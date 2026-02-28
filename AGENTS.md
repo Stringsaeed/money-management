@@ -7,7 +7,7 @@
 - Treat guidance as source of truth even if your runtime defaults differ; override only when the user explicitly says so.
 - Default tone: concise, factual, high-signal commit-ready work with clear diffs and explanations.
 - Prefer action now, questions later—clarify only when output would materially diverge.
-- All edits should remain ASCII unless the touched file already relies on Unicode and the addition is justified.
+- UI copy, labels, and decorative elements should use emojis freely to support the modern minimal design language; non-UI files (configs, scripts) remain ASCII-only.
 - Never delete or revert user-owned changes unless they ask; keep the worktree state intact outside your edits.
 
 ## Commands & Tooling
@@ -35,7 +35,7 @@
 - Keep commands succinct and never stream large logs; summarize key lines for the user.
 - When referencing files to the user, wrap the repository-relative path in backticks so the CLI can hyperlink it.
 - Tests are absent, but still mention manual QA, simulator smoke checks, or component stories when relevant.
-- Honor ASCII-only rule unless a file already mixes Unicode (e.g., emojis in copy decks) and you have concrete cause to keep them.
+- Emojis are encouraged in UI copy, labels, and decorative elements to reinforce the modern minimal design language; keep non-UI files (configs, scripts) ASCII-only.
 - Respect user-owned dirty changes; do not format unrelated files even if the formatter would touch them.
 
 ## Repository Map
@@ -62,7 +62,7 @@
 - Hooks: obey `react-hooks/rules-of-hooks` and include dependencies arrays that satisfy `react-hooks/exhaustive-deps`.
 - Avoid `any`; prefer discriminated unions or `unknown` with proper type guards.
 - Use the `@/*` alias consistently; root-relative imports improve readability and survive folder moves.
-- Keep files small and purposeful—extract subcomponents when files exceed ~200 lines or serve multiple concerns.
+- Keep files small and purposeful—extract subcomponents when files exceed ~200 lines or serve multiple concerns. Strongly prefer many small, single-responsibility components over large monolithic ones; follow React and React Native best practices loaded from the relevant skills.
 - Default naming: `PascalCase` for components/types, `camelCase` for functions/constants, `SCREAMING_SNAKE_CASE` for env fallback constants.
 - Error messages should explain the impact and next action, not just restate that something failed.
 - When defining React Navigation routes, leverage Expo Router file conventions instead of manual stack registration.
@@ -84,6 +84,10 @@
 - Use `ParallaxScrollView` for hero sections that need scroll-bound headers; do not reinvent parallax per screen.
 - Haptics go through the `HapticTab` abstraction for tab interactions; use Expo Haptics elsewhere via centralized helpers.
 - When styling with NativeWind, keep classes deterministic—avoid interpolating strings or conditionally appending non-existent tokens.
+- **No inline styles**: always use NativeWind `className` props for styling; never use the `style` prop for layout or visual properties that NativeWind can express.
+- **Safe area**: every screen must respect safe areas. Use `safe-top` / `safe-bottom` NativeWind classes (or `SafeAreaView` equivalent classes) on the outermost container of every screen so content is never obscured by notches or home indicators.
+- **Animations on layout change**: whenever a layout-level change happens (list items added/removed, conditional panels, screen transitions), wrap affected elements in Reanimated `Animated.View` and apply `entering`/`exiting`/`layout` props from `react-native-reanimated` so all layout shifts animate smoothly.
+- **Modern minimal design with emojis**: default to clean, minimal UI with generous whitespace. Prefer emojis over icon libraries for decorative or label purposes wherever they convey the intent clearly.
 - Animations should rely on Reanimated v4; never mix imperative Animated API unless Reanimated cannot cover the case.
 - Favor React Compiler friendly patterns (no dynamic hook order, no conditional hook definition) because the project has `reactCompiler` experiments on.
 - When exporting SVG/bitmap assets, optimize them through `expo optimize` before committing.
@@ -144,6 +148,11 @@
 - [ ] Load the skill bundle that matches the task scope.
 - [ ] Gather context with `glob`/`read` rather than editing blindly.
 - [ ] Implement the change using TypeScript strict-safe patterns and repo-specific theming.
+- [ ] Use NativeWind `className` only — no inline `style` props for visual/layout rules.
+- [ ] Apply `safe-top` / `safe-bottom` classes on every screen's outermost container.
+- [ ] Wrap layout-changing elements in Reanimated `Animated.View` with `entering`/`exiting`/`layout` props.
+- [ ] Decompose into small, single-responsibility components; no large monoliths.
+- [ ] Use emojis in UI copy and labels to reinforce minimal modern design.
 - [ ] Run `bun run lint:fix`.
 - [ ] Run `bun run format`.
 - [ ] Document manual QA (or note that it was skipped).
