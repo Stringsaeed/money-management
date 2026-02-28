@@ -22,6 +22,7 @@ No test suite is configured yet.
 This is an **Expo cross-platform app** (iOS, Android, Web) using file-based routing via Expo Router.
 
 **Key stack:**
+
 - React 19 + React Native 0.83 + TypeScript (strict mode)
 - Expo 55 with plugins: expo-router, expo-splash-screen, expo-font, expo-image, expo-web-browser
 - react-native-reanimated v4 for animations
@@ -30,6 +31,7 @@ This is an **Expo cross-platform app** (iOS, Android, Web) using file-based rout
 **Path alias:** `@/*` maps to the project root.
 
 **Routing (app/):**
+
 - `_layout.tsx` — Root stack with `ThemeProvider` (light/dark)
 - `(tabs)/_layout.tsx` — Bottom tab navigator
 - `(tabs)/index.tsx` — Home tab
@@ -37,11 +39,13 @@ This is an **Expo cross-platform app** (iOS, Android, Web) using file-based rout
 - `modal.tsx` — Modal screen
 
 **Theming:**
+
 - `constants/theme.ts` — Color palettes and fonts for light/dark modes
 - `hooks/use-theme-color.ts` — Resolves themed colors per platform
 - `hooks/use-color-scheme.ts` / `hooks/use-color-scheme.web.ts` — Platform-specific color scheme detection
 
 **Components (`components/`):**
+
 - `ThemedText`, `ThemedView` — Theme-aware wrappers
 - `ui/IconSymbol` — SF Symbols / MaterialIcons bridge (platform-specific: `.ios.tsx` vs `.tsx`)
 - `ParallaxScrollView` — Parallax header scroll container
