@@ -1,1 +1,8 @@
-{ "recommendations": ["expo.vscode-expo-tools"] }
+{
+  "recommendations": [
+    "expo.vscode-expo-tools",
+    "oxc.oxc-vscode",
+    "typescriptteam.native-preview",
+    "yoavbls.pretty-ts-errors"
+  ]
+}
