@@ -10,12 +10,12 @@ interface AccountCardProps {
 }
 
 const ACCOUNT_TYPE_LABELS: Record<string, string> = {
-  checking: "Checking",
-  savings: "Savings",
-  cash: "Cash",
-  credit_card: "Credit Card",
-  investment: "Investment",
-  other: "Other",
+  checking: "💳 Checking",
+  savings: "🏦 Savings",
+  cash: "💵 Cash",
+  credit_card: "💳 Credit Card",
+  investment: "📈 Investment",
+  other: "🏧 Other",
 };
 
 export function AccountCard({ account, onPress, compact = false }: AccountCardProps) {
@@ -26,38 +26,27 @@ export function AccountCard({ account, onPress, compact = false }: AccountCardPr
       onPress={onPress}
       style={({ pressed }) => ({
         backgroundColor: account.color,
-        borderRadius: 16,
-        padding: compact ? 14 : 20,
         opacity: pressed ? 0.85 : 1,
-        minWidth: compact ? 140 : undefined,
+        borderCurve: "continuous",
+        boxShadow: `0 4px 16px ${account.color}50`,
       })}
+      className={`rounded-2xl ${compact ? "p-3.5 min-w-[140px]" : "p-5"}`}
     >
-      <View
-        style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}
-      >
-        <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, fontWeight: "500" }}>
+      <View className="flex-row justify-between items-start">
+        <Text className="text-white/80 text-xs font-medium">
           {ACCOUNT_TYPE_LABELS[account.type] ?? account.type}
         </Text>
-        <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 12 }}>{account.currency}</Text>
+        <Text className="text-white/80 text-xs">{account.currency}</Text>
       </View>
       <Text
-        style={{
-          color: "white",
-          fontSize: compact ? 16 : 14,
-          fontWeight: "600",
-          marginTop: 8,
-          marginBottom: 4,
-        }}
+        className={`text-white font-semibold mt-2 mb-1 ${compact ? "text-base" : "text-sm"}`}
         numberOfLines={1}
       >
         {account.name}
       </Text>
       <Text
-        style={{
-          color: "white",
-          fontSize: compact ? 20 : 28,
-          fontWeight: "700",
-        }}
+        className={`text-white font-bold ${compact ? "text-xl" : "text-[28px]"}`}
+        style={{ fontVariant: ["tabular-nums"] }}
       >
         {isNegative ? "-" : ""}
         {formatCents(Math.abs(account.balance), account.currency)}

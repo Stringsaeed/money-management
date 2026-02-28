@@ -7,26 +7,17 @@ interface AmountInputProps {
   valueCents: number;
   onChangeCents: (cents: number) => void;
   currency?: string;
-  style?: object;
 }
 
 /**
- * A currency-aware numeric input.
- * Displays formatted value; stores and returns integer cents.
+ * Currency-aware numeric input — stores and returns integer cents.
  */
-export function AmountInput({
-  valueCents,
-  onChangeCents,
-  currency = "USD",
-  style,
-}: AmountInputProps) {
+export function AmountInput({ valueCents, onChangeCents, currency = "USD" }: AmountInputProps) {
   const [raw, setRaw] = useState(valueCents > 0 ? centsToDecimalString(valueCents) : "");
   const inputRef = useRef<TextInput>(null);
 
   function handleChange(text: string) {
-    // Allow only digits and a single decimal point
     const cleaned = text.replace(/[^0-9.]/g, "");
-    // Prevent multiple decimal points
     const parts = cleaned.split(".");
     const normalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join("")}` : cleaned;
     setRaw(normalized);
@@ -34,27 +25,17 @@ export function AmountInput({
   }
 
   return (
-    <Pressable onPress={() => inputRef.current?.focus()} style={style}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          borderWidth: 1,
-          borderColor: "#D1D5DB",
-          borderRadius: 10,
-          paddingHorizontal: 14,
-          paddingVertical: 12,
-          gap: 6,
-        }}
-      >
-        <Text style={{ fontSize: 16, color: "#6B7280", fontWeight: "600" }}>{currency}</Text>
+    <Pressable onPress={() => inputRef.current?.focus()}>
+      <View className="flex-row items-center border border-gray-300 rounded-[10px] px-3.5 py-3 gap-1.5">
+        <Text className="text-base text-gray-500 font-semibold">{currency}</Text>
         <TextInput
           ref={inputRef}
           value={raw}
           onChangeText={handleChange}
           keyboardType="decimal-pad"
           placeholder="0.00"
-          style={{ flex: 1, fontSize: 22, fontWeight: "600" }}
+          className="flex-1 text-[22px] font-semibold"
+          style={{ fontVariant: ["tabular-nums"] }}
           returnKeyType="done"
         />
       </View>

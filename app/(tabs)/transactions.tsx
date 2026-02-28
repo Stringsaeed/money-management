@@ -1,14 +1,15 @@
 import { router } from "expo-router";
 import { ActivityIndicator, Pressable, SectionList, Text, View } from "react-native";
 
-import { TransactionGroup } from "@/components/transaction/transaction-group";
 import { EmptyState } from "@/components/common/empty-state";
-import { useTransactions, useMonthSummary } from "@/hooks/use-transactions";
+import { TransactionGroup } from "@/components/transaction/transaction-group";
+import { useMonthSummary, useTransactions } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
 import { formatCents } from "@/utils/currency";
-import { formatMonth, addMonths } from "@/utils/date";
-import { Colors } from "@/constants/theme";
+import { addMonths, formatMonth } from "@/utils/date";
 import type { DayGroup, TransactionWithDetails } from "@/types";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function groupByDay(transactions: TransactionWithDetails[]): DayGroup[] {
   const map = new Map<string, DayGroup>();
@@ -24,6 +25,78 @@ function groupByDay(transactions: TransactionWithDetails[]): DayGroup[] {
   return Array.from(map.values()).sort((a, b) => b.date.localeCompare(a.date));
 }
 
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+interface MonthNavigatorProps {
+  year: number;
+  month: number;
+  onPrev: () => void;
+  onNext: () => void;
+}
+
+function MonthNavigator({ year, month, onPrev, onNext }: MonthNavigatorProps) {
+  return (
+    <View className="flex-row items-center px-5 py-2">
+      <Pressable onPress={onPrev} hitSlop={12} className="p-1">
+        <Text className="text-[22px] text-gray-500">‹</Text>
+      </Pressable>
+      <Text className="flex-1 text-center text-[17px] font-bold text-gray-900">
+        {formatMonth(year, month)}
+      </Text>
+      <Pressable onPress={onNext} hitSlop={12} className="p-1">
+        <Text className="text-[22px] text-gray-500">›</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+interface MonthlySummaryProps {
+  income: number;
+  expense: number;
+  net: number;
+  currency: string;
+}
+
+function MonthlySummary({ income, expense, net, currency }: MonthlySummaryProps) {
+  const netClass = net >= 0 ? "text-green-600" : "text-red-600";
+  return (
+    <View className="flex-row border-t border-gray-100">
+      <View className="flex-1 items-center py-2">
+        <Text className="text-[11px] text-gray-500 font-medium mb-0.5">INCOME 📈</Text>
+        <Text
+          className="text-[15px] font-bold text-green-600"
+          style={{ fontVariant: ["tabular-nums"] }}
+        >
+          +{formatCents(income, currency)}
+        </Text>
+      </View>
+      <View className="w-px bg-gray-200 my-1" />
+      <View className="flex-1 items-center py-2">
+        <Text className="text-[11px] text-gray-500 font-medium mb-0.5">EXPENSES 💸</Text>
+        <Text
+          className="text-[15px] font-bold text-red-600"
+          style={{ fontVariant: ["tabular-nums"] }}
+        >
+          -{formatCents(expense, currency)}
+        </Text>
+      </View>
+      <View className="w-px bg-gray-200 my-1" />
+      <View className="flex-1 items-center py-2">
+        <Text className="text-[11px] text-gray-500 font-medium mb-0.5">NET</Text>
+        <Text
+          className={`text-[15px] font-bold ${netClass}`}
+          style={{ fontVariant: ["tabular-nums"] }}
+        >
+          {net >= 0 ? "+" : ""}
+          {formatCents(net, currency)}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+// ─── Screen ──────────────────────────────────────────────────────────────────
+
 export default function TransactionsScreen() {
   const { selectedYear, selectedMonth, setSelectedMonth } = useUIStore();
   const { data: transactions = [], isLoading } = useTransactions({
@@ -33,92 +106,37 @@ export default function TransactionsScreen() {
   const { data: summary } = useMonthSummary(selectedYear, selectedMonth);
 
   const groups = groupByDay(transactions);
-
-  // Determine currency from first account currency in transactions
   const currency = transactions[0]?.currency ?? "USD";
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
-      {/* Month selector + summary */}
-      <View
-        style={{
-          backgroundColor: "white",
-          paddingTop: 56,
-          paddingHorizontal: 20,
-          paddingBottom: 16,
-          borderBottomWidth: 1,
-          borderBottomColor: "#F3F4F6",
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-          <Pressable
-            onPress={() => {
-              const prev = addMonths(selectedYear, selectedMonth, -1);
-              setSelectedMonth(prev.year, prev.month);
-            }}
-            hitSlop={12}
-          >
-            <Text style={{ fontSize: 22, color: "#6B7280" }}>‹</Text>
-          </Pressable>
-          <Text
-            style={{
-              flex: 1,
-              textAlign: "center",
-              fontSize: 17,
-              fontWeight: "700",
-              color: "#111827",
-            }}
-          >
-            {formatMonth(selectedYear, selectedMonth)}
-          </Text>
-          <Pressable
-            onPress={() => {
-              const next = addMonths(selectedYear, selectedMonth, 1);
-              setSelectedMonth(next.year, next.month);
-            }}
-            hitSlop={12}
-          >
-            <Text style={{ fontSize: 22, color: "#6B7280" }}>›</Text>
-          </Pressable>
-        </View>
-
-        {/* Month summary */}
+    <View className="flex-1 bg-gray-50">
+      {/* Sticky header */}
+      <View className="bg-white pt-safe border-b border-gray-100">
+        <MonthNavigator
+          year={selectedYear}
+          month={selectedMonth}
+          onPrev={() => {
+            const prev = addMonths(selectedYear, selectedMonth, -1);
+            setSelectedMonth(prev.year, prev.month);
+          }}
+          onNext={() => {
+            const next = addMonths(selectedYear, selectedMonth, 1);
+            setSelectedMonth(next.year, next.month);
+          }}
+        />
         {summary && (
-          <View style={{ flexDirection: "row", gap: 0 }}>
-            <View style={{ flex: 1, alignItems: "center" }}>
-              <Text style={{ fontSize: 11, color: "#6B7280", fontWeight: "500" }}>INCOME</Text>
-              <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.light.income }}>
-                +{formatCents(summary.totalIncome, currency)}
-              </Text>
-            </View>
-            <View style={{ width: 1, backgroundColor: "#E5E7EB", marginVertical: 4 }} />
-            <View style={{ flex: 1, alignItems: "center" }}>
-              <Text style={{ fontSize: 11, color: "#6B7280", fontWeight: "500" }}>EXPENSES</Text>
-              <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.light.expense }}>
-                -{formatCents(summary.totalExpense, currency)}
-              </Text>
-            </View>
-            <View style={{ width: 1, backgroundColor: "#E5E7EB", marginVertical: 4 }} />
-            <View style={{ flex: 1, alignItems: "center" }}>
-              <Text style={{ fontSize: 11, color: "#6B7280", fontWeight: "500" }}>NET</Text>
-              <Text
-                style={{
-                  fontSize: 15,
-                  fontWeight: "700",
-                  color: summary.netAmount >= 0 ? Colors.light.income : Colors.light.expense,
-                }}
-              >
-                {summary.netAmount >= 0 ? "+" : ""}
-                {formatCents(summary.netAmount, currency)}
-              </Text>
-            </View>
-          </View>
+          <MonthlySummary
+            income={summary.totalIncome}
+            expense={summary.totalExpense}
+            net={summary.netAmount}
+            currency={currency}
+          />
         )}
       </View>
 
-      {/* Transaction list */}
+      {/* List */}
       {isLoading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} />
+        <ActivityIndicator className="mt-10" />
       ) : groups.length === 0 ? (
         <EmptyState
           icon="📋"
@@ -127,14 +145,9 @@ export default function TransactionsScreen() {
           action={
             <Pressable
               onPress={() => router.push("/transaction/new")}
-              style={{
-                backgroundColor: "#0a7ea4",
-                borderRadius: 10,
-                paddingHorizontal: 20,
-                paddingVertical: 12,
-              }}
+              className="bg-[#0a7ea4] rounded-xl px-5 py-3 mt-1"
             >
-              <Text style={{ color: "white", fontWeight: "600" }}>Add Transaction</Text>
+              <Text className="text-white font-semibold">＋ Add Transaction</Text>
             </Pressable>
           }
         />
@@ -146,7 +159,7 @@ export default function TransactionsScreen() {
             <TransactionGroup group={item} currency={currency} showAccount />
           )}
           renderSectionHeader={() => null}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={{ paddingBottom: 112 }}
           stickySectionHeadersEnabled={false}
         />
       )}
@@ -154,24 +167,10 @@ export default function TransactionsScreen() {
       {/* FAB */}
       <Pressable
         onPress={() => router.push("/transaction/new")}
-        style={{
-          position: "absolute",
-          bottom: 32,
-          right: 20,
-          width: 56,
-          height: 56,
-          borderRadius: 28,
-          backgroundColor: Colors.light.tint,
-          alignItems: "center",
-          justifyContent: "center",
-          shadowColor: "#000",
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 8,
-        }}
+        style={{ boxShadow: "0 4px 16px rgba(10, 126, 164, 0.4)" }}
+        className="absolute bottom-8 right-5 w-14 h-14 rounded-full bg-[#0a7ea4] items-center justify-center"
       >
-        <Text style={{ color: "white", fontSize: 28, lineHeight: 30 }}>+</Text>
+        <Text className="text-white text-[28px] leading-[30px]">＋</Text>
       </Pressable>
     </View>
   );

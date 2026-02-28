@@ -1,7 +1,6 @@
 import { Text, View } from "react-native";
 
 import { TransactionRow } from "./transaction-row";
-import { Colors } from "@/constants/theme";
 import { formatCents } from "@/utils/currency";
 import { formatDayHeader } from "@/utils/date";
 import type { DayGroup } from "@/types";
@@ -14,30 +13,19 @@ interface TransactionGroupProps {
 
 export function TransactionGroup({ group, currency = "USD", showAccount }: TransactionGroupProps) {
   const net = group.totalIncome - group.totalExpense;
+  const netClass = net >= 0 ? "text-green-600" : "text-red-600";
 
   return (
-    <View style={{ marginBottom: 4 }}>
+    <View className="mb-1">
       {/* Day header */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          paddingHorizontal: 16,
-          paddingVertical: 8,
-          backgroundColor: "#F3F4F6",
-        }}
-      >
-        <Text style={{ fontSize: 13, fontWeight: "600", color: "#374151" }}>
+      <View className="flex-row justify-between items-center px-4 py-2 bg-gray-100">
+        <Text className="text-[13px] font-semibold text-gray-700">
           {formatDayHeader(group.date)}
         </Text>
         {(group.totalIncome > 0 || group.totalExpense > 0) && (
           <Text
-            style={{
-              fontSize: 13,
-              fontWeight: "600",
-              color: net >= 0 ? Colors.light.income : Colors.light.expense,
-            }}
+            className={`text-[13px] font-semibold ${netClass}`}
+            style={{ fontVariant: ["tabular-nums"] }}
           >
             {net >= 0 ? "+" : ""}
             {formatCents(net, currency)}
@@ -45,11 +33,11 @@ export function TransactionGroup({ group, currency = "USD", showAccount }: Trans
         )}
       </View>
 
-      {/* Transaction rows */}
-      <View style={{ backgroundColor: "white" }}>
+      {/* Rows */}
+      <View className="bg-white">
         {group.transactions.map((t, i) => (
           <View key={t.id}>
-            {i > 0 && <View style={{ height: 1, backgroundColor: "#F3F4F6", marginLeft: 68 }} />}
+            {i > 0 && <View className="h-px bg-gray-100 ml-[68px]" />}
             <TransactionRow transaction={t} showAccount={showAccount} />
           </View>
         ))}
