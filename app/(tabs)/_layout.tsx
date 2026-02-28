@@ -1,7 +1,7 @@
+import { ChartPieIcon, CreditCardIcon, GearIcon, ListIcon } from "phosphor-react-native";
 import { Tabs } from "expo-router";
 
 import { HapticTab } from "@/components/haptic-tab";
-import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
@@ -20,28 +20,36 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Dashboard",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="chart.pie.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <ChartPieIcon size={26} color={color} weight={focused ? "fill" : "regular"} />
+          ),
         }}
       />
       <Tabs.Screen
         name="transactions"
         options={{
           title: "Transactions",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="list.bullet" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <ListIcon size={26} color={color} weight={focused ? "fill" : "regular"} />
+          ),
         }}
       />
       <Tabs.Screen
         name="accounts"
         options={{
           title: "Accounts",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="creditcard.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <CreditCardIcon size={26} color={color} weight={focused ? "fill" : "regular"} />
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: "Settings",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="gearshape.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <GearIcon size={26} color={color} weight={focused ? "fill" : "regular"} />
+          ),
         }}
       />
     </Tabs>
