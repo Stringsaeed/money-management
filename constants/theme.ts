@@ -50,7 +50,7 @@ export const AccountTypeColors: Record<string, string> = {
   other: "#7F8C8D",
 };
 
-// Preset palette for user-selected account/category colors
+// Preset palette for user-selected account/category colors (hex values, stored in DB)
 export const ColorPalette = [
   "#4A90D9",
   "#27AE60",
