@@ -11,11 +11,16 @@ bun run start        # Start Expo dev server
 bun run ios          # Run on iOS simulator
 bun run android      # Run on Android emulator/device
 bun run web          # Run in browser
-bun run lint         # Run ESLint
+bun run lint         # Run oxlint
+bun run lint:fix     # Run oxlint with auto-fix
+bun run format       # Format with oxfmt
+bun run format:check # Check formatting without writing
 bun run reset-project  # Reset app/ to blank (moves current to app-example/)
 ```
 
 No test suite is configured yet.
+
+**Always run `bun run lint:fix && bun run format` after making code changes.**
 
 ## Architecture
 
@@ -52,6 +57,12 @@ This is an **Expo cross-platform app** (iOS, Android, Web) using file-based rout
 - `HapticTab` — Tab bar button with haptic feedback
 
 **Platform-specific files** follow the `.ios.tsx` / `.web.ts` convention used by Expo (Metro resolver picks them automatically).
+
+**Linting/Formatting:**
+
+- oxlint — config in `.oxlintrc.json` (import, react, typescript, expo rules)
+- oxfmt — config in `.oxfmtrc.json`
+- ESLint config (`eslint.config.js`) retained as oxlint uses `eslint-plugin-expo` as a jsPlugin
 
 ## Skills
 
