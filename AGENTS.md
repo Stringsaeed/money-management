@@ -70,7 +70,7 @@
 - Keep optional chaining and nullish coalescing in place of defensive `&&` ladders when reading nested data.
 - Prefer `useMemo`/`useCallback` for heavy computations or callback props that feed deep hierarchies; otherwise skip premature memoization.
 - Export a default component per screen file; named helpers can live in the same module but keep them near usage.
-- For icons, use `IconSymbol` to automatically pick SF Symbols on iOS and fallback glyphs elsewhere.
+- For icons, use **phosphor-react-native**. Always import with the `Icon` suffix (e.g. `CaretRightIcon`, `GearIcon`) — the un-suffixed exports are deprecated and emit warnings. Use `weight={focused ? "fill" : "regular"}` to reflect active/inactive state. Install the peer dep via `npx expo install react-native-svg` to get the Expo-pinned version.
 - Keep `eqeqeq` behavior in mind: `==` is only acceptable where `smart` semantics cover `null == undefined`; otherwise use `===`.
 - Do not mutate React state directly; clone arrays/objects or use functional updates.
 - Avoid `require` for JSON/TS modules in TypeScript; use `import` statements so type checking works.
