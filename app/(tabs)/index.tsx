@@ -1,99 +1,172 @@
-import { Image } from "expo-image";
-import { Platform, StyleSheet } from "react-native";
+import { router } from "expo-router";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 
-import { HelloWave } from "@/components/hello-wave";
-import ParallaxScrollView from "@/components/parallax-scroll-view";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Link } from "expo-router";
+import { AccountCard } from "@/components/account/account-card";
+import { TransactionRow } from "@/components/transaction/transaction-row";
+import { useAccountsWithBalances } from "@/hooks/use-accounts";
+import { useRecentTransactions } from "@/hooks/use-transactions";
+import { useRecurringProcessor } from "@/hooks/use-recurring-processor";
+import { formatCents } from "@/utils/currency";
+import { Colors } from "@/constants/theme";
 
-export default function HomeScreen() {
+export default function DashboardScreen() {
+  // Process recurring payments on every app launch
+  useRecurringProcessor();
+
+  const { data: accounts = [], isLoading: loadingAccounts } = useAccountsWithBalances();
+  const { data: recent = [], isLoading: loadingRecent } = useRecentTransactions(8);
+
+  // Check if this is a first launch (no accounts)
+  if (!loadingAccounts && accounts.length === 0) {
+    router.replace("/onboarding");
+    return null;
+  }
+
+  // Group accounts by currency for multi-currency support
+  const currencies = [...new Set(accounts.map((a) => a.currency))];
+  const hasMixedCurrencies = currencies.length > 1;
+
+  // Net worth: sum of all non-excluded accounts (single currency only)
+  const netWorth = accounts
+    .filter((a) => !a.excludeFromTotal)
+    .reduce((sum, a) => sum + a.balance, 0);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
-      }
+    <ScrollView
+      style={{ flex: 1, backgroundColor: "#F9FAFB" }}
+      contentContainerStyle={{ paddingBottom: 120 }}
     >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{" "}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: "cmd + d",
-              android: "cmd + m",
-              web: "F12",
+      {/* Net Worth header */}
+      <View
+        style={{
+          backgroundColor: Colors.light.tint,
+          paddingTop: 60,
+          paddingBottom: 28,
+          paddingHorizontal: 20,
+        }}
+      >
+        <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 14, fontWeight: "500" }}>
+          {hasMixedCurrencies ? "Total Balance" : "Net Worth"}
+        </Text>
+        {loadingAccounts ? (
+          <ActivityIndicator color="white" style={{ marginTop: 8 }} />
+        ) : hasMixedCurrencies ? (
+          <View style={{ marginTop: 4, gap: 2 }}>
+            {currencies.map((cur) => {
+              const total = accounts
+                .filter((a) => !a.excludeFromTotal && a.currency === cur)
+                .reduce((s, a) => s + a.balance, 0);
+              return (
+                <Text key={cur} style={{ color: "white", fontSize: 22, fontWeight: "700" }}>
+                  {formatCents(total, cur)}
+                </Text>
+              );
             })}
-          </ThemedText>{" "}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert("Action pressed")} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert("Share pressed")}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert("Delete pressed")}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+          </View>
+        ) : (
+          <Text style={{ color: "white", fontSize: 36, fontWeight: "700", marginTop: 4 }}>
+            {formatCents(netWorth, currencies[0] ?? "USD")}
+          </Text>
+        )}
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        {/* Quick action */}
+        <Pressable
+          onPress={() => router.push("/transaction/new")}
+          style={{
+            marginTop: 16,
+            backgroundColor: "rgba(255,255,255,0.2)",
+            borderRadius: 10,
+            paddingVertical: 12,
+            alignItems: "center",
+          }}
+        >
+          <Text style={{ color: "white", fontWeight: "600", fontSize: 15 }}>+ Add Transaction</Text>
+        </Pressable>
+      </View>
+
+      {/* Accounts */}
+      <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 12,
+          }}
+        >
+          <Text style={{ fontSize: 17, fontWeight: "700", color: "#111827" }}>Accounts</Text>
+          <Pressable onPress={() => router.push("/account/new")}>
+            <Text style={{ color: Colors.light.tint, fontSize: 14, fontWeight: "600" }}>+ Add</Text>
+          </Pressable>
+        </View>
+
+        {loadingAccounts ? (
+          <ActivityIndicator />
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginHorizontal: -20 }}
+            contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+          >
+            {accounts.map((account) => (
+              <AccountCard
+                key={account.id}
+                account={account}
+                onPress={() => router.push(`/account/${account.id}`)}
+                compact
+              />
+            ))}
+          </ScrollView>
+        )}
+      </View>
+
+      {/* Recent Transactions */}
+      <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 12,
+          }}
+        >
+          <Text style={{ fontSize: 17, fontWeight: "700", color: "#111827" }}>Recent</Text>
+          <Pressable onPress={() => router.push("/(tabs)/transactions")}>
+            <Text style={{ color: Colors.light.tint, fontSize: 14, fontWeight: "600" }}>
+              See all
+            </Text>
+          </Pressable>
+        </View>
+
+        {loadingRecent ? (
+          <ActivityIndicator />
+        ) : recent.length === 0 ? (
+          <View
+            style={{
+              backgroundColor: "white",
+              borderRadius: 12,
+              padding: 24,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#6B7280", textAlign: "center" }}>
+              No transactions yet.{"\n"}Tap &quot;+ Add Transaction&quot; above to get started.
+            </Text>
+          </View>
+        ) : (
+          <View style={{ backgroundColor: "white", borderRadius: 12, overflow: "hidden" }}>
+            {recent.map((t, i) => (
+              <View key={t.id}>
+                {i > 0 && (
+                  <View style={{ height: 1, backgroundColor: "#F3F4F6", marginLeft: 68 }} />
+                )}
+                <TransactionRow transaction={t} showAccount />
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
-  },
-});
