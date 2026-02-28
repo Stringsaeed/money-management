@@ -49,6 +49,14 @@ This is an **Expo cross-platform app** (iOS, Android, Web) using file-based rout
 
 **Platform-specific files** follow the `.ios.tsx` / `.web.ts` convention used by Expo (Metro resolver picks them automatically).
 
+## Skills
+
+Always invoke installed skills relevant to the task before writing code:
+
+- **Expo / React Native work:** `expo-app-design:building-ui`, `expo-app-design:data-fetching`, `expo-app-design:tailwind-setup`, `expo-app-design:api-routes`, `expo-app-design:use-dom`, `expo-deployment:deployment`, `expo-deployment:cicd-workflows`, `upgrading-expo:upgrading-expo`
+- **React Native performance:** `react-native-best-practices`, `vercel-react-native-skills`
+- **React / Next.js:** `vercel-react-best-practices`, `vercel-composition-patterns`
+
 ## Workflow
 
 Always commit changes after they are accepted by the user. Use [Conventional Commits](https://www.conventionalcommits.org/) for all commit messages (e.g. `feat:`, `fix:`, `chore:`, `refactor:`).
