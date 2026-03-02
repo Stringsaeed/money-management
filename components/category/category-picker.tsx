@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { Text } from "@/components/ui/text";
 import Animated, { Easing, LinearTransition } from "react-native-reanimated";
 
 import { useCategories } from "@/hooks/use-categories";

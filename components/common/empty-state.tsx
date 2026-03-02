@@ -1,4 +1,4 @@
-import { Text } from "react-native";
+import { Text } from "@/components/ui/text";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 interface EmptyStateProps {

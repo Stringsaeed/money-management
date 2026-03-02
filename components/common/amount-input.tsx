@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, TextInput, View } from "react-native";
+import { Text } from "@/components/ui/text";
 
 import { centsToDecimalString, decimalStringToCents } from "@/utils/currency";
 

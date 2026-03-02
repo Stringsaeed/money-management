@@ -28,8 +28,8 @@ export default function AccountDetailScreen() {
   const { data: account, isLoading: loadingAccount } = useAccount(id);
   const { selectedYear, selectedMonth, setSelectedMonth } = useUIStore();
   const { data: transactions = [], isLoading: loadingTxns } = useTransactions({
-    year: selectedYear,
-    month: selectedMonth,
+    year: selectedYear ?? undefined,
+    month: selectedMonth ?? undefined,
     accountId: id,
   });
 
@@ -75,25 +75,29 @@ export default function AccountDetailScreen() {
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16, gap: 16 }}>
           <Pressable
             onPress={() => {
+              if (!selectedYear || !selectedMonth) return;
               const prev = addMonths(selectedYear, selectedMonth, -1);
               setSelectedMonth(prev.year, prev.month);
             }}
           >
             <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 20 }}>‹</Text>
           </Pressable>
-          <Text
-            style={{
-              color: "white",
-              fontSize: 15,
-              fontWeight: "600",
-              flex: 1,
-              textAlign: "center",
-            }}
-          >
-            {formatMonth(selectedYear, selectedMonth)}
-          </Text>
+          {!!selectedMonth && !!selectedYear && (
+            <Text
+              style={{
+                color: "white",
+                fontSize: 15,
+                fontWeight: "600",
+                flex: 1,
+                textAlign: "center",
+              }}
+            >
+              {formatMonth(selectedYear, selectedMonth)}
+            </Text>
+          )}
           <Pressable
             onPress={() => {
+              if (!selectedYear || !selectedMonth) return;
               const next = addMonths(selectedYear, selectedMonth, 1);
               setSelectedMonth(next.year, next.month);
             }}
