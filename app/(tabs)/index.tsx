@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, SectionList, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, SectionList, ScrollView, View } from "react-native";
+import { Text } from "@/components/ui/text";
 import * as DropdownMenu from "zeego/dropdown-menu";
 
 import { EmptyState } from "@/components/common/empty-state";

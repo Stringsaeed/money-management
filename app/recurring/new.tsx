@@ -5,10 +5,10 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Text,
   TextInput,
-  View,
+  View
 } from "react-native";
+import { Text } from "@/components/ui/text";
 
 import { AccountPicker } from "@/components/account/account-picker";
 import { CategoryPicker } from "@/components/category/category-picker";

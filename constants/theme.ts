@@ -74,6 +74,21 @@ export const ColorPalette = [
   "#9467BD",
 ];
 
+// ─── Manrope font family constants ───────────────────────────────────────────
+//
+// These match the font names registered via @expo-google-fonts/manrope.
+// Use these values if you ever need to reference a specific Manrope weight
+// outside of the shared <Text /> component (e.g. in TextInput styles).
+export const ManropeFonts = {
+  extraLight: "Manrope_200ExtraLight",
+  light: "Manrope_300Light",
+  regular: "Manrope_400Regular",
+  medium: "Manrope_500Medium",
+  semiBold: "Manrope_600SemiBold",
+  bold: "Manrope_700Bold",
+  extraBold: "Manrope_800ExtraBold",
+} as const;
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */

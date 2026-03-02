@@ -2,7 +2,8 @@ import { drizzle } from "drizzle-orm/expo-sqlite";
 import { router } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, TextInput, View } from "react-native";
+import { Text } from "@/components/ui/text";
 
 import { AccountTypeColors, ColorPalette } from "@/constants/theme";
 import { accounts } from "@/db/schema";
