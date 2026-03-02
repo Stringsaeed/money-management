@@ -280,18 +280,26 @@ const TRANSACTIONS: TxRow[] = [
 ];
 
 export async function seedDatabase(db: DB): Promise<void> {
-  // Bail out if any accounts already exist (already seeded or user has their own data)
-  const existing = await db.select({ id: accounts.id }).from(accounts).limit(1).all();
+  await db.transaction(async (txDb) => {
+    // Bail out if any accounts already exist (already seeded or user has their own data)
+    const existing = await txDb
+      .select({ id: accounts.id })
+      .from(accounts)
+      .limit(1)
+      .all();
 
-  if (existing.length > 0) return;
+    if (existing.length > 0) {
+      return;
+    }
 
-  for (const row of ACCOUNTS) {
-    await db.insert(accounts).values(row);
-  }
-  for (const row of CATEGORIES) {
-    await db.insert(categories).values(row);
-  }
-  for (const row of TRANSACTIONS) {
-    await db.insert(transactions).values(row);
-  }
+    for (const row of ACCOUNTS) {
+      await txDb.insert(accounts).values(row);
+    }
+    for (const row of CATEGORIES) {
+      await txDb.insert(categories).values(row);
+    }
+    for (const row of TRANSACTIONS) {
+      await txDb.insert(transactions).values(row);
+    }
+  });
 }
