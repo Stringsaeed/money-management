@@ -1,7 +1,9 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { Text } from "@/components/ui/text";
 
 import { formatCents } from "@/utils/currency";
 import type { AccountWithBalance } from "@/types";
+import { twMerge } from "tailwind-merge";
 
 interface AccountCardProps {
   account: AccountWithBalance;
@@ -24,13 +26,15 @@ export function AccountCard({ account, onPress, compact = false }: AccountCardPr
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => ({
+      className={twMerge(
+        `rounded-2xl p-5 opacity-100 active:opacity-85`,
+        compact && "p-3.5 min-w-35",
+      )}
+      style={{
         backgroundColor: account.color,
-        opacity: pressed ? 0.85 : 1,
         borderCurve: "continuous",
         boxShadow: `0 4px 16px ${account.color}50`,
-      })}
-      className={`rounded-2xl ${compact ? "p-3.5 min-w-[140px]" : "p-5"}`}
+      }}
     >
       <View className="flex-row justify-between items-start">
         <Text className="text-white/80 text-xs font-medium">

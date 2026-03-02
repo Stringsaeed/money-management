@@ -1,16 +1,31 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { drizzle } from "drizzle-orm/expo-sqlite";
+import {
+  Manrope_200ExtraLight,
+  Manrope_300Light,
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+  useFonts,
+} from "@expo-google-fonts/manrope";
 import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { SQLiteProvider, type SQLiteDatabase } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import "react-native-reanimated";
 import "../global.css";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { runMigrations } from "@/db/migrate";
+import { seedDatabase } from "@/db/seed";
+
+// Keep the native splash screen visible while fonts load
+SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -28,8 +43,16 @@ const queryClient = new QueryClient({
 const DB_NAME = "money.db";
 
 async function onDatabaseInit(db: SQLiteDatabase) {
-  const drizzleDb = drizzle(db);
-  await runMigrations(drizzleDb);
+  try {
+    console.log("Initializing database...");
+    const drizzleDb = drizzle(db);
+    console.log("Running migrations...");
+    await runMigrations(drizzleDb);
+    console.log("Seeding database...");
+    await seedDatabase(drizzleDb);
+  } catch (error) {
+    console.error("Error initializing database:", error);
+  }
 }
 
 function LoadingFallback() {
@@ -43,12 +66,33 @@ function LoadingFallback() {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
+  const [fontsLoaded, fontError] = useFonts({
+    Manrope_200ExtraLight,
+    Manrope_300Light,
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
-    <SQLiteProvider databaseName={DB_NAME} onInit={onDatabaseInit} useSuspense>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-          <Suspense fallback={<LoadingFallback />}>
+    <Suspense fallback={<LoadingFallback />}>
+      <SQLiteProvider databaseName={DB_NAME} onInit={onDatabaseInit} useSuspense>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
             <Stack>
+              <Stack.Screen name="splash" options={{ headerShown: false }} />
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="onboarding" options={{ headerShown: false }} />
               <Stack.Screen
@@ -86,10 +130,10 @@ export default function RootLayout() {
                 options={{ presentation: "modal", title: "Edit Recurring" }}
               />
             </Stack>
-          </Suspense>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </QueryClientProvider>
-    </SQLiteProvider>
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </QueryClientProvider>
+      </SQLiteProvider>
+    </Suspense>
   );
 }
