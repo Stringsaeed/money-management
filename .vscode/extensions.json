@@ -3,6 +3,8 @@
     "expo.vscode-expo-tools",
     "oxc.oxc-vscode",
     "typescriptteam.native-preview",
-    "yoavbls.pretty-ts-errors"
+    "yoavbls.pretty-ts-errors",
+    "swmansion.react-native-ide",
+    "bradlc.vscode-tailwindcss"
   ]
 }

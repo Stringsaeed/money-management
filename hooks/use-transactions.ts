@@ -138,10 +138,16 @@ export function useTransaction(id: string) {
 
 // ── Month summary ─────────────────────────────────────────────────────────────
 
-export function useMonthSummary(year: number, month: number, accountId?: string | null) {
+export function useMonthSummary(
+  year: number,
+  month: number,
+  accountId?: string | null,
+  enabled = true,
+) {
   const db = useDatabase();
   return useQuery({
     queryKey: ["month-summary", year, month, accountId],
+    enabled,
     queryFn: async () => {
       const { start, end } = monthBounds(year, month);
       const conditions = [gte(transactions.date, start), lte(transactions.date, end)];

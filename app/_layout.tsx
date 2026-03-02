@@ -11,6 +11,7 @@ import "../global.css";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { runMigrations } from "@/db/migrate";
+import { seedDatabase } from "@/db/seed";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -28,8 +29,16 @@ const queryClient = new QueryClient({
 const DB_NAME = "money.db";
 
 async function onDatabaseInit(db: SQLiteDatabase) {
-  const drizzleDb = drizzle(db);
-  await runMigrations(drizzleDb);
+  try {
+    console.log("Initializing database...");
+    const drizzleDb = drizzle(db);
+    console.log("Running migrations...");
+    await runMigrations(drizzleDb);
+    console.log("Seeding database...");
+    await seedDatabase(drizzleDb);
+  } catch (error) {
+    console.error("Error initializing database:", error);
+  }
 }
 
 function LoadingFallback() {
@@ -44,11 +53,12 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <SQLiteProvider databaseName={DB_NAME} onInit={onDatabaseInit} useSuspense>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-          <Suspense fallback={<LoadingFallback />}>
+    <Suspense fallback={<LoadingFallback />}>
+      <SQLiteProvider databaseName={DB_NAME} onInit={onDatabaseInit} useSuspense>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
             <Stack>
+              <Stack.Screen name="splash" options={{ headerShown: false }} />
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="onboarding" options={{ headerShown: false }} />
               <Stack.Screen
@@ -86,10 +96,10 @@ export default function RootLayout() {
                 options={{ presentation: "modal", title: "Edit Recurring" }}
               />
             </Stack>
-          </Suspense>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </QueryClientProvider>
-    </SQLiteProvider>
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </QueryClientProvider>
+      </SQLiteProvider>
+    </Suspense>
   );
 }
