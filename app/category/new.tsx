@@ -6,11 +6,12 @@ import {
   Pressable,
   ScrollView,
   TextInput,
-  View
+  View,
 } from "react-native";
 import { Text } from "@/components/ui/text";
 
 import { ColorPicker } from "@/components/common/color-picker";
+import { EmojiPicker } from "@/components/common/emoji-picker";
 import { ColorPalette } from "@/constants/theme";
 import { useCreateCategory } from "@/hooks/use-categories";
 
@@ -19,6 +20,7 @@ export default function NewCategoryScreen() {
   const [name, setName] = useState("");
   const [type, setType] = useState<"income" | "expense">("expense");
   const [color, setColor] = useState(ColorPalette[0]);
+  const [icon, setIcon] = useState("🏷️");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -34,7 +36,7 @@ export default function NewCategoryScreen() {
         name: name.trim(),
         type,
         color,
-        icon: "tag.fill",
+        icon,
         parentId: null,
         sortOrder: 0,
       });
@@ -116,6 +118,14 @@ export default function NewCategoryScreen() {
               </Text>
             </Pressable>
           </View>
+        </View>
+
+        {/* Icon */}
+        <View>
+          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
+            Icon
+          </Text>
+          <EmojiPicker value={icon} onChange={setIcon} />
         </View>
 
         {/* Color */}

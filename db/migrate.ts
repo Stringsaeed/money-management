@@ -10,24 +10,24 @@ import migrations from "./migrations/migrations";
 // ── Default seed data ─────────────────────────────────────────────────────────
 
 const DEFAULT_EXPENSE_CATEGORIES = [
-  { name: "Food & Dining", icon: "fork.knife", color: "#FF6B6B" },
-  { name: "Transport", icon: "car.fill", color: "#4ECDC4" },
-  { name: "Housing", icon: "house.fill", color: "#45B7D1" },
-  { name: "Utilities", icon: "bolt.fill", color: "#F7DC6F" },
-  { name: "Healthcare", icon: "cross.fill", color: "#E74C3C" },
-  { name: "Entertainment", icon: "tv.fill", color: "#9B59B6" },
-  { name: "Shopping", icon: "bag.fill", color: "#E67E22" },
-  { name: "Education", icon: "book.fill", color: "#3498DB" },
-  { name: "Personal Care", icon: "heart.fill", color: "#F1948A" },
-  { name: "Other", icon: "ellipsis.circle.fill", color: "#95A5A6" },
+  { name: "Food & Dining", icon: "🍽️", color: "#FF6B6B" },
+  { name: "Transport", icon: "🚗", color: "#4ECDC4" },
+  { name: "Housing", icon: "🏠", color: "#45B7D1" },
+  { name: "Utilities", icon: "⚡", color: "#F7DC6F" },
+  { name: "Healthcare", icon: "🏥", color: "#E74C3C" },
+  { name: "Entertainment", icon: "🎬", color: "#9B59B6" },
+  { name: "Shopping", icon: "🛍️", color: "#E67E22" },
+  { name: "Education", icon: "📚", color: "#3498DB" },
+  { name: "Personal Care", icon: "💆", color: "#F1948A" },
+  { name: "Other", icon: "📦", color: "#95A5A6" },
 ];
 
 const DEFAULT_INCOME_CATEGORIES = [
-  { name: "Salary", icon: "dollarsign.circle.fill", color: "#27AE60" },
-  { name: "Freelance", icon: "briefcase.fill", color: "#2ECC71" },
-  { name: "Investment", icon: "chart.line.uptrend.xyaxis", color: "#1ABC9C" },
-  { name: "Gift", icon: "gift.fill", color: "#F39C12" },
-  { name: "Other Income", icon: "plus.circle.fill", color: "#52BE80" },
+  { name: "Salary", icon: "💰", color: "#27AE60" },
+  { name: "Freelance", icon: "💼", color: "#2ECC71" },
+  { name: "Investment", icon: "📈", color: "#1ABC9C" },
+  { name: "Gift", icon: "🎁", color: "#F39C12" },
+  { name: "Other Income", icon: "💵", color: "#52BE80" },
 ];
 
 const DEFAULT_SETTINGS: { key: string; value: string }[] = [

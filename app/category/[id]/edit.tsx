@@ -8,11 +8,12 @@ import {
   Pressable,
   ScrollView,
   TextInput,
-  View
+  View,
 } from "react-native";
 import { Text } from "@/components/ui/text";
 
 import { ColorPicker } from "@/components/common/color-picker";
+import { EmojiPicker } from "@/components/common/emoji-picker";
 import { useCategory, useDeleteCategory, useUpdateCategory } from "@/hooks/use-categories";
 
 export default function EditCategoryScreen() {
@@ -23,6 +24,7 @@ export default function EditCategoryScreen() {
 
   const [name, setName] = useState(category?.name ?? "");
   const [color, setColor] = useState(category?.color ?? "#FF6B6B");
+  const [icon, setIcon] = useState(category?.icon ?? "🏷️");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -42,7 +44,7 @@ export default function EditCategoryScreen() {
     }
     setSaving(true);
     try {
-      await updateCategory.mutateAsync({ id, data: { name: name.trim(), color } });
+      await updateCategory.mutateAsync({ id, data: { name: name.trim(), color, icon } });
       router.back();
     } catch {
       setError("Failed to update category.");
@@ -116,6 +118,13 @@ export default function EditCategoryScreen() {
               {category.type === "expense" ? "Expense" : "Income"}
             </Text>
           </View>
+        </View>
+
+        <View>
+          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
+            Icon
+          </Text>
+          <EmojiPicker value={icon} onChange={setIcon} />
         </View>
 
         <View>

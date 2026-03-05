@@ -1,8 +1,21 @@
 import { router } from "expo-router";
-import { Pressable, ScrollView, View } from "react-native";
+import { useState } from "react";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import Animated, { Easing, LinearTransition } from "react-native-reanimated";
+import { useQueryClient } from "@tanstack/react-query";
+import { eq } from "drizzle-orm";
 
+import { useDatabase } from "@/db/client";
+import {
+  accounts as accountsTable,
+  appSettings,
+  categories,
+  exchangeRates,
+  recurringPayments,
+  transactions,
+} from "@/db/schema";
+import { seedDatabase } from "@/db/seed";
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import { useRecurringPayments } from "@/hooks/use-recurring-payments";
@@ -132,6 +145,11 @@ function CategoryRow({ category }: { category: Category }) {
 // ─── Screen ──────────────────────────────────────────────────────────────────
 
 export default function SettingsScreen() {
+  const db = useDatabase();
+  const qc = useQueryClient();
+  const [erasing, setErasing] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+
   const { data: accounts = [] } = useAccountsWithBalances();
   const { data: expenseCategories = [] } = useCategories("expense");
   const { data: incomeCategories = [] } = useCategories("income");
@@ -140,6 +158,53 @@ export default function SettingsScreen() {
 
   const totalCategories = expenseCategories.length + incomeCategories.length;
   const activeRecurring = recurring.filter((r) => r.isActive).length;
+
+  function handleEraseAll() {
+    Alert.alert(
+      "Erase All Data",
+      "This will permanently delete all accounts, categories, transactions, and settings. This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Erase Everything",
+          style: "destructive",
+          onPress: async () => {
+            setErasing(true);
+            try {
+              await db.delete(transactions);
+              await db.delete(recurringPayments);
+              await db.delete(categories);
+              await db.delete(exchangeRates);
+              await db.delete(accountsTable);
+              await db
+                .update(appSettings)
+                .set({ value: "false" })
+                .where(eq(appSettings.key, "seeded"));
+              qc.invalidateQueries();
+              router.replace("/onboarding");
+            } catch {
+              Alert.alert("Error", "Failed to erase data. Please try again.");
+            } finally {
+              setErasing(false);
+            }
+          },
+        },
+      ],
+    );
+  }
+
+  async function handleSeed() {
+    setSeeding(true);
+    try {
+      await seedDatabase(db);
+      qc.invalidateQueries();
+      Alert.alert("Done", "Seed data has been inserted.");
+    } catch {
+      Alert.alert("Error", "Failed to seed data. Data may already exist.");
+    } finally {
+      setSeeding(false);
+    }
+  }
 
   // Net worth across all non-excluded accounts, by currency
   const currencies = [...new Set(accounts.map((a) => a.currency))];
@@ -293,6 +358,44 @@ export default function SettingsScreen() {
             <Text className="text-[11px] text-gray-400 mt-2">Version 1.0.0</Text>
           </View>
         </Card>
+
+        {/* Danger Zone */}
+        <SectionHeader title="Danger Zone ⚠️" />
+        <Card>
+          <Pressable
+            onPress={handleEraseAll}
+            disabled={erasing}
+            className="px-4 py-3.5 items-center active:bg-red-50"
+          >
+            <Text className="text-[15px] font-semibold text-red-600">
+              {erasing ? "Erasing…" : "Erase All Data"}
+            </Text>
+            <Text className="text-[12px] text-gray-400 mt-0.5">
+              Permanently delete all accounts, categories, and transactions
+            </Text>
+          </Pressable>
+        </Card>
+
+        {/* Dev Tools — only in development */}
+        {__DEV__ && (
+          <>
+            <SectionHeader title="Dev Tools 🛠️" />
+            <Card>
+              <Pressable
+                onPress={handleSeed}
+                disabled={seeding}
+                className="px-4 py-3.5 items-center active:bg-gray-50"
+              >
+                <Text className="text-[15px] font-semibold text-blue-600">
+                  {seeding ? "Seeding…" : "Run Seed Data"}
+                </Text>
+                <Text className="text-[12px] text-gray-400 mt-0.5">
+                  Insert demo accounts, categories, and transactions
+                </Text>
+              </Pressable>
+            </Card>
+          </>
+        )}
       </ScrollView>
     </View>
   );
