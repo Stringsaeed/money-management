@@ -57,7 +57,7 @@ async function onDatabaseInit(db: SQLiteDatabase) {
 
 function LoadingFallback() {
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+    <View className="flex-1 justify-center items-center">
       <ActivityIndicator size="large" />
     </View>
   );
@@ -83,7 +83,7 @@ export default function RootLayout() {
   }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) {
-    return null;
+    return <LoadingFallback />;
   }
 
   return (

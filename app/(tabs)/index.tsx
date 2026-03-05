@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, SectionList, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
+import { SymbolView } from "expo-symbols";
 import * as DropdownMenu from "zeego/dropdown-menu";
 
 import { EmptyState } from "@/components/common/empty-state";
@@ -13,9 +14,9 @@ import { useMonthSummary, useTransactions } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
 import { formatCents } from "@/utils/currency";
 import { formatMonth } from "@/utils/date";
-import type { AccountWithBalance, Category, DayGroup, TransactionWithDetails } from "@/types";
+import type { DayGroup, TransactionWithDetails } from "@/types";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function groupByDay(transactions: TransactionWithDetails[]): DayGroup[] {
   const map = new Map<string, DayGroup>();
@@ -31,270 +32,178 @@ function groupByDay(transactions: TransactionWithDetails[]): DayGroup[] {
   return Array.from(map.values()).sort((a, b) => b.date.localeCompare(a.date));
 }
 
-/** Generate the last N months as { year, month } entries, newest first */
-function recentMonths(count = 24): { year: number; month: number }[] {
-  const now = new Date();
-  const result: { year: number; month: number }[] = [];
-  for (let i = 0; i < count; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    result.push({ year: d.getFullYear(), month: d.getMonth() + 1 });
-  }
-  return result;
-}
+// ─── Active chip ──────────────────────────────────────────────────────────────
 
-const MONTHS = recentMonths(24);
-
-const ACCOUNT_EMOJI: Record<string, string> = {
-  checking: "💳",
-  savings: "🏦",
-  cash: "💵",
-  credit_card: "💳",
-  investment: "📈",
-  other: "🏧",
-};
-
-// ─── Sub-components ──────────────────────────────────────────────────────────
-
-interface FilterPillProps {
+interface ActiveChipProps {
   label: string;
-  isSelected: boolean;
-  onPress: () => void;
-  accentColor?: string;
-  rightLabel?: string;
+  onRemove: () => void;
 }
 
-function FilterPill({ label, isSelected, onPress, accentColor, rightLabel }: FilterPillProps) {
-  const bg = isSelected ? (accentColor ?? "#111827") : "#f3f4f6";
+function ActiveChip({ label, onRemove }: ActiveChipProps) {
   return (
-    <Pressable
-      onPress={onPress}
-      style={{ backgroundColor: bg, borderCurve: "continuous" }}
-      className="rounded-full px-3 py-1.5 flex-row items-center gap-1.5 active:opacity-70"
+    <View
+      className="flex-row items-center gap-1 bg-gray-900 rounded-full pl-3 pr-2 py-1.5"
+      style={{ borderCurve: "continuous" }}
     >
-      {accentColor && !isSelected && (
-        <View style={{ backgroundColor: accentColor }} className="w-2 h-2 rounded-full" />
-      )}
-      <Text
-        className={`text-[13px] font-medium ${isSelected ? "text-white" : "text-gray-700"}`}
-        style={{ fontVariant: ["tabular-nums"] }}
+      <Text className="text-[12px] font-medium text-white">{label}</Text>
+      <Pressable
+        onPress={onRemove}
+        hitSlop={8}
+        className="w-4 h-4 items-center justify-center active:opacity-60"
       >
-        {label}
-      </Text>
-      {rightLabel ? (
-        <Text
-          className={`text-[11px] ${isSelected ? "text-white/75" : "text-gray-500"}`}
-          style={{ fontVariant: ["tabular-nums"] }}
-        >
-          {rightLabel}
-        </Text>
-      ) : null}
-    </Pressable>
+        <
+        name="xmark" size={10} tintColor="rgba(255,255,255,0.7)" weight="bold" />
+      </Pressable>
+    </View>
   );
 }
 
-interface MonthDropdownProps {
-  selectedYear: number | null;
-  selectedMonth: number | null;
-  onSelect: (year: number | null, month: number | null) => void;
-}
-
-function MonthDropdown({ selectedYear, selectedMonth, onSelect }: MonthDropdownProps) {
-  const label =
-    selectedYear && selectedMonth
-      ? `📅 ${formatMonth(selectedYear, selectedMonth)}`
-      : "📅 All Time";
-
-  return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger>
-        <Pressable
-          style={{
-            backgroundColor: selectedMonth ? "#111827" : "#f3f4f6",
-            borderCurve: "continuous",
-          }}
-          className="rounded-full px-3 py-1.5 flex-row items-center gap-1 active:opacity-70"
-        >
-          <Text
-            className={`text-[13px] font-medium ${selectedMonth ? "text-white" : "text-gray-700"}`}
-          >
-            {label}
-          </Text>
-          <Text className={`text-[10px] ${selectedMonth ? "text-white/60" : "text-gray-400"}`}>
-            ▾
-          </Text>
-        </Pressable>
-      </DropdownMenu.Trigger>
-
-      <DropdownMenu.Content>
-        <DropdownMenu.Item key="all-time" onSelect={() => onSelect(null, null)}>
-          <DropdownMenu.ItemTitle>📅 All Time</DropdownMenu.ItemTitle>
-        </DropdownMenu.Item>
-
-        {MONTHS.map(({ year, month }) => {
-          const key = `${year}-${String(month).padStart(2, "0")}`;
-          const isActive = year === selectedYear && month === selectedMonth;
-          return (
-            <DropdownMenu.Item key={key} onSelect={() => onSelect(year, month)}>
-              <DropdownMenu.ItemTitle>
-                {isActive ? "✓ " : ""}
-                {formatMonth(year, month)}
-              </DropdownMenu.ItemTitle>
-            </DropdownMenu.Item>
-          );
-        })}
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
-  );
-}
+// ─── Sticky header ────────────────────────────────────────────────────────────
 
 interface StickyHeaderProps {
-  accounts: AccountWithBalance[];
-  activeAccountId: string | null;
-  onSelectAccount: (id: string | null) => void;
+  activeFilterCount: number;
+  activeAccountName: string | null;
   selectedYear: number | null;
   selectedMonth: number | null;
-  onSelectMonth: (year: number | null, month: number | null) => void;
+  selectedCategoryName: string | null;
   summary: { totalIncome: number; totalExpense: number; netAmount: number } | undefined;
-  categories: Category[];
-  selectedCategoryId: string | null;
-  onSelectCategory: (id: string | null) => void;
   currency: string;
+  setActiveAccountId: (id: string | null) => void;
+  setSelectedMonth: (year: number | null, month: number | null) => void;
+  setSelectedCategoryId: (id: string | null) => void;
 }
 
 function StickyHeader({
-  accounts,
-  activeAccountId,
-  onSelectAccount,
+  activeFilterCount,
+  activeAccountName,
   selectedYear,
   selectedMonth,
-  onSelectMonth,
+  selectedCategoryName,
   summary,
-  categories,
-  selectedCategoryId,
-  onSelectCategory,
   currency,
+  setActiveAccountId,
+  setSelectedMonth,
+  setSelectedCategoryId,
 }: StickyHeaderProps) {
+  const hasChips = !!(activeAccountName || selectedMonth || selectedCategoryName);
+
   return (
     <View className="bg-white border-b border-gray-100">
-      {/* Top bar */}
+      {/* Title row */}
       <View className="flex-row items-center justify-between px-4 pt-safe-offset-3 pb-3">
         <Text className="text-[20px] font-bold text-gray-900">💰 Finances</Text>
-        <Pressable
-          onPress={() => router.push("/(tabs)/settings")}
-          className="w-8 h-8 items-center justify-center rounded-full bg-gray-100 active:bg-gray-200"
-          style={{ borderCurve: "continuous" }}
-        >
-          <Text className="text-[15px]">⚙️</Text>
-        </Pressable>
+        <View className="flex-row items-center gap-2">
+          <Pressable
+            onPress={() => router.push("/(tabs)/filters")}
+            className="w-8 h-8 items-center justify-center rounded-full bg-gray-100 active:bg-gray-200"
+            style={{ borderCurve: "continuous" }}
+          >
+            <SymbolView
+              name="line.3.horizontal.decrease.circle"
+              size={20}
+              tintColor={activeFilterCount > 0 ? "#111827" : "#6b7280"}
+              weight={activeFilterCount > 0 ? "semibold" : "regular"}
+            />
+            {activeFilterCount > 0 && (
+              <View className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-gray-900 items-center justify-center">
+                <Text className="text-[9px] font-bold text-white leading-none">
+                  {activeFilterCount}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+          <Pressable
+            onPress={() => router.push("/(tabs)/settings")}
+            className="w-8 h-8 items-center justify-center rounded-full bg-gray-100 active:bg-gray-200"
+            style={{ borderCurve: "continuous" }}
+          >
+            <Text className="text-[15px]">⚙️</Text>
+          </Pressable>
+        </View>
       </View>
 
-      {/* Account switcher */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 10 }}
-      >
-        <FilterPill
-          label="🌐 All"
-          isSelected={activeAccountId === null}
-          onPress={() => onSelectAccount(null)}
-        />
-        {accounts.map((account) => (
-          <FilterPill
-            key={account.id}
-            label={`${ACCOUNT_EMOJI[account.type] ?? "🏧"} ${account.name}`}
-            isSelected={activeAccountId === account.id}
-            accentColor={account.color}
-            rightLabel={formatCents(account.balance, account.currency)}
-            onPress={() => onSelectAccount(activeAccountId === account.id ? null : account.id)}
-          />
-        ))}
-      </ScrollView>
-
-      {/* Month dropdown + summary */}
-      <View className="px-4 pb-3">
-        <MonthDropdown
-          selectedYear={selectedYear}
-          selectedMonth={selectedMonth}
-          onSelect={onSelectMonth}
-        />
-
-        {/* Summary — only shown when a specific month is selected */}
-        {summary && selectedMonth && (
-          <View className="flex-row items-center gap-5 mt-3">
-            <View className="items-start">
-              <Text className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
-                Income
-              </Text>
-              <Text
-                className="text-[13px] font-semibold text-green-600"
-                style={{ fontVariant: ["tabular-nums"] }}
-              >
-                📈 +{formatCents(summary.totalIncome, currency)}
-              </Text>
-            </View>
-            <View className="w-px h-6 bg-gray-200" />
-            <View className="items-start">
-              <Text className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
-                Spent
-              </Text>
-              <Text
-                className="text-[13px] font-semibold text-red-500"
-                style={{ fontVariant: ["tabular-nums"] }}
-              >
-                💸 -{formatCents(summary.totalExpense, currency)}
-              </Text>
-            </View>
-            <View className="w-px h-6 bg-gray-200" />
-            <View className="items-start">
-              <Text className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Net</Text>
-              <Text
-                className={`text-[13px] font-semibold ${summary.netAmount >= 0 ? "text-green-600" : "text-red-500"}`}
-                style={{ fontVariant: ["tabular-nums"] }}
-              >
-                📊 {summary.netAmount >= 0 ? "+" : ""}
-                {formatCents(summary.netAmount, currency)}
-              </Text>
-            </View>
-          </View>
-        )}
-      </View>
-
-      {/* Category filter */}
-      {categories.length > 0 && (
+      {/* Active filter chips */}
+      {hasChips && (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 10 }}
         >
-          <FilterPill
-            label="🏷️ All"
-            isSelected={selectedCategoryId === null}
-            onPress={() => onSelectCategory(null)}
-          />
-          {categories.map((cat) => (
-            <FilterPill
-              key={cat.id}
-              label={cat.name}
-              accentColor={cat.color}
-              isSelected={selectedCategoryId === cat.id}
-              onPress={() => onSelectCategory(selectedCategoryId === cat.id ? null : cat.id)}
+          {activeAccountName && (
+            <ActiveChip
+              label={`💳 ${activeAccountName}`}
+              onRemove={() => setActiveAccountId(null)}
             />
-          ))}
+          )}
+          {selectedYear && selectedMonth && (
+            <ActiveChip
+              label={`📅 ${formatMonth(selectedYear, selectedMonth)}`}
+              onRemove={() => setSelectedMonth(null, null)}
+            />
+          )}
+          {selectedCategoryName && (
+            <ActiveChip
+              label={`🏷️ ${selectedCategoryName}`}
+              onRemove={() => setSelectedCategoryId(null)}
+            />
+          )}
         </ScrollView>
+      )}
+
+      {/* Monthly summary — only when a specific month is selected */}
+      {summary && selectedMonth && (
+        <View className="flex-row items-center gap-5 px-4 pb-3">
+          <View className="items-start">
+            <Text className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Income</Text>
+            <Text
+              className="text-[13px] font-semibold text-green-600"
+              style={{ fontVariant: ["tabular-nums"] }}
+            >
+              📈 +{formatCents(summary.totalIncome, currency)}
+            </Text>
+          </View>
+          <View className="w-px h-6 bg-gray-200" />
+          <View className="items-start">
+            <Text className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Spent</Text>
+            <Text
+              className="text-[13px] font-semibold text-red-500"
+              style={{ fontVariant: ["tabular-nums"] }}
+            >
+              💸 -{formatCents(summary.totalExpense, currency)}
+            </Text>
+          </View>
+          <View className="w-px h-6 bg-gray-200" />
+          <View className="items-start">
+            <Text className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Net</Text>
+            <Text
+              className={`text-[13px] font-semibold ${summary.netAmount >= 0 ? "text-green-600" : "text-red-500"}`}
+              style={{ fontVariant: ["tabular-nums"] }}
+            >
+              📊 {summary.netAmount >= 0 ? "+" : ""}
+              {formatCents(summary.netAmount, currency)}
+            </Text>
+          </View>
+        </View>
       )}
     </View>
   );
 }
 
-// ─── Screen ──────────────────────────────────────────────────────────────────
+// ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
   useRecurringProcessor();
 
-  const { selectedYear, selectedMonth, setSelectedMonth, activeAccountId, setActiveAccountId } =
-    useUIStore();
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const {
+    selectedYear,
+    selectedMonth,
+    setSelectedMonth,
+    activeAccountId,
+    setActiveAccountId,
+    selectedCategoryId,
+    setSelectedCategoryId,
+    resetFilters,
+  } = useUIStore();
 
   const { data: accounts = [], isLoading: loadingAccounts } = useAccountsWithBalances();
   const { data: allCategories = [] } = useCategories();
@@ -316,44 +225,34 @@ export default function HomeScreen() {
     return allTransactions.filter((t) => t.category?.id === selectedCategoryId);
   }, [allTransactions, selectedCategoryId]);
 
-  // Only show categories present in this period
-  const activeCategories = useMemo(() => {
-    const ids = new Set(allTransactions.map((t) => t.category?.id).filter(Boolean));
-    return allCategories.filter((c) => ids.has(c.id));
-  }, [allTransactions, allCategories]);
-
   if (!loadingAccounts && accounts.length === 0) {
     router.replace("/onboarding");
     return null;
   }
 
+  const activeAccount = accounts.find((a) => a.id === activeAccountId);
+  const activeCategory = allCategories.find((c) => c.id === selectedCategoryId);
+  const activeFilterCount = [activeAccountId, selectedMonth, selectedCategoryId].filter(
+    Boolean,
+  ).length;
+
   const groups = groupByDay(transactions);
   const currency =
-    accounts.find((a) => a.id === activeAccountId)?.currency ??
-    transactions[0]?.currency ??
-    accounts[0]?.currency ??
-    "USD";
+    activeAccount?.currency ?? transactions[0]?.currency ?? accounts[0]?.currency ?? "USD";
 
   return (
     <View className="flex-1 bg-gray-50">
       <StickyHeader
-        accounts={accounts}
-        activeAccountId={activeAccountId}
-        onSelectAccount={(id) => {
-          setActiveAccountId(id);
-          setSelectedCategoryId(null);
-        }}
+        activeFilterCount={activeFilterCount}
+        activeAccountName={activeAccount?.name ?? null}
         selectedYear={selectedYear}
         selectedMonth={selectedMonth}
-        onSelectMonth={(year, month) => {
-          setSelectedMonth(year, month);
-          setSelectedCategoryId(null);
-        }}
+        selectedCategoryName={activeCategory?.name ?? null}
         summary={selectedMonth ? summary : undefined}
-        categories={activeCategories}
-        selectedCategoryId={selectedCategoryId}
-        onSelectCategory={setSelectedCategoryId}
         currency={currency}
+        setActiveAccountId={setActiveAccountId}
+        setSelectedMonth={setSelectedMonth}
+        setSelectedCategoryId={setSelectedCategoryId}
       />
 
       {loadingTx ? (
@@ -363,11 +262,20 @@ export default function HomeScreen() {
           icon="📋"
           title="No transactions"
           message={
-            selectedCategoryId
-              ? "No transactions for this category."
-              : selectedMonth
-                ? "No transactions found for this period."
-                : "No transactions yet. Tap ＋ to get started."
+            activeFilterCount > 0
+              ? "No transactions match the current filters."
+              : "No transactions yet. Tap ＋ to get started."
+          }
+          action={
+            activeFilterCount > 0 ? (
+              <Pressable
+                onPress={resetFilters}
+                className="mt-1 px-5 py-2.5 rounded-full bg-gray-900 active:opacity-80"
+                style={{ borderCurve: "continuous" }}
+              >
+                <Text className="text-white text-[14px] font-medium">Reset Filters</Text>
+              </Pressable>
+            ) : undefined
           }
         />
       ) : (
@@ -387,7 +295,7 @@ export default function HomeScreen() {
         />
       )}
 
-      {/* FAB — the one and only add button */}
+      {/* FAB */}
       <Pressable
         onPress={() => router.push("/transaction/new")}
         style={{ boxShadow: "0 4px 20px rgba(0, 0, 0, 0.18)", borderCurve: "continuous" }}

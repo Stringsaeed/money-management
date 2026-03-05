@@ -5,6 +5,17 @@ export default function TabLayout() {
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="settings" options={{ title: "Settings", headerBackTitle: "Back" }} />
+      <Stack.Screen
+        name="filters"
+        options={{
+          presentation: "formSheet",
+          sheetAllowedDetents: "fitToContents",
+          sheetGrabberVisible: true,
+          title: "Filters",
+          contentStyle: { backgroundColor: "white" },
+          sheetResizeAnimationEnabled: false,
+        }}
+      />
     </Stack>
   );
 }
