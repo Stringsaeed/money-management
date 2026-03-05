@@ -7,10 +7,10 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Text,
   TextInput,
-  View,
+  View
 } from "react-native";
+import { Text } from "@/components/ui/text";
 
 import { ColorPicker } from "@/components/common/color-picker";
 import { AccountTypeColors } from "@/constants/theme";
