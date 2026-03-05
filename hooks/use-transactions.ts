@@ -136,6 +136,25 @@ export function useTransaction(id: string) {
   });
 }
 
+// ── Transaction date range ────────────────────────────────────────────────────
+
+export function useTransactionDateRange() {
+  const db = useDatabase();
+  return useQuery({
+    queryKey: ["transaction-date-range"],
+    queryFn: async () => {
+      const result = (await db
+        .select({
+          minDate: sql<string>`MIN(${transactions.date})`,
+          maxDate: sql<string>`MAX(${transactions.date})`,
+        })
+        .from(transactions)
+        .get()) as { minDate: string | null; maxDate: string | null } | undefined;
+      return result ?? { minDate: null, maxDate: null };
+    },
+  });
+}
+
 // ── Month summary ─────────────────────────────────────────────────────────────
 
 export function useMonthSummary(

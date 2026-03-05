@@ -37,7 +37,7 @@ export function TransactionGroup({ group, currency = "USD", showAccount }: Trans
       <View className="bg-white">
         {group.transactions.map((t, i) => (
           <View key={t.id}>
-            {i > 0 && <View className="h-px bg-gray-100 ml-[68px]" />}
+            {i > 0 && <View className="h-px bg-gray-100 ml-17" />}
             <TransactionRow transaction={t} showAccount={showAccount} />
           </View>
         ))}

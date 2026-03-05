@@ -17,6 +17,7 @@
   "dependencies": {
     "@expo-google-fonts/manrope": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
+    "@lodev09/react-native-true-sheet": "^3.9.9",
     "@react-native-menu/menu": "1.2.2",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",

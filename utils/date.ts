@@ -101,3 +101,28 @@ export function daysInMonth(year: number, month: number): number {
 export function clampDay(year: number, month: number, day: number): number {
   return Math.min(day, daysInMonth(year, month));
 }
+
+/**
+ * Generate all months between two "YYYY-MM-DD" date strings, newest first.
+ * Returns an empty array if either date is null/undefined.
+ */
+export function monthsBetween(
+  minDate: string | null | undefined,
+  maxDate: string | null | undefined,
+): { year: number; month: number }[] {
+  if (!minDate || !maxDate) return [];
+  const [minY, minM] = minDate.split("-").map(Number);
+  const [maxY, maxM] = maxDate.split("-").map(Number);
+  const result: { year: number; month: number }[] = [];
+  let y = maxY;
+  let m = maxM;
+  while (y > minY || (y === minY && m >= minM)) {
+    result.push({ year: y, month: m });
+    m -= 1;
+    if (m === 0) {
+      m = 12;
+      y -= 1;
+    }
+  }
+  return result;
+}
