@@ -1,8 +1,9 @@
 import { router } from "expo-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, SectionList, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { SymbolView } from "expo-symbols";
+import * as DropdownMenu from "zeego/dropdown-menu";
 
 import { EmptyState } from "@/components/common/empty-state";
 import { TransactionGroup } from "@/components/transaction/transaction-group";
@@ -50,7 +51,8 @@ function ActiveChip({ label, onRemove }: ActiveChipProps) {
         hitSlop={8}
         className="w-4 h-4 items-center justify-center active:opacity-60"
       >
-        <SymbolView name="xmark" size={10} tintColor="rgba(255,255,255,0.7)" weight="bold" />
+        <
+        name="xmark" size={10} tintColor="rgba(255,255,255,0.7)" weight="bold" />
       </Pressable>
     </View>
   );

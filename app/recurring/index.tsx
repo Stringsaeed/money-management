@@ -1,5 +1,6 @@
 import { router } from "expo-router";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import { Text } from "@/components/ui/text";
 
 import { EmptyState } from "@/components/common/empty-state";
 import { useRecurringPayments } from "@/hooks/use-recurring-payments";

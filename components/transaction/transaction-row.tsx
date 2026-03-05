@@ -1,5 +1,6 @@
 import { router } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { Text } from "@/components/ui/text";
 
 import { formatCents } from "@/utils/currency";
 import type { TransactionWithDetails } from "@/types";

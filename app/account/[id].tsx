@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import { Text } from "@/components/ui/text";
 
 import { TransactionGroup } from "@/components/transaction/transaction-group";
 import { useAccount } from "@/hooks/use-accounts";
