@@ -1,4 +1,4 @@
-import { ForwardedRef, useMemo, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { Pressable, View } from "react-native";
 import * as DropdownMenu from "zeego/dropdown-menu";
 import { SymbolView } from "expo-symbols";
@@ -9,7 +9,6 @@ import { useCategories } from "@/hooks/use-categories";
 import { useTransactionDateRange } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
 import { formatMonth, monthsBetween } from "@/utils/date";
-import { TrueSheet } from "@lodev09/react-native-true-sheet";
 
 // ─── FilterRow ────────────────────────────────────────────────────────────────
 
@@ -33,7 +32,7 @@ function DropdownValue({ label }: { label: string }) {
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
-export default function FiltersScreen({ ref }: { ref: ForwardedRef<TrueSheet> }) {
+export default function FiltersScreen() {
   const {
     selectedYear,
     selectedMonth,
