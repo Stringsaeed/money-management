@@ -17,21 +17,16 @@ export function TransactionRow({ transaction: t, showAccount = false }: Transact
   const amountClass = isTransfer ? "text-violet-600" : isIncome ? "text-green-600" : "text-red-600";
 
   const amountPrefix = isIncome ? "+" : isTransfer ? "⇄ " : "-";
-  const dotColor = t.category?.color ?? t.account.color;
-
   return (
     <Pressable
       onPress={() => router.push(`/transaction/${t.id}`)}
       className="flex-row items-center px-4 py-3 gap-3 active:bg-gray-50"
     >
-      {/* Icon circle */}
-      <View
-        style={{ backgroundColor: `${dotColor}20` }}
-        className="w-10 h-10 rounded-full items-center justify-center"
-      >
-        <View style={{ backgroundColor: dotColor }} className="w-3.5 h-3.5 rounded-full">
-          <Text>{t.category?.icon}</Text>
-        </View>
+      {/* Category emoji */}
+      <View className="w-10 h-10 rounded-full items-center justify-center bg-gray-100">
+        <Text className="text-[20px] leading-none">
+          {t.category?.icon ?? (isTransfer ? "⇄" : "💰")}
+        </Text>
       </View>
 
       {/* Description + tags */}

@@ -23,7 +23,7 @@ export const categories = sqliteTable("categories", {
   name: text("name").notNull(),
   type: text("type").notNull(), // "income" | "expense"
   color: text("color").notNull().default("#FF6B6B"),
-  icon: text("icon").notNull().default("tag.fill"),
+  icon: text("icon").notNull().default("🏷️"),
   parentId: text("parent_id"), // self-reference, no FK to avoid circular
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: text("created_at").notNull(),

@@ -25,7 +25,7 @@ export interface Category {
   name: string;
   type: "income" | "expense";
   color: string; // hex
-  icon: string; // icon name
+  icon: string; // emoji
   parentId: string | null; // optional sub-category
   sortOrder: number;
   createdAt: string;
