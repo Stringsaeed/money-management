@@ -15,7 +15,7 @@ export default function Splash() {
     );
   }
 
-  if (accounts.length === 0) {
+  if (!__DEV__ && accounts.length === 0) {
     return <Redirect href="/onboarding" />;
   }
 
