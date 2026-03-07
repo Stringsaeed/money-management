@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import Animated, { Easing, LinearTransition } from "react-native-reanimated";
 
@@ -37,10 +37,40 @@ interface CategoryPickerProps {
   onChange: (categoryId: string | null) => void;
   type: "income" | "expense";
   label?: string;
+  horizontal?: boolean;
 }
 
-export function CategoryPicker({ value, onChange, type, label }: CategoryPickerProps) {
+export function CategoryPicker({
+  value,
+  onChange,
+  type,
+  label,
+  horizontal = false,
+}: CategoryPickerProps) {
   const { data: cats = [] } = useCategories(type);
+
+  if (horizontal) {
+    return (
+      <View className="gap-2">
+        {label ? <Text className="text-sm font-semibold text-gray-700">{label}</Text> : null}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerClassName="gap-2"
+        >
+          {cats.map((cat) => (
+            <CategoryChip
+              key={cat.id}
+              name={cat.name}
+              color={cat.color}
+              isSelected={cat.id === value}
+              onPress={() => onChange(cat.id === value ? null : cat.id)}
+            />
+          ))}
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View className="gap-2">

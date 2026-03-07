@@ -1,25 +1,21 @@
 import * as Haptics from "expo-haptics";
-import { type ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
-import {
-  ArrowLeftIcon,
-  ArrowRightIcon,
-  CheckCircleIcon,
-  WarningCircleIcon,
-} from "phosphor-react-native";
+import { ArrowLeftIcon, ArrowRightIcon, TrashIcon, WarningCircleIcon } from "phosphor-react-native";
 import Animated, {
-  Easing,
-  FadeInDown,
-  FadeOutDown,
-  LinearTransition,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
 } from "react-native-reanimated";
+import { twMerge } from "tailwind-merge";
 
 import { AccountPicker } from "@/components/account/account-picker";
 import { CategoryPicker } from "@/components/category/category-picker";
@@ -50,55 +46,24 @@ interface TransactionFormProps {
   onDelete?: () => void;
 }
 
-interface SectionCardProps {
-  eyebrow: string;
-  title: string;
-  description: string;
-  children: ReactNode;
-}
-
 interface TypeOption {
   value: TransactionType;
   label: string;
   emoji: string;
   color: string;
-  helper: string;
 }
 
 const TYPE_OPTIONS: TypeOption[] = [
-  {
-    value: "expense",
-    label: "Expense",
-    emoji: "💸",
-    color: "#DC2626",
-    helper: "Money heading out.",
-  },
-  {
-    value: "income",
-    label: "Income",
-    emoji: "✨",
-    color: "#16A34A",
-    helper: "Money coming in.",
-  },
-  {
-    value: "transfer",
-    label: "Transfer",
-    emoji: "🔁",
-    color: "#7C3AED",
-    helper: "Move between accounts.",
-  },
+  { value: "expense", label: "Expense", emoji: "💸", color: "#DC2626" },
+  { value: "income", label: "Income", emoji: "💰", color: "#16A34A" },
+  { value: "transfer", label: "Transfer", emoji: "🔁", color: "#7C3AED" },
 ] as const;
 
-const DATE_SHORTCUTS = [
-  { label: "Today", emoji: "☀️", resolve: () => today() },
-  {
-    label: "Yesterday",
-    emoji: "🌙",
-    resolve: () => shiftDate(today(), -1),
-  },
-] as const;
-
-const FORM_LAYOUT = LinearTransition.easing(Easing.out(Easing.cubic));
+const formatAmount = (cents: number) =>
+  new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(cents / 100);
 
 const triggerErrorHaptic = () => {
   if (process.env.EXPO_OS === "ios") {
@@ -134,7 +99,6 @@ const getDisplayDateLabel = (value: string) => {
   }
 
   return parseDate(value).toLocaleDateString(undefined, {
-    weekday: "short",
     month: "short",
     day: "numeric",
   });
@@ -156,94 +120,52 @@ const getValidationMessage = ({
   hasAccounts: boolean;
 }) => {
   if (!hasAccounts) {
-    return "Add an account first so this transaction has somewhere to land.";
+    return "Add an account first.";
   }
 
   if (amount <= 0) {
-    return "Enter an amount above 0.00 before saving.";
+    return "Enter an amount above 0.00.";
   }
 
   if (!accountId) {
-    return "Choose the account this transaction belongs to.";
+    return "Pick the source account.";
   }
 
   if (!isValidDateString(date)) {
-    return "Pick a valid transaction date before saving.";
+    return "Use a valid date.";
   }
 
   if (type === "transfer" && !toAccountId) {
-    return "Choose a destination account for this transfer.";
+    return "Choose where the transfer goes.";
   }
 
   if (type === "transfer" && toAccountId === accountId) {
-    return "Transfers need two different accounts.";
+    return "Transfer accounts must be different.";
   }
 
   return null;
 };
 
-const SectionCard = ({ eyebrow, title, description, children }: SectionCardProps) => (
-  <View className="gap-3 rounded-[28px] bg-white px-4 py-4">
-    <View className="gap-1">
-      <Text className="text-xs font-semibold uppercase tracking-[1.4px] text-gray-400">
-        {eyebrow}
-      </Text>
-      <Text className="text-[19px] font-bold text-gray-950">{title}</Text>
-      <Text className="text-sm leading-6 text-gray-500">{description}</Text>
-    </View>
-    {children}
-  </View>
-);
-
-interface TypePillProps {
+interface TypeToggleProps {
   option: TypeOption;
   selected: boolean;
   onPress: () => void;
 }
 
-const TypePill = ({ option, selected, onPress }: TypePillProps) => (
+const TypeToggle = ({ option, selected, onPress }: TypeToggleProps) => (
   <Pressable
     accessibilityRole="button"
-    className="flex-1 rounded-[24px] border px-3 py-3 active:opacity-85"
+    className="flex-1 rounded-full px-3 py-2.5 active:opacity-85"
     onPress={onPress}
     style={{
-      backgroundColor: selected ? `${option.color}16` : "#F8FAFC",
-      borderColor: selected ? option.color : "#E2E8F0",
+      backgroundColor: selected ? "#111827" : "#F1F5F9",
     }}
   >
-    <View className="gap-1">
-      <Text
-        className="text-base font-semibold"
-        style={{ color: selected ? option.color : "#111827" }}
-      >
-        {option.emoji} {option.label}
-      </Text>
-      <Text className="text-xs leading-5" style={{ color: selected ? option.color : "#6B7280" }}>
-        {option.helper}
-      </Text>
-    </View>
-  </Pressable>
-);
-
-interface DateShortcutProps {
-  label: string;
-  emoji: string;
-  selected: boolean;
-  onPress: () => void;
-}
-
-const DateShortcut = ({ label, emoji, selected, onPress }: DateShortcutProps) => (
-  <Pressable
-    accessibilityRole="button"
-    className="rounded-full border px-3.5 py-2 active:opacity-85"
-    onPress={onPress}
-    style={{
-      backgroundColor: selected ? "#111827" : "#F8FAFC",
-      borderColor: selected ? "#111827" : "#E2E8F0",
-    }}
-  >
-    <Text className="text-sm font-semibold" style={{ color: selected ? "#FFFFFF" : "#475569" }}>
-      {emoji} {label}
+    <Text
+      className="text-center text-sm font-semibold"
+      style={{ color: selected ? "#FFFFFF" : "#64748B" }}
+    >
+      {option.label}
     </Text>
   </Pressable>
 );
@@ -255,6 +177,7 @@ export function TransactionForm({
   onDelete,
 }: TransactionFormProps) {
   const { data: accounts = [] } = useAccounts();
+  const { height } = useWindowDimensions();
 
   const firstAccountId = accounts[0]?.id ?? "";
   const firstAccountCurrency = accounts[0]?.currency ?? "USD";
@@ -281,6 +204,12 @@ export function TransactionForm({
     date,
     hasAccounts: accounts.length > 0,
   });
+  const tight = height < 720;
+
+  const amountScale = useSharedValue(1);
+  const animatedAmountStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: amountScale.value }],
+  }));
 
   useEffect(() => {
     if (!accountId && firstAccountId) {
@@ -289,15 +218,19 @@ export function TransactionForm({
   }, [accountId, firstAccountId]);
 
   useEffect(() => {
+    amountScale.value = withSequence(
+      withTiming(1.03, { duration: 110 }),
+      withTiming(1, { duration: 180 }),
+    );
+  }, [amount, amountScale]);
+
+  useEffect(() => {
     setSubmissionError("");
   }, [type, amount, accountId, toAccountId, categoryId, description, date]);
 
-  const handleAmountChange = (nextAmount: number) => {
-    setAmount(nextAmount);
-  };
-
   const handleTypeChange = (nextType: TransactionType) => {
     setType(nextType);
+
     if (nextType !== "transfer") {
       setToAccountId(null);
     }
@@ -305,9 +238,14 @@ export function TransactionForm({
 
   const handleAccountChange = (nextAccountId: string) => {
     setAccountId(nextAccountId);
+
     if (nextAccountId === toAccountId) {
       setToAccountId(null);
     }
+  };
+
+  const handleBackspace = () => {
+    setAmount((currentAmount) => Math.floor(currentAmount / 10));
   };
 
   const handleToAccountChange = (nextAccountId: string) => {
@@ -339,7 +277,7 @@ export function TransactionForm({
         exchangeRate: null,
       });
     } catch {
-      setSubmissionError("Saving failed. Nothing was lost, so you can try again.");
+      setSubmissionError("Saving failed. Try again.");
     } finally {
       setSaving(false);
     }
@@ -348,243 +286,162 @@ export function TransactionForm({
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-neutral-950 pb-safe pt-safe"
+      className="flex-1 bg-[#F5F2EC] pb-safe pt-safe"
     >
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="gap-4 px-4 pb-6 pt-3"
-        contentInsetAdjustmentBehavior="automatic"
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="gap-1 px-1">
-          <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-white/45">
-            ⚡ Quick capture
-          </Text>
-          <Text className="text-[32px] font-extrabold text-white">
-            {selectedType.emoji} {submitLabel}
-          </Text>
-          <Text className="text-sm leading-6 text-white/60">
-            Dial the amount first, then lock in the details below.
-          </Text>
+      <View className="flex-1 px-4 pb-4">
+        <View className="flex-row items-center justify-between">
+          <View className="rounded-full bg-[#FCE7F3] px-3 py-1.5">
+            <Text className="text-xs font-semibold uppercase tracking-[1.6px] text-[#BE185D]">
+              ⚡ Fast capture
+            </Text>
+          </View>
+
+          {onDelete ? (
+            <Pressable
+              accessibilityRole="button"
+              className="h-10 w-10 items-center justify-center rounded-full bg-white active:opacity-80"
+              onPress={onDelete}
+            >
+              <TrashIcon color="#DC2626" size={18} weight="regular" />
+            </Pressable>
+          ) : (
+            <View className="rounded-full bg-white px-3 py-1.5">
+              <Text className="text-xs font-semibold text-gray-500">{submitLabel}</Text>
+            </View>
+          )}
         </View>
 
-        <TransactionAmountPad
-          accentColor={selectedType.color}
-          currency={currency}
-          onChangeCents={handleAmountChange}
-          validationMessage={showValidation ? validationMessage : null}
-          valueCents={amount}
-        />
+        <View
+          className={twMerge(
+            "mt-3 flex-row gap-2 rounded-full bg-white p-1.5",
+            tight ? "mb-3" : "mb-4",
+          )}
+        >
+          {TYPE_OPTIONS.map((option) => (
+            <TypeToggle
+              key={option.value}
+              onPress={() => handleTypeChange(option.value)}
+              option={option}
+              selected={type === option.value}
+            />
+          ))}
+        </View>
 
-        <Animated.View className="gap-4" layout={FORM_LAYOUT}>
-          <SectionCard
-            description="Choose the motion of money so the form only shows what matters."
-            eyebrow="🎯 Type"
-            title="Transaction flow"
-          >
-            <View className="flex-row gap-3">
-              {TYPE_OPTIONS.map((option) => (
-                <TypePill
-                  key={option.value}
-                  onPress={() => handleTypeChange(option.value)}
-                  option={option}
-                  selected={type === option.value}
-                />
-              ))}
+        <View className="flex-1 justify-between">
+          <View className={twMerge("items-center", tight ? "pt-1" : "pt-3")}>
+            <Animated.View className="items-center" style={animatedAmountStyle}>
+              <View className="mb-3 rounded-full bg-white px-3 py-1.5">
+                <Text className="text-xs font-semibold uppercase tracking-[1.4px] text-gray-500">
+                  {selectedType.emoji} {currency}
+                </Text>
+              </View>
+
+              <View className="flex-row items-end gap-2">
+                <Text
+                  className={twMerge("pb-1 text-gray-400", tight ? "text-[24px]" : "text-[28px]")}
+                >
+                  {currency === "USD" ? "$" : currency}
+                </Text>
+                <Text
+                  className={twMerge(
+                    "font-extrabold tabular-nums text-gray-950",
+                    tight ? "text-[52px]" : "text-[60px]",
+                  )}
+                >
+                  {formatAmount(amount)}
+                </Text>
+              </View>
+            </Animated.View>
+
+            <View className={twMerge("mt-4 w-full items-center", tight ? "gap-2" : "gap-3")}>
+              <TextInput
+                className={twMerge(
+                  "w-[72%] rounded-full border border-white bg-white px-4 text-center text-sm text-gray-950",
+                  tight ? "py-2.5" : "py-3",
+                )}
+                maxLength={36}
+                onChangeText={setDescription}
+                placeholder="Add a quick note ✍️"
+                placeholderTextColor="#94A3B8"
+                returnKeyType="done"
+                value={description}
+              />
+
+              <View className="flex-row w-full items-center gap-2">
+                <Pressable
+                  accessibilityRole="button"
+                  className="h-12 w-12 items-center justify-center rounded-2xl bg-white active:opacity-80"
+                  onPress={() => setDate((currentDate) => shiftDate(currentDate, -1))}
+                >
+                  <ArrowLeftIcon color="#111827" size={18} weight="regular" />
+                </Pressable>
+
+                <View className="flex-1 rounded-[22px] bg-white px-4 py-3">
+                  <Text className="text-xs font-semibold uppercase tracking-[1.3px] text-gray-400">
+                    {getDisplayDateLabel(date)}
+                  </Text>
+                  <Text className="mt-1 text-base font-bold text-gray-950">{date}</Text>
+                </View>
+
+                <Pressable
+                  accessibilityRole="button"
+                  className="h-12 w-12 items-center justify-center rounded-2xl bg-white active:opacity-80"
+                  onPress={() => setDate((currentDate) => shiftDate(currentDate, 1))}
+                >
+                  <ArrowRightIcon color="#111827" size={18} weight="regular" />
+                </Pressable>
+              </View>
             </View>
-          </SectionCard>
+          </View>
 
-          <SectionCard
-            description="Pick the account that should own this transaction."
-            eyebrow="🏦 Source"
-            title="From account"
-          >
-            <AccountPicker onChange={handleAccountChange} value={accountId} />
-          </SectionCard>
+          <View className={twMerge("gap-3", tight ? "pb-1" : "pb-2")}>
+            <View className="rounded-[26px] bg-white px-3 py-3">
+              <Text className="mb-2 text-[11px] font-semibold uppercase tracking-[1.2px] text-gray-400">
+                From account
+              </Text>
+              <AccountPicker onChange={handleAccountChange} value={accountId} />
+            </View>
 
-          {type === "transfer" ? (
-            <Animated.View
-              entering={FadeInDown.duration(220)}
-              exiting={FadeOutDown.duration(180)}
-              layout={FORM_LAYOUT}
-            >
-              <SectionCard
-                description="Transfers need a second account so balances stay accurate."
-                eyebrow="🔁 Route"
-                title="Destination"
-              >
+            <View className="rounded-[26px] bg-white px-3 py-3">
+              <Text className="mb-2 text-[11px] font-semibold uppercase tracking-[1.2px] text-gray-400">
+                {type === "transfer" ? "Destination" : "Category"}
+              </Text>
+              {type === "transfer" ? (
                 <AccountPicker
                   exclude={accountId ? [accountId] : []}
                   onChange={handleToAccountChange}
                   value={toAccountId}
                 />
-              </SectionCard>
-            </Animated.View>
-          ) : (
-            <Animated.View
-              entering={FadeInDown.duration(220)}
-              exiting={FadeOutDown.duration(180)}
-              layout={FORM_LAYOUT}
-            >
-              <SectionCard
-                description="Categories make the dashboard totals useful later."
-                eyebrow="🧩 Context"
-                title="Category"
-              >
-                <CategoryPicker onChange={setCategoryId} type={type} value={categoryId} />
-              </SectionCard>
-            </Animated.View>
-          )}
-
-          <SectionCard
-            description="Shift the date without opening another keyboard."
-            eyebrow="📅 Timing"
-            title="Transaction date"
-          >
-            <View className="gap-3">
-              <View className="flex-row items-center gap-3">
-                <Pressable
-                  accessibilityRole="button"
-                  className="h-14 w-14 items-center justify-center rounded-full bg-gray-100 active:opacity-80"
-                  onPress={() => setDate((currentDate) => shiftDate(currentDate, -1))}
-                >
-                  <ArrowLeftIcon color="#111827" size={22} weight="regular" />
-                </Pressable>
-
-                <View className="flex-1 rounded-[24px] border border-gray-200 bg-gray-50 px-4 py-3">
-                  <Text className="text-xs font-semibold uppercase tracking-[1.4px] text-gray-400">
-                    {getDisplayDateLabel(date)}
-                  </Text>
-                  <Text className="mt-1 text-[22px] font-bold text-gray-950">{date}</Text>
-                </View>
-
-                <Pressable
-                  accessibilityRole="button"
-                  className="h-14 w-14 items-center justify-center rounded-full bg-gray-100 active:opacity-80"
-                  onPress={() => setDate((currentDate) => shiftDate(currentDate, 1))}
-                >
-                  <ArrowRightIcon color="#111827" size={22} weight="regular" />
-                </Pressable>
-              </View>
-
-              <View className="flex-row gap-2">
-                {DATE_SHORTCUTS.map((shortcut) => {
-                  const resolvedDate = shortcut.resolve();
-
-                  return (
-                    <DateShortcut
-                      emoji={shortcut.emoji}
-                      key={shortcut.label}
-                      label={shortcut.label}
-                      onPress={() => setDate(resolvedDate)}
-                      selected={date === resolvedDate}
-                    />
-                  );
-                })}
-              </View>
+              ) : (
+                <CategoryPicker
+                  horizontal
+                  onChange={setCategoryId}
+                  type={type}
+                  value={categoryId}
+                />
+              )}
             </View>
-          </SectionCard>
 
-          <SectionCard
-            description="Optional, but useful if this purchase needs a little story."
-            eyebrow="📝 Note"
-            title="Description"
-          >
-            <View className="gap-2">
-              <TextInput
-                className="min-h-[104px] rounded-[24px] border border-gray-200 bg-gray-50 px-4 py-4 text-base text-gray-950"
-                maxLength={80}
-                multiline
-                numberOfLines={4}
-                onChangeText={setDescription}
-                placeholder="Coffee after the client meeting ☕"
-                placeholderTextColor="#94A3B8"
-                textAlignVertical="top"
-                value={description}
-              />
-
-              <View className="flex-row items-center justify-between">
-                <Text className="text-xs leading-5 text-gray-400">
-                  {description.trim()
-                    ? "Short notes stay readable in your timeline."
-                    : "Skip it if the amount already says enough."}
-                </Text>
-                <Text className="text-xs font-semibold tabular-nums text-gray-500">
-                  {description.length}/80
+            {showValidation && (validationMessage || submissionError) ? (
+              <View className="flex-row items-center gap-2 rounded-2xl bg-[#FEF3C7] px-3 py-2.5">
+                <WarningCircleIcon color="#B45309" size={16} weight="fill" />
+                <Text className="flex-1 text-xs font-semibold text-amber-800">
+                  {submissionError || validationMessage}
                 </Text>
               </View>
-            </View>
-          </SectionCard>
+            ) : null}
 
-          {showValidation && validationMessage ? (
-            <Animated.View
-              entering={FadeInDown.duration(180)}
-              exiting={FadeOutDown.duration(160)}
-              layout={FORM_LAYOUT}
-            >
-              <View className="flex-row items-start gap-3 rounded-[24px] border border-amber-200 bg-amber-50 px-4 py-3">
-                <WarningCircleIcon color="#B45309" size={22} weight="fill" />
-                <View className="flex-1 gap-1">
-                  <Text className="text-sm font-semibold text-amber-900">Needs attention</Text>
-                  <Text className="text-sm leading-6 text-amber-800">{validationMessage}</Text>
-                </View>
-              </View>
-            </Animated.View>
-          ) : null}
-
-          {showValidation && !validationMessage ? (
-            <Animated.View
-              entering={FadeInDown.duration(180)}
-              exiting={FadeOutDown.duration(160)}
-              layout={FORM_LAYOUT}
-            >
-              <View className="flex-row items-start gap-3 rounded-[24px] border border-emerald-200 bg-emerald-50 px-4 py-3">
-                <CheckCircleIcon color="#047857" size={22} weight="fill" />
-                <View className="flex-1 gap-1">
-                  <Text className="text-sm font-semibold text-emerald-900">Ready to save</Text>
-                  <Text className="text-sm leading-6 text-emerald-800">
-                    Everything checks out. Save whenever you are ready.
-                  </Text>
-                </View>
-              </View>
-            </Animated.View>
-          ) : null}
-
-          {submissionError ? (
-            <Animated.View
-              entering={FadeInDown.duration(180)}
-              exiting={FadeOutDown.duration(160)}
-              layout={FORM_LAYOUT}
-            >
-              <View className="rounded-[24px] border border-red-200 bg-red-50 px-4 py-3">
-                <Text className="text-sm font-semibold text-red-800">{submissionError}</Text>
-              </View>
-            </Animated.View>
-          ) : null}
-
-          <Pressable
-            accessibilityRole="button"
-            className="items-center rounded-[26px] px-4 py-4 active:opacity-85"
-            disabled={saving}
-            onPress={handleSubmit}
-            style={{ backgroundColor: selectedType.color, opacity: saving ? 0.65 : 1 }}
-          >
-            <Text className="text-base font-bold text-white">
-              {saving ? "Saving..." : submitLabel}
-            </Text>
-          </Pressable>
-
-          {onDelete ? (
-            <Pressable
-              accessibilityRole="button"
-              className="items-center rounded-[22px] border border-red-200 bg-white px-4 py-4 active:opacity-80"
-              onPress={onDelete}
-            >
-              <Text className="text-sm font-semibold text-red-600">Delete transaction</Text>
-            </Pressable>
-          ) : null}
-        </Animated.View>
-      </ScrollView>
+            <TransactionAmountPad
+              accentColor={selectedType.color}
+              isSubmitting={saving}
+              onBackspace={handleBackspace}
+              onChangeCents={setAmount}
+              onSubmit={handleSubmit}
+              valueCents={amount}
+            />
+          </View>
+        </View>
+      </View>
     </KeyboardAvoidingView>
   );
 }

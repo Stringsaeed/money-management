@@ -7,7 +7,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { BackspaceIcon } from "phosphor-react-native";
+import { BackspaceIcon, CheckIcon } from "phosphor-react-native";
 
 import { Text } from "@/components/ui/text";
 
@@ -16,22 +16,23 @@ const KEY_ROWS = [
   ["1", "2", "3"],
   ["4", "5", "6"],
   ["7", "8", "9"],
-  ["00", "0", "backspace"],
+  ["00", "0", "submit"],
 ] as const;
 
 interface TransactionAmountPadProps {
   valueCents: number;
-  currency: string;
   accentColor: string;
-  validationMessage?: string | null;
+  isSubmitting?: boolean;
   onChangeCents: (cents: number) => void;
+  onBackspace?: () => void;
+  onSubmit: () => void;
 }
 
 interface KeypadKeyProps {
   label: string;
   accentColor: string;
+  disabled?: boolean;
   onPress: () => void;
-  onLongPress?: () => void;
 }
 
 const triggerSelectionHaptic = () => {
@@ -39,12 +40,6 @@ const triggerSelectionHaptic = () => {
     Haptics.selectionAsync();
   }
 };
-
-const formatAmount = (cents: number) =>
-  new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(cents / 100);
 
 const appendDigits = (current: number, digits: string) => {
   let next = current;
@@ -56,29 +51,27 @@ const appendDigits = (current: number, digits: string) => {
   return next;
 };
 
-const KeypadKey = ({ label, accentColor, onPress, onLongPress }: KeypadKeyProps) => {
-  const isActionKey = label === "backspace";
-  const actionText = isActionKey ? "⌫" : label;
+const KeypadKey = ({ label, accentColor, disabled, onPress }: KeypadKeyProps) => {
+  const isSubmitKey = label === "submit";
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={isActionKey ? "Delete one digit" : `Enter ${label}`}
+      accessibilityLabel={isSubmitKey ? "Save transaction" : `Enter ${label}`}
       className="flex-1 aspect-square rounded-[26px] items-center justify-center active:opacity-85"
-      onLongPress={onLongPress}
+      disabled={disabled}
       onPress={onPress}
       style={{
-        backgroundColor: isActionKey ? "#111827" : `${accentColor}14`,
-        borderColor: isActionKey ? "#111827" : `${accentColor}25`,
+        backgroundColor: isSubmitKey ? accentColor : "#F3F4F6",
+        borderColor: isSubmitKey ? accentColor : "#E5E7EB",
         borderWidth: 1,
+        opacity: disabled ? 0.6 : 1,
       }}
     >
-      {isActionKey ? (
-        <BackspaceIcon color="#FFFFFF" size={26} weight="regular" />
+      {isSubmitKey ? (
+        <CheckIcon color="#FFFFFF" size={28} weight="bold" />
       ) : (
-        <Text className="text-[30px] font-bold tabular-nums" style={{ color: accentColor }}>
-          {actionText}
-        </Text>
+        <Text className="text-[30px] font-bold tabular-nums text-gray-950">{label}</Text>
       )}
     </Pressable>
   );
@@ -86,10 +79,11 @@ const KeypadKey = ({ label, accentColor, onPress, onLongPress }: KeypadKeyProps)
 
 export const TransactionAmountPad = ({
   valueCents,
-  currency,
   accentColor,
-  validationMessage,
+  isSubmitting = false,
   onChangeCents,
+  onBackspace,
+  onSubmit,
 }: TransactionAmountPadProps) => {
   const scale = useSharedValue(1);
 
@@ -107,74 +101,56 @@ export const TransactionAmountPad = ({
   const handleKeyPress = (key: (typeof KEY_ROWS)[number][number]) => {
     triggerSelectionHaptic();
 
-    if (key === "backspace") {
-      onChangeCents(Math.floor(valueCents / 10));
+    if (key === "submit") {
+      onSubmit();
       return;
     }
 
     onChangeCents(appendDigits(valueCents, key));
   };
 
-  const handleClear = () => {
+  const handleBackspace = () => {
     triggerSelectionHaptic();
-    onChangeCents(0);
+    if (onBackspace) {
+      onBackspace();
+      return;
+    }
+
+    onChangeCents(Math.floor(valueCents / 10));
   };
 
   return (
-    <View className="gap-4">
-      <View className="overflow-hidden rounded-[32px] border border-white/10 bg-neutral-950 px-5 py-5">
-        <View className="flex-row items-center justify-between">
-          <View className="rounded-full bg-white/10 px-3 py-1.5">
-            <Text className="text-xs font-semibold uppercase tracking-[1.4px] text-white/65">
-              💸 Amount
-            </Text>
-          </View>
-
-          <Pressable
-            accessibilityRole="button"
-            className="rounded-full bg-white/8 px-3 py-1.5 active:opacity-80"
-            onPress={handleClear}
-          >
-            <Text className="text-xs font-semibold text-white/75">Reset</Text>
-          </Pressable>
-        </View>
-
-        <Animated.View className="mt-5 gap-2" style={animatedDisplayStyle}>
-          <View className="flex-row items-end gap-2">
-            <Text className="text-[46px] font-extrabold text-white tabular-nums">
-              {formatAmount(valueCents)}
-            </Text>
-            <Text className="pb-2 text-sm font-semibold uppercase tracking-[1.2px] text-white/50">
-              {currency}
-            </Text>
-          </View>
-
-          <Text className="text-sm leading-6 text-white/60">
-            {validationMessage ??
-              "Tap the pad to compose the amount with buttery-safe precision ✨"}
-          </Text>
-        </Animated.View>
+    <View className="gap-3">
+      <View className="flex-row items-center justify-end">
+        <Pressable
+          accessibilityRole="button"
+          className="h-10 w-10 items-center justify-center rounded-full bg-gray-200 active:opacity-80"
+          onLongPress={() => onChangeCents(0)}
+          onPress={handleBackspace}
+        >
+          <BackspaceIcon color="#111827" size={20} weight="regular" />
+        </Pressable>
       </View>
 
       <View className="rounded-[32px] bg-white p-3 shadow-sm">
-        <View className="gap-3">
+        <Animated.View className="gap-3" style={animatedDisplayStyle}>
           {KEY_ROWS.map((row) => (
             <View key={row.join("-")} className="flex-row gap-3">
               {row.map((key) => (
                 <KeypadKey
                   key={key}
                   accentColor={accentColor}
+                  disabled={isSubmitting}
                   label={key}
-                  onLongPress={key === "backspace" ? handleClear : undefined}
                   onPress={() => handleKeyPress(key)}
                 />
               ))}
             </View>
           ))}
-        </View>
+        </Animated.View>
 
         <Text className="mt-4 text-center text-xs font-medium text-gray-400">
-          Hold ⌫ to clear everything.
+          Tap ✓ to save. Hold ⌫ to clear.
         </Text>
       </View>
     </View>
