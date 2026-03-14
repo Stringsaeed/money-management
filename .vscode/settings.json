@@ -9,8 +9,33 @@
     "class",
     "className",
     "headerClassName",
-    "contentContainerClassName"
+    "contentContainerClassName",
+    "columnWrapperClassName",
+    "endFillColorClassName",
+    "imageClassName",
+    "tintColorClassName",
+    "ios_backgroundColorClassName",
+    "thumbColorClassName",
+    "trackColorOnClassName",
+    "trackColorOffClassName",
+    "selectionColorClassName",
+    "cursorColorClassName",
+    "underlineColorAndroidClassName",
+    "placeholderTextColorClassName",
+    "selectionHandleColorClassName",
+    "colorsClassName",
+    "progressBackgroundColorClassName",
+    "titleColorClassName",
+    "underlayColorClassName",
+    "colorClassName",
+    "drawerBackgroundColorClassName",
+    "statusBarBackgroundColorClassName",
+    "backdropColorClassName",
+    "backgroundColorClassName",
+    "ListFooterComponentClassName",
+    "ListHeaderComponentClassName"
   ],
+  "tailwindCSS.classFunctions": ["useResolveClassNames"],
   "oxc.typeAware": true,
   "oxc.fmt.configPath": ".oxfmtrc.json",
   "editor.defaultFormatter": "oxc.oxc-vscode",
@@ -27,5 +52,5 @@
     "editor.defaultFormatter": "oxc.oxc-vscode",
     "editor.formatOnSave": true
   },
-  "typescript.experimental.useTsgo": true
+  "js/ts.experimental.useTsgo": true
 }

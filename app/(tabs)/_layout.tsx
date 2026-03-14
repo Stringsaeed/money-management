@@ -4,7 +4,10 @@ export default function TabLayout() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="settings" options={{ title: "Settings", headerBackTitle: "Back" }} />
+      <Stack.Screen
+        name="settings"
+        options={{ title: "Settings", headerBackButtonDisplayMode: "minimal" }}
+      />
       <Stack.Screen
         name="filters"
         options={{

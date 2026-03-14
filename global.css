@@ -1,24 +1,18 @@
-@import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/preflight.css" layer(base);
-@import "tailwindcss/utilities.css";
+@import "tailwindcss";
+@import "uniwind";
 
-@import "nativewind/theme";
+@import "heroui-native/styles";
 
-/* Platform-specific font families */
-@media android {
-  :root {
-    --font-mono: monospace;
-    --font-rounded: normal;
-    --font-serif: serif;
-    --font-sans: normal;
-  }
+@theme {
+  --font-thin: "Manrope_200ExtraLight";
+  --font-light: "Manrope_300Light";
+  --font-normal: "Manrope_400Regular";
+  --font-medium: "Manrope_500Medium";
+  --font-semibold: "Manrope_600SemiBold";
+  --font-bold: "Manrope_700Bold";
+  --font-black: "Manrope_900Black";
+
+  --font-mono: monospace;
 }
 
-@media ios {
-  :root {
-    --font-mono: ui-monospace;
-    --font-serif: ui-serif;
-    --font-sans: system-ui;
-    --font-rounded: ui-rounded;
-  }
-}
+@source './node_modules/heroui-native/lib';

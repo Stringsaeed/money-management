@@ -24,9 +24,7 @@ export function TransactionRow({ transaction: t, showAccount = false }: Transact
     >
       {/* Category emoji */}
       <View className="w-10 h-10 rounded-full items-center justify-center bg-gray-100">
-        <Text className="text-[20px] leading-none">
-          {t.category?.icon ?? (isTransfer ? "⇄" : "💰")}
-        </Text>
+        <Text className="text-[20px]">{t.category?.icon ?? (isTransfer ? "⇄" : "💰")}</Text>
       </View>
 
       {/* Description + tags */}
@@ -45,7 +43,7 @@ export function TransactionRow({ transaction: t, showAccount = false }: Transact
       {/* Amount */}
       <Text
         className={`text-base font-semibold tabular-nums ${amountClass}`}
-        style={{ fontVariant: ["tabular-nums"] }}
+        // style={{ fontVariant: ["tabular-nums"] }}
       >
         {amountPrefix}
         {formatCents(t.amount, t.currency)}

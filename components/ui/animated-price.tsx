@@ -117,13 +117,5 @@ const styles = StyleSheet.create({
   },
   currency: {
     fontFamily: "Manrope_400Regular",
-    transform: [
-      { scale: 0.5 },
-
-      {
-        translateY: "45%",
-      },
-    ],
-    transformOrigin: "top right",
   },
 });

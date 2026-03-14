@@ -1,5 +1,21 @@
+import {
+  addDays,
+  addMonths as addCalendarMonths,
+  addWeeks,
+  addYears,
+  getDay,
+  getMonth,
+  getYear,
+  isAfter,
+  isBefore,
+  setDate as setDayOfMonth,
+  setMonth,
+  startOfMonth,
+  startOfYear,
+} from "date-fns";
+
 import type { RecurringPayment } from "@/types";
-import { clampDay, toDateString } from "./date";
+import { clampDay, parseDate, toDateString } from "./date";
 
 /**
  * Given a recurring payment rule and today's date, returns all "YYYY-MM-DD"
@@ -11,23 +27,17 @@ import { clampDay, toDateString } from "./date";
 export function getPendingOccurrences(rule: RecurringPayment, todayStr: string): string[] {
   if (!rule.isActive) return [];
 
-  const today = parseLocalDate(todayStr);
-  const start = parseLocalDate(rule.startDate);
-  const end = rule.endDate ? parseLocalDate(rule.endDate) : null;
+  const today = parseDate(todayStr);
+  const start = parseDate(rule.startDate);
+  const end = rule.endDate ? parseDate(rule.endDate) : null;
 
   // Effective ceiling: min(today, endDate)
-  const ceiling = end && end < today ? end : today;
+  const ceiling = end && isBefore(end, today) ? end : today;
 
   // Effective floor: max(startDate, lastGeneratedDate + 1 day)
-  let floor: Date;
-  if (rule.lastGeneratedDate) {
-    floor = parseLocalDate(rule.lastGeneratedDate);
-    floor.setDate(floor.getDate() + 1); // exclusive: day after last generated
-  } else {
-    floor = start;
-  }
+  const floor = rule.lastGeneratedDate ? addDays(parseDate(rule.lastGeneratedDate), 1) : start;
 
-  if (floor > ceiling) return [];
+  if (isAfter(floor, ceiling)) return [];
 
   const occurrences: string[] = [];
 
@@ -51,16 +61,12 @@ export function getPendingOccurrences(rule: RecurringPayment, todayStr: string):
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function parseLocalDate(str: string): Date {
-  const [y, m, d] = str.split("-").map(Number);
-  return new Date(y, m - 1, d);
-}
-
 function collectDaily(from: Date, to: Date, out: string[]): void {
-  const cur = new Date(from);
-  while (cur <= to) {
-    out.push(toDateString(cur));
-    cur.setDate(cur.getDate() + 1);
+  let current = from;
+
+  while (!isAfter(current, to)) {
+    out.push(toDateString(current));
+    current = addDays(current, 1);
   }
 }
 
@@ -70,35 +76,27 @@ function collectWeekly(
   targetDow: number, // 0=Sun … 6=Sat
   out: string[],
 ): void {
-  // Find first occurrence of targetDow >= from
-  const cur = new Date(from);
-  const daysUntil = (targetDow - cur.getDay() + 7) % 7;
-  cur.setDate(cur.getDate() + daysUntil);
+  let current = addDays(from, (targetDow - getDay(from) + 7) % 7);
 
-  while (cur <= to) {
-    out.push(toDateString(cur));
-    cur.setDate(cur.getDate() + 7);
+  while (!isAfter(current, to)) {
+    out.push(toDateString(current));
+    current = addWeeks(current, 1);
   }
 }
 
 function collectMonthly(from: Date, to: Date, targetDay: number, out: string[]): void {
-  // Start at the first month that has a valid occurrence >= from
-  let year = from.getFullYear();
-  let month = from.getMonth() + 1; // 1-indexed
+  let cursor = startOfMonth(from);
 
-  while (true) {
-    const day = clampDay(year, month, targetDay);
-    const candidate = new Date(year, month - 1, day);
+  while (!isAfter(cursor, to)) {
+    const year = getYear(cursor);
+    const month = getMonth(cursor) + 1;
+    const candidate = setDayOfMonth(cursor, clampDay(year, month, targetDay));
 
-    if (candidate > to) break;
-    if (candidate >= from) {
+    if (!isBefore(candidate, from) && !isAfter(candidate, to)) {
       out.push(toDateString(candidate));
     }
 
-    // Advance to next month
-    const next = new Date(year, month, 1); // first of next month
-    year = next.getFullYear();
-    month = next.getMonth() + 1;
+    cursor = addCalendarMonths(cursor, 1);
   }
 }
 
@@ -109,16 +107,19 @@ function collectYearly(
   targetDay: number,
   out: string[],
 ): void {
-  let year = from.getFullYear();
+  let cursor = startOfYear(from);
 
-  while (true) {
-    const day = clampDay(year, targetMonth, targetDay);
-    const candidate = new Date(year, targetMonth - 1, day);
+  while (!isAfter(cursor, to)) {
+    const year = getYear(cursor);
+    const candidate = setDayOfMonth(
+      setMonth(cursor, targetMonth - 1),
+      clampDay(year, targetMonth, targetDay),
+    );
 
-    if (candidate > to) break;
-    if (candidate >= from) {
+    if (!isBefore(candidate, from) && !isAfter(candidate, to)) {
       out.push(toDateString(candidate));
     }
-    year++;
+
+    cursor = addYears(cursor, 1);
   }
 }

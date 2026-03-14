@@ -22,8 +22,18 @@ import { Text } from "@/components/ui/text";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import useNumPadNumber from "@/hooks/use-num-pad-number";
-import { parseDate, today, toDateString } from "@/utils/date";
+import { toDateString, today } from "@/utils/date";
 import type { TransactionType } from "@/types";
+import {
+  getCurrencySymbol,
+  getDisplayDateLabel,
+  getValidationMessage,
+  shiftDate,
+  triggerErrorHaptic,
+} from "./utils";
+import TransactionDatePicker from "./transaction-date-picker/transaction-date-picker";
+import { parseISO } from "date-fns";
+import { cn } from "heroui-native";
 
 export interface TransactionFormData {
   type: TransactionType;
@@ -32,7 +42,7 @@ export interface TransactionFormData {
   toAccountId: string | null;
   categoryId: string | null;
   description: string;
-  date: string;
+  date: Date;
   currency: string;
   originalAmount: number | null;
   originalCurrency: string | null;
@@ -56,102 +66,7 @@ interface TypeOption {
 const TYPE_OPTIONS: TypeOption[] = [
   { value: "expense", label: "Expense", emoji: "💸", color: "#4F46E5" },
   { value: "income", label: "Income", emoji: "💰", color: "#16A34A" },
-  { value: "transfer", label: "Transfer", emoji: "🔁", color: "#0EA5E9" },
 ] as const;
-
-const triggerErrorHaptic = () => {
-  if (process.env.EXPO_OS === "ios") {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-  }
-};
-
-const shiftDate = (date: string, delta: number) => {
-  const nextDate = parseDate(date);
-  nextDate.setDate(nextDate.getDate() + delta);
-  return toDateString(nextDate);
-};
-
-const isValidDateString = (value: string) => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return false;
-  }
-
-  const parsed = parseDate(value);
-  return !Number.isNaN(parsed.getTime()) && toDateString(parsed) === value;
-};
-
-const getDisplayDateLabel = (value: string) => {
-  const todayValue = today();
-  const yesterdayValue = shiftDate(todayValue, -1);
-
-  if (value === todayValue) {
-    return "Today";
-  }
-
-  if (value === yesterdayValue) {
-    return "Yesterday";
-  }
-
-  return parseDate(value).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
-};
-
-const getCurrencySymbol = (currency: string) => {
-  const currencyPart = new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  })
-    .formatToParts(0)
-    .find((part) => part.type === "currency");
-
-  return currencyPart?.value ?? currency;
-};
-
-const getValidationMessage = ({
-  amount,
-  accountId,
-  type,
-  toAccountId,
-  date,
-  hasAccounts,
-}: {
-  amount: number;
-  accountId: string;
-  type: TransactionType;
-  toAccountId: string | null;
-  date: string;
-  hasAccounts: boolean;
-}) => {
-  if (!hasAccounts) {
-    return "Add an account first.";
-  }
-
-  if (amount <= 0) {
-    return "Enter an amount above 0.00.";
-  }
-
-  if (!accountId) {
-    return "Pick the source account.";
-  }
-
-  if (!isValidDateString(date)) {
-    return "Use a valid date.";
-  }
-
-  if (type === "transfer" && !toAccountId) {
-    return "Choose where the transfer goes.";
-  }
-
-  if (type === "transfer" && toAccountId === accountId) {
-    return "Transfer accounts must be different.";
-  }
-
-  return null;
-};
 
 interface TypeChipProps {
   option: TypeOption;
@@ -195,7 +110,7 @@ export function TransactionForm({
   const [toAccountId, setToAccountId] = useState<string | null>(initialData?.toAccountId ?? null);
   const [categoryId, setCategoryId] = useState<string | null>(initialData?.categoryId ?? null);
   const [description, setDescription] = useState(initialData?.description ?? "");
-  const [date, setDate] = useState(initialData?.date ?? today());
+  const [date, setDate] = useState(initialData?.date ?? new Date());
   const [saving, setSaving] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
@@ -280,23 +195,18 @@ export function TransactionForm({
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-[#050505] pb-safe pt-safe"
+      className="flex-1 pb-safe pt-safe"
     >
       <View className="flex-1 px-4 pb-4">
         <View className="flex-row items-center justify-between">
           <CloseButton
             className="bg-white/8"
-            iconProps={{ color: "#FFFFFF", size: 18 }}
+            iconProps={{ size: 18 }}
             onPress={() => router.back()}
           />
 
           <View className="flex-row items-center gap-2">
-            <Chip animation="disable-all" className="bg-white/8" variant="secondary">
-              <Chip.Label className="font-semibold text-white">
-                📅 {getDisplayDateLabel(date)}
-              </Chip.Label>
-            </Chip>
-
+            <TransactionDatePicker date={date} onChange={setDate} />
             {onDelete ? (
               <Chip
                 animation="disable-all"
@@ -312,232 +222,14 @@ export function TransactionForm({
           </View>
         </View>
 
-        <View
-          className={twMerge(
-            "mt-4 flex-row items-center justify-center gap-2",
-            tight ? "mb-3" : "mb-5",
-          )}
-        >
-          {TYPE_OPTIONS.map((option) => (
-            <TypeChip
-              key={option.value}
-              onPress={() => handleTypeChange(option.value)}
-              option={option}
-              selected={type === option.value}
-            />
-          ))}
-        </View>
-
-        <View className="flex-1 justify-between">
+        <View className="flex-1">
           <View className={twMerge("flex-1 items-center justify-center", tight ? "pt-1" : "pt-3")}>
-            <AnimatedPrice currency={currencySymbol} size={tight ? 68 : 78}>
+            <AnimatedPrice currency="AED" size={tight ? 68 : 78}>
               {numPad.displayValue}
             </AnimatedPrice>
-
-            <Text className="mt-3 text-center text-sm leading-6 text-white/45">
-              Capture the amount first, then lock in the context below.
-            </Text>
           </View>
 
-          <Card className="rounded-[32px] border border-white/6 bg-[#0E0F12]">
-            <Card.Body className="gap-3 p-3">
-              <View className="gap-1">
-                <Text className="text-[11px] font-semibold uppercase tracking-[1.2px] text-white/35">
-                  Note
-                </Text>
-                <Input
-                  className="border-transparent bg-[#17181D] px-4 text-white"
-                  onChangeText={setDescription}
-                  placeholder="Flight ticket"
-                  placeholderColorClassName="text-white/25"
-                  value={description}
-                />
-              </View>
-
-              <View className="flex-row items-center gap-2">
-                <Pressable
-                  accessibilityRole="button"
-                  className="h-11 w-11 items-center justify-center rounded-2xl bg-white/8 active:opacity-80"
-                  onPress={() => setDate((currentDate) => shiftDate(currentDate, -1))}
-                >
-                  <ArrowLeftIcon color="#FFFFFF" size={18} weight="regular" />
-                </Pressable>
-
-                <Chip
-                  animation="disable-all"
-                  className="flex-1 bg-white/8 px-2"
-                  variant="secondary"
-                >
-                  <Chip.Label className="text-center font-semibold text-white">
-                    {getDisplayDateLabel(date)} · {date}
-                  </Chip.Label>
-                </Chip>
-
-                <Pressable
-                  accessibilityRole="button"
-                  className="h-11 w-11 items-center justify-center rounded-2xl bg-white/8 active:opacity-80"
-                  onPress={() => setDate((currentDate) => shiftDate(currentDate, 1))}
-                >
-                  <ArrowRightIcon color="#FFFFFF" size={18} weight="regular" />
-                </Pressable>
-              </View>
-
-              <View className="flex-row items-center justify-between gap-2">
-                <View className="flex-row flex-1 items-center gap-2">
-                  {currentAccount ? (
-                    <Chip animation="disable-all" className="bg-white/8" variant="secondary">
-                      <Chip.Label className="font-semibold text-white">
-                        🏦 {currentAccount.name}
-                      </Chip.Label>
-                    </Chip>
-                  ) : null}
-
-                  {type === "transfer" && currentDestinationAccount ? (
-                    <Chip animation="disable-all" className="bg-white/8" variant="secondary">
-                      <Chip.Label className="font-semibold text-white">
-                        🔁 {currentDestinationAccount.name}
-                      </Chip.Label>
-                    </Chip>
-                  ) : null}
-
-                  {type !== "transfer" && currentCategory ? (
-                    <Chip animation="disable-all" className="bg-[#1B2C55]" variant="secondary">
-                      <Chip.Label className="font-semibold text-blue-200">
-                        {currentCategory.icon} {currentCategory.name}
-                      </Chip.Label>
-                    </Chip>
-                  ) : null}
-                </View>
-
-                <Chip
-                  animation="disable-all"
-                  className="bg-white px-4"
-                  isDisabled={saving}
-                  onPress={handleSubmit}
-                  variant="secondary"
-                >
-                  <Chip.Label className="font-bold text-black">
-                    {saving ? "Saving..." : submitLabel}
-                  </Chip.Label>
-                </Chip>
-              </View>
-
-              <View className="gap-2">
-                <Text className="text-[11px] font-semibold uppercase tracking-[1.2px] text-white/35">
-                  From account
-                </Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerClassName="gap-2"
-                >
-                  {accounts.map((account) => (
-                    <Chip
-                      key={account.id}
-                      animation="disable-all"
-                      className="px-3"
-                      onPress={() => handleAccountChange(account.id)}
-                      style={{
-                        backgroundColor:
-                          account.id === accountId ? `${selectedType.color}33` : "#17181D",
-                        borderColor: account.id === accountId ? selectedType.color : "#1F2937",
-                        borderWidth: 1,
-                      }}
-                      variant="secondary"
-                    >
-                      <Chip.Label
-                        className={
-                          account.id === accountId ? "font-semibold text-white" : "text-white/65"
-                        }
-                      >
-                        {account.name}
-                      </Chip.Label>
-                    </Chip>
-                  ))}
-                </ScrollView>
-              </View>
-
-              <View className="gap-2">
-                <Text className="text-[11px] font-semibold uppercase tracking-[1.2px] text-white/35">
-                  {type === "transfer" ? "Destination" : "Category"}
-                </Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerClassName="gap-2"
-                >
-                  {type === "transfer"
-                    ? accounts
-                        .filter((account) => account.id !== accountId)
-                        .map((account) => (
-                          <Chip
-                            key={account.id}
-                            animation="disable-all"
-                            className="px-3"
-                            onPress={() => setToAccountId(account.id)}
-                            style={{
-                              backgroundColor:
-                                account.id === toAccountId ? `${selectedType.color}33` : "#17181D",
-                              borderColor:
-                                account.id === toAccountId ? selectedType.color : "#1F2937",
-                              borderWidth: 1,
-                            }}
-                            variant="secondary"
-                          >
-                            <Chip.Label
-                              className={
-                                account.id === toAccountId
-                                  ? "font-semibold text-white"
-                                  : "text-white/65"
-                              }
-                            >
-                              {account.name}
-                            </Chip.Label>
-                          </Chip>
-                        ))
-                    : categories.map((category) => (
-                        <Chip
-                          key={category.id}
-                          animation="disable-all"
-                          className="px-3"
-                          onPress={() =>
-                            setCategoryId(category.id === categoryId ? null : category.id)
-                          }
-                          style={{
-                            backgroundColor:
-                              category.id === categoryId ? `${selectedType.color}33` : "#17181D",
-                            borderColor:
-                              category.id === categoryId ? selectedType.color : "#1F2937",
-                            borderWidth: 1,
-                          }}
-                          variant="secondary"
-                        >
-                          <Chip.Label
-                            className={
-                              category.id === categoryId
-                                ? "font-semibold text-white"
-                                : "text-white/65"
-                            }
-                          >
-                            {category.icon} {category.name}
-                          </Chip.Label>
-                        </Chip>
-                      ))}
-                </ScrollView>
-              </View>
-
-              {showValidation && (validationMessage || submissionError) ? (
-                <View className="flex-row items-center gap-2 rounded-2xl bg-[#271B09] px-3 py-2.5">
-                  <WarningCircleIcon color="#FBBF24" size={16} weight="fill" />
-                  <Text className="flex-1 text-xs font-semibold text-amber-200">
-                    {submissionError || validationMessage}
-                  </Text>
-                </View>
-              ) : null}
-            </Card.Body>
-          </Card>
-
-          <View className={twMerge("w-full", tight ? "mt-2" : "mt-3")}>
+          <View className={cn("w-full flex-1", tight ? "mt-2" : "mt-3")}>
             <NumberPad
               onClear={numPad.clearAll}
               onDelete={numPad.deleteDigit}

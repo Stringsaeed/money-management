@@ -1,3 +1,29 @@
+import {
+  addMonths as addCalendarMonths,
+  eachMonthOfInterval,
+  endOfMonth,
+  format,
+  getDaysInMonth,
+  getMonth,
+  getYear,
+  intlFormat,
+  isAfter,
+  parse,
+  startOfDay,
+  startOfMonth,
+} from "date-fns";
+
+const DATE_ONLY_PATTERN = "yyyy-MM-dd";
+
+const DISPLAY_FORMATS = {
+  "MM/DD/YYYY": "MM/dd/yyyy",
+  "DD/MM/YYYY": "dd/MM/yyyy",
+  "YYYY-MM-DD": DATE_ONLY_PATTERN,
+} as const;
+
+const buildDateString = (year: number, month: number, day = 1) =>
+  `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
 /**
  * Returns today's date as a "YYYY-MM-DD" string (local time).
  */
@@ -16,18 +42,14 @@ export function nowIso(): string {
  * Convert a Date to "YYYY-MM-DD" (local time).
  */
 export function toDateString(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+  return format(date, DATE_ONLY_PATTERN);
 }
 
 /**
  * Parse a "YYYY-MM-DD" string to a local Date at midnight.
  */
 export function parseDate(dateStr: string): Date {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  return new Date(year, month - 1, day);
+  return parse(dateStr, DATE_ONLY_PATTERN, startOfDay(new Date()));
 }
 
 /**
@@ -36,10 +58,9 @@ export function parseDate(dateStr: string): Date {
  */
 export function formatDate(
   dateStr: string,
-  format: "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD" = "MM/DD/YYYY",
+  displayFormat: keyof typeof DISPLAY_FORMATS = "MM/DD/YYYY",
 ): string {
-  const [year, month, day] = dateStr.split("-");
-  return format.replace("YYYY", year).replace("MM", month).replace("DD", day);
+  return format(parseDate(dateStr), DISPLAY_FORMATS[displayFormat]);
 }
 
 /**
@@ -47,8 +68,7 @@ export function formatDate(
  * e.g. "Saturday, Feb 15"
  */
 export function formatDayHeader(dateStr: string): string {
-  const date = parseDate(dateStr);
-  return date.toLocaleDateString(undefined, {
+  return intlFormat(parseDate(dateStr), {
     weekday: "long",
     month: "short",
     day: "numeric",
@@ -60,8 +80,10 @@ export function formatDayHeader(dateStr: string): string {
  * e.g. { year: 2026, month: 2 } → "February 2026"
  */
 export function formatMonth(year: number, month: number): string {
-  const date = new Date(year, month - 1, 1);
-  return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  return intlFormat(parseDate(buildDateString(year, month)), {
+    month: "long",
+    year: "numeric",
+  });
 }
 
 /**
@@ -69,10 +91,11 @@ export function formatMonth(year: number, month: number): string {
  * month is 1-indexed.
  */
 export function monthBounds(year: number, month: number): { start: string; end: string } {
-  const start = `${year}-${String(month).padStart(2, "0")}-01`;
-  const lastDay = new Date(year, month, 0).getDate();
-  const end = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
-  return { start, end };
+  const date = parseDate(buildDateString(year, month));
+  return {
+    start: toDateString(startOfMonth(date)),
+    end: toDateString(endOfMonth(date)),
+  };
 }
 
 /**
@@ -83,15 +106,15 @@ export function addMonths(
   month: number,
   delta: number,
 ): { year: number; month: number } {
-  const date = new Date(year, month - 1 + delta, 1);
-  return { year: date.getFullYear(), month: date.getMonth() + 1 };
+  const date = addCalendarMonths(parseDate(buildDateString(year, month)), delta);
+  return { year: getYear(date), month: getMonth(date) + 1 };
 }
 
 /**
  * Returns the number of days in a month (accounts for leap years).
  */
 export function daysInMonth(year: number, month: number): number {
-  return new Date(year, month, 0).getDate();
+  return getDaysInMonth(parseDate(buildDateString(year, month)));
 }
 
 /**
@@ -111,18 +134,13 @@ export function monthsBetween(
   maxDate: string | null | undefined,
 ): { year: number; month: number }[] {
   if (!minDate || !maxDate) return [];
-  const [minY, minM] = minDate.split("-").map(Number);
-  const [maxY, maxM] = maxDate.split("-").map(Number);
-  const result: { year: number; month: number }[] = [];
-  let y = maxY;
-  let m = maxM;
-  while (y > minY || (y === minY && m >= minM)) {
-    result.push({ year: y, month: m });
-    m -= 1;
-    if (m === 0) {
-      m = 12;
-      y -= 1;
-    }
-  }
-  return result;
+
+  const start = startOfMonth(parseDate(minDate));
+  const end = startOfMonth(parseDate(maxDate));
+
+  if (isAfter(start, end)) return [];
+
+  return eachMonthOfInterval({ start, end })
+    .reverse()
+    .map((date) => ({ year: getYear(date), month: getMonth(date) + 1 }));
 }

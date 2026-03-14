@@ -17,6 +17,8 @@ import { StatusBar } from "expo-status-bar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { HeroUINativeProvider } from "heroui-native/provider";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import "../global.css";
 
@@ -90,48 +92,56 @@ export default function RootLayout() {
     <Suspense fallback={<LoadingFallback />}>
       <SQLiteProvider databaseName={DB_NAME} onInit={onDatabaseInit} useSuspense>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-            <Stack>
-              <Stack.Screen name="splash" options={{ headerShown: false }} />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="transaction/new"
-                options={{ presentation: "modal", title: "Add Transaction" }}
-              />
-              <Stack.Screen
-                name="transaction/[id]"
-                options={{ presentation: "modal", title: "Edit Transaction" }}
-              />
-              <Stack.Screen
-                name="account/new"
-                options={{ presentation: "modal", title: "New Account" }}
-              />
-              <Stack.Screen name="account/[id]" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="account/[id]/edit"
-                options={{ presentation: "modal", title: "Edit Account" }}
-              />
-              <Stack.Screen
-                name="category/new"
-                options={{ presentation: "modal", title: "New Category" }}
-              />
-              <Stack.Screen
-                name="category/[id]/edit"
-                options={{ presentation: "modal", title: "Edit Category" }}
-              />
-              <Stack.Screen name="recurring/index" options={{ title: "Recurring Payments" }} />
-              <Stack.Screen
-                name="recurring/new"
-                options={{ presentation: "modal", title: "New Recurring" }}
-              />
-              <Stack.Screen
-                name="recurring/[id]/edit"
-                options={{ presentation: "modal", title: "Edit Recurring" }}
-              />
-            </Stack>
-            <StatusBar style="auto" />
-          </ThemeProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <HeroUINativeProvider>
+              <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+                <Stack>
+                  <Stack.Screen name="splash" options={{ headerShown: false }} />
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="transaction/new"
+                    options={{
+                      presentation: "card",
+                      title: "Add Transaction",
+                      headerShown: false,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="transaction/[id]"
+                    options={{ presentation: "modal", title: "Edit Transaction" }}
+                  />
+                  <Stack.Screen
+                    name="account/new"
+                    options={{ presentation: "modal", title: "New Account" }}
+                  />
+                  <Stack.Screen name="account/[id]" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="account/[id]/edit"
+                    options={{ presentation: "modal", title: "Edit Account" }}
+                  />
+                  <Stack.Screen
+                    name="category/new"
+                    options={{ presentation: "modal", title: "New Category" }}
+                  />
+                  <Stack.Screen
+                    name="category/[id]/edit"
+                    options={{ presentation: "modal", title: "Edit Category" }}
+                  />
+                  <Stack.Screen name="recurring/index" options={{ title: "Recurring Payments" }} />
+                  <Stack.Screen
+                    name="recurring/new"
+                    options={{ presentation: "modal", title: "New Recurring" }}
+                  />
+                  <Stack.Screen
+                    name="recurring/[id]/edit"
+                    options={{ presentation: "modal", title: "Edit Recurring" }}
+                  />
+                </Stack>
+                <StatusBar style="auto" />
+              </ThemeProvider>
+            </HeroUINativeProvider>
+          </GestureHandlerRootView>
         </QueryClientProvider>
       </SQLiteProvider>
     </Suspense>

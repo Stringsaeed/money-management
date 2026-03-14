@@ -1,5 +1,5 @@
 const { getDefaultConfig } = require("expo/metro-config");
-const { withNativewind } = require("nativewind/metro");
+const { withUniwindConfig } = require("uniwind/metro");
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
@@ -7,4 +7,7 @@ const config = getDefaultConfig(__dirname);
 // Allow Metro to resolve .sql files for drizzle migrations
 config.resolver.sourceExts.push("sql");
 
-module.exports = withNativewind(config);
+module.exports = withUniwindConfig(config, {
+  cssEntryFile: "./global.css",
+  dtsFile: "./uniwind-types.d.ts",
+});

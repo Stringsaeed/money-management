@@ -3,6 +3,8 @@ import { useMemo } from "react";
 import { ActivityIndicator, Pressable, SectionList, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { SymbolView } from "expo-symbols";
+import { Chip } from "heroui-native/chip";
+import { CloseButton } from "heroui-native/close-button";
 
 import { EmptyState } from "@/components/common/empty-state";
 import { TransactionGroup } from "@/components/transaction/transaction-group";
@@ -104,9 +106,7 @@ function StickyHeader({
             />
             {activeFilterCount > 0 && (
               <View className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-gray-900 items-center justify-center">
-                <Text className="text-[9px] font-bold text-white leading-none">
-                  {activeFilterCount}
-                </Text>
+                <Text className="text-[9px] font-bold text-white">{activeFilterCount}</Text>
               </View>
             )}
           </Pressable>
@@ -128,22 +128,25 @@ function StickyHeader({
           contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 10 }}
         >
           {activeAccountName && (
-            <ActiveChip
-              label={`💳 ${activeAccountName}`}
-              onRemove={() => setActiveAccountId(null)}
-            />
+            <Chip color="default">
+              <Text>💳</Text>
+              <Chip.Label>{activeAccountName}</Chip.Label>
+              <CloseButton onPress={() => setActiveAccountId(null)} />
+            </Chip>
           )}
           {selectedYear && selectedMonth && (
-            <ActiveChip
-              label={`📅 ${formatMonth(selectedYear, selectedMonth)}`}
-              onRemove={() => setSelectedMonth(null, null)}
-            />
+            <Chip color="default">
+              <Text>📅</Text>
+              <Chip.Label>{formatMonth(selectedYear, selectedMonth)}</Chip.Label>
+              <CloseButton onPress={() => setSelectedMonth(null, null)} />
+            </Chip>
           )}
           {selectedCategoryName && (
-            <ActiveChip
-              label={`🏷️ ${selectedCategoryName}`}
-              onRemove={() => setSelectedCategoryId(null)}
-            />
+            <Chip color="default">
+              <Text>🏷️</Text>
+              <Chip.Label>{selectedCategoryName}</Chip.Label>
+              <CloseButton onPress={() => setSelectedCategoryId(null)} />
+            </Chip>
           )}
         </ScrollView>
       )}
@@ -239,7 +242,7 @@ export default function HomeScreen() {
     activeAccount?.currency ?? transactions[0]?.currency ?? accounts[0]?.currency ?? "USD";
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-white">
       <StickyHeader
         activeFilterCount={activeFilterCount}
         activeAccountName={activeAccount?.name ?? null}
@@ -299,7 +302,7 @@ export default function HomeScreen() {
         style={{ boxShadow: "0 4px 20px rgba(0, 0, 0, 0.18)", borderCurve: "continuous" }}
         className="absolute bottom-safe-offset-8 right-5 w-14 h-14 rounded-full bg-gray-900 items-center justify-center active:opacity-80"
       >
-        <Text className="text-white text-[28px] leading-7.5">＋</Text>
+        <Text className="text-white text-[28px]">＋</Text>
       </Pressable>
     </View>
   );

@@ -1,51 +1,32 @@
 import { StyleSheet, Text as RNText, type TextProps } from "react-native";
+import { twMerge } from "tailwind-merge";
 
 // ─── Manrope font-weight map ──────────────────────────────────────────────────
 //
 // Maps React Native fontWeight values to the correct Manrope font file name,
 // so that custom font files are used instead of OS font synthesis.
 
-const WEIGHT_TO_MANROPE: Record<string, string> = {
-  "100": "Manrope_200ExtraLight",
-  "200": "Manrope_200ExtraLight",
-  "300": "Manrope_300Light",
-  "400": "Manrope_400Regular",
-  normal: "Manrope_400Regular",
-  "500": "Manrope_500Medium",
-  "600": "Manrope_600SemiBold",
-  "700": "Manrope_700Bold",
-  bold: "Manrope_700Bold",
-  "800": "Manrope_800ExtraBold",
-  "900": "Manrope_800ExtraBold",
-};
+const WEIGHT_TO_MANROPE = {
+  "100": "font-thin",
+  "200": "font-extralight",
+  "300": "font-light",
+  "400": "font-normal",
+  normal: "font-normal",
+  "500": "font-medium",
+  "600": "font-semibold",
+  "700": "font-bold",
+  bold: "font-bold",
+  "800": "font-extrabold",
+  "900": "font-extrabold",
+} as const;
 
-// NativeWind / Tailwind font-weight class names → Manrope variant
-const TAILWIND_WEIGHT_TO_MANROPE: Record<string, string> = {
-  "font-thin": "Manrope_200ExtraLight",
-  "font-extralight": "Manrope_200ExtraLight",
-  "font-light": "Manrope_300Light",
-  "font-normal": "Manrope_400Regular",
-  "font-medium": "Manrope_500Medium",
-  "font-semibold": "Manrope_600SemiBold",
-  "font-bold": "Manrope_700Bold",
-  "font-extrabold": "Manrope_800ExtraBold",
-  "font-black": "Manrope_800ExtraBold",
-};
-
-function resolveManropeFont(fontWeight?: string | number, className?: string): string {
-  // 1. Prefer className-based resolution (NativeWind / Tailwind)
-  if (className) {
-    const tokens = className.split(/\s+/);
-    for (const token of tokens) {
-      const font = TAILWIND_WEIGHT_TO_MANROPE[token];
-      if (font) return font;
-    }
+function resolveManropeFont(fontWeight?: string | number) {
+  if (fontWeight) {
+    return (
+      WEIGHT_TO_MANROPE[fontWeight as keyof typeof WEIGHT_TO_MANROPE] ?? ("font-normal" as const)
+    );
   }
-  // 2. Fall back to inline fontWeight
-  if (fontWeight != null) {
-    return WEIGHT_TO_MANROPE[String(fontWeight)] ?? "Manrope_400Regular";
-  }
-  return "Manrope_400Regular";
+  return "font-normal" as const;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -68,18 +49,10 @@ export type { TextProps };
  * // NativeWind
  * <Text className="text-lg font-semibold text-gray-900">Title</Text>
  *
- * // Inline style
- * <Text style={{ fontSize: 16, fontWeight: "700" }}>Bold</Text>
  */
 export function Text({ style, className, ...rest }: TextProps & { className?: string }) {
   const flat = StyleSheet.flatten(style);
-  const fontFamily = resolveManropeFont(flat?.fontWeight as string | undefined, className);
+  const fontFamily = resolveManropeFont(flat?.fontWeight as string | undefined);
 
-  return (
-    <RNText
-      className={className}
-      style={[{ fontFamily: "Manrope_400Regular" }, style, { fontFamily }]}
-      {...rest}
-    />
-  );
+  return <RNText className={twMerge(className, fontFamily)} style={style} {...rest} />;
 }

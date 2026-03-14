@@ -16,15 +16,21 @@
   },
   "dependencies": {
     "@expo-google-fonts/manrope": "^0.4.2",
-    "@expo/vector-icons": "^15.0.3",
+    "@expo/ui": "55.0.1",
+    "@expo/vector-icons": "^15.0.2",
+    "@gorhom/bottom-sheet": "^5.2.8",
+    "@react-native-community/datetimepicker": "8.6.0",
     "@react-native-menu/menu": "1.2.2",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
+    "@shopify/react-native-skia": "2.4.18",
     "@tanstack/react-query": "^5.90.21",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
     "expo": "^55.0.0",
+    "expo-blur": "~55.0.8",
     "expo-build-properties": "~55.0.9",
     "expo-constants": "~55.0.7",
     "expo-crypto": "~55.0.8",
@@ -32,16 +38,19 @@
     "expo-font": "~55.0.4",
     "expo-haptics": "~55.0.8",
     "expo-image": "~55.0.5",
+    "expo-linear-gradient": "~55.0.8",
     "expo-linking": "~55.0.7",
     "expo-router": "~55.0.3",
     "expo-splash-screen": "~55.0.10",
     "expo-sqlite": "~55.0.10",
     "expo-status-bar": "~55.0.4",
-    "expo-symbols": "~55.0.4",
+    "expo-symbols": "~55.0.5",
     "expo-system-ui": "~55.0.9",
     "expo-web-browser": "~55.0.9",
+    "heroui-native": "^1.0.0-rc.4",
     "nativewind": "^5.0.0-preview.2",
     "phosphor-react-native": "^3.0.3",
+    "pressto": "^0.6.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-native": "0.83.2",
@@ -53,9 +62,12 @@
     "react-native-safe-area-context": "~5.6.2",
     "react-native-screens": "~4.23.0",
     "react-native-svg": "15.15.3",
+    "react-native-ui-datepicker": "^3.1.2",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.7.2",
-    "tailwind-merge": "^3.5.0",
+    "tailwind-merge": "^3.4.0",
+    "tailwind-variants": "^3.2.2",
+    "uniwind": "^1.5.0",
     "zeego": "^3.0.6",
     "zustand": "^5.0.11"
   },
@@ -74,5 +86,8 @@
   },
   "resolutions": {
     "lightningcss": "1.30.1"
-  }
+  },
+  "trustedDependencies": [
+    "@shopify/react-native-skia"
+  ]
 }

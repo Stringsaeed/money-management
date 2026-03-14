@@ -9,7 +9,7 @@ import {
   ScrollView,
   Switch,
   TextInput,
-  View
+  View,
 } from "react-native";
 import { Text } from "@/components/ui/text";
 

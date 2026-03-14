@@ -2,8 +2,6 @@ import React from "react";
 import { PressableScale } from "pressto";
 import { View } from "react-native";
 import { ArrowLeftIcon, DotIcon } from "phosphor-react-native";
-import { cn } from "heroui-native/utils";
-
 import { Text } from "../ui/text";
 
 interface NumberPadProps {
@@ -37,14 +35,16 @@ export default function NumberPad({
     return (
       <PressableScale
         key={value}
-        // @ts-expect-error - I'm not sure how to type this, but it works.
-        className={cn("flex-1 justify-center items-center")}
-        // style={[styles.button, isSpecialButton && styles.specialButton]}
         onPress={handlePress}
         onLongPress={() => {
           if (value === "delete") {
             onClear?.();
           }
+        }}
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
         {value === "delete" ? (
@@ -70,7 +70,7 @@ export default function NumberPad({
   ];
 
   return (
-    <View className="flex-1 p-2 w-full justify-end min-h-50 max-h-75">
+    <View className="flex-1 w-full justify-end min-h-50 max-h-75">
       {numbers.map((row, rowIndex) => (
         <View key={`row-${rowIndex}`} className="flex-row justify-around flex-1">
           {row.map((value) =>

@@ -4,11 +4,13 @@
  */
 import { drizzle } from "drizzle-orm/expo-sqlite";
 
+import { nowIso } from "@/utils/date";
+
 import { accounts, categories, transactions } from "./schema";
 
 type DB = ReturnType<typeof drizzle>;
 
-const NOW = new Date().toISOString();
+const NOW = nowIso();
 
 const ACCOUNTS = [
   {
