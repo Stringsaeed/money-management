@@ -1,8 +1,8 @@
 import { useState } from "react";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Button } from "heroui-native/button";
 import { Chip } from "heroui-native/chip";
 import { BottomSheet, useBottomSheet } from "heroui-native/bottom-sheet";
-import DateTimePicker, { DateType, useDefaultClassNames } from "react-native-ui-datepicker";
 
 import { getDisplayDateLabel } from "../utils";
 
@@ -25,8 +25,13 @@ function DoneButton({ onPress }: { onPress?: VoidFunction }) {
 }
 
 export default function TransactionDatePicker({ date, onChange }: TransactionDatePickerProps) {
-  const defaultClassNames = useDefaultClassNames();
-  const [selected, setSelected] = useState<DateType>();
+  const [selected, setSelected] = useState<Date>(date);
+
+  const handleChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (selectedDate) {
+      setSelected(selectedDate);
+    }
+  };
 
   return (
     <BottomSheet>
@@ -37,26 +42,21 @@ export default function TransactionDatePicker({ date, onChange }: TransactionDat
       </BottomSheet.Trigger>
       <BottomSheet.Portal disableFullWindowOverlay>
         <BottomSheet.Overlay />
-        <BottomSheet.Content backgroundClassName="rounded-[32px]" contentContainerClassName="gap-4">
+        <BottomSheet.Content
+          backgroundClassName="rounded-[32px]"
+          contentContainerClassName="gap-4 items-center"
+        >
           <DateTimePicker
-            mode="single"
-            date={selected}
-            onChange={({ date }) => {
-              setSelected(date);
-            }}
-            timePicker
-            navigationPosition="around"
-            classNames={defaultClassNames}
+            value={selected}
+            mode="datetime"
+            display="inline"
+            onChange={handleChange}
+            accentColor="black"
           />
 
           <DoneButton
             onPress={() => {
-              if (!selected) {
-                return;
-              }
-
-              // @ts-expect-error
-              onChange?.(new Date(selected));
+              onChange?.(selected);
             }}
           />
         </BottomSheet.Content>
