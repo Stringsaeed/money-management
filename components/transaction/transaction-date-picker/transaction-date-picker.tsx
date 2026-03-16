@@ -24,7 +24,15 @@ function DoneButton({ onPress }: { onPress?: VoidFunction }) {
   );
 }
 
-export default function TransactionDatePicker({ date, onChange }: TransactionDatePickerProps) {
+interface ExtendedDatePickerProps extends TransactionDatePickerProps {
+  children?: React.ReactNode;
+}
+
+export default function TransactionDatePicker({
+  date,
+  onChange,
+  children,
+}: ExtendedDatePickerProps) {
   const [selected, setSelected] = useState<Date>(date);
 
   const handleChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -35,10 +43,12 @@ export default function TransactionDatePicker({ date, onChange }: TransactionDat
 
   return (
     <BottomSheet>
-      <BottomSheet.Trigger asChild>
-        <Chip variant="soft" color="default">
-          <Chip.Label className="capitalize">📆 {getDisplayDateLabel(date)}</Chip.Label>
-        </Chip>
+      <BottomSheet.Trigger asChild={!children}>
+        {children ?? (
+          <Chip variant="soft" color="default">
+            <Chip.Label className="capitalize">📆 {getDisplayDateLabel(date)}</Chip.Label>
+          </Chip>
+        )}
       </BottomSheet.Trigger>
       <BottomSheet.Portal disableFullWindowOverlay>
         <BottomSheet.Overlay />

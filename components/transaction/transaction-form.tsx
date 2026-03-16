@@ -5,35 +5,31 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
+  TextInput,
   View,
   useWindowDimensions,
 } from "react-native";
-import { ArrowLeftIcon, ArrowRightIcon, TrashIcon, WarningCircleIcon } from "phosphor-react-native";
-import { Card } from "heroui-native/card";
-import { Chip } from "heroui-native/chip";
-import { CloseButton } from "heroui-native/close-button";
-import { Input } from "heroui-native/input";
-import { twMerge } from "tailwind-merge";
+import {
+  ArrowLeftIcon,
+  CalendarBlankIcon,
+  CaretDownIcon,
+  CheckIcon,
+  NoteBlankIcon,
+  TagIcon,
+  TrashIcon,
+} from "phosphor-react-native";
+import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
+import { formatRelative } from "date-fns";
+import { AnimatedRollingNumber } from "react-native-animated-rolling-numbers";
 
-import AnimatedPrice from "@/components/ui/animated-price";
 import NumberPad from "@/components/transaction/num-pad";
 import { Text } from "@/components/ui/text";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import useNumPadNumber from "@/hooks/use-num-pad-number";
-import { toDateString, today } from "@/utils/date";
 import type { TransactionType } from "@/types";
-import {
-  getCurrencySymbol,
-  getDisplayDateLabel,
-  getValidationMessage,
-  shiftDate,
-  triggerErrorHaptic,
-} from "./utils";
+import { getCurrencySymbol, getValidationMessage, triggerErrorHaptic } from "./utils";
 import TransactionDatePicker from "./transaction-date-picker/transaction-date-picker";
-import { parseISO } from "date-fns";
-import { cn } from "heroui-native";
 
 export interface TransactionFormData {
   type: TransactionType;
@@ -56,49 +52,14 @@ interface TransactionFormProps {
   onDelete?: () => void;
 }
 
-interface TypeOption {
-  value: TransactionType;
-  label: string;
-  emoji: string;
-  color: string;
-}
+const MUTED = "#9CA3AF";
+const ACCENT = "#11181C";
+const BG = "#FFFFFF";
+const CATEGORY_HIGHLIGHT = "#F3F4F6";
 
-const TYPE_OPTIONS: TypeOption[] = [
-  { value: "expense", label: "Expense", emoji: "💸", color: "#4F46E5" },
-  { value: "income", label: "Income", emoji: "💰", color: "#16A34A" },
-] as const;
+const layoutTransition = LinearTransition.springify().damping(20).stiffness(150);
 
-interface TypeChipProps {
-  option: TypeOption;
-  selected: boolean;
-  onPress: () => void;
-}
-
-const TypeChip = ({ option, selected, onPress }: TypeChipProps) => (
-  <Chip
-    animation="disable-all"
-    className={twMerge(
-      "rounded-full border px-4",
-      selected ? "border-transparent" : "border-white/10 bg-[#141417]",
-    )}
-    onPress={onPress}
-    style={{
-      backgroundColor: selected ? option.color : "#141417",
-    }}
-    variant="secondary"
-  >
-    <Chip.Label className="font-semibold text-white">
-      {option.emoji} {option.label}
-    </Chip.Label>
-  </Chip>
-);
-
-export function TransactionForm({
-  initialData,
-  onSubmit,
-  submitLabel = "Save",
-  onDelete,
-}: TransactionFormProps) {
+export function TransactionForm({ initialData, onSubmit, onDelete }: TransactionFormProps) {
   const { data: accounts = [] } = useAccounts();
   const { height } = useWindowDimensions();
 
@@ -107,13 +68,15 @@ export function TransactionForm({
 
   const [type, setType] = useState<TransactionType>(initialData?.type ?? "expense");
   const [accountId, setAccountId] = useState(initialData?.accountId ?? "");
-  const [toAccountId, setToAccountId] = useState<string | null>(initialData?.toAccountId ?? null);
+  const [toAccountId] = useState<string | null>(initialData?.toAccountId ?? null);
   const [categoryId, setCategoryId] = useState<string | null>(initialData?.categoryId ?? null);
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [date, setDate] = useState(initialData?.date ?? new Date());
   const [saving, setSaving] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [showNotePad, setShowNotePad] = useState(false);
   const { data: categories = [] } = useCategories(type === "income" ? "income" : "expense");
 
   const numPad = useNumPadNumber((initialData?.amount ?? 0) / 100);
@@ -121,10 +84,8 @@ export function TransactionForm({
 
   const currentAccount = accounts.find((account) => account.id === accountId);
   const currentCategory = categories.find((category) => category.id === categoryId);
-  const currentDestinationAccount = accounts.find((account) => account.id === toAccountId);
   const currency = currentAccount?.currency ?? initialData?.currency ?? firstAccountCurrency;
   const currencySymbol = useMemo(() => getCurrencySymbol(currency), [currency]);
-  const selectedType = TYPE_OPTIONS.find((option) => option.value === type) ?? TYPE_OPTIONS[0];
   const validationMessage = getValidationMessage({
     amount: amountCents,
     accountId,
@@ -145,19 +106,12 @@ export function TransactionForm({
     setSubmissionError("");
   }, [type, amountCents, accountId, toAccountId, categoryId, description, date]);
 
-  const handleTypeChange = (nextType: TransactionType) => {
-    setType(nextType);
-
-    if (nextType !== "transfer") {
-      setToAccountId(null);
-    }
-  };
-
-  const handleAccountChange = (nextAccountId: string) => {
-    setAccountId(nextAccountId);
-
-    if (nextAccountId === toAccountId) {
-      setToAccountId(null);
+  const handleTypeToggle = () => {
+    const next = type === "expense" ? "income" : "expense";
+    setType(next);
+    setCategoryId(null);
+    if (process.env.EXPO_OS === "ios") {
+      Haptics.selectionAsync();
     }
   };
 
@@ -192,51 +146,186 @@ export function TransactionForm({
     }
   };
 
+  const isExpense = type === "expense";
+  const verbText = isExpense ? "You spent" : "You received";
+  const prepositionText = isExpense ? "on" : "from";
+  const dateLabel = formatRelative(date, new Date());
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 pb-safe pt-safe"
+      className="flex-1"
+      style={{ backgroundColor: BG }}
     >
-      <View className="flex-1 px-4 pb-4">
-        <View className="flex-row items-center justify-between">
-          <CloseButton
-            className="bg-white/8"
-            iconProps={{ size: 18 }}
-            onPress={() => router.back()}
-          />
+      {/* Header bar */}
+      <View className="flex-row items-center justify-between px-5 pt-safe pb-2">
+        <Pressable
+          onPress={() => router.back()}
+          className="h-10 w-10 items-center justify-center rounded-full"
+          style={{ backgroundColor: "#F3F4F6" }}
+        >
+          <ArrowLeftIcon size={20} color={ACCENT} weight="bold" />
+        </Pressable>
 
-          <View className="flex-row items-center gap-2">
-            <TransactionDatePicker date={date} onChange={setDate} />
-            {onDelete ? (
-              <Chip
-                animation="disable-all"
-                className="bg-[#2B1111]"
-                color="danger"
-                onPress={onDelete}
-                variant="secondary"
-              >
-                <TrashIcon color="#F87171" size={14} weight="regular" />
-                <Chip.Label className="font-semibold text-red-300">Delete</Chip.Label>
-              </Chip>
-            ) : null}
-          </View>
+        <View className="flex-row items-center gap-3">
+          {onDelete ? (
+            <Pressable
+              onPress={onDelete}
+              className="h-10 w-10 items-center justify-center rounded-full"
+              style={{ backgroundColor: "#FEE2E2" }}
+            >
+              <TrashIcon size={18} color="#DC2626" weight="bold" />
+            </Pressable>
+          ) : null}
+          <Pressable
+            onPress={handleSubmit}
+            disabled={saving}
+            className="h-10 w-10 items-center justify-center rounded-full"
+            style={{ backgroundColor: ACCENT, opacity: saving ? 0.5 : 1 }}
+          >
+            <CheckIcon size={20} color="#FFFFFF" weight="bold" />
+          </Pressable>
         </View>
+      </View>
 
-        <View className="flex-1">
-          <View className={twMerge("flex-1 items-center justify-center", tight ? "pt-1" : "pt-3")}>
-            <AnimatedPrice currency="AED" size={tight ? 68 : 78}>
-              {numPad.displayValue}
-            </AnimatedPrice>
+      {/* Typography-driven form */}
+      <View className={`flex-1 px-6 ${tight ? "pt-2" : "pt-6"}`}>
+        <Animated.View
+          layout={layoutTransition}
+          className="gap-1 flex-1 items-center flex-row flex-wrap"
+        >
+          <Pressable onPress={handleTypeToggle}>
+            <View className="flex-row items-center gap-2">
+              <Text className="font-medium tracking-wide uppercase" style={{ color: MUTED }}>
+                {verbText}
+              </Text>
+              <CaretDownIcon size={12} color={MUTED} weight="bold" />
+            </View>
+          </Pressable>
+
+          <View
+            className="flex-row items-center gap-1.5 rounded-xl px-3 py-1.5"
+            style={{ backgroundColor: CATEGORY_HIGHLIGHT, borderCurve: "continuous" }}
+          >
+            <Text className="font-normal">{currencySymbol}</Text>
+            <AnimatedRollingNumber useGrouping value={numPad.value} />
           </View>
 
-          <View className={cn("w-full flex-1", tight ? "mt-2" : "mt-3")}>
-            <NumberPad
-              onClear={numPad.clearAll}
-              onDelete={numPad.deleteDigit}
-              onDot={numPad.addDecimalPoint}
-              onPress={numPad.appendDigit}
-            />
+          <View className="flex-row flex-wrap items-center gap-1.5 mt-1">
+            <Text className="text-xl font-medium text-muted">{prepositionText}</Text>
+            <Pressable
+              onPress={() => {
+                setShowCategoryPicker(!showCategoryPicker);
+                setShowNotePad(false);
+              }}
+            >
+              <View
+                className="flex-row items-center gap-1.5 rounded-xl px-3 py-1.5"
+                style={{
+                  backgroundColor: currentCategory
+                    ? `${currentCategory.color}15`
+                    : CATEGORY_HIGHLIGHT,
+                  borderCurve: "continuous",
+                }}
+              >
+                {currentCategory ? (
+                  <Text className="text-[18px]">{currentCategory.icon}</Text>
+                ) : (
+                  <TagIcon size={16} color={MUTED} weight="duotone" />
+                )}
+                <Text
+                  className="text-[18px] font-semibold"
+                  style={{ color: currentCategory ? currentCategory.color : MUTED }}
+                >
+                  {currentCategory?.name ?? "category"}
+                </Text>
+                <CaretDownIcon
+                  size={12}
+                  color={currentCategory ? currentCategory.color : MUTED}
+                  weight="bold"
+                />
+              </View>
+            </Pressable>
           </View>
+
+          <View className="flex-row items-center gap-1.5 mt-1">
+            <Text className="text-xl font-medium" style={{ color: MUTED }}>
+              at
+            </Text>
+            <TransactionDatePicker date={date} onChange={setDate}>
+              <Pressable
+                className="flex-row items-center gap-1.5 rounded-xl px-3 py-1.5"
+                style={{ backgroundColor: CATEGORY_HIGHLIGHT, borderCurve: "continuous" }}
+              >
+                <CalendarBlankIcon size={16} color={ACCENT} weight="duotone" />
+                <Text className="text-[18px] font-semibold" style={{ color: ACCENT }}>
+                  {dateLabel}
+                </Text>
+              </Pressable>
+            </TransactionDatePicker>
+          </View>
+
+          <View className="flex-row items-center gap-1.5 mt-1">
+            <Pressable
+              onPress={() => {
+                setShowNotePad(!showNotePad);
+                setShowCategoryPicker(false);
+              }}
+            >
+              <View
+                className="flex-row items-center gap-1.5 rounded-xl px-3 py-1.5"
+                style={{
+                  backgroundColor: description ? "#F0FDF4" : CATEGORY_HIGHLIGHT,
+                  borderCurve: "continuous",
+                }}
+              >
+                <NoteBlankIcon size={16} color={description ? "#16A34A" : MUTED} weight="duotone" />
+                <Text
+                  className="text-[18px] font-semibold"
+                  style={{ color: description ? ACCENT : MUTED }}
+                >
+                  {description || "add a note"}
+                </Text>
+              </View>
+            </Pressable>
+          </View>
+        </Animated.View>
+
+        {/* Validation message */}
+        {showValidation && validationMessage ? (
+          <Animated.View
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(150)}
+            layout={layoutTransition}
+            className="mt-3"
+          >
+            <Text className="text-sm font-medium" style={{ color: "#DC2626" }}>
+              {validationMessage}
+            </Text>
+          </Animated.View>
+        ) : null}
+
+        {submissionError ? (
+          <Animated.View
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(150)}
+            layout={layoutTransition}
+            className="mt-3"
+          >
+            <Text className="text-sm font-medium" style={{ color: "#DC2626" }}>
+              {submissionError}
+            </Text>
+          </Animated.View>
+        ) : null}
+
+        {/* Number pad */}
+        <View className="grow">
+          <NumberPad
+            onClear={numPad.clearAll}
+            onDelete={numPad.deleteDigit}
+            onDot={numPad.addDecimalPoint}
+            onPress={numPad.appendDigit}
+          />
         </View>
       </View>
     </KeyboardAvoidingView>

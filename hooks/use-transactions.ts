@@ -6,6 +6,7 @@ import { accounts, categories, transactions } from "@/db/schema";
 import { generateId } from "@/utils/id";
 import { nowIso, monthBounds } from "@/utils/date";
 import type { Transaction, TransactionWithDetails } from "@/types";
+import { formatISO, isDate } from "date-fns";
 
 // ── Query keys ────────────────────────────────────────────────────────────────
 
@@ -227,11 +228,15 @@ export function useUpdateTransaction() {
       data,
     }: {
       id: string;
-      data: Partial<Omit<Transaction, "id" | "createdAt">>;
+      data: Partial<Omit<Transaction, "id" | "createdAt" | "date"> & { date?: Date | string }>;
     }) => {
       await db
         .update(transactions)
-        .set({ ...data, updatedAt: nowIso() })
+        .set({
+          ...data,
+          date: isDate(data?.date) ? formatISO(data.date) : data?.date,
+          updatedAt: nowIso(),
+        })
         .where(eq(transactions.id, id));
     },
     onSuccess: (_, { id }) => {

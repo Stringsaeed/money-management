@@ -102,14 +102,17 @@ export default function RootLayout() {
                   <Stack.Screen
                     name="transaction/new"
                     options={{
-                      presentation: "card",
-                      title: "Add Transaction",
+                      presentation: "fullScreenModal",
                       headerShown: false,
                     }}
                   />
                   <Stack.Screen
                     name="transaction/[id]"
-                    options={{ presentation: "modal", title: "Edit Transaction" }}
+                    options={{
+                      presentation: "modal",
+                      title: "Edit Transaction",
+                      headerShown: false,
+                    }}
                   />
                   <Stack.Screen
                     name="account/new"
