@@ -1,7 +1,7 @@
 import React from "react";
 import { PressableScale } from "pressto";
 import { View } from "react-native";
-import { ArrowLeftIcon, DotIcon } from "phosphor-react-native";
+import { BackspaceIcon, DotOutlineIcon } from "phosphor-react-native";
 import { Text } from "../ui/text";
 
 interface NumberPadProps {
@@ -11,6 +11,8 @@ interface NumberPadProps {
   onDot?: () => void;
   showDot?: boolean;
 }
+
+const ACCENT = "#11181C";
 
 export default function NumberPad({
   onPress,
@@ -48,15 +50,13 @@ export default function NumberPad({
         }}
       >
         {value === "delete" ? (
-          <Text className="text-[20px]">
-            <ArrowLeftIcon size={20} weight="bold" />
-          </Text>
+          <BackspaceIcon size={24} color={ACCENT} weight="regular" />
         ) : value === "dot" ? (
-          <Text className="text-[20px]">
-            <DotIcon size={20} weight="bold" />
-          </Text>
+          <DotOutlineIcon size={24} color={ACCENT} weight="fill" />
         ) : (
-          <Text className="text-[26px]">{value}</Text>
+          <Text className="text-[28px] font-medium" style={{ color: ACCENT }}>
+            {value}
+          </Text>
         )}
       </PressableScale>
     );
@@ -70,14 +70,14 @@ export default function NumberPad({
   ];
 
   return (
-    <View className="flex-1 w-full justify-end min-h-50 max-h-75">
+    <View className="w-full flex-1 justify-end pb-safe">
       {numbers.map((row, rowIndex) => (
-        <View key={`row-${rowIndex}`} className="flex-row justify-around flex-1">
+        <View key={`row-${rowIndex}`} className="flex-1 flex-row justify-around">
           {row.map((value) =>
             value ? (
               renderButton(value)
             ) : (
-              <View key="empty" className="flex-1 justify-center items-center" />
+              <View key="empty" className="flex-1 items-center justify-center" />
             ),
           )}
         </View>

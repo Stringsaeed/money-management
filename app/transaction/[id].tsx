@@ -19,7 +19,7 @@ export default function EditTransactionScreen() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View className="flex-1 items-center justify-center">
         <ActivityIndicator />
       </View>
     );
@@ -59,7 +59,7 @@ export default function EditTransactionScreen() {
         toAccountId: transaction.toAccountId,
         categoryId: transaction.categoryId,
         description: transaction.description,
-        date: transaction.date,
+        date: new Date(transaction.date),
         currency: transaction.currency,
         originalAmount: transaction.originalAmount,
         originalCurrency: transaction.originalCurrency,
