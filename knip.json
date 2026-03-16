@@ -1,0 +1,24 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": ["app/**/*.tsx"],
+  "project": [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "constants/**/*.{ts,tsx}",
+    "db/**/*.{ts,tsx,js}",
+    "hooks/**/*.{ts,tsx}",
+    "stores/**/*.{ts,tsx}",
+    "types/**/*.{ts,tsx}",
+    "utils/**/*.{ts,tsx}",
+    "scripts/**/*.{js,ts}"
+  ],
+  "ignoreDependencies": [
+    "expo-build-properties",
+    "expo-linear-gradient",
+    "nativewind",
+    "react-native-css",
+    "babel-plugin-inline-import",
+    "expo-updates"
+  ],
+  "ignore": ["hooks/use-color-scheme.web.ts"]
+}

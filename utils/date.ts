@@ -15,12 +15,6 @@ import {
 
 const DATE_ONLY_PATTERN = "yyyy-MM-dd";
 
-const DISPLAY_FORMATS = {
-  "MM/DD/YYYY": "MM/dd/yyyy",
-  "DD/MM/YYYY": "dd/MM/yyyy",
-  "YYYY-MM-DD": DATE_ONLY_PATTERN,
-} as const;
-
 const buildDateString = (year: number, month: number, day = 1) =>
   `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
@@ -50,17 +44,6 @@ export function toDateString(date: Date): string {
  */
 export function parseDate(dateStr: string): Date {
   return parse(dateStr, DATE_ONLY_PATTERN, startOfDay(new Date()));
-}
-
-/**
- * Format a "YYYY-MM-DD" string using a display format string.
- * Supported tokens: YYYY, MM, DD
- */
-export function formatDate(
-  dateStr: string,
-  displayFormat: keyof typeof DISPLAY_FORMATS = "MM/DD/YYYY",
-): string {
-  return format(parseDate(dateStr), DISPLAY_FORMATS[displayFormat]);
 }
 
 /**
@@ -113,7 +96,7 @@ export function addMonths(
 /**
  * Returns the number of days in a month (accounts for leap years).
  */
-export function daysInMonth(year: number, month: number): number {
+function daysInMonth(year: number, month: number): number {
   return getDaysInMonth(parseDate(buildDateString(year, month)));
 }
 

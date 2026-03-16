@@ -9,7 +9,7 @@ import type { Account, AccountWithBalance } from "@/types";
 
 // ── Query keys ────────────────────────────────────────────────────────────────
 
-export const accountKeys = {
+const accountKeys = {
   all: ["accounts"] as const,
   balances: ["account-balances"] as const,
   detail: (id: string) => ["accounts", id] as const,

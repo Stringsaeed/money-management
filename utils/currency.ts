@@ -30,29 +30,3 @@ export function decimalStringToCents(value: string): number {
   if (isNaN(parsed)) return 0;
   return Math.round(parsed * 100);
 }
-
-/**
- * Apply an exchange rate (stored as rate * 1_000_000) to an amount in cents.
- * e.g. convertCents(100, 1084700) → 109 cents (€1.00 @ 1.0847 USD/EUR)
- */
-export function convertCents(amountCents: number, rateTimesOneMillion: number): number {
-  return Math.round((amountCents * rateTimesOneMillion) / 1_000_000);
-}
-
-/**
- * Parse a float exchange rate string to the integer storage format (rate * 1_000_000).
- * e.g. "1.0847" → 1084700
- */
-export function rateStringToInt(rateStr: string): number {
-  const rate = parseFloat(rateStr.replace(/[^0-9.]/g, ""));
-  if (isNaN(rate) || rate <= 0) return 1_000_000; // default: 1:1
-  return Math.round(rate * 1_000_000);
-}
-
-/**
- * Format the stored integer rate back to a readable decimal string.
- * e.g. 1084700 → "1.0847"
- */
-export function rateIntToString(rateInt: number): string {
-  return (rateInt / 1_000_000).toFixed(6).replace(/\.?0+$/, "");
-}

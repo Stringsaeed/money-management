@@ -3,7 +3,7 @@ import { StyleSheet, type TextProps } from "react-native";
 import { Text } from "@/components/ui/text";
 import { useThemeColor } from "@/hooks/use-theme-color";
 
-export type ThemedTextProps = TextProps & {
+type ThemedTextProps = TextProps & {
   lightColor?: string;
   darkColor?: string;
   type?: "default" | "title" | "defaultSemiBold" | "subtitle" | "link";

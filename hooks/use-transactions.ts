@@ -10,14 +10,14 @@ import { formatISO, isDate } from "date-fns";
 
 // ── Query keys ────────────────────────────────────────────────────────────────
 
-export const transactionKeys = {
+const transactionKeys = {
   all: ["transactions"] as const,
   list: (filters: TransactionFilters) => ["transactions", "list", filters] as const,
   recent: (limit: number) => ["transactions", "recent", limit] as const,
   detail: (id: string) => ["transactions", id] as const,
 };
 
-export interface TransactionFilters {
+interface TransactionFilters {
   year?: number;
   month?: number; // 1-indexed
   accountId?: string | null;
@@ -97,23 +97,6 @@ export function useTransactions(filters: TransactionFilters) {
         .from(transactions)
         .where(conditions.length ? and(...conditions) : undefined)
         .orderBy(desc(transactions.date), desc(transactions.createdAt))
-        .all()) as Transaction[];
-
-      return enrichTransactions(db, rows);
-    },
-  });
-}
-
-export function useRecentTransactions(limit = 10) {
-  const db = useDatabase();
-  return useQuery({
-    queryKey: transactionKeys.recent(limit),
-    queryFn: async (): Promise<TransactionWithDetails[]> => {
-      const rows = (await db
-        .select()
-        .from(transactions)
-        .orderBy(desc(transactions.date), desc(transactions.createdAt))
-        .limit(limit)
         .all()) as Transaction[];
 
       return enrichTransactions(db, rows);

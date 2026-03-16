@@ -31,8 +31,6 @@ function resolveManropeFont(fontWeight?: string | number) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export type { TextProps };
-
 /**
  * Shared Text component that always renders with the Manrope typeface.
  *

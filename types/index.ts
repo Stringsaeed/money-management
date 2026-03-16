@@ -79,24 +79,6 @@ export interface RecurringPayment {
   updatedAt: string;
 }
 
-// ── ExchangeRate ──────────────────────────────────────────────────────────────
-
-export interface ExchangeRate {
-  id: string; // "{fromCurrency}_{toCurrency}"
-  fromCurrency: string;
-  toCurrency: string;
-  rate: number; // rate * 1_000_000
-  updatedAt: string;
-}
-
-// ── AppSettings ───────────────────────────────────────────────────────────────
-
-export interface AppSettings {
-  homeCurrency: string; // ISO 4217
-  dateFormat: "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD";
-  firstDayOfWeek: 0 | 1; // 0=Sunday, 1=Monday
-}
-
 // ── Computed / query results ───────────────────────────────────────────────────
 
 export interface AccountWithBalance extends Account {
@@ -114,12 +96,4 @@ export interface DayGroup {
   transactions: TransactionWithDetails[];
   totalIncome: number;
   totalExpense: number;
-}
-
-export interface MonthSummary {
-  year: number;
-  month: number; // 1-12
-  totalIncome: number;
-  totalExpense: number;
-  netAmount: number;
 }

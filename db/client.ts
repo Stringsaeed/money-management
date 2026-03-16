@@ -1,12 +1,9 @@
 /**
- * Re-export useSQLiteContext for convenience, and provide a typed
- * drizzle DB wrapper.
+ * Typed drizzle DB wrapper over Expo SQLite.
  */
 import { useSQLiteContext } from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import * as schema from "./schema";
-
-export { useSQLiteContext };
 
 /**
  * Returns a drizzle-wrapped database instance from the SQLite context.

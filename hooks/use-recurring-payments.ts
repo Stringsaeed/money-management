@@ -9,7 +9,7 @@ import type { RecurringPayment } from "@/types";
 
 // ── Query keys ────────────────────────────────────────────────────────────────
 
-export const recurringKeys = {
+const recurringKeys = {
   all: ["recurring-payments"] as const,
   detail: (id: string) => ["recurring-payments", id] as const,
 };

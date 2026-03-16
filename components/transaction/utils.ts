@@ -1,17 +1,12 @@
-import { addDays, formatRelative, isValid } from "date-fns";
+import { formatRelative, isValid } from "date-fns";
 import * as Haptics from "expo-haptics";
 
-import { parseDate, toDateString } from "@/utils/date";
 import { TransactionType } from "@/types";
 
 export const triggerErrorHaptic = () => {
   if (process.env.EXPO_OS === "ios") {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
   }
-};
-
-export const shiftDate = (date: string, delta: number) => {
-  return toDateString(addDays(parseDate(date), delta));
 };
 
 export const getDisplayDateLabel = (value: Date) => {

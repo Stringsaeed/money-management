@@ -2,8 +2,6 @@
  * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
  */
 
-import { Platform } from "react-native";
-
 const tintColorLight = "#0a7ea4";
 const tintColorDark = "#fff";
 
@@ -73,43 +71,3 @@ export const ColorPalette = [
   "#D62728",
   "#9467BD",
 ];
-
-// ─── Manrope font family constants ───────────────────────────────────────────
-//
-// These match the font names registered via @expo-google-fonts/manrope.
-// Use these values if you ever need to reference a specific Manrope weight
-// outside of the shared <Text /> component (e.g. in TextInput styles).
-export const ManropeFonts = {
-  extraLight: "Manrope_200ExtraLight",
-  light: "Manrope_300Light",
-  regular: "Manrope_400Regular",
-  medium: "Manrope_500Medium",
-  semiBold: "Manrope_600SemiBold",
-  bold: "Manrope_700Bold",
-  extraBold: "Manrope_800ExtraBold",
-} as const;
-
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: "system-ui",
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: "ui-serif",
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: "ui-rounded",
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: "ui-monospace",
-  },
-  default: {
-    sans: "normal",
-    serif: "serif",
-    rounded: "normal",
-    mono: "monospace",
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});

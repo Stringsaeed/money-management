@@ -9,7 +9,7 @@ import type { Category } from "@/types";
 
 // ── Query keys ────────────────────────────────────────────────────────────────
 
-export const categoryKeys = {
+const categoryKeys = {
   all: ["categories"] as const,
   byType: (type: "income" | "expense") => ["categories", type] as const,
   detail: (id: string) => ["categories", id] as const,
