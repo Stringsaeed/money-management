@@ -1,5 +1,7 @@
 import { useState } from "react";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { Button } from "heroui-native/button";
 import { Chip } from "heroui-native/chip";
 import { BottomSheet, useBottomSheet } from "heroui-native/bottom-sheet";
@@ -46,11 +48,13 @@ export default function TransactionDatePicker({
       <BottomSheet.Trigger asChild={!children}>
         {children ?? (
           <Chip variant="soft" color="default">
-            <Chip.Label className="capitalize">📆 {getDisplayDateLabel(date)}</Chip.Label>
+            <Chip.Label className="capitalize">
+              📆 {getDisplayDateLabel(date)}
+            </Chip.Label>
           </Chip>
         )}
       </BottomSheet.Trigger>
-      <BottomSheet.Portal disableFullWindowOverlay>
+      <BottomSheet.Portal>
         <BottomSheet.Overlay />
         <BottomSheet.Content
           backgroundClassName="rounded-[32px]"

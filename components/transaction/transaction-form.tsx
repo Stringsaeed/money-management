@@ -1,14 +1,7 @@
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  TextInput,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, View, useWindowDimensions } from "react-native";
 import {
   ArrowLeftIcon,
   CalendarBlankIcon,
@@ -60,6 +53,7 @@ const CATEGORY_HIGHLIGHT = "#F3F4F6";
 const layoutTransition = LinearTransition.springify().damping(20).stiffness(150);
 
 export function TransactionForm({ initialData, onSubmit, onDelete }: TransactionFormProps) {
+  const router = useRouter();
   const { data: accounts = [] } = useAccounts();
   const { height } = useWindowDimensions();
 
@@ -160,7 +154,19 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
       {/* Header bar */}
       <View className="flex-row items-center justify-between px-5 pt-safe pb-2">
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => {
+            try {
+              if (router.canDismiss()) {
+                router.dismiss();
+              } else if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace("/(tabs)");
+              }
+            } catch (e) {
+              console.error("Navigation error:", e);
+            }
+          }}
           className="h-10 w-10 items-center justify-center rounded-full"
           style={{ backgroundColor: "#F3F4F6" }}
         >
