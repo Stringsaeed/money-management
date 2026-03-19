@@ -3,8 +3,6 @@ import { useMemo } from "react";
 import { ActivityIndicator, Pressable, SectionList, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { SymbolView } from "expo-symbols";
-import { Chip } from "heroui-native/chip";
-import { CloseButton } from "heroui-native/close-button";
 
 import { EmptyState } from "@/components/common/empty-state";
 import { TransactionGroup } from "@/components/transaction/transaction-group";
@@ -16,6 +14,10 @@ import { useUIStore } from "@/stores/ui-store";
 import { formatCents } from "@/utils/currency";
 import { formatMonth } from "@/utils/date";
 import type { DayGroup, TransactionWithDetails } from "@/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { XIcon } from "phosphor-react-native";
+import { Icon } from "@/components/ui/icon";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -31,31 +33,6 @@ function groupByDay(transactions: TransactionWithDetails[]): DayGroup[] {
     else if (t.type === "expense") group.totalExpense += t.amount;
   }
   return Array.from(map.values()).sort((a, b) => b.date.localeCompare(a.date));
-}
-
-// ─── Active chip ──────────────────────────────────────────────────────────────
-
-interface ActiveChipProps {
-  label: string;
-  onRemove: () => void;
-}
-
-function ActiveChip({ label, onRemove }: ActiveChipProps) {
-  return (
-    <View
-      className="flex-row items-center gap-1 bg-gray-900 rounded-full pl-3 pr-2 py-1.5"
-      style={{ borderCurve: "continuous" }}
-    >
-      <Text className="text-[12px] font-medium text-white">{label}</Text>
-      <Pressable
-        onPress={onRemove}
-        hitSlop={8}
-        className="w-4 h-4 items-center justify-center active:opacity-60"
-      >
-        <SymbolView name="xmark" size={10} tintColor="rgba(255,255,255,0.7)" weight="bold" />
-      </Pressable>
-    </View>
-  );
 }
 
 // ─── Sticky header ────────────────────────────────────────────────────────────
@@ -128,25 +105,31 @@ function StickyHeader({
           contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 10 }}
         >
           {activeAccountName && (
-            <Chip color="default">
+            <Badge>
               <Text>💳</Text>
-              <Chip.Label>{activeAccountName}</Chip.Label>
-              <CloseButton onPress={() => setActiveAccountId(null)} />
-            </Chip>
+              <Text>{activeAccountName}</Text>
+              <Button onPress={() => setActiveAccountId(null)} variant="outline" size="icon">
+                <Icon as={XIcon} />
+              </Button>
+            </Badge>
           )}
           {selectedYear && selectedMonth && (
-            <Chip color="default">
+            <Badge>
               <Text>📅</Text>
-              <Chip.Label>{formatMonth(selectedYear, selectedMonth)}</Chip.Label>
-              <CloseButton onPress={() => setSelectedMonth(null, null)} />
-            </Chip>
+              <Text>{formatMonth(selectedYear, selectedMonth)}</Text>
+              <Button onPress={() => setSelectedMonth(null, null)} variant="outline" size="icon">
+                <Icon as={XIcon} />
+              </Button>
+            </Badge>
           )}
           {selectedCategoryName && (
-            <Chip color="default">
+            <Badge>
               <Text>🏷️</Text>
-              <Chip.Label>{selectedCategoryName}</Chip.Label>
-              <CloseButton onPress={() => setSelectedCategoryId(null)} />
-            </Chip>
+              <Text>{selectedCategoryName}</Text>
+              <Button onPress={() => setSelectedCategoryId(null)} variant="outline" size="icon">
+                <Icon as={XIcon} />
+              </Button>
+            </Badge>
           )}
         </ScrollView>
       )}
@@ -242,7 +225,7 @@ export default function HomeScreen() {
     activeAccount?.currency ?? transactions[0]?.currency ?? accounts[0]?.currency ?? "USD";
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-accent">
       <StickyHeader
         activeFilterCount={activeFilterCount}
         activeAccountName={activeAccount?.name ?? null}

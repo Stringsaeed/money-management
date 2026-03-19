@@ -52,5 +52,8 @@
     "editor.defaultFormatter": "oxc.oxc-vscode",
     "editor.formatOnSave": true
   },
-  "js/ts.experimental.useTsgo": true
+  "js/ts.experimental.useTsgo": true,
+  "[json]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  }
 }

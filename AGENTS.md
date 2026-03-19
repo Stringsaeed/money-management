@@ -47,7 +47,7 @@
 - `constants/theme.ts` defines color palettes and font stacks for light/dark; rely on the exported tokens instead of hard-coded hex values.
 - `hooks/use-theme-color.ts` and `hooks/use-color-scheme.ts[x]` centralize theme lookups per platform; consult them before creating new theme helpers.
 - `assets/` contains images/fonts; import static assets through Expo’s module system rather than `require` strings.
-- `global.css`, `postcss.config.mjs`, and `uniwind-types.d.ts` set up Tailwind v4.
+- `global.css`, `postcss.config.mjs` set up Tailwind v4.
 - `scripts/reset-project.js` resets the `app/` folder; never run it automatically because it moves files irreversibly.
 - `constants/`, `hooks/`, and `components/` share the `@/*` alias (configured in `tsconfig.json`) so prefer `import Foo from "@/components/Foo"` over relative `../../` walks.
 - `eslint.config.js`, `.oxlintrc.json`, and `.oxfmtrc.json` codify lint/format behavior; read them before changing stylistic conventions.
@@ -161,9 +161,3 @@
 - [ ] Prepare Conventional Commit message if the user asks for one.
 - [ ] Summarize changes referencing file paths wrapped in backticks.
 - [ ] Suggest logical next steps (tests, build, QA) in the final response when relevant.
-
-<!-- HEROUI-NATIVE-AGENTS-MD-START -->
-
-[HeroUI Native Docs Index]|root: ./.heroui-docs/native|STOP. What you remember about HeroUI Native is WRONG for this project. Always search docs and read before any task.|If docs missing, run this command first: heroui agents-md --native --output AGENTS.md|components/(buttons):{button.mdx,close-button.mdx}|components/(collections):{menu.mdx,tag-group.mdx}|components/(controls):{slider.mdx,switch.mdx}|components/(data-display):{chip.mdx}|components/(feedback):{alert.mdx,skeleton-group.mdx,skeleton.mdx,spinner.mdx}|components/(forms):{checkbox.mdx,control-field.mdx,description.mdx,field-error.mdx,input-group.mdx,input-otp.mdx,input.mdx,label.mdx,radio-group.mdx,search-field.mdx,select.mdx,text-area.mdx,text-field.mdx}|components/(layout):{card.mdx,separator.mdx,surface.mdx}|components/(media):{avatar.mdx}|components/(navigation):{accordion.mdx,list-group.mdx,tabs.mdx}|components/(overlays):{bottom-sheet.mdx,dialog.mdx,popover.mdx,toast.mdx}|components/(utilities):{pressable-feedback.mdx,scroll-shadow.mdx}|getting-started/(handbook):{animation.mdx,colors.mdx,composition.mdx,portal.mdx,provider.mdx,styling.mdx,theming.mdx}|getting-started/(overview):{design-principles.mdx,quick-start.mdx}|getting-started/(ui-for-agents):{agent-skills.mdx,agents-md.mdx,llms-txt.mdx,mcp-server.mdx}|releases:{beta-10.mdx,beta-11.mdx,beta-12.mdx,beta-13.mdx,rc-1.mdx,rc-2.mdx,rc-3.mdx,rc-4.mdx}
-
-<!-- HEROUI-NATIVE-AGENTS-MD-END -->

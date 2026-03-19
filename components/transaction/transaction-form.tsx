@@ -258,17 +258,7 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
             <Text className="text-xl font-medium" style={{ color: MUTED }}>
               at
             </Text>
-            <TransactionDatePicker date={date} onChange={setDate}>
-              <Pressable
-                className="flex-row items-center gap-1.5 rounded-xl px-3 py-1.5"
-                style={{ backgroundColor: CATEGORY_HIGHLIGHT, borderCurve: "continuous" }}
-              >
-                <CalendarBlankIcon size={16} color={ACCENT} weight="duotone" />
-                <Text className="text-[18px] font-semibold" style={{ color: ACCENT }}>
-                  {dateLabel}
-                </Text>
-              </Pressable>
-            </TransactionDatePicker>
+            <TransactionDatePicker date={date} onChange={setDate}></TransactionDatePicker>
           </View>
 
           <View className="flex-row items-center gap-1.5 mt-1">

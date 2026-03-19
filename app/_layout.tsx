@@ -10,6 +10,15 @@ import {
   Manrope_800ExtraBold,
   useFonts,
 } from "@expo-google-fonts/manrope";
+import {
+  Newsreader_200ExtraLight,
+  Newsreader_300Light,
+  Newsreader_400Regular,
+  Newsreader_500Medium,
+  Newsreader_600SemiBold,
+  Newsreader_700Bold,
+  Newsreader_800ExtraBold,
+} from "@expo-google-fonts/newsreader";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SQLiteProvider, type SQLiteDatabase } from "expo-sqlite";
@@ -17,7 +26,6 @@ import { StatusBar } from "expo-status-bar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { HeroUINativeProvider } from "heroui-native/provider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import "../global.css";
@@ -25,6 +33,8 @@ import "../global.css";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { runMigrations } from "@/db/migrate";
 import { seedDatabase } from "@/db/seed";
+import { PortalHost } from "@rn-primitives/portal";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 // Keep the native splash screen visible while fonts load
 SplashScreen.preventAutoHideAsync();
@@ -76,6 +86,14 @@ export default function RootLayout() {
     Manrope_600SemiBold,
     Manrope_700Bold,
     Manrope_800ExtraBold,
+
+    Newsreader_200ExtraLight,
+    Newsreader_300Light,
+    Newsreader_400Regular,
+    Newsreader_500Medium,
+    Newsreader_600SemiBold,
+    Newsreader_700Bold,
+    Newsreader_800ExtraBold,
   });
 
   useEffect(() => {
@@ -93,7 +111,7 @@ export default function RootLayout() {
       <SQLiteProvider databaseName={DB_NAME} onInit={onDatabaseInit} useSuspense>
         <QueryClientProvider client={queryClient}>
           <GestureHandlerRootView style={{ flex: 1 }}>
-            <HeroUINativeProvider>
+            <BottomSheetModalProvider>
               <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
                 <Stack>
                   <Stack.Screen name="splash" options={{ headerShown: false }} />
@@ -102,7 +120,7 @@ export default function RootLayout() {
                   <Stack.Screen
                     name="transaction/new"
                     options={{
-                      presentation: "fullScreenModal",
+                      presentation: "card",
                       headerShown: false,
                     }}
                   />
@@ -142,8 +160,9 @@ export default function RootLayout() {
                   />
                 </Stack>
                 <StatusBar style="auto" />
+                <PortalHost />
               </ThemeProvider>
-            </HeroUINativeProvider>
+            </BottomSheetModalProvider>
           </GestureHandlerRootView>
         </QueryClientProvider>
       </SQLiteProvider>

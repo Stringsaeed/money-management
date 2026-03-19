@@ -1,18 +1,44 @@
-@import "tailwindcss";
-@import "uniwind";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
 
-@import "heroui-native/styles";
+@import "nativewind/theme";
 
 @theme {
-  --font-thin: "Manrope_200ExtraLight";
-  --font-light: "Manrope_300Light";
-  --font-normal: "Manrope_400Regular";
-  --font-medium: "Manrope_500Medium";
-  --font-semibold: "Manrope_600SemiBold";
-  --font-bold: "Manrope_700Bold";
-  --font-black: "Manrope_900Black";
+  --font-thin: "Newsreader_200ExtraLight";
+  --font-light: "Newsreader_300Light";
+  --font-normal: "Newsreader_400Regular";
+  --font-medium: "Newsreader_500Medium";
+  --font-semibold: "Newsreader_600SemiBold";
+  --font-bold: "Newsreader_700Bold";
+  --font-black: "Newsreader_900Black";
 
   --font-mono: monospace;
-}
 
-@source './node_modules/heroui-native/lib';
+  --shadow-ledger: 0 10px 40px rgba(28, 27, 26, 0.04);
+
+  --color-background: 97.8% 0.004 70;
+  --color-foreground: 11% 0.009 70;
+  --color-card: 97.8% 0.004 70;
+  --color-card-foreground: 11% 0.009 70;
+  --color-popover: 100% 0 0;
+  --color-popover-foreground: 11% 0.009 70;
+  --color-primary: 11% 0.009 70;
+  --color-primary-foreground: 98% 0.001 70;
+  --color-secondary: 48% 0.087 70;
+  --color-secondary-foreground: 0 0% 9%;
+  --color-muted: 0 0% 96.1%;
+  --color-muted-foreground: 0 0% 45.1%;
+  --color-accent: 0 0% 96.1%;
+  --color-accent-foreground: 0 0% 9%;
+  --color-destructive: 0 84.2% 60.2%;
+  --color-border: 0 0% 89.8%;
+  --color-input: 0 0% 89.8%;
+  --color-ring: 0 0% 63%;
+  --color-radius: 0.625rem;
+  --color-chart-1: 12 76% 61%;
+  --color-chart-2: 173 58% 39%;
+  --color-chart-3: 197 37% 24%;
+  --color-chart-4: 43 74% 66%;
+  --color-chart-5: 27 87% 67%;
+}

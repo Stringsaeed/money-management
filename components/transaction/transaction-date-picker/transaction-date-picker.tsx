@@ -1,27 +1,32 @@
-import { useState } from "react";
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
-import { Button } from "heroui-native/button";
-import { Chip } from "heroui-native/chip";
-import { BottomSheet, useBottomSheet } from "heroui-native/bottom-sheet";
-
+import React, { useRef, useState } from "react";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import {
+  BottomSheetBackdrop,
+  BottomSheetFooter,
+  BottomSheetModal,
+  BottomSheetView,
+  useBottomSheet,
+} from "@gorhom/bottom-sheet";
 import { getDisplayDateLabel } from "../utils";
 
 import { TransactionDatePickerProps } from "./types";
+import { Badge } from "@/components/ui/badge";
+import { Text } from "@/components/ui/text";
+import { Button } from "@/components/ui/button";
+import { PressableScale } from "pressto";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function DoneButton({ onPress }: { onPress?: VoidFunction }) {
-  const { onOpenChange } = useBottomSheet();
+  const { close } = useBottomSheet();
 
   return (
     <Button
       onPress={() => {
         onPress?.();
-        onOpenChange(false);
+        close();
       }}
-      variant="primary"
     >
-      <Button.Label>Done</Button.Label>
+      <Text>Done</Text>
     </Button>
   );
 }
@@ -35,6 +40,8 @@ export default function TransactionDatePicker({
   onChange,
   children,
 }: ExtendedDatePickerProps) {
+  const { bottom } = useSafeAreaInsets();
+  const ref = useRef<BottomSheetModal>(null);
   const [selected, setSelected] = useState<Date>(date);
 
   const handleChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -43,23 +50,49 @@ export default function TransactionDatePicker({
     }
   };
 
+  const onOpen = () => {
+    ref.current?.present();
+  };
+
+  const renderTrigger = () => {
+    if (children) {
+      const child = React.Children.only(children);
+      console.log({ child });
+
+      return React.cloneElement(child, {
+        onPress: onOpen,
+      });
+    }
+
+    return (
+      <PressableScale onPress={onOpen}>
+        <Badge variant="secondary">
+          <Text className="capitalize">📆 {getDisplayDateLabel(date)}</Text>
+        </Badge>
+      </PressableScale>
+    );
+  };
+
   return (
-    <BottomSheet>
-      <BottomSheet.Trigger asChild={!children}>
-        {children ?? (
-          <Chip variant="soft" color="default">
-            <Chip.Label className="capitalize">
-              📆 {getDisplayDateLabel(date)}
-            </Chip.Label>
-          </Chip>
+    <>
+      {renderTrigger()}
+      <BottomSheetModal
+        enableDynamicSizing
+        ref={ref}
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} />
         )}
-      </BottomSheet.Trigger>
-      <BottomSheet.Portal>
-        <BottomSheet.Overlay />
-        <BottomSheet.Content
-          backgroundClassName="rounded-[32px]"
-          contentContainerClassName="gap-4 items-center"
-        >
+        footerComponent={(props) => (
+          <BottomSheetFooter {...props} bottomInset={bottom}>
+            <DoneButton
+              onPress={() => {
+                onChange?.(selected);
+              }}
+            />
+          </BottomSheetFooter>
+        )}
+      >
+        <BottomSheetView className="flex-1 items-center justify-center">
           <DateTimePicker
             value={selected}
             mode="datetime"
@@ -67,14 +100,8 @@ export default function TransactionDatePicker({
             onChange={handleChange}
             accentColor="black"
           />
-
-          <DoneButton
-            onPress={() => {
-              onChange?.(selected);
-            }}
-          />
-        </BottomSheet.Content>
-      </BottomSheet.Portal>
-    </BottomSheet>
+        </BottomSheetView>
+      </BottomSheetModal>
+    </>
   );
 }
