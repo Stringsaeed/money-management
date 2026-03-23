@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
+import { SymbolView } from "expo-symbols";
 
 import { formatCents } from "@/utils/currency";
 import type { TransactionWithDetails } from "@/types";
@@ -14,36 +15,52 @@ export function TransactionRow({ transaction: t, showAccount = false }: Transact
   const isIncome = t.type === "income";
   const isTransfer = t.type === "transfer";
 
-  const amountClass = isTransfer ? "text-violet-600" : isIncome ? "text-green-600" : "text-red-600";
+  const amountColor = isTransfer ? "text-ink/60" : isIncome ? "text-sage" : "text-ink";
+  const iconBg = isIncome ? "bg-sage/10" : isTransfer ? "bg-ink/5" : "bg-terracotta/10";
+  const iconColor = isIncome ? "#8B9D83" : isTransfer ? "#9CA3AF" : "#B48A7B";
 
-  const amountPrefix = isIncome ? "+" : isTransfer ? "⇄ " : "-";
+  const amountPrefix = isIncome ? "+" : isTransfer ? "" : "-";
+
   return (
     <Pressable
       onPress={() => router.push(`/transaction/${t.id}`)}
-      className="flex-row items-center px-4 py-3 gap-3 active:bg-gray-50"
+      className="flex-row items-center px-5 py-3.5 gap-3 active:bg-surface-container/50"
     >
-      {/* Category emoji */}
-      <View className="w-10 h-10 rounded-full items-center justify-center bg-gray-100">
-        <Text className="text-[20px]">{t.category?.icon ?? (isTransfer ? "⇄" : "💰")}</Text>
+      {/* Type indicator */}
+      <View className={`w-9 h-9 rounded-full items-center justify-center ${iconBg}`}>
+        {t.category?.icon ? (
+          <Text className="text-[17px]">{t.category.icon}</Text>
+        ) : (
+          <SymbolView
+            name={
+              isIncome
+                ? "arrow.down.left"
+                : isTransfer
+                  ? "arrow.left.arrow.right"
+                  : "arrow.up.right"
+            }
+            size={16}
+            tintColor={iconColor}
+          />
+        )}
       </View>
 
-      {/* Description + tags */}
+      {/* Description + subtitle */}
       <View className="flex-1 gap-0.5">
-        <Text className="text-[15px] font-medium text-gray-900" numberOfLines={1}>
+        <Text className="font-body-medium text-[15px] text-ink" numberOfLines={1}>
           {t.description || t.category?.name || (isTransfer ? "Transfer" : "Transaction")}
         </Text>
-        <View className="flex-row gap-1.5 items-center flex-wrap">
-          {isTransfer && t.toAccount ? (
-            <Text className="text-[11px] text-gray-500">→ {t.toAccount.name}</Text>
-          ) : null}
-          {showAccount ? <Text className="text-[11px] text-gray-500">{t.account.name}</Text> : null}
-        </View>
+        <Text className="font-body-normal text-xs text-ink/40" numberOfLines={1}>
+          {t.category?.name ?? (isTransfer ? "Transfer" : "")}
+          {showAccount && t.account?.name ? ` · ${t.account.name}` : ""}
+          {isTransfer && t.toAccount ? ` → ${t.toAccount.name}` : ""}
+        </Text>
       </View>
 
       {/* Amount */}
       <Text
-        className={`text-base font-semibold tabular-nums ${amountClass}`}
-        // style={{ fontVariant: ["tabular-nums"] }}
+        className={`font-heading-normal text-[15px] ${amountColor}`}
+        style={{ fontVariant: ["tabular-nums"] }}
       >
         {amountPrefix}
         {formatCents(t.amount, t.currency)}

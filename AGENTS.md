@@ -12,25 +12,24 @@
 
 ## Commands & Tooling
 
-- Use Bun for every script (`bun install`, `bun run ...`); avoid npm/yarn even though README still lists npm.
+- **Package manager: Yarn** (`yarn install`, `yarn run ...`); avoid npm/bun.
 - Use `date-fns` for date parsing, formatting, arithmetic, and interval logic; do not hand-roll date math or ad-hoc `Date` utilities.
-- Core scripts: `bun run start`, `bun run ios`, `bun run android`, `bun run web` for Expo entry points.
-- Reset starter code (rare) via `bun run reset-project`, which moves the current app to `app-example/`.
-- Lint with `bun run lint` (oxlint) but always finish work by running `bun run lint:fix` followed by `bun run format` (oxfmt).
-- Formatting check only: `bun run format:check` if you need CI parity without rewriting files.
+- Core scripts: `yarn start`, `yarn ios`, `yarn android`, `yarn web` for Expo entry points.
+- Lint with `yarn lint` (oxlint) but always finish work by running `yarn lint:fix` followed by `yarn format` (oxfmt).
+- Formatting check only: `yarn format:check` if you need CI parity without rewriting files.
 - There is no dedicated build step; Expo bundler handles builds per platform when invoking the platform-specific start scripts.
 - Tests are not configured yet; document manual QA in PR descriptions and focus on lint + runtime smoke tests.
-- Single-test workflow: once a Jest/Vitest runner exists, prefer `bun test path/to/file.test.tsx`; until then state "no automated tests" in reports.
-- Use `bunx expo-doctor` or `bunx expo install` only if health checks demand it—otherwise keep dependencies stable.
-- Shell access: prefer specialized helpers (Read/Glob/Grep) for file IO; reserve Bash for git, bun, or runtime commands.
-- Never invoke destructive git commands (`reset --hard`, `checkout --`) without the user’s explicit order.
+- Single-test workflow: once a Jest/Vitest runner exists, prefer `yarn test path/to/file.test.tsx`; until then state "no automated tests" in reports.
+- Use `yarn dlx expo-doctor` or `npx expo install` only if health checks demand it—otherwise keep dependencies stable.
+- Shell access: prefer specialized helpers (Read/Glob/Grep) for file IO; reserve Bash for git, yarn, or runtime commands.
+- Never invoke destructive git commands (`reset --hard`, `checkout --`) without the user's explicit order.
 
 ## Workflow Expectations
 
 - Start by skimming AGENTS.md and this file to refresh requirements for linting, formatting, skills, and Expo architecture.
 - Before writing code, gather context with `glob`, `read`, or `grep`; inspect related files rather than editing blind.
 - Apply single-file modifications with `apply_patch` when practical; avoid it for generated code or mass rewrites.
-- After editing, rerun `bun run lint:fix && bun run format` even if linters previously passed—this is mandatory per AGENTS.md.
+- After editing, rerun `yarn lint:fix && yarn format` even if linters previously passed—this is mandatory per AGENTS.md.
 - Document any skipped steps (e.g., simulator run) in the final response so the user knows what still needs verification.
 - Avoid questions like "Should I proceed?"; instead pick the safest default, act, and mention the assumption afterward.
 - Keep commands succinct and never stream large logs; summarize key lines for the user.
@@ -42,16 +41,45 @@
 ## Repository Map
 
 - `app/` holds Expo Router screens; `_layout.tsx` defines the root stack, `(tabs)/_layout.tsx` configures bottom tabs, `modal.tsx` exposes modal routes.
-- Tab routes: `(tabs)/index.tsx` is the Home tab, `(tabs)/explore.tsx` is Explore; mimic their patterns for new tabs.
-- `components/` hosts shared UI like `ThemedText`, `ThemedView`, `ParallaxScrollView`, `HapticTab`, and the platform-aware `ui/IconSymbol` bridge.
-- `constants/theme.ts` defines color palettes and font stacks for light/dark; rely on the exported tokens instead of hard-coded hex values.
-- `hooks/use-theme-color.ts` and `hooks/use-color-scheme.ts[x]` centralize theme lookups per platform; consult them before creating new theme helpers.
-- `assets/` contains images/fonts; import static assets through Expo’s module system rather than `require` strings.
-- `global.css`, `postcss.config.mjs`, and `uniwind-types.d.ts` set up Tailwind v4.
-- `scripts/reset-project.js` resets the `app/` folder; never run it automatically because it moves files irreversibly.
+- Tab routes: `(tabs)/index.tsx` is the Home tab; mimic their patterns for new tabs.
+- `components/` hosts shared UI; `components/ui/` for base primitives (`text.tsx`, `badge.tsx`, `button.tsx`, `icon.tsx`).
+- `components/transaction/` groups transaction-related components, each in its own file or subdirectory with `types.ts`.
+- `lib/utils.ts` exports `cn()` (clsx + tailwind-merge) for conditional class composition.
+- `hooks/` contains data-fetching hooks (`use-accounts.ts`, `use-categories.ts`, `use-transactions.ts`) and UI hooks.
+- `stores/` contains Zustand stores (e.g. `ui-store.ts`).
+- `utils/` contains shared pure helpers (`currency.ts`, `date.ts`).
+- `assets/` contains images/fonts; import static assets through Expo's module system rather than `require` strings.
+- `global.css` configures NativeWind v5 + Tailwind CSS v4 theme (fonts, colors, custom tokens).
+- `metro.config.js` uses `withNativewind(config)` with default options.
+- `nativewind-env.d.ts` is a generated file committed to source control.
 - `constants/`, `hooks/`, and `components/` share the `@/*` alias (configured in `tsconfig.json`) so prefer `import Foo from "@/components/Foo"` over relative `../../` walks.
-- `eslint.config.js`, `.oxlintrc.json`, and `.oxfmtrc.json` codify lint/format behavior; read them before changing stylistic conventions.
-- No `.cursor/rules` or Copilot instruction files exist right now, so there are no external Cursor/Copilot constraints to mirror.
+- `.oxlintrc.json` and `.oxfmtrc.json` codify lint/format behavior; read them before changing stylistic conventions.
+
+## Design System: Paper Ledger
+
+The app follows the **Paper Ledger** design system — a clean, editorial aesthetic inspired by financial ledgers and newspapers.
+
+### Typography
+
+- **Heading font**: Newsreader (serif) — used for titles, amounts, section headers. Classes: `font-heading-thin`, `font-heading-normal`, `font-heading-medium`. Headings are typically italic.
+- **Body font**: Plus Jakarta Sans (sans-serif) — used for labels, descriptions, UI text. Classes: `font-body-normal`, `font-body-medium`, `font-body-semibold`.
+- All font families are defined as CSS custom properties in `global.css` under `@theme`.
+
+### Colors
+
+- `ink` (#1C1B1A) — primary text, active elements
+- `surface` (#F9F8F6) — page background
+- `surface-container` (#F1F0EE) — card/input backgrounds
+- `surface-dim` (#EBE8E3) — pressed/hover states
+- `ledger-outline` (#EBE8E3) — borders, dividers
+- `sage` (#8B9D83) — income, positive amounts
+- `terracotta` (#B48A7B) — expenses, destructive actions
+- `destructive` (#D9534F) — delete actions, errors
+
+### Shared Constants
+
+- `components/transaction/constants.ts` exports reusable values: `INK`, `INK_MUTED`, `SURFACE_CONTAINER`, `DESTRUCTIVE`, `SHEET_BG`, `SHEET_HANDLE`, `layoutTransition`.
+- Bottom sheets use `SHEET_BG` and `SHEET_HANDLE` for consistent appearance.
 
 ## Code Style & Imports
 
@@ -65,10 +93,13 @@
 - Prefer `date-fns` over native `Date` mutation helpers for all business logic; only use native `Date` directly when a platform API requires a `Date` instance or exact `toISOString()` serialization is needed.
 - Use the `@/*` alias consistently; root-relative imports improve readability and survive folder moves.
 - Keep files small and purposeful—extract subcomponents when files exceed ~200 lines or serve multiple concerns. Strongly prefer many small, single-responsibility components over large monolithic ones; follow React and React Native best practices loaded from the relevant skills.
+- **One component per file**: every React component must live in its own file. A component directory (e.g. `components/transaction/`) groups related components, hooks, types, and utilities together.
+- **Hooks in separate files**: when a component's logic grows beyond simple inline state, extract a custom hook into its own file (e.g. `use-transaction-form.ts`) within the same directory.
+- **Pure functions in utils**: pure helper functions belong in a `utils.ts` (or context-specific file like `currency.ts`, `date.ts`) within the relevant directory or `@/utils/` for shared helpers. Never inline business logic in component files.
 - Default naming: `PascalCase` for components/types, `camelCase` for functions/constants, `SCREAMING_SNAKE_CASE` for env fallback constants.
 - Error messages should explain the impact and next action, not just restate that something failed.
 - When defining React Navigation routes, leverage Expo Router file conventions instead of manual stack registration.
-- Use `clsx` or `tailwind-merge` already installed when combining class strings for tailwind.
+- **Use `cn()` from `@/lib/utils`** for conditional class composition instead of template literals or inline styles. Example: `cn("base-classes", condition && "conditional-class")`.
 - Keep optional chaining and nullish coalescing in place of defensive `&&` ladders when reading nested data.
 - Prefer `useMemo`/`useCallback` for heavy computations or callback props that feed deep hierarchies; otherwise skip premature memoization.
 - Export a default component per screen file; named helpers can live in the same module but keep them near usage.
@@ -79,20 +110,33 @@
 
 ## Components & Theming
 
-- Wrap visual blocks with `ThemedView` or `ThemedText` unless you have a compelling need for the raw React Native primitives.
-- Colors come from `constants/theme.ts`; extend palettes there rather than scattering literals across files.
-- Respect system color scheme detection via `useColorScheme`; when adding toggles, plumb them through the existing ThemeProvider in `app/_layout.tsx`.
+- Colors are defined in `global.css` `@theme` block; extend palettes there rather than scattering hex literals across files.
 - Layout spacing should follow an 8px baseline when possible; keep cross-platform parity by aligning with Tailwind spacing tokens.
-- Use `ParallaxScrollView` for hero sections that need scroll-bound headers; do not reinvent parallax per screen.
-- Haptics go through the `HapticTab` abstraction for tab interactions; use Expo Haptics elsewhere via centralized helpers.
-- When styling with tailwind, keep classes deterministic—avoid interpolating strings or conditionally appending non-existent tokens.
-- **No inline styles**: always use tailwind `className` props for styling; never use the `style` prop for layout or visual properties that tailwind can express.
-- **Safe area**: every screen must respect safe areas. Use `safe-top` / `safe-bottom` tailwind classes (or `SafeAreaView` equivalent classes) on the outermost container of every screen so content is never obscured by notches or home indicators.
+- Haptics: use Expo Haptics via centralized helpers (e.g. `triggerErrorHaptic` in component utils).
+- **No inline styles**: always use tailwind `className` props for styling; never use the `style` prop for layout or visual properties that tailwind can express. Exceptions: `fontVariant: ["tabular-nums"]`, `borderCurve: "continuous"`, and dynamic colors from data (e.g. `${cat.color}20`) that cannot be expressed as Tailwind classes.
+- **Use standard Tailwind classes**: prefer standard size classes over arbitrary values. Use `text-xs` (12px), `text-sm` (14px), `text-base` (16px), `text-lg` (18px), `text-xl` (20px), `text-2xl` (24px). Use `tracking-tight`, `tracking-wide`, `tracking-wider` instead of `tracking-[0.5px]`, `tracking-[1px]`, `tracking-[1.5px]`. Only use arbitrary values (`text-[13px]`, `text-[11px]`) when no standard class matches.
+- **Safe area**: every screen must respect safe areas. Use `safe-top` / `safe-bottom` / `pt-safe` / `pb-safe` tailwind classes on the outermost container of every screen so content is never obscured by notches or home indicators.
 - **Animations on layout change**: whenever a layout-level change happens (list items added/removed, conditional panels, screen transitions), wrap affected elements in Reanimated `Animated.View` and apply `entering`/`exiting`/`layout` props from `react-native-reanimated` so all layout shifts animate smoothly.
 - **Modern minimal design with emojis**: default to clean, minimal UI with generous whitespace. Prefer emojis over icon libraries for decorative or label purposes wherever they convey the intent clearly.
 - Animations should rely on Reanimated v4; never mix imperative Animated API unless Reanimated cannot cover the case.
 - Favor React Compiler friendly patterns (no dynamic hook order, no conditional hook definition) because the project has `reactCompiler` experiments on.
-- When exporting SVG/bitmap assets, optimize them through `expo optimize` before committing.
+
+## Picker / Bottom Sheet Pattern
+
+When creating picker components (account, category, date, etc.), follow this established pattern:
+
+- Each picker lives in its own directory: `components/transaction/<name>-picker/` with `<name>-picker.tsx` and `types.ts`.
+- The picker manages its own `BottomSheetModal` ref internally — callers never touch refs.
+- Accept `children` as trigger: use `React.Children.only` + `React.cloneElement` to inject `onPress` on the child element.
+- Accept `onChange` callback for value changes.
+- Use `@gorhom/bottom-sheet` with `enableDynamicSizing`, `SHEET_BG`, `SHEET_HANDLE` from constants.
+- Dismiss the sheet after selection via `ref.current?.dismiss()`.
+
+## Form State Management
+
+- Use `@tanstack/react-form` with `useForm` for complex forms (e.g. transaction form).
+- Use `form.Subscribe` with granular `selector` props to minimize re-renders — only subscribe to the specific field values each component needs.
+- Keep form orchestration in a slim parent component; delegate rendering to child components via `form.Subscribe`.
 
 ## State, Data, and Errors
 
@@ -111,10 +155,9 @@
 ## Testing & QA
 
 - Automated tests are not set up yet; communicate this fact in your final response whenever testing is requested.
-- Until Jest/Vitest exists, rely on manual QA: run `bun run ios` or `bun run android` where feasible, or `bun run web` for quick smoke checks.
+- Until Jest/Vitest exists, rely on manual QA: run `yarn ios` or `yarn android` where feasible, or `yarn web` for quick smoke checks.
 - If you add a test runner, document its usage in this file and in `package.json` scripts for others.
 - When adding tests later, prefer colocated `*.test.tsx` or `*.spec.ts` files near the unit under test.
-- For single-test execution, run `bun test path/to/file.test.tsx` (Jest) or `bun test file --runInBand`; mention this pattern even if not yet wired up.
 - Snapshot tests should target stable UI (icons, large layout) and live under a `__snapshots__` directory ignored by Metro.
 - Keep Detox/E2E scripts separate from Expo start scripts to avoid simulator conflicts.
 - Report any manual QA done (device, simulator, steps) so the user can reproduce issues or confirm fixes.
@@ -123,11 +166,11 @@
 ## Git & Collaboration
 
 - Always create a commit after completing each task unless the user explicitly instructs otherwise.
-- Follow Conventional Commits (`feat:`, `fix:`, `chore:`, etc.) and keep messages focused on the "why".
+- Follow Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, etc.) and keep messages focused on the "why".
 - Run `git status`, `git diff`, and `git log` via the Bash tool, reporting summaries instead of full raw output when users ask.
 - Never amend or force-push unless instructed; if a pre-commit hook rewrites files, create a new commit containing the updated changes.
 - Do not stage or commit secrets (e.g., `.env`, credentials); warn the user if they request it.
-- Respect users’ existing dirty files—avoid formatting or touching unrelated files to keep diffs minimal.
+- Respect users' existing dirty files—avoid formatting or touching unrelated files to keep diffs minimal.
 - Reference files with inline code formatting (`path/to/file.tsx`) in final responses so links stay clickable in the CLI.
 - Describe verification steps (lint, format, simulator run) explicitly in the final message.
 - If a command fails, capture the error text and explain what needs fixing instead of rerunning blindly.
@@ -151,19 +194,15 @@
 - [ ] Gather context with `glob`/`read` rather than editing blindly.
 - [ ] Implement the change using TypeScript strict-safe patterns and repo-specific theming.
 - [ ] Use tailwind `className` only — no inline `style` props for visual/layout rules.
+- [ ] Use `cn()` for conditional classes — no template literal class concatenation.
+- [ ] Use standard Tailwind size classes — no arbitrary values when a standard class exists.
 - [ ] Apply `safe-top` / `safe-bottom` classes on every screen's outermost container.
 - [ ] Wrap layout-changing elements in Reanimated `Animated.View` with `entering`/`exiting`/`layout` props.
 - [ ] Decompose into small, single-responsibility components; no large monoliths.
 - [ ] Use emojis in UI copy and labels to reinforce minimal modern design.
-- [ ] Run `bun run lint:fix`.
-- [ ] Run `bun run format`.
+- [ ] Run `yarn lint:fix`.
+- [ ] Run `yarn format`.
 - [ ] Document manual QA (or note that it was skipped).
 - [ ] Prepare Conventional Commit message if the user asks for one.
 - [ ] Summarize changes referencing file paths wrapped in backticks.
 - [ ] Suggest logical next steps (tests, build, QA) in the final response when relevant.
-
-<!-- HEROUI-NATIVE-AGENTS-MD-START -->
-
-[HeroUI Native Docs Index]|root: ./.heroui-docs/native|STOP. What you remember about HeroUI Native is WRONG for this project. Always search docs and read before any task.|If docs missing, run this command first: heroui agents-md --native --output AGENTS.md|components/(buttons):{button.mdx,close-button.mdx}|components/(collections):{menu.mdx,tag-group.mdx}|components/(controls):{slider.mdx,switch.mdx}|components/(data-display):{chip.mdx}|components/(feedback):{alert.mdx,skeleton-group.mdx,skeleton.mdx,spinner.mdx}|components/(forms):{checkbox.mdx,control-field.mdx,description.mdx,field-error.mdx,input-group.mdx,input-otp.mdx,input.mdx,label.mdx,radio-group.mdx,search-field.mdx,select.mdx,text-area.mdx,text-field.mdx}|components/(layout):{card.mdx,separator.mdx,surface.mdx}|components/(media):{avatar.mdx}|components/(navigation):{accordion.mdx,list-group.mdx,tabs.mdx}|components/(overlays):{bottom-sheet.mdx,dialog.mdx,popover.mdx,toast.mdx}|components/(utilities):{pressable-feedback.mdx,scroll-shadow.mdx}|getting-started/(handbook):{animation.mdx,colors.mdx,composition.mdx,portal.mdx,provider.mdx,styling.mdx,theming.mdx}|getting-started/(overview):{design-principles.mdx,quick-start.mdx}|getting-started/(ui-for-agents):{agent-skills.mdx,agents-md.mdx,llms-txt.mdx,mcp-server.mdx}|releases:{beta-10.mdx,beta-11.mdx,beta-12.mdx,beta-13.mdx,rc-1.mdx,rc-2.mdx,rc-3.mdx,rc-4.mdx}
-
-<!-- HEROUI-NATIVE-AGENTS-MD-END -->

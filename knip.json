@@ -13,12 +13,11 @@
     "scripts/**/*.{js,ts}"
   ],
   "ignoreDependencies": [
-    "expo-build-properties",
     "expo-linear-gradient",
-    "nativewind",
-    "react-native-css",
     "babel-plugin-inline-import",
-    "expo-updates"
+    "expo-updates",
+    "tailwind-variants",
+    "tailwindcss-animate"
   ],
   "ignore": ["hooks/use-color-scheme.web.ts"]
 }

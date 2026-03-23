@@ -2,6 +2,8 @@ import React from "react";
 import { PressableScale } from "pressto";
 import { View } from "react-native";
 import { BackspaceIcon, DotOutlineIcon } from "phosphor-react-native";
+import { styled } from "nativewind";
+
 import { Text } from "../ui/text";
 
 interface NumberPadProps {
@@ -12,7 +14,13 @@ interface NumberPadProps {
   showDot?: boolean;
 }
 
-const ACCENT = "#11181C";
+const INK = "#1C1B1A";
+
+const StyledPressableScale = styled(PressableScale, {
+  className: {
+    target: "style",
+  },
+});
 
 export default function NumberPad({
   onPress,
@@ -35,7 +43,7 @@ export default function NumberPad({
     };
 
     return (
-      <PressableScale
+      <StyledPressableScale
         key={value}
         onPress={handlePress}
         onLongPress={() => {
@@ -43,22 +51,16 @@ export default function NumberPad({
             onClear?.();
           }
         }}
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
+        className="flex-1 justify-center items-center"
       >
         {value === "delete" ? (
-          <BackspaceIcon size={24} color={ACCENT} weight="regular" />
+          <BackspaceIcon size={24} color={INK} weight="regular" />
         ) : value === "dot" ? (
-          <DotOutlineIcon size={24} color={ACCENT} weight="fill" />
+          <DotOutlineIcon size={24} color={INK} weight="fill" />
         ) : (
-          <Text className="text-[28px] font-medium" style={{ color: ACCENT }}>
-            {value}
-          </Text>
+          <Text className="font-heading-medium text-[28px] text-ink">{value}</Text>
         )}
-      </PressableScale>
+      </StyledPressableScale>
     );
   };
 

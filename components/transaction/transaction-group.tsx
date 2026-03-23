@@ -14,18 +14,17 @@ interface TransactionGroupProps {
 
 export function TransactionGroup({ group, currency = "USD", showAccount }: TransactionGroupProps) {
   const net = group.totalIncome - group.totalExpense;
-  const netClass = net >= 0 ? "text-green-600" : "text-red-600";
 
   return (
-    <View className="mb-1">
+    <View className="mb-px">
       {/* Day header */}
-      <View className="flex-row justify-between items-center px-4 py-2 bg-gray-100">
-        <Text className="text-[13px] font-semibold text-gray-700">
+      <View className="flex-row justify-between items-center px-5 py-2.5 bg-surface-container/50">
+        <Text className="font-body-semibold text-[11px] text-ink/50 uppercase tracking-tight">
           {formatDayHeader(group.date)}
         </Text>
         {(group.totalIncome > 0 || group.totalExpense > 0) && (
           <Text
-            className={`text-[13px] font-semibold ${netClass}`}
+            className={`font-heading-normal text-[13px] ${net >= 0 ? "text-sage" : "text-terracotta"}`}
             style={{ fontVariant: ["tabular-nums"] }}
           >
             {net >= 0 ? "+" : ""}
@@ -35,10 +34,10 @@ export function TransactionGroup({ group, currency = "USD", showAccount }: Trans
       </View>
 
       {/* Rows */}
-      <View className="bg-white">
+      <View>
         {group.transactions.map((t, i) => (
           <View key={t.id}>
-            {i > 0 && <View className="h-px bg-gray-100 ml-17" />}
+            {i > 0 && <View className="h-px bg-ledger-outline ml-16" />}
             <TransactionRow transaction={t} showAccount={showAccount} />
           </View>
         ))}
