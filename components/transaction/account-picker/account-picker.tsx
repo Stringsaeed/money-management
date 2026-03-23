@@ -1,6 +1,8 @@
 import React, { useRef } from "react";
 import { Pressable, PressableProps, View } from "react-native";
 import { CheckIcon } from "phosphor-react-native";
+
+import { Icon } from "@/components/ui/icon";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -74,7 +76,9 @@ export default function AccountPicker({
                       {acc.currency}
                     </Text>
                   </View>
-                  {isSelected ? <CheckIcon size={18} color="#F9F8F6" weight="bold" /> : null}
+                  {isSelected ? (
+                    <Icon as={CheckIcon} size={18} className="text-surface" weight="bold" />
+                  ) : null}
                 </Pressable>
               );
             })}
