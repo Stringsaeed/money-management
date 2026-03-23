@@ -1,7 +1,5 @@
 import { useRouter } from "expo-router";
-import { useRef } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useForm } from "@tanstack/react-form";
 
@@ -12,10 +10,10 @@ import { useCategories } from "@/hooks/use-categories";
 import useNumPadNumber from "@/hooks/use-num-pad-number";
 import type { TransactionType } from "@/types";
 
-import { AccountSheet } from "./account-sheet";
+import AccountPicker from "./account-picker/account-picker";
 import { AmountDisplay } from "./amount-display";
 import { BreadcrumbSegment } from "./breadcrumb-segment";
-import { CategorySheet } from "./category-sheet";
+import CategoryPicker from "./category-picker/category-picker";
 import { layoutTransition } from "./constants";
 import { FormHeader } from "./form-header";
 import { NoteInput } from "./note-input";
@@ -29,9 +27,6 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
   const router = useRouter();
   const { data: accounts = [] } = useAccounts();
   const { data: categories = [] } = useCategories();
-
-  const categorySheetRef = useRef<BottomSheetModal>(null);
-  const accountSheetRef = useRef<BottomSheetModal>(null);
 
   const firstAccountId = accounts[0]?.id ?? "";
   const firstAccountCurrency = accounts[0]?.currency ?? "USD";
@@ -124,12 +119,17 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
                   const account = accounts.find((a) => a.id === accountId);
                   return (
                     <>
-                      <BreadcrumbSegment
-                        emoji="🏦"
-                        label={account?.name ?? "Account"}
-                        active={!!account}
-                        onPress={() => accountSheetRef.current?.present()}
-                      />
+                      <AccountPicker
+                        accounts={accounts}
+                        selectedId={accountId}
+                        onChange={(id) => form.setFieldValue("accountId", id)}
+                      >
+                        <BreadcrumbSegment
+                          emoji="🏦"
+                          label={account?.name ?? "Account"}
+                          active={!!account}
+                        />
+                      </AccountPicker>
                       <Text className="font-heading-normal text-[14px] italic text-ink/25">›</Text>
                     </>
                   );
@@ -141,12 +141,17 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
               {(categoryId) => {
                 const category = categories.find((c) => c.id === categoryId);
                 return (
-                  <BreadcrumbSegment
-                    emoji={category?.icon ?? "🏷️"}
-                    label={category?.name ?? "Category"}
-                    active={!!category}
-                    onPress={() => categorySheetRef.current?.present()}
-                  />
+                  <CategoryPicker
+                    categories={categories}
+                    selectedId={categoryId}
+                    onChange={(id) => form.setFieldValue("categoryId", id)}
+                  >
+                    <BreadcrumbSegment
+                      emoji={category?.icon ?? "🏷️"}
+                      label={category?.name ?? "Category"}
+                      active={!!category}
+                    />
+                  </CategoryPicker>
                 );
               }}
             </form.Subscribe>
@@ -218,28 +223,6 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
           onPress={numPad.appendDigit}
         />
       </View>
-
-      {/* Bottom sheets */}
-      <form.Subscribe
-        selector={(s) => ({ categoryId: s.values.categoryId, accountId: s.values.accountId })}
-      >
-        {({ categoryId, accountId }) => (
-          <>
-            <CategorySheet
-              sheetRef={categorySheetRef}
-              categories={categories}
-              selectedId={categoryId}
-              onSelect={(id) => form.setFieldValue("categoryId", id)}
-            />
-            <AccountSheet
-              sheetRef={accountSheetRef}
-              accounts={accounts}
-              selectedId={accountId}
-              onSelect={(id) => form.setFieldValue("accountId", id)}
-            />
-          </>
-        )}
-      </form.Subscribe>
     </View>
   );
 }
