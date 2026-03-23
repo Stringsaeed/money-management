@@ -27,3 +27,11 @@ export const getCurrencySymbol = (currency: string) => {
 
   return currencyMap[currency] ?? currency;
 };
+
+export const getDateDisplayValue = (date: Date): string => {
+  const now = new Date();
+  const diff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};

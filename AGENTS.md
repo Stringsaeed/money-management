@@ -65,6 +65,9 @@
 - Prefer `date-fns` over native `Date` mutation helpers for all business logic; only use native `Date` directly when a platform API requires a `Date` instance or exact `toISOString()` serialization is needed.
 - Use the `@/*` alias consistently; root-relative imports improve readability and survive folder moves.
 - Keep files small and purposeful—extract subcomponents when files exceed ~200 lines or serve multiple concerns. Strongly prefer many small, single-responsibility components over large monolithic ones; follow React and React Native best practices loaded from the relevant skills.
+- **One component per file**: every React component must live in its own file. A component directory (e.g. `components/transaction/`) groups related components, hooks, types, and utilities together.
+- **Hooks in separate files**: when a component's logic grows beyond simple inline state, extract a custom hook into its own file (e.g. `use-transaction-form.ts`) within the same directory.
+- **Pure functions in utils**: pure helper functions belong in a `utils.ts` (or context-specific file like `currency.ts`, `date.ts`) within the relevant directory or `@/utils/` for shared helpers. Never inline business logic in component files.
 - Default naming: `PascalCase` for components/types, `camelCase` for functions/constants, `SCREAMING_SNAKE_CASE` for env fallback constants.
 - Error messages should explain the impact and next action, not just restate that something failed.
 - When defining React Navigation routes, leverage Expo Router file conventions instead of manual stack registration.
