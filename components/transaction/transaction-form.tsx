@@ -357,14 +357,14 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
   const numPad = useNumPadNumber((initialData?.amount ?? 0) / 100);
   const isEditing = !!initialData?.amount;
 
-  const form = useForm<FormValues>({
+  const form = useForm({
     defaultValues: {
       accountId: initialData?.accountId ?? firstAccountId,
       toAccountId: initialData?.toAccountId ?? null,
       categoryId: initialData?.categoryId ?? null,
       description: initialData?.description ?? "",
       date: initialData?.date ?? new Date(),
-    },
+    } as FormValues,
     onSubmit: async ({ value }) => {
       const amountCents = Math.round(numPad.value * 100);
       const currentCategory = categories.find((c) => c.id === value.categoryId);
