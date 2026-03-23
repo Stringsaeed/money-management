@@ -45,7 +45,7 @@ export default function AccountPicker({
         )}
       >
         <BottomSheetView className="pb-safe px-5 gap-4">
-          <Text className="font-heading-normal text-[20px] italic text-ink">Account</Text>
+          <Text className="font-heading-normal text-xl italic text-ink">Account</Text>
 
           <View className="gap-2">
             {accounts.map((acc) => {
@@ -61,7 +61,7 @@ export default function AccountPicker({
                     isSelected ? "bg-ink" : "bg-surface-container"
                   }`}
                 >
-                  <Text className="text-[18px]">🏦</Text>
+                  <Text className="text-lg">🏦</Text>
                   <View className="flex-1">
                     <Text
                       className={`font-body-medium text-[15px] ${isSelected ? "text-surface" : "text-ink"}`}
@@ -69,7 +69,7 @@ export default function AccountPicker({
                       {acc.name}
                     </Text>
                     <Text
-                      className={`font-body-normal text-[12px] ${isSelected ? "text-surface/60" : "text-ink/40"}`}
+                      className={`font-body-normal text-xs ${isSelected ? "text-surface/60" : "text-ink/40"}`}
                     >
                       {acc.currency}
                     </Text>

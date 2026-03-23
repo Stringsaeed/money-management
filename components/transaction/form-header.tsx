@@ -2,6 +2,7 @@ import { Pressable, View } from "react-native";
 import { ArrowLeftIcon, CheckIcon, TrashIcon } from "phosphor-react-native";
 
 import { Text } from "@/components/ui/text";
+import { cn } from "@/lib/utils";
 import { DESTRUCTIVE, INK } from "./constants";
 
 interface FormHeaderProps {
@@ -22,7 +23,7 @@ export function FormHeader({ onBack, onDelete, onSubmit, saving, title }: FormHe
         <ArrowLeftIcon size={20} color={INK} weight="bold" />
       </Pressable>
 
-      <Text className="font-heading-normal text-[18px] italic text-ink">{title}</Text>
+      <Text className="font-heading-normal text-lg italic text-ink">{title}</Text>
 
       <View className="flex-row items-center gap-2">
         {onDelete ? (
@@ -36,8 +37,10 @@ export function FormHeader({ onBack, onDelete, onSubmit, saving, title }: FormHe
         <Pressable
           onPress={onSubmit}
           disabled={saving}
-          className="h-10 w-10 items-center justify-center rounded-full bg-ink active:opacity-80"
-          style={{ opacity: saving ? 0.5 : 1 }}
+          className={cn(
+            "h-10 w-10 items-center justify-center rounded-full bg-ink active:opacity-80",
+            saving && "opacity-50",
+          )}
         >
           <CheckIcon size={20} color="#F9F8F6" weight="bold" />
         </Pressable>

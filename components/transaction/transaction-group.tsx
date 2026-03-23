@@ -19,7 +19,7 @@ export function TransactionGroup({ group, currency = "USD", showAccount }: Trans
     <View className="mb-px">
       {/* Day header */}
       <View className="flex-row justify-between items-center px-5 py-2.5 bg-surface-container/50">
-        <Text className="font-body-semibold text-[11px] text-ink/50 uppercase tracking-[0.5px]">
+        <Text className="font-body-semibold text-[11px] text-ink/50 uppercase tracking-tight">
           {formatDayHeader(group.date)}
         </Text>
         {(group.totalIncome > 0 || group.totalExpense > 0) && (

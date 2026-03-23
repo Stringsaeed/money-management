@@ -130,7 +130,7 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
                           active={!!account}
                         />
                       </AccountPicker>
-                      <Text className="font-heading-normal text-[14px] italic text-ink/25">›</Text>
+                      <Text className="font-heading-normal text-sm italic text-ink/25">›</Text>
                     </>
                   );
                 }}
@@ -156,7 +156,7 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
               }}
             </form.Subscribe>
 
-            <Text className="font-heading-normal text-[14px] italic text-ink/25">›</Text>
+            <Text className="font-heading-normal text-sm italic text-ink/25">›</Text>
 
             <form.Subscribe selector={(s) => s.values.date}>
               {(date) => (

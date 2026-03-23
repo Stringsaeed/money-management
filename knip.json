@@ -13,10 +13,7 @@
     "scripts/**/*.{js,ts}"
   ],
   "ignoreDependencies": [
-    "expo-build-properties",
     "expo-linear-gradient",
-    "nativewind",
-    "react-native-css",
     "babel-plugin-inline-import",
     "expo-updates",
     "tailwind-variants",

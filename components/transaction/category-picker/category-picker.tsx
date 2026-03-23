@@ -29,9 +29,9 @@ function CategoryGrid({
             className="items-center gap-1.5 px-4 py-3 rounded-xl"
             style={{ backgroundColor: isSelected ? `${cat.color}20` : SURFACE_CONTAINER }}
           >
-            <Text className="text-[24px]">{cat.icon}</Text>
+            <Text className="text-2xl">{cat.icon}</Text>
             <Text
-              className="font-body-medium text-[12px]"
+              className="font-body-medium text-xs"
               style={{ color: isSelected ? INK : INK_MUTED }}
             >
               {cat.name}
@@ -88,11 +88,11 @@ export default function CategoryPicker({
         )}
       >
         <BottomSheetView className="pb-safe px-5 gap-5">
-          <Text className="font-heading-normal text-[20px] italic text-ink">Category</Text>
+          <Text className="font-heading-normal text-xl italic text-ink">Category</Text>
 
           {expenseCategories.length > 0 ? (
             <View className="gap-3">
-              <Text className="font-body-semibold text-[10px] text-ink/40 uppercase tracking-[1.5px]">
+              <Text className="font-body-semibold text-[10px] text-ink/40 uppercase tracking-wider">
                 Expenses
               </Text>
               <CategoryGrid
@@ -105,7 +105,7 @@ export default function CategoryPicker({
 
           {incomeCategories.length > 0 ? (
             <View className="gap-3">
-              <Text className="font-body-semibold text-[10px] text-ink/40 uppercase tracking-[1.5px]">
+              <Text className="font-body-semibold text-[10px] text-ink/40 uppercase tracking-wider">
                 Income
               </Text>
               <CategoryGrid

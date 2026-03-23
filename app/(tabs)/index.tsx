@@ -68,7 +68,7 @@ function BalanceHero({
     <View className="px-5 pt-safe-offset-4 pb-2 bg-background">
       {/* Top row: date label + action buttons */}
       <View className="flex-row items-center justify-between mb-2">
-        <Text className="font-body-semibold text-[11px] text-ink/40 uppercase tracking-[1.5px]">
+        <Text className="font-body-semibold text-[11px] text-ink/40 uppercase tracking-wider">
           AS OF {formatHeaderDate()}
         </Text>
         <View className="flex-row items-center gap-2">
@@ -116,7 +116,7 @@ function BalanceHero({
           style={{ borderCurve: "continuous" }}
         >
           <SymbolView name="plus" size={14} tintColor="#1C1B1A" />
-          <Text className="font-body-semibold text-[11px] text-ink uppercase tracking-[1px]">
+          <Text className="font-body-semibold text-[11px] text-ink uppercase tracking-wide">
             Add Entry
           </Text>
         </Pressable>
@@ -125,7 +125,7 @@ function BalanceHero({
           className="flex-row items-center gap-2 px-5 py-2.5 bg-surface-container active:bg-surface-dim"
           style={{ borderCurve: "continuous" }}
         >
-          <Text className="font-body-semibold text-[11px] text-ink uppercase tracking-[1px]">
+          <Text className="font-body-semibold text-[11px] text-ink uppercase tracking-wide">
             Transfer
           </Text>
         </Pressable>
@@ -143,12 +143,12 @@ function AccountsSection({ accounts }: { accounts: AccountWithBalance[] }) {
     <View className="mt-4">
       {/* Section header */}
       <View className="flex-row items-center justify-between px-5 pb-3 border-b border-ledger-outline mx-5">
-        <Text className="font-heading-normal text-[20px] italic text-ink">Primary Positions</Text>
+        <Text className="font-heading-normal text-xl italic text-ink">Primary Positions</Text>
         <Pressable
           onPress={() => router.push("/(tabs)/accounts")}
           className="flex-row items-center gap-1"
         >
-          <Text className="font-body-semibold text-[11px] text-ink/40 uppercase tracking-[1px]">
+          <Text className="font-body-semibold text-[11px] text-ink/40 uppercase tracking-wide">
             View All
           </Text>
           <SymbolView name="arrow.right" size={10} tintColor="#9CA3AF" />
@@ -169,7 +169,7 @@ function AccountsSection({ accounts }: { accounts: AccountWithBalance[] }) {
             style={{ borderCurve: "continuous" }}
           >
             <View className="w-10 h-10 bg-surface-container rounded-full items-center justify-center">
-              <Text className="text-[18px]">
+              <Text className="text-lg">
                 {account.type === "cash"
                   ? "💵"
                   : account.type === "bank"
@@ -182,11 +182,11 @@ function AccountsSection({ accounts }: { accounts: AccountWithBalance[] }) {
               </Text>
             </View>
             <View>
-              <Text className="font-body-medium text-[11px] text-ink/40 uppercase tracking-[0.5px]">
+              <Text className="font-body-medium text-[11px] text-ink/40 uppercase tracking-tight">
                 {account.name}
               </Text>
               <Text
-                className="font-heading-normal text-[16px] text-ink"
+                className="font-heading-normal text-base text-ink"
                 style={{ fontVariant: ["tabular-nums"] }}
               >
                 {formatCents(account.balance, account.currency)}
@@ -237,7 +237,7 @@ function FilterBar({
       >
         {activeAccountName && (
           <Badge>
-            <Text className="font-body-medium text-[12px]">{activeAccountName}</Text>
+            <Text className="font-body-medium text-xs">{activeAccountName}</Text>
             <Button onPress={() => setActiveAccountId(null)} variant="outline" size="icon">
               <Icon as={XIcon} />
             </Button>
@@ -245,7 +245,7 @@ function FilterBar({
         )}
         {selectedYear && selectedMonth && (
           <Badge>
-            <Text className="font-body-medium text-[12px]">
+            <Text className="font-body-medium text-xs">
               {formatMonth(selectedYear, selectedMonth)}
             </Text>
             <Button onPress={() => setSelectedMonth(null, null)} variant="outline" size="icon">
@@ -255,7 +255,7 @@ function FilterBar({
         )}
         {selectedCategoryName && (
           <Badge>
-            <Text className="font-body-medium text-[12px]">{selectedCategoryName}</Text>
+            <Text className="font-body-medium text-xs">{selectedCategoryName}</Text>
             <Button onPress={() => setSelectedCategoryId(null)} variant="outline" size="icon">
               <Icon as={XIcon} />
             </Button>
@@ -271,7 +271,7 @@ function FilterBar({
               Income
             </Text>
             <Text
-              className="font-heading-normal text-[14px] text-sage"
+              className="font-heading-normal text-sm text-sage"
               style={{ fontVariant: ["tabular-nums"] }}
             >
               +{formatCents(summary.totalIncome, currency)}
@@ -283,7 +283,7 @@ function FilterBar({
               Spent
             </Text>
             <Text
-              className="font-heading-normal text-[14px] text-terracotta"
+              className="font-heading-normal text-sm text-terracotta"
               style={{ fontVariant: ["tabular-nums"] }}
             >
               -{formatCents(summary.totalExpense, currency)}
@@ -295,7 +295,7 @@ function FilterBar({
               Net
             </Text>
             <Text
-              className={`font-heading-normal text-[14px] ${summary.netAmount >= 0 ? "text-sage" : "text-terracotta"}`}
+              className={`font-heading-normal text-sm ${summary.netAmount >= 0 ? "text-sage" : "text-terracotta"}`}
               style={{ fontVariant: ["tabular-nums"] }}
             >
               {summary.netAmount >= 0 ? "+" : ""}
@@ -313,7 +313,7 @@ function FilterBar({
 function JournalHeader() {
   return (
     <View className="flex-row items-center justify-between px-5 pb-2 pt-4 border-b border-ledger-outline mx-5">
-      <Text className="font-heading-normal text-[20px] italic text-ink">Recent Journal</Text>
+      <Text className="font-heading-normal text-xl italic text-ink">Recent Journal</Text>
     </View>
   );
 }
@@ -413,7 +413,7 @@ export default function HomeScreen() {
                   className="mt-1 px-5 py-2.5 border border-ink active:bg-ink"
                   style={{ borderCurve: "continuous" }}
                 >
-                  <Text className="font-body-semibold text-[11px] text-ink uppercase tracking-[1px]">
+                  <Text className="font-body-semibold text-[11px] text-ink uppercase tracking-wide">
                     Reset Filters
                   </Text>
                 </Pressable>

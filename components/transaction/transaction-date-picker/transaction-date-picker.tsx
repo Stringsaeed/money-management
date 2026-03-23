@@ -7,6 +7,7 @@ import { getDisplayDateLabel } from "../utils";
 
 import { TransactionDatePickerProps } from "./types";
 import { Text } from "@/components/ui/text";
+import { SHEET_BG, SHEET_HANDLE } from "../constants";
 
 interface ExtendedDatePickerProps extends TransactionDatePickerProps {
   children?: React.ReactNode;
@@ -48,7 +49,7 @@ export default function TransactionDatePicker({
           style={{ borderCurve: "continuous" }}
         >
           <Text className="text-[15px]">📆</Text>
-          <Text className="font-body-medium text-[14px] text-ink capitalize">
+          <Text className="font-body-medium text-sm text-ink capitalize">
             {getDisplayDateLabel(date)}
           </Text>
         </View>
@@ -62,8 +63,8 @@ export default function TransactionDatePicker({
       <BottomSheetModal
         enableDynamicSizing
         ref={ref}
-        backgroundStyle={{ backgroundColor: "#F9F8F6" }}
-        handleIndicatorStyle={{ backgroundColor: "#EBE8E3" }}
+        backgroundStyle={SHEET_BG}
+        handleIndicatorStyle={SHEET_HANDLE}
         backdropComponent={(props) => (
           <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} />
         )}
@@ -86,7 +87,7 @@ export default function TransactionDatePicker({
             className="mx-8 py-3 bg-ink items-center active:opacity-80"
             style={{ borderCurve: "continuous" }}
           >
-            <Text className="font-body-semibold text-[13px] text-surface uppercase tracking-[1px]">
+            <Text className="font-body-semibold text-[13px] text-surface uppercase tracking-wide">
               Done
             </Text>
           </Pressable>

@@ -13,7 +13,7 @@ export function AmountDisplay({ currencySymbol, value }: AmountDisplayProps) {
   return (
     <View className="flex-row items-baseline">
       <Text
-        className="font-heading-medium text-[18px] text-ink/30 mr-1"
+        className="font-heading-medium text-lg text-ink/30 mr-1"
         style={{ fontVariant: ["tabular-nums"] }}
       >
         {currencySymbol}
