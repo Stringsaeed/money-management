@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useRef } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -12,6 +12,7 @@ import { ArrowLeftIcon, CheckIcon, TrashIcon } from "phosphor-react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { AnimatedRollingNumber } from "react-native-animated-rolling-numbers";
+import { useForm } from "@tanstack/react-form";
 
 import NumberPad from "@/components/transaction/num-pad";
 import { Text } from "@/components/ui/text";
@@ -19,7 +20,7 @@ import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import useNumPadNumber from "@/hooks/use-num-pad-number";
 import type { TransactionType } from "@/types";
-import { getCurrencySymbol, getValidationMessage, triggerErrorHaptic } from "./utils";
+import { getCurrencySymbol, triggerErrorHaptic } from "./utils";
 import TransactionDatePicker from "./transaction-date-picker/transaction-date-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -42,6 +43,14 @@ interface TransactionFormProps {
   onSubmit: (data: TransactionFormData) => Promise<void>;
   submitLabel?: string;
   onDelete?: () => void;
+}
+
+interface FormValues {
+  accountId: string;
+  toAccountId: string | null;
+  categoryId: string | null;
+  description: string;
+  date: Date;
 }
 
 const INK = "#1C1B1A";
@@ -322,11 +331,22 @@ function NoteInput({ value, onChange }: { value: string; onChange: (text: string
   );
 }
 
+// ─── Date Display Helper ──────────────────────────────────────────────────────
+
+function getDateDisplayValue(date: Date): string {
+  const now = new Date();
+  const diff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 // ─── Form ─────────────────────────────────────────────────────────────────────
 
 export function TransactionForm({ initialData, onSubmit, onDelete }: TransactionFormProps) {
   const router = useRouter();
   const { data: accounts = [] } = useAccounts();
+  const { data: categories = [] } = useCategories();
 
   const categorySheetRef = useRef<BottomSheetModal>(null);
   const accountSheetRef = useRef<BottomSheetModal>(null);
@@ -334,45 +354,48 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
   const firstAccountId = accounts[0]?.id ?? "";
   const firstAccountCurrency = accounts[0]?.currency ?? "USD";
 
-  const [accountId, setAccountId] = useState(initialData?.accountId ?? "");
-  const [toAccountId] = useState<string | null>(initialData?.toAccountId ?? null);
-  const [categoryId, setCategoryId] = useState<string | null>(initialData?.categoryId ?? null);
-  const [description, setDescription] = useState(initialData?.description ?? "");
-  const [date, setDate] = useState(initialData?.date ?? new Date());
-  const [saving, setSaving] = useState(false);
-  const [showValidation, setShowValidation] = useState(false);
-  const [submissionError, setSubmissionError] = useState("");
-
-  const { data: categories = [] } = useCategories();
-
   const numPad = useNumPadNumber((initialData?.amount ?? 0) / 100);
-  const amountCents = Math.round(numPad.value * 100);
-
-  const currentAccount = accounts.find((account) => account.id === accountId);
-  const currentCategory = categories.find((category) => category.id === categoryId);
-  const type: TransactionType = currentCategory?.type ?? initialData?.type ?? "expense";
-  const currency = currentAccount?.currency ?? initialData?.currency ?? firstAccountCurrency;
-  const currencySymbol = useMemo(() => getCurrencySymbol(currency), [currency]);
-  const validationMessage = getValidationMessage({
-    amount: amountCents,
-    accountId,
-    type,
-    toAccountId,
-    date,
-    hasAccounts: accounts.length > 0,
-  });
-
   const isEditing = !!initialData?.amount;
 
-  useEffect(() => {
-    if (!accountId && firstAccountId) {
-      setAccountId(firstAccountId);
-    }
-  }, [accountId, firstAccountId]);
+  const form = useForm<FormValues>({
+    defaultValues: {
+      accountId: initialData?.accountId ?? firstAccountId,
+      toAccountId: initialData?.toAccountId ?? null,
+      categoryId: initialData?.categoryId ?? null,
+      description: initialData?.description ?? "",
+      date: initialData?.date ?? new Date(),
+    },
+    onSubmit: async ({ value }) => {
+      const amountCents = Math.round(numPad.value * 100);
+      const currentCategory = categories.find((c) => c.id === value.categoryId);
+      const type: TransactionType = currentCategory?.type ?? initialData?.type ?? "expense";
+      const currentAccount = accounts.find((a) => a.id === value.accountId);
+      const currency = currentAccount?.currency ?? initialData?.currency ?? firstAccountCurrency;
 
-  useEffect(() => {
-    setSubmissionError("");
-  }, [type, amountCents, accountId, toAccountId, categoryId, description, date]);
+      if (amountCents <= 0) {
+        triggerErrorHaptic();
+        throw new Error("Enter an amount above 0.00.");
+      }
+      if (!value.accountId) {
+        triggerErrorHaptic();
+        throw new Error("Pick the source account.");
+      }
+
+      await onSubmit({
+        type,
+        amount: amountCents,
+        accountId: value.accountId,
+        toAccountId: type === "transfer" ? value.toAccountId : null,
+        categoryId: type === "transfer" ? null : value.categoryId,
+        description: value.description.trim(),
+        date: value.date,
+        currency,
+        originalAmount: null,
+        originalCurrency: null,
+        exchangeRate: null,
+      });
+    },
+  });
 
   const handleBack = () => {
     try {
@@ -388,45 +411,6 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
     }
   };
 
-  const handleSubmit = async () => {
-    setShowValidation(true);
-
-    if (validationMessage) {
-      triggerErrorHaptic();
-      return;
-    }
-
-    setSaving(true);
-
-    try {
-      await onSubmit({
-        type,
-        amount: amountCents,
-        accountId,
-        toAccountId: type === "transfer" ? toAccountId : null,
-        categoryId: type === "transfer" ? null : categoryId,
-        description: description.trim(),
-        date,
-        currency,
-        originalAmount: null,
-        originalCurrency: null,
-        exchangeRate: null,
-      });
-    } catch {
-      setSubmissionError("Saving failed. Try again.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const getDateDisplayValue = () => {
-    const now = new Date();
-    const diff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-    if (diff === 0) return "Today";
-    if (diff === 1) return "Yesterday";
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  };
-
   return (
     <View className="flex-1 bg-surface">
       {/* Upper half: header + breadcrumb + amount + note */}
@@ -434,13 +418,17 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-        <FormHeader
-          onBack={handleBack}
-          onDelete={onDelete}
-          onSubmit={handleSubmit}
-          saving={saving}
-          title={isEditing ? "Edit Entry" : "New Entry"}
-        />
+        <form.Subscribe selector={(s) => s.isSubmitting}>
+          {(isSubmitting) => (
+            <FormHeader
+              onBack={handleBack}
+              onDelete={onDelete}
+              onSubmit={() => form.handleSubmit()}
+              saving={isSubmitting}
+              title={isEditing ? "Edit Entry" : "New Entry"}
+            />
+          )}
+        </form.Subscribe>
 
         {/* Breadcrumb: Account › Category › Date */}
         <View className="pt-2 pb-3">
@@ -450,69 +438,94 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
             contentContainerStyle={{ paddingHorizontal: 20, gap: 8, alignItems: "center" }}
           >
             {accounts.length > 1 ? (
-              <>
-                <BreadcrumbSegment
-                  emoji="🏦"
-                  label={currentAccount?.name ?? "Account"}
-                  active={!!currentAccount}
-                  onPress={() => accountSheetRef.current?.present()}
-                />
-                <Text className="font-heading-normal text-[14px] italic text-ink/25">›</Text>
-              </>
+              <form.Subscribe selector={(s) => s.values.accountId}>
+                {(accountId) => {
+                  const account = accounts.find((a) => a.id === accountId);
+                  return (
+                    <>
+                      <BreadcrumbSegment
+                        emoji="🏦"
+                        label={account?.name ?? "Account"}
+                        active={!!account}
+                        onPress={() => accountSheetRef.current?.present()}
+                      />
+                      <Text className="font-heading-normal text-[14px] italic text-ink/25">›</Text>
+                    </>
+                  );
+                }}
+              </form.Subscribe>
             ) : null}
 
-            <BreadcrumbSegment
-              emoji={currentCategory?.icon ?? "🏷️"}
-              label={currentCategory?.name ?? "Category"}
-              active={!!currentCategory}
-              onPress={() => categorySheetRef.current?.present()}
-            />
+            <form.Subscribe selector={(s) => s.values.categoryId}>
+              {(categoryId) => {
+                const category = categories.find((c) => c.id === categoryId);
+                return (
+                  <BreadcrumbSegment
+                    emoji={category?.icon ?? "🏷️"}
+                    label={category?.name ?? "Category"}
+                    active={!!category}
+                    onPress={() => categorySheetRef.current?.present()}
+                  />
+                );
+              }}
+            </form.Subscribe>
 
             <Text className="font-heading-normal text-[14px] italic text-ink/25">›</Text>
 
-            <TransactionDatePicker date={date} onChange={setDate}>
-              <BreadcrumbSegment emoji="📅" label={getDateDisplayValue()} active />
-            </TransactionDatePicker>
+            <form.Subscribe selector={(s) => s.values.date}>
+              {(date) => (
+                <TransactionDatePicker date={date} onChange={(d) => form.setFieldValue("date", d)}>
+                  <BreadcrumbSegment emoji="📅" label={getDateDisplayValue(date)} active />
+                </TransactionDatePicker>
+              )}
+            </form.Subscribe>
           </ScrollView>
         </View>
 
         {/* Amount — centered in remaining space */}
-        <Animated.View
-          layout={layoutTransition}
-          className="flex-1 items-center justify-center px-5"
-        >
-          <AmountDisplay currencySymbol={currencySymbol} value={numPad.value} />
-        </Animated.View>
+        <form.Subscribe selector={(s) => s.values.accountId}>
+          {(accountId) => {
+            const account = accounts.find((a) => a.id === accountId);
+            const currency = account?.currency ?? initialData?.currency ?? firstAccountCurrency;
+            const symbol = getCurrencySymbol(currency);
+            return (
+              <Animated.View
+                layout={layoutTransition}
+                className="flex-1 items-center justify-center px-5"
+              >
+                <AmountDisplay currencySymbol={symbol} value={numPad.value} />
+              </Animated.View>
+            );
+          }}
+        </form.Subscribe>
 
-        {/* Validation / error messages */}
-        {showValidation && validationMessage ? (
-          <Animated.View
-            entering={FadeIn.duration(200)}
-            exiting={FadeOut.duration(150)}
-            layout={layoutTransition}
-            className="px-5 pb-2"
-          >
-            <Text className="font-body-medium text-[13px] text-destructive text-center">
-              {validationMessage}
-            </Text>
-          </Animated.View>
-        ) : null}
-
-        {submissionError ? (
-          <Animated.View
-            entering={FadeIn.duration(200)}
-            exiting={FadeOut.duration(150)}
-            layout={layoutTransition}
-            className="px-5 pb-2"
-          >
-            <Text className="font-body-medium text-[13px] text-destructive text-center">
-              {submissionError}
-            </Text>
-          </Animated.View>
-        ) : null}
+        {/* Submission error */}
+        <form.Subscribe selector={(s) => (s.submissionAttempts > 0 ? s.errors : [])}>
+          {(errors) =>
+            errors.length > 0 ? (
+              <Animated.View
+                entering={FadeIn.duration(200)}
+                exiting={FadeOut.duration(150)}
+                layout={layoutTransition}
+                className="px-5 pb-2"
+              >
+                <Text className="font-body-medium text-[13px] text-destructive text-center">
+                  {errors.join(", ")}
+                </Text>
+              </Animated.View>
+            ) : null
+          }
+        </form.Subscribe>
 
         {/* Note input */}
-        <NoteInput value={description} onChange={setDescription} />
+        <form.Subscribe selector={(s) => s.values.description}>
+          {(description) => (
+            <NoteInput
+              value={description}
+              onChange={(text) => form.setFieldValue("description", text)}
+            />
+          )}
+        </form.Subscribe>
       </KeyboardAvoidingView>
 
       {/* Lower half: compact number pad */}
@@ -526,18 +539,26 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
       </View>
 
       {/* Bottom sheets */}
-      <CategorySheet
-        sheetRef={categorySheetRef}
-        categories={categories}
-        selectedId={categoryId}
-        onSelect={setCategoryId}
-      />
-      <AccountSheet
-        sheetRef={accountSheetRef}
-        accounts={accounts}
-        selectedId={accountId}
-        onSelect={setAccountId}
-      />
+      <form.Subscribe
+        selector={(s) => ({ categoryId: s.values.categoryId, accountId: s.values.accountId })}
+      >
+        {({ categoryId, accountId }) => (
+          <>
+            <CategorySheet
+              sheetRef={categorySheetRef}
+              categories={categories}
+              selectedId={categoryId}
+              onSelect={(id) => form.setFieldValue("categoryId", id)}
+            />
+            <AccountSheet
+              sheetRef={accountSheetRef}
+              accounts={accounts}
+              selectedId={accountId}
+              onSelect={(id) => form.setFieldValue("accountId", id)}
+            />
+          </>
+        )}
+      </form.Subscribe>
     </View>
   );
 }
