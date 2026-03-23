@@ -1,18 +1,16 @@
-import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, View, useWindowDimensions } from "react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowLeftIcon,
-  CalendarBlankIcon,
-  CaretDownIcon,
-  CheckIcon,
-  NoteBlankIcon,
-  TagIcon,
-  TrashIcon,
-} from "phosphor-react-native";
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  TextInput,
+  View,
+} from "react-native";
+import { ArrowLeftIcon, CheckIcon, TrashIcon } from "phosphor-react-native";
+import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
-import { formatRelative } from "date-fns";
 import { AnimatedRollingNumber } from "react-native-animated-rolling-numbers";
 
 import NumberPad from "@/components/transaction/num-pad";
@@ -23,6 +21,7 @@ import useNumPadNumber from "@/hooks/use-num-pad-number";
 import type { TransactionType } from "@/types";
 import { getCurrencySymbol, getValidationMessage, triggerErrorHaptic } from "./utils";
 import TransactionDatePicker from "./transaction-date-picker/transaction-date-picker";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export interface TransactionFormData {
   type: TransactionType;
@@ -45,22 +44,296 @@ interface TransactionFormProps {
   onDelete?: () => void;
 }
 
-const MUTED = "#9CA3AF";
-const ACCENT = "#11181C";
-const BG = "#FFFFFF";
-const CATEGORY_HIGHLIGHT = "#F3F4F6";
+const INK = "#1C1B1A";
+const DESTRUCTIVE = "#D9534F";
 
 const layoutTransition = LinearTransition.springify().damping(20).stiffness(150);
+
+const SHEET_BG = { backgroundColor: "#F9F8F6" };
+const SHEET_HANDLE = { backgroundColor: "#EBE8E3" };
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+
+function FormHeader({
+  onBack,
+  onDelete,
+  onSubmit,
+  saving,
+  title,
+}: {
+  onBack: () => void;
+  onDelete?: () => void;
+  onSubmit: () => void;
+  saving: boolean;
+  title: string;
+}) {
+  return (
+    <View className="flex-row items-center justify-between px-5 pt-safe pb-3">
+      <Pressable
+        onPress={onBack}
+        className="h-10 w-10 items-center justify-center rounded-full bg-surface-container active:bg-surface-dim"
+      >
+        <ArrowLeftIcon size={20} color={INK} weight="bold" />
+      </Pressable>
+
+      <Text className="font-heading-normal text-[18px] italic text-ink">{title}</Text>
+
+      <View className="flex-row items-center gap-2">
+        {onDelete ? (
+          <Pressable
+            onPress={onDelete}
+            className="h-10 w-10 items-center justify-center rounded-full bg-terracotta/10 active:bg-terracotta/20"
+          >
+            <TrashIcon size={18} color={DESTRUCTIVE} weight="bold" />
+          </Pressable>
+        ) : null}
+        <Pressable
+          onPress={onSubmit}
+          disabled={saving}
+          className="h-10 w-10 items-center justify-center rounded-full bg-ink active:opacity-80"
+          style={{ opacity: saving ? 0.5 : 1 }}
+        >
+          <CheckIcon size={20} color="#F9F8F6" weight="bold" />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+// ─── Breadcrumb Segment ───────────────────────────────────────────────────────
+
+function BreadcrumbSegment({
+  emoji,
+  label,
+  active,
+  onPress,
+}: {
+  emoji: string;
+  label: string;
+  active?: boolean;
+  onPress?: VoidFunction;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container active:bg-surface-dim"
+    >
+      <Text className="text-[14px]">{emoji}</Text>
+      <Text
+        className={`font-body-medium text-[13px] ${active ? "text-ink" : "text-ink/35"}`}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+// ─── Amount Display ───────────────────────────────────────────────────────────
+
+function AmountDisplay({ currencySymbol, value }: { currencySymbol: string; value: number }) {
+  return (
+    <View className="flex-row items-baseline">
+      <Text
+        className="font-heading-medium text-[18px] text-ink/30 mr-1"
+        style={{ fontVariant: ["tabular-nums"] }}
+      >
+        {currencySymbol}
+      </Text>
+      <AnimatedRollingNumber
+        useGrouping
+        value={value}
+        textStyle={{
+          fontFamily: "Newsreader_500Medium",
+          fontSize: 52,
+          color: INK,
+          lineHeight: 60,
+        }}
+      />
+    </View>
+  );
+}
+
+// ─── Category Bottom Sheet ────────────────────────────────────────────────────
+
+function CategorySheet({
+  sheetRef,
+  categories,
+  selectedId,
+  onSelect,
+}: {
+  sheetRef: React.RefObject<BottomSheetModal | null>;
+  categories: { id: string; name: string; icon: string; color: string; type: string }[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  const insets = useSafeAreaInsets();
+  const incomeCategories = categories.filter((c) => c.type === "income");
+  const expenseCategories = categories.filter((c) => c.type === "expense");
+
+  const renderGrid = (items: typeof categories) => (
+    <View className="flex-row flex-wrap gap-2">
+      {items.map((cat) => {
+        const isSelected = cat.id === selectedId;
+        return (
+          <Pressable
+            key={cat.id}
+            onPress={() => {
+              onSelect(cat.id);
+              sheetRef.current?.dismiss();
+            }}
+            className="items-center gap-1.5 px-4 py-3 rounded-xl"
+            style={{ backgroundColor: isSelected ? `${cat.color}20` : "#F1F0EE" }}
+          >
+            <Text className="text-[24px]">{cat.icon}</Text>
+            <Text
+              className="font-body-medium text-[12px]"
+              style={{ color: isSelected ? INK : "#1C1B1A66" }}
+            >
+              {cat.name}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+
+  return (
+    <BottomSheetModal
+      enableDynamicSizing
+      ref={sheetRef}
+      backgroundStyle={SHEET_BG}
+      topInset={insets.top}
+      handleIndicatorStyle={SHEET_HANDLE}
+      backdropComponent={(props) => (
+        <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} />
+      )}
+    >
+      <BottomSheetView className="pb-safe px-5 gap-5">
+        <Text className="font-heading-normal text-[20px] italic text-ink">Category</Text>
+
+        {expenseCategories.length > 0 ? (
+          <View className="gap-3">
+            <Text className="font-body-semibold text-[10px] text-ink/40 uppercase tracking-[1.5px]">
+              Expenses
+            </Text>
+            {renderGrid(expenseCategories)}
+          </View>
+        ) : null}
+
+        {incomeCategories.length > 0 ? (
+          <View className="gap-3">
+            <Text className="font-body-semibold text-[10px] text-ink/40 uppercase tracking-[1.5px]">
+              Income
+            </Text>
+            {renderGrid(incomeCategories)}
+          </View>
+        ) : null}
+
+        <View className="h-4" />
+      </BottomSheetView>
+    </BottomSheetModal>
+  );
+}
+
+// ─── Account Bottom Sheet ─────────────────────────────────────────────────────
+
+function AccountSheet({
+  sheetRef,
+  accounts,
+  selectedId,
+  onSelect,
+}: {
+  sheetRef: React.RefObject<BottomSheetModal | null>;
+  accounts: { id: string; name: string; currency: string }[];
+  selectedId: string;
+  onSelect: (id: string) => void;
+}) {
+  const insets = useSafeAreaInsets();
+  return (
+    <BottomSheetModal
+      enableDynamicSizing
+      ref={sheetRef}
+      backgroundStyle={SHEET_BG}
+      topInset={insets.top}
+      handleIndicatorStyle={SHEET_HANDLE}
+      backdropComponent={(props) => (
+        <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} />
+      )}
+    >
+      <BottomSheetView className="pb-safe px-5 gap-4">
+        <Text className="font-heading-normal text-[20px] italic text-ink">Account</Text>
+
+        <View className="gap-2">
+          {accounts.map((acc) => {
+            const isSelected = acc.id === selectedId;
+            return (
+              <Pressable
+                key={acc.id}
+                onPress={() => {
+                  onSelect(acc.id);
+                  sheetRef.current?.dismiss();
+                }}
+                className={`flex-row items-center gap-3 px-4 py-3.5 rounded-xl ${
+                  isSelected ? "bg-ink" : "bg-surface-container"
+                }`}
+              >
+                <Text className="text-[18px]">🏦</Text>
+                <View className="flex-1">
+                  <Text
+                    className={`font-body-medium text-[15px] ${isSelected ? "text-surface" : "text-ink"}`}
+                  >
+                    {acc.name}
+                  </Text>
+                  <Text
+                    className={`font-body-normal text-[12px] ${isSelected ? "text-surface/60" : "text-ink/40"}`}
+                  >
+                    {acc.currency}
+                  </Text>
+                </View>
+                {isSelected ? <CheckIcon size={18} color="#F9F8F6" weight="bold" /> : null}
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View className="h-4" />
+      </BottomSheetView>
+    </BottomSheetModal>
+  );
+}
+
+// ─── Note Input ───────────────────────────────────────────────────────────────
+
+function NoteInput({ value, onChange }: { value: string; onChange: (text: string) => void }) {
+  return (
+    <View className="px-5 py-2">
+      <View className="flex-row items-center gap-2 bg-surface-container rounded-xl px-4 py-2.5">
+        <Text className="text-[16px]">📝</Text>
+        <TextInput
+          value={value}
+          onChangeText={onChange}
+          placeholder="Add a note..."
+          placeholderTextColor="#1C1B1A40"
+          className="flex-1 font-body-normal text-[15px] text-ink py-0"
+        />
+      </View>
+    </View>
+  );
+}
+
+// ─── Form ─────────────────────────────────────────────────────────────────────
 
 export function TransactionForm({ initialData, onSubmit, onDelete }: TransactionFormProps) {
   const router = useRouter();
   const { data: accounts = [] } = useAccounts();
-  const { height } = useWindowDimensions();
+
+  const categorySheetRef = useRef<BottomSheetModal>(null);
+  const accountSheetRef = useRef<BottomSheetModal>(null);
 
   const firstAccountId = accounts[0]?.id ?? "";
   const firstAccountCurrency = accounts[0]?.currency ?? "USD";
 
-  const [type, setType] = useState<TransactionType>(initialData?.type ?? "expense");
   const [accountId, setAccountId] = useState(initialData?.accountId ?? "");
   const [toAccountId] = useState<string | null>(initialData?.toAccountId ?? null);
   const [categoryId, setCategoryId] = useState<string | null>(initialData?.categoryId ?? null);
@@ -69,15 +342,15 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
   const [saving, setSaving] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
-  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
-  const [showNotePad, setShowNotePad] = useState(false);
-  const { data: categories = [] } = useCategories(type === "income" ? "income" : "expense");
+
+  const { data: categories = [] } = useCategories();
 
   const numPad = useNumPadNumber((initialData?.amount ?? 0) / 100);
   const amountCents = Math.round(numPad.value * 100);
 
   const currentAccount = accounts.find((account) => account.id === accountId);
   const currentCategory = categories.find((category) => category.id === categoryId);
+  const type: TransactionType = currentCategory?.type ?? initialData?.type ?? "expense";
   const currency = currentAccount?.currency ?? initialData?.currency ?? firstAccountCurrency;
   const currencySymbol = useMemo(() => getCurrencySymbol(currency), [currency]);
   const validationMessage = getValidationMessage({
@@ -88,7 +361,8 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
     date,
     hasAccounts: accounts.length > 0,
   });
-  const tight = height < 760;
+
+  const isEditing = !!initialData?.amount;
 
   useEffect(() => {
     if (!accountId && firstAccountId) {
@@ -100,12 +374,17 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
     setSubmissionError("");
   }, [type, amountCents, accountId, toAccountId, categoryId, description, date]);
 
-  const handleTypeToggle = () => {
-    const next = type === "expense" ? "income" : "expense";
-    setType(next);
-    setCategoryId(null);
-    if (process.env.EXPO_OS === "ios") {
-      Haptics.selectionAsync();
+  const handleBack = () => {
+    try {
+      if (router.canDismiss()) {
+        router.dismiss();
+      } else if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace("/(tabs)");
+      }
+    } catch (e) {
+      console.error("Navigation error:", e);
     }
   };
 
@@ -140,162 +419,80 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
     }
   };
 
-  const isExpense = type === "expense";
-  const verbText = isExpense ? "You spent" : "You received";
-  const prepositionText = isExpense ? "on" : "from";
-  const dateLabel = formatRelative(date, new Date());
+  const getDateDisplayValue = () => {
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Yesterday";
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1"
-      style={{ backgroundColor: BG }}
-    >
-      {/* Header bar */}
-      <View className="flex-row items-center justify-between px-5 pt-safe pb-2">
-        <Pressable
-          onPress={() => {
-            try {
-              if (router.canDismiss()) {
-                router.dismiss();
-              } else if (router.canGoBack()) {
-                router.back();
-              } else {
-                router.replace("/(tabs)");
-              }
-            } catch (e) {
-              console.error("Navigation error:", e);
-            }
-          }}
-          className="h-10 w-10 items-center justify-center rounded-full"
-          style={{ backgroundColor: "#F3F4F6" }}
-        >
-          <ArrowLeftIcon size={20} color={ACCENT} weight="bold" />
-        </Pressable>
+    <View className="flex-1 bg-surface">
+      {/* Upper half: header + breadcrumb + amount + note */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
+        <FormHeader
+          onBack={handleBack}
+          onDelete={onDelete}
+          onSubmit={handleSubmit}
+          saving={saving}
+          title={isEditing ? "Edit Entry" : "New Entry"}
+        />
 
-        <View className="flex-row items-center gap-3">
-          {onDelete ? (
-            <Pressable
-              onPress={onDelete}
-              className="h-10 w-10 items-center justify-center rounded-full"
-              style={{ backgroundColor: "#FEE2E2" }}
-            >
-              <TrashIcon size={18} color="#DC2626" weight="bold" />
-            </Pressable>
-          ) : null}
-          <Pressable
-            onPress={handleSubmit}
-            disabled={saving}
-            className="h-10 w-10 items-center justify-center rounded-full"
-            style={{ backgroundColor: ACCENT, opacity: saving ? 0.5 : 1 }}
+        {/* Breadcrumb: Account › Category › Date */}
+        <View className="pt-2 pb-3">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 20, gap: 8, alignItems: "center" }}
           >
-            <CheckIcon size={20} color="#FFFFFF" weight="bold" />
-          </Pressable>
-        </View>
-      </View>
+            {accounts.length > 1 ? (
+              <>
+                <BreadcrumbSegment
+                  emoji="🏦"
+                  label={currentAccount?.name ?? "Account"}
+                  active={!!currentAccount}
+                  onPress={() => accountSheetRef.current?.present()}
+                />
+                <Text className="font-heading-normal text-[14px] italic text-ink/25">›</Text>
+              </>
+            ) : null}
 
-      {/* Typography-driven form */}
-      <View className={`flex-1 px-6 ${tight ? "pt-2" : "pt-6"}`}>
+            <BreadcrumbSegment
+              emoji={currentCategory?.icon ?? "🏷️"}
+              label={currentCategory?.name ?? "Category"}
+              active={!!currentCategory}
+              onPress={() => categorySheetRef.current?.present()}
+            />
+
+            <Text className="font-heading-normal text-[14px] italic text-ink/25">›</Text>
+
+            <TransactionDatePicker date={date} onChange={setDate}>
+              <BreadcrumbSegment emoji="📅" label={getDateDisplayValue()} active />
+            </TransactionDatePicker>
+          </ScrollView>
+        </View>
+
+        {/* Amount — centered in remaining space */}
         <Animated.View
           layout={layoutTransition}
-          className="gap-1 flex-1 items-center flex-row flex-wrap"
+          className="flex-1 items-center justify-center px-5"
         >
-          <Pressable onPress={handleTypeToggle}>
-            <View className="flex-row items-center gap-2">
-              <Text className="font-medium tracking-wide uppercase" style={{ color: MUTED }}>
-                {verbText}
-              </Text>
-              <CaretDownIcon size={12} color={MUTED} weight="bold" />
-            </View>
-          </Pressable>
-
-          <View
-            className="flex-row items-center gap-1.5 rounded-xl px-3 py-1.5"
-            style={{ backgroundColor: CATEGORY_HIGHLIGHT, borderCurve: "continuous" }}
-          >
-            <Text className="font-normal">{currencySymbol}</Text>
-            <AnimatedRollingNumber useGrouping value={numPad.value} />
-          </View>
-
-          <View className="flex-row flex-wrap items-center gap-1.5 mt-1">
-            <Text className="text-xl font-medium text-muted">{prepositionText}</Text>
-            <Pressable
-              onPress={() => {
-                setShowCategoryPicker(!showCategoryPicker);
-                setShowNotePad(false);
-              }}
-            >
-              <View
-                className="flex-row items-center gap-1.5 rounded-xl px-3 py-1.5"
-                style={{
-                  backgroundColor: currentCategory
-                    ? `${currentCategory.color}15`
-                    : CATEGORY_HIGHLIGHT,
-                  borderCurve: "continuous",
-                }}
-              >
-                {currentCategory ? (
-                  <Text className="text-[18px]">{currentCategory.icon}</Text>
-                ) : (
-                  <TagIcon size={16} color={MUTED} weight="duotone" />
-                )}
-                <Text
-                  className="text-[18px] font-semibold"
-                  style={{ color: currentCategory ? currentCategory.color : MUTED }}
-                >
-                  {currentCategory?.name ?? "category"}
-                </Text>
-                <CaretDownIcon
-                  size={12}
-                  color={currentCategory ? currentCategory.color : MUTED}
-                  weight="bold"
-                />
-              </View>
-            </Pressable>
-          </View>
-
-          <View className="flex-row items-center gap-1.5 mt-1">
-            <Text className="text-xl font-medium" style={{ color: MUTED }}>
-              at
-            </Text>
-            <TransactionDatePicker date={date} onChange={setDate}></TransactionDatePicker>
-          </View>
-
-          <View className="flex-row items-center gap-1.5 mt-1">
-            <Pressable
-              onPress={() => {
-                setShowNotePad(!showNotePad);
-                setShowCategoryPicker(false);
-              }}
-            >
-              <View
-                className="flex-row items-center gap-1.5 rounded-xl px-3 py-1.5"
-                style={{
-                  backgroundColor: description ? "#F0FDF4" : CATEGORY_HIGHLIGHT,
-                  borderCurve: "continuous",
-                }}
-              >
-                <NoteBlankIcon size={16} color={description ? "#16A34A" : MUTED} weight="duotone" />
-                <Text
-                  className="text-[18px] font-semibold"
-                  style={{ color: description ? ACCENT : MUTED }}
-                >
-                  {description || "add a note"}
-                </Text>
-              </View>
-            </Pressable>
-          </View>
+          <AmountDisplay currencySymbol={currencySymbol} value={numPad.value} />
         </Animated.View>
 
-        {/* Validation message */}
+        {/* Validation / error messages */}
         {showValidation && validationMessage ? (
           <Animated.View
             entering={FadeIn.duration(200)}
             exiting={FadeOut.duration(150)}
             layout={layoutTransition}
-            className="mt-3"
+            className="px-5 pb-2"
           >
-            <Text className="text-sm font-medium" style={{ color: "#DC2626" }}>
+            <Text className="font-body-medium text-[13px] text-destructive text-center">
               {validationMessage}
             </Text>
           </Animated.View>
@@ -306,24 +503,41 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
             entering={FadeIn.duration(200)}
             exiting={FadeOut.duration(150)}
             layout={layoutTransition}
-            className="mt-3"
+            className="px-5 pb-2"
           >
-            <Text className="text-sm font-medium" style={{ color: "#DC2626" }}>
+            <Text className="font-body-medium text-[13px] text-destructive text-center">
               {submissionError}
             </Text>
           </Animated.View>
         ) : null}
 
-        {/* Number pad */}
-        <View className="grow">
-          <NumberPad
-            onClear={numPad.clearAll}
-            onDelete={numPad.deleteDigit}
-            onDot={numPad.addDecimalPoint}
-            onPress={numPad.appendDigit}
-          />
-        </View>
+        {/* Note input */}
+        <NoteInput value={description} onChange={setDescription} />
+      </KeyboardAvoidingView>
+
+      {/* Lower half: compact number pad */}
+      <View className="flex-1 px-4 border-t border-ledger-outline">
+        <NumberPad
+          onClear={numPad.clearAll}
+          onDelete={numPad.deleteDigit}
+          onDot={numPad.addDecimalPoint}
+          onPress={numPad.appendDigit}
+        />
       </View>
-    </KeyboardAvoidingView>
+
+      {/* Bottom sheets */}
+      <CategorySheet
+        sheetRef={categorySheetRef}
+        categories={categories}
+        selectedId={categoryId}
+        onSelect={setCategoryId}
+      />
+      <AccountSheet
+        sheetRef={accountSheetRef}
+        accounts={accounts}
+        selectedId={accountId}
+        onSelect={setAccountId}
+      />
+    </View>
   );
 }

@@ -1,3 +1,4 @@
+import { intlFormat } from "date-fns";
 import { router } from "expo-router";
 import { useMemo } from "react";
 import { ActivityIndicator, Pressable, SectionList, ScrollView, View } from "react-native";
@@ -13,7 +14,7 @@ import { useMonthSummary, useTransactions } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
 import { formatCents } from "@/utils/currency";
 import { formatMonth } from "@/utils/date";
-import type { DayGroup, TransactionWithDetails } from "@/types";
+import type { AccountWithBalance, DayGroup, TransactionWithDetails } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { XIcon } from "phosphor-react-native";
@@ -35,10 +36,172 @@ function groupByDay(transactions: TransactionWithDetails[]): DayGroup[] {
   return Array.from(map.values()).sort((a, b) => b.date.localeCompare(a.date));
 }
 
-// ─── Sticky header ────────────────────────────────────────────────────────────
+function formatHeaderDate(): string {
+  return intlFormat(new Date(), {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).toUpperCase();
+}
 
-interface StickyHeaderProps {
+function computeTotalBalance(accounts: AccountWithBalance[]): {
+  totalCents: number;
+  currency: string;
+} {
+  const currency = accounts[0]?.currency ?? "USD";
+  const totalCents = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+  return { totalCents, currency };
+}
+
+// ─── Balance Hero ─────────────────────────────────────────────────────────────
+
+function BalanceHero({
+  accounts,
+  activeFilterCount,
+}: {
+  accounts: AccountWithBalance[];
   activeFilterCount: number;
+}) {
+  const { totalCents, currency } = computeTotalBalance(accounts);
+
+  return (
+    <View className="px-5 pt-safe-offset-4 pb-2 bg-background">
+      {/* Top row: date label + action buttons */}
+      <View className="flex-row items-center justify-between mb-2">
+        <Text className="font-body-semibold text-[11px] text-ink/40 uppercase tracking-[1.5px]">
+          AS OF {formatHeaderDate()}
+        </Text>
+        <View className="flex-row items-center gap-2">
+          <Pressable
+            onPress={() => router.push("/(tabs)/filters")}
+            className="w-8 h-8 items-center justify-center rounded-full bg-surface-container active:bg-surface-dim"
+            style={{ borderCurve: "continuous" }}
+          >
+            <SymbolView
+              name="line.3.horizontal.decrease.circle"
+              size={20}
+              tintColor={activeFilterCount > 0 ? "#1C1B1A" : "#9CA3AF"}
+              weight={activeFilterCount > 0 ? "semibold" : "regular"}
+            />
+            {activeFilterCount > 0 && (
+              <View className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-ink items-center justify-center">
+                <Text className="text-[9px] font-bold text-background">{activeFilterCount}</Text>
+              </View>
+            )}
+          </Pressable>
+          <Pressable
+            onPress={() => router.push("/(tabs)/settings")}
+            className="w-8 h-8 items-center justify-center rounded-full bg-surface-container active:bg-surface-dim"
+            style={{ borderCurve: "continuous" }}
+          >
+            <SymbolView name="gearshape" size={18} tintColor="#9CA3AF" />
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Balance amount */}
+      <Text
+        className="font-heading-medium text-[48px] leading-tight text-ink"
+        style={{ fontVariant: ["tabular-nums"] }}
+        selectable
+      >
+        {formatCents(totalCents, currency)}
+      </Text>
+
+      {/* Action buttons */}
+      <View className="flex-row gap-3 mt-4 mb-2">
+        <Pressable
+          onPress={() => router.push("/transaction/new")}
+          className="flex-row items-center gap-2 px-5 py-2.5 border border-ink active:bg-ink"
+          style={{ borderCurve: "continuous" }}
+        >
+          <SymbolView name="plus" size={14} tintColor="#1C1B1A" />
+          <Text className="font-body-semibold text-[11px] text-ink uppercase tracking-[1px]">
+            Add Entry
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => router.push("/transaction/new")}
+          className="flex-row items-center gap-2 px-5 py-2.5 bg-surface-container active:bg-surface-dim"
+          style={{ borderCurve: "continuous" }}
+        >
+          <Text className="font-body-semibold text-[11px] text-ink uppercase tracking-[1px]">
+            Transfer
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+// ─── Accounts Section ─────────────────────────────────────────────────────────
+
+function AccountsSection({ accounts }: { accounts: AccountWithBalance[] }) {
+  if (accounts.length === 0) return null;
+
+  return (
+    <View className="mt-4">
+      {/* Section header */}
+      <View className="flex-row items-center justify-between px-5 pb-3 border-b border-ledger-outline mx-5">
+        <Text className="font-heading-normal text-[20px] italic text-ink">Primary Positions</Text>
+        <Pressable
+          onPress={() => router.push("/(tabs)/accounts")}
+          className="flex-row items-center gap-1"
+        >
+          <Text className="font-body-semibold text-[11px] text-ink/40 uppercase tracking-[1px]">
+            View All
+          </Text>
+          <SymbolView name="arrow.right" size={10} tintColor="#9CA3AF" />
+        </Pressable>
+      </View>
+
+      {/* Horizontal scroll of account cards */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 20, gap: 12, paddingTop: 16, paddingBottom: 8 }}
+      >
+        {accounts.map((account) => (
+          <Pressable
+            key={account.id}
+            onPress={() => router.push(`/account/${account.id}`)}
+            className="w-[130px] p-4 border border-ledger-outline gap-3 active:bg-surface-container"
+            style={{ borderCurve: "continuous" }}
+          >
+            <View className="w-10 h-10 bg-surface-container rounded-full items-center justify-center">
+              <Text className="text-[18px]">
+                {account.type === "cash"
+                  ? "💵"
+                  : account.type === "bank"
+                    ? "🏦"
+                    : account.type === "credit"
+                      ? "💳"
+                      : account.type === "investment"
+                        ? "📈"
+                        : "💰"}
+              </Text>
+            </View>
+            <View>
+              <Text className="font-body-medium text-[11px] text-ink/40 uppercase tracking-[0.5px]">
+                {account.name}
+              </Text>
+              <Text
+                className="font-heading-normal text-[16px] text-ink"
+                style={{ fontVariant: ["tabular-nums"] }}
+              >
+                {formatCents(account.balance, account.currency)}
+              </Text>
+            </View>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─── Filter Bar ───────────────────────────────────────────────────────────────
+
+interface FilterBarProps {
   activeAccountName: string | null;
   selectedYear: number | null;
   selectedMonth: number | null;
@@ -50,8 +213,7 @@ interface StickyHeaderProps {
   setSelectedCategoryId: (id: string | null) => void;
 }
 
-function StickyHeader({
-  activeFilterCount,
+function FilterBar({
   activeAccountName,
   selectedYear,
   selectedMonth,
@@ -61,114 +223,97 @@ function StickyHeader({
   setActiveAccountId,
   setSelectedMonth,
   setSelectedCategoryId,
-}: StickyHeaderProps) {
+}: FilterBarProps) {
   const hasChips = !!(activeAccountName || selectedMonth || selectedCategoryName);
+  if (!hasChips) return null;
 
   return (
-    <View className="bg-white border-b border-gray-100">
-      {/* Title row */}
-      <View className="flex-row items-center justify-between px-4 pt-safe-offset-3 pb-3">
-        <Text className="text-[20px] font-bold text-gray-900">💰 Finances</Text>
-        <View className="flex-row items-center gap-2">
-          <Pressable
-            onPress={() => router.push("/(tabs)/filters")}
-            className="w-8 h-8 items-center justify-center rounded-full bg-gray-100 active:bg-gray-200"
-            style={{ borderCurve: "continuous" }}
-          >
-            <SymbolView
-              name="line.3.horizontal.decrease.circle"
-              size={20}
-              tintColor={activeFilterCount > 0 ? "#111827" : "#6b7280"}
-              weight={activeFilterCount > 0 ? "semibold" : "regular"}
-            />
-            {activeFilterCount > 0 && (
-              <View className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-gray-900 items-center justify-center">
-                <Text className="text-[9px] font-bold text-white">{activeFilterCount}</Text>
-              </View>
-            )}
-          </Pressable>
-          <Pressable
-            onPress={() => router.push("/(tabs)/settings")}
-            className="w-8 h-8 items-center justify-center rounded-full bg-gray-100 active:bg-gray-200"
-            style={{ borderCurve: "continuous" }}
-          >
-            <Text className="text-[15px]">⚙️</Text>
-          </Pressable>
-        </View>
-      </View>
-
+    <View className="bg-background">
       {/* Active filter chips */}
-      {hasChips && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 10 }}
-        >
-          {activeAccountName && (
-            <Badge>
-              <Text>💳</Text>
-              <Text>{activeAccountName}</Text>
-              <Button onPress={() => setActiveAccountId(null)} variant="outline" size="icon">
-                <Icon as={XIcon} />
-              </Button>
-            </Badge>
-          )}
-          {selectedYear && selectedMonth && (
-            <Badge>
-              <Text>📅</Text>
-              <Text>{formatMonth(selectedYear, selectedMonth)}</Text>
-              <Button onPress={() => setSelectedMonth(null, null)} variant="outline" size="icon">
-                <Icon as={XIcon} />
-              </Button>
-            </Badge>
-          )}
-          {selectedCategoryName && (
-            <Badge>
-              <Text>🏷️</Text>
-              <Text>{selectedCategoryName}</Text>
-              <Button onPress={() => setSelectedCategoryId(null)} variant="outline" size="icon">
-                <Icon as={XIcon} />
-              </Button>
-            </Badge>
-          )}
-        </ScrollView>
-      )}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingBottom: 10 }}
+      >
+        {activeAccountName && (
+          <Badge>
+            <Text className="font-body-medium text-[12px]">{activeAccountName}</Text>
+            <Button onPress={() => setActiveAccountId(null)} variant="outline" size="icon">
+              <Icon as={XIcon} />
+            </Button>
+          </Badge>
+        )}
+        {selectedYear && selectedMonth && (
+          <Badge>
+            <Text className="font-body-medium text-[12px]">
+              {formatMonth(selectedYear, selectedMonth)}
+            </Text>
+            <Button onPress={() => setSelectedMonth(null, null)} variant="outline" size="icon">
+              <Icon as={XIcon} />
+            </Button>
+          </Badge>
+        )}
+        {selectedCategoryName && (
+          <Badge>
+            <Text className="font-body-medium text-[12px]">{selectedCategoryName}</Text>
+            <Button onPress={() => setSelectedCategoryId(null)} variant="outline" size="icon">
+              <Icon as={XIcon} />
+            </Button>
+          </Badge>
+        )}
+      </ScrollView>
 
-      {/* Monthly summary — only when a specific month is selected */}
+      {/* Monthly summary */}
       {summary && selectedMonth && (
-        <View className="flex-row items-center gap-5 px-4 pb-3">
+        <View className="flex-row items-center gap-5 px-5 pb-3">
           <View className="items-start">
-            <Text className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Income</Text>
+            <Text className="font-body-semibold text-[10px] text-ink/40 uppercase tracking-wide mb-0.5">
+              Income
+            </Text>
             <Text
-              className="text-[13px] font-semibold text-green-600"
+              className="font-heading-normal text-[14px] text-sage"
               style={{ fontVariant: ["tabular-nums"] }}
             >
-              📈 +{formatCents(summary.totalIncome, currency)}
+              +{formatCents(summary.totalIncome, currency)}
             </Text>
           </View>
-          <View className="w-px h-6 bg-gray-200" />
+          <View className="w-px h-6 bg-ledger-outline" />
           <View className="items-start">
-            <Text className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Spent</Text>
+            <Text className="font-body-semibold text-[10px] text-ink/40 uppercase tracking-wide mb-0.5">
+              Spent
+            </Text>
             <Text
-              className="text-[13px] font-semibold text-red-500"
+              className="font-heading-normal text-[14px] text-terracotta"
               style={{ fontVariant: ["tabular-nums"] }}
             >
-              💸 -{formatCents(summary.totalExpense, currency)}
+              -{formatCents(summary.totalExpense, currency)}
             </Text>
           </View>
-          <View className="w-px h-6 bg-gray-200" />
+          <View className="w-px h-6 bg-ledger-outline" />
           <View className="items-start">
-            <Text className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Net</Text>
+            <Text className="font-body-semibold text-[10px] text-ink/40 uppercase tracking-wide mb-0.5">
+              Net
+            </Text>
             <Text
-              className={`text-[13px] font-semibold ${summary.netAmount >= 0 ? "text-green-600" : "text-red-500"}`}
+              className={`font-heading-normal text-[14px] ${summary.netAmount >= 0 ? "text-sage" : "text-terracotta"}`}
               style={{ fontVariant: ["tabular-nums"] }}
             >
-              📊 {summary.netAmount >= 0 ? "+" : ""}
+              {summary.netAmount >= 0 ? "+" : ""}
               {formatCents(summary.netAmount, currency)}
             </Text>
           </View>
         </View>
       )}
+    </View>
+  );
+}
+
+// ─── Journal Header ───────────────────────────────────────────────────────────
+
+function JournalHeader() {
+  return (
+    <View className="flex-row items-center justify-between px-5 pb-2 pt-4 border-b border-ledger-outline mx-5">
+      <Text className="font-heading-normal text-[20px] italic text-ink">Recent Journal</Text>
     </View>
   );
 }
@@ -224,10 +369,11 @@ export default function HomeScreen() {
   const currency =
     activeAccount?.currency ?? transactions[0]?.currency ?? accounts[0]?.currency ?? "USD";
 
-  return (
-    <View className="flex-1 bg-accent">
-      <StickyHeader
-        activeFilterCount={activeFilterCount}
+  const ListHeader = (
+    <>
+      <BalanceHero accounts={accounts} activeFilterCount={activeFilterCount} />
+      <AccountsSection accounts={accounts} />
+      <FilterBar
         activeAccountName={activeAccount?.name ?? null}
         selectedYear={selectedYear}
         selectedMonth={selectedMonth}
@@ -238,30 +384,43 @@ export default function HomeScreen() {
         setSelectedMonth={setSelectedMonth}
         setSelectedCategoryId={setSelectedCategoryId}
       />
+      <JournalHeader />
+    </>
+  );
 
+  return (
+    <View className="flex-1 bg-background">
       {loadingTx ? (
-        <ActivityIndicator className="mt-10" />
+        <>
+          {ListHeader}
+          <ActivityIndicator className="mt-10" />
+        </>
       ) : groups.length === 0 ? (
-        <EmptyState
-          icon="📋"
-          title="No transactions"
-          message={
-            activeFilterCount > 0
-              ? "No transactions match the current filters."
-              : "No transactions yet. Tap ＋ to get started."
-          }
-          action={
-            activeFilterCount > 0 ? (
-              <Pressable
-                onPress={resetFilters}
-                className="mt-1 px-5 py-2.5 rounded-full bg-gray-900 active:opacity-80"
-                style={{ borderCurve: "continuous" }}
-              >
-                <Text className="text-white text-[14px] font-medium">Reset Filters</Text>
-              </Pressable>
-            ) : undefined
-          }
-        />
+        <>
+          {ListHeader}
+          <EmptyState
+            icon="📋"
+            title="No transactions"
+            message={
+              activeFilterCount > 0
+                ? "No transactions match the current filters."
+                : "No transactions yet. Tap + Add Entry to get started."
+            }
+            action={
+              activeFilterCount > 0 ? (
+                <Pressable
+                  onPress={resetFilters}
+                  className="mt-1 px-5 py-2.5 border border-ink active:bg-ink"
+                  style={{ borderCurve: "continuous" }}
+                >
+                  <Text className="font-body-semibold text-[11px] text-ink uppercase tracking-[1px]">
+                    Reset Filters
+                  </Text>
+                </Pressable>
+              ) : undefined
+            }
+          />
+        </>
       ) : (
         <SectionList
           sections={groups.map((g) => ({ title: g.date, data: [g] }))}
@@ -274,19 +433,11 @@ export default function HomeScreen() {
             />
           )}
           renderSectionHeader={() => null}
+          ListHeaderComponent={ListHeader}
           contentContainerStyle={{ paddingBottom: 112 }}
           stickySectionHeadersEnabled={false}
         />
       )}
-
-      {/* FAB */}
-      <Pressable
-        onPress={() => router.push("/transaction/new")}
-        style={{ boxShadow: "0 4px 20px rgba(0, 0, 0, 0.18)", borderCurve: "continuous" }}
-        className="absolute bottom-safe-offset-8 right-5 w-14 h-14 rounded-full bg-gray-900 items-center justify-center active:opacity-80"
-      >
-        <Text className="text-white text-[28px]">＋</Text>
-      </Pressable>
     </View>
   );
 }

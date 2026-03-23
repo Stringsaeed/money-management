@@ -1,15 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { drizzle } from "drizzle-orm/expo-sqlite";
-import {
-  Manrope_200ExtraLight,
-  Manrope_300Light,
-  Manrope_400Regular,
-  Manrope_500Medium,
-  Manrope_600SemiBold,
-  Manrope_700Bold,
-  Manrope_800ExtraBold,
-  useFonts,
-} from "@expo-google-fonts/manrope";
+import { useFonts } from "expo-font";
 import {
   Newsreader_200ExtraLight,
   Newsreader_300Light,
@@ -19,6 +10,15 @@ import {
   Newsreader_700Bold,
   Newsreader_800ExtraBold,
 } from "@expo-google-fonts/newsreader";
+import {
+  PlusJakartaSans_200ExtraLight,
+  PlusJakartaSans_300Light,
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+} from "@expo-google-fonts/plus-jakarta-sans";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SQLiteProvider, type SQLiteDatabase } from "expo-sqlite";
@@ -79,14 +79,6 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   const [fontsLoaded, fontError] = useFonts({
-    Manrope_200ExtraLight,
-    Manrope_300Light,
-    Manrope_400Regular,
-    Manrope_500Medium,
-    Manrope_600SemiBold,
-    Manrope_700Bold,
-    Manrope_800ExtraBold,
-
     Newsreader_200ExtraLight,
     Newsreader_300Light,
     Newsreader_400Regular,
@@ -94,6 +86,14 @@ export default function RootLayout() {
     Newsreader_600SemiBold,
     Newsreader_700Bold,
     Newsreader_800ExtraBold,
+
+    PlusJakartaSans_200ExtraLight,
+    PlusJakartaSans_300Light,
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
   });
 
   useEffect(() => {

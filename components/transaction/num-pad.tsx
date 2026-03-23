@@ -12,7 +12,7 @@ interface NumberPadProps {
   showDot?: boolean;
 }
 
-const ACCENT = "#11181C";
+const INK = "#1C1B1A";
 
 export default function NumberPad({
   onPress,
@@ -50,13 +50,11 @@ export default function NumberPad({
         }}
       >
         {value === "delete" ? (
-          <BackspaceIcon size={24} color={ACCENT} weight="regular" />
+          <BackspaceIcon size={24} color={INK} weight="regular" />
         ) : value === "dot" ? (
-          <DotOutlineIcon size={24} color={ACCENT} weight="fill" />
+          <DotOutlineIcon size={24} color={INK} weight="fill" />
         ) : (
-          <Text className="text-[28px] font-medium" style={{ color: ACCENT }}>
-            {value}
-          </Text>
+          <Text className="font-heading-medium text-[28px] text-ink">{value}</Text>
         )}
       </PressableScale>
     );
