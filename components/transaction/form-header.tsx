@@ -1,9 +1,9 @@
 import { Pressable, View } from "react-native";
 import { ArrowLeftIcon, CheckIcon, TrashIcon } from "phosphor-react-native";
 
+import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
-import { DESTRUCTIVE, INK } from "./constants";
 
 interface FormHeaderProps {
   onBack: () => void;
@@ -20,7 +20,7 @@ export function FormHeader({ onBack, onDelete, onSubmit, saving, title }: FormHe
         onPress={onBack}
         className="h-10 w-10 items-center justify-center rounded-full bg-surface-container active:bg-surface-dim"
       >
-        <ArrowLeftIcon size={20} color={INK} weight="bold" />
+        <Icon as={ArrowLeftIcon} size={20} className="text-ink" weight="bold" />
       </Pressable>
 
       <Text className="font-heading-normal text-lg italic text-ink">{title}</Text>
@@ -31,7 +31,7 @@ export function FormHeader({ onBack, onDelete, onSubmit, saving, title }: FormHe
             onPress={onDelete}
             className="h-10 w-10 items-center justify-center rounded-full bg-terracotta/10 active:bg-terracotta/20"
           >
-            <TrashIcon size={18} color={DESTRUCTIVE} weight="bold" />
+            <Icon as={TrashIcon} size={18} className="text-destructive" weight="bold" />
           </Pressable>
         ) : null}
         <Pressable
@@ -42,7 +42,7 @@ export function FormHeader({ onBack, onDelete, onSubmit, saving, title }: FormHe
             saving && "opacity-50",
           )}
         >
-          <CheckIcon size={20} color="#F9F8F6" weight="bold" />
+          <Icon as={CheckIcon} size={20} className="text-surface" weight="bold" />
         </Pressable>
       </View>
     </View>
