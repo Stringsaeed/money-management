@@ -1,4 +1,4 @@
-import { Redirect } from "expo-router";
+import { Redirect, Stack, useRouter } from "expo-router";
 import { ActivityIndicator, Pressable, SectionList, View } from "react-native";
 
 import { EmptyState } from "@/components/common/empty-state";
@@ -9,8 +9,10 @@ import { JournalHeader } from "@/components/home/journal-header";
 import { TransactionGroup } from "@/components/transaction/transaction-group";
 import { Text } from "@/components/ui/text";
 import { useHomeScreen } from "@/hooks/use-home-screen";
+import { formatHeaderDate } from "@/utils/date";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const {
     accounts,
     loadingAccounts,
@@ -36,7 +38,7 @@ export default function HomeScreen() {
 
   const ListHeader = (
     <>
-      <BalanceHero accounts={accounts} activeFilterCount={activeFilterCount} />
+      <BalanceHero accounts={accounts} />
       <AccountsSection accounts={accounts} />
       <FilterBar
         activeAccountName={activeAccount?.name ?? null}
@@ -55,6 +57,42 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-background">
+      <Stack.Screen
+        options={{
+          headerTitle: () => (
+            <Text className="font-body-semibold text-[11px] text-ink/40 uppercase tracking-wider">
+              AS OF {formatHeaderDate()}
+            </Text>
+          ),
+          unstable_headerRightItems: () => [
+            {
+              label: "filters",
+              type: "button",
+              onPress: () => router.push("/filters"),
+              icon: {
+                type: "sfSymbol",
+                name: "line.3.horizontal.decrease.circle",
+              },
+              badge:
+                activeFilterCount > 0
+                  ? {
+                      value: activeFilterCount,
+                    }
+                  : undefined,
+              sharesBackground: false,
+            },
+            {
+              label: "settings",
+              type: "button",
+              onPress: () => router.push("/settings"),
+              icon: {
+                type: "sfSymbol",
+                name: "gearshape",
+              },
+            },
+          ],
+        }}
+      />
       {loadingTx ? (
         <>
           {ListHeader}

@@ -19,5 +19,9 @@
     "tailwind-variants",
     "tailwindcss-animate"
   ],
-  "ignore": ["hooks/use-color-scheme.web.ts"]
+  "ignore": ["hooks/use-color-scheme.web.ts"],
+  "expo": {
+    "config": ["app.config.ts"],
+    "entry": ["app/**/*.{ts,tsx}"]
+  }
 }

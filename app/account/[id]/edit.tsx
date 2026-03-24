@@ -79,7 +79,7 @@ export default function EditAccountScreen() {
           style: "destructive",
           onPress: async () => {
             await deleteAccount.mutateAsync(id);
-            router.replace("/(tabs)/settings");
+            router.replace("/settings");
           },
         },
       ],

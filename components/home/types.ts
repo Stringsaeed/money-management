@@ -2,7 +2,6 @@ import type { AccountWithBalance } from "@/types";
 
 export interface BalanceHeroProps {
   accounts: AccountWithBalance[];
-  activeFilterCount: number;
 }
 
 export interface AccountsSectionProps {

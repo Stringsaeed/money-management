@@ -27,10 +27,7 @@ export function AccountsSection({ accounts }: AccountsSectionProps) {
       {/* Section header */}
       <View className="flex-row items-center justify-between px-5 pb-3 border-b border-ledger-outline mx-5">
         <Text className="font-heading-normal text-xl italic text-ink">Primary Positions</Text>
-        <Pressable
-          onPress={() => router.push("/(tabs)/accounts")}
-          className="flex-row items-center gap-1"
-        >
+        <Pressable onPress={() => router.push("/accounts")} className="flex-row items-center gap-1">
           <Text className="font-body-semibold text-[11px] text-ink/40 uppercase tracking-wide">
             View All
           </Text>
