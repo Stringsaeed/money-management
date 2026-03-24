@@ -30,3 +30,16 @@ export function decimalStringToCents(value: string): number {
   if (isNaN(parsed)) return 0;
   return Math.round(parsed * 100);
 }
+
+/**
+ * Sum balances across accounts and return the total in cents with a currency code.
+ * Falls back to "USD" when the list is empty.
+ */
+export function computeTotalBalance(accounts: { balance: number; currency: string }[]): {
+  totalCents: number;
+  currency: string;
+} {
+  const currency = accounts[0]?.currency ?? "USD";
+  const totalCents = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+  return { totalCents, currency };
+}

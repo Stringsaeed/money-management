@@ -81,7 +81,7 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
       } else if (router.canGoBack()) {
         router.back();
       } else {
-        router.replace("/(tabs)");
+        router.replace("/");
       }
     } catch (e) {
       console.error("Navigation error:", e);

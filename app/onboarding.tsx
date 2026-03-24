@@ -59,7 +59,7 @@ export default function OnboardingScreen() {
         createdAt: now,
         updatedAt: now,
       });
-      router.replace("/(tabs)");
+      router.replace("/");
     } catch {
       setError("Failed to create account. Please try again.");
     } finally {

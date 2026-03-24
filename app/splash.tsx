@@ -19,5 +19,5 @@ export default function Splash() {
     return <Redirect href="/onboarding" />;
   }
 
-  return <Redirect href="/(tabs)" />;
+  return <Redirect href="/" />;
 }
