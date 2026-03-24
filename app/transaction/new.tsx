@@ -3,6 +3,7 @@ import {
   type TransactionFormData,
 } from "@/components/transaction/transaction-form";
 import { useCreateTransaction } from "@/hooks/use-transactions";
+import { toDateString } from "@/utils/date";
 import { useRouter } from "expo-router";
 
 export default function NewTransactionScreen() {
@@ -12,6 +13,7 @@ export default function NewTransactionScreen() {
   async function handleSubmit(data: TransactionFormData) {
     await createTransaction.mutateAsync({
       ...data,
+      date: toDateString(data.date),
       recurringPaymentId: null,
     });
 

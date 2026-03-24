@@ -1,12 +1,13 @@
 /**
  * Demo seed — inserts realistic accounts, categories & transactions.
- * Safe to call repeatedly: checks if data already exists before inserting.
+ * Safe to call repeatedly: uses `seeded` flag + onConflictDoNothing.
  */
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 
 import { nowIso } from "@/utils/date";
 
-import { accounts, categories, transactions } from "./schema";
+import { accounts, appSettings, categories, transactions } from "./schema";
 
 type DB = ReturnType<typeof drizzle>;
 
@@ -282,22 +283,23 @@ const TRANSACTIONS: TxRow[] = [
 ];
 
 export async function seedDatabase(db: DB): Promise<void> {
+  // Check the seeded flag first — skip entirely if already seeded
+  const seededRow = await db.select().from(appSettings).where(eq(appSettings.key, "seeded")).get();
+
+  if (seededRow?.value === "true") return;
+
   await db.transaction(async (txDb) => {
-    // Bail out if any accounts already exist (already seeded or user has their own data)
-    const existing = await txDb.select({ id: accounts.id }).from(accounts).limit(1).all();
-
-    if (existing.length > 0) {
-      return;
-    }
-
     for (const row of ACCOUNTS) {
-      await txDb.insert(accounts).values(row);
+      await txDb.insert(accounts).values(row).onConflictDoNothing();
     }
     for (const row of CATEGORIES) {
-      await txDb.insert(categories).values(row);
+      await txDb.insert(categories).values(row).onConflictDoNothing();
     }
     for (const row of TRANSACTIONS) {
-      await txDb.insert(transactions).values(row);
+      await txDb.insert(transactions).values(row).onConflictDoNothing();
     }
   });
+
+  // Mark as seeded so subsequent app launches skip this entirely
+  await db.insert(appSettings).values({ key: "seeded", value: "true" }).onConflictDoNothing().run();
 }
