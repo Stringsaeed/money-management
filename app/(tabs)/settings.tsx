@@ -27,22 +27,19 @@ import type { AccountWithBalance, Category } from "@/types";
 
 function SectionHeader({ title }: { title: string }) {
   return (
-    <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 pt-6 pb-2">
+    <Text className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-4 pt-6 pb-2">
       {title}
     </Text>
   );
 }
 
 function Divider() {
-  return <View className="h-px bg-gray-100 ml-4" />;
+  return <View className="h-px bg-border ml-4" />;
 }
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <View
-      className="bg-white rounded-xl mx-4 overflow-hidden"
-      style={{ borderCurve: "continuous" }}
-    >
+    <View className="bg-card rounded-xl mx-4 overflow-hidden" style={{ borderCurve: "continuous" }}>
       {children}
     </View>
   );
@@ -61,22 +58,24 @@ function SettingsRow({ emoji, label, subtitle, onPress, rightLabel, noChevron }:
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row items-center px-4 py-3.5 gap-3 active:bg-gray-50"
+      className="flex-row items-center px-4 py-3.5 gap-3 active:bg-accent"
     >
       <Text className="text-xl w-7 text-center">{emoji}</Text>
       <View className="flex-1">
-        <Text className="text-base text-gray-900">{label}</Text>
-        {subtitle ? <Text className="text-[13px] text-gray-500 mt-0.5">{subtitle}</Text> : null}
+        <Text className="text-base text-foreground">{label}</Text>
+        {subtitle ? (
+          <Text className="text-[13px] text-muted-foreground mt-0.5">{subtitle}</Text>
+        ) : null}
       </View>
       {rightLabel ? (
         <Text
-          className="text-sm text-gray-500 font-medium"
+          className="text-sm text-muted-foreground font-medium"
           style={{ fontVariant: ["tabular-nums"] }}
         >
           {rightLabel}
         </Text>
       ) : null}
-      {!noChevron && <Text className="text-gray-300 text-lg">›</Text>}
+      {!noChevron && <Text className="text-border text-lg">›</Text>}
     </Pressable>
   );
 }
@@ -103,7 +102,7 @@ function AccountRow({ account }: { account: AccountWithBalance }) {
   return (
     <Pressable
       onPress={() => router.push(`/account/${account.id}`)}
-      className="flex-row items-center px-4 py-3.5 gap-3 active:bg-gray-50"
+      className="flex-row items-center px-4 py-3.5 gap-3 active:bg-accent"
     >
       <View
         style={{ backgroundColor: `${account.color}20` }}
@@ -112,19 +111,19 @@ function AccountRow({ account }: { account: AccountWithBalance }) {
         <Text className="text-base">{ACCOUNT_EMOJI[account.type] ?? "🏧"}</Text>
       </View>
       <View className="flex-1">
-        <Text className="text-base text-gray-900">{account.name}</Text>
-        <Text className="text-[13px] text-gray-500 mt-0.5">
+        <Text className="text-base text-foreground">{account.name}</Text>
+        <Text className="text-[13px] text-muted-foreground mt-0.5">
           {ACCOUNT_LABEL[account.type] ?? account.type} · {account.currency}
         </Text>
       </View>
       <Text
-        className={`text-[15px] font-semibold ${account.balance < 0 ? "text-red-500" : "text-gray-900"}`}
+        className={`text-[15px] font-semibold ${account.balance < 0 ? "text-destructive" : "text-foreground"}`}
         style={{ fontVariant: ["tabular-nums"] }}
       >
         {account.balance < 0 ? "-" : ""}
         {formatCents(Math.abs(account.balance), account.currency)}
       </Text>
-      <Text className="text-gray-300 text-lg ml-1">›</Text>
+      <Text className="text-border text-lg ml-1">›</Text>
     </Pressable>
   );
 }
@@ -133,11 +132,11 @@ function CategoryRow({ category }: { category: Category }) {
   return (
     <Pressable
       onPress={() => router.push(`/category/${category.id}/edit`)}
-      className="flex-row items-center px-4 py-3 gap-3 active:bg-gray-50"
+      className="flex-row items-center px-4 py-3 gap-3 active:bg-accent"
     >
       <View style={{ backgroundColor: category.color }} className="w-2.5 h-2.5 rounded-full" />
-      <Text className="flex-1 text-[15px] text-gray-900">{category.name}</Text>
-      <Text className="text-gray-300">›</Text>
+      <Text className="flex-1 text-[15px] text-foreground">{category.name}</Text>
+      <Text className="text-border">›</Text>
     </Pressable>
   );
 }
@@ -211,13 +210,13 @@ export default function SettingsScreen() {
   const hasMixedCurrencies = currencies.length > 1;
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <ScrollView className="flex-1 bg-gray-50" contentContainerClassName="pb-12">
+    <View className="flex-1 bg-background">
+      <ScrollView className="flex-1 bg-background" contentContainerClassName="pb-12">
         {/* Accounts */}
         <SectionHeader title="Accounts 💳" />
         <Animated.View
           layout={LinearTransition.easing(Easing.ease)}
-          className="bg-white rounded-xl mx-4 overflow-hidden"
+          className="bg-card rounded-xl mx-4 overflow-hidden"
           style={{ borderCurve: "continuous" }}
         >
           {accounts.map((account, i) => (
@@ -233,10 +232,10 @@ export default function SettingsScreen() {
         {/* Net worth summary */}
         {accounts.length > 0 && (
           <View
-            className="mx-4 mt-2 px-4 py-3 rounded-xl bg-gray-100"
+            className="mx-4 mt-2 px-4 py-3 rounded-xl bg-muted"
             style={{ borderCurve: "continuous" }}
           >
-            <Text className="text-[11px] text-gray-500 uppercase tracking-wide mb-1">
+            <Text className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1">
               💰 Net Worth (excl. excluded)
             </Text>
             {hasMixedCurrencies ? (
@@ -247,7 +246,7 @@ export default function SettingsScreen() {
                 return (
                   <Text
                     key={cur}
-                    className="text-[15px] font-bold text-gray-900"
+                    className="text-[15px] font-bold text-foreground"
                     style={{ fontVariant: ["tabular-nums"] }}
                   >
                     {formatCents(total, cur)}
@@ -256,7 +255,7 @@ export default function SettingsScreen() {
               })
             ) : (
               <Text
-                className="text-[15px] font-bold text-gray-900"
+                className="text-[15px] font-bold text-foreground"
                 style={{ fontVariant: ["tabular-nums"] }}
               >
                 {formatCents(
@@ -310,7 +309,7 @@ export default function SettingsScreen() {
         <SectionHeader title="Expense Categories 💸" />
         <Animated.View
           layout={LinearTransition.easing(Easing.ease)}
-          className="bg-white rounded-xl mx-4 overflow-hidden"
+          className="bg-card rounded-xl mx-4 overflow-hidden"
           style={{ borderCurve: "continuous" }}
         >
           {expenseCategories.map((cat, i) => (
@@ -331,7 +330,7 @@ export default function SettingsScreen() {
         <SectionHeader title="Income Categories 💰" />
         <Animated.View
           layout={LinearTransition.easing(Easing.ease)}
-          className="bg-white rounded-xl mx-4 overflow-hidden"
+          className="bg-card rounded-xl mx-4 overflow-hidden"
           style={{ borderCurve: "continuous" }}
         >
           {incomeCategories.map((cat, i) => (
@@ -353,9 +352,9 @@ export default function SettingsScreen() {
         <Card>
           <View className="items-center px-4 py-5 gap-1">
             <Text className="text-4xl mb-2">💰</Text>
-            <Text className="text-base font-semibold text-gray-900">Money Manager</Text>
-            <Text className="text-[13px] text-gray-500">Track your finances, simply.</Text>
-            <Text className="text-[11px] text-gray-400 mt-2">Version 1.0.0</Text>
+            <Text className="text-base font-semibold text-foreground">Money Manager</Text>
+            <Text className="text-[13px] text-muted-foreground">Track your finances, simply.</Text>
+            <Text className="text-[11px] text-muted-foreground/60 mt-2">Version 1.0.0</Text>
           </View>
         </Card>
 
@@ -365,12 +364,12 @@ export default function SettingsScreen() {
           <Pressable
             onPress={handleEraseAll}
             disabled={erasing}
-            className="px-4 py-3.5 items-center active:bg-red-50"
+            className="px-4 py-3.5 items-center active:bg-destructive/10"
           >
-            <Text className="text-[15px] font-semibold text-red-600">
+            <Text className="text-[15px] font-semibold text-destructive">
               {erasing ? "Erasing…" : "Erase All Data"}
             </Text>
-            <Text className="text-[12px] text-gray-400 mt-0.5">
+            <Text className="text-[12px] text-muted-foreground mt-0.5">
               Permanently delete all accounts, categories, and transactions
             </Text>
           </Pressable>
@@ -384,12 +383,12 @@ export default function SettingsScreen() {
               <Pressable
                 onPress={handleSeed}
                 disabled={seeding}
-                className="px-4 py-3.5 items-center active:bg-gray-50"
+                className="px-4 py-3.5 items-center active:bg-accent"
               >
-                <Text className="text-[15px] font-semibold text-blue-600">
+                <Text className="text-[15px] font-semibold text-brand">
                   {seeding ? "Seeding…" : "Run Seed Data"}
                 </Text>
-                <Text className="text-[12px] text-gray-400 mt-0.5">
+                <Text className="text-[12px] text-muted-foreground mt-0.5">
                   Insert demo accounts, categories, and transactions
                 </Text>
               </Pressable>

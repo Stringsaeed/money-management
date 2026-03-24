@@ -70,8 +70,8 @@ export function EmojiPicker({ value, onChange }: EmojiPickerProps) {
           onPress={() => onChange(emoji)}
           className={
             value === emoji
-              ? "w-10 h-10 rounded-xl items-center justify-center bg-gray-900"
-              : "w-10 h-10 rounded-xl items-center justify-center bg-gray-100 active:bg-gray-200"
+              ? "w-10 h-10 rounded-xl items-center justify-center bg-primary"
+              : "w-10 h-10 rounded-xl items-center justify-center bg-muted active:bg-accent"
           }
           style={{ borderCurve: "continuous" }}
         >

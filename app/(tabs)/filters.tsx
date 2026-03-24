@@ -14,8 +14,8 @@ import { formatMonth, monthsBetween } from "@/utils/date";
 
 function FilterRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
-      <Text className="text-[15px] text-gray-500">{label}</Text>
+    <View className="flex-row items-center justify-between px-4 py-4 border-b border-border">
+      <Text className="text-[15px] text-muted-foreground">{label}</Text>
       {children}
     </View>
   );
@@ -24,7 +24,7 @@ function FilterRow({ label, children }: { label: string; children: ReactNode }) 
 function DropdownValue({ label }: { label: string }) {
   return (
     <View className="flex-row items-center gap-1.5">
-      <Text className="text-[15px] font-medium text-gray-900">{label}</Text>
+      <Text className="text-[15px] font-medium text-foreground">{label}</Text>
       <SymbolView name="chevron.down" size={11} tintColor="#9ca3af" weight="semibold" />
     </View>
   );
@@ -60,7 +60,7 @@ export default function FiltersScreen() {
   ).length;
 
   return (
-    <View className="pt-safe pb-safe bg-white">
+    <View className="pt-safe pb-safe bg-background">
       {/* Account row */}
       <FilterRow label="Account">
         <DropdownMenu.Root>
@@ -170,10 +170,10 @@ export default function FiltersScreen() {
         <View className="px-4 pt-4">
           <Pressable
             onPress={resetFilters}
-            className="py-3.5 rounded-2xl bg-gray-100 items-center active:opacity-70"
+            className="py-3.5 rounded-2xl bg-muted items-center active:opacity-70"
             style={{ borderCurve: "continuous" }}
           >
-            <Text className="text-[15px] font-medium text-red-500">Reset All Filters</Text>
+            <Text className="text-[15px] font-medium text-destructive">Reset All Filters</Text>
           </Pressable>
         </View>
       )}

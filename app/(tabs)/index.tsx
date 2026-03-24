@@ -1,7 +1,14 @@
 import { intlFormat } from "date-fns";
 import { router } from "expo-router";
 import { useMemo } from "react";
-import { ActivityIndicator, Pressable, SectionList, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  SectionList,
+  ScrollView,
+  useColorScheme,
+  View,
+} from "react-native";
 import { Text } from "@/components/ui/text";
 import { SymbolView } from "expo-symbols";
 
@@ -63,6 +70,9 @@ function BalanceHero({
   activeFilterCount: number;
 }) {
   const { totalCents, currency } = computeTotalBalance(accounts);
+  const colorScheme = useColorScheme();
+  const inkColor = colorScheme === "dark" ? "#E8E6E3" : "#1C1B1A";
+  const mutedIconColor = colorScheme === "dark" ? "#6B6966" : "#9CA3AF";
 
   return (
     <View className="px-5 pt-safe-offset-4 pb-2 bg-background">
@@ -80,7 +90,7 @@ function BalanceHero({
             <SymbolView
               name="line.3.horizontal.decrease.circle"
               size={20}
-              tintColor={activeFilterCount > 0 ? "#1C1B1A" : "#9CA3AF"}
+              tintColor={activeFilterCount > 0 ? inkColor : mutedIconColor}
               weight={activeFilterCount > 0 ? "semibold" : "regular"}
             />
             {activeFilterCount > 0 && (
@@ -94,7 +104,7 @@ function BalanceHero({
             className="w-8 h-8 items-center justify-center rounded-full bg-surface-container active:bg-surface-dim"
             style={{ borderCurve: "continuous" }}
           >
-            <SymbolView name="gearshape" size={18} tintColor="#9CA3AF" />
+            <SymbolView name="gearshape" size={18} tintColor={mutedIconColor} />
           </Pressable>
         </View>
       </View>
@@ -110,25 +120,10 @@ function BalanceHero({
 
       {/* Action buttons */}
       <View className="flex-row gap-3 mt-4 mb-2">
-        <Pressable
-          onPress={() => router.push("/transaction/new")}
-          className="flex-row items-center gap-2 px-5 py-2.5 border border-ink active:bg-ink"
-          style={{ borderCurve: "continuous" }}
-        >
-          <SymbolView name="plus" size={14} tintColor="#1C1B1A" />
-          <Text className="font-body-semibold text-[11px] text-ink uppercase tracking-wide">
-            Add Entry
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={() => router.push("/transaction/new")}
-          className="flex-row items-center gap-2 px-5 py-2.5 bg-surface-container active:bg-surface-dim"
-          style={{ borderCurve: "continuous" }}
-        >
-          <Text className="font-body-semibold text-[11px] text-ink uppercase tracking-wide">
-            Transfer
-          </Text>
-        </Pressable>
+        <Button variant="outline" onPress={() => router.push("/transaction/new")}>
+          <SymbolView name="plus" size={14} tintColor={inkColor} />
+          <Text>Add Entry</Text>
+        </Button>
       </View>
     </View>
   );
@@ -137,6 +132,7 @@ function BalanceHero({
 // ─── Accounts Section ─────────────────────────────────────────────────────────
 
 function AccountsSection({ accounts }: { accounts: AccountWithBalance[] }) {
+  const colorScheme = useColorScheme();
   if (accounts.length === 0) return null;
 
   return (
@@ -151,7 +147,11 @@ function AccountsSection({ accounts }: { accounts: AccountWithBalance[] }) {
           <Text className="font-body-semibold text-[11px] text-ink/40 uppercase tracking-wide">
             View All
           </Text>
-          <SymbolView name="arrow.right" size={10} tintColor="#9CA3AF" />
+          <SymbolView
+            name="arrow.right"
+            size={10}
+            tintColor={colorScheme === "dark" ? "#6B6966" : "#9CA3AF"}
+          />
         </Pressable>
       </View>
 

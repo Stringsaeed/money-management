@@ -17,7 +17,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
           style={{ backgroundColor: c }}
           className={
             value === c
-              ? "w-9 h-9 rounded-full border-[3px] border-white shadow"
+              ? "w-9 h-9 rounded-full border-[3px] border-background shadow"
               : "w-9 h-9 rounded-full"
           }
         />

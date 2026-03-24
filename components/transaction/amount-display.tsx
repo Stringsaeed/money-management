@@ -1,8 +1,7 @@
-import { View } from "react-native";
+import { useColorScheme, View } from "react-native";
 import { AnimatedRollingNumber } from "react-native-animated-rolling-numbers";
 
 import { Text } from "@/components/ui/text";
-import { INK } from "./constants";
 
 interface AmountDisplayProps {
   currencySymbol: string;
@@ -10,6 +9,9 @@ interface AmountDisplayProps {
 }
 
 export function AmountDisplay({ currencySymbol, value }: AmountDisplayProps) {
+  const colorScheme = useColorScheme();
+  const inkColor = colorScheme === "dark" ? "#E8E6E3" : "#1C1B1A";
+
   return (
     <View className="flex-row items-baseline">
       <Text
@@ -24,7 +26,7 @@ export function AmountDisplay({ currencySymbol, value }: AmountDisplayProps) {
         textStyle={{
           fontFamily: "Newsreader_500Medium",
           fontSize: 52,
-          color: INK,
+          color: inkColor,
           lineHeight: 60,
         }}
       />

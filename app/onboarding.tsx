@@ -68,7 +68,7 @@ export default function OnboardingScreen() {
   }
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-background">
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -79,61 +79,50 @@ export default function OnboardingScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Header */}
-          <View style={{ marginBottom: 32, marginTop: 48 }}>
-            <Text style={{ fontSize: 32, fontWeight: "700", marginBottom: 8 }}>Welcome 👋</Text>
-            <Text style={{ fontSize: 16, color: "#6B7280" }}>
+          <View className="mb-8 mt-12">
+            <Text className="text-[32px] font-bold text-foreground mb-2">Welcome 👋</Text>
+            <Text className="text-base text-muted-foreground">
               Let&apos;s set up your first account to get started.
             </Text>
           </View>
 
           {/* Account Name */}
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8 }}>Account Name</Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Account Name</Text>
           <TextInput
             value={name}
             onChangeText={setName}
             placeholder="e.g. Main Checking"
-            style={{
-              borderWidth: 1,
-              borderColor: "#D1D5DB",
-              borderRadius: 10,
-              padding: 14,
-              fontSize: 16,
-              marginBottom: 20,
-            }}
+            placeholderTextColor="#9a9896"
+            className="border border-input rounded-[10px] p-3.5 text-base text-foreground mb-5"
             autoFocus
             returnKeyType="next"
           />
 
           {/* Account Type */}
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8 }}>Account Type</Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Account Type</Text>
           <Animated.View
             layout={LinearTransition.easing(Easing.ease)}
-            style={{
-              flexDirection: "row",
-              flexWrap: "wrap",
-              gap: 8,
-              marginBottom: 20,
-            }}
+            className="flex-row flex-wrap gap-2 mb-5"
           >
             {ACCOUNT_TYPES.map((at) => (
               <Animated.View key={at.value} layout={LinearTransition.easing(Easing.ease)}>
                 <Pressable
                   onPress={() => setType(at.value)}
                   style={{
-                    paddingHorizontal: 14,
-                    paddingVertical: 8,
-                    borderRadius: 20,
-                    borderWidth: 2,
-                    borderColor: type === at.value ? AccountTypeColors[at.value] : "#D1D5DB",
+                    borderColor: type === at.value ? AccountTypeColors[at.value] : undefined,
                     backgroundColor:
-                      type === at.value ? `${AccountTypeColors[at.value]}20` : "transparent",
+                      type === at.value ? `${AccountTypeColors[at.value]}20` : undefined,
                   }}
+                  className={twMerge(
+                    "px-3.5 py-2 rounded-full border-2 border-input",
+                    type === at.value && "border-transparent",
+                  )}
                 >
                   <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: type === at.value ? "600" : "400",
-                    }}
+                    className={twMerge(
+                      "text-sm text-foreground",
+                      type === at.value && "font-semibold",
+                    )}
                   >
                     {at.icon} {at.label}
                   </Text>
@@ -143,7 +132,7 @@ export default function OnboardingScreen() {
           </Animated.View>
 
           {/* Currency */}
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8 }}>Currency</Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Currency</Text>
           <Animated.ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -157,35 +146,31 @@ export default function OnboardingScreen() {
                   key={c}
                   onPress={() => setCurrency(c)}
                   className={twMerge(
-                    "self-start px-4 py-2 rounded-full border-2",
-                    currency === c ? "border-[#0a7ea4] bg-[#0a7ea420]" : "border-gray-300",
+                    "self-start px-4 py-2 rounded-full border-2 border-input",
+                    currency === c && "border-brand bg-brand/10",
                   )}
                 >
-                  <Text style={{ fontWeight: currency === c ? "600" : "400" }}>{c}</Text>
+                  <Text className={twMerge("text-foreground", currency === c && "font-semibold")}>
+                    {c}
+                  </Text>
                 </Pressable>
               </Animated.View>
             ))}
           </Animated.ScrollView>
 
           {/* Initial Balance */}
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8 }}>Starting Balance</Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Starting Balance</Text>
           <TextInput
             value={balance}
             onChangeText={setBalance}
             keyboardType="decimal-pad"
-            style={{
-              borderWidth: 1,
-              borderColor: "#D1D5DB",
-              borderRadius: 10,
-              padding: 14,
-              fontSize: 16,
-              marginBottom: 20,
-            }}
+            className="border border-input rounded-[10px] p-3.5 text-base text-foreground mb-5"
             placeholder="0.00"
+            placeholderTextColor="#9a9896"
           />
 
           {/* Color */}
-          <Text style={{ fontSize: 14, fontWeight: "600" }}>Color</Text>
+          <Text className="text-sm font-semibold text-foreground">Color</Text>
           <Animated.ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -200,7 +185,7 @@ export default function OnboardingScreen() {
                   style={{ backgroundColor: c }}
                   className={
                     color === c
-                      ? "w-9 h-9 rounded-full border-[3px] border-white shadow"
+                      ? "w-9 h-9 rounded-full border-[3px] border-background shadow"
                       : "w-9 h-9 rounded-full"
                   }
                 />
@@ -208,9 +193,7 @@ export default function OnboardingScreen() {
             ))}
           </Animated.ScrollView>
 
-          {error ? (
-            <Text style={{ color: "#DC2626", marginBottom: 16, textAlign: "center" }}>{error}</Text>
-          ) : null}
+          {error ? <Text className="text-destructive mb-4 text-center">{error}</Text> : null}
 
           {/* Create Button */}
         </Animated.ScrollView>
@@ -219,15 +202,10 @@ export default function OnboardingScreen() {
         <Pressable
           onPress={handleCreate}
           disabled={saving}
-          style={{
-            backgroundColor: "#0a7ea4",
-            borderRadius: 12,
-            padding: 16,
-            alignItems: "center",
-            opacity: saving ? 0.6 : 1,
-          }}
+          className="bg-brand rounded-xl p-4 items-center"
+          style={{ opacity: saving ? 0.6 : 1 }}
         >
-          <Text style={{ color: "white", fontSize: 17, fontWeight: "600" }}>
+          <Text className="text-brand-foreground text-[17px] font-semibold">
             {saving ? "Creating…" : "Create Account"}
           </Text>
         </Pressable>

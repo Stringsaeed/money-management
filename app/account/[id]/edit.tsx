@@ -41,7 +41,7 @@ export default function EditAccountScreen() {
   // Once account loads, update local state
   if (isLoading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator />
       </View>
     );
@@ -88,7 +88,7 @@ export default function EditAccountScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      className="flex-1 bg-background"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -97,43 +97,33 @@ export default function EditAccountScreen() {
       >
         {/* Name */}
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Account Name
-          </Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Account Name</Text>
           <TextInput
             value={name}
             onChangeText={setName}
-            style={{
-              borderWidth: 1,
-              borderColor: "#D1D5DB",
-              borderRadius: 10,
-              padding: 14,
-              fontSize: 16,
-            }}
+            placeholderTextColor="#9a9896"
+            className="border border-input rounded-[10px] p-3.5 text-base text-foreground"
           />
         </View>
 
         {/* Type */}
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Account Type
-          </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          <Text className="text-sm font-semibold text-foreground mb-2">Account Type</Text>
+          <View className="flex-row flex-wrap gap-2">
             {ACCOUNT_TYPES.map((at) => (
               <Pressable
                 key={at.value}
                 onPress={() => setType(at.value)}
                 style={{
-                  paddingHorizontal: 14,
-                  paddingVertical: 8,
-                  borderRadius: 20,
-                  borderWidth: 2,
-                  borderColor: type === at.value ? AccountTypeColors[at.value] : "#D1D5DB",
+                  borderColor: type === at.value ? AccountTypeColors[at.value] : undefined,
                   backgroundColor:
-                    type === at.value ? `${AccountTypeColors[at.value]}20` : "transparent",
+                    type === at.value ? `${AccountTypeColors[at.value]}20` : undefined,
                 }}
+                className={`px-3.5 py-2 rounded-full border-2 ${type === at.value ? "" : "border-input"}`}
               >
-                <Text style={{ fontSize: 14, fontWeight: type === at.value ? "600" : "400" }}>
+                <Text
+                  className={`text-sm text-foreground ${type === at.value ? "font-semibold" : ""}`}
+                >
                   {at.label}
                 </Text>
               </Pressable>
@@ -143,32 +133,25 @@ export default function EditAccountScreen() {
 
         {/* Color */}
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Color
-          </Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Color</Text>
           <ColorPicker value={color} onChange={setColor} />
         </View>
 
-        {error ? <Text style={{ color: "#DC2626", textAlign: "center" }}>{error}</Text> : null}
+        {error ? <Text className="text-destructive text-center">{error}</Text> : null}
 
         <Pressable
           onPress={handleSave}
           disabled={saving}
-          style={{
-            backgroundColor: "#0a7ea4",
-            borderRadius: 12,
-            padding: 16,
-            alignItems: "center",
-            opacity: saving ? 0.6 : 1,
-          }}
+          className="bg-brand rounded-xl p-4 items-center"
+          style={{ opacity: saving ? 0.6 : 1 }}
         >
-          <Text style={{ color: "white", fontSize: 17, fontWeight: "600" }}>
+          <Text className="text-brand-foreground text-[17px] font-semibold">
             {saving ? "Saving…" : "Save Changes"}
           </Text>
         </Pressable>
 
-        <Pressable onPress={handleDelete} style={{ alignItems: "center", paddingVertical: 12 }}>
-          <Text style={{ color: "#DC2626", fontSize: 15, fontWeight: "500" }}>Delete Account</Text>
+        <Pressable onPress={handleDelete} className="items-center py-3">
+          <Text className="text-destructive text-[15px] font-medium">Delete Account</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

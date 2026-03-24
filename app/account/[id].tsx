@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, useColorScheme, View } from "react-native";
 import { Text } from "@/components/ui/text";
 
 import { TransactionGroup } from "@/components/transaction/transaction-group";
@@ -28,6 +28,7 @@ export default function AccountDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: account, isLoading: loadingAccount } = useAccount(id);
   const { selectedYear, selectedMonth, setSelectedMonth } = useUIStore();
+  const colorScheme = useColorScheme();
   const { data: transactions = [], isLoading: loadingTxns } = useTransactions({
     year: selectedYear ?? undefined,
     month: selectedMonth ?? undefined,
@@ -36,7 +37,7 @@ export default function AccountDetailScreen() {
 
   if (loadingAccount) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator />
       </View>
     );
@@ -52,7 +53,7 @@ export default function AccountDetailScreen() {
     .reduce((s, t) => s + t.amount, 0);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+    <ScrollView className="flex-1 bg-background">
       {/* Header */}
       <View
         style={{
@@ -125,11 +126,11 @@ export default function AccountDetailScreen() {
       </View>
 
       {/* Transactions */}
-      <View style={{ paddingVertical: 8 }}>
+      <View className="py-2">
         {loadingTxns ? (
-          <ActivityIndicator style={{ marginTop: 32 }} />
+          <ActivityIndicator className="mt-8" />
         ) : groups.length === 0 ? (
-          <Text style={{ textAlign: "center", color: "#6B7280", marginTop: 48 }}>
+          <Text className="text-center text-muted-foreground mt-12">
             No transactions this month
           </Text>
         ) : (
@@ -150,11 +151,7 @@ export default function AccountDetailScreen() {
           backgroundColor: account.color,
           alignItems: "center",
           justifyContent: "center",
-          shadowColor: "#000",
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 8,
+          boxShadow: `0 4px 8px ${colorScheme === "dark" ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.3)"}`,
         }}
       >
         <Text style={{ color: "white", fontSize: 28, lineHeight: 30 }}>+</Text>

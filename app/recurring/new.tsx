@@ -18,9 +18,9 @@ import { useCreateRecurringPayment } from "@/hooks/use-recurring-payments";
 import { today } from "@/utils/date";
 import type { RecurrenceInterval, TransactionType } from "@/types";
 
-const TYPE_OPTIONS: { value: TransactionType; label: string; color: string }[] = [
-  { value: "expense", label: "Expense", color: "#DC2626" },
-  { value: "income", label: "Income", color: "#16A34A" },
+const TYPE_OPTIONS: { value: TransactionType; label: string; activeClass: string }[] = [
+  { value: "expense", label: "Expense", activeClass: "bg-destructive" },
+  { value: "income", label: "Income", activeClass: "bg-secondary" },
 ];
 
 const INTERVAL_OPTIONS: { value: RecurrenceInterval; label: string }[] = [
@@ -97,7 +97,7 @@ export default function NewRecurringScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      className="flex-1 bg-background"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -106,46 +106,28 @@ export default function NewRecurringScreen() {
       >
         {/* Name */}
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Name
-          </Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Name</Text>
           <TextInput
             value={name}
             onChangeText={setName}
             placeholder="e.g. Netflix, Rent"
+            placeholderTextColor="#9a9896"
             autoFocus
-            style={{
-              borderWidth: 1,
-              borderColor: "#D1D5DB",
-              borderRadius: 10,
-              padding: 14,
-              fontSize: 16,
-            }}
+            className="border border-input rounded-[10px] p-3.5 text-base text-foreground"
           />
         </View>
 
         {/* Type */}
-        <View
-          style={{
-            flexDirection: "row",
-            borderRadius: 10,
-            overflow: "hidden",
-            borderWidth: 1,
-            borderColor: "#E5E7EB",
-          }}
-        >
+        <View className="flex-row rounded-[10px] overflow-hidden border border-border">
           {TYPE_OPTIONS.map((opt) => (
             <Pressable
               key={opt.value}
               onPress={() => setType(opt.value)}
-              style={{
-                flex: 1,
-                paddingVertical: 12,
-                alignItems: "center",
-                backgroundColor: type === opt.value ? opt.color : "white",
-              }}
+              className={`flex-1 py-3 items-center ${type === opt.value ? opt.activeClass : "bg-card"}`}
             >
-              <Text style={{ fontWeight: "600", color: type === opt.value ? "white" : "#374151" }}>
+              <Text
+                className={`font-semibold ${type === opt.value ? "text-white" : "text-foreground"}`}
+              >
                 {opt.label}
               </Text>
             </Pressable>
@@ -154,9 +136,7 @@ export default function NewRecurringScreen() {
 
         {/* Amount */}
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Amount
-          </Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Amount</Text>
           <AmountInput valueCents={amount} onChangeCents={setAmount} currency={currency} />
         </View>
 
@@ -175,24 +155,17 @@ export default function NewRecurringScreen() {
 
         {/* Interval */}
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Frequency
-          </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          <Text className="text-sm font-semibold text-foreground mb-2">Frequency</Text>
+          <View className="flex-row flex-wrap gap-2">
             {INTERVAL_OPTIONS.map((opt) => (
               <Pressable
                 key={opt.value}
                 onPress={() => setInterval(opt.value)}
-                style={{
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
-                  borderRadius: 20,
-                  borderWidth: 2,
-                  borderColor: interval === opt.value ? "#0a7ea4" : "#D1D5DB",
-                  backgroundColor: interval === opt.value ? "#0a7ea420" : "transparent",
-                }}
+                className={`px-4 py-2 rounded-full border-2 ${interval === opt.value ? "border-brand bg-brand/10" : "border-input"}`}
               >
-                <Text style={{ fontWeight: interval === opt.value ? "600" : "400" }}>
+                <Text
+                  className={`text-foreground ${interval === opt.value ? "font-semibold" : ""}`}
+                >
                   {opt.label}
                 </Text>
               </Pressable>
@@ -203,78 +176,53 @@ export default function NewRecurringScreen() {
         {/* Day of month (monthly/yearly) */}
         {(interval === "monthly" || interval === "yearly") && (
           <View>
-            <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-              Day of Month (1–31)
-            </Text>
+            <Text className="text-sm font-semibold text-foreground mb-2">Day of Month (1–31)</Text>
             <TextInput
               value={dayOfMonth}
               onChangeText={setDayOfMonth}
               keyboardType="number-pad"
               placeholder="1"
-              style={{
-                borderWidth: 1,
-                borderColor: "#D1D5DB",
-                borderRadius: 10,
-                padding: 14,
-                fontSize: 16,
-                width: 100,
-              }}
+              placeholderTextColor="#9a9896"
+              className="border border-input rounded-[10px] p-3.5 text-base text-foreground w-[100px]"
             />
           </View>
         )}
 
         {/* Start date */}
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
+          <Text className="text-sm font-semibold text-foreground mb-2">
             Start Date (YYYY-MM-DD)
           </Text>
           <TextInput
             value={startDate}
             onChangeText={setStartDate}
             placeholder="YYYY-MM-DD"
-            style={{
-              borderWidth: 1,
-              borderColor: "#D1D5DB",
-              borderRadius: 10,
-              padding: 14,
-              fontSize: 16,
-            }}
+            placeholderTextColor="#9a9896"
+            className="border border-input rounded-[10px] p-3.5 text-base text-foreground"
           />
         </View>
 
         {/* Note */}
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Note (optional)
-          </Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Note (optional)</Text>
           <TextInput
             value={description}
             onChangeText={setDescription}
             placeholder="Add a note…"
-            style={{
-              borderWidth: 1,
-              borderColor: "#D1D5DB",
-              borderRadius: 10,
-              padding: 14,
-              fontSize: 16,
-            }}
+            placeholderTextColor="#9a9896"
+            className="border border-input rounded-[10px] p-3.5 text-base text-foreground"
           />
         </View>
 
-        {error ? <Text style={{ color: "#DC2626", textAlign: "center" }}>{error}</Text> : null}
+        {error ? <Text className="text-destructive text-center">{error}</Text> : null}
 
         <Pressable
           onPress={handleCreate}
           disabled={saving}
-          style={{
-            backgroundColor: "#0a7ea4",
-            borderRadius: 12,
-            padding: 16,
-            alignItems: "center",
-            opacity: saving ? 0.6 : 1,
-          }}
+          className="bg-brand rounded-xl p-4 items-center"
+          style={{ opacity: saving ? 0.6 : 1 }}
         >
-          <Text style={{ color: "white", fontSize: 17, fontWeight: "600" }}>
+          <Text className="text-brand-foreground text-[17px] font-semibold">
             {saving ? "Creating…" : "Create Recurring Payment"}
           </Text>
         </Pressable>

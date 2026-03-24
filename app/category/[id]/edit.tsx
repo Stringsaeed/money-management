@@ -30,7 +30,7 @@ export default function EditCategoryScreen() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator />
       </View>
     );
@@ -73,7 +73,7 @@ export default function EditCategoryScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      className="flex-1 bg-background"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -81,39 +81,22 @@ export default function EditCategoryScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Category Name
-          </Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Category Name</Text>
           <TextInput
             value={name}
             onChangeText={setName}
-            style={{
-              borderWidth: 1,
-              borderColor: "#D1D5DB",
-              borderRadius: 10,
-              padding: 14,
-              fontSize: 16,
-            }}
+            placeholderTextColor="#9a9896"
+            className="border border-input rounded-[10px] p-3.5 text-base text-foreground"
           />
         </View>
 
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Type
-          </Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Type</Text>
           <View
-            style={{
-              paddingHorizontal: 14,
-              paddingVertical: 10,
-              borderRadius: 10,
-              backgroundColor: category.type === "expense" ? "#FEE2E2" : "#DCFCE7",
-            }}
+            className={`px-3.5 py-2.5 rounded-[10px] ${category.type === "expense" ? "bg-destructive/10" : "bg-secondary/20"}`}
           >
             <Text
-              style={{
-                color: category.type === "expense" ? "#DC2626" : "#16A34A",
-                fontWeight: "600",
-              }}
+              className={`font-semibold ${category.type === "expense" ? "text-destructive" : "text-secondary"}`}
             >
               {category.type === "expense" ? "Expense" : "Income"}
             </Text>
@@ -121,39 +104,30 @@ export default function EditCategoryScreen() {
         </View>
 
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Icon
-          </Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Icon</Text>
           <EmojiPicker value={icon} onChange={setIcon} />
         </View>
 
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Color
-          </Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Color</Text>
           <ColorPicker value={color} onChange={setColor} />
         </View>
 
-        {error ? <Text style={{ color: "#DC2626", textAlign: "center" }}>{error}</Text> : null}
+        {error ? <Text className="text-destructive text-center">{error}</Text> : null}
 
         <Pressable
           onPress={handleSave}
           disabled={saving}
-          style={{
-            backgroundColor: "#0a7ea4",
-            borderRadius: 12,
-            padding: 16,
-            alignItems: "center",
-            opacity: saving ? 0.6 : 1,
-          }}
+          className="bg-brand rounded-xl p-4 items-center"
+          style={{ opacity: saving ? 0.6 : 1 }}
         >
-          <Text style={{ color: "white", fontSize: 17, fontWeight: "600" }}>
+          <Text className="text-brand-foreground text-[17px] font-semibold">
             {saving ? "Saving…" : "Save Changes"}
           </Text>
         </Pressable>
 
-        <Pressable onPress={handleDelete} style={{ alignItems: "center", paddingVertical: 12 }}>
-          <Text style={{ color: "#DC2626", fontSize: 15, fontWeight: "500" }}>Delete Category</Text>
+        <Pressable onPress={handleDelete} className="items-center py-3">
+          <Text className="text-destructive text-[15px] font-medium">Delete Category</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
