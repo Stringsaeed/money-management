@@ -10,6 +10,7 @@ import {
   useTransaction,
   useUpdateTransaction,
 } from "@/hooks/use-transactions";
+import { toDateString } from "@/utils/date";
 
 export default function EditTransactionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -28,7 +29,7 @@ export default function EditTransactionScreen() {
   if (!transaction) return null;
 
   async function handleSubmit(data: TransactionFormData) {
-    await updateTransaction.mutateAsync({ id, data });
+    await updateTransaction.mutateAsync({ id, data: { ...data, date: toDateString(data.date) } });
     router.back();
   }
 

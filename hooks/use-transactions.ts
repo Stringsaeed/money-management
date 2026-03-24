@@ -4,9 +4,9 @@ import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { useDatabase } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
 import { generateId } from "@/utils/id";
-import { nowIso, monthBounds } from "@/utils/date";
+import { nowIso, monthBounds, toDateString } from "@/utils/date";
 import type { Transaction, TransactionWithDetails } from "@/types";
-import { formatISO, isDate } from "date-fns";
+import { isDate } from "date-fns";
 
 // ── Query keys ────────────────────────────────────────────────────────────────
 
@@ -190,7 +190,8 @@ export function useCreateTransaction() {
     mutationFn: async (data: NewTransaction) => {
       const now = nowIso();
       const id = generateId();
-      await db.insert(transactions).values({ ...data, id, createdAt: now, updatedAt: now });
+      const date = isDate(data.date) ? toDateString(data.date as unknown as Date) : data.date;
+      await db.insert(transactions).values({ ...data, date, id, createdAt: now, updatedAt: now });
       return id;
     },
     onSuccess: () => {
@@ -217,7 +218,7 @@ export function useUpdateTransaction() {
         .update(transactions)
         .set({
           ...data,
-          date: isDate(data?.date) ? formatISO(data.date) : data?.date,
+          date: isDate(data?.date) ? toDateString(data.date as unknown as Date) : data?.date,
           updatedAt: nowIso(),
         })
         .where(eq(transactions.id, id));
