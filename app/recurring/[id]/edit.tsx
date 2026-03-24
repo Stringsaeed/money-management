@@ -38,7 +38,7 @@ export default function EditRecurringScreen() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator />
       </View>
     );
@@ -87,7 +87,7 @@ export default function EditRecurringScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      className="flex-1 bg-background"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -96,27 +96,18 @@ export default function EditRecurringScreen() {
       >
         {/* Name */}
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Name
-          </Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Name</Text>
           <TextInput
             value={name}
             onChangeText={setName}
-            style={{
-              borderWidth: 1,
-              borderColor: "#D1D5DB",
-              borderRadius: 10,
-              padding: 14,
-              fontSize: 16,
-            }}
+            placeholderTextColor="#9a9896"
+            className="border border-input rounded-[10px] p-3.5 text-base text-foreground"
           />
         </View>
 
         {/* Amount */}
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Amount
-          </Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Amount</Text>
           <AmountInput valueCents={amount} onChangeCents={setAmount} currency={currency} />
         </View>
 
@@ -125,58 +116,38 @@ export default function EditRecurringScreen() {
 
         {/* Interval (read-only display) */}
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Frequency
-          </Text>
-          <View
-            style={{
-              paddingHorizontal: 14,
-              paddingVertical: 12,
-              borderRadius: 10,
-              backgroundColor: "#F3F4F6",
-            }}
-          >
-            <Text style={{ fontSize: 15, color: "#374151", textTransform: "capitalize" }}>
-              {rule.interval}
-            </Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Frequency</Text>
+          <View className="px-3.5 py-3 rounded-[10px] bg-muted">
+            <Text className="text-[15px] text-foreground capitalize">{rule.interval}</Text>
           </View>
         </View>
 
         {/* Active toggle */}
-        <View
-          style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
-        >
+        <View className="flex-row justify-between items-center">
           <View>
-            <Text style={{ fontSize: 15, fontWeight: "600", color: "#374151" }}>Active</Text>
-            <Text style={{ fontSize: 13, color: "#6B7280" }}>
+            <Text className="text-[15px] font-semibold text-foreground">Active</Text>
+            <Text className="text-[13px] text-muted-foreground">
               Pausing stops new transactions from being generated
             </Text>
           </View>
           <Switch value={isActive} onValueChange={setIsActive} />
         </View>
 
-        {error ? <Text style={{ color: "#DC2626", textAlign: "center" }}>{error}</Text> : null}
+        {error ? <Text className="text-destructive text-center">{error}</Text> : null}
 
         <Pressable
           onPress={handleSave}
           disabled={saving}
-          style={{
-            backgroundColor: "#0a7ea4",
-            borderRadius: 12,
-            padding: 16,
-            alignItems: "center",
-            opacity: saving ? 0.6 : 1,
-          }}
+          className="bg-brand rounded-xl p-4 items-center"
+          style={{ opacity: saving ? 0.6 : 1 }}
         >
-          <Text style={{ color: "white", fontSize: 17, fontWeight: "600" }}>
+          <Text className="text-brand-foreground text-[17px] font-semibold">
             {saving ? "Saving…" : "Save Changes"}
           </Text>
         </Pressable>
 
-        <Pressable onPress={handleDelete} style={{ alignItems: "center", paddingVertical: 12 }}>
-          <Text style={{ color: "#DC2626", fontSize: 15, fontWeight: "500" }}>
-            Delete Recurring Payment
-          </Text>
+        <Pressable onPress={handleDelete} className="items-center py-3">
+          <Text className="text-destructive text-[15px] font-medium">Delete Recurring Payment</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

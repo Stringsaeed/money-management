@@ -27,15 +27,15 @@ export function AmountInput({ valueCents, onChangeCents, currency = "USD" }: Amo
 
   return (
     <Pressable onPress={() => inputRef.current?.focus()}>
-      <View className="flex-row items-center border border-gray-300 rounded-[10px] px-3.5 py-3 gap-1.5">
-        <Text className="text-base text-gray-500 font-semibold">{currency}</Text>
+      <View className="flex-row items-center border border-input rounded-[10px] px-3.5 py-3 gap-1.5">
+        <Text className="text-base text-muted-foreground font-semibold">{currency}</Text>
         <TextInput
           ref={inputRef}
           value={raw}
           onChangeText={handleChange}
           keyboardType="decimal-pad"
           placeholder="0.00"
-          className="flex-1 text-[22px] font-semibold"
+          className="flex-1 text-[22px] font-semibold text-foreground"
           style={{ fontVariant: ["tabular-nums"] }}
           returnKeyType="done"
         />

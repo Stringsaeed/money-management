@@ -54,10 +54,48 @@
   --color-border: #e5e5e5;
   --color-input: #e5e5e5;
   --color-ring: 0 0% 63%;
+  --color-brand: #0a7ea4;
+  --color-brand-foreground: #ffffff;
   --radius: 0.625rem;
   --chart-1: 12 76% 61%;
   --chart-2: 173 58% 39%;
   --chart-3: 197 37% 24%;
   --chart-4: 43 74% 66%;
   --chart-5: 27 87% 67%;
+}
+
+@layer base {
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-surface: #141312;
+      --color-surface-container: #1e1d1c;
+      --color-surface-dim: #282624;
+      --color-ink: #e8e6e3;
+      --color-sage: #9db493;
+      --color-terracotta: #c99e8e;
+      --color-ledger-outline: #2a2826;
+
+      --color-background: #141312;
+      --color-foreground: #e8e6e3;
+      --color-card: #1e1d1c;
+      --color-card-foreground: #e8e6e3;
+      --color-popover: #1e1d1c;
+      --color-popover-foreground: #e8e6e3;
+      --color-primary: #e8e6e3;
+      --color-primary-foreground: #141312;
+      --color-secondary: #7ab48a;
+      --color-secondary-foreground: #141312;
+      --color-muted: #252423;
+      --color-muted-foreground: #9a9896;
+      --color-accent: #252423;
+      --color-accent-foreground: #e8e6e3;
+      --color-destructive: #e06360;
+      --color-border: #333231;
+      --color-input: #333231;
+      --color-brand: #2ba5cf;
+      --color-brand-foreground: #ffffff;
+
+      --shadow-ledger: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+  }
 }

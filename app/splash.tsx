@@ -7,8 +7,8 @@ export default function Splash() {
 
   if (loadingAccounts) {
     return (
-      <Animated.View className="flex-1 items-center justify-center bg-white dark:bg-black">
-        <Animated.Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <Animated.View className="flex-1 items-center justify-center bg-background">
+        <Animated.Text className="text-2xl font-bold text-foreground">
           Money Management
         </Animated.Text>
       </Animated.View>

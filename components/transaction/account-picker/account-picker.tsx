@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Pressable, PressableProps, View } from "react-native";
+import { Pressable, PressableProps, useColorScheme, View } from "react-native";
 import { CheckIcon } from "phosphor-react-native";
 
 import { Icon } from "@/components/ui/icon";
@@ -7,7 +7,6 @@ import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from "@gorhom/
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Text } from "@/components/ui/text";
-import { SHEET_BG, SHEET_HANDLE } from "../constants";
 import type { AccountPickerProps } from "./types";
 
 export default function AccountPicker({
@@ -18,6 +17,10 @@ export default function AccountPicker({
 }: AccountPickerProps) {
   const ref = useRef<BottomSheetModal>(null);
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+
+  const sheetBg = { backgroundColor: colorScheme === "dark" ? "#141312" : "#F9F8F6" };
+  const sheetHandle = { backgroundColor: colorScheme === "dark" ? "#282624" : "#EBE8E3" };
 
   const onOpen = () => {
     ref.current?.present();
@@ -39,9 +42,9 @@ export default function AccountPicker({
       <BottomSheetModal
         enableDynamicSizing
         ref={ref}
-        backgroundStyle={SHEET_BG}
+        backgroundStyle={sheetBg}
         topInset={insets.top}
-        handleIndicatorStyle={SHEET_HANDLE}
+        handleIndicatorStyle={sheetHandle}
         backdropComponent={(props) => (
           <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} />
         )}

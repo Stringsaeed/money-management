@@ -15,8 +15,8 @@ export function EmptyState({ icon, title, message, action }: EmptyStateProps) {
       className="flex-1 items-center justify-center p-8 gap-3"
     >
       {icon ? <Text className="text-5xl">{icon}</Text> : null}
-      <Text className="text-lg font-semibold text-center text-gray-700">{title}</Text>
-      <Text className="text-sm text-center text-gray-500 leading-5">{message}</Text>
+      <Text className="text-lg font-semibold text-center text-foreground">{title}</Text>
+      <Text className="text-sm text-center text-muted-foreground leading-5">{message}</Text>
       {action}
     </Animated.View>
   );

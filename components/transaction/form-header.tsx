@@ -20,7 +20,7 @@ export function FormHeader({ onBack, onDelete, onSubmit, saving, title }: FormHe
         onPress={onBack}
         className="h-10 w-10 items-center justify-center rounded-full bg-surface-container active:bg-surface-dim"
       >
-        <Icon as={ArrowLeftIcon} size={20} className="text-ink" weight="bold" />
+        <Icon as={ArrowLeftIcon} size={20} className="text-ink dark:text-ink" weight="bold" />
       </Pressable>
 
       <Text className="font-heading-normal text-lg italic text-ink">{title}</Text>

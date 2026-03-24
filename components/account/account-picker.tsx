@@ -16,16 +16,16 @@ function AccountChip({ name, currency, color, isSelected, onPress }: AccountChip
     <Pressable
       onPress={onPress}
       style={{
-        borderColor: isSelected ? color : "#D1D5DB",
-        backgroundColor: isSelected ? `${color}20` : "#F9FAFB",
+        borderColor: isSelected ? color : undefined,
+        backgroundColor: isSelected ? `${color}20` : undefined,
       }}
-      className="px-3.5 py-2.5 rounded-[10px] border-2 min-w-[100px]"
+      className={`px-3.5 py-2.5 rounded-[10px] border-2 min-w-[100px] ${isSelected ? "" : "border-input bg-card"}`}
     >
       <View style={{ backgroundColor: color }} className="w-2 h-2 rounded-full mb-1" />
-      <Text className="text-[13px] font-semibold text-gray-900" numberOfLines={1}>
+      <Text className="text-[13px] font-semibold text-foreground" numberOfLines={1}>
         {name}
       </Text>
-      <Text className="text-[11px] text-gray-500">{currency}</Text>
+      <Text className="text-[11px] text-muted-foreground">{currency}</Text>
     </Pressable>
   );
 }
@@ -43,7 +43,7 @@ export function AccountPicker({ value, onChange, exclude = [], label }: AccountP
 
   return (
     <View className="gap-2">
-      {label ? <Text className="text-sm font-semibold text-gray-700">{label}</Text> : null}
+      {label ? <Text className="text-sm font-semibold text-foreground">{label}</Text> : null}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

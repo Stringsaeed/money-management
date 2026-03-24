@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Pressable, View } from "react-native";
+import { Pressable, useColorScheme, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { SymbolView } from "expo-symbols";
 
@@ -14,10 +14,21 @@ interface TransactionRowProps {
 export function TransactionRow({ transaction: t, showAccount = false }: TransactionRowProps) {
   const isIncome = t.type === "income";
   const isTransfer = t.type === "transfer";
+  const colorScheme = useColorScheme();
 
   const amountColor = isTransfer ? "text-ink/60" : isIncome ? "text-sage" : "text-ink";
   const iconBg = isIncome ? "bg-sage/10" : isTransfer ? "bg-ink/5" : "bg-terracotta/10";
-  const iconColor = isIncome ? "#8B9D83" : isTransfer ? "#9CA3AF" : "#B48A7B";
+  const iconColor = isIncome
+    ? colorScheme === "dark"
+      ? "#9DB493"
+      : "#8B9D83"
+    : isTransfer
+      ? colorScheme === "dark"
+        ? "#6B6966"
+        : "#9CA3AF"
+      : colorScheme === "dark"
+        ? "#C99E8E"
+        : "#B48A7B";
 
   const amountPrefix = isIncome ? "+" : isTransfer ? "" : "-";
 

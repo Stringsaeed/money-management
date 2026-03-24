@@ -50,7 +50,7 @@ export default function NewCategoryScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      className="flex-1 bg-background"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -59,61 +59,38 @@ export default function NewCategoryScreen() {
       >
         {/* Name */}
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Category Name
-          </Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Category Name</Text>
           <TextInput
             value={name}
             onChangeText={setName}
             placeholder="e.g. Groceries"
+            placeholderTextColor="#9a9896"
             autoFocus
-            style={{
-              borderWidth: 1,
-              borderColor: "#D1D5DB",
-              borderRadius: 10,
-              padding: 14,
-              fontSize: 16,
-            }}
+            className="border border-input rounded-[10px] p-3.5 text-base text-foreground"
           />
         </View>
 
         {/* Type */}
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Type
-          </Text>
-          <View
-            style={{
-              flexDirection: "row",
-              borderRadius: 10,
-              overflow: "hidden",
-              borderWidth: 1,
-              borderColor: "#E5E7EB",
-            }}
-          >
+          <Text className="text-sm font-semibold text-foreground mb-2">Type</Text>
+          <View className="flex-row rounded-[10px] overflow-hidden border border-border">
             <Pressable
               onPress={() => setType("expense")}
-              style={{
-                flex: 1,
-                paddingVertical: 12,
-                alignItems: "center",
-                backgroundColor: type === "expense" ? "#DC2626" : "white",
-              }}
+              className={`flex-1 py-3 items-center ${type === "expense" ? "bg-destructive" : "bg-card"}`}
             >
-              <Text style={{ fontWeight: "600", color: type === "expense" ? "white" : "#374151" }}>
+              <Text
+                className={`font-semibold ${type === "expense" ? "text-white" : "text-foreground"}`}
+              >
                 Expense
               </Text>
             </Pressable>
             <Pressable
               onPress={() => setType("income")}
-              style={{
-                flex: 1,
-                paddingVertical: 12,
-                alignItems: "center",
-                backgroundColor: type === "income" ? "#16A34A" : "white",
-              }}
+              className={`flex-1 py-3 items-center ${type === "income" ? "bg-secondary" : "bg-card"}`}
             >
-              <Text style={{ fontWeight: "600", color: type === "income" ? "white" : "#374151" }}>
+              <Text
+                className={`font-semibold ${type === "income" ? "text-secondary-foreground" : "text-foreground"}`}
+              >
                 Income
               </Text>
             </Pressable>
@@ -122,34 +99,25 @@ export default function NewCategoryScreen() {
 
         {/* Icon */}
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Icon
-          </Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Icon</Text>
           <EmojiPicker value={icon} onChange={setIcon} />
         </View>
 
         {/* Color */}
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-            Color
-          </Text>
+          <Text className="text-sm font-semibold text-foreground mb-2">Color</Text>
           <ColorPicker value={color} onChange={setColor} />
         </View>
 
-        {error ? <Text style={{ color: "#DC2626", textAlign: "center" }}>{error}</Text> : null}
+        {error ? <Text className="text-destructive text-center">{error}</Text> : null}
 
         <Pressable
           onPress={handleCreate}
           disabled={saving}
-          style={{
-            backgroundColor: "#0a7ea4",
-            borderRadius: 12,
-            padding: 16,
-            alignItems: "center",
-            opacity: saving ? 0.6 : 1,
-          }}
+          className="bg-brand rounded-xl p-4 items-center"
+          style={{ opacity: saving ? 0.6 : 1 }}
         >
-          <Text style={{ color: "white", fontSize: 17, fontWeight: "600" }}>
+          <Text className="text-brand-foreground text-[17px] font-semibold">
             {saving ? "Creating…" : "Create Category"}
           </Text>
         </Pressable>

@@ -42,11 +42,7 @@ const CURRENCIES = [
 ];
 
 function FieldLabel({ children }: { children: string }) {
-  return (
-    <Text style={{ fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#374151" }}>
-      {children}
-    </Text>
-  );
+  return <Text className="text-sm font-semibold text-foreground mb-2">{children}</Text>;
 }
 
 export default function NewAccountScreen() {
@@ -88,7 +84,7 @@ export default function NewAccountScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      className="flex-1 bg-background"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -102,41 +98,30 @@ export default function NewAccountScreen() {
             value={name}
             onChangeText={setName}
             placeholder="e.g. Main Checking"
+            placeholderTextColor="#9a9896"
             autoFocus
-            style={{
-              borderWidth: 1,
-              borderColor: "#D1D5DB",
-              borderRadius: 10,
-              padding: 14,
-              fontSize: 16,
-            }}
+            className="border border-input rounded-[10px] p-3.5 text-base text-foreground"
           />
         </View>
 
         {/* Type */}
         <View>
           <FieldLabel>Account Type</FieldLabel>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          <View className="flex-row flex-wrap gap-2">
             {ACCOUNT_TYPES.map((at) => (
               <Pressable
                 key={at.value}
                 onPress={() => setType(at.value)}
                 style={{
-                  paddingHorizontal: 14,
-                  paddingVertical: 8,
-                  borderRadius: 20,
-                  borderWidth: 2,
-                  borderColor: type === at.value ? AccountTypeColors[at.value] : "#D1D5DB",
+                  borderColor: type === at.value ? AccountTypeColors[at.value] : undefined,
                   backgroundColor:
-                    type === at.value ? `${AccountTypeColors[at.value]}20` : "transparent",
+                    type === at.value ? `${AccountTypeColors[at.value]}20` : undefined,
                 }}
+                className={`px-3.5 py-2 rounded-full border-2 ${type === at.value ? "" : "border-input"}`}
               >
                 <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: type === at.value ? "600" : "400",
-                    color: type === at.value ? AccountTypeColors[at.value] : "#374151",
-                  }}
+                  style={type === at.value ? { color: AccountTypeColors[at.value] } : undefined}
+                  className={`text-sm ${type === at.value ? "font-semibold" : "text-foreground"}`}
                 >
                   {at.label}
                 </Text>
@@ -149,21 +134,16 @@ export default function NewAccountScreen() {
         <View>
           <FieldLabel>Currency</FieldLabel>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={{ flexDirection: "row", gap: 8 }}>
+            <View className="flex-row gap-2">
               {CURRENCIES.map((c) => (
                 <Pressable
                   key={c}
                   onPress={() => setCurrency(c)}
-                  style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
-                    borderRadius: 20,
-                    borderWidth: 2,
-                    borderColor: currency === c ? "#0a7ea4" : "#D1D5DB",
-                    backgroundColor: currency === c ? "#0a7ea420" : "transparent",
-                  }}
+                  className={`px-4 py-2 rounded-full border-2 ${currency === c ? "border-brand bg-brand/10" : "border-input"}`}
                 >
-                  <Text style={{ fontWeight: currency === c ? "600" : "400" }}>{c}</Text>
+                  <Text className={`text-foreground ${currency === c ? "font-semibold" : ""}`}>
+                    {c}
+                  </Text>
                 </Pressable>
               ))}
             </View>
@@ -178,13 +158,8 @@ export default function NewAccountScreen() {
             onChangeText={setBalance}
             keyboardType="decimal-pad"
             placeholder="0.00"
-            style={{
-              borderWidth: 1,
-              borderColor: "#D1D5DB",
-              borderRadius: 10,
-              padding: 14,
-              fontSize: 16,
-            }}
+            placeholderTextColor="#9a9896"
+            className="border border-input rounded-[10px] p-3.5 text-base text-foreground"
           />
         </View>
 
@@ -194,20 +169,15 @@ export default function NewAccountScreen() {
           <ColorPicker value={color} onChange={setColor} />
         </View>
 
-        {error ? <Text style={{ color: "#DC2626", textAlign: "center" }}>{error}</Text> : null}
+        {error ? <Text className="text-destructive text-center">{error}</Text> : null}
 
         <Pressable
           onPress={handleCreate}
           disabled={saving}
-          style={{
-            backgroundColor: "#0a7ea4",
-            borderRadius: 12,
-            padding: 16,
-            alignItems: "center",
-            opacity: saving ? 0.6 : 1,
-          }}
+          className="bg-brand rounded-xl p-4 items-center"
+          style={{ opacity: saving ? 0.6 : 1 }}
         >
-          <Text style={{ color: "white", fontSize: 17, fontWeight: "600" }}>
+          <Text className="text-brand-foreground text-[17px] font-semibold">
             {saving ? "Creating…" : "Create Account"}
           </Text>
         </Pressable>

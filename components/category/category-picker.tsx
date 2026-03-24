@@ -16,15 +16,15 @@ function CategoryChip({ name, color, isSelected, onPress }: CategoryChipProps) {
     <Pressable
       onPress={onPress}
       style={{
-        borderColor: isSelected ? color : "#E5E7EB",
-        backgroundColor: isSelected ? `${color}20` : "#F9FAFB",
+        borderColor: isSelected ? color : undefined,
+        backgroundColor: isSelected ? `${color}20` : undefined,
       }}
-      className="flex-row items-center gap-1.5 px-3 py-2 rounded-full border-2"
+      className={`flex-row items-center gap-1.5 px-3 py-2 rounded-full border-2 ${isSelected ? "" : "border-input bg-card"}`}
     >
       <View style={{ backgroundColor: color }} className="w-2 h-2 rounded-full" />
       <Text
         style={{ color: isSelected ? color : undefined }}
-        className={`text-[13px] ${isSelected ? "font-semibold" : "font-normal text-gray-700"}`}
+        className={`text-[13px] ${isSelected ? "font-semibold" : "font-normal text-foreground"}`}
       >
         {name}
       </Text>
@@ -52,7 +52,7 @@ export function CategoryPicker({
   if (horizontal) {
     return (
       <View className="gap-2">
-        {label ? <Text className="text-sm font-semibold text-gray-700">{label}</Text> : null}
+        {label ? <Text className="text-sm font-semibold text-foreground">{label}</Text> : null}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -74,7 +74,7 @@ export function CategoryPicker({
 
   return (
     <View className="gap-2">
-      {label ? <Text className="text-sm font-semibold text-gray-700">{label}</Text> : null}
+      {label ? <Text className="text-sm font-semibold text-foreground">{label}</Text> : null}
       <Animated.View
         layout={LinearTransition.easing(Easing.ease)}
         className="flex-row flex-wrap gap-2"

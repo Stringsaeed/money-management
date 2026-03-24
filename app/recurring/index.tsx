@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, useColorScheme, View } from "react-native";
 import { Text } from "@/components/ui/text";
 
 import { EmptyState } from "@/components/common/empty-state";
@@ -21,19 +21,17 @@ export default function RecurringListScreen() {
   const { data: recurring = [], isLoading } = useRecurringPayments();
   const { data: accounts = [] } = useAccounts();
   const { data: categories = [] } = useCategories();
+  const colorScheme = useColorScheme();
 
   const accountMap = new Map(accounts.map((a) => [a.id, a]));
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
-  return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
-      {/* Header */}
-      <View style={{ padding: 20, paddingTop: 60, backgroundColor: "white" }}>
-        <Text style={{ fontSize: 28, fontWeight: "700" }}>Recurring Payments</Text>
-      </View>
+  const colors = colorScheme === "dark" ? Colors.dark : Colors.light;
 
+  return (
+    <View className="flex-1 bg-background">
       {isLoading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} />
+        <ActivityIndicator className="mt-10" />
       ) : recurring.length === 0 ? (
         <EmptyState
           icon="🔄"
@@ -42,14 +40,9 @@ export default function RecurringListScreen() {
           action={
             <Pressable
               onPress={() => router.push("/recurring/new")}
-              style={{
-                backgroundColor: "#0a7ea4",
-                borderRadius: 10,
-                paddingHorizontal: 20,
-                paddingVertical: 12,
-              }}
+              className="bg-brand rounded-[10px] px-5 py-3"
             >
-              <Text style={{ color: "white", fontWeight: "600" }}>Add Recurring</Text>
+              <Text className="text-brand-foreground font-semibold">Add Recurring</Text>
             </Pressable>
           }
         />
@@ -60,47 +53,40 @@ export default function RecurringListScreen() {
             const category = r.categoryId ? categoryMap.get(r.categoryId) : undefined;
             const typeColor =
               r.type === "income"
-                ? Colors.light.income
+                ? colors.income
                 : r.type === "expense"
-                  ? Colors.light.expense
-                  : Colors.light.transfer;
+                  ? colors.expense
+                  : colors.transfer;
 
             return (
               <Pressable
                 key={r.id}
                 onPress={() => router.push(`/recurring/${r.id}/edit`)}
-                style={({ pressed }) => ({
-                  backgroundColor: "white",
-                  borderRadius: 12,
-                  padding: 16,
-                  opacity: pressed ? 0.8 : 1,
-                  borderLeftWidth: 4,
-                  borderLeftColor: typeColor,
-                })}
+                className="bg-card rounded-xl p-4 active:opacity-80"
+                style={{ borderLeftWidth: 4, borderLeftColor: typeColor }}
               >
-                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                  <Text style={{ fontSize: 16, fontWeight: "600", color: "#111827" }}>
-                    {r.name}
-                  </Text>
-                  <Text style={{ fontSize: 16, fontWeight: "700", color: typeColor }}>
+                <View className="flex-row justify-between">
+                  <Text className="text-base font-semibold text-foreground">{r.name}</Text>
+                  <Text
+                    className="text-base font-bold"
+                    style={{ color: typeColor, fontVariant: ["tabular-nums"] }}
+                  >
                     {r.type === "income" ? "+" : r.type === "expense" ? "-" : ""}
                     {formatCents(r.amount, r.currency)}
                   </Text>
                 </View>
-                <View style={{ flexDirection: "row", gap: 8, marginTop: 6, alignItems: "center" }}>
-                  <Text style={{ fontSize: 12, color: "#6B7280" }}>
+                <View className="flex-row gap-2 mt-1.5 items-center">
+                  <Text className="text-xs text-muted-foreground">
                     {INTERVAL_LABELS[r.interval]}
                   </Text>
                   {account ? (
-                    <Text style={{ fontSize: 12, color: "#6B7280" }}>· {account.name}</Text>
+                    <Text className="text-xs text-muted-foreground">· {account.name}</Text>
                   ) : null}
                   {category ? (
-                    <Text style={{ fontSize: 12, color: "#6B7280" }}>· {category.name}</Text>
+                    <Text className="text-xs text-muted-foreground">· {category.name}</Text>
                   ) : null}
                   {!r.isActive ? (
-                    <Text style={{ fontSize: 12, color: "#9CA3AF", fontStyle: "italic" }}>
-                      (paused)
-                    </Text>
+                    <Text className="text-xs text-muted-foreground/60 italic">(paused)</Text>
                   ) : null}
                 </View>
               </Pressable>
@@ -119,15 +105,11 @@ export default function RecurringListScreen() {
           width: 56,
           height: 56,
           borderRadius: 28,
-          backgroundColor: "#0a7ea4",
           alignItems: "center",
           justifyContent: "center",
-          shadowColor: "#000",
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 8,
+          boxShadow: `0 4px 8px ${colorScheme === "dark" ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.3)"}`,
         }}
+        className="bg-brand"
       >
         <Text style={{ color: "white", fontSize: 28, lineHeight: 30 }}>+</Text>
       </Pressable>

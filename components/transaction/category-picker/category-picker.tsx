@@ -1,10 +1,9 @@
 import React, { useRef } from "react";
-import { Pressable, PressableProps, View } from "react-native";
+import { Pressable, PressableProps, useColorScheme, View } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Text } from "@/components/ui/text";
-import { INK, INK_MUTED, SHEET_BG, SHEET_HANDLE, SURFACE_CONTAINER } from "../constants";
 import type { CategoryPickerProps } from "./types";
 
 type CategoryItem = CategoryPickerProps["categories"][number];
@@ -13,11 +12,17 @@ function CategoryGrid({
   items,
   selectedId,
   onSelect,
+  isDark,
 }: {
   items: CategoryItem[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  isDark: boolean;
 }) {
+  const surfaceContainer = isDark ? "#1E1D1C" : "#F1F0EE";
+  const inkColor = isDark ? "#E8E6E3" : "#1C1B1A";
+  const inkMuted = isDark ? "#E8E6E366" : "#1C1B1A66";
+
   return (
     <View className="flex-row flex-wrap gap-2">
       {items.map((cat) => {
@@ -27,12 +32,12 @@ function CategoryGrid({
             key={cat.id}
             onPress={() => onSelect(cat.id)}
             className="items-center gap-1.5 px-4 py-3 rounded-xl"
-            style={{ backgroundColor: isSelected ? `${cat.color}20` : SURFACE_CONTAINER }}
+            style={{ backgroundColor: isSelected ? `${cat.color}20` : surfaceContainer }}
           >
             <Text className="text-2xl">{cat.icon}</Text>
             <Text
               className="font-body-medium text-xs"
-              style={{ color: isSelected ? INK : INK_MUTED }}
+              style={{ color: isSelected ? inkColor : inkMuted }}
             >
               {cat.name}
             </Text>
@@ -51,6 +56,11 @@ export default function CategoryPicker({
 }: CategoryPickerProps) {
   const ref = useRef<BottomSheetModal>(null);
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  const sheetBg = { backgroundColor: isDark ? "#141312" : "#F9F8F6" };
+  const sheetHandle = { backgroundColor: isDark ? "#282624" : "#EBE8E3" };
 
   const incomeCategories = categories.filter((c) => c.type === "income");
   const expenseCategories = categories.filter((c) => c.type === "expense");
@@ -80,9 +90,9 @@ export default function CategoryPicker({
       <BottomSheetModal
         enableDynamicSizing
         ref={ref}
-        backgroundStyle={SHEET_BG}
+        backgroundStyle={sheetBg}
         topInset={insets.top}
-        handleIndicatorStyle={SHEET_HANDLE}
+        handleIndicatorStyle={sheetHandle}
         backdropComponent={(props) => (
           <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} />
         )}
@@ -99,6 +109,7 @@ export default function CategoryPicker({
                 items={expenseCategories}
                 selectedId={selectedId}
                 onSelect={handleSelect}
+                isDark={isDark}
               />
             </View>
           ) : null}
@@ -112,6 +123,7 @@ export default function CategoryPicker({
                 items={incomeCategories}
                 selectedId={selectedId}
                 onSelect={handleSelect}
+                isDark={isDark}
               />
             </View>
           ) : null}
