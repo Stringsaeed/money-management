@@ -90,5 +90,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       resizeMode: "contain",
       backgroundColor: "#f9f8f6",
     },
+    updates: {
+      url: "https://u.expo.dev/a33b24c0-b380-4d0a-8ce6-b2f4b61da346",
+    },
+    runtimeVersion: {
+      policy: "appVersion",
+    },
   };
 };

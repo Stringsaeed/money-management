@@ -48,6 +48,7 @@
     "expo-status-bar": "~55.0.4",
     "expo-symbols": "~55.0.5",
     "expo-system-ui": "~55.0.10",
+    "expo-updates": "~55.0.15",
     "expo-web-browser": "~55.0.10",
     "nativewind": "^5.0.0-preview.3",
     "phosphor-react-native": "^3.0.3",
