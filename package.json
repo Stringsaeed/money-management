@@ -13,7 +13,9 @@
     "lint:fix": "oxlint --fix",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "check-loose-end": "knip"
+    "check-loose-end": "knip",
+    "test": "jest --passWithNoTests",
+    "ts:check": "tsc -p . --noEmit"
   },
   "dependencies": {
     "@expo-google-fonts/newsreader": "^0.4.1",
@@ -46,6 +48,7 @@
     "expo-status-bar": "~55.0.4",
     "expo-symbols": "~55.0.5",
     "expo-system-ui": "~55.0.10",
+    "expo-updates": "~55.0.15",
     "expo-web-browser": "~55.0.10",
     "nativewind": "^5.0.0-preview.3",
     "phosphor-react-native": "^3.0.3",
@@ -77,6 +80,7 @@
     "drizzle-kit": "^0.31.9",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~55.0.0",
+    "jest": "^30.3.0",
     "knip": "^5.87.0",
     "oxfmt": "^0.35.0",
     "oxlint": "^1.50.0",
