@@ -4,6 +4,7 @@ import { Alert, Pressable, ScrollView, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useQueryClient } from "@tanstack/react-query";
 import { eq } from "drizzle-orm";
+import * as Updates from "expo-updates";
 
 import { AccountRow } from "@/components/settings/account-row";
 import { Card } from "@/components/settings/card";
@@ -26,12 +27,15 @@ import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import { useRecurringPayments } from "@/hooks/use-recurring-payments";
 import { useTransactions } from "@/hooks/use-transactions";
+import { Button } from "@/components/ui/button";
 
 export default function SettingsScreen() {
   const db = useDatabase();
   const qc = useQueryClient();
   const [erasing, setErasing] = useState(false);
   const [seeding, setSeeding] = useState(false);
+
+  const updates = Updates.useUpdates();
 
   const { data: accounts = [] } = useAccountsWithBalances();
   const { data: expenseCategories = [] } = useCategories("expense");
@@ -105,7 +109,11 @@ export default function SettingsScreen() {
           </Animated.View>
         ))}
         {accounts.length > 0 && <Divider />}
-        <SettingsRow emoji="＋" label="Add Account" onPress={() => router.push("/account/new")} />
+        <SettingsRow
+          emoji="＋"
+          label="Add Account"
+          onPress={() => router.push("/account/new")}
+        />
       </Card>
 
       {/* Manage */}
@@ -136,7 +144,12 @@ export default function SettingsScreen() {
           noChevron
         />
         <Divider />
-        <SettingsRow emoji="🏦" label="Accounts" rightLabel={String(accounts.length)} noChevron />
+        <SettingsRow
+          emoji="🏦"
+          label="Accounts"
+          rightLabel={String(accounts.length)}
+          noChevron
+        />
         <Divider />
         <SettingsRow
           emoji="🔁"
@@ -185,9 +198,15 @@ export default function SettingsScreen() {
       <Card>
         <View className="items-center px-4 py-6 gap-1">
           <Text className="text-4xl mb-2">💰</Text>
-          <Text className="font-heading-normal text-xl italic text-ink">Money Manager</Text>
-          <Text className="font-body-normal text-xs text-ink/40">Track your finances, simply.</Text>
-          <Text className="font-body-normal text-xs text-ink/20 mt-2">Version 1.0.0</Text>
+          <Text className="font-heading-normal text-xl italic text-ink">
+            Money Manager
+          </Text>
+          <Text className="font-body-normal text-xs text-ink/40">
+            Track your finances, simply.
+          </Text>
+          <Text className="font-body-normal text-xs text-ink/20 mt-2">
+            Version 1.0.0
+          </Text>
         </View>
       </Card>
 
@@ -209,25 +228,48 @@ export default function SettingsScreen() {
       </Card>
 
       {/* Dev Tools — only in development */}
-      {__DEV__ && (
-        <>
-          <SectionHeader title="Dev Tools 🛠️" />
-          <Card>
-            <Pressable
-              onPress={handleSeed}
-              disabled={seeding}
-              className="px-4 py-3.5 items-center active:bg-surface-dim"
-            >
-              <Text className="font-body-semibold text-base text-sage">
-                {seeding ? "Seeding…" : "Run Seed Data"}
-              </Text>
+      {__DEV__ ||
+        (Updates.channel === "preview" && (
+          <>
+            <SectionHeader title="Dev Tools 🛠️" />
+            <Card>
+              <Pressable
+                onPress={handleSeed}
+                disabled={seeding}
+                className="px-4 py-3.5 items-center active:bg-surface-dim"
+              >
+                <Text className="font-body-semibold text-base text-sage">
+                  {seeding ? "Seeding…" : "Run Seed Data"}
+                </Text>
+                <Text className="font-body-normal text-xs text-ink/40 mt-0.5">
+                  Insert demo accounts, categories, and transactions
+                </Text>
+              </Pressable>
               <Text className="font-body-normal text-xs text-ink/40 mt-0.5">
-                Insert demo accounts, categories, and transactions
+                Channel for build is (${Updates.channel})
               </Text>
-            </Pressable>
-          </Card>
-        </>
-      )}
+
+              {updates.isUpdateAvailable && (
+                <View className="mt-4 px-4 py-3.5 bg-yellow-50 rounded">
+                  <Text className="font-body-semibold text-sm text-yellow-800">
+                    Update Available
+                  </Text>
+                  <Text className="font-body-normal text-xs text-yellow-700 mt-0.5">
+                    A new version of the app is available. Please update to the
+                    latest version for the best experience.
+                  </Text>
+                  <Button
+                    onPress={() => Updates.reloadAsync()}
+                    className="mt-3"
+                    size="sm"
+                  >
+                    <Text>Download</Text>
+                  </Button>
+                </View>
+              )}
+            </Card>
+          </>
+        ))}
     </ScrollView>
   );
 }
