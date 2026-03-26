@@ -22,9 +22,7 @@ export function useAccounts() {
   return useQuery({
     queryKey: accountKeys.all,
     queryFn: () =>
-      db.select().from(accounts).orderBy(accounts.sortOrder, accounts.createdAt).all() as Promise<
-        Account[]
-      >,
+      db.select().from(accounts).orderBy(accounts.sortOrder, accounts.createdAt).all() as Account[],
   });
 }
 
@@ -33,7 +31,7 @@ export function useAccount(id: string) {
   return useQuery({
     queryKey: accountKeys.detail(id),
     queryFn: () =>
-      db.select().from(accounts).where(eq(accounts.id, id)).get() as Promise<Account | undefined>,
+      db.select().from(accounts).where(eq(accounts.id, id)).get() as Account | undefined,
   });
 }
 

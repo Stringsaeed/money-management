@@ -21,9 +21,11 @@ export function useRecurringPayments() {
   return useQuery({
     queryKey: recurringKeys.all,
     queryFn: () =>
-      db.select().from(recurringPayments).orderBy(recurringPayments.name).all() as Promise<
-        RecurringPayment[]
-      >,
+      db
+        .select()
+        .from(recurringPayments)
+        .orderBy(recurringPayments.name)
+        .all() as RecurringPayment[],
   });
 }
 
@@ -32,9 +34,9 @@ export function useRecurringPayment(id: string) {
   return useQuery({
     queryKey: recurringKeys.detail(id),
     queryFn: () =>
-      db.select().from(recurringPayments).where(eq(recurringPayments.id, id)).get() as Promise<
-        RecurringPayment | undefined
-      >,
+      db.select().from(recurringPayments).where(eq(recurringPayments.id, id)).get() as
+        | RecurringPayment
+        | undefined,
   });
 }
 

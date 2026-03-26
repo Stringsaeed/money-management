@@ -29,7 +29,7 @@
 - Start by skimming AGENTS.md and this file to refresh requirements for linting, formatting, skills, and Expo architecture.
 - Before writing code, gather context with `glob`, `read`, or `grep`; inspect related files rather than editing blind.
 - Apply single-file modifications with `apply_patch` when practical; avoid it for generated code or mass rewrites.
-- After editing, rerun `yarn lint:fix && yarn format` even if linters previously passed—this is mandatory per AGENTS.md.
+- After editing, run `npx tsc --noEmit` to catch type errors, then `yarn lint:fix && yarn format`—this is mandatory.
 - Document any skipped steps (e.g., simulator run) in the final response so the user knows what still needs verification.
 - Avoid questions like "Should I proceed?"; instead pick the safest default, act, and mention the assumption afterward.
 - Keep commands succinct and never stream large logs; summarize key lines for the user.
@@ -200,6 +200,7 @@ When creating picker components (account, category, date, etc.), follow this est
 - [ ] Wrap layout-changing elements in Reanimated `Animated.View` with `entering`/`exiting`/`layout` props.
 - [ ] Decompose into small, single-responsibility components; no large monoliths.
 - [ ] Use emojis in UI copy and labels to reinforce minimal modern design.
+- [ ] Run `npx tsc --noEmit` to verify no TypeScript errors.
 - [ ] Run `yarn lint:fix`.
 - [ ] Run `yarn format`.
 - [ ] Document manual QA (or note that it was skipped).
