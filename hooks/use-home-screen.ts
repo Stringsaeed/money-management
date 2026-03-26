@@ -3,7 +3,11 @@ import { useMemo } from "react";
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import { useRecurringProcessor } from "@/hooks/use-recurring-processor";
-import { useMonthSummary, useTransactions } from "@/hooks/use-transactions";
+import {
+  useMonthSummary,
+  useTransactionDateRange,
+  useTransactions,
+} from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
 import { groupByDay } from "@/utils/transaction";
 
@@ -28,6 +32,7 @@ export function useHomeScreen() {
     month: selectedMonth ?? undefined,
     accountId: activeAccountId,
   });
+  const { data: dateRange } = useTransactionDateRange();
   const { data: summary } = useMonthSummary(
     selectedYear ?? 0,
     selectedMonth ?? 0,
@@ -53,6 +58,8 @@ export function useHomeScreen() {
 
   return {
     accounts,
+    allCategories,
+    dateRange,
     loadingAccounts,
     loadingTx,
     groups,

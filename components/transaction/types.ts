@@ -14,11 +14,14 @@ export interface TransactionFormData {
   exchangeRate: number | null;
 }
 
+export interface TransactionFormHandle {
+  submit: () => void;
+}
+
 export interface TransactionFormProps {
   initialData?: Partial<TransactionFormData>;
   onSubmit: (data: TransactionFormData) => Promise<void>;
-  submitLabel?: string;
-  onDelete?: () => void;
+  formRef?: React.MutableRefObject<TransactionFormHandle | null>;
 }
 
 export interface FormValues {

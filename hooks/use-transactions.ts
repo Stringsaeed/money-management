@@ -104,12 +104,12 @@ export function useTransactions(filters: TransactionFilters) {
   });
 }
 
-export function useTransaction(id: string) {
+export function useTransaction(id: string | undefined) {
   const db = useDatabase();
   return useQuery({
-    queryKey: transactionKeys.detail(id),
+    queryKey: transactionKeys.detail(id ?? ""),
     queryFn: async (): Promise<TransactionWithDetails | undefined> => {
-      const row = (await db.select().from(transactions).where(eq(transactions.id, id)).get()) as
+      const row = (await db.select().from(transactions).where(eq(transactions.id, id!)).get()) as
         | Transaction
         | undefined;
 
@@ -117,6 +117,7 @@ export function useTransaction(id: string) {
       const enriched = await enrichTransactions(db, [row]);
       return enriched[0];
     },
+    enabled: !!id,
   });
 }
 

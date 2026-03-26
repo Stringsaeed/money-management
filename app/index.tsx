@@ -1,5 +1,11 @@
 import { Redirect, Stack, useRouter } from "expo-router";
+import { useMemo } from "react";
 import { ActivityIndicator, Pressable, SectionList, View } from "react-native";
+import type {
+  NativeStackHeaderItem,
+  NativeStackHeaderItemMenuAction,
+  NativeStackHeaderItemMenuSubmenu,
+} from "@react-navigation/native-stack";
 
 import { EmptyState } from "@/components/common/empty-state";
 import { AccountsSection } from "@/components/home/accounts-section";
@@ -9,12 +15,14 @@ import { JournalHeader } from "@/components/home/journal-header";
 import { TransactionGroup } from "@/components/transaction/transaction-group";
 import { Text } from "@/components/ui/text";
 import { useHomeScreen } from "@/hooks/use-home-screen";
-import { formatHeaderDate } from "@/utils/date";
+import { formatHeaderDate, formatMonth, monthsBetween } from "@/utils/date";
 
 export default function HomeScreen() {
   const router = useRouter();
   const {
     accounts,
+    allCategories,
+    dateRange,
     loadingAccounts,
     loadingTx,
     groups,
@@ -26,15 +34,143 @@ export default function HomeScreen() {
     selectedYear,
     selectedMonth,
     activeAccountId,
+    selectedCategoryId,
     setSelectedMonth,
     setActiveAccountId,
     setSelectedCategoryId,
     resetFilters,
   } = useHomeScreen();
 
+  const availableMonths = useMemo(
+    () => monthsBetween(dateRange?.minDate, dateRange?.maxDate),
+    [dateRange?.minDate, dateRange?.maxDate],
+  );
+
   if (!loadingAccounts && accounts.length === 0) {
     return <Redirect href="/onboarding" />;
   }
+
+  // ── Filter menu ────────────────────────────────────────────────────────────
+
+  const accountSubmenu: NativeStackHeaderItemMenuSubmenu = {
+    type: "submenu",
+    label: "Account",
+    icon: { type: "sfSymbol", name: "building.columns" },
+    items: [
+      {
+        type: "action",
+        label: "All Accounts",
+        state: activeAccountId === null ? "on" : "off",
+        onPress: () => setActiveAccountId(null),
+      } satisfies NativeStackHeaderItemMenuAction,
+      ...accounts.map(
+        (acc) =>
+          ({
+            type: "action",
+            label: acc.name,
+            state: activeAccountId === acc.id ? "on" : "off",
+            onPress: () => setActiveAccountId(activeAccountId === acc.id ? null : acc.id),
+          }) satisfies NativeStackHeaderItemMenuAction,
+      ),
+    ],
+  };
+
+  const periodSubmenu: NativeStackHeaderItemMenuSubmenu = {
+    type: "submenu",
+    label: "Period",
+    icon: { type: "sfSymbol", name: "calendar" },
+    items: [
+      {
+        type: "action",
+        label: "All Time",
+        state: selectedMonth === null ? "on" : "off",
+        onPress: () => setSelectedMonth(null, null),
+      } satisfies NativeStackHeaderItemMenuAction,
+      ...availableMonths.map(
+        ({ year, month }) =>
+          ({
+            type: "action",
+            label: formatMonth(year, month),
+            state: year === selectedYear && month === selectedMonth ? "on" : "off",
+            onPress: () =>
+              year === selectedYear && month === selectedMonth
+                ? setSelectedMonth(null, null)
+                : setSelectedMonth(year, month),
+          }) satisfies NativeStackHeaderItemMenuAction,
+      ),
+    ],
+  };
+
+  const categorySubmenu: NativeStackHeaderItemMenuSubmenu = {
+    type: "submenu",
+    label: "Category",
+    icon: { type: "sfSymbol", name: "tag" },
+    items: [
+      {
+        type: "action",
+        label: "All Categories",
+        state: selectedCategoryId === null ? "on" : "off",
+        onPress: () => setSelectedCategoryId(null),
+      } satisfies NativeStackHeaderItemMenuAction,
+      ...allCategories.map(
+        (cat) =>
+          ({
+            type: "action",
+            label: cat.name,
+            state: selectedCategoryId === cat.id ? "on" : "off",
+            onPress: () => setSelectedCategoryId(selectedCategoryId === cat.id ? null : cat.id),
+          }) satisfies NativeStackHeaderItemMenuAction,
+      ),
+    ],
+  };
+
+  const filterMenuItems: (NativeStackHeaderItemMenuAction | NativeStackHeaderItemMenuSubmenu)[] = [
+    accountSubmenu,
+    periodSubmenu,
+    categorySubmenu,
+  ];
+
+  if (activeFilterCount > 0) {
+    filterMenuItems.push({
+      type: "action",
+      label: "Reset All Filters",
+      icon: { type: "sfSymbol", name: "xmark.circle" },
+      destructive: true,
+      onPress: resetFilters,
+    });
+  }
+
+  const headerRightItems: NativeStackHeaderItem[] = [
+    {
+      label: "filters",
+      type: "menu",
+      icon: {
+        type: "sfSymbol",
+        name: "line.3.horizontal.decrease.circle",
+      },
+      badge:
+        activeFilterCount > 0
+          ? {
+              value: activeFilterCount,
+            }
+          : undefined,
+      sharesBackground: false,
+      menu: {
+        items: filterMenuItems,
+      },
+    },
+    {
+      label: "settings",
+      type: "button",
+      onPress: () => router.push("/settings"),
+      icon: {
+        type: "sfSymbol",
+        name: "gearshape",
+      },
+    },
+  ];
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   const ListHeader = (
     <>
@@ -64,33 +200,7 @@ export default function HomeScreen() {
               AS OF {formatHeaderDate()}
             </Text>
           ),
-          unstable_headerRightItems: () => [
-            {
-              label: "filters",
-              type: "button",
-              onPress: () => router.push("/filters"),
-              icon: {
-                type: "sfSymbol",
-                name: "line.3.horizontal.decrease.circle",
-              },
-              badge:
-                activeFilterCount > 0
-                  ? {
-                      value: activeFilterCount,
-                    }
-                  : undefined,
-              sharesBackground: false,
-            },
-            {
-              label: "settings",
-              type: "button",
-              onPress: () => router.push("/settings"),
-              icon: {
-                type: "sfSymbol",
-                name: "gearshape",
-              },
-            },
-          ],
+          unstable_headerRightItems: () => headerRightItems,
         }}
       />
       {loadingTx ? (
