@@ -24,9 +24,9 @@ export function useCategories(type?: "income" | "expense") {
     queryFn: async (): Promise<Category[]> => {
       const query = db.select().from(categories).orderBy(categories.sortOrder, categories.name);
       if (type) {
-        return query.where(eq(categories.type, type)).all() as Promise<Category[]>;
+        return query.where(eq(categories.type, type)).all() as Category[];
       }
-      return query.all() as Promise<Category[]>;
+      return query.all() as Category[];
     },
   });
 }
@@ -36,9 +36,7 @@ export function useCategory(id: string) {
   return useQuery({
     queryKey: categoryKeys.detail(id),
     queryFn: () =>
-      db.select().from(categories).where(eq(categories.id, id)).get() as Promise<
-        Category | undefined
-      >,
+      db.select().from(categories).where(eq(categories.id, id)).get() as Category | undefined,
   });
 }
 

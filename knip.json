@@ -17,7 +17,8 @@
     "babel-plugin-inline-import",
     "expo-updates",
     "tailwind-variants",
-    "tailwindcss-animate"
+    "tailwindcss-animate",
+    "@react-navigation/native-stack"
   ],
   "ignore": ["hooks/use-color-scheme.web.ts"],
   "expo": {
