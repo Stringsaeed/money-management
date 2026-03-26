@@ -128,36 +128,12 @@ export default function RootLayout() {
                     name="settings"
                     options={{ title: "Settings", headerBackButtonDisplayMode: "minimal" }}
                   />
-                  <Stack.Screen
-                    name="filters"
-                    options={{
-                      presentation: "formSheet",
-                      sheetAllowedDetents: "fitToContents",
-                      sheetGrabberVisible: true,
-                      title: "Filters",
-                      contentStyle: {
-                        backgroundColor: colorScheme === "dark" ? "#141312" : "white",
-                      },
-                      sheetResizeAnimationEnabled: false,
-                      headerTitleStyle: {
-                        fontFamily: "Newsreader_400Regular",
-                      },
-                    }}
-                  />
                   <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="transaction/new"
-                    options={{
-                      presentation: "card",
-                      headerShown: false,
-                    }}
-                  />
                   <Stack.Screen
                     name="transaction/[id]"
                     options={{
-                      presentation: "modal",
-                      title: "Edit Transaction",
-                      headerShown: false,
+                      presentation: "card",
+                      headerBackButtonDisplayMode: "minimal",
                     }}
                   />
                   <Stack.Screen

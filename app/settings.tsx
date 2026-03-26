@@ -1,11 +1,18 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
-import { Text } from "@/components/ui/text";
-import Animated, { Easing, LinearTransition } from "react-native-reanimated";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useQueryClient } from "@tanstack/react-query";
 import { eq } from "drizzle-orm";
+import * as Updates from "expo-updates";
 
+import { AccountRow } from "@/components/settings/account-row";
+import { Card } from "@/components/settings/card";
+import { CategoryRow } from "@/components/settings/category-row";
+import { Divider } from "@/components/settings/divider";
+import { SectionHeader } from "@/components/settings/section-header";
+import { SettingsRow } from "@/components/settings/settings-row";
+import { Text } from "@/components/ui/text";
 import { useDatabase } from "@/db/client";
 import {
   accounts as accountsTable,
@@ -20,134 +27,15 @@ import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import { useRecurringPayments } from "@/hooks/use-recurring-payments";
 import { useTransactions } from "@/hooks/use-transactions";
-import { formatCents } from "@/utils/currency";
-import type { AccountWithBalance, Category } from "@/types";
-
-// ─── Sub-components ──────────────────────────────────────────────────────────
-
-function SectionHeader({ title }: { title: string }) {
-  return (
-    <Text className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-4 pt-6 pb-2">
-      {title}
-    </Text>
-  );
-}
-
-function Divider() {
-  return <View className="h-px bg-border ml-4" />;
-}
-
-function Card({ children }: { children: React.ReactNode }) {
-  return (
-    <View className="bg-card rounded-xl mx-4 overflow-hidden" style={{ borderCurve: "continuous" }}>
-      {children}
-    </View>
-  );
-}
-
-interface SettingsRowProps {
-  emoji: string;
-  label: string;
-  subtitle?: string;
-  onPress?: () => void;
-  rightLabel?: string;
-  noChevron?: boolean;
-}
-
-function SettingsRow({ emoji, label, subtitle, onPress, rightLabel, noChevron }: SettingsRowProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className="flex-row items-center px-4 py-3.5 gap-3 active:bg-accent"
-    >
-      <Text className="text-xl w-7 text-center">{emoji}</Text>
-      <View className="flex-1">
-        <Text className="text-base text-foreground">{label}</Text>
-        {subtitle ? (
-          <Text className="text-[13px] text-muted-foreground mt-0.5">{subtitle}</Text>
-        ) : null}
-      </View>
-      {rightLabel ? (
-        <Text
-          className="text-sm text-muted-foreground font-medium"
-          style={{ fontVariant: ["tabular-nums"] }}
-        >
-          {rightLabel}
-        </Text>
-      ) : null}
-      {!noChevron && <Text className="text-border text-lg">›</Text>}
-    </Pressable>
-  );
-}
-
-const ACCOUNT_EMOJI: Record<string, string> = {
-  checking: "💳",
-  savings: "🏦",
-  cash: "💵",
-  credit_card: "💳",
-  investment: "📈",
-  other: "🏧",
-};
-
-const ACCOUNT_LABEL: Record<string, string> = {
-  checking: "Checking",
-  savings: "Savings",
-  cash: "Cash",
-  credit_card: "Credit Card",
-  investment: "Investment",
-  other: "Other",
-};
-
-function AccountRow({ account }: { account: AccountWithBalance }) {
-  return (
-    <Pressable
-      onPress={() => router.push(`/account/${account.id}`)}
-      className="flex-row items-center px-4 py-3.5 gap-3 active:bg-accent"
-    >
-      <View
-        style={{ backgroundColor: `${account.color}20` }}
-        className="w-9 h-9 rounded-full items-center justify-center"
-      >
-        <Text className="text-base">{ACCOUNT_EMOJI[account.type] ?? "🏧"}</Text>
-      </View>
-      <View className="flex-1">
-        <Text className="text-base text-foreground">{account.name}</Text>
-        <Text className="text-[13px] text-muted-foreground mt-0.5">
-          {ACCOUNT_LABEL[account.type] ?? account.type} · {account.currency}
-        </Text>
-      </View>
-      <Text
-        className={`text-[15px] font-semibold ${account.balance < 0 ? "text-destructive" : "text-foreground"}`}
-        style={{ fontVariant: ["tabular-nums"] }}
-      >
-        {account.balance < 0 ? "-" : ""}
-        {formatCents(Math.abs(account.balance), account.currency)}
-      </Text>
-      <Text className="text-border text-lg ml-1">›</Text>
-    </Pressable>
-  );
-}
-
-function CategoryRow({ category }: { category: Category }) {
-  return (
-    <Pressable
-      onPress={() => router.push(`/category/${category.id}/edit`)}
-      className="flex-row items-center px-4 py-3 gap-3 active:bg-accent"
-    >
-      <View style={{ backgroundColor: category.color }} className="w-2.5 h-2.5 rounded-full" />
-      <Text className="flex-1 text-[15px] text-foreground">{category.name}</Text>
-      <Text className="text-border">›</Text>
-    </Pressable>
-  );
-}
-
-// ─── Screen ──────────────────────────────────────────────────────────────────
+import { Button } from "@/components/ui/button";
 
 export default function SettingsScreen() {
   const db = useDatabase();
   const qc = useQueryClient();
   const [erasing, setErasing] = useState(false);
   const [seeding, setSeeding] = useState(false);
+
+  const updates = Updates.useUpdates();
 
   const { data: accounts = [] } = useAccountsWithBalances();
   const { data: expenseCategories = [] } = useCategories("expense");
@@ -182,7 +70,7 @@ export default function SettingsScreen() {
               qc.invalidateQueries();
               router.replace("/onboarding");
             } catch {
-              Alert.alert("Error", "Failed to erase data. Please try again.");
+              Alert.alert("Error", "Failed to erase data — please try again.");
             } finally {
               setErasing(false);
             }
@@ -199,203 +87,189 @@ export default function SettingsScreen() {
       qc.invalidateQueries();
       Alert.alert("Done", "Seed data has been inserted.");
     } catch {
-      Alert.alert("Error", "Failed to seed data. Data may already exist.");
+      Alert.alert("Error", "Failed to seed data — data may already exist.");
     } finally {
       setSeeding(false);
     }
   }
 
-  // Net worth across all non-excluded accounts, by currency
-  const currencies = [...new Set(accounts.map((a) => a.currency))];
-  const hasMixedCurrencies = currencies.length > 1;
-
   return (
-    <View className="flex-1 bg-background">
-      <ScrollView className="flex-1 bg-background" contentContainerClassName="pb-12">
-        {/* Accounts */}
-        <SectionHeader title="Accounts 💳" />
-        <Animated.View
-          layout={LinearTransition.easing(Easing.ease)}
-          className="bg-card rounded-xl mx-4 overflow-hidden"
-          style={{ borderCurve: "continuous" }}
+    <ScrollView
+      className="flex-1 bg-surface"
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerClassName="pb-safe-offset-12"
+    >
+      {/* Accounts */}
+      <SectionHeader title="Accounts 💳" />
+      <Card animated>
+        {accounts.map((account, i) => (
+          <Animated.View key={account.id} entering={FadeIn} exiting={FadeOut}>
+            {i > 0 && <Divider />}
+            <AccountRow account={account} />
+          </Animated.View>
+        ))}
+        {accounts.length > 0 && <Divider />}
+        <SettingsRow
+          emoji="＋"
+          label="Add Account"
+          onPress={() => router.push("/account/new")}
+        />
+      </Card>
+
+      {/* Manage */}
+      <SectionHeader title="Manage 🛠️" />
+      <Card>
+        <SettingsRow
+          emoji="🏷️"
+          label="Categories"
+          subtitle={`${totalCategories} ${totalCategories === 1 ? "category" : "categories"}`}
+          onPress={() => router.push("/category/new")}
+        />
+        <Divider />
+        <SettingsRow
+          emoji="🔁"
+          label="Recurring Payments"
+          subtitle={`${activeRecurring} active`}
+          onPress={() => router.push("/recurring")}
+        />
+      </Card>
+
+      {/* Stats */}
+      <SectionHeader title="Stats 📊" />
+      <Card>
+        <SettingsRow
+          emoji="🧾"
+          label="Total Transactions"
+          rightLabel={String(allTransactions.length)}
+          noChevron
+        />
+        <Divider />
+        <SettingsRow
+          emoji="🏦"
+          label="Accounts"
+          rightLabel={String(accounts.length)}
+          noChevron
+        />
+        <Divider />
+        <SettingsRow
+          emoji="🔁"
+          label="Active Recurring"
+          rightLabel={String(activeRecurring)}
+          noChevron
+        />
+      </Card>
+
+      {/* Expense categories */}
+      <SectionHeader title="Expense Categories 💸" />
+      <Card animated>
+        {expenseCategories.map((cat, i) => (
+          <Animated.View key={cat.id} entering={FadeIn} exiting={FadeOut}>
+            {i > 0 && <Divider />}
+            <CategoryRow category={cat} />
+          </Animated.View>
+        ))}
+        {expenseCategories.length > 0 && <Divider />}
+        <SettingsRow
+          emoji="＋"
+          label="Add Expense Category"
+          onPress={() => router.push("/category/new")}
+        />
+      </Card>
+
+      {/* Income categories */}
+      <SectionHeader title="Income Categories 💰" />
+      <Card animated>
+        {incomeCategories.map((cat, i) => (
+          <Animated.View key={cat.id} entering={FadeIn} exiting={FadeOut}>
+            {i > 0 && <Divider />}
+            <CategoryRow category={cat} />
+          </Animated.View>
+        ))}
+        {incomeCategories.length > 0 && <Divider />}
+        <SettingsRow
+          emoji="＋"
+          label="Add Income Category"
+          onPress={() => router.push("/category/new")}
+        />
+      </Card>
+
+      {/* About */}
+      <SectionHeader title="About ℹ️" />
+      <Card>
+        <View className="items-center px-4 py-6 gap-1">
+          <Text className="text-4xl mb-2">💰</Text>
+          <Text className="font-heading-normal text-xl italic text-ink">
+            Money Manager
+          </Text>
+          <Text className="font-body-normal text-xs text-ink/40">
+            Track your finances, simply.
+          </Text>
+          <Text className="font-body-normal text-xs text-ink/20 mt-2">
+            Version 1.0.0
+          </Text>
+        </View>
+      </Card>
+
+      {/* Danger Zone */}
+      <SectionHeader title="Danger Zone ⚠️" />
+      <Card>
+        <Pressable
+          onPress={handleEraseAll}
+          disabled={erasing}
+          className="px-4 py-3.5 items-center active:bg-destructive/10"
         >
-          {accounts.map((account, i) => (
-            <View key={account.id}>
-              {i > 0 && <Divider />}
-              <AccountRow account={account} />
-            </View>
-          ))}
-          {accounts.length > 0 && <Divider />}
-          <SettingsRow emoji="＋" label="Add Account" onPress={() => router.push("/account/new")} />
-        </Animated.View>
+          <Text className="font-body-semibold text-base text-destructive">
+            {erasing ? "Erasing…" : "Erase All Data"}
+          </Text>
+          <Text className="font-body-normal text-xs text-ink/40 mt-0.5">
+            Permanently delete all accounts, categories, and transactions
+          </Text>
+        </Pressable>
+      </Card>
 
-        {/* Net worth summary */}
-        {accounts.length > 0 && (
-          <View
-            className="mx-4 mt-2 px-4 py-3 rounded-xl bg-muted"
-            style={{ borderCurve: "continuous" }}
-          >
-            <Text className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1">
-              💰 Net Worth (excl. excluded)
-            </Text>
-            {hasMixedCurrencies ? (
-              currencies.map((cur) => {
-                const total = accounts
-                  .filter((a) => !a.excludeFromTotal && a.currency === cur)
-                  .reduce((s, a) => s + a.balance, 0);
-                return (
-                  <Text
-                    key={cur}
-                    className="text-[15px] font-bold text-foreground"
-                    style={{ fontVariant: ["tabular-nums"] }}
-                  >
-                    {formatCents(total, cur)}
-                  </Text>
-                );
-              })
-            ) : (
-              <Text
-                className="text-[15px] font-bold text-foreground"
-                style={{ fontVariant: ["tabular-nums"] }}
-              >
-                {formatCents(
-                  accounts.filter((a) => !a.excludeFromTotal).reduce((s, a) => s + a.balance, 0),
-                  currencies[0] ?? "USD",
-                )}
-              </Text>
-            )}
-          </View>
-        )}
-
-        {/* Manage */}
-        <SectionHeader title="Manage 🛠️" />
-        <Card>
-          <SettingsRow
-            emoji="🏷️"
-            label="Categories"
-            subtitle={`${totalCategories} ${totalCategories === 1 ? "category" : "categories"}`}
-            onPress={() => router.push("/category/new")}
-          />
-          <Divider />
-          <SettingsRow
-            emoji="🔁"
-            label="Recurring Payments"
-            subtitle={`${activeRecurring} active`}
-            onPress={() => router.push("/recurring")}
-          />
-        </Card>
-
-        {/* Stats */}
-        <SectionHeader title="Stats 📊" />
-        <Card>
-          <SettingsRow
-            emoji="🧾"
-            label="Total Transactions"
-            rightLabel={String(allTransactions.length)}
-            noChevron
-          />
-          <Divider />
-          <SettingsRow emoji="🏦" label="Accounts" rightLabel={String(accounts.length)} noChevron />
-          <Divider />
-          <SettingsRow
-            emoji="🔁"
-            label="Active Recurring"
-            rightLabel={String(activeRecurring)}
-            noChevron
-          />
-        </Card>
-
-        {/* Expense categories */}
-        <SectionHeader title="Expense Categories 💸" />
-        <Animated.View
-          layout={LinearTransition.easing(Easing.ease)}
-          className="bg-card rounded-xl mx-4 overflow-hidden"
-          style={{ borderCurve: "continuous" }}
-        >
-          {expenseCategories.map((cat, i) => (
-            <View key={cat.id}>
-              {i > 0 && <Divider />}
-              <CategoryRow category={cat} />
-            </View>
-          ))}
-          {expenseCategories.length > 0 && <Divider />}
-          <SettingsRow
-            emoji="＋"
-            label="Add Expense Category"
-            onPress={() => router.push("/category/new")}
-          />
-        </Animated.View>
-
-        {/* Income categories */}
-        <SectionHeader title="Income Categories 💰" />
-        <Animated.View
-          layout={LinearTransition.easing(Easing.ease)}
-          className="bg-card rounded-xl mx-4 overflow-hidden"
-          style={{ borderCurve: "continuous" }}
-        >
-          {incomeCategories.map((cat, i) => (
-            <View key={cat.id}>
-              {i > 0 && <Divider />}
-              <CategoryRow category={cat} />
-            </View>
-          ))}
-          {incomeCategories.length > 0 && <Divider />}
-          <SettingsRow
-            emoji="＋"
-            label="Add Income Category"
-            onPress={() => router.push("/category/new")}
-          />
-        </Animated.View>
-
-        {/* About */}
-        <SectionHeader title="About ℹ️" />
-        <Card>
-          <View className="items-center px-4 py-5 gap-1">
-            <Text className="text-4xl mb-2">💰</Text>
-            <Text className="text-base font-semibold text-foreground">Money Manager</Text>
-            <Text className="text-[13px] text-muted-foreground">Track your finances, simply.</Text>
-            <Text className="text-[11px] text-muted-foreground/60 mt-2">Version 1.0.0</Text>
-          </View>
-        </Card>
-
-        {/* Danger Zone */}
-        <SectionHeader title="Danger Zone ⚠️" />
-        <Card>
-          <Pressable
-            onPress={handleEraseAll}
-            disabled={erasing}
-            className="px-4 py-3.5 items-center active:bg-destructive/10"
-          >
-            <Text className="text-[15px] font-semibold text-destructive">
-              {erasing ? "Erasing…" : "Erase All Data"}
-            </Text>
-            <Text className="text-[12px] text-muted-foreground mt-0.5">
-              Permanently delete all accounts, categories, and transactions
-            </Text>
-          </Pressable>
-        </Card>
-
-        {/* Dev Tools — only in development */}
-        {__DEV__ && (
+      {/* Dev Tools — only in development */}
+      {__DEV__ ||
+        (Updates.channel === "preview" && (
           <>
             <SectionHeader title="Dev Tools 🛠️" />
             <Card>
               <Pressable
                 onPress={handleSeed}
                 disabled={seeding}
-                className="px-4 py-3.5 items-center active:bg-accent"
+                className="px-4 py-3.5 items-center active:bg-surface-dim"
               >
-                <Text className="text-[15px] font-semibold text-brand">
+                <Text className="font-body-semibold text-base text-sage">
                   {seeding ? "Seeding…" : "Run Seed Data"}
                 </Text>
-                <Text className="text-[12px] text-muted-foreground mt-0.5">
+                <Text className="font-body-normal text-xs text-ink/40 mt-0.5">
                   Insert demo accounts, categories, and transactions
                 </Text>
               </Pressable>
+              <Text className="font-body-normal text-xs text-ink/40 mt-0.5">
+                Channel for build is (${Updates.channel})
+              </Text>
+
+              {updates.isUpdateAvailable && (
+                <View className="mt-4 px-4 py-3.5 bg-yellow-50 rounded">
+                  <Text className="font-body-semibold text-sm text-yellow-800">
+                    Update Available
+                  </Text>
+                  <Text className="font-body-normal text-xs text-yellow-700 mt-0.5">
+                    A new version of the app is available. Please update to the
+                    latest version for the best experience.
+                  </Text>
+                  <Button
+                    onPress={() => Updates.reloadAsync()}
+                    className="mt-3"
+                    size="sm"
+                  >
+                    <Text>Download</Text>
+                  </Button>
+                </View>
+              )}
             </Card>
           </>
-        )}
-      </ScrollView>
-    </View>
+        ))}
+    </ScrollView>
   );
 }

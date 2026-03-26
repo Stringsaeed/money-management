@@ -1,4 +1,3 @@
-import { useRouter } from "expo-router";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useForm } from "@tanstack/react-form";
@@ -15,7 +14,6 @@ import { AmountDisplay } from "./amount-display";
 import { BreadcrumbSegment } from "./breadcrumb-segment";
 import CategoryPicker from "./category-picker/category-picker";
 import { layoutTransition } from "./constants";
-import { FormHeader } from "./form-header";
 import { NoteInput } from "./note-input";
 import TransactionDatePicker from "./transaction-date-picker/transaction-date-picker";
 import type { FormValues, TransactionFormProps } from "./types";
@@ -23,8 +21,7 @@ import { getCurrencySymbol, getDateDisplayValue, triggerErrorHaptic } from "./ut
 
 export type { TransactionFormData } from "./types";
 
-export function TransactionForm({ initialData, onSubmit, onDelete }: TransactionFormProps) {
-  const router = useRouter();
+export function TransactionForm({ initialData, onSubmit, formRef }: TransactionFormProps) {
   const { data: accounts = [] } = useAccounts();
   const { data: categories = [] } = useCategories();
 
@@ -32,7 +29,6 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
   const firstAccountCurrency = accounts[0]?.currency ?? "USD";
 
   const numPad = useNumPadNumber((initialData?.amount ?? 0) / 100);
-  const isEditing = !!initialData?.amount;
 
   const form = useForm({
     defaultValues: {
@@ -74,19 +70,10 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
     },
   });
 
-  const handleBack = () => {
-    try {
-      if (router.canDismiss()) {
-        router.dismiss();
-      } else if (router.canGoBack()) {
-        router.back();
-      } else {
-        router.replace("/");
-      }
-    } catch (e) {
-      console.error("Navigation error:", e);
-    }
-  };
+  // Expose submit to parent via ref for native header integration
+  if (formRef) {
+    formRef.current = { submit: () => form.handleSubmit() };
+  }
 
   return (
     <View className="flex-1 bg-surface">
@@ -94,18 +81,6 @@ export function TransactionForm({ initialData, onSubmit, onDelete }: Transaction
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-        <form.Subscribe selector={(s) => s.isSubmitting}>
-          {(isSubmitting) => (
-            <FormHeader
-              onBack={handleBack}
-              onDelete={onDelete}
-              onSubmit={() => form.handleSubmit()}
-              saving={isSubmitting}
-              title={isEditing ? "Edit Entry" : "New Entry"}
-            />
-          )}
-        </form.Subscribe>
-
         {/* Breadcrumb: Account › Category › Date */}
         <View className="pt-2 pb-3">
           <ScrollView
