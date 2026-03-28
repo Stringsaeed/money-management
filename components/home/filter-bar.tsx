@@ -1,14 +1,11 @@
 import { ScrollView, View } from "react-native";
-import { XIcon } from "phosphor-react-native";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { formatCents } from "@/utils/currency";
 import { formatMonth } from "@/utils/date";
 import { cn } from "@/lib/utils";
 
+import { FilterChip } from "./filter-chip";
 import type { FilterBarProps } from "./types";
 
 export function FilterBar({
@@ -31,33 +28,19 @@ export function FilterBar({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingBottom: 10 }}
+        contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingBottom: 12 }}
       >
         {activeAccountName && (
-          <Badge>
-            <Text className="font-body-medium text-xs">{activeAccountName}</Text>
-            <Button onPress={() => setActiveAccountId(null)} variant="outline" size="icon">
-              <Icon as={XIcon} />
-            </Button>
-          </Badge>
+          <FilterChip label={activeAccountName} onRemove={() => setActiveAccountId(null)} />
         )}
         {selectedYear && selectedMonth && (
-          <Badge>
-            <Text className="font-body-medium text-xs">
-              {formatMonth(selectedYear, selectedMonth)}
-            </Text>
-            <Button onPress={() => setSelectedMonth(null, null)} variant="outline" size="icon">
-              <Icon as={XIcon} />
-            </Button>
-          </Badge>
+          <FilterChip
+            label={formatMonth(selectedYear, selectedMonth)}
+            onRemove={() => setSelectedMonth(null, null)}
+          />
         )}
         {selectedCategoryName && (
-          <Badge>
-            <Text className="font-body-medium text-xs">{selectedCategoryName}</Text>
-            <Button onPress={() => setSelectedCategoryId(null)} variant="outline" size="icon">
-              <Icon as={XIcon} />
-            </Button>
-          </Badge>
+          <FilterChip label={selectedCategoryName} onRemove={() => setSelectedCategoryId(null)} />
         )}
       </ScrollView>
 

@@ -1,6 +1,7 @@
 import { Redirect, Stack, useRouter } from "expo-router";
-import { useMemo } from "react";
-import { ActivityIndicator, Pressable, SectionList, View } from "react-native";
+import { useCallback, useMemo } from "react";
+import { ActivityIndicator, Pressable, View } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import type {
   NativeStackHeaderItem,
   NativeStackHeaderItemMenuAction,
@@ -8,14 +9,45 @@ import type {
 } from "@react-navigation/native-stack";
 
 import { EmptyState } from "@/components/common/empty-state";
-import { AccountsSection } from "@/components/home/accounts-section";
 import { BalanceHero } from "@/components/home/balance-hero";
 import { FilterBar } from "@/components/home/filter-bar";
 import { JournalHeader } from "@/components/home/journal-header";
-import { TransactionGroup } from "@/components/transaction/transaction-group";
+import { StatsCharts } from "@/components/settings/stats-charts";
+import { TransactionRow } from "@/components/transaction/transaction-row";
 import { Text } from "@/components/ui/text";
+import { useCategorySpending, useMonthlyTrend } from "@/hooks/use-chart-data";
 import { useHomeScreen } from "@/hooks/use-home-screen";
-import { formatHeaderDate, formatMonth, monthsBetween } from "@/utils/date";
+import { formatMonth, monthsBetween, formatDayHeader } from "@/utils/date";
+import { formatCents } from "@/utils/currency";
+import {
+  buildJournalList,
+  type JournalListItem,
+  type SectionHeaderItem,
+} from "@/utils/journal-list";
+
+// ── List item components ─────────────────────────────────────────────────────
+
+function DayHeader({ item }: { item: SectionHeaderItem }) {
+  const net = item.totalIncome - item.totalExpense;
+  return (
+    <View className="flex-row justify-between items-center px-5 py-2.5 bg-surface-container/50">
+      <Text className="font-body-semibold text-[11px] text-ink/50 uppercase tracking-tight">
+        {formatDayHeader(item.date)}
+      </Text>
+      {(item.totalIncome > 0 || item.totalExpense > 0) && (
+        <Text
+          className={`font-heading-normal text-[13px] ${net >= 0 ? "text-sage" : "text-terracotta"}`}
+          style={{ fontVariant: ["tabular-nums"] }}
+        >
+          {net >= 0 ? "+" : ""}
+          {formatCents(net, item.currency)}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+// ── Main screen ──────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -44,6 +76,50 @@ export default function HomeScreen() {
   const availableMonths = useMemo(
     () => monthsBetween(dateRange?.minDate, dateRange?.maxDate),
     [dateRange?.minDate, dateRange?.maxDate],
+  );
+
+  const flatTransactions = useMemo(() => groups.flatMap((g) => g.transactions), [groups]);
+  const categorySpending = useCategorySpending(flatTransactions);
+  const monthlyTrend = useMonthlyTrend(flatTransactions);
+
+  const filteredBalance = useMemo(() => {
+    if (activeFilterCount === 0) {
+      return accounts.reduce((sum, acc) => sum + acc.balance, 0);
+    }
+    let net = 0;
+    for (const g of groups) {
+      for (const t of g.transactions) {
+        if (t.type === "income") net += t.amount;
+        else if (t.type === "expense") net -= t.amount;
+      }
+    }
+    return net;
+  }, [activeFilterCount, accounts, groups]);
+
+  const showAccount = activeAccountId === null;
+  const items = useMemo(
+    () => buildJournalList(groups, currency, showAccount),
+    [groups, currency, showAccount],
+  );
+
+  const renderItem = useCallback(({ item }: { item: JournalListItem }) => {
+    if (item.type === "section-header") {
+      return <DayHeader item={item} />;
+    }
+    return (
+      <View>
+        <TransactionRow transaction={item.data} showAccount={item.showAccount} />
+        {!item.isLast && <View className="h-px bg-ledger-outline ml-16" />}
+      </View>
+    );
+  }, []);
+
+  const getItemType = useCallback((item: JournalListItem) => item.type, []);
+
+  const keyExtractor = useCallback(
+    (item: JournalListItem) =>
+      item.type === "section-header" ? `header-${item.date}` : `tx-${item.data.id}`,
+    [],
   );
 
   if (!loadingAccounts && accounts.length === 0) {
@@ -140,6 +216,46 @@ export default function HomeScreen() {
     });
   }
 
+  const headerLeftItems: NativeStackHeaderItem[] = [
+    {
+      label: "navigation",
+      type: "menu",
+      icon: {
+        type: "sfSymbol",
+        name: "line.3.horizontal",
+      },
+      menu: {
+        items: [
+          {
+            type: "action",
+            label: "Ledger",
+            icon: { type: "sfSymbol", name: "book" },
+            onPress: () => router.push("/ledger" as never),
+          },
+          {
+            type: "action",
+            label: "Envelopes",
+            icon: { type: "sfSymbol", name: "envelope" },
+            onPress: () => router.push("/envelopes" as never),
+          },
+          {
+            type: "action",
+            label: "Obligations — Coming Soon",
+            icon: { type: "sfSymbol", name: "scalemass" },
+            disabled: true,
+            onPress: () => {},
+          },
+          {
+            type: "action",
+            label: "Preferences",
+            icon: { type: "sfSymbol", name: "gearshape" },
+            onPress: () => router.push("/settings"),
+          },
+        ],
+      },
+    },
+  ];
+
   const headerRightItems: NativeStackHeaderItem[] = [
     {
       label: "filters",
@@ -160,22 +276,20 @@ export default function HomeScreen() {
       },
     },
     {
-      label: "settings",
+      label: "add entry",
       type: "button",
-      onPress: () => router.push("/settings"),
       icon: {
         type: "sfSymbol",
-        name: "gearshape",
+        name: "plus",
       },
+      onPress: () => router.push("/transaction/new"),
     },
   ];
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ── List header ────────────────────────────────────────────────────────────
 
   const ListHeader = (
-    <>
-      <BalanceHero accounts={accounts} />
-      <AccountsSection accounts={accounts} />
+    <View className="pt-safe-offset-20">
       <FilterBar
         activeAccountName={activeAccount?.name ?? null}
         selectedYear={selectedYear}
@@ -187,19 +301,19 @@ export default function HomeScreen() {
         setSelectedMonth={setSelectedMonth}
         setSelectedCategoryId={setSelectedCategoryId}
       />
+      <BalanceHero balanceCents={filteredBalance} currency={currency} />
+      <StatsCharts categorySpending={categorySpending} monthlyTrend={monthlyTrend} />
       <JournalHeader />
-    </>
+    </View>
   );
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <View className="flex-1 bg-background">
       <Stack.Screen
         options={{
-          headerTitle: () => (
-            <Text className="font-body-semibold text-[11px] text-ink/40 uppercase tracking-wider">
-              AS OF {formatHeaderDate()}
-            </Text>
-          ),
+          unstable_headerLeftItems: () => headerLeftItems,
           unstable_headerRightItems: () => headerRightItems,
         }}
       />
@@ -208,7 +322,7 @@ export default function HomeScreen() {
           {ListHeader}
           <ActivityIndicator className="mt-10" />
         </>
-      ) : groups.length === 0 ? (
+      ) : items.length === 0 ? (
         <>
           {ListHeader}
           <EmptyState
@@ -235,20 +349,13 @@ export default function HomeScreen() {
           />
         </>
       ) : (
-        <SectionList
-          sections={groups.map((g) => ({ title: g.date, data: [g] }))}
-          keyExtractor={(item) => item.date}
-          renderItem={({ item }) => (
-            <TransactionGroup
-              group={item}
-              currency={currency}
-              showAccount={activeAccountId === null}
-            />
-          )}
-          renderSectionHeader={() => null}
+        <FlashList
+          data={items}
+          renderItem={renderItem}
+          getItemType={getItemType}
+          keyExtractor={keyExtractor}
           ListHeaderComponent={ListHeader}
           contentContainerStyle={{ paddingBottom: 112 }}
-          stickySectionHeadersEnabled={false}
         />
       )}
     </View>
