@@ -1,10 +1,11 @@
 import { Activity, useState } from "react";
 import { View } from "react-native";
+import { ChartBarIcon, TrendUpIcon } from "phosphor-react-native";
 
+import { ToggleGroup, ToggleGroupIcon, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { CategorySpendingDatum, MonthlyTrendDatum } from "@/hooks/use-chart-data";
 
 import { CategorySpendingChart } from "./category-spending-chart";
-import { ChartTabButton } from "./chart-tab-button";
 import { TransactionTrendChart } from "./transaction-trend-chart";
 
 type ChartTab = "spending" | "trend";
@@ -18,24 +19,29 @@ export function StatsCharts({ categorySpending, monthlyTrend }: Props) {
   const [activeTab, setActiveTab] = useState<ChartTab>("spending");
 
   return (
-    <View>
+    <View className="mx-5 mt-4">
       {/* Tab Switcher */}
-      <View className="flex-row mx-5 mt-4 border border-ledger-outline overflow-hidden">
-        <ChartTabButton
-          label="Spending"
-          active={activeTab === "spending"}
-          onPress={() => setActiveTab("spending")}
-        />
-        <View className="w-px bg-ledger-outline" />
-        <ChartTabButton
-          label="Trend"
-          active={activeTab === "trend"}
-          onPress={() => setActiveTab("trend")}
-        />
+      <View className="absolute top-2 right-2 z-10">
+        <ToggleGroup
+          type="single"
+          className="bg-background "
+          value={activeTab}
+          onValueChange={(val) => {
+            if (val) setActiveTab(val as ChartTab);
+          }}
+          variant="outline"
+        >
+          <ToggleGroupItem value="spending" isFirst>
+            <ToggleGroupIcon as={ChartBarIcon} />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="trend" isLast>
+            <ToggleGroupIcon as={TrendUpIcon} />
+          </ToggleGroupItem>
+        </ToggleGroup>
       </View>
 
       {/* Chart */}
-      <View className="mx-5 mt-3">
+      <View>
         <Activity mode={activeTab === "spending" ? "visible" : "hidden"}>
           <CategorySpendingChart data={categorySpending} />
         </Activity>
