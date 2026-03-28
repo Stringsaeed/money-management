@@ -15,12 +15,11 @@
   "ignoreDependencies": [
     "expo-linear-gradient",
     "babel-plugin-inline-import",
-    "expo-updates",
     "tailwind-variants",
     "tailwindcss-animate",
     "@react-navigation/native-stack"
   ],
-  "ignore": ["hooks/use-color-scheme.web.ts"],
+  "ignore": ["hooks/use-color-scheme.web.ts", "components/ui/*.{ts,tsx}"],
   "expo": {
     "config": ["app.config.ts"],
     "entry": ["app/**/*.{ts,tsx}"]

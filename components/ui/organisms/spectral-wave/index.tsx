@@ -1,13 +1,13 @@
 // oxlint-disable eslint-plugin-react-hooks/exhaustive-deps
 // @ts-check
-import React, { useMemo, memo } from "react";
+import React, { memo } from "react";
 import { View, StyleSheet } from "react-native";
 import { Canvas, Fill, Skia, Shader, type Uniforms } from "@shopify/react-native-skia";
 import { useSharedValue, useFrameCallback, useDerivedValue } from "react-native-reanimated";
 import { SHADER_SOURCE } from "./const";
 import { DEFAULTS } from "./conf";
 import { colorToRGBA } from "./utils";
-import type { ISpectralWave, RGBA } from "./types";
+import type { ISpectralWave } from "./types";
 
 const shader = Skia.RuntimeEffect.Make(SHADER_SOURCE);
 
@@ -34,21 +34,12 @@ const SpectralWaveComponent: React.FC<ISpectralWave> = ({
   useFrameCallback(() => {
     tick.value += 0.016;
   });
-  const border = useMemo<RGBA>(() => colorToRGBA(borderColor), [borderColor]);
+  const border = colorToRGBA(borderColor);
 
   const useCustom = colors != null ? 1.0 : 0.0;
-  const c0 = useMemo<number[]>(
-    () => (colors ? colorToRGBA(colors[0]).slice(0, 3) : [0, 0, 0]),
-    [colors?.[0]],
-  );
-  const c1 = useMemo<number[]>(
-    () => (colors ? colorToRGBA(colors[1]).slice(0, 3) : [0, 0, 0]),
-    [colors?.[1]],
-  );
-  const c2 = useMemo<number[]>(
-    () => (colors ? colorToRGBA(colors[2]).slice(0, 3) : [0, 0, 0]),
-    [colors?.[2]],
-  );
+  const c0 = colors ? colorToRGBA(colors[0]).slice(0, 3) : [0, 0, 0];
+  const c1 = colors ? colorToRGBA(colors[1]).slice(0, 3) : [0, 0, 0];
+  const c2 = colors ? colorToRGBA(colors[2]).slice(0, 3) : [0, 0, 0];
 
   const uniforms = useDerivedValue<Uniforms>(() => ({
     uDimensions: [width, height],
