@@ -53,7 +53,7 @@ export function CategorySpendingChart({ data }: Props) {
   }));
 
   return (
-    <View className="h-52">
+    <View className="h-52 min-w-screen-mx-5">
       <CartesianChart
         data={chartData}
         xKey="x"
@@ -63,12 +63,11 @@ export function CategorySpendingChart({ data }: Props) {
           font: emojiFont,
           tickCount: chartData.length,
           formatXLabel: (value) => chartData[Math.round(value)]?.icon ?? "",
-          labelColor: colorMutedForeground,
         }}
         yAxis={[
           {
             font,
-            tickCount: 3,
+            tickCount: 5,
             formatYLabel: (v) => {
               const value = v as number;
               return value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(Math.round(value));
@@ -84,7 +83,7 @@ export function CategorySpendingChart({ data }: Props) {
             barCount={points.amount.length}
             chartBounds={chartBounds}
             roundedCorners={{ topLeft: 5, topRight: 5 }}
-            innerPadding={0.3}
+            innerPadding={0.4}
             animate={{ type: "spring", duration: 500 }}
           >
             <LinearGradient

@@ -40,15 +40,12 @@ export function StatsCharts({ categorySpending, monthlyTrend }: Props) {
         </ToggleGroup>
       </View>
 
-      {/* Chart */}
-      <View>
-        <Activity mode={activeTab === "spending" ? "visible" : "hidden"}>
-          <CategorySpendingChart data={categorySpending} />
-        </Activity>
-        <Activity mode={activeTab === "trend" ? "visible" : "hidden"}>
-          <TransactionTrendChart data={monthlyTrend} />
-        </Activity>
-      </View>
+      <Activity mode={activeTab === "spending" ? "visible" : "hidden"}>
+        <CategorySpendingChart data={categorySpending} />
+      </Activity>
+      <Activity mode={activeTab === "trend" ? "visible" : "hidden"}>
+        <TransactionTrendChart data={monthlyTrend} />
+      </Activity>
     </View>
   );
 }

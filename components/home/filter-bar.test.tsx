@@ -27,8 +27,6 @@ describe("FilterBar", () => {
         selectedYear={2026}
         selectedMonth={3}
         selectedCategoryName="Food"
-        summary={{ totalIncome: 100_00, totalExpense: 40_00, netAmount: 60_00 }}
-        currency="USD"
         setActiveAccountId={setActiveAccountId}
         setSelectedMonth={setSelectedMonth}
         setSelectedCategoryId={setSelectedCategoryId}
@@ -39,9 +37,6 @@ describe("FilterBar", () => {
     fireEvent.press(screen.getByText("March 2026"));
     fireEvent.press(screen.getByText("Food"));
 
-    expect(screen.getByText("+$100.00")).toBeOnTheScreen();
-    expect(screen.getByText("-$40.00")).toBeOnTheScreen();
-    expect(screen.getByText("+$60.00")).toBeOnTheScreen();
     expect(setActiveAccountId).toHaveBeenCalledWith(null);
     expect(setSelectedMonth).toHaveBeenCalledWith(null, null);
     expect(setSelectedCategoryId).toHaveBeenCalledWith(null);
@@ -54,8 +49,6 @@ describe("FilterBar", () => {
         selectedYear={null}
         selectedMonth={null}
         selectedCategoryName={null}
-        summary={undefined}
-        currency="USD"
         setActiveAccountId={jest.fn()}
         setSelectedMonth={jest.fn()}
         setSelectedCategoryId={jest.fn()}

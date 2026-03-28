@@ -14,8 +14,6 @@ export interface FilterBarProps {
   selectedYear: number | null;
   selectedMonth: number | null;
   selectedCategoryName: string | null;
-  summary: { totalIncome: number; totalExpense: number; netAmount: number } | undefined;
-  currency: string;
   setActiveAccountId: (id: string | null) => void;
   setSelectedMonth: (year: number | null, month: number | null) => void;
   setSelectedCategoryId: (id: string | null) => void;
@@ -37,7 +35,6 @@ export interface HomeListHeaderProps {
   selectedYear: number | null;
   selectedMonth: number | null;
   selectedCategoryName: string | null;
-  summary: { totalIncome: number; totalExpense: number; netAmount: number } | undefined;
   currency: string;
   filteredBalance: number;
   categorySpending: CategorySpendingDatum[];

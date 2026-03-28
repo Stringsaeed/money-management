@@ -1,20 +1,18 @@
-import { Redirect, Stack, useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 
 import { HomeEmptyState } from "@/components/home/home-empty-state";
 import { HomeJournalList } from "@/components/home/home-journal-list";
-import { HomeListHeader } from "@/components/home/home-list-header";
-import { useHomeInsights } from "@/hooks/use-home-insights";
+import { LedgerListHeader } from "@/components/ledger/ledger-list-header";
 import { useHomeScreen } from "@/hooks/use-home-screen";
-import { buildHomeHeaderItems } from "@/utils/home-header-items";
+import { buildLedgerHeaderItems } from "@/utils/ledger-header-items";
 
-export default function HomeScreen() {
+export default function LedgerScreen() {
   const router = useRouter();
   const {
     accounts,
     allCategories,
     dateRange,
-    loadingAccounts,
     loadingTx,
     groups,
     currency,
@@ -29,17 +27,11 @@ export default function HomeScreen() {
     setActiveAccountId,
     setSelectedCategoryId,
     resetFilters,
-  } = useHomeScreen({ limit: 10 });
-
-  const { filteredBalance, categorySpending, monthlyTrend } = useHomeInsights({
-    accounts,
-    groups,
-    activeFilterCount,
-  });
+  } = useHomeScreen();
 
   const showAccount = activeAccountId === null;
 
-  const { headerLeftItems, headerRightItems } = buildHomeHeaderItems({
+  const { headerRightItems } = buildLedgerHeaderItems({
     router,
     accounts,
     allCategories,
@@ -55,20 +47,12 @@ export default function HomeScreen() {
     resetFilters,
   });
 
-  if (!loadingAccounts && accounts.length === 0) {
-    return <Redirect href="/onboarding" />;
-  }
-
   const listHeader = (
-    <HomeListHeader
+    <LedgerListHeader
       activeAccountName={activeAccount?.name ?? null}
       selectedYear={selectedYear}
       selectedMonth={selectedMonth}
       selectedCategoryName={activeCategory?.name ?? null}
-      currency={currency}
-      filteredBalance={filteredBalance}
-      categorySpending={categorySpending}
-      monthlyTrend={monthlyTrend}
       setActiveAccountId={setActiveAccountId}
       setSelectedMonth={setSelectedMonth}
       setSelectedCategoryId={setSelectedCategoryId}
@@ -79,7 +63,8 @@ export default function HomeScreen() {
     <View className="flex-1 bg-background">
       <Stack.Screen
         options={{
-          unstable_headerLeftItems: () => headerLeftItems,
+          title: "Ledger",
+          headerBackButtonDisplayMode: "minimal",
           unstable_headerRightItems: () => headerRightItems,
         }}
       />

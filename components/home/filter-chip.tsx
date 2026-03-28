@@ -12,14 +12,11 @@ export function FilterChip({ label, onRemove }: { label: string; onRemove: () =>
 
   useLayoutEffect(() => {
     if (targetRef.current) {
-      targetRef.current.measure((x, y, width, height) => {
-        if (width === viewMeasurements.width && height === viewMeasurements.height) {
-          return;
-        }
+      targetRef.current.measure((_, __, width, height) => {
         setViewMeasurements({ width, height });
       });
     }
-  }, [viewMeasurements]);
+  }, []);
 
   return (
     <SpectralWave

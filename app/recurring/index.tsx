@@ -29,7 +29,7 @@ export default function RecurringListScreen() {
   const colors = colorScheme === "dark" ? Colors.dark : Colors.light;
 
   return (
-    <View className="flex-1 bg-background">
+    <View className="flex-1 bg-background pt-safe-offset-20">
       {isLoading ? (
         <ActivityIndicator className="mt-10" />
       ) : recurring.length === 0 ? (

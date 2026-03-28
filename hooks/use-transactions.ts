@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { aliasedTable, and, desc, eq, gte, lte, sql } from "drizzle-orm";
 
 import { useDatabase } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
@@ -7,6 +7,8 @@ import { generateId } from "@/utils/id";
 import { nowIso, monthBounds, toDateString } from "@/utils/date";
 import type { Transaction, TransactionWithDetails } from "@/types";
 import { isDate } from "date-fns";
+
+const toAccounts = aliasedTable(accounts, "to_accounts");
 
 // ── Query keys ────────────────────────────────────────────────────────────────
 
@@ -21,52 +23,100 @@ interface TransactionFilters {
   year?: number;
   month?: number; // 1-indexed
   accountId?: string | null;
+  categoryId?: string | null;
   type?: Transaction["type"];
+  limit?: number;
 }
 
-// ── Helper: enrich transactions with account/category names ───────────────────
+// ── Helper: selected columns for joined query ────────────────────────────────
 
-async function enrichTransactions(
-  db: ReturnType<typeof import("@/db/client").useDatabase>,
-  rows: Transaction[],
-): Promise<TransactionWithDetails[]> {
-  if (rows.length === 0) return [];
+const enrichedSelect = {
+  // Transaction columns
+  id: transactions.id,
+  type: transactions.type,
+  amount: transactions.amount,
+  currency: transactions.currency,
+  originalAmount: transactions.originalAmount,
+  originalCurrency: transactions.originalCurrency,
+  exchangeRate: transactions.exchangeRate,
+  date: transactions.date,
+  accountId: transactions.accountId,
+  toAccountId: transactions.toAccountId,
+  categoryId: transactions.categoryId,
+  recurringPaymentId: transactions.recurringPaymentId,
+  description: transactions.description,
+  createdAt: transactions.createdAt,
+  updatedAt: transactions.updatedAt,
+  // Account columns
+  accountName: accounts.name,
+  accountColor: accounts.color,
+  accountIcon: accounts.icon,
+  accountCurrency: accounts.currency,
+  // ToAccount columns
+  toAccountName: toAccounts.name,
+  toAccountColor: toAccounts.color,
+  toAccountIcon: toAccounts.icon,
+  toAccountCurrency: toAccounts.currency,
+  // Category columns
+  categoryName: categories.name,
+  categoryColor: categories.color,
+  categoryIcon: categories.icon,
+};
 
-  // Fetch all accounts and categories in two queries (faster than per-row joins)
-  const allAccounts = await db.select().from(accounts).all();
-  const allCategories = await db.select().from(categories).all();
+type EnrichedRow = Record<keyof typeof enrichedSelect, string | number | null>;
 
-  const accountMap = new Map(allAccounts.map((a) => [a.id, a]));
-  const categoryMap = new Map(allCategories.map((c) => [c.id, c]));
-
-  return rows.map((t) => {
-    const acc = accountMap.get(t.accountId);
-    const toAcc = t.toAccountId ? accountMap.get(t.toAccountId) : undefined;
-    const cat = t.categoryId ? categoryMap.get(t.categoryId) : undefined;
-
-    return {
-      ...t,
-      account: acc
-        ? { id: acc.id, name: acc.name, color: acc.color, icon: acc.icon, currency: acc.currency }
-        : {
-            id: t.accountId,
-            name: "Unknown",
-            color: "#ccc",
-            icon: "banknote.fill",
-            currency: "USD",
-          },
-      toAccount: toAcc
+function mapRowToTransaction(row: EnrichedRow): TransactionWithDetails {
+  return {
+    id: row.id as string,
+    type: row.type as Transaction["type"],
+    amount: row.amount as number,
+    currency: row.currency as string,
+    originalAmount: row.originalAmount as number | null,
+    originalCurrency: row.originalCurrency as string | null,
+    exchangeRate: row.exchangeRate as number | null,
+    date: row.date as string,
+    accountId: row.accountId as string,
+    toAccountId: row.toAccountId as string | null,
+    categoryId: row.categoryId as string | null,
+    recurringPaymentId: row.recurringPaymentId as string | null,
+    description: row.description as string,
+    createdAt: row.createdAt as string,
+    updatedAt: row.updatedAt as string,
+    account: row.accountName
+      ? {
+          id: row.accountId as string,
+          name: row.accountName as string,
+          color: row.accountColor as string,
+          icon: row.accountIcon as string,
+          currency: row.accountCurrency as string,
+        }
+      : {
+          id: row.accountId as string,
+          name: "Unknown",
+          color: "#ccc",
+          icon: "banknote.fill",
+          currency: "USD",
+        },
+    toAccount:
+      row.toAccountId && row.toAccountName
         ? {
-            id: toAcc.id,
-            name: toAcc.name,
-            color: toAcc.color,
-            icon: toAcc.icon,
-            currency: toAcc.currency,
+            id: row.toAccountId as string,
+            name: row.toAccountName as string,
+            color: row.toAccountColor as string,
+            icon: row.toAccountIcon as string,
+            currency: row.toAccountCurrency as string,
           }
         : null,
-      category: cat ? { id: cat.id, name: cat.name, color: cat.color, icon: cat.icon } : null,
-    };
-  });
+    category:
+      row.categoryId && row.categoryName
+        ? {
+            id: row.categoryId as string,
+            name: row.categoryName as string,
+            color: row.categoryColor as string,
+            icon: row.categoryIcon as string,
+          }
+        : null,
+  };
 }
 
 // ── Queries ────────────────────────────────────────────────────────────────────
@@ -88,18 +138,28 @@ export function useTransactions(filters: TransactionFilters) {
           sql`(${transactions.accountId} = ${filters.accountId} OR ${transactions.toAccountId} = ${filters.accountId})`,
         );
       }
+      if (filters.categoryId) {
+        conditions.push(eq(transactions.categoryId, filters.categoryId));
+      }
       if (filters.type) {
         conditions.push(eq(transactions.type, filters.type));
       }
 
-      const rows = (await db
-        .select()
+      let query = db
+        .select(enrichedSelect)
         .from(transactions)
+        .leftJoin(accounts, eq(transactions.accountId, accounts.id))
+        .leftJoin(toAccounts, eq(transactions.toAccountId, toAccounts.id))
+        .leftJoin(categories, eq(transactions.categoryId, categories.id))
         .where(conditions.length ? and(...conditions) : undefined)
-        .orderBy(desc(transactions.date), desc(transactions.createdAt))
-        .all()) as Transaction[];
+        .orderBy(desc(transactions.date), desc(transactions.createdAt));
 
-      return enrichTransactions(db, rows);
+      if (filters.limit) {
+        query = query.limit(filters.limit) as typeof query;
+      }
+
+      const rows = await query.all();
+      return (rows as unknown as EnrichedRow[]).map(mapRowToTransaction);
     },
   });
 }
@@ -109,13 +169,17 @@ export function useTransaction(id: string | undefined) {
   return useQuery({
     queryKey: transactionKeys.detail(id ?? ""),
     queryFn: async (): Promise<TransactionWithDetails | undefined> => {
-      const row = (await db.select().from(transactions).where(eq(transactions.id, id!)).get()) as
-        | Transaction
-        | undefined;
+      const row = await db
+        .select(enrichedSelect)
+        .from(transactions)
+        .leftJoin(accounts, eq(transactions.accountId, accounts.id))
+        .leftJoin(toAccounts, eq(transactions.toAccountId, toAccounts.id))
+        .leftJoin(categories, eq(transactions.categoryId, categories.id))
+        .where(eq(transactions.id, id!))
+        .get();
 
       if (!row) return undefined;
-      const enriched = await enrichTransactions(db, [row]);
-      return enriched[0];
+      return mapRowToTransaction(row as unknown as EnrichedRow);
     },
     enabled: !!id,
   });

@@ -1,25 +1,17 @@
 import { View } from "react-native";
 
-import { StatsCharts } from "@/components/settings/stats-charts";
+import { FilterBar } from "@/components/home/filter-bar";
+import type { FilterBarProps } from "@/components/home/types";
 
-import { BalanceHero } from "./balance-hero";
-import { FilterBar } from "./filter-bar";
-import { JournalHeader } from "./journal-header";
-import type { HomeListHeaderProps } from "./types";
-
-export function HomeListHeader({
+export function LedgerListHeader({
   activeAccountName,
   selectedYear,
   selectedMonth,
   selectedCategoryName,
-  currency,
-  filteredBalance,
-  categorySpending,
-  monthlyTrend,
   setActiveAccountId,
   setSelectedMonth,
   setSelectedCategoryId,
-}: HomeListHeaderProps) {
+}: FilterBarProps) {
   return (
     <View className="pt-safe-offset-20">
       <FilterBar
@@ -31,9 +23,6 @@ export function HomeListHeader({
         setSelectedMonth={setSelectedMonth}
         setSelectedCategoryId={setSelectedCategoryId}
       />
-      <BalanceHero balanceCents={filteredBalance} currency={currency} />
-      <StatsCharts categorySpending={categorySpending} monthlyTrend={monthlyTrend} />
-      <JournalHeader />
     </View>
   );
 }
