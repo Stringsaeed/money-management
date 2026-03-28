@@ -1,0 +1,242 @@
+import { Alert } from "react-native";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+import SettingsScreen from "@/app/settings";
+
+const mockReplace = jest.fn();
+const mockPush = jest.fn();
+const mockInvalidateQueries = jest.fn();
+const mockUseDatabase = jest.fn();
+const deleteBuilder = { where: jest.fn().mockResolvedValue(undefined) };
+const updateBuilder = {
+  set: jest.fn().mockReturnThis(),
+  where: jest.fn().mockResolvedValue(undefined),
+};
+const mockAccounts = [
+  {
+    id: "account-1",
+    name: "Wallet",
+    type: "checking",
+    currency: "USD",
+    color: "#8B9D83",
+    icon: "banknote.fill",
+    initialBalance: 100_00,
+    balance: 250_00,
+    excludeFromTotal: false,
+    sortOrder: 0,
+    createdAt: "2026-03-28T10:00:00.000Z",
+    updatedAt: "2026-03-28T10:00:00.000Z",
+  },
+];
+const mockExpenseCategories = [
+  {
+    id: "expense-1",
+    name: "Food",
+    type: "expense",
+    color: "#B48A7B",
+    icon: "🛒",
+    parentId: null,
+    sortOrder: 0,
+    createdAt: "2026-03-28T10:00:00.000Z",
+    updatedAt: "2026-03-28T10:00:00.000Z",
+  },
+];
+const mockIncomeCategories = [
+  {
+    id: "income-1",
+    name: "Salary",
+    type: "income",
+    color: "#8B9D83",
+    icon: "💼",
+    parentId: null,
+    sortOrder: 0,
+    createdAt: "2026-03-28T10:00:00.000Z",
+    updatedAt: "2026-03-28T10:00:00.000Z",
+  },
+];
+const mockRecurring = [
+  {
+    id: "recurring-1",
+    name: "Rent",
+    type: "expense",
+    amount: 1200_00,
+    currency: "USD",
+    accountId: "account-1",
+    toAccountId: null,
+    categoryId: "expense-1",
+    description: "Monthly rent",
+    interval: "monthly",
+    dayOfMonth: 1,
+    dayOfWeek: null,
+    monthOfYear: null,
+    startDate: "2026-01-01",
+    endDate: null,
+    lastGeneratedDate: null,
+    isActive: true,
+    createdAt: "2026-03-28T10:00:00.000Z",
+    updatedAt: "2026-03-28T10:00:00.000Z",
+  },
+];
+const mockTransactions = [
+  {
+    id: "transaction-1",
+    type: "expense",
+    amount: 45_00,
+    currency: "USD",
+    originalAmount: null,
+    originalCurrency: null,
+    exchangeRate: null,
+    date: "2026-03-28",
+    accountId: "account-1",
+    toAccountId: null,
+    categoryId: "expense-1",
+    description: "Coffee",
+    recurringPaymentId: null,
+    createdAt: "2026-03-28T10:00:00.000Z",
+    updatedAt: "2026-03-28T10:00:00.000Z",
+    account: {
+      id: "account-1",
+      name: "Wallet",
+      color: "#8B9D83",
+      icon: "banknote.fill",
+      currency: "USD",
+    },
+    toAccount: null,
+    category: {
+      id: "expense-1",
+      name: "Food",
+      color: "#B48A7B",
+      icon: "🛒",
+    },
+  },
+];
+
+jest.mock("expo-router", () => ({
+  router: {
+    replace: (...args: unknown[]) => mockReplace(...args),
+    push: (...args: unknown[]) => mockPush(...args),
+  },
+}));
+
+jest.mock("@tanstack/react-query", () => {
+  const actual = jest.requireActual("@tanstack/react-query");
+
+  return {
+    ...actual,
+    useQueryClient: () => ({
+      invalidateQueries: (...args: unknown[]) => mockInvalidateQueries(...args),
+    }),
+  };
+});
+
+jest.mock("@/db/client", () => ({
+  useDatabase: () => mockUseDatabase(),
+}));
+
+jest.mock("expo-updates", () => ({
+  channel: "preview",
+}));
+
+jest.mock("@/hooks/use-accounts", () => ({
+  useAccountsWithBalances: () => ({
+    data: mockAccounts,
+  }),
+}));
+
+jest.mock("@/hooks/use-categories", () => ({
+  useCategories: (type?: "income" | "expense") => ({
+    data: type === "income" ? mockIncomeCategories : mockExpenseCategories,
+  }),
+}));
+
+jest.mock("@/hooks/use-recurring-payments", () => ({
+  useRecurringPayments: () => ({
+    data: mockRecurring,
+  }),
+}));
+
+jest.mock("@/hooks/use-transactions", () => ({
+  useTransactions: () => ({
+    data: mockTransactions,
+  }),
+}));
+
+jest.mock("@/components/settings/account-row", () => ({
+  AccountRow: ({ account }: { account: { name: string } }) => {
+    const React = require("react");
+    const { Text } = require("react-native");
+
+    return React.createElement(Text, null, `account:${account.name}`);
+  },
+}));
+
+jest.mock("@/components/settings/category-row", () => ({
+  CategoryRow: ({ category }: { category: { name: string } }) => {
+    const React = require("react");
+    const { Text } = require("react-native");
+
+    return React.createElement(Text, null, `category:${category.name}`);
+  },
+}));
+
+jest.mock("@/components/settings/dev-tools-section", () => ({
+  DevToolsSection: () => {
+    const React = require("react");
+    const { Text } = require("react-native");
+
+    return React.createElement(Text, null, "dev-tools");
+  },
+}));
+
+describe("app/settings", () => {
+  const client = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+
+  beforeEach(() => {
+    mockUseDatabase.mockReturnValue({
+      delete: jest.fn(() => deleteBuilder),
+      update: jest.fn(() => updateBuilder),
+    });
+  });
+
+  it("renders settings content and dev tools", () => {
+    render(
+      <QueryClientProvider client={client}>
+        <SettingsScreen />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText("Accounts 💳")).toBeOnTheScreen();
+    expect(screen.getByText("account:Wallet")).toBeOnTheScreen();
+    expect(screen.getByText("category:Food")).toBeOnTheScreen();
+    expect(screen.getByText("category:Salary")).toBeOnTheScreen();
+    expect(screen.getByText("dev-tools")).toBeOnTheScreen();
+  });
+
+  it("erases data after destructive confirmation", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+
+    render(
+      <QueryClientProvider client={client}>
+        <SettingsScreen />
+      </QueryClientProvider>,
+    );
+
+    fireEvent.press(screen.getByText("Erase All Data"));
+
+    const destructiveAction = alertSpy.mock.calls[0]?.[2]?.[1];
+    await act(async () => {
+      await destructiveAction?.onPress?.();
+    });
+
+    await waitFor(() => {
+      expect(mockInvalidateQueries).toHaveBeenCalled();
+    });
+
+    expect(mockReplace).toHaveBeenCalledWith("/onboarding");
+  });
+});

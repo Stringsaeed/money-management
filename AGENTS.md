@@ -18,8 +18,8 @@
 - Lint with `yarn lint` (oxlint) but always finish work by running `yarn lint:fix` followed by `yarn format` (oxfmt).
 - Formatting check only: `yarn format:check` if you need CI parity without rewriting files.
 - There is no dedicated build step; Expo bundler handles builds per platform when invoking the platform-specific start scripts.
-- Tests are not configured yet; document manual QA in PR descriptions and focus on lint + runtime smoke tests.
-- Single-test workflow: once a Jest/Vitest runner exists, prefer `yarn test path/to/file.test.tsx`; until then state "no automated tests" in reports.
+- Jest + React Native Testing Library are configured. Keep the suite green and use `yarn test:ci` as the pre-merge gate.
+- Single-test workflow: prefer `yarn test path/to/file.test.tsx` or `yarn jest path/to/file.test.tsx --runInBand` when isolating a failing case.
 - Use `yarn dlx expo-doctor` or `npx expo install` only if health checks demand it—otherwise keep dependencies stable.
 - Shell access: prefer specialized helpers (Read/Glob/Grep) for file IO; reserve Bash for git, yarn, or runtime commands.
 - Never invoke destructive git commands (`reset --hard`, `checkout --`) without the user's explicit order.
@@ -34,7 +34,7 @@
 - Avoid questions like "Should I proceed?"; instead pick the safest default, act, and mention the assumption afterward.
 - Keep commands succinct and never stream large logs; summarize key lines for the user.
 - When referencing files to the user, wrap the repository-relative path in backticks so the CLI can hyperlink it.
-- Tests are absent, but still mention manual QA, simulator smoke checks, or component stories when relevant.
+- Tests are configured; still mention manual QA, simulator smoke checks, or component stories when relevant after UI changes.
 - Emojis are encouraged in UI copy, labels, and decorative elements to reinforce the modern minimal design language; keep non-UI files (configs, scripts) ASCII-only.
 - Respect user-owned dirty changes; do not format unrelated files even if the formatter would touch them.
 
@@ -154,9 +154,8 @@ When creating picker components (account, category, date, etc.), follow this est
 
 ## Testing & QA
 
-- Automated tests are not set up yet; communicate this fact in your final response whenever testing is requested.
-- Until Jest/Vitest exists, rely on manual QA: run `yarn ios` or `yarn android` where feasible, or `yarn web` for quick smoke checks.
-- If you add a test runner, document its usage in this file and in `package.json` scripts for others.
+- Automated tests are set up with Jest + React Native Testing Library. Use `yarn test:ci` for CI parity and pre-merge verification.
+- Prefer automated coverage first, then manual QA with `yarn ios`, `yarn android`, or `yarn web` when UI behavior changes.
 - When adding tests later, prefer colocated `*.test.tsx` or `*.spec.ts` files near the unit under test.
 - Snapshot tests should target stable UI (icons, large layout) and live under a `__snapshots__` directory ignored by Metro.
 - Keep Detox/E2E scripts separate from Expo start scripts to avoid simulator conflicts.
