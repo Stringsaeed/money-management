@@ -1,7 +1,8 @@
 import type { AccountWithBalance } from "@/types";
 
 export interface BalanceHeroProps {
-  accounts: AccountWithBalance[];
+  balanceCents: number;
+  currency: string;
 }
 
 export interface AccountsSectionProps {

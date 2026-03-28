@@ -1,0 +1,100 @@
+import { LinearGradient, useFont, vec, matchFont } from "@shopify/react-native-skia";
+import { View } from "react-native";
+import { CartesianChart, Bar } from "victory-native";
+
+import { Text } from "@/components/ui/text";
+import type { CategorySpendingDatum } from "@/hooks/use-chart-data";
+import { useNativeVariable } from "react-native-css";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const fontFile = require("@expo-google-fonts/plus-jakarta-sans/400Regular/PlusJakartaSans_400Regular.ttf");
+
+interface BarDatum {
+  x: number;
+  amount: number;
+  label: string;
+  color: string;
+  icon: string;
+  [key: string]: unknown;
+}
+
+interface Props {
+  data: CategorySpendingDatum[];
+}
+
+const emojiFont = matchFont({
+  fontSize: 12,
+  fontFamily: "Apple Color Emoji",
+  fontStyle: "normal",
+  fontWeight: "400",
+});
+
+export function CategorySpendingChart({ data }: Props) {
+  const font = useFont(fontFile, 10);
+  // @ts-expect-error - This is an unstable API and may change in the future
+  const colorInk = useNativeVariable("--color-ink");
+  // @ts-expect-error - This is an unstable API and may change in the future
+  const colorMutedForeground = useNativeVariable("--color-muted-foreground");
+
+  if (data.length === 0) {
+    return (
+      <View className="h-52 items-center justify-center">
+        <Text className="font-body-normal text-sm text-ink/40">No expense data yet</Text>
+      </View>
+    );
+  }
+
+  const chartData: BarDatum[] = data.map((d, i) => ({
+    x: i,
+    amount: d.amount / 100,
+    label: d.category,
+    color: d.color,
+    icon: d.icon,
+  }));
+
+  return (
+    <View className="h-52">
+      <CartesianChart
+        data={chartData}
+        xKey="x"
+        yKeys={["amount"]}
+        domainPadding={{ left: 24, right: 24, top: 16 }}
+        xAxis={{
+          font: emojiFont,
+          tickCount: chartData.length,
+          formatXLabel: (value) => chartData[Math.round(value)]?.icon ?? "",
+          labelColor: colorMutedForeground,
+        }}
+        yAxis={[
+          {
+            font,
+            tickCount: 3,
+            formatYLabel: (v) => {
+              const value = v as number;
+              return value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(Math.round(value));
+            },
+            labelColor: colorMutedForeground,
+          },
+        ]}
+      >
+        {({ points, chartBounds }) => (
+          <Bar
+            labels={{ position: "top", font }}
+            points={points.amount}
+            barCount={points.amount.length}
+            chartBounds={chartBounds}
+            roundedCorners={{ topLeft: 5, topRight: 5 }}
+            innerPadding={0.3}
+            animate={{ type: "spring", duration: 500 }}
+          >
+            <LinearGradient
+              start={vec(0, chartBounds.top)}
+              end={vec(0, chartBounds.bottom)}
+              colors={[colorInk, colorInk + "30"]}
+            />
+          </Bar>
+        )}
+      </CartesianChart>
+    </View>
+  );
+}

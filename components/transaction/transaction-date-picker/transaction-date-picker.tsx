@@ -32,8 +32,6 @@ export default function TransactionDatePicker({
   };
 
   const onOpen = () => {
-    console.log("On Open");
-
     ref.current?.present();
   };
 
