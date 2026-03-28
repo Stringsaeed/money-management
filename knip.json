@@ -19,7 +19,13 @@
     "tailwindcss-animate",
     "@react-navigation/native-stack"
   ],
-  "ignore": ["hooks/use-color-scheme.web.ts", "components/ui/*.{ts,tsx}"],
+  "ignore": [
+    "hooks/use-color-scheme.web.ts",
+    "components/ui/*.{ts,tsx}",
+    "*.test.{ts,tsx}",
+    "jest/**/*.{ts,tsx,js}",
+    "__tests__/**/*.{ts,tsx,js}"
+  ],
   "expo": {
     "config": ["app.config.ts"],
     "entry": ["app/**/*.{ts,tsx}"]

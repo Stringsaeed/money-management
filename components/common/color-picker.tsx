@@ -14,6 +14,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
         <Pressable
           key={c}
           onPress={() => onChange(c)}
+          accessibilityRole="button"
           style={{ backgroundColor: c }}
           className={
             value === c

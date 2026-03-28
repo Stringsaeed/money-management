@@ -1,50 +1,47 @@
-# Welcome to your Expo app 👋
+# Manila
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Expo Router money management app with Jest + React Native Testing Library coverage gates.
 
 ## Get started
 
 1. Install dependencies
 
    ```bash
-   npm install
+   yarn install
    ```
 
 2. Start the app
 
    ```bash
-   npx expo start
+   yarn start
    ```
 
-In the output, you'll find options to open the app in a
+## Testing
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Use these scripts locally:
 
 ```bash
-npm run reset-project
+yarn test
+yarn test:watch
+yarn test:coverage
+yarn test:ci
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+`yarn test:ci` is the pre-merge gate and the command used in CI.
 
-## Learn more
+Current policy:
 
-To learn more about developing your project with Expo, look at the following resources:
+- touched business-logic files ship with tests in the same PR
+- new pure utilities should keep file coverage at 100%
+- coverage thresholds are staged upward over time rather than dropped opportunistically
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Verification
 
-## Join the community
+Before merging:
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+yarn test:ci
+npx tsc --noEmit
+yarn lint:fix
+yarn format
+```
