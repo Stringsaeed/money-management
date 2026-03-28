@@ -127,15 +127,3 @@ export function monthsBetween(
     .reverse()
     .map((date) => ({ year: getYear(date), month: getMonth(date) + 1 }));
 }
-
-/**
- * Format the current date as an uppercase header string.
- * e.g. "MARCH 25, 2026"
- */
-export function formatHeaderDate(): string {
-  return intlFormat(new Date(), {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  }).toUpperCase();
-}

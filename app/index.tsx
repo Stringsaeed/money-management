@@ -1,5 +1,4 @@
 import { Redirect, Stack, useRouter } from "expo-router";
-import { useMemo } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 import { HomeEmptyState } from "@/components/home/home-empty-state";
@@ -41,39 +40,21 @@ export default function HomeScreen() {
 
   const showAccount = activeAccountId === null;
 
-  const { headerLeftItems, headerRightItems } = useMemo(
-    () =>
-      buildHomeHeaderItems({
-        router,
-        accounts,
-        allCategories,
-        dateRange,
-        activeAccountId,
-        selectedYear,
-        selectedMonth,
-        selectedCategoryId,
-        activeFilterCount,
-        setActiveAccountId,
-        setSelectedMonth,
-        setSelectedCategoryId,
-        resetFilters,
-      }),
-    [
-      router,
-      accounts,
-      allCategories,
-      dateRange,
-      activeAccountId,
-      selectedYear,
-      selectedMonth,
-      selectedCategoryId,
-      activeFilterCount,
-      setActiveAccountId,
-      setSelectedMonth,
-      setSelectedCategoryId,
-      resetFilters,
-    ],
-  );
+  const { headerLeftItems, headerRightItems } = buildHomeHeaderItems({
+    router,
+    accounts,
+    allCategories,
+    dateRange,
+    activeAccountId,
+    selectedYear,
+    selectedMonth,
+    selectedCategoryId,
+    activeFilterCount,
+    setActiveAccountId,
+    setSelectedMonth,
+    setSelectedCategoryId,
+    resetFilters,
+  });
 
   if (!loadingAccounts && accounts.length === 0) {
     return <Redirect href="/onboarding" />;

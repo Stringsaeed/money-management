@@ -1,4 +1,3 @@
-import { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 
@@ -14,12 +13,9 @@ export function HomeJournalList({
   showAccount,
   ListHeaderComponent,
 }: HomeJournalListProps) {
-  const items = useMemo(
-    () => buildJournalList(groups, currency, showAccount),
-    [groups, currency, showAccount],
-  );
+  const items = buildJournalList(groups, currency, showAccount);
 
-  const renderItem = useCallback(({ item }: { item: JournalListItem }) => {
+  const renderItem = ({ item }: { item: JournalListItem }) => {
     if (item.type === "section-header") {
       return <JournalDayHeader item={item} />;
     }
@@ -30,15 +26,12 @@ export function HomeJournalList({
         {!item.isLast && <View className="ml-16 h-px bg-ledger-outline" />}
       </View>
     );
-  }, []);
+  };
 
-  const getItemType = useCallback((item: JournalListItem) => item.type, []);
+  const getItemType = (item: JournalListItem) => item.type;
 
-  const keyExtractor = useCallback(
-    (item: JournalListItem) =>
-      item.type === "section-header" ? `header-${item.date}` : `tx-${item.data.id}`,
-    [],
-  );
+  const keyExtractor = (item: JournalListItem) =>
+    item.type === "section-header" ? `header-${item.date}` : `tx-${item.data.id}`;
 
   return (
     <FlashList

@@ -101,7 +101,7 @@ The app follows the **Paper Ledger** design system — a clean, editorial aesthe
 - When defining React Navigation routes, leverage Expo Router file conventions instead of manual stack registration.
 - **Use `cn()` from `@/lib/utils`** for conditional class composition instead of template literals or inline styles. Example: `cn("base-classes", condition && "conditional-class")`.
 - Keep optional chaining and nullish coalescing in place of defensive `&&` ladders when reading nested data.
-- Prefer `useMemo`/`useCallback` for heavy computations or callback props that feed deep hierarchies; otherwise skip premature memoization.
+- Avoid `useMemo`/`useCallback` we use react-compiler to do it for us.
 - Export a default component per screen file; named helpers can live in the same module but keep them near usage.
 - For icons, use **phosphor-react-native**. Always import with the `Icon` suffix (e.g. `CaretRightIcon`, `GearIcon`) — the un-suffixed exports are deprecated and emit warnings. Use `weight={focused ? "fill" : "regular"}` to reflect active/inactive state.
 - Keep `eqeqeq` behavior in mind: `==` is only acceptable where `smart` semantics cover `null == undefined`; otherwise use `===`.
