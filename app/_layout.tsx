@@ -113,54 +113,71 @@ export default function RootLayout() {
           <GestureHandlerRootView style={{ flex: 1 }}>
             <BottomSheetModalProvider>
               <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-                <Stack>
+                <Stack
+                  screenOptions={{
+                    headerTransparent: true,
+                    headerShadowVisible: false,
+                    headerBlurEffect: "none",
+                    headerLargeTitleStyle: { fontFamily: "Newsreader_400Regular" },
+                    headerTitleStyle: { fontFamily: "Newsreader_400Regular" },
+                    headerBackButtonDisplayMode: "minimal",
+                  }}
+                >
                   <Stack.Screen name="splash" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="index"
-                    options={{
-                      headerTransparent: true,
-                      headerShadowVisible: false,
-                      headerBlurEffect: "none",
-                      title: "",
-                    }}
-                  />
-                  <Stack.Screen
-                    name="settings"
-                    options={{ title: "Settings", headerBackButtonDisplayMode: "minimal" }}
-                  />
+                  <Stack.Screen name="index" options={{ title: "" }} />
+                  <Stack.Screen name="ledger" options={{ title: "Ledger" }} />
+                  <Stack.Screen name="settings" options={{ title: "Settings" }} />
                   <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="transaction/[id]"
-                    options={{
-                      presentation: "card",
-                      headerBackButtonDisplayMode: "minimal",
-                    }}
-                  />
+                  <Stack.Screen name="transaction/[id]" options={{ presentation: "card" }} />
                   <Stack.Screen
                     name="account/new"
-                    options={{ presentation: "modal", title: "New Account" }}
+                    options={{
+                      presentation: "modal",
+                      title: "New Account",
+                      headerTransparent: false,
+                    }}
                   />
                   <Stack.Screen name="account/[id]" options={{ headerShown: false }} />
                   <Stack.Screen
                     name="account/[id]/edit"
-                    options={{ presentation: "modal", title: "Edit Account" }}
+                    options={{
+                      presentation: "modal",
+                      title: "Edit Account",
+                      headerTransparent: false,
+                    }}
                   />
                   <Stack.Screen
                     name="category/new"
-                    options={{ presentation: "modal", title: "New Category" }}
+                    options={{
+                      presentation: "modal",
+                      title: "New Category",
+                      headerTransparent: false,
+                    }}
                   />
                   <Stack.Screen
                     name="category/[id]/edit"
-                    options={{ presentation: "modal", title: "Edit Category" }}
+                    options={{
+                      presentation: "modal",
+                      title: "Edit Category",
+                      headerTransparent: false,
+                    }}
                   />
                   <Stack.Screen name="recurring/index" options={{ title: "Recurring Payments" }} />
                   <Stack.Screen
                     name="recurring/new"
-                    options={{ presentation: "modal", title: "New Recurring" }}
+                    options={{
+                      presentation: "modal",
+                      title: "New Recurring",
+                      headerTransparent: false,
+                    }}
                   />
                   <Stack.Screen
                     name="recurring/[id]/edit"
-                    options={{ presentation: "modal", title: "Edit Recurring" }}
+                    options={{
+                      presentation: "modal",
+                      title: "Edit Recurring",
+                      headerTransparent: false,
+                    }}
                   />
                 </Stack>
                 <StatusBar style="auto" />

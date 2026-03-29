@@ -10,12 +10,7 @@ import {
   useTransactions,
   useUpdateTransaction,
 } from "@/hooks/use-transactions";
-import {
-  createAccount,
-  createCategory,
-  createTransaction,
-  createTransactionWithDetails,
-} from "@/tests/test-utils/factories";
+import { createTransaction, createTransactionWithDetails } from "@/tests/test-utils/factories";
 import { createMockDb } from "@/tests/test-utils/mock-db";
 import { renderHookWithProviders } from "@/tests/test-utils/render";
 
@@ -39,24 +34,44 @@ jest.mock("@/utils/date", () => {
 });
 
 describe("use-transactions hooks", () => {
-  it("loads and enriches transaction lists", async () => {
+  it("loads and enriches transaction lists via JOIN", async () => {
     const db = createMockDb({
       selectResults: [
         {
           all: [
-            createTransaction({
+            {
+              // Transaction columns
               id: "transaction-1",
-              accountId: "account-1",
-              categoryId: "category-1",
+              type: "expense",
               amount: 40_00,
-            }),
+              currency: "USD",
+              originalAmount: null,
+              originalCurrency: null,
+              exchangeRate: null,
+              date: "2026-03-28",
+              accountId: "account-1",
+              toAccountId: null,
+              categoryId: "category-1",
+              recurringPaymentId: null,
+              description: "Coffee",
+              createdAt: "2026-03-28T12:00:00.000Z",
+              updatedAt: "2026-03-28T12:00:00.000Z",
+              // Joined account columns
+              accountName: "Main Checking",
+              accountColor: "#8B9D83",
+              accountIcon: "banknote.fill",
+              accountCurrency: "USD",
+              // Joined toAccount columns
+              toAccountName: null,
+              toAccountColor: null,
+              toAccountIcon: null,
+              toAccountCurrency: null,
+              // Joined category columns
+              categoryName: "Groceries",
+              categoryColor: "#B48A7B",
+              categoryIcon: "🛒",
+            },
           ],
-        },
-        {
-          all: [createAccount({ id: "account-1", name: "Main Checking", currency: "USD" })],
-        },
-        {
-          all: [createCategory({ id: "category-1", name: "Groceries", icon: "🛒" })],
         },
       ],
     });
@@ -74,6 +89,7 @@ describe("use-transactions hooks", () => {
       createTransactionWithDetails({
         id: "transaction-1",
         amount: 40_00,
+        date: "2026-03-28",
         account: {
           id: "account-1",
           name: "Main Checking",
@@ -94,9 +110,36 @@ describe("use-transactions hooks", () => {
   it("loads a transaction detail only when enabled", async () => {
     const detailDb = createMockDb({
       selectResults: [
-        { get: createTransaction({ id: "transaction-1" }) },
-        { all: [createAccount({ id: "account-1" })] },
-        { all: [createCategory({ id: "category-1" })] },
+        {
+          get: {
+            id: "transaction-1",
+            type: "expense",
+            amount: 50_00,
+            currency: "USD",
+            originalAmount: null,
+            originalCurrency: null,
+            exchangeRate: null,
+            date: "2026-03-28",
+            accountId: "account-1",
+            toAccountId: null,
+            categoryId: "category-1",
+            recurringPaymentId: null,
+            description: "",
+            createdAt: "2026-03-28T00:00:00.000Z",
+            updatedAt: "2026-03-28T00:00:00.000Z",
+            accountName: "Checking",
+            accountColor: "#8B9D83",
+            accountIcon: "banknote.fill",
+            accountCurrency: "USD",
+            toAccountName: null,
+            toAccountColor: null,
+            toAccountIcon: null,
+            toAccountCurrency: null,
+            categoryName: "Food",
+            categoryColor: "#B48A7B",
+            categoryIcon: "🍔",
+          },
+        },
       ],
     });
     mockUseDatabase.mockReturnValue(detailDb);

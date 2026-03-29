@@ -5,13 +5,13 @@ import type {
   NativeStackHeaderItemMenuSubmenu,
 } from "@react-navigation/native-stack";
 
-import { formatMonth, monthsBetween } from "@/utils/date";
-import { useUIStore } from "@/stores/ui-store";
-import { useTransactionDateRange } from "@/hooks/use-transactions";
-import { useCategories } from "@/hooks/use-categories";
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
+import { useCategories } from "@/hooks/use-categories";
+import { useTransactionDateRange } from "@/hooks/use-transactions";
+import { useUIStore } from "@/stores/ui-store";
+import { formatMonth, monthsBetween } from "@/utils/date";
 
-export function useHomeHeaderItems() {
+export function useLedgerHeaderItems() {
   const router = useRouter();
   const {
     activeAccountId,
@@ -21,10 +21,11 @@ export function useHomeHeaderItems() {
     setActiveAccountId,
     setSelectedMonth,
     setSelectedCategoryId,
+    resetFilters,
   } = useUIStore();
+  const { data: accounts = [] } = useAccountsWithBalances();
   const { data: allCategories = [] } = useCategories();
   const { data: dateRange } = useTransactionDateRange();
-  const { data: accounts = [] } = useAccountsWithBalances();
 
   const activeFilterCount = [activeAccountId, selectedMonth, selectedCategoryId].filter(
     Boolean,
@@ -42,7 +43,7 @@ export function useHomeHeaderItems() {
         label: "All Accounts",
         state: activeAccountId === null ? "on" : "off",
         onPress: () => setActiveAccountId(null),
-      },
+      } satisfies NativeStackHeaderItemMenuAction,
       ...accounts.map(
         (account) =>
           ({
@@ -111,45 +112,15 @@ export function useHomeHeaderItems() {
     categorySubmenu,
   ];
 
-  const headerLeftItems: NativeStackHeaderItem[] = [
-    {
-      label: "navigation",
-      type: "menu",
-      icon: {
-        type: "sfSymbol",
-        name: "line.3.horizontal",
-      },
-      menu: {
-        items: [
-          {
-            type: "action",
-            label: "Ledger",
-            icon: { type: "sfSymbol", name: "book" },
-            onPress: () => router.push("/ledger" as never),
-          },
-          {
-            type: "action",
-            label: "Envelopes",
-            icon: { type: "sfSymbol", name: "envelope" },
-            onPress: () => router.push("/envelopes" as never),
-          },
-          {
-            type: "action",
-            label: "Obligations — Coming Soon",
-            icon: { type: "sfSymbol", name: "scalemass" },
-            disabled: true,
-            onPress: () => {},
-          },
-          {
-            type: "action",
-            label: "Preferences",
-            icon: { type: "sfSymbol", name: "gearshape" },
-            onPress: () => router.push("/settings"),
-          },
-        ],
-      },
-    },
-  ];
+  if (activeFilterCount > 0) {
+    filterMenuItems.push({
+      type: "action",
+      label: "Reset All Filters",
+      icon: { type: "sfSymbol", name: "xmark.circle" },
+      destructive: true,
+      onPress: resetFilters,
+    });
+  }
 
   const headerRightItems: NativeStackHeaderItem[] = [
     {
@@ -181,5 +152,5 @@ export function useHomeHeaderItems() {
     },
   ];
 
-  return { headerLeftItems, headerRightItems };
+  return { headerRightItems };
 }

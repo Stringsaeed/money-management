@@ -76,7 +76,7 @@ export function TransactionForm({ initialData, onSubmit, formRef }: TransactionF
   }
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-surface pt-safe-offset-20">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"

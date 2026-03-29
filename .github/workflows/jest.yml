@@ -1,7 +1,15 @@
 name: Run Jest tests
 
+concurrency:
+  # Make sure every job on main has unique group id (run_id), so cancel-in-progress only affects PR's
+  # https://stackoverflow.com/questions/74117321/if-condition-in-concurrency-in-gha
+  group: ${{ github.workflow }}-${{ github.head_ref && github.ref || github.run_id }}
+  cancel-in-progress: true
+
 on:
   pull_request:
+    branches:
+      - main
 
 jobs:
   jest:
@@ -11,10 +19,12 @@ jobs:
       - name: 🏗 Setup repo
         uses: actions/checkout@v4
 
+      - run: corepack enable
+
       - name: 🌿 Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: ".nvmrc"
+          node-version-file: .nvmrc
           cache: "yarn"
 
       - name: 📦 Install dependencies

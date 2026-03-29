@@ -1,22 +1,32 @@
-import { Activity, useState } from "react";
+import { Activity, useMemo, useState } from "react";
 import { View } from "react-native";
 import { ChartBarIcon, TrendUpIcon } from "phosphor-react-native";
 
 import { ToggleGroup, ToggleGroupIcon, ToggleGroupItem } from "@/components/ui/toggle-group";
-import type { CategorySpendingDatum, MonthlyTrendDatum } from "@/hooks/use-chart-data";
+import { useCategorySpending, useTransactionPoints } from "@/hooks/use-chart-data";
+import { useTransactions } from "@/hooks/use-transactions";
+import { useUIStore } from "@/stores/ui-store";
 
 import { CategorySpendingChart } from "./category-spending-chart";
 import { TransactionTrendChart } from "./transaction-trend-chart";
 
 type ChartTab = "spending" | "trend";
 
-interface Props {
-  categorySpending: CategorySpendingDatum[];
-  monthlyTrend: MonthlyTrendDatum[];
-}
-
-export function StatsCharts({ categorySpending, monthlyTrend }: Props) {
+export function StatsCharts() {
   const [activeTab, setActiveTab] = useState<ChartTab>("spending");
+  const { selectedYear, selectedMonth, activeAccountId, selectedCategoryId } = useUIStore();
+
+  const { data: transactions = [] } = useTransactions({
+    year: selectedYear ?? undefined,
+    month: selectedMonth ?? undefined,
+    accountId: activeAccountId,
+    categoryId: selectedCategoryId,
+  });
+
+  const flatTransactions = useMemo(() => transactions, [transactions]);
+
+  const categorySpending = useCategorySpending(flatTransactions);
+  const transactionPoints = useTransactionPoints(flatTransactions);
 
   return (
     <View className="mx-5 mt-4">
@@ -40,15 +50,12 @@ export function StatsCharts({ categorySpending, monthlyTrend }: Props) {
         </ToggleGroup>
       </View>
 
-      {/* Chart */}
-      <View>
-        <Activity mode={activeTab === "spending" ? "visible" : "hidden"}>
-          <CategorySpendingChart data={categorySpending} />
-        </Activity>
-        <Activity mode={activeTab === "trend" ? "visible" : "hidden"}>
-          <TransactionTrendChart data={monthlyTrend} />
-        </Activity>
-      </View>
+      <Activity mode={activeTab === "spending" ? "visible" : "hidden"}>
+        <CategorySpendingChart data={categorySpending} />
+      </Activity>
+      <Activity mode={activeTab === "trend" ? "visible" : "hidden"}>
+        <TransactionTrendChart data={transactionPoints} />
+      </Activity>
     </View>
   );
 }
