@@ -32,6 +32,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     icon: "./assets/images/icon.png",
     scheme: "moneymanagement",
     userInterfaceStyle: "automatic",
+    buildCacheProvider: "eas",
     ios: {
       supportsTablet: true,
       bundleIdentifier: getAppId(),
@@ -74,6 +75,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "expo-sqlite",
       "@react-native-community/datetimepicker",
       "expo-build-properties",
+      "@rnrepo/expo-config-plugin",
     ],
     experiments: {
       typedRoutes: true,

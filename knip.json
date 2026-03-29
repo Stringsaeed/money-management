@@ -17,7 +17,8 @@
     "babel-plugin-inline-import",
     "tailwind-variants",
     "tailwindcss-animate",
-    "@react-navigation/native-stack"
+    "@react-navigation/native-stack",
+    "eas-build-cache-provider"
   ],
   "ignore": [
     "hooks/use-color-scheme.web.ts",
