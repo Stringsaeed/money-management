@@ -10,12 +10,7 @@ import {
   useTransactions,
   useUpdateTransaction,
 } from "@/hooks/use-transactions";
-import {
-  createAccount,
-  createCategory,
-  createTransaction,
-  createTransactionWithDetails,
-} from "@/tests/test-utils/factories";
+import { createTransaction, createTransactionWithDetails } from "@/tests/test-utils/factories";
 import { createMockDb } from "@/tests/test-utils/mock-db";
 import { renderHookWithProviders } from "@/tests/test-utils/render";
 
@@ -94,6 +89,7 @@ describe("use-transactions hooks", () => {
       createTransactionWithDetails({
         id: "transaction-1",
         amount: 40_00,
+        date: "2026-03-28",
         account: {
           id: "account-1",
           name: "Main Checking",

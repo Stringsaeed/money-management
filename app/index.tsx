@@ -1,79 +1,33 @@
-import { Redirect, Stack, useRouter } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 
 import { HomeEmptyState } from "@/components/home/home-empty-state";
 import { HomeJournalList } from "@/components/home/home-journal-list";
 import { HomeListHeader } from "@/components/home/home-list-header";
-import { useHomeInsights } from "@/hooks/use-home-insights";
 import { useHomeScreen } from "@/hooks/use-home-screen";
-import { buildHomeHeaderItems } from "@/utils/home-header-items";
+import { useHomeHeaderItems } from "@/utils/home-header-items";
 
 export default function HomeScreen() {
-  const router = useRouter();
   const {
-    accounts,
-    allCategories,
-    dateRange,
     loadingAccounts,
     loadingTx,
     groups,
     currency,
     activeFilterCount,
-    activeAccount,
-    activeCategory,
-    selectedYear,
-    selectedMonth,
     activeAccountId,
-    selectedCategoryId,
-    setSelectedMonth,
-    setActiveAccountId,
-    setSelectedCategoryId,
+    accounts,
     resetFilters,
   } = useHomeScreen({ limit: 10 });
 
-  const { filteredBalance, categorySpending, monthlyTrend } = useHomeInsights({
-    accounts,
-    groups,
-    activeFilterCount,
-  });
-
   const showAccount = activeAccountId === null;
 
-  const { headerLeftItems, headerRightItems } = buildHomeHeaderItems({
-    router,
-    accounts,
-    allCategories,
-    dateRange,
-    activeAccountId,
-    selectedYear,
-    selectedMonth,
-    selectedCategoryId,
-    activeFilterCount,
-    setActiveAccountId,
-    setSelectedMonth,
-    setSelectedCategoryId,
-    resetFilters,
-  });
+  const { headerLeftItems, headerRightItems } = useHomeHeaderItems();
 
   if (!loadingAccounts && accounts.length === 0) {
     return <Redirect href="/onboarding" />;
   }
 
-  const listHeader = (
-    <HomeListHeader
-      activeAccountName={activeAccount?.name ?? null}
-      selectedYear={selectedYear}
-      selectedMonth={selectedMonth}
-      selectedCategoryName={activeCategory?.name ?? null}
-      currency={currency}
-      filteredBalance={filteredBalance}
-      categorySpending={categorySpending}
-      monthlyTrend={monthlyTrend}
-      setActiveAccountId={setActiveAccountId}
-      setSelectedMonth={setSelectedMonth}
-      setSelectedCategoryId={setSelectedCategoryId}
-    />
-  );
+  const listHeader = <HomeListHeader />;
 
   return (
     <View className="flex-1 bg-background">

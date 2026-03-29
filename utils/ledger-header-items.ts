@@ -1,50 +1,36 @@
-import type { Router } from "expo-router";
+import { useRouter } from "expo-router";
 import type {
   NativeStackHeaderItem,
   NativeStackHeaderItemMenuAction,
   NativeStackHeaderItemMenuSubmenu,
 } from "@react-navigation/native-stack";
 
+import { useAccountsWithBalances } from "@/hooks/use-accounts";
+import { useCategories } from "@/hooks/use-categories";
+import { useTransactionDateRange } from "@/hooks/use-transactions";
+import { useUIStore } from "@/stores/ui-store";
 import { formatMonth, monthsBetween } from "@/utils/date";
-import type { AccountWithBalance, Category } from "@/types";
 
-interface BuildLedgerHeaderItemsArgs {
-  router: Router;
-  accounts: AccountWithBalance[];
-  allCategories: Category[];
-  dateRange:
-    | {
-        minDate: string | null;
-        maxDate: string | null;
-      }
-    | null
-    | undefined;
-  activeAccountId: string | null;
-  selectedYear: number | null;
-  selectedMonth: number | null;
-  selectedCategoryId: string | null;
-  activeFilterCount: number;
-  setActiveAccountId: (id: string | null) => void;
-  setSelectedMonth: (year: number | null, month: number | null) => void;
-  setSelectedCategoryId: (id: string | null) => void;
-  resetFilters: () => void;
-}
+export function useLedgerHeaderItems() {
+  const router = useRouter();
+  const {
+    activeAccountId,
+    selectedYear,
+    selectedMonth,
+    selectedCategoryId,
+    setActiveAccountId,
+    setSelectedMonth,
+    setSelectedCategoryId,
+    resetFilters,
+  } = useUIStore();
+  const { data: accounts = [] } = useAccountsWithBalances();
+  const { data: allCategories = [] } = useCategories();
+  const { data: dateRange } = useTransactionDateRange();
 
-export function buildLedgerHeaderItems({
-  router,
-  accounts,
-  allCategories,
-  dateRange,
-  activeAccountId,
-  selectedYear,
-  selectedMonth,
-  selectedCategoryId,
-  activeFilterCount,
-  setActiveAccountId,
-  setSelectedMonth,
-  setSelectedCategoryId,
-  resetFilters,
-}: BuildLedgerHeaderItemsArgs) {
+  const activeFilterCount = [activeAccountId, selectedMonth, selectedCategoryId].filter(
+    Boolean,
+  ).length;
+
   const availableMonths = monthsBetween(dateRange?.minDate, dateRange?.maxDate);
 
   const accountSubmenu: NativeStackHeaderItemMenuSubmenu = {

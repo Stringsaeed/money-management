@@ -1,6 +1,19 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
 import { FilterBar } from "@/components/home/filter-bar";
+import { useUIStore } from "@/stores/ui-store";
+
+jest.mock("@/hooks/use-accounts", () => ({
+  useAccountsWithBalances: () => ({
+    data: [{ id: "account-1", name: "Wallet" }],
+  }),
+}));
+
+jest.mock("@/hooks/use-categories", () => ({
+  useCategories: () => ({
+    data: [{ id: "category-1", name: "Food" }],
+  }),
+}));
 
 jest.mock("@/components/home/filter-chip", () => ({
   FilterChip: ({ label, onRemove }: { label: string; onRemove: () => void }) => {
@@ -16,44 +29,38 @@ jest.mock("@/components/home/filter-chip", () => ({
 }));
 
 describe("FilterBar", () => {
-  it("renders active filters and allows them to clear", () => {
-    const setActiveAccountId = jest.fn();
-    const setSelectedMonth = jest.fn();
-    const setSelectedCategoryId = jest.fn();
+  beforeEach(() => {
+    useUIStore.setState({
+      selectedYear: null,
+      selectedMonth: null,
+      activeAccountId: null,
+      selectedCategoryId: null,
+    });
+  });
 
-    render(
-      <FilterBar
-        activeAccountName="Wallet"
-        selectedYear={2026}
-        selectedMonth={3}
-        selectedCategoryName="Food"
-        setActiveAccountId={setActiveAccountId}
-        setSelectedMonth={setSelectedMonth}
-        setSelectedCategoryId={setSelectedCategoryId}
-      />,
-    );
+  it("renders active filters and allows them to clear", () => {
+    useUIStore.setState({
+      activeAccountId: "account-1",
+      selectedYear: 2026,
+      selectedMonth: 3,
+      selectedCategoryId: "category-1",
+    });
+
+    render(<FilterBar />);
 
     fireEvent.press(screen.getByText("Wallet"));
-    fireEvent.press(screen.getByText("March 2026"));
-    fireEvent.press(screen.getByText("Food"));
+    expect(useUIStore.getState().activeAccountId).toBeNull();
 
-    expect(setActiveAccountId).toHaveBeenCalledWith(null);
-    expect(setSelectedMonth).toHaveBeenCalledWith(null, null);
-    expect(setSelectedCategoryId).toHaveBeenCalledWith(null);
+    fireEvent.press(screen.getByText("March 2026"));
+    expect(useUIStore.getState().selectedYear).toBeNull();
+    expect(useUIStore.getState().selectedMonth).toBeNull();
+
+    fireEvent.press(screen.getByText("Food"));
+    expect(useUIStore.getState().selectedCategoryId).toBeNull();
   });
 
   it("renders nothing when there are no active chips", () => {
-    const { toJSON } = render(
-      <FilterBar
-        activeAccountName={null}
-        selectedYear={null}
-        selectedMonth={null}
-        selectedCategoryName={null}
-        setActiveAccountId={jest.fn()}
-        setSelectedMonth={jest.fn()}
-        setSelectedCategoryId={jest.fn()}
-      />,
-    );
+    const { toJSON } = render(<FilterBar />);
 
     expect(toJSON()).toBeNull();
   });

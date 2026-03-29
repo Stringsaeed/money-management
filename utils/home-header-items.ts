@@ -1,4 +1,4 @@
-import type { Router } from "expo-router";
+import { useRouter } from "expo-router";
 import type {
   NativeStackHeaderItem,
   NativeStackHeaderItemMenuAction,
@@ -6,45 +6,30 @@ import type {
 } from "@react-navigation/native-stack";
 
 import { formatMonth, monthsBetween } from "@/utils/date";
-import type { AccountWithBalance, Category } from "@/types";
+import { useUIStore } from "@/stores/ui-store";
+import { useTransactionDateRange } from "@/hooks/use-transactions";
+import { useCategories } from "@/hooks/use-categories";
+import { useAccountsWithBalances } from "@/hooks/use-accounts";
 
-interface BuildHomeHeaderItemsArgs {
-  router: Router;
-  accounts: AccountWithBalance[];
-  allCategories: Category[];
-  dateRange:
-    | {
-        minDate: string | null;
-        maxDate: string | null;
-      }
-    | null
-    | undefined;
-  activeAccountId: string | null;
-  selectedYear: number | null;
-  selectedMonth: number | null;
-  selectedCategoryId: string | null;
-  activeFilterCount: number;
-  setActiveAccountId: (id: string | null) => void;
-  setSelectedMonth: (year: number | null, month: number | null) => void;
-  setSelectedCategoryId: (id: string | null) => void;
-  resetFilters: () => void;
-}
+export function useHomeHeaderItems() {
+  const router = useRouter();
+  const {
+    activeAccountId,
+    selectedYear,
+    selectedMonth,
+    selectedCategoryId,
+    setActiveAccountId,
+    setSelectedMonth,
+    setSelectedCategoryId,
+  } = useUIStore();
+  const { data: allCategories = [] } = useCategories();
+  const { data: dateRange } = useTransactionDateRange();
+  const { data: accounts = [] } = useAccountsWithBalances();
 
-export function buildHomeHeaderItems({
-  router,
-  accounts,
-  allCategories,
-  dateRange,
-  activeAccountId,
-  selectedYear,
-  selectedMonth,
-  selectedCategoryId,
-  activeFilterCount,
-  setActiveAccountId,
-  setSelectedMonth,
-  setSelectedCategoryId,
-  resetFilters,
-}: BuildHomeHeaderItemsArgs) {
+  const activeFilterCount = [activeAccountId, selectedMonth, selectedCategoryId].filter(
+    Boolean,
+  ).length;
+
   const availableMonths = monthsBetween(dateRange?.minDate, dateRange?.maxDate);
 
   const accountSubmenu: NativeStackHeaderItemMenuSubmenu = {
@@ -57,7 +42,7 @@ export function buildHomeHeaderItems({
         label: "All Accounts",
         state: activeAccountId === null ? "on" : "off",
         onPress: () => setActiveAccountId(null),
-      } satisfies NativeStackHeaderItemMenuAction,
+      },
       ...accounts.map(
         (account) =>
           ({
@@ -125,16 +110,6 @@ export function buildHomeHeaderItems({
     periodSubmenu,
     categorySubmenu,
   ];
-
-  if (activeFilterCount > 0) {
-    filterMenuItems.push({
-      type: "action",
-      label: "Reset All Filters",
-      icon: { type: "sfSymbol", name: "xmark.circle" },
-      destructive: true,
-      onPress: resetFilters,
-    });
-  }
 
   const headerLeftItems: NativeStackHeaderItem[] = [
     {

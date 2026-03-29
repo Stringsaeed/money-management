@@ -3,27 +3,19 @@ import { renderHook } from "@testing-library/react-native";
 import { useHomeScreen } from "@/hooks/use-home-screen";
 import {
   createAccountWithBalance,
-  createCategory,
   createTransactionWithDetails,
 } from "@/tests/test-utils/factories";
 
 const mockUseAccountsWithBalances = jest.fn();
-const mockUseCategories = jest.fn();
 const mockUseTransactions = jest.fn();
-const mockUseTransactionDateRange = jest.fn();
 const mockUseRecurringProcessor = jest.fn();
 
 jest.mock("@/hooks/use-accounts", () => ({
   useAccountsWithBalances: () => mockUseAccountsWithBalances(),
 }));
 
-jest.mock("@/hooks/use-categories", () => ({
-  useCategories: () => mockUseCategories(),
-}));
-
 jest.mock("@/hooks/use-transactions", () => ({
   useTransactions: (...args: unknown[]) => mockUseTransactions(...args),
-  useTransactionDateRange: () => mockUseTransactionDateRange(),
 }));
 
 jest.mock("@/hooks/use-recurring-processor", () => ({
@@ -39,12 +31,6 @@ describe("useHomeScreen", () => {
       ],
       isLoading: false,
     });
-    mockUseCategories.mockReturnValue({
-      data: [
-        createCategory({ id: "category-1", name: "Groceries" }),
-        createCategory({ id: "category-2", name: "Salary", type: "income", icon: "💼" }),
-      ],
-    });
     mockUseTransactions.mockReturnValue({
       data: [
         createTransactionWithDetails({
@@ -56,21 +42,17 @@ describe("useHomeScreen", () => {
       ],
       isLoading: false,
     });
-    mockUseTransactionDateRange.mockReturnValue({
-      data: { minDate: "2026-01-01", maxDate: "2026-03-28" },
-    });
     const { result } = renderHook(() => useHomeScreen());
 
     expect(mockUseRecurringProcessor).toHaveBeenCalled();
     expect(result.current.accounts).toHaveLength(2);
     expect(result.current.groups).toHaveLength(1);
     expect(result.current.currency).toBe("EUR");
-    expect(result.current.dateRange).toEqual({ minDate: "2026-01-01", maxDate: "2026-03-28" });
     expect(result.current.loadingAccounts).toBe(false);
     expect(result.current.loadingTx).toBe(false);
   });
 
-  it("passes filters to SQL query and falls back to account currency", () => {
+  it("passes filters to SQL query and derives active filter count", () => {
     const { useUIStore } = jest.requireActual("@/stores/ui-store");
 
     useUIStore.setState({
@@ -84,9 +66,6 @@ describe("useHomeScreen", () => {
       data: [createAccountWithBalance({ id: "account-1", currency: "GBP", balance: 100_00 })],
       isLoading: false,
     });
-    mockUseCategories.mockReturnValue({
-      data: [createCategory({ id: "category-2", name: "Salary", type: "income", icon: "💼" })],
-    });
     mockUseTransactions.mockReturnValue({
       data: [
         createTransactionWithDetails({
@@ -96,9 +75,6 @@ describe("useHomeScreen", () => {
         }),
       ],
       isLoading: false,
-    });
-    mockUseTransactionDateRange.mockReturnValue({
-      data: { minDate: "2026-01-01", maxDate: "2026-03-28" },
     });
 
     const { result } = renderHook(() => useHomeScreen());
@@ -112,8 +88,6 @@ describe("useHomeScreen", () => {
     });
     expect(result.current.groups[0]?.transactions).toHaveLength(1);
     expect(result.current.activeFilterCount).toBe(3);
-    expect(result.current.activeAccount?.id).toBe("account-1");
-    expect(result.current.activeCategory?.id).toBe("category-2");
     expect(result.current.currency).toBe("GBP");
   });
 
@@ -122,12 +96,10 @@ describe("useHomeScreen", () => {
       data: [createAccountWithBalance({ id: "account-1", currency: undefined })],
       isLoading: true,
     });
-    mockUseCategories.mockReturnValue({ data: [] });
     mockUseTransactions.mockReturnValue({
       data: [createTransactionWithDetails({ currency: "JPY" })],
       isLoading: true,
     });
-    mockUseTransactionDateRange.mockReturnValue({ data: undefined });
 
     const { result } = renderHook(() => useHomeScreen());
 
@@ -138,9 +110,7 @@ describe("useHomeScreen", () => {
 
   it("falls back to USD when no currencies are available anywhere", () => {
     mockUseAccountsWithBalances.mockReturnValue({ data: [], isLoading: false });
-    mockUseCategories.mockReturnValue({ data: [] });
     mockUseTransactions.mockReturnValue({ data: [], isLoading: false });
-    mockUseTransactionDateRange.mockReturnValue({ data: undefined });
 
     const { result } = renderHook(() => useHomeScreen());
 

@@ -8,7 +8,10 @@ import { SpectralWave } from "@/components/ui/organisms/spectral-wave";
 
 export function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
   const targetRef = useRef<View>(null);
-  const [viewMeasurements, setViewMeasurements] = useState({ width: 0, height: 0 });
+  const [viewMeasurements, setViewMeasurements] = useState({
+    width: 0,
+    height: 0,
+  });
 
   useLayoutEffect(() => {
     if (targetRef.current) {
@@ -19,17 +22,30 @@ export function FilterChip({ label, onRemove }: { label: string; onRemove: () =>
   }, []);
 
   return (
-    <SpectralWave
-      width={viewMeasurements.width + 4}
-      height={viewMeasurements.height + 4}
-      borderRadius={4}
-      asChild
-      timeScale={1.5}
-      colors={["#000", "#c7d2fe", "#fbcfe8"]}
+    <View
+      className="relative justify-center items-center"
+      style={
+        viewMeasurements.width && viewMeasurements.height
+          ? {
+              width: viewMeasurements.width + 4,
+              height: viewMeasurements.height + 4,
+            }
+          : undefined
+      }
     >
+      <View className="absolute" pointerEvents="none">
+        <SpectralWave
+          width={viewMeasurements.width + 4}
+          height={viewMeasurements.height + 4}
+          borderRadius={4}
+          asChild
+          timeScale={1.5}
+          colors={["#1c1b1a", "#7ab48a", "#f9f8f6"]}
+        />
+      </View>
       <View
         ref={targetRef}
-        className="flex-row bg-accent items-center gap-1.5 border border-ledger-outline pl-3 pr-1.5 py-1.5 rounded-sm"
+        className="flex-row bg-accent items-center gap-1.5 border border-ledger-outline pl-3 pr-1.5 py-1.5 rounded-sm self-center"
       >
         <Text className="font-body-medium text-[11px] text-ink/60 uppercase tracking-wide">
           {label}
@@ -42,6 +58,6 @@ export function FilterChip({ label, onRemove }: { label: string; onRemove: () =>
           <Icon as={X} size={10} className="text-ink/30" />
         </Pressable>
       </View>
-    </SpectralWave>
+    </View>
   );
 }
