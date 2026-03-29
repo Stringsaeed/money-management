@@ -1,4 +1,4 @@
-import { format, parseISO, startOfMonth } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 import type { TransactionWithDetails } from "@/types";
 
@@ -10,11 +10,10 @@ export interface CategorySpendingDatum {
   [key: string]: unknown;
 }
 
-export interface MonthlyTrendDatum {
-  month: number;
+export interface TransactionPointDatum {
+  index: number;
   label: string;
-  income: number;
-  expense: number;
+  amount: number;
   [key: string]: unknown;
 }
 
@@ -42,31 +41,20 @@ export function useCategorySpending(
   });
 }
 
-export function useMonthlyTrend(transactions: TransactionWithDetails[]): MonthlyTrendDatum[] {
-  const map = new Map<string, { income: number; expense: number }>();
+export function useTransactionPoints(
+  transactions: TransactionWithDetails[],
+): TransactionPointDatum[] {
+  const sorted = [...transactions]
+    .filter((t) => t.type !== "transfer")
+    .sort((a, b) => a.date.localeCompare(b.date));
 
-  for (const t of transactions) {
-    if (t.type === "transfer") continue;
-    const monthKey = format(startOfMonth(parseISO(t.date)), "yyyy-MM");
-    const existing = map.get(monthKey);
-    if (existing) {
-      if (t.type === "income") existing.income += t.amount;
-      else existing.expense += t.amount;
-    } else {
-      map.set(monthKey, {
-        income: t.type === "income" ? t.amount : 0,
-        expense: t.type === "expense" ? t.amount : 0,
-      });
-    }
-  }
-
-  return Array.from(map.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-6)
-    .map(([key, data], index) => ({
-      month: index,
-      label: format(parseISO(key + "-01"), "MMM"),
-      income: data.income / 100,
-      expense: data.expense / 100,
-    }));
+  let balance = 0;
+  return sorted.map((t, index) => {
+    balance += t.type === "income" ? t.amount : -t.amount;
+    return {
+      index,
+      label: format(parseISO(t.date), "d MMM"),
+      amount: balance / 100,
+    };
+  });
 }

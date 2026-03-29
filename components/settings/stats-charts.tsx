@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { ChartBarIcon, TrendUpIcon } from "phosphor-react-native";
 
 import { ToggleGroup, ToggleGroupIcon, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { useCategorySpending, useMonthlyTrend } from "@/hooks/use-chart-data";
+import { useCategorySpending, useTransactionPoints } from "@/hooks/use-chart-data";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
 
@@ -26,7 +26,7 @@ export function StatsCharts() {
   const flatTransactions = useMemo(() => transactions, [transactions]);
 
   const categorySpending = useCategorySpending(flatTransactions);
-  const monthlyTrend = useMonthlyTrend(flatTransactions);
+  const transactionPoints = useTransactionPoints(flatTransactions);
 
   return (
     <View className="mx-5 mt-4">
@@ -54,7 +54,7 @@ export function StatsCharts() {
         <CategorySpendingChart data={categorySpending} />
       </Activity>
       <Activity mode={activeTab === "trend" ? "visible" : "hidden"}>
-        <TransactionTrendChart data={monthlyTrend} />
+        <TransactionTrendChart data={transactionPoints} />
       </Activity>
     </View>
   );
