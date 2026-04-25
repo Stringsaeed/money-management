@@ -3,9 +3,10 @@ import { View } from "react-native";
 import { CartesianChart, Bar } from "victory-native";
 
 import { Text } from "@/components/ui/text";
-import type { CategorySpendingDatum } from "@/hooks/use-chart-data";
+import { useCategorySpending } from "@/hooks/use-chart-data";
 import { useNativeVariable } from "react-native-css";
-
+import { useTransactions } from "@/hooks/use-transactions";
+import { useUIStore } from "@/stores/ui-store";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const fontFile = require("@expo-google-fonts/plus-jakarta-sans/400Regular/PlusJakartaSans_400Regular.ttf");
 
@@ -18,10 +19,6 @@ interface BarDatum {
   [key: string]: unknown;
 }
 
-interface Props {
-  data: CategorySpendingDatum[];
-}
-
 const emojiFont = matchFont({
   fontSize: 12,
   fontFamily: "Apple Color Emoji",
@@ -29,7 +26,18 @@ const emojiFont = matchFont({
   fontWeight: "400",
 });
 
-export function CategorySpendingChart({ data }: Props) {
+export function CategorySpendingChart() {
+  const { selectedYear, selectedMonth, activeAccountId, selectedCategoryId } = useUIStore();
+
+  const { data: transactions = [] } = useTransactions({
+    year: selectedYear ?? undefined,
+    month: selectedMonth ?? undefined,
+    accountId: activeAccountId,
+    categoryId: selectedCategoryId,
+  });
+
+  const data = useCategorySpending(transactions);
+
   const font = useFont(fontFile, 10);
   // @ts-expect-error - This is an unstable API and may change in the future
   const colorInk = useNativeVariable("--color-ink");
@@ -78,7 +86,7 @@ export function CategorySpendingChart({ data }: Props) {
       >
         {({ points, chartBounds }) => (
           <Bar
-            labels={{ position: "top", font }}
+            labels={{ position: "top", font, color: colorInk }}
             points={points.amount}
             barCount={points.amount.length}
             chartBounds={chartBounds}

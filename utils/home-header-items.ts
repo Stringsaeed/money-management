@@ -113,8 +113,8 @@ export function useHomeHeaderItems() {
 
   const headerLeftItems: NativeStackHeaderItem[] = [
     {
-      label: "navigation",
       type: "menu",
+      label: "Navigation",
       icon: {
         type: "sfSymbol",
         name: "line.3.horizontal",
@@ -135,7 +135,7 @@ export function useHomeHeaderItems() {
           },
           {
             type: "action",
-            label: "Obligations — Coming Soon",
+            label: "Obligations",
             icon: { type: "sfSymbol", name: "scalemass" },
             disabled: true,
             onPress: () => {},

@@ -1,11 +1,8 @@
-import { Activity, useMemo, useState } from "react";
+import { Activity, useState } from "react";
 import { View } from "react-native";
 import { ChartBarIcon, TrendUpIcon } from "phosphor-react-native";
 
 import { ToggleGroup, ToggleGroupIcon, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { useCategorySpending, useTransactionPoints } from "@/hooks/use-chart-data";
-import { useTransactions } from "@/hooks/use-transactions";
-import { useUIStore } from "@/stores/ui-store";
 
 import { CategorySpendingChart } from "./category-spending-chart";
 import { TransactionTrendChart } from "./transaction-trend-chart";
@@ -14,24 +11,11 @@ type ChartTab = "spending" | "trend";
 
 export function StatsCharts() {
   const [activeTab, setActiveTab] = useState<ChartTab>("spending");
-  const { selectedYear, selectedMonth, activeAccountId, selectedCategoryId } = useUIStore();
-
-  const { data: transactions = [] } = useTransactions({
-    year: selectedYear ?? undefined,
-    month: selectedMonth ?? undefined,
-    accountId: activeAccountId,
-    categoryId: selectedCategoryId,
-  });
-
-  const flatTransactions = useMemo(() => transactions, [transactions]);
-
-  const categorySpending = useCategorySpending(flatTransactions);
-  const transactionPoints = useTransactionPoints(flatTransactions);
 
   return (
-    <View className="mx-5 mt-4">
+    <View className="mx-5 mt-4 shadow-sm border border-muted-foreground/20 p-2 rounded-lg bg-background">
       {/* Tab Switcher */}
-      <View className="absolute top-2 right-2 z-10">
+      <View className="self-end">
         <ToggleGroup
           type="single"
           className="bg-background "
@@ -51,10 +35,10 @@ export function StatsCharts() {
       </View>
 
       <Activity mode={activeTab === "spending" ? "visible" : "hidden"}>
-        <CategorySpendingChart data={categorySpending} />
+        <CategorySpendingChart />
       </Activity>
       <Activity mode={activeTab === "trend" ? "visible" : "hidden"}>
-        <TransactionTrendChart data={transactionPoints} />
+        <TransactionTrendChart />
       </Activity>
     </View>
   );

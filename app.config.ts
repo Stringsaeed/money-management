@@ -69,7 +69,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           },
         },
       ],
-      "expo-font",
+      [
+        "expo-font",
+        {
+          fonts: [
+            "node_modules/@expo-google-fonts/newsreader/400Regular/Newsreader_400Regular.ttf",
+            "node_modules/@expo-google-fonts/plus-jakarta-sans/400Regular/PlusJakartaSans_400Regular.ttf",
+          ],
+        },
+      ],
       "expo-image",
       "expo-web-browser",
       "expo-sqlite",

@@ -1,12 +1,20 @@
 import { useMemo } from "react";
 import { View } from "react-native";
-
-import { Text } from "@/components/ui/text";
+import { Host, Text as SwiftUIText } from "@expo/ui/swift-ui";
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
 import { formatCents } from "@/utils/currency";
 import { groupByDay } from "@/utils/transaction";
+import {
+  Animation,
+  animation,
+  contentTransition,
+  font,
+  frame,
+  monospacedDigit,
+} from "@expo/ui/swift-ui/modifiers";
+import { useLoadAfterTimeout } from "@/hooks/use-load-after-timeout";
 
 export function BalanceHero() {
   const { selectedYear, selectedMonth, activeAccountId, selectedCategoryId } = useUIStore();
@@ -46,16 +54,33 @@ export function BalanceHero() {
 
     return net;
   }, [activeFilterCount, accounts, groups]);
+  const balance = useLoadAfterTimeout(filteredBalance, 0, 500);
 
   return (
     <View className="px-5 pb-2 bg-background">
-      <Text
-        className="font-heading-medium text-[48px] leading-tight text-ink"
-        style={{ fontVariant: ["tabular-nums"] }}
-        selectable
-      >
-        {formatCents(filteredBalance, currency)}
-      </Text>
+      <Host matchContents>
+        <SwiftUIText
+          modifiers={[
+            monospacedDigit(),
+            contentTransition("numericText"),
+            font({
+              family: "Newsreader-Regular",
+              size: 48,
+            }),
+            animation(
+              Animation.spring({
+                response: 0.4,
+                dampingFraction: 0.6,
+                duration: 500,
+              }),
+              balance,
+            ),
+            frame({ maxWidth: 400, alignment: "leading" }),
+          ]}
+        >
+          {formatCents(balance, currency)}
+        </SwiftUIText>
+      </Host>
     </View>
   );
 }

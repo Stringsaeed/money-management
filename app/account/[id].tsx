@@ -54,7 +54,6 @@ export default function AccountDetailScreen() {
 
   return (
     <ScrollView className="flex-1 bg-background">
-      {/* Header */}
       <View
         style={{
           backgroundColor: account.color,

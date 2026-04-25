@@ -3,16 +3,24 @@ import { View } from "react-native";
 import { CartesianChart, Line } from "victory-native";
 
 import { Text } from "@/components/ui/text";
-import type { TransactionPointDatum } from "@/hooks/use-chart-data";
+import { useTransactions } from "@/hooks/use-transactions";
+import { useUIStore } from "@/stores/ui-store";
+import { useTransactionPoints } from "@/hooks/use-chart-data";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const fontFile = require("@expo-google-fonts/plus-jakarta-sans/400Regular/PlusJakartaSans_400Regular.ttf");
 
-interface Props {
-  data: TransactionPointDatum[];
-}
+export function TransactionTrendChart() {
+  const { selectedYear, selectedMonth, activeAccountId, selectedCategoryId } = useUIStore();
 
-export function TransactionTrendChart({ data }: Props) {
+  const { data: transactions = [] } = useTransactions({
+    year: selectedYear ?? undefined,
+    month: selectedMonth ?? undefined,
+    accountId: activeAccountId,
+    categoryId: selectedCategoryId,
+  });
+
+  const data = useTransactionPoints(transactions);
   const font = useFont(fontFile, 10);
 
   if (data.length < 2) {

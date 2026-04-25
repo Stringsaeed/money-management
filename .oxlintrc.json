@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["import", "react"],
+  "plugins": ["import", "react", "jest"],
   "categories": {
     "correctness": "off"
   },
@@ -90,7 +90,14 @@
     "clearImmediate": "readonly",
     "process": "readonly",
     "setImmediate": "readonly",
-    "shared-node-browser": "writable"
+    "shared-node-browser": "writable",
+    "jest": "readonly",
+    "describe": "readonly",
+    "expect": "readonly",
+    "it": "readonly",
+    "beforeAll": "readonly",
+    "beforeEach": "readonly",
+    "afterEach": "readonly"
   },
   "ignorePatterns": ["android/app/build", "dist/*"],
   "jsPlugins": ["eslint-plugin-expo"],
@@ -121,7 +128,7 @@
         ],
         "@typescript-eslint/no-extra-non-null-assertion": "warn",
         "no-unused-vars": [
-          "warn",
+          "error",
           {
             "vars": "all",
             "args": "none",
@@ -130,7 +137,7 @@
           }
         ],
         "no-useless-constructor": "warn",
-        "no-undef": "off",
+        "no-undef": "error",
         "@typescript-eslint/no-require-imports": [
           "warn",
           {
