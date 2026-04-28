@@ -52,3 +52,4 @@ app-example
 !.yarn/versions
 
 coverage
+.env*

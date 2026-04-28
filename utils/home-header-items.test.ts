@@ -61,13 +61,15 @@ describe("useHomeHeaderItems", () => {
     const filtersItem = result.current.headerRightItems[0] as any;
     const addEntryItem = result.current.headerRightItems[1] as any;
 
-    expect(navigationItem?.menu?.items).toHaveLength(4);
+    expect(navigationItem?.menu?.items).toHaveLength(5);
 
     navigationItem?.menu?.items[0]?.onPress?.();
-    navigationItem?.menu?.items[3]?.onPress?.();
+    navigationItem?.menu?.items[1]?.onPress?.();
+    navigationItem?.menu?.items[4]?.onPress?.();
     addEntryItem?.onPress?.();
 
     expect(mockPush).toHaveBeenCalledWith("/ledger");
+    expect(mockPush).toHaveBeenCalledWith("/money-movement");
     expect(mockPush).toHaveBeenCalledWith("/settings");
     expect(mockPush).toHaveBeenCalledWith("/transaction/new");
 

@@ -129,6 +129,12 @@ export function useHomeHeaderItems() {
           },
           {
             type: "action",
+            label: "Money Movement",
+            icon: { type: "sfSymbol", name: "chart.line.uptrend.xyaxis" },
+            onPress: () => router.push("/money-movement" as never),
+          },
+          {
+            type: "action",
             label: "Envelopes",
             icon: { type: "sfSymbol", name: "envelope" },
             onPress: () => router.push("/envelopes" as never),
