@@ -34,8 +34,25 @@ interface TwelveDataQuoteResponse {
   message?: string;
 }
 
+interface FreeCryptoQuoteResponse {
+  symbol?: string;
+  price?: number | string;
+  change_24h?: number | string;
+  exchange?: string;
+  updated_at?: string;
+  timestamp?: string;
+  data?: unknown;
+  result?: unknown;
+  status?: string;
+  message?: string;
+  error?: string;
+}
+
 const TWELVE_DATA_QUOTE_URL = "https://api.twelvedata.com/quote";
+const FREE_CRYPTO_API_DATA_URL = "https://api.freecryptoapi.com/v1/getData";
 const TWELVE_DATA_API_KEY = process.env.EXPO_PUBLIC_TWELVE_DATA_API_KEY;
+const FREE_CRYPTO_API_KEY =
+  process.env.EXPO_PUBLIC_FREECRYPTO_API_KEY ?? process.env.EXPO_PUBLIC_FREECRYPTOAPI_KEY;
 
 export const MARKET_ASSETS: MarketAssetDefinition[] = [
   { symbol: "NVDA", label: "NVIDIA", group: "Stocks", emoji: "⚡️" },
@@ -59,10 +76,29 @@ function parseNumber(value: string | undefined) {
   return Number.isFinite(numberValue) ? numberValue : null;
 }
 
+function parseMaybeNumber(value: number | string | undefined) {
+  if (value === undefined) return null;
+
+  const numberValue = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numberValue) ? numberValue : null;
+}
+
+function getCryptoSymbol(asset: MarketAssetDefinition) {
+  return asset.symbol.split("/")[0] ?? asset.symbol;
+}
+
 async function fetchMarketQuote(asset: MarketAssetDefinition): Promise<MarketQuote> {
+  if (asset.group === "Crypto") {
+    return fetchCryptoQuote(asset);
+  }
+
+  if (!TWELVE_DATA_API_KEY) {
+    throw new Error("Add EXPO_PUBLIC_TWELVE_DATA_API_KEY to load stocks and metals.");
+  }
+
   const params = new URLSearchParams({
     symbol: asset.symbol,
-    apikey: TWELVE_DATA_API_KEY ?? "",
+    apikey: TWELVE_DATA_API_KEY,
   });
 
   const response = await fetch(`${TWELVE_DATA_QUOTE_URL}?${params.toString()}`);
@@ -88,6 +124,68 @@ async function fetchMarketQuote(asset: MarketAssetDefinition): Promise<MarketQuo
     updatedAt: quote.datetime ?? null,
     errorMessage: null,
   };
+}
+
+async function fetchCryptoQuote(asset: MarketAssetDefinition): Promise<MarketQuote> {
+  if (!FREE_CRYPTO_API_KEY) {
+    throw new Error("Add EXPO_PUBLIC_FREECRYPTO_API_KEY to load crypto quotes.");
+  }
+
+  const cryptoSymbol = getCryptoSymbol(asset);
+  const params = new URLSearchParams({ symbol: cryptoSymbol });
+  const response = await fetch(`${FREE_CRYPTO_API_DATA_URL}?${params.toString()}`, {
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${FREE_CRYPTO_API_KEY}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`FreeCryptoAPI returned ${response.status} for ${asset.symbol}`);
+  }
+
+  const quote = normalizeFreeCryptoQuote((await response.json()) as FreeCryptoQuoteResponse);
+
+  if (quote.status === "error" || quote.error) {
+    throw new Error(quote.message ?? quote.error ?? `FreeCryptoAPI could not load ${asset.symbol}`);
+  }
+
+  return {
+    ...asset,
+    symbol: `${cryptoSymbol}/USD`,
+    currency: "USD",
+    price: parseMaybeNumber(quote.price),
+    change: null,
+    percentChange: parseMaybeNumber(quote.change_24h),
+    exchange: quote.exchange ?? "FreeCryptoAPI",
+    isMarketOpen: true,
+    updatedAt: quote.updated_at ?? quote.timestamp ?? new Date().toISOString(),
+    errorMessage: null,
+  };
+}
+
+function normalizeFreeCryptoQuote(response: FreeCryptoQuoteResponse): FreeCryptoQuoteResponse {
+  if (Array.isArray(response.data)) {
+    return (response.data[0] as FreeCryptoQuoteResponse | undefined) ?? response;
+  }
+
+  if (Array.isArray(response.result)) {
+    return (response.result[0] as FreeCryptoQuoteResponse | undefined) ?? response;
+  }
+
+  if (isFreeCryptoQuoteResponse(response.data)) {
+    return response.data;
+  }
+
+  if (isFreeCryptoQuoteResponse(response.result)) {
+    return response.result;
+  }
+
+  return response;
+}
+
+function isFreeCryptoQuoteResponse(value: unknown): value is FreeCryptoQuoteResponse {
+  return typeof value === "object" && value !== null;
 }
 
 function buildFailedQuote(asset: MarketAssetDefinition, error: unknown): MarketQuote {
@@ -128,13 +226,13 @@ async function fetchMarketQuotes() {
 export function useMarketQuotes() {
   return useQuery({
     queryKey: ["market-quotes"],
-    enabled: Boolean(TWELVE_DATA_API_KEY),
+    enabled: hasMarketDataApiKeys(),
     queryFn: fetchMarketQuotes,
     staleTime: 60 * 1000,
     refetchInterval: 5 * 60 * 1000,
   });
 }
 
-export function hasTwelveDataApiKey() {
-  return Boolean(TWELVE_DATA_API_KEY);
+export function hasMarketDataApiKeys() {
+  return Boolean(TWELVE_DATA_API_KEY || FREE_CRYPTO_API_KEY);
 }

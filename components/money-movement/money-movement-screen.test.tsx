@@ -13,7 +13,7 @@ jest.mock("@/hooks/use-market-quotes", () => ({
     { symbol: "XAU/USD", label: "Gold Spot", group: "Metals", emoji: "🥇" },
     { symbol: "BTC/USD", label: "Bitcoin", group: "Crypto", emoji: "₿" },
   ],
-  hasTwelveDataApiKey: () => mockHasTwelveDataApiKey(),
+  hasMarketDataApiKeys: () => mockHasTwelveDataApiKey(),
   useMarketQuotes: () => mockUseMarketQuotes(),
 }));
 
@@ -52,13 +52,13 @@ describe("MoneyMovementScreen", () => {
     });
   });
 
-  it("shows setup state when Twelve Data key is missing", () => {
+  it("shows setup state when market API keys are missing", () => {
     mockHasTwelveDataApiKey.mockReturnValue(false);
 
     render(<MoneyMovementScreen />);
 
     expect(screen.getByText("Money Movement")).toBeOnTheScreen();
-    expect(screen.getByText("Connect Twelve Data 🔌")).toBeOnTheScreen();
+    expect(screen.getByText("Connect market APIs 🔌")).toBeOnTheScreen();
   });
 
   it("renders grouped market quotes and refreshes feed", () => {

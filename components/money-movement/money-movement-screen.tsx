@@ -5,7 +5,7 @@ import { MarketHero } from "@/components/money-movement/market-hero";
 import { MarketStateCard } from "@/components/money-movement/market-state-card";
 import { QuoteSection } from "@/components/money-movement/quote-section";
 import {
-  hasTwelveDataApiKey,
+  hasMarketDataApiKeys,
   MARKET_ASSETS,
   type MarketAssetGroup,
   useMarketQuotes,
@@ -14,7 +14,7 @@ import {
 const GROUPS: MarketAssetGroup[] = ["Stocks", "Metals", "Crypto"];
 
 export function MoneyMovementScreen() {
-  const hasApiKey = hasTwelveDataApiKey();
+  const hasApiKey = hasMarketDataApiKeys();
   const { data: quotes = [], isFetching, isLoading, error, refetch } = useMarketQuotes();
   const handleRefresh = () => {
     refetch();
@@ -36,8 +36,8 @@ export function MoneyMovementScreen() {
 
         {!hasApiKey ? (
           <MarketStateCard
-            title="Connect Twelve Data 🔌"
-            message="Add EXPO_PUBLIC_TWELVE_DATA_API_KEY to the app environment to stream live stocks, metals, and crypto quotes."
+            title="Connect market APIs 🔌"
+            message="Add EXPO_PUBLIC_TWELVE_DATA_API_KEY for stocks and metals, or EXPO_PUBLIC_FREECRYPTO_API_KEY for crypto quotes."
           />
         ) : null}
 
@@ -46,7 +46,7 @@ export function MoneyMovementScreen() {
         {hasApiKey && error ? (
           <MarketStateCard
             title="Market feed paused"
-            message={error instanceof Error ? error.message : "Twelve Data could not load quotes."}
+            message={error instanceof Error ? error.message : "Market APIs could not load quotes."}
           />
         ) : null}
 
@@ -59,7 +59,7 @@ export function MoneyMovementScreen() {
         {hasApiKey && !isLoading && quotes.length === 0 && !error ? (
           <MarketStateCard
             title="No quotes yet"
-            message={`Twelve Data is ready for ${MARKET_ASSETS.length} tracked markets. Tap Refresh to try again.`}
+            message={`Market APIs are ready for ${MARKET_ASSETS.length} tracked markets. Tap Refresh to try again.`}
           />
         ) : null}
       </ScrollView>
