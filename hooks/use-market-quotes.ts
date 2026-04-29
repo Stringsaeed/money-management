@@ -88,10 +88,6 @@ function getCryptoSymbol(asset: MarketAssetDefinition) {
 }
 
 async function fetchMarketQuote(asset: MarketAssetDefinition): Promise<MarketQuote> {
-  if (asset.group === "Crypto") {
-    return fetchCryptoQuote(asset);
-  }
-
   if (!TWELVE_DATA_API_KEY) {
     throw new Error("Add EXPO_PUBLIC_TWELVE_DATA_API_KEY to load stocks and metals.");
   }
@@ -126,13 +122,17 @@ async function fetchMarketQuote(asset: MarketAssetDefinition): Promise<MarketQuo
   };
 }
 
-async function fetchCryptoQuote(asset: MarketAssetDefinition): Promise<MarketQuote> {
+async function fetchCryptoQuotes(assets: MarketAssetDefinition[]): Promise<MarketQuote[]> {
+  if (assets.length === 0) {
+    return [];
+  }
+
   if (!FREE_CRYPTO_API_KEY) {
     throw new Error("Add EXPO_PUBLIC_FREECRYPTO_API_KEY to load crypto quotes.");
   }
 
-  const cryptoSymbol = getCryptoSymbol(asset);
-  const params = new URLSearchParams({ symbol: cryptoSymbol });
+  const cryptoSymbols = assets.map(getCryptoSymbol);
+  const params = new URLSearchParams({ symbol: cryptoSymbols.join("+") });
   const response = await fetch(`${FREE_CRYPTO_API_DATA_URL}?${params.toString()}`, {
     headers: {
       Accept: "application/json",
@@ -141,51 +141,70 @@ async function fetchCryptoQuote(asset: MarketAssetDefinition): Promise<MarketQuo
   });
 
   if (!response.ok) {
-    throw new Error(`FreeCryptoAPI returned ${response.status} for ${asset.symbol}`);
+    throw new Error(`FreeCryptoAPI returned ${response.status} for crypto quotes`);
   }
 
-  const quote = normalizeFreeCryptoQuote((await response.json()) as FreeCryptoQuoteResponse);
+  const quotes = normalizeFreeCryptoQuotes((await response.json()) as FreeCryptoQuoteResponse);
+  const quoteBySymbol = new Map(
+    quotes.map((quote) => [normalizeCryptoSymbol(quote.symbol), quote] as const),
+  );
 
-  if (quote.status === "error" || quote.error) {
-    throw new Error(quote.message ?? quote.error ?? `FreeCryptoAPI could not load ${asset.symbol}`);
-  }
+  return assets.map((asset) => {
+    const cryptoSymbol = getCryptoSymbol(asset);
+    const quote = quoteBySymbol.get(normalizeCryptoSymbol(cryptoSymbol));
 
-  return {
-    ...asset,
-    symbol: `${cryptoSymbol}/USD`,
-    currency: "USD",
-    price: parseMaybeNumber(quote.price),
-    change: null,
-    percentChange: parseMaybeNumber(quote.change_24h),
-    exchange: quote.exchange ?? "FreeCryptoAPI",
-    isMarketOpen: true,
-    updatedAt: quote.updated_at ?? quote.timestamp ?? new Date().toISOString(),
-    errorMessage: null,
-  };
+    if (!quote) {
+      return buildFailedQuote(asset, new Error(`FreeCryptoAPI did not return ${asset.symbol}`));
+    }
+
+    if (quote.status === "error" || quote.error) {
+      return buildFailedQuote(
+        asset,
+        new Error(quote.message ?? quote.error ?? `FreeCryptoAPI could not load ${asset.symbol}`),
+      );
+    }
+
+    return {
+      ...asset,
+      symbol: `${cryptoSymbol}/USD`,
+      currency: "USD",
+      price: parseMaybeNumber(quote.price),
+      change: null,
+      percentChange: parseMaybeNumber(quote.change_24h),
+      exchange: quote.exchange ?? "FreeCryptoAPI",
+      isMarketOpen: true,
+      updatedAt: quote.updated_at ?? quote.timestamp ?? new Date().toISOString(),
+      errorMessage: null,
+    };
+  });
 }
 
-function normalizeFreeCryptoQuote(response: FreeCryptoQuoteResponse): FreeCryptoQuoteResponse {
+function normalizeFreeCryptoQuotes(response: FreeCryptoQuoteResponse): FreeCryptoQuoteResponse[] {
   if (Array.isArray(response.data)) {
-    return (response.data[0] as FreeCryptoQuoteResponse | undefined) ?? response;
+    return response.data.filter(isFreeCryptoQuoteResponse);
   }
 
   if (Array.isArray(response.result)) {
-    return (response.result[0] as FreeCryptoQuoteResponse | undefined) ?? response;
+    return response.result.filter(isFreeCryptoQuoteResponse);
   }
 
   if (isFreeCryptoQuoteResponse(response.data)) {
-    return response.data;
+    return [response.data];
   }
 
   if (isFreeCryptoQuoteResponse(response.result)) {
-    return response.result;
+    return [response.result];
   }
 
-  return response;
+  return [response];
 }
 
 function isFreeCryptoQuoteResponse(value: unknown): value is FreeCryptoQuoteResponse {
   return typeof value === "object" && value !== null;
+}
+
+function normalizeCryptoSymbol(symbol: string | undefined) {
+  return symbol?.split("@")[0]?.split("/")[0]?.toUpperCase() ?? "";
 }
 
 function buildFailedQuote(asset: MarketAssetDefinition, error: unknown): MarketQuote {
@@ -203,14 +222,16 @@ function buildFailedQuote(asset: MarketAssetDefinition, error: unknown): MarketQ
 }
 
 async function fetchMarketQuotes() {
-  const quoteResults = await Promise.allSettled(MARKET_ASSETS.map(fetchMarketQuote));
+  const regularAssets = MARKET_ASSETS.filter((asset) => asset.group !== "Crypto");
+  const cryptoAssets = MARKET_ASSETS.filter((asset) => asset.group === "Crypto");
 
-  return quoteResults.map((result, index): MarketQuote => {
+  const regularQuoteResults = await Promise.allSettled(regularAssets.map(fetchMarketQuote));
+  const regularQuotes = regularQuoteResults.map((result, index): MarketQuote => {
+    const asset = regularAssets[index];
+
     if (result.status === "fulfilled") {
       return result.value;
     }
-
-    const asset = MARKET_ASSETS[index];
 
     if (asset) {
       return buildFailedQuote(asset, result.reason);
@@ -221,6 +242,18 @@ async function fetchMarketQuotes() {
       result.reason,
     );
   });
+
+  const cryptoQuotes = await fetchCryptoQuotes(cryptoAssets).catch((error: unknown) =>
+    cryptoAssets.map((asset) => buildFailedQuote(asset, error)),
+  );
+
+  const quoteBySymbol = new Map(
+    [...regularQuotes, ...cryptoQuotes].map((quote) => [quote.symbol, quote] as const),
+  );
+
+  return MARKET_ASSETS.map(
+    (asset) => quoteBySymbol.get(asset.symbol) ?? buildFailedQuote(asset, "Quote unavailable"),
+  );
 }
 
 export function useMarketQuotes() {
