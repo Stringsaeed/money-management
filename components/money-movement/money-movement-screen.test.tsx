@@ -57,7 +57,7 @@ describe("MoneyMovementScreen", () => {
 
     render(<MoneyMovementScreen />);
 
-    expect(screen.getByText("Money Movement")).toBeOnTheScreen();
+    expect(screen.getByText(/Live board for top US stocks/)).toBeOnTheScreen();
     expect(screen.getByText("Connect market APIs 🔌")).toBeOnTheScreen();
   });
 

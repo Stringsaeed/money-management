@@ -31,6 +31,26 @@ jest.mock("react-native-nitro-fetch", () => ({
   fetch: global.fetch,
 }));
 
+jest.mock("@expo/ui/swift-ui", () => {
+  const { Text, View } = require("react-native");
+
+  return {
+    Host: View,
+    Text,
+  };
+});
+
+jest.mock("@expo/ui/swift-ui/modifiers", () => ({
+  Animation: {
+    spring: jest.fn((config) => config),
+  },
+  animation: jest.fn(),
+  contentTransition: jest.fn(),
+  font: jest.fn(),
+  frame: jest.fn(),
+  monospacedDigit: jest.fn(),
+}));
+
 jest.mock("@gorhom/bottom-sheet", () => require("@gorhom/bottom-sheet/mock"));
 jest.mock("react-native-worklets", () => require("react-native-worklets/lib/module/mock"));
 jest.mock("react-native-reanimated", () => {
