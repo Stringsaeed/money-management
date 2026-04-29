@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export type MarketAssetGroup = "Stocks" | "Metals" | "Crypto";
 
-export interface MarketAssetDefinition {
+interface MarketAssetDefinition {
   symbol: string;
   label: string;
   group: MarketAssetGroup;
@@ -62,11 +62,11 @@ export const MARKET_ASSETS: MarketAssetDefinition[] = [
   { symbol: "AMZN", label: "Amazon", group: "Stocks", emoji: "📦" },
   { symbol: "XAU/USD", label: "Gold Spot", group: "Metals", emoji: "🥇" },
   { symbol: "XAG/USD", label: "Silver Spot", group: "Metals", emoji: "🥈" },
-  { symbol: "BTC/USD", label: "Bitcoin", group: "Crypto", emoji: "₿" },
-  { symbol: "ETH/USD", label: "Ethereum", group: "Crypto", emoji: "◆" },
-  { symbol: "USDT/USD", label: "Tether", group: "Crypto", emoji: "💵" },
-  { symbol: "XRP/USD", label: "XRP", group: "Crypto", emoji: "💧" },
-  { symbol: "BNB/USD", label: "BNB", group: "Crypto", emoji: "🟡" },
+  { symbol: "BTC", label: "Bitcoin", group: "Crypto", emoji: "₿" },
+  { symbol: "ETH", label: "Ethereum", group: "Crypto", emoji: "◆" },
+  { symbol: "USDT", label: "Tether", group: "Crypto", emoji: "💵" },
+  // { symbol: "XRP", label: "XRP", group: "Crypto", emoji: "💧" },
+  // { symbol: "BNB", label: "BNB", group: "Crypto", emoji: "🟡" },
 ];
 
 function parseNumber(value: string | undefined) {
@@ -84,7 +84,7 @@ function parseMaybeNumber(value: number | string | undefined) {
 }
 
 function getCryptoSymbol(asset: MarketAssetDefinition) {
-  return asset.symbol.split("/")[0] ?? asset.symbol;
+  return asset.symbol;
 }
 
 async function fetchMarketQuote(asset: MarketAssetDefinition): Promise<MarketQuote> {
@@ -131,9 +131,10 @@ async function fetchCryptoQuotes(assets: MarketAssetDefinition[]): Promise<Marke
     throw new Error("Add EXPO_PUBLIC_FREECRYPTO_API_KEY to load crypto quotes.");
   }
 
+  const url = new URL(FREE_CRYPTO_API_DATA_URL);
   const cryptoSymbols = assets.map(getCryptoSymbol);
-  const params = new URLSearchParams({ symbol: cryptoSymbols.join("+") });
-  const response = await fetch(`${FREE_CRYPTO_API_DATA_URL}?${params.toString()}`, {
+  url.searchParams.append("symbol", cryptoSymbols.join("+"));
+  const response = await fetch(url.toString(), {
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${FREE_CRYPTO_API_KEY}`,

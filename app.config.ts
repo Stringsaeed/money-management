@@ -84,6 +84,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "@react-native-community/datetimepicker",
       "expo-build-properties",
       "@rnrepo/expo-config-plugin",
+      "./plugins/withRocketSimConnect.js",
     ],
     experiments: {
       typedRoutes: true,
