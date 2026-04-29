@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { fetch } from "react-native-nitro-fetch";
 
 export type MarketAssetGroup = "Stocks" | "Metals" | "Crypto";
 

@@ -27,6 +27,10 @@ jest.mock("expo-haptics", () => ({
   },
 }));
 
+jest.mock("react-native-nitro-fetch", () => ({
+  fetch: global.fetch,
+}));
+
 jest.mock("@gorhom/bottom-sheet", () => require("@gorhom/bottom-sheet/mock"));
 jest.mock("react-native-worklets", () => require("react-native-worklets/lib/module/mock"));
 jest.mock("react-native-reanimated", () => {
