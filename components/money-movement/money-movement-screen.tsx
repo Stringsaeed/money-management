@@ -28,10 +28,7 @@ export function MoneyMovementScreen() {
   return (
     <View className="flex-1 bg-background">
       <Stack.Screen options={{ title: "Money Movement" }} />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerClassName="gap-5 pt-safe-offset-20 pb-safe-offset-10"
-      >
+      <ScrollView contentContainerClassName="gap-5 pt-safe-offset-20 pb-safe-offset-10">
         <MarketHero hasApiKey={hasApiKey} isFetching={isFetching} onRefresh={handleRefresh} />
 
         {!hasApiKey ? (

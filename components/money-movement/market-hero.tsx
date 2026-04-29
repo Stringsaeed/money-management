@@ -14,7 +14,6 @@ export function MarketHero({ hasApiKey, isFetching, onRefresh }: MarketHeroProps
   return (
     <View className="mx-5 gap-5">
       <View className="gap-3">
-        <Text className="font-heading-normal text-5xl italic text-ink">Money Movement</Text>
         <Text className="font-body-normal text-base leading-7 text-ink/50">
           Live board for top US stocks by market cap, gold, silver, and top crypto pairs.
         </Text>
