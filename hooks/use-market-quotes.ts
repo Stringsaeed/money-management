@@ -34,6 +34,16 @@ interface TwelveDataQuoteResponse {
   message?: string;
 }
 
+interface MetalsDevLatestResponse {
+  status?: string;
+  currency?: string;
+  unit?: string;
+  timestamp?: string;
+  metals?: Record<string, number | string | undefined>;
+  error_code?: number;
+  error_message?: string;
+}
+
 interface FreeCryptoApiResponse {
   status?: string;
   symbols?: unknown;
@@ -60,8 +70,10 @@ interface FreeCryptoQuoteResponse {
 }
 
 const TWELVE_DATA_QUOTE_URL = "https://api.twelvedata.com/quote";
+const METALS_DEV_LATEST_URL = "https://api.metals.dev/v1/latest";
 const FREE_CRYPTO_API_DATA_URL = "https://api.freecryptoapi.com/v1/getData";
 const TWELVE_DATA_API_KEY = process.env.EXPO_PUBLIC_TWELVE_DATA_API_KEY;
+const METALS_DEV_API_KEY = process.env.EXPO_PUBLIC_METALS_DEV_API_KEY;
 const FREE_CRYPTO_API_KEY =
   process.env.EXPO_PUBLIC_FREECRYPTO_API_KEY ?? process.env.EXPO_PUBLIC_FREECRYPTOAPI_KEY;
 
@@ -98,9 +110,20 @@ function getCryptoSymbol(asset: MarketAssetDefinition) {
   return normalizeCryptoSymbol(asset.symbol);
 }
 
-async function fetchMarketQuote(asset: MarketAssetDefinition): Promise<MarketQuote> {
+function getMetalKey(asset: MarketAssetDefinition) {
+  switch (normalizeCryptoSymbol(asset.symbol)) {
+    case "XAU":
+      return "gold";
+    case "XAG":
+      return "silver";
+    default:
+      return asset.symbol.toLowerCase();
+  }
+}
+
+async function fetchStockQuote(asset: MarketAssetDefinition): Promise<MarketQuote> {
   if (!TWELVE_DATA_API_KEY) {
-    throw new Error("Add EXPO_PUBLIC_TWELVE_DATA_API_KEY to load stocks and metals.");
+    throw new Error("Add EXPO_PUBLIC_TWELVE_DATA_API_KEY to load stocks.");
   }
 
   const params = new URLSearchParams({
@@ -131,6 +154,58 @@ async function fetchMarketQuote(asset: MarketAssetDefinition): Promise<MarketQuo
     updatedAt: quote.datetime ?? null,
     errorMessage: null,
   };
+}
+
+async function fetchMetalQuotes(assets: MarketAssetDefinition[]): Promise<MarketQuote[]> {
+  if (assets.length === 0) {
+    return [];
+  }
+
+  if (!METALS_DEV_API_KEY) {
+    throw new Error("Add EXPO_PUBLIC_METALS_DEV_API_KEY to load metals.");
+  }
+
+  const params = new URLSearchParams({
+    api_key: METALS_DEV_API_KEY,
+    currency: "USD",
+    unit: "toz",
+  });
+  const response = await fetch(`${METALS_DEV_LATEST_URL}?${params.toString()}`, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Metals.Dev returned ${response.status} for metals`);
+  }
+
+  const quote = (await response.json()) as MetalsDevLatestResponse;
+
+  if (quote.status === "failure") {
+    throw new Error(quote.error_message ?? "Metals.Dev could not load metals");
+  }
+
+  return assets.map((asset) => {
+    const metalKey = getMetalKey(asset);
+    const price = parseMaybeNumber(quote.metals?.[metalKey]);
+
+    if (price === null) {
+      return buildFailedQuote(asset, new Error(`Metals.Dev did not return ${asset.label}`));
+    }
+
+    return {
+      ...asset,
+      currency: quote.currency ?? "USD",
+      price,
+      change: null,
+      percentChange: null,
+      exchange: "Metals.Dev",
+      isMarketOpen: true,
+      updatedAt: quote.timestamp ?? null,
+      errorMessage: null,
+    };
+  });
 }
 
 async function fetchCryptoQuotes(assets: MarketAssetDefinition[]): Promise<MarketQuote[]> {
@@ -247,12 +322,13 @@ function buildFailedQuote(asset: MarketAssetDefinition, error: unknown): MarketQ
 }
 
 async function fetchMarketQuotes() {
-  const regularAssets = MARKET_ASSETS.filter((asset) => asset.group !== "Crypto");
+  const stockAssets = MARKET_ASSETS.filter((asset) => asset.group === "Stocks");
+  const metalAssets = MARKET_ASSETS.filter((asset) => asset.group === "Metals");
   const cryptoAssets = MARKET_ASSETS.filter((asset) => asset.group === "Crypto");
 
-  const regularQuoteResults = await Promise.allSettled(regularAssets.map(fetchMarketQuote));
-  const regularQuotes = regularQuoteResults.map((result, index): MarketQuote => {
-    const asset = regularAssets[index];
+  const stockQuoteResults = await Promise.allSettled(stockAssets.map(fetchStockQuote));
+  const stockQuotes = stockQuoteResults.map((result, index): MarketQuote => {
+    const asset = stockAssets[index];
 
     if (result.status === "fulfilled") {
       return result.value;
@@ -268,12 +344,16 @@ async function fetchMarketQuotes() {
     );
   });
 
+  const metalQuotes = await fetchMetalQuotes(metalAssets).catch((error: unknown) =>
+    metalAssets.map((asset) => buildFailedQuote(asset, error)),
+  );
+
   const cryptoQuotes = await fetchCryptoQuotes(cryptoAssets).catch((error: unknown) =>
     cryptoAssets.map((asset) => buildFailedQuote(asset, error)),
   );
 
   const quoteBySymbol = new Map(
-    [...regularQuotes, ...cryptoQuotes].map(
+    [...stockQuotes, ...metalQuotes, ...cryptoQuotes].map(
       (quote) => [normalizeCryptoSymbol(quote.symbol), quote] as const,
     ),
   );
@@ -296,5 +376,5 @@ export function useMarketQuotes() {
 }
 
 export function hasMarketDataApiKeys() {
-  return Boolean(TWELVE_DATA_API_KEY || FREE_CRYPTO_API_KEY);
+  return Boolean(TWELVE_DATA_API_KEY || METALS_DEV_API_KEY || FREE_CRYPTO_API_KEY);
 }

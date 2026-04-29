@@ -37,7 +37,7 @@ export function MoneyMovementScreen() {
         {!hasApiKey ? (
           <MarketStateCard
             title="Connect market APIs 🔌"
-            message="Add EXPO_PUBLIC_TWELVE_DATA_API_KEY for stocks and metals, or EXPO_PUBLIC_FREECRYPTO_API_KEY for crypto quotes."
+            message="Add EXPO_PUBLIC_TWELVE_DATA_API_KEY for stocks, EXPO_PUBLIC_METALS_DEV_API_KEY for metals, or EXPO_PUBLIC_FREECRYPTO_API_KEY for crypto quotes."
           />
         ) : null}
 
