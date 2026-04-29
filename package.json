@@ -64,7 +64,7 @@
     "pressto": "^0.6.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "react-native": "patch:react-native@npm%3A0.83.6#~/.yarn/patches/react-native-npm-0.83.6-106e10c49d.patch",
+    "react-native": "0.83.6",
     "react-native-css": "^3.0.5",
     "react-native-gesture-handler": "~2.30.0",
     "react-native-reanimated": "4.2.1",
@@ -100,13 +100,18 @@
     "tailwindcss": "^4.2.2",
     "typescript": "~5.9.2"
   },
-  "resolutions": {
-    "expo-constants": "55.0.9",
-    "lightningcss": "1.30.1"
-  },
-  "packageManager": "yarn@4.13.0",
-  "trustedDependencies": [
-    "esbuild",
-    "unrs-resolver"
-  ]
+  "packageManager": "pnpm@10.18.0",
+  "pnpm": {
+    "overrides": {
+      "expo-constants": "55.0.9",
+      "lightningcss": "1.30.1"
+    },
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "unrs-resolver"
+    ],
+    "patchedDependencies": {
+      "react-native@0.83.6": "patches/react-native@0.83.6.patch"
+    }
+  }
 }

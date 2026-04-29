@@ -12,16 +12,16 @@
 
 ## Commands & Tooling
 
-- **Package manager: Yarn** (`yarn install`, `yarn run ...`); avoid npm/bun.
+- **Package manager: pnpm** (`pnpm install`, `pnpm run ...`); avoid npm/yarn/bun.
 - Use `date-fns` for date parsing, formatting, arithmetic, and interval logic; do not hand-roll date math or ad-hoc `Date` utilities.
-- Core scripts: `yarn start`, `yarn ios`, `yarn android`, `yarn web` for Expo entry points.
-- Lint with `yarn lint` (oxlint) but always finish work by running `yarn lint:fix` followed by `yarn format` (oxfmt).
-- Formatting check only: `yarn format:check` if you need CI parity without rewriting files.
+- Core scripts: `pnpm start`, `pnpm ios`, `pnpm android`, `pnpm web` for Expo entry points.
+- Lint with `pnpm lint` (oxlint) but always finish work by running `pnpm lint:fix` followed by `pnpm format` (oxfmt).
+- Formatting check only: `pnpm format:check` if you need CI parity without rewriting files.
 - There is no dedicated build step; Expo bundler handles builds per platform when invoking the platform-specific start scripts.
-- Jest + React Native Testing Library are configured. Keep the suite green and use `yarn test:ci` as the pre-merge gate.
-- Single-test workflow: prefer `yarn test path/to/file.test.tsx` or `yarn jest path/to/file.test.tsx --runInBand` when isolating a failing case.
-- Use `yarn dlx expo-doctor` or `npx expo install` only if health checks demand it—otherwise keep dependencies stable.
-- Shell access: prefer specialized helpers (Read/Glob/Grep) for file IO; reserve Bash for git, yarn, or runtime commands.
+- Jest + React Native Testing Library are configured. Keep the suite green and use `pnpm test:ci` as the pre-merge gate.
+- Single-test workflow: prefer `pnpm test path/to/file.test.tsx` or `pnpm jest path/to/file.test.tsx --runInBand` when isolating a failing case.
+- Use `pnpm dlx expo-doctor` or `npx expo install` only if health checks demand it—otherwise keep dependencies stable.
+- Shell access: prefer specialized helpers (Read/Glob/Grep) for file IO; reserve Bash for git, pnpm, or runtime commands.
 - Never invoke destructive git commands (`reset --hard`, `checkout --`) without the user's explicit order.
 
 ## Workflow Expectations
@@ -29,7 +29,7 @@
 - Start by skimming AGENTS.md and this file to refresh requirements for linting, formatting, skills, and Expo architecture.
 - Before writing code, gather context with `glob`, `read`, or `grep`; inspect related files rather than editing blind.
 - Apply single-file modifications with `apply_patch` when practical; avoid it for generated code or mass rewrites.
-- After editing, run `npx tsc --noEmit` to catch type errors, then `yarn lint:fix && yarn format`—this is mandatory.
+- After editing, run `npx tsc --noEmit` to catch type errors, then `pnpm lint:fix && pnpm format`—this is mandatory.
 - Document any skipped steps (e.g., simulator run) in the final response so the user knows what still needs verification.
 - Avoid questions like "Should I proceed?"; instead pick the safest default, act, and mention the assumption afterward.
 - Keep commands succinct and never stream large logs; summarize key lines for the user.
@@ -154,8 +154,8 @@ When creating picker components (account, category, date, etc.), follow this est
 
 ## Testing & QA
 
-- Automated tests are set up with Jest + React Native Testing Library. Use `yarn test:ci` for CI parity and pre-merge verification.
-- Prefer automated coverage first, then manual QA with `yarn ios`, `yarn android`, or `yarn web` when UI behavior changes.
+- Automated tests are set up with Jest + React Native Testing Library. Use `pnpm test:ci` for CI parity and pre-merge verification.
+- Prefer automated coverage first, then manual QA with `pnpm ios`, `pnpm android`, or `pnpm web` when UI behavior changes.
 - When adding tests later, prefer colocated `*.test.tsx` or `*.spec.ts` files near the unit under test.
 - Snapshot tests should target stable UI (icons, large layout) and live under a `__snapshots__` directory ignored by Metro.
 - Keep Detox/E2E scripts separate from Expo start scripts to avoid simulator conflicts.
@@ -200,8 +200,8 @@ When creating picker components (account, category, date, etc.), follow this est
 - [ ] Decompose into small, single-responsibility components; no large monoliths.
 - [ ] Use emojis in UI copy and labels to reinforce minimal modern design.
 - [ ] Run `npx tsc --noEmit` to verify no TypeScript errors.
-- [ ] Run `yarn lint:fix`.
-- [ ] Run `yarn format`.
+- [ ] Run `pnpm lint:fix`.
+- [ ] Run `pnpm format`.
 - [ ] Document manual QA (or note that it was skipped).
 - [ ] Prepare Conventional Commit message if the user asks for one.
 - [ ] Summarize changes referencing file paths wrapped in backticks.

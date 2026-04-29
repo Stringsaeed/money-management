@@ -7,13 +7,13 @@ Expo Router money management app with Jest + React Native Testing Library covera
 1. Install dependencies
 
    ```bash
-   yarn install
+   pnpm install
    ```
 
 2. Start the app
 
    ```bash
-   yarn start
+   pnpm start
    ```
 
 ## Testing
@@ -21,13 +21,13 @@ Expo Router money management app with Jest + React Native Testing Library covera
 Use these scripts locally:
 
 ```bash
-yarn test
-yarn test:watch
-yarn test:coverage
-yarn test:ci
+pnpm test
+pnpm test:watch
+pnpm test:coverage
+pnpm test:ci
 ```
 
-`yarn test:ci` is the pre-merge gate and the command used in CI.
+`pnpm test:ci` is the pre-merge gate and the command used in CI.
 
 Current policy:
 
@@ -40,8 +40,8 @@ Current policy:
 Before merging:
 
 ```bash
-yarn test:ci
+pnpm test:ci
 npx tsc --noEmit
-yarn lint:fix
-yarn format
+pnpm lint:fix
+pnpm format
 ```
