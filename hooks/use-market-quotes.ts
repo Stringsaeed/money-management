@@ -34,15 +34,26 @@ interface TwelveDataQuoteResponse {
   message?: string;
 }
 
+interface FreeCryptoApiResponse {
+  status?: string;
+  symbols?: unknown;
+  data?: unknown;
+  result?: unknown;
+  message?: string;
+  error?: string;
+}
+
 interface FreeCryptoQuoteResponse {
   symbol?: string;
+  last?: number | string;
+  daily_change_percentage?: number | string;
+  source_exchange?: string;
+  date?: string;
   price?: number | string;
   change_24h?: number | string;
   exchange?: string;
   updated_at?: string;
   timestamp?: string;
-  data?: unknown;
-  result?: unknown;
   status?: string;
   message?: string;
   error?: string;
@@ -84,7 +95,7 @@ function parseMaybeNumber(value: number | string | undefined) {
 }
 
 function getCryptoSymbol(asset: MarketAssetDefinition) {
-  return asset.symbol;
+  return normalizeCryptoSymbol(asset.symbol);
 }
 
 async function fetchMarketQuote(asset: MarketAssetDefinition): Promise<MarketQuote> {
@@ -131,10 +142,9 @@ async function fetchCryptoQuotes(assets: MarketAssetDefinition[]): Promise<Marke
     throw new Error("Add EXPO_PUBLIC_FREECRYPTO_API_KEY to load crypto quotes.");
   }
 
-  const url = new URL(FREE_CRYPTO_API_DATA_URL);
   const cryptoSymbols = assets.map(getCryptoSymbol);
-  url.searchParams.append("symbol", cryptoSymbols.join("+"));
-  const response = await fetch(url.toString(), {
+  const response = await fetch(`${FREE_CRYPTO_API_DATA_URL}?symbol=${cryptoSymbols.join("+")}`, {
+    method: "GET",
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${FREE_CRYPTO_API_KEY}`,
@@ -145,7 +155,17 @@ async function fetchCryptoQuotes(assets: MarketAssetDefinition[]): Promise<Marke
     throw new Error(`FreeCryptoAPI returned ${response.status} for crypto quotes`);
   }
 
-  const quotes = normalizeFreeCryptoQuotes((await response.json()) as FreeCryptoQuoteResponse);
+  const cryptoResponse = (await response.json()) as FreeCryptoApiResponse;
+
+  if (cryptoResponse.status === "error" || cryptoResponse.error) {
+    throw new Error(
+      cryptoResponse.message ??
+        cryptoResponse.error ??
+        "FreeCryptoAPI could not load crypto quotes",
+    );
+  }
+
+  const quotes = normalizeFreeCryptoQuotes(cryptoResponse);
   const quoteBySymbol = new Map(
     quotes.map((quote) => [normalizeCryptoSymbol(quote.symbol), quote] as const),
   );
@@ -169,18 +189,22 @@ async function fetchCryptoQuotes(assets: MarketAssetDefinition[]): Promise<Marke
       ...asset,
       symbol: `${cryptoSymbol}/USD`,
       currency: "USD",
-      price: parseMaybeNumber(quote.price),
+      price: parseMaybeNumber(quote.last ?? quote.price),
       change: null,
-      percentChange: parseMaybeNumber(quote.change_24h),
-      exchange: quote.exchange ?? "FreeCryptoAPI",
+      percentChange: parseMaybeNumber(quote.daily_change_percentage ?? quote.change_24h),
+      exchange: quote.source_exchange ?? quote.exchange ?? "FreeCryptoAPI",
       isMarketOpen: true,
-      updatedAt: quote.updated_at ?? quote.timestamp ?? new Date().toISOString(),
+      updatedAt: quote.date ?? quote.updated_at ?? quote.timestamp ?? new Date().toISOString(),
       errorMessage: null,
     };
   });
 }
 
-function normalizeFreeCryptoQuotes(response: FreeCryptoQuoteResponse): FreeCryptoQuoteResponse[] {
+function normalizeFreeCryptoQuotes(response: FreeCryptoApiResponse): FreeCryptoQuoteResponse[] {
+  if (Array.isArray(response.symbols)) {
+    return response.symbols.filter(isFreeCryptoQuoteResponse);
+  }
+
   if (Array.isArray(response.data)) {
     return response.data.filter(isFreeCryptoQuoteResponse);
   }
@@ -197,7 +221,7 @@ function normalizeFreeCryptoQuotes(response: FreeCryptoQuoteResponse): FreeCrypt
     return [response.result];
   }
 
-  return [response];
+  return [];
 }
 
 function isFreeCryptoQuoteResponse(value: unknown): value is FreeCryptoQuoteResponse {
@@ -249,11 +273,15 @@ async function fetchMarketQuotes() {
   );
 
   const quoteBySymbol = new Map(
-    [...regularQuotes, ...cryptoQuotes].map((quote) => [quote.symbol, quote] as const),
+    [...regularQuotes, ...cryptoQuotes].map(
+      (quote) => [normalizeCryptoSymbol(quote.symbol), quote] as const,
+    ),
   );
 
   return MARKET_ASSETS.map(
-    (asset) => quoteBySymbol.get(asset.symbol) ?? buildFailedQuote(asset, "Quote unavailable"),
+    (asset) =>
+      quoteBySymbol.get(normalizeCryptoSymbol(asset.symbol)) ??
+      buildFailedQuote(asset, "Quote unavailable"),
   );
 }
 

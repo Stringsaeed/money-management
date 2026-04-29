@@ -10,11 +10,9 @@ describe("MARKET_ASSETS", () => {
       "AMZN",
       "XAU/USD",
       "XAG/USD",
-      "BTC/USD",
-      "ETH/USD",
-      "USDT/USD",
-      "XRP/USD",
-      "BNB/USD",
+      "BTC",
+      "ETH",
+      "USDT",
     ]);
   });
 });
