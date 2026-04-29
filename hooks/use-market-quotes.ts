@@ -89,8 +89,8 @@ export const MARKET_ASSETS: MarketAssetDefinition[] = [
   { symbol: "BTC", label: "Bitcoin", group: "Crypto", emoji: "₿" },
   { symbol: "ETH", label: "Ethereum", group: "Crypto", emoji: "◆" },
   { symbol: "USDT", label: "Tether", group: "Crypto", emoji: "💵" },
-  // { symbol: "XRP", label: "XRP", group: "Crypto", emoji: "💧" },
-  // { symbol: "BNB", label: "BNB", group: "Crypto", emoji: "🟡" },
+  { symbol: "XRP", label: "XRP", group: "Crypto", emoji: "💧" },
+  { symbol: "BNB", label: "BNB", group: "Crypto", emoji: "🟡" },
 ];
 
 function parseNumber(value: string | undefined) {

@@ -13,6 +13,8 @@ describe("MARKET_ASSETS", () => {
       "BTC",
       "ETH",
       "USDT",
+      "XRP",
+      "BNB",
     ]);
   });
 });
