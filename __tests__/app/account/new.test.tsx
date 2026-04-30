@@ -9,6 +9,9 @@ jest.mock("expo-router", () => ({
   router: {
     back: (...args: unknown[]) => mockBack(...args),
   },
+  Stack: {
+    Screen: () => null,
+  },
 }));
 
 jest.mock("@/components/common/color-picker", () => ({
@@ -31,7 +34,9 @@ describe("app/account/new", () => {
 
     fireEvent.press(screen.getByText("Create Account"));
 
-    expect(await screen.findByText("Account name is required")).toBeOnTheScreen();
+    expect(
+      await screen.findByText("Add an account name so it can show up clearly across your ledger."),
+    ).toBeOnTheScreen();
   });
 
   it("creates an account and navigates back", async () => {

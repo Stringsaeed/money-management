@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -8,42 +8,20 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Text } from "@/components/ui/text";
+import Animated, { FadeInDown, FadeOutUp } from "react-native-reanimated";
 
+import { AccountCurrencyPicker } from "@/components/account/account-currency-picker";
+import { ACCOUNT_TYPE_META } from "@/components/account/account-form-options";
+import { AccountPreviewCard } from "@/components/account/account-preview-card";
+import { AccountTypePicker } from "@/components/account/account-type-picker";
+import { AmountInput } from "@/components/common/amount-input";
 import { ColorPicker } from "@/components/common/color-picker";
-import { AccountTypeColors, ColorPalette } from "@/constants/theme";
+import { AccountTypeColors } from "@/constants/theme";
 import { useCreateAccount } from "@/hooks/use-accounts";
-import { decimalStringToCents } from "@/utils/currency";
+import { cn } from "@/lib/utils";
+import { layoutTransition } from "@/components/transaction/constants";
+import { Text } from "@/components/ui/text";
 import type { AccountType } from "@/types";
-
-const ACCOUNT_TYPES: { value: AccountType; label: string }[] = [
-  { value: "checking", label: "Checking" },
-  { value: "savings", label: "Savings" },
-  { value: "cash", label: "Cash" },
-  { value: "credit_card", label: "Credit Card" },
-  { value: "investment", label: "Investment" },
-  { value: "other", label: "Other" },
-];
-
-const CURRENCIES = [
-  "USD",
-  "EUR",
-  "GBP",
-  "JPY",
-  "CAD",
-  "AUD",
-  "CHF",
-  "CNY",
-  "SAR",
-  "AED",
-  "INR",
-  "BRL",
-  "MXN",
-];
-
-function FieldLabel({ children }: { children: string }) {
-  return <Text className="text-sm font-semibold text-foreground mb-2">{children}</Text>;
-}
 
 export default function NewAccountScreen() {
   const createAccount = useCreateAccount();
@@ -51,14 +29,29 @@ export default function NewAccountScreen() {
   const [name, setName] = useState("");
   const [type, setType] = useState<AccountType>("checking");
   const [currency, setCurrency] = useState("USD");
-  const [balance, setBalance] = useState("0");
-  const [color, setColor] = useState(ColorPalette[0]);
+  const [balanceCents, setBalanceCents] = useState(0);
+  const [color, setColor] = useState(AccountTypeColors.checking);
+  const [hasCustomColor, setHasCustomColor] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const selectedType = ACCOUNT_TYPE_META[type];
+
+  function handleTypeChange(nextType: AccountType) {
+    setType(nextType);
+
+    if (!hasCustomColor) {
+      setColor(ACCOUNT_TYPE_META[nextType].color);
+    }
+  }
+
+  function handleColorChange(nextColor: string) {
+    setColor(nextColor);
+    setHasCustomColor(true);
+  }
 
   async function handleCreate() {
     if (!name.trim()) {
-      setError("Account name is required");
+      setError("Add an account name so it can show up clearly across your ledger.");
       return;
     }
     setSaving(true);
@@ -69,119 +62,141 @@ export default function NewAccountScreen() {
         type,
         currency,
         color,
-        icon: "banknote.fill",
-        initialBalance: decimalStringToCents(balance),
+        icon: selectedType.systemIcon,
+        initialBalance: balanceCents,
         excludeFromTotal: false,
         sortOrder: 0,
       });
       router.back();
     } catch {
-      setError("Failed to create account. Please try again.");
+      setError("We couldn't create this account. Try again in a moment.");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-background"
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView
-        contentContainerStyle={{ padding: 16, gap: 20, paddingBottom: 40 }}
-        keyboardShouldPersistTaps="handled"
+    <View className="flex-1 bg-surface">
+      <Stack.Screen options={{ title: "Add Account" }} />
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        {/* Name */}
-        <View>
-          <FieldLabel>Account Name</FieldLabel>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="e.g. Main Checking"
-            placeholderTextColor="#9a9896"
-            autoFocus
-            className="border border-input rounded-[10px] p-3.5 text-base text-foreground"
-          />
-        </View>
-
-        {/* Type */}
-        <View>
-          <FieldLabel>Account Type</FieldLabel>
-          <View className="flex-row flex-wrap gap-2">
-            {ACCOUNT_TYPES.map((at) => (
-              <Pressable
-                key={at.value}
-                onPress={() => setType(at.value)}
-                style={{
-                  borderColor: type === at.value ? AccountTypeColors[at.value] : undefined,
-                  backgroundColor:
-                    type === at.value ? `${AccountTypeColors[at.value]}20` : undefined,
-                }}
-                className={`px-3.5 py-2 rounded-full border-2 ${type === at.value ? "" : "border-input"}`}
-              >
-                <Text
-                  style={type === at.value ? { color: AccountTypeColors[at.value] } : undefined}
-                  className={`text-sm ${type === at.value ? "font-semibold" : "text-foreground"}`}
-                >
-                  {at.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        {/* Currency */}
-        <View>
-          <FieldLabel>Currency</FieldLabel>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View className="flex-row gap-2">
-              {CURRENCIES.map((c) => (
-                <Pressable
-                  key={c}
-                  onPress={() => setCurrency(c)}
-                  className={`px-4 py-2 rounded-full border-2 ${currency === c ? "border-brand bg-brand/10" : "border-input"}`}
-                >
-                  <Text className={`text-foreground ${currency === c ? "font-semibold" : ""}`}>
-                    {c}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </ScrollView>
-        </View>
-
-        {/* Initial Balance */}
-        <View>
-          <FieldLabel>Starting Balance</FieldLabel>
-          <TextInput
-            value={balance}
-            onChangeText={setBalance}
-            keyboardType="decimal-pad"
-            placeholder="0.00"
-            placeholderTextColor="#9a9896"
-            className="border border-input rounded-[10px] p-3.5 text-base text-foreground"
-          />
-        </View>
-
-        {/* Color */}
-        <View>
-          <FieldLabel>Color</FieldLabel>
-          <ColorPicker value={color} onChange={setColor} />
-        </View>
-
-        {error ? <Text className="text-destructive text-center">{error}</Text> : null}
-
-        <Pressable
-          onPress={handleCreate}
-          disabled={saving}
-          className="bg-brand rounded-xl p-4 items-center"
-          style={{ opacity: saving ? 0.6 : 1 }}
+        <ScrollView
+          className="flex-1"
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerClassName="gap-5 px-5 pb-safe-offset-24 pt-6"
+          keyboardShouldPersistTaps="handled"
         >
-          <Text className="text-brand-foreground text-[17px] font-semibold">
-            {saving ? "Creating…" : "Create Account"}
-          </Text>
-        </Pressable>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <View className="gap-2">
+            <Text className="font-heading-normal text-4xl italic text-ink">Add account 💳</Text>
+            <Text className="font-body-normal text-sm leading-6 text-ink/50">
+              Build a fresh ledger space for spending, saving, cash, or investing.
+            </Text>
+          </View>
+
+          <Animated.View entering={FadeInDown.duration(220)} layout={layoutTransition}>
+            <AccountPreviewCard
+              balanceCents={balanceCents}
+              color={color}
+              currency={currency}
+              name={name}
+              type={type}
+            />
+          </Animated.View>
+
+          <View className="gap-4 rounded-3xl border border-ledger-outline bg-surface-container p-5">
+            <Text className="font-heading-normal text-xl italic text-ink">Identity ✍️</Text>
+
+            <View className="gap-2">
+              <Text className="font-body-medium text-sm text-ink/60">Account name</Text>
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                placeholder="e.g. Main Checking"
+                placeholderTextColor="#9a9896"
+                autoFocus
+                returnKeyType="done"
+                className="rounded-2xl border border-ledger-outline bg-surface px-4 py-3 text-base text-ink"
+              />
+            </View>
+
+            <View className="gap-2">
+              <Text className="font-body-medium text-sm text-ink/60">Opening balance</Text>
+              <AmountInput
+                valueCents={balanceCents}
+                onChangeCents={setBalanceCents}
+                currency={currency}
+              />
+            </View>
+          </View>
+
+          <View className="gap-4 rounded-3xl border border-ledger-outline bg-surface-container p-5">
+            <View className="gap-1">
+              <Text className="font-heading-normal text-xl italic text-ink">Type 🧩</Text>
+              <Text className="font-body-normal text-sm leading-6 text-ink/50">
+                Pick the bucket that best matches how this account behaves in the app.
+              </Text>
+            </View>
+
+            <AccountTypePicker value={type} onChange={handleTypeChange} />
+
+            <Animated.View layout={layoutTransition}>
+              <Text className="font-body-normal text-sm leading-6 text-ink/50">
+                {selectedType.description}
+              </Text>
+            </Animated.View>
+          </View>
+
+          <View className="gap-4 rounded-3xl border border-ledger-outline bg-surface-container p-5">
+            <View className="gap-1">
+              <Text className="font-heading-normal text-xl italic text-ink">Currency 💱</Text>
+              <Text className="font-body-normal text-sm leading-6 text-ink/50">
+                Choose the currency used for this account&apos;s balances and entries.
+              </Text>
+            </View>
+
+            <AccountCurrencyPicker value={currency} onChange={setCurrency} />
+          </View>
+
+          <View className="gap-4 rounded-3xl border border-ledger-outline bg-surface-container p-5">
+            <View className="gap-1">
+              <Text className="font-heading-normal text-xl italic text-ink">Color 🎨</Text>
+              <Text className="font-body-normal text-sm leading-6 text-ink/50">
+                Tint the preview so this account is easier to spot across the ledger.
+              </Text>
+            </View>
+
+            <ColorPicker value={color} onChange={handleColorChange} />
+          </View>
+        </ScrollView>
+
+        <Animated.View
+          layout={layoutTransition}
+          className="border-t border-ledger-outline bg-surface px-5 pb-safe pt-4"
+        >
+          {error ? (
+            <Animated.View entering={FadeInDown.duration(180)} exiting={FadeOutUp.duration(180)}>
+              <Text className="mb-3 text-center font-body-medium text-sm text-destructive">
+                {error}
+              </Text>
+            </Animated.View>
+          ) : null}
+
+          <Pressable
+            onPress={handleCreate}
+            disabled={saving}
+            className={cn(
+              "items-center rounded-2xl bg-ink px-4 py-4 active:bg-ink/90",
+              saving && "opacity-60",
+            )}
+          >
+            <Text className="font-body-semibold text-base text-surface">
+              {saving ? "Creating…" : "Create Account"}
+            </Text>
+          </Pressable>
+        </Animated.View>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
