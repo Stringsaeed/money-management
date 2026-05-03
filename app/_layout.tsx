@@ -133,8 +133,11 @@ export default function RootLayout() {
                   <Stack.Screen
                     name="account/new"
                     options={{
-                      presentation: "modal",
-                      title: "New Account",
+                      presentation: "formSheet",
+                      sheetAllowedDetents: "fitToContents",
+                      sheetCornerRadius: 32,
+                      sheetGrabberVisible: true,
+                      title: "Add Account",
                       headerTransparent: false,
                     }}
                   />

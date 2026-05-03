@@ -9,9 +9,6 @@ jest.mock("expo-router", () => ({
   router: {
     back: (...args: unknown[]) => mockBack(...args),
   },
-  Stack: {
-    Screen: () => null,
-  },
 }));
 
 jest.mock("@/components/common/color-picker", () => ({
@@ -34,9 +31,7 @@ describe("app/account/new", () => {
 
     fireEvent.press(screen.getByText("Create Account"));
 
-    expect(
-      await screen.findByText("Add an account name so it can show up clearly across your ledger."),
-    ).toBeOnTheScreen();
+    expect(await screen.findByText("Enter account name.")).toBeOnTheScreen();
   });
 
   it("creates an account and navigates back", async () => {
@@ -50,6 +45,16 @@ describe("app/account/new", () => {
       expect(mockMutateAsync).toHaveBeenCalled();
     });
 
+    expect(mockMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        color: "#4A90D9",
+        currency: "USD",
+        icon: "creditcard.fill",
+        initialBalance: 850,
+        name: "Wallet",
+        type: "checking",
+      }),
+    );
     expect(mockBack).toHaveBeenCalled();
   });
 });
