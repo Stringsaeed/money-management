@@ -1,4 +1,6 @@
-import { Pressable, View } from "react-native";
+import { Platform, Pressable, View } from "react-native";
+import { Host, Picker, Text as SwiftUIText } from "@expo/ui/swift-ui";
+import { pickerStyle, tag } from "@expo/ui/swift-ui/modifiers";
 
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
@@ -12,6 +14,28 @@ interface AccountTypePickerProps {
 }
 
 export function AccountTypePicker({ value, onChange }: AccountTypePickerProps) {
+  if (Platform.OS === "ios") {
+    return (
+      <View className="rounded-2xl border border-ledger-outline bg-surface px-4 py-1">
+        <Host matchContents>
+          <Picker
+            label="Type"
+            modifiers={[pickerStyle("menu")]}
+            onSelectionChange={onChange}
+            selection={value}
+            systemImage="square.grid.2x2"
+          >
+            {ACCOUNT_TYPE_OPTIONS.map((option) => (
+              <SwiftUIText key={option.value} modifiers={[tag(option.value)]}>
+                {option.emoji} {option.label}
+              </SwiftUIText>
+            ))}
+          </Picker>
+        </Host>
+      </View>
+    );
+  }
+
   return (
     <View className="flex-row flex-wrap gap-3">
       {ACCOUNT_TYPE_OPTIONS.map((option) => {
