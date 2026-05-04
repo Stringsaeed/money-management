@@ -35,7 +35,9 @@ jest.mock("@expo/ui/swift-ui", () => {
   const { Text, View } = require("react-native");
 
   return {
+    ColorPicker: View,
     Host: View,
+    Picker: View,
     Text,
   };
 });
@@ -49,6 +51,8 @@ jest.mock("@expo/ui/swift-ui/modifiers", () => ({
   font: jest.fn(),
   frame: jest.fn(),
   monospacedDigit: jest.fn(),
+  pickerStyle: jest.fn(),
+  tag: jest.fn(),
 }));
 
 jest.mock("@gorhom/bottom-sheet", () => require("@gorhom/bottom-sheet/mock"));

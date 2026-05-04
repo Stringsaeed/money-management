@@ -1,4 +1,6 @@
-import { Pressable, ScrollView, View } from "react-native";
+import { Platform, Pressable, ScrollView, View } from "react-native";
+import { Host, Picker, Text as SwiftUIText } from "@expo/ui/swift-ui";
+import { pickerStyle, tag } from "@expo/ui/swift-ui/modifiers";
 
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
@@ -11,6 +13,28 @@ interface AccountCurrencyPickerProps {
 }
 
 export function AccountCurrencyPicker({ value, onChange }: AccountCurrencyPickerProps) {
+  if (Platform.OS === "ios") {
+    return (
+      <View className="rounded-2xl border border-ledger-outline bg-surface px-4 py-1">
+        <Host matchContents>
+          <Picker
+            label="Currency"
+            modifiers={[pickerStyle("menu")]}
+            onSelectionChange={onChange}
+            selection={value}
+            systemImage="dollarsign.circle"
+          >
+            {ACCOUNT_CURRENCIES.map((currency) => (
+              <SwiftUIText key={currency} modifiers={[tag(currency)]}>
+                {currency}
+              </SwiftUIText>
+            ))}
+          </Picker>
+        </Host>
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       horizontal
