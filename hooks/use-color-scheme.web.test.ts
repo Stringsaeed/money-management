@@ -6,6 +6,16 @@ const mockUseColorScheme = jest.fn();
 
 jest.mock("react-native", () => {
   return {
+    Platform: {
+      OS: "web",
+      select: <T,>(options: {
+        android?: T;
+        default?: T;
+        ios?: T;
+        native?: T;
+        web?: T;
+      }) => options.web ?? options.default ?? options.native ?? options.ios ?? options.android,
+    },
     useColorScheme: () => mockUseColorScheme(),
   };
 });

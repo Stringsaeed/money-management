@@ -81,6 +81,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "expo-image",
       "expo-web-browser",
       "expo-sqlite",
+      "expo-status-bar",
       "@react-native-community/datetimepicker",
       "expo-build-properties",
       "@rnrepo/expo-config-plugin",

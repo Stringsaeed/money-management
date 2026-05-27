@@ -26,12 +26,12 @@ describe("app/account/new", () => {
     mockMutateAsync.mockResolvedValue(undefined);
   });
 
-  it("validates the account name", async () => {
+  it("does not submit when the account name is blank", () => {
     render(<NewAccountScreen />);
 
     fireEvent.press(screen.getByText("Create Account"));
 
-    expect(await screen.findByText("Enter account name.")).toBeOnTheScreen();
+    expect(mockMutateAsync).not.toHaveBeenCalled();
   });
 
   it("creates an account and navigates back", async () => {

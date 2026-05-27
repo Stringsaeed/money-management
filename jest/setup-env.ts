@@ -27,6 +27,13 @@ jest.mock("expo-haptics", () => ({
   },
 }));
 
+jest.mock("expo-router/react-navigation", () => ({
+  DarkTheme: { dark: true },
+  DefaultTheme: { dark: false },
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
+  useHeaderHeight: () => 0,
+}));
+
 jest.mock("react-native-nitro-fetch", () => ({
   fetch: global.fetch,
 }));
