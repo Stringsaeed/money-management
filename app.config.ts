@@ -97,11 +97,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         projectId: "a33b24c0-b380-4d0a-8ce6-b2f4b61da346",
       },
     },
-    splash: {
-      image: "./assets/images/splash.png",
-      resizeMode: "contain",
-      backgroundColor: "#f9f8f6",
-    },
     updates: {
       url: "https://u.expo.dev/a33b24c0-b380-4d0a-8ce6-b2f4b61da346",
     },
