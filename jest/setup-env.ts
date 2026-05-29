@@ -64,6 +64,15 @@ jest.mock("@expo/ui/swift-ui/modifiers", () => ({
   tag: jest.fn(),
 }));
 
+jest.mock("@tanstack/devtools-event-client", () => ({
+  EventClient: class {
+    emit() {}
+    on() {
+      return () => {};
+    }
+  },
+}));
+
 jest.mock("@gorhom/bottom-sheet", () => {
   const mock = require("@gorhom/bottom-sheet/mock");
 
