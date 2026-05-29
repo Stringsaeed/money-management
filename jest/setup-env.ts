@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+// oxlint-disable typescript/no-require-imports
 import { notifyManager } from "@tanstack/query-core";
 import { act } from "@testing-library/react-native";
 
@@ -62,7 +64,31 @@ jest.mock("@expo/ui/swift-ui/modifiers", () => ({
   tag: jest.fn(),
 }));
 
-jest.mock("@gorhom/bottom-sheet", () => require("@gorhom/bottom-sheet/mock"));
+jest.mock("@gorhom/bottom-sheet", () => {
+  const mock = require("@gorhom/bottom-sheet/mock");
+
+  const BottomSheetHandle = ({ children }: { children?: React.ReactNode }) => children ?? null;
+  const BottomSheetFooter = ({ children }: { children?: React.ReactNode }) => children ?? null;
+
+  return {
+    ...mock,
+    BottomSheetHandle,
+    BottomSheetFooter,
+  };
+});
+
+jest.mock("@swmansion/react-native-bottom-sheet", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+
+  const Passthrough = ({ children }: { children?: React.ReactNode }) =>
+    React.createElement(View, null, children);
+
+  return {
+    BottomSheetProvider: Passthrough,
+    ModalBottomSheet: Passthrough,
+  };
+});
 jest.mock("react-native-worklets", () => require("react-native-worklets/lib/module/mock"));
 jest.mock("react-native-reanimated", () => {
   const reanimated = require("react-native-reanimated/mock");

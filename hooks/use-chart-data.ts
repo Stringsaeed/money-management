@@ -2,7 +2,7 @@ import { format, parseISO } from "date-fns";
 
 import type { TransactionWithDetails } from "@/types";
 
-export interface CategorySpendingDatum {
+interface CategorySpendingDatum {
   category: string;
   amount: number;
   color: string;
@@ -10,7 +10,7 @@ export interface CategorySpendingDatum {
   [key: string]: unknown;
 }
 
-export interface TransactionPointDatum {
+interface TransactionPointDatum {
   index: number;
   label: string;
   amount: number;

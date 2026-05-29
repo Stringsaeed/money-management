@@ -6,6 +6,7 @@ settings:
 
 overrides:
   lightningcss: 1.30.1
+  expo-crypto: 56.0.3
 
 importers:
 
@@ -21,8 +22,8 @@ importers:
         specifier: ~56.0.14
         version: 56.0.14(a9a8d8ba2ebf10cd01187bd73c3662a4)
       '@gorhom/bottom-sheet':
-        specifier: ^5.2.8
-        version: 5.2.12(ebd0411d215d350ad4ebdb3510ddcb9d)
+        specifier: ^5.2.14
+        version: 5.2.14(ebd0411d215d350ad4ebdb3510ddcb9d)
       '@react-native-community/datetimepicker':
         specifier: 9.1.0
         version: 9.1.0(expo@56.0.5)(react-native@0.85.3(@babel/core@7.29.0)(@react-native/jest-preset@0.85.3(@babel/core@7.29.0)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)
@@ -47,6 +48,9 @@ importers:
       '@shopify/react-native-skia':
         specifier: 2.6.2
         version: 2.6.2(react-native-reanimated@4.3.1(react-native-worklets@0.8.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/jest-preset@0.85.3(@babel/core@7.29.0)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/jest-preset@0.85.3(@babel/core@7.29.0)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/jest-preset@0.85.3(@babel/core@7.29.0)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)
+      '@swmansion/react-native-bottom-sheet':
+        specifier: ^0.10.0
+        version: 0.10.0(react-native-safe-area-context@5.7.0(react-native@0.85.3(@babel/core@7.29.0)(@react-native/jest-preset@0.85.3(@babel/core@7.29.0)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/jest-preset@0.85.3(@babel/core@7.29.0)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)
       '@tanstack/react-form':
         specifier: ^1.28.5
         version: 1.29.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -75,8 +79,8 @@ importers:
         specifier: ~56.0.16
         version: 56.0.16(expo@56.0.5)(react-native@0.85.3(@babel/core@7.29.0)(@react-native/jest-preset@0.85.3(@babel/core@7.29.0)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))
       expo-crypto:
-        specifier: ~56.0.4
-        version: 56.0.4(expo@56.0.5)
+        specifier: 56.0.3
+        version: 56.0.3(expo@56.0.5)
       expo-dev-client:
         specifier: ~56.0.16
         version: 56.0.16(expo@56.0.5)(react-native@0.85.3(@babel/core@7.29.0)(@react-native/jest-preset@0.85.3(@babel/core@7.29.0)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))
@@ -1454,8 +1458,8 @@ packages:
     resolution: {integrity: sha512-4aQzz9vgxcNXFfo/iyNgDDYfsU5XGKKxWxZopw0cVotHiW+U8IJbIxMaxsINs6bHhtkG3StKNPcOrn3eBuxKPw==}
     hasBin: true
 
-  '@gorhom/bottom-sheet@5.2.12':
-    resolution: {integrity: sha512-4/SUU8cyFBU2WCLfyqkk/Tveo2XFeaPf8lUmmQ1cG9qVnBSP2+m8Gmk0jpoef2qOm+Ow3Dxo/ii1eZ4arQmgiw==}
+  '@gorhom/bottom-sheet@5.2.14':
+    resolution: {integrity: sha512-uLQFlDjp9z+jrOFcMSEldPqL5JdaXL3vXOh+juhwoNvXgTsEorJLjHTugXu+YccAG/0KJnShzKCrb71MHBsvJg==}
     peerDependencies:
       '@types/react': '*'
       '@types/react-native': '*'
@@ -2473,6 +2477,13 @@ packages:
 
   '@sinonjs/fake-timers@10.3.0':
     resolution: {integrity: sha512-V4BG07kuYSUkTCSBHG8G8TNhM+F19jXFWnQtzj+we8DrkpSBCee9Z3Ms8yiGer/dlmhe35/Xdgyo3/0rQKg7YA==}
+
+  '@swmansion/react-native-bottom-sheet@0.10.0':
+    resolution: {integrity: sha512-0QxsPj+IlszXrWHebEAzMpx/KQpf1LaRzIo5RirXq8uOtb1HspkRm8B3XYXKvka8JPAhslltCzbfOYtjicylHQ==}
+    peerDependencies:
+      react: '>=18.0.0'
+      react-native: '>=0.76.0'
+      react-native-safe-area-context: '>=4.0.0'
 
   '@tailwindcss/node@4.2.4':
     resolution: {integrity: sha512-Ai7+yQPxz3ddrDQzFfBKdHEVBg0w3Zl83jnjuwxnZOsnH9pGn93QHQtpU0p/8rYWxvbFZHneni6p1BSLK4DkGA==}
@@ -3973,8 +3984,8 @@ packages:
       expo: '*'
       react-native: '*'
 
-  expo-crypto@56.0.4:
-    resolution: {integrity: sha512-fRNEhoXRXgAWBpe3/hq5X+KXTit3OZqdiAGts1YvNEUHQb+H5591mpPac0Yw+sZg9pXcrjRnzo5AxvZaENpc7g==}
+  expo-crypto@56.0.3:
+    resolution: {integrity: sha512-Ehiub29JVhN69RbMfaBoZbrrT55o9zU5YojHg48W63aCSN7lGyFz5g8JdUN3mXMaZCAUoExdk24NJPvMgbFZ+w==}
     peerDependencies:
       expo: '*'
 
@@ -8082,7 +8093,7 @@ snapshots:
       chalk: 4.1.2
       js-yaml: 4.1.1
 
-  '@gorhom/bottom-sheet@5.2.12(ebd0411d215d350ad4ebdb3510ddcb9d)':
+  '@gorhom/bottom-sheet@5.2.14(ebd0411d215d350ad4ebdb3510ddcb9d)':
     dependencies:
       '@gorhom/portal': 1.0.14(react-native@0.85.3(@babel/core@7.29.0)(@react-native/jest-preset@0.85.3(@babel/core@7.29.0)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)
       invariant: 2.2.4
@@ -8927,9 +8938,7 @@ snapshots:
       metro-runtime: 0.84.4
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-colors@0.74.89': {}
 
@@ -9052,6 +9061,12 @@ snapshots:
   '@sinonjs/fake-timers@10.3.0':
     dependencies:
       '@sinonjs/commons': 3.0.1
+
+  '@swmansion/react-native-bottom-sheet@0.10.0(react-native-safe-area-context@5.7.0(react-native@0.85.3(@babel/core@7.29.0)(@react-native/jest-preset@0.85.3(@babel/core@7.29.0)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/jest-preset@0.85.3(@babel/core@7.29.0)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)':
+    dependencies:
+      react: 19.2.3
+      react-native: 0.85.3(@babel/core@7.29.0)(@react-native/jest-preset@0.85.3(@babel/core@7.29.0)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3)
+      react-native-safe-area-context: 5.7.0(react-native@0.85.3(@babel/core@7.29.0)(@react-native/jest-preset@0.85.3(@babel/core@7.29.0)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)
 
   '@tailwindcss/node@4.2.4':
     dependencies:
@@ -10759,7 +10774,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  expo-crypto@56.0.4(expo@56.0.5):
+  expo-crypto@56.0.3(expo@56.0.5):
     dependencies:
       expo: 56.0.5(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(@expo/metro-runtime@56.0.13)(expo-router@56.2.7)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native-worklets@0.8.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/jest-preset@0.85.3(@babel/core@7.29.0)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/jest-preset@0.85.3(@babel/core@7.29.0)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
 

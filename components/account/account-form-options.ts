@@ -1,7 +1,7 @@
 import { AccountTypeColors } from "@/constants/theme";
 import type { AccountType } from "@/types";
 
-export interface AccountTypeOption {
+interface AccountTypeOption {
   value: AccountType;
   label: string;
   emoji: string;
