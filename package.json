@@ -18,7 +18,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --runInBand --coverage --ci --watchman=false",
-    "ts:check": "tsc -p . --noEmit",
+    "ts:check": "npx tsgo --noEmit",
     "prebuild": "expo prebuild"
   },
   "dependencies": {
@@ -87,6 +87,7 @@
     "@types/jest": "29.5.14",
     "@types/react": "~19.2.10",
     "@types/react-test-renderer": "^19",
+    "@typescript/native-preview": "7.0.0-dev.20260527.2",
     "babel-plugin-inline-import": "^3.0.0",
     "drizzle-kit": "^0.31.9",
     "eas-build-cache-provider": "^18.0.2",
