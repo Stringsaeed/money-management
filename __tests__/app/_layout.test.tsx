@@ -6,7 +6,7 @@ const mockUseFonts = jest.requireMock("expo-font").useFonts as jest.Mock;
 const mockHideAsync = jest.requireMock("expo-splash-screen").hideAsync as jest.Mock;
 const mockStackScreen = jest.fn((_: unknown) => null);
 
-jest.mock("@react-navigation/native", () => ({
+jest.mock("expo-router/react-navigation", () => ({
   DarkTheme: { dark: true },
   DefaultTheme: { dark: false },
   ThemeProvider: ({ children }: { children: React.ReactNode }) => children,

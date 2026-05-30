@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { eq } from "drizzle-orm";
 import * as Updates from "expo-updates";
 
+import { AccountFormBottomSheet } from "@/components/account/account-form-sheet";
 import { AccountRow } from "@/components/settings/account-row";
 import { Card } from "@/components/settings/card";
 import { CategoryRow } from "@/components/settings/category-row";
@@ -91,7 +92,9 @@ export default function SettingsScreen() {
           </Animated.View>
         ))}
         {accounts.length > 0 && <Divider />}
-        <SettingsRow emoji="＋" label="Add Account" onPress={() => router.push("/account/new")} />
+        <AccountFormBottomSheet>
+          <SettingsRow emoji="＋" label="Add Account" />
+        </AccountFormBottomSheet>
       </Card>
 
       {/* Manage */}

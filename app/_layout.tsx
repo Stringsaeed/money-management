@@ -1,4 +1,3 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import { useFonts } from "expo-font";
 import {
@@ -20,6 +19,7 @@ import {
   PlusJakartaSans_800ExtraBold,
 } from "@expo-google-fonts/plus-jakarta-sans";
 import { Stack } from "expo-router";
+import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import * as SplashScreen from "expo-splash-screen";
 import { SQLiteProvider, type SQLiteDatabase } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
@@ -29,6 +29,7 @@ import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import "../global.css";
+import { BottomSheetProvider as SwmBottomSheetProvider } from "@swmansion/react-native-bottom-sheet";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { runMigrations } from "@/db/migrate";
@@ -111,80 +112,77 @@ export default function RootLayout() {
       <SQLiteProvider databaseName={DB_NAME} onInit={onDatabaseInit} useSuspense>
         <QueryClientProvider client={queryClient}>
           <GestureHandlerRootView style={{ flex: 1 }}>
-            <BottomSheetModalProvider>
-              <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-                <Stack
-                  screenOptions={{
-                    headerTransparent: true,
-                    headerShadowVisible: false,
-                    headerBlurEffect: "none",
-                    headerLargeTitleStyle: { fontFamily: "Newsreader_400Regular" },
-                    headerTitleStyle: { fontFamily: "Newsreader_400Regular" },
-                    headerBackButtonDisplayMode: "minimal",
-                  }}
-                >
-                  <Stack.Screen name="splash" options={{ headerShown: false }} />
-                  <Stack.Screen name="index" options={{ title: "" }} />
-                  <Stack.Screen name="ledger" options={{ title: "Ledger" }} />
-                  <Stack.Screen name="money-movement" options={{ title: "Money Movement" }} />
-                  <Stack.Screen name="settings" options={{ title: "Settings" }} />
-                  <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-                  <Stack.Screen name="transaction/[id]" options={{ presentation: "card" }} />
-                  <Stack.Screen
-                    name="account/new"
-                    options={{
-                      presentation: "modal",
-                      title: "New Account",
-                      headerTransparent: false,
+            <SwmBottomSheetProvider>
+              <BottomSheetModalProvider>
+                <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+                  <Stack
+                    screenOptions={{
+                      headerTransparent: true,
+                      headerShadowVisible: false,
+                      headerBlurEffect: "none",
+                      headerLargeTitleStyle: { fontFamily: "Newsreader_400Regular" },
+                      headerTitleStyle: { fontFamily: "Newsreader_400Regular" },
+                      headerBackButtonDisplayMode: "minimal",
                     }}
-                  />
-                  <Stack.Screen name="account/[id]" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="account/[id]/edit"
-                    options={{
-                      presentation: "modal",
-                      title: "Edit Account",
-                      headerTransparent: false,
-                    }}
-                  />
-                  <Stack.Screen
-                    name="category/new"
-                    options={{
-                      presentation: "modal",
-                      title: "New Category",
-                      headerTransparent: false,
-                    }}
-                  />
-                  <Stack.Screen
-                    name="category/[id]/edit"
-                    options={{
-                      presentation: "modal",
-                      title: "Edit Category",
-                      headerTransparent: false,
-                    }}
-                  />
-                  <Stack.Screen name="recurring/index" options={{ title: "Recurring Payments" }} />
-                  <Stack.Screen
-                    name="recurring/new"
-                    options={{
-                      presentation: "modal",
-                      title: "New Recurring",
-                      headerTransparent: false,
-                    }}
-                  />
-                  <Stack.Screen
-                    name="recurring/[id]/edit"
-                    options={{
-                      presentation: "modal",
-                      title: "Edit Recurring",
-                      headerTransparent: false,
-                    }}
-                  />
-                </Stack>
-                <StatusBar style="auto" />
-                <PortalHost />
-              </ThemeProvider>
-            </BottomSheetModalProvider>
+                  >
+                    <Stack.Screen name="splash" options={{ headerShown: false }} />
+                    <Stack.Screen name="index" options={{ title: "" }} />
+                    <Stack.Screen name="ledger" options={{ title: "Ledger" }} />
+                    <Stack.Screen name="money-movement" options={{ title: "Money Movement" }} />
+                    <Stack.Screen name="settings" options={{ title: "Settings" }} />
+                    <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+                    <Stack.Screen name="transaction/[id]" options={{ presentation: "card" }} />
+                    <Stack.Screen name="account/[id]" options={{ headerShown: false }} />
+                    <Stack.Screen
+                      name="account/[id]/edit"
+                      options={{
+                        presentation: "modal",
+                        title: "Edit Account",
+                        headerTransparent: false,
+                      }}
+                    />
+                    <Stack.Screen
+                      name="category/new"
+                      options={{
+                        presentation: "modal",
+                        title: "New Category",
+                        headerTransparent: false,
+                      }}
+                    />
+                    <Stack.Screen
+                      name="category/[id]/edit"
+                      options={{
+                        presentation: "modal",
+                        title: "Edit Category",
+                        headerTransparent: false,
+                      }}
+                    />
+                    <Stack.Screen
+                      name="recurring/index"
+                      options={{ title: "Recurring Payments" }}
+                    />
+                    <Stack.Screen
+                      name="recurring/new"
+                      options={{
+                        presentation: "modal",
+                        title: "New Recurring",
+                        headerTransparent: false,
+                      }}
+                    />
+                    <Stack.Screen
+                      name="recurring/[id]/edit"
+                      options={{
+                        presentation: "modal",
+                        title: "Edit Recurring",
+                        headerTransparent: false,
+                      }}
+                    />
+                  </Stack>
+                  <StatusBar style="auto" />
+                  <PortalHost />
+                </ThemeProvider>
+              </BottomSheetModalProvider>
+            </SwmBottomSheetProvider>
           </GestureHandlerRootView>
         </QueryClientProvider>
       </SQLiteProvider>

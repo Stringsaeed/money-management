@@ -142,6 +142,10 @@ jest.mock("@/hooks/use-accounts", () => ({
   useAccountsWithBalances: () => ({
     data: mockAccounts,
   }),
+  useCreateAccount: () => ({
+    mutateAsync: jest.fn().mockResolvedValue(undefined),
+    isPending: false,
+  }),
 }));
 
 jest.mock("@/hooks/use-categories", () => ({

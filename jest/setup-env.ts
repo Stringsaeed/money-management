@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+// oxlint-disable typescript/no-require-imports
 import { notifyManager } from "@tanstack/query-core";
 import { act } from "@testing-library/react-native";
 
@@ -27,6 +29,13 @@ jest.mock("expo-haptics", () => ({
   },
 }));
 
+jest.mock("expo-router/react-navigation", () => ({
+  DarkTheme: { dark: true },
+  DefaultTheme: { dark: false },
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
+  useHeaderHeight: () => 0,
+}));
+
 jest.mock("react-native-nitro-fetch", () => ({
   fetch: global.fetch,
 }));
@@ -35,7 +44,9 @@ jest.mock("@expo/ui/swift-ui", () => {
   const { Text, View } = require("react-native");
 
   return {
+    ColorPicker: View,
     Host: View,
+    Picker: View,
     Text,
   };
 });
@@ -49,9 +60,44 @@ jest.mock("@expo/ui/swift-ui/modifiers", () => ({
   font: jest.fn(),
   frame: jest.fn(),
   monospacedDigit: jest.fn(),
+  pickerStyle: jest.fn(),
+  tag: jest.fn(),
 }));
 
-jest.mock("@gorhom/bottom-sheet", () => require("@gorhom/bottom-sheet/mock"));
+jest.mock("@tanstack/devtools-event-client", () => ({
+  EventClient: class {
+    emit() {}
+    on() {
+      return () => {};
+    }
+  },
+}));
+
+jest.mock("@gorhom/bottom-sheet", () => {
+  const mock = require("@gorhom/bottom-sheet/mock");
+
+  const BottomSheetHandle = ({ children }: { children?: React.ReactNode }) => children ?? null;
+  const BottomSheetFooter = ({ children }: { children?: React.ReactNode }) => children ?? null;
+
+  return {
+    ...mock,
+    BottomSheetHandle,
+    BottomSheetFooter,
+  };
+});
+
+jest.mock("@swmansion/react-native-bottom-sheet", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+
+  const Passthrough = ({ children }: { children?: React.ReactNode }) =>
+    React.createElement(View, null, children);
+
+  return {
+    BottomSheetProvider: Passthrough,
+    ModalBottomSheet: Passthrough,
+  };
+});
 jest.mock("react-native-worklets", () => require("react-native-worklets/lib/module/mock"));
 jest.mock("react-native-reanimated", () => {
   const reanimated = require("react-native-reanimated/mock");

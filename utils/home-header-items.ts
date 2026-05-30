@@ -3,7 +3,7 @@ import type {
   NativeStackHeaderItem,
   NativeStackHeaderItemMenuAction,
   NativeStackHeaderItemMenuSubmenu,
-} from "@react-navigation/native-stack";
+} from "expo-router/build/react-navigation/native-stack";
 
 import { formatMonth, monthsBetween } from "@/utils/date";
 import { useUIStore } from "@/stores/ui-store";

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react-native";
+import { act, render, screen } from "@testing-library/react-native";
 
 import { BalanceHero } from "@/components/home/balance-hero";
 import { useUIStore } from "@/stores/ui-store";
@@ -15,6 +15,7 @@ jest.mock("@/hooks/use-transactions", () => ({
 
 describe("BalanceHero", () => {
   beforeEach(() => {
+    jest.useFakeTimers();
     useUIStore.setState({
       selectedYear: null,
       selectedMonth: null,
@@ -25,6 +26,9 @@ describe("BalanceHero", () => {
 
   it("renders total account balance when no filters are active", () => {
     render(<BalanceHero />);
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
 
     expect(screen.getByText("$123.45")).toBeOnTheScreen();
   });

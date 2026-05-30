@@ -81,6 +81,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "expo-image",
       "expo-web-browser",
       "expo-sqlite",
+      "expo-status-bar",
       "@react-native-community/datetimepicker",
       "expo-build-properties",
       "@rnrepo/expo-config-plugin",
@@ -95,11 +96,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       eas: {
         projectId: "a33b24c0-b380-4d0a-8ce6-b2f4b61da346",
       },
-    },
-    splash: {
-      image: "./assets/images/splash.png",
-      resizeMode: "contain",
-      backgroundColor: "#f9f8f6",
     },
     updates: {
       url: "https://u.expo.dev/a33b24c0-b380-4d0a-8ce6-b2f4b61da346",

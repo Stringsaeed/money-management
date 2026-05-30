@@ -3,7 +3,7 @@ import type {
   NativeStackHeaderItem,
   NativeStackHeaderItemMenuAction,
   NativeStackHeaderItemMenuSubmenu,
-} from "@react-navigation/native-stack";
+} from "expo-router/build/react-navigation/native-stack";
 
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";

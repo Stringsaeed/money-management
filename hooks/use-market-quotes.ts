@@ -276,7 +276,9 @@ async function fetchCryptoQuotes(assets: MarketAssetDefinition[]): Promise<Marke
   });
 }
 
-function normalizeFreeCryptoQuotes(response: FreeCryptoApiResponse): FreeCryptoQuoteResponse[] {
+export function normalizeFreeCryptoQuotes(
+  response: FreeCryptoApiResponse,
+): FreeCryptoQuoteResponse[] {
   if (Array.isArray(response.symbols)) {
     return response.symbols.filter(isFreeCryptoQuoteResponse);
   }
@@ -304,7 +306,7 @@ function isFreeCryptoQuoteResponse(value: unknown): value is FreeCryptoQuoteResp
   return typeof value === "object" && value !== null;
 }
 
-function normalizeCryptoSymbol(symbol: string | undefined) {
+export function normalizeCryptoSymbol(symbol: string | undefined) {
   return symbol?.split("@")[0]?.split("/")[0]?.toUpperCase() ?? "";
 }
 
@@ -322,7 +324,7 @@ function buildFailedQuote(asset: MarketAssetDefinition, error: unknown): MarketQ
   };
 }
 
-async function fetchMarketQuotes() {
+export async function fetchMarketQuotes() {
   const stockAssets = MARKET_ASSETS.filter((asset) => asset.group === "Stocks");
   const metalAssets = MARKET_ASSETS.filter((asset) => asset.group === "Metals");
   const cryptoAssets = MARKET_ASSETS.filter((asset) => asset.group === "Crypto");

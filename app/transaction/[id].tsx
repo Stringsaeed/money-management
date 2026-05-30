@@ -1,7 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useRef } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
-import { NativeStackHeaderItem } from "@react-navigation/native-stack";
+import type { NativeStackHeaderItem } from "expo-router/build/react-navigation/native-stack";
 
 import {
   TransactionForm,
