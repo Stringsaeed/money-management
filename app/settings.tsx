@@ -1,15 +1,11 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useQueryClient } from "@tanstack/react-query";
 import { eq } from "drizzle-orm";
 import * as Updates from "expo-updates";
 
-import { AccountFormBottomSheet } from "@/components/account/account-form-sheet";
-import { AccountRow } from "@/components/settings/account-row";
 import { Card } from "@/components/settings/card";
-import { CategoryRow } from "@/components/settings/category-row";
 import { DevToolsSection } from "@/components/settings/dev-tools-section";
 import { Divider } from "@/components/settings/divider";
 import { SectionHeader } from "@/components/settings/section-header";
@@ -34,12 +30,11 @@ export default function SettingsScreen() {
   const qc = useQueryClient();
   const [erasing, setErasing] = useState(false);
   const { data: accounts = [] } = useAccountsWithBalances();
-  const { data: expenseCategories = [] } = useCategories("expense");
-  const { data: incomeCategories = [] } = useCategories("income");
+  const { data: allCategories = [] } = useCategories();
   const { data: recurring = [] } = useRecurringPayments();
   const { data: allTransactions = [] } = useTransactions({});
 
-  const totalCategories = expenseCategories.length + incomeCategories.length;
+  const totalCategories = allCategories.length;
   const activeRecurring = recurring.filter((r) => r.isActive).length;
 
   function handleEraseAll() {
@@ -82,29 +77,21 @@ export default function SettingsScreen() {
       contentInsetAdjustmentBehavior="automatic"
       contentContainerClassName="pb-safe-offset-12"
     >
-      {/* Accounts */}
-      <SectionHeader title="Accounts 💳" />
-      <Card animated>
-        {accounts.map((account, i) => (
-          <Animated.View key={account.id} entering={FadeIn} exiting={FadeOut}>
-            {i > 0 && <Divider />}
-            <AccountRow account={account} />
-          </Animated.View>
-        ))}
-        {accounts.length > 0 && <Divider />}
-        <AccountFormBottomSheet>
-          <SettingsRow emoji="＋" label="Add Account" />
-        </AccountFormBottomSheet>
-      </Card>
-
       {/* Manage */}
       <SectionHeader title="Manage 🛠️" />
       <Card>
         <SettingsRow
+          emoji="💳"
+          label="Accounts"
+          subtitle={`${accounts.length} ${accounts.length === 1 ? "account" : "accounts"}`}
+          onPress={() => router.push("/accounts")}
+        />
+        <Divider />
+        <SettingsRow
           emoji="🏷️"
           label="Categories"
           subtitle={`${totalCategories} ${totalCategories === 1 ? "category" : "categories"}`}
-          onPress={() => router.push("/category/new")}
+          onPress={() => router.push("/categories")}
         />
         <Divider />
         <SettingsRow
@@ -132,40 +119,6 @@ export default function SettingsScreen() {
           label="Active Recurring"
           rightLabel={String(activeRecurring)}
           noChevron
-        />
-      </Card>
-
-      {/* Expense categories */}
-      <SectionHeader title="Expense Categories 💸" />
-      <Card animated>
-        {expenseCategories.map((cat, i) => (
-          <Animated.View key={cat.id} entering={FadeIn} exiting={FadeOut}>
-            {i > 0 && <Divider />}
-            <CategoryRow category={cat} />
-          </Animated.View>
-        ))}
-        {expenseCategories.length > 0 && <Divider />}
-        <SettingsRow
-          emoji="＋"
-          label="Add Expense Category"
-          onPress={() => router.push("/category/new")}
-        />
-      </Card>
-
-      {/* Income categories */}
-      <SectionHeader title="Income Categories 💰" />
-      <Card animated>
-        {incomeCategories.map((cat, i) => (
-          <Animated.View key={cat.id} entering={FadeIn} exiting={FadeOut}>
-            {i > 0 && <Divider />}
-            <CategoryRow category={cat} />
-          </Animated.View>
-        ))}
-        {incomeCategories.length > 0 && <Divider />}
-        <SettingsRow
-          emoji="＋"
-          label="Add Income Category"
-          onPress={() => router.push("/category/new")}
         />
       </Card>
 
