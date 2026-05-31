@@ -130,6 +130,8 @@ export default function RootLayout() {
                     <Stack.Screen name="ledger" options={{ title: "Ledger" }} />
                     <Stack.Screen name="money-movement" options={{ title: "Money Movement" }} />
                     <Stack.Screen name="settings" options={{ title: "Settings" }} />
+                    <Stack.Screen name="categories" options={{ title: "Categories" }} />
+                    <Stack.Screen name="accounts" options={{ title: "Accounts" }} />
                     <Stack.Screen name="onboarding" options={{ headerShown: false }} />
                     <Stack.Screen name="transaction/[id]" options={{ presentation: "card" }} />
                     <Stack.Screen name="account/[id]" options={{ headerShown: false }} />

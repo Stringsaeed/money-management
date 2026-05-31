@@ -152,6 +152,10 @@ jest.mock("@/hooks/use-categories", () => ({
   useCategories: (type?: "income" | "expense") => ({
     data: type === "income" ? mockIncomeCategories : mockExpenseCategories,
   }),
+  useCreateCategory: () => ({
+    mutateAsync: jest.fn().mockResolvedValue(undefined),
+    isPending: false,
+  }),
 }));
 
 jest.mock("@/hooks/use-recurring-payments", () => ({
@@ -214,10 +218,9 @@ describe("app/settings", () => {
       </QueryClientProvider>,
     );
 
-    expect(screen.getByText("Accounts 💳")).toBeOnTheScreen();
-    expect(screen.getByText("account:Wallet")).toBeOnTheScreen();
-    expect(screen.getByText("category:Food")).toBeOnTheScreen();
-    expect(screen.getByText("category:Salary")).toBeOnTheScreen();
+    expect(screen.getByText("Manage 🛠️")).toBeOnTheScreen();
+    expect(screen.getByText("1 account")).toBeOnTheScreen();
+    expect(screen.getByText("Categories")).toBeOnTheScreen();
     expect(screen.getByText("dev-tools")).toBeOnTheScreen();
   });
 
