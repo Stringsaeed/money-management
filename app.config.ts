@@ -1,13 +1,13 @@
-import { ConfigContext, ExpoConfig } from "expo/config";
+import type { ConfigContext, ExpoConfig } from "expo/config";
 
 const getAppName = () => {
   switch (process.env.APP_ENV) {
     case "production":
-      return "Money Management";
+      return "Trove";
     case "preview":
-      return "Money Management (Preview)";
+      return "Trove (Preview)";
     default:
-      return "Money Management (Dev)";
+      return "Trove (Dev)";
   }
 };
 
@@ -26,11 +26,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   return {
     ...config,
     name: getAppName(),
-    slug: "money-management",
+    slug: "trove",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    scheme: "moneymanagement",
+    scheme: "trove",
     userInterfaceStyle: "automatic",
     buildCacheProvider: "eas",
     ios: {
@@ -40,6 +40,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
+      icon: "./assets/icon.icon",
     },
     android: {
       adaptiveIcon: {
