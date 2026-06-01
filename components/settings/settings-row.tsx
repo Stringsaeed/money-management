@@ -1,10 +1,11 @@
 import { CaretRightIcon } from "phosphor-react-native";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 
 import type { SettingsRowProps } from "./types";
+import { PressableOpacity } from "pressto";
 
 export function SettingsRow({
   emoji,
@@ -15,9 +16,15 @@ export function SettingsRow({
   noChevron,
 }: SettingsRowProps) {
   return (
-    <Pressable
+    <PressableOpacity
       onPress={onPress}
-      className="flex-row items-center px-4 py-3.5 gap-3 active:bg-surface-dim"
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        gap: 12,
+      }}
     >
       <Text className="text-xl w-7 text-center">{emoji}</Text>
       <View className="flex-1">
@@ -35,6 +42,6 @@ export function SettingsRow({
         </Text>
       ) : null}
       {!noChevron && <Icon as={CaretRightIcon} className="text-ink/20" size={16} />}
-    </Pressable>
+    </PressableOpacity>
   );
 }
