@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { layoutTransition } from "@/components/transaction/constants";
@@ -14,8 +14,14 @@ export function Card({ children, animated }: CardProps) {
   return (
     <Component
       layout={animated ? layoutTransition : undefined}
-      className="bg-surface-container mx-5 mt-4 overflow-hidden"
-      style={{ borderCurve: "continuous" }}
+      className="bg-surface-container mx-5 mt-4"
+      style={{
+        borderCurve: "circular",
+        boxShadow: "2px 2px 0px -1.5px rgba(0,0,0,0.01)",
+        borderRadius: 8,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: "rgba(0,0,0,0.1)",
+      }}
     >
       {children}
     </Component>
