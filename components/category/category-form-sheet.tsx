@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Pressable, PressableProps, ScrollView, View } from "react-native";
+import type { PressableProps} from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { XIcon } from "phosphor-react-native";
 
 import { CATEGORY_TYPE_META, type CategoryType } from "@/components/category/category-form-options";

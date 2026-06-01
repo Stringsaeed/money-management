@@ -3,7 +3,7 @@
  * Safe to call repeatedly: uses `seeded` flag + onConflictDoNothing.
  */
 import { eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/expo-sqlite";
+import type { drizzle } from "drizzle-orm/expo-sqlite";
 
 import { nowIso } from "@/utils/date";
 

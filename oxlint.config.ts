@@ -1,21 +1,25 @@
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["import", "react", "jest"],
-  "categories": {
-    "correctness": "off"
+import { defineConfig } from "oxlint";
+// @ts-expect-error - no types for oxlint-config
+import strict from "@rnx-kit/oxlint-config";
+
+export default defineConfig({
+  extends: [strict],
+  plugins: ["import", "react", "jest"],
+  categories: {
+    correctness: "off",
   },
-  "env": {
-    "builtin": true,
-    "es2022": true,
-    "browser": true
+  env: {
+    builtin: true,
+    es2022: true,
+    browser: true,
   },
-  "rules": {
+  rules: {
     "import/namespace": "error",
     "import/export": "error",
     "import/no-named-as-default": "warn",
     "import/no-named-as-default-member": "warn",
     "import/no-duplicates": "warn",
-    "eqeqeq": ["warn", "smart"],
+    eqeqeq: ["warn", "smart"],
     "no-dupe-class-members": "error",
     "no-dupe-keys": "error",
     "no-duplicate-case": "error",
@@ -30,20 +34,20 @@
     "no-unused-expressions": [
       "warn",
       {
-        "allowShortCircuit": true,
-        "enforceForJSX": true
-      }
+        allowShortCircuit: true,
+        enforceForJSX: true,
+      },
     ],
     "no-unused-labels": "warn",
     "no-unused-vars": [
       "warn",
       {
-        "vars": "all",
-        "args": "none",
-        "ignoreRestSiblings": true,
-        "caughtErrors": "all",
-        "caughtErrorsIgnorePattern": "^_"
-      }
+        vars: "all",
+        args: "none",
+        ignoreRestSiblings: true,
+        caughtErrors: "all",
+        caughtErrorsIgnorePattern: "^_",
+      },
     ],
     "no-with": "warn",
     "unicode-bom": ["warn", "never"],
@@ -71,83 +75,83 @@
     "react/no-this-in-sfc": "warn",
     "expo/use-dom-exports": ["error"],
     "expo/no-env-var-destructuring": ["error"],
-    "expo/no-dynamic-env-var": ["error"]
+    "expo/no-dynamic-env-var": ["error"],
   },
-  "globals": {
-    "exports": "readonly",
-    "global": "readonly",
-    "module": "readonly",
-    "require": "readonly",
-    "AudioWorkletGlobalScope": "readonly",
-    "AudioWorkletProcessor": "readonly",
-    "currentFrame": "readonly",
-    "currentTime": "readonly",
-    "registerProcessor": "readonly",
-    "sampleRate": "readonly",
-    "WorkletGlobalScope": "readonly",
-    "__DEV__": "readonly",
-    "ErrorUtils": "readonly",
-    "clearImmediate": "readonly",
-    "process": "readonly",
-    "setImmediate": "readonly",
+  globals: {
+    exports: "readonly",
+    global: "readonly",
+    module: "readonly",
+    require: "readonly",
+    AudioWorkletGlobalScope: "readonly",
+    AudioWorkletProcessor: "readonly",
+    currentFrame: "readonly",
+    currentTime: "readonly",
+    registerProcessor: "readonly",
+    sampleRate: "readonly",
+    WorkletGlobalScope: "readonly",
+    __DEV__: "readonly",
+    ErrorUtils: "readonly",
+    clearImmediate: "readonly",
+    process: "readonly",
+    setImmediate: "readonly",
     "shared-node-browser": "writable",
-    "jest": "readonly",
-    "describe": "readonly",
-    "expect": "readonly",
-    "it": "readonly",
-    "beforeAll": "readonly",
-    "beforeEach": "readonly",
-    "afterEach": "readonly"
+    jest: "readonly",
+    describe: "readonly",
+    expect: "readonly",
+    it: "readonly",
+    beforeAll: "readonly",
+    beforeEach: "readonly",
+    afterEach: "readonly",
   },
-  "ignorePatterns": ["android/app/build", "dist/*"],
-  "jsPlugins": ["eslint-plugin-expo"],
-  "overrides": [
+  ignorePatterns: ["android/app/build", "dist/*"],
+  jsPlugins: ["eslint-plugin-expo"],
+  overrides: [
     {
-      "files": ["**/metro.config.js"],
-      "env": {
-        "node": true
-      }
+      files: ["**/metro.config.js"],
+      env: {
+        node: true,
+      },
     },
     {
-      "files": ["**/*.ts", "**/*.tsx", "**/*.d.ts"],
-      "rules": {
+      files: ["**/*.ts", "**/*.tsx", "**/*.d.ts"],
+      rules: {
         "@typescript-eslint/array-type": [
           "warn",
           {
-            "default": "array"
-          }
+            default: "array",
+          },
         ],
         "@typescript-eslint/no-empty-object-type": "warn",
         "@typescript-eslint/no-wrapper-object-types": "warn",
         "@typescript-eslint/consistent-type-assertions": [
           "warn",
           {
-            "assertionStyle": "as",
-            "objectLiteralTypeAssertions": "allow"
-          }
+            assertionStyle: "as",
+            objectLiteralTypeAssertions: "allow",
+          },
         ],
         "@typescript-eslint/no-extra-non-null-assertion": "warn",
         "no-unused-vars": [
           "error",
           {
-            "vars": "all",
-            "args": "none",
-            "ignoreRestSiblings": true,
-            "caughtErrors": "all"
-          }
+            vars: "all",
+            args: "none",
+            ignoreRestSiblings: true,
+            caughtErrors: "all",
+          },
         ],
         "no-useless-constructor": "warn",
         "no-undef": "error",
         "@typescript-eslint/no-require-imports": [
           "warn",
           {
-            "allow": [
-              "\\.(aac|aiff|avif|bmp|caf|db|gif|heic|html|jpeg|jpg|json|m4a|m4v|mov|mp3|mp4|mpeg|mpg|otf|pdf|png|psd|svg|ttf|wav|webm|webp|xml|yaml|yml|zip)$"
-            ]
-          }
-        ]
+            allow: [
+              "\\.(aac|aiff|avif|bmp|caf|db|gif|heic|html|jpeg|jpg|json|m4a|m4v|mov|mp3|mp4|mpeg|mpg|otf|pdf|png|psd|svg|ttf|wav|webm|webp|xml|yaml|yml|zip)$",
+            ],
+          },
+        ],
       },
-      "plugins": ["typescript"]
-    }
-  ]
-}
+      plugins: ["typescript"],
+    },
+  ],
+});

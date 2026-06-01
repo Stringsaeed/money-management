@@ -9,7 +9,7 @@ import { AccountTypePicker } from "@/components/account/account-type-picker";
 import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
 import type { AccountType } from "@/types";
-import { UseAccountFormReturn } from "./form";
+import type { UseAccountFormReturn } from "./form";
 
 type SheetTextInputProps = ComponentProps<typeof TextInput>;
 

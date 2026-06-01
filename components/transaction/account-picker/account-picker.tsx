@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
-import { Pressable, PressableProps, useColorScheme, View } from "react-native";
+import type { PressableProps} from "react-native";
+import { Pressable, useColorScheme, View } from "react-native";
 import { CheckIcon } from "phosphor-react-native";
 
 import { Icon } from "@/components/ui/icon";

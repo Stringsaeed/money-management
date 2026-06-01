@@ -5,7 +5,7 @@ import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 
-import { UseAccountFormReturn } from "./form";
+import type { UseAccountFormReturn } from "./form";
 
 interface AccountFormSheetFooterProps {
   error?: string;

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { PressableProps, ScrollView, View } from "react-native";
+import type { PressableProps} from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { ACCOUNT_TYPE_META } from "@/components/account/account-form-options";
 import { AccountFormContent } from "@/components/account/account-form-content";

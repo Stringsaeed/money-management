@@ -10,7 +10,7 @@ import {
   monospacedDigit,
 } from "@expo/ui/swift-ui/modifiers";
 import { useNativeVariable } from "react-native-css";
-import useNumPadNumber from "@/hooks/use-num-pad-number";
+import type useNumPadNumber from "@/hooks/use-num-pad-number";
 
 interface AmountDisplayProps {
   currencySymbol: string;

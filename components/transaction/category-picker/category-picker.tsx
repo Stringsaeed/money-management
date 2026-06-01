@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
-import { Pressable, PressableProps, useColorScheme, View } from "react-native";
+import type { PressableProps} from "react-native";
+import { Pressable, useColorScheme, View } from "react-native";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 

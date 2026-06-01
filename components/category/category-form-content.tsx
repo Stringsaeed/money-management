@@ -8,7 +8,7 @@ import { CategoryTypePicker } from "@/components/category/category-type-picker";
 import type { CategoryType } from "@/components/category/category-form-options";
 import { Text } from "@/components/ui/text";
 
-import { UseCategoryFormReturn } from "./form";
+import type { UseCategoryFormReturn } from "./form";
 
 type SheetTextInputProps = ComponentProps<typeof TextInput>;
 

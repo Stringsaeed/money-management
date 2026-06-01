@@ -5,7 +5,7 @@ import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 
-import { UseCategoryFormReturn } from "./form";
+import type { UseCategoryFormReturn } from "./form";
 
 interface CategoryFormSheetFooterProps {
   error?: string;

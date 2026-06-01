@@ -1,11 +1,13 @@
 import React, { useRef, useState } from "react";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { PressableScale } from "pressto";
-import { Pressable, PressableProps, useColorScheme, View } from "react-native";
+import type { PressableProps} from "react-native";
+import { Pressable, useColorScheme, View } from "react-native";
 import { getDisplayDateLabel } from "../utils";
 
-import { TransactionDatePickerProps } from "./types";
+import type { TransactionDatePickerProps } from "./types";
 import { Text } from "@/components/ui/text";
 
 interface ExtendedDatePickerProps extends TransactionDatePickerProps {
