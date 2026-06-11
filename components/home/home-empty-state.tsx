@@ -1,6 +1,7 @@
 import { Pressable } from "react-native";
 
 import { EmptyState } from "@/components/common/empty-state";
+import { SproutLedgerGraphic } from "@/components/graphics/sprout-ledger";
 import { Text } from "@/components/ui/text";
 
 import type { HomeEmptyStateProps } from "./types";
@@ -8,7 +9,7 @@ import type { HomeEmptyStateProps } from "./types";
 export function HomeEmptyState({ activeFilterCount, onResetFilters }: HomeEmptyStateProps) {
   return (
     <EmptyState
-      icon="📋"
+      illustration={<SproutLedgerGraphic />}
       title="No transactions"
       message={
         activeFilterCount > 0

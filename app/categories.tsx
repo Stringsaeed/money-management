@@ -10,6 +10,7 @@ import {
 } from "phosphor-react-native";
 
 import { CategoryFormBottomSheet } from "@/components/category/category-form-sheet";
+import { SeedPacketsGraphic } from "@/components/graphics/seed-packets";
 import { Card } from "@/components/settings/card";
 import { CategoryRow } from "@/components/settings/category-row";
 import { Divider } from "@/components/settings/divider";
@@ -93,7 +94,7 @@ export default function CategoriesScreen() {
 
         {filtered.length === 0 ? (
           <View className="items-center py-16 px-8 gap-2">
-            <Text className="text-3xl">🏷️</Text>
+            <SeedPacketsGraphic />
             <Text className="font-heading-normal italic text-lg text-ink">No categories yet</Text>
             <Text className="font-body-normal text-sm text-ink/50 text-center">
               Tap the + button to add your first category.

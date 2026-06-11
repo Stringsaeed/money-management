@@ -2,6 +2,7 @@ import { LinearGradient, useFont, vec, matchFont } from "@shopify/react-native-s
 import { View } from "react-native";
 import { CartesianChart, Bar } from "victory-native";
 
+import { TinySproutGraphic } from "@/components/graphics/tiny-sprout";
 import { Text } from "@/components/ui/text";
 import { useCategorySpending } from "@/hooks/use-chart-data";
 import { useNativeVariable } from "react-native-css";
@@ -46,7 +47,8 @@ export function CategorySpendingChart() {
 
   if (data.length === 0) {
     return (
-      <View className="h-52 items-center justify-center">
+      <View className="h-52 items-center justify-center gap-2">
+        <TinySproutGraphic />
         <Text className="font-body-normal text-sm text-ink/40">No expense data yet</Text>
       </View>
     );

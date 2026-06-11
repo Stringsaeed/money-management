@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, TextInput, View } from "react-native";
+import { GardenRowGraphic } from "@/components/graphics/garden-row";
 import { Text } from "@/components/ui/text";
 
 import { AccountTypeColors, ColorPalette } from "@/constants/theme";
@@ -80,7 +81,8 @@ export default function OnboardingScreen() {
         >
           {/* Header */}
           <View className="mb-8 mt-12">
-            <Text className="text-[32px] font-bold text-foreground mb-2">Welcome 👋</Text>
+            <GardenRowGraphic />
+            <Text className="text-[32px] font-bold text-foreground mb-2 mt-4">Welcome 👋</Text>
             <Text className="text-base text-muted-foreground">
               Let&apos;s set up your first account to get started.
             </Text>

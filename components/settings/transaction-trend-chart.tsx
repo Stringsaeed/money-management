@@ -2,6 +2,7 @@ import { useFont } from "@shopify/react-native-skia";
 import { View } from "react-native";
 import { CartesianChart, Line } from "victory-native";
 
+import { TinySproutGraphic } from "@/components/graphics/tiny-sprout";
 import { Text } from "@/components/ui/text";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
@@ -25,7 +26,8 @@ export function TransactionTrendChart() {
 
   if (data.length < 2) {
     return (
-      <View className="h-52 items-center justify-center">
+      <View className="h-52 items-center justify-center gap-2">
+        <TinySproutGraphic />
         <Text className="font-body-normal text-sm text-ink/40">Need at least 2 transactions</Text>
       </View>
     );

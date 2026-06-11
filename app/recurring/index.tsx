@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, useColorScheme, View } from "
 import { Text } from "@/components/ui/text";
 
 import { EmptyState } from "@/components/common/empty-state";
+import { WateringCanGraphic } from "@/components/graphics/watering-can";
 import { useRecurringPayments } from "@/hooks/use-recurring-payments";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
@@ -34,7 +35,7 @@ export default function RecurringListScreen() {
         <ActivityIndicator className="mt-10" />
       ) : recurring.length === 0 ? (
         <EmptyState
-          icon="🔄"
+          illustration={<WateringCanGraphic />}
           title="No recurring payments"
           message="Set up recurring payments for rent, subscriptions, or regular income."
           action={

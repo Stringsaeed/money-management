@@ -3,6 +3,7 @@ import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { PlusIcon } from "phosphor-react-native";
 
 import { AccountFormBottomSheet } from "@/components/account/account-form-sheet";
+import { CoinPlantGraphic } from "@/components/graphics/coin-plant";
 import { AccountRow } from "@/components/settings/account-row";
 import { Card } from "@/components/settings/card";
 import { Divider } from "@/components/settings/divider";
@@ -24,7 +25,7 @@ export default function AccountsScreen() {
       >
         {accounts.length === 0 ? (
           <View className="items-center py-16 px-8 gap-2">
-            <Text className="text-3xl">💳</Text>
+            <CoinPlantGraphic />
             <Text className="font-heading-normal italic text-lg text-ink">No accounts yet</Text>
             <Text className="font-body-normal text-sm text-ink/50 text-center">
               Tap the + button to add your first account.
