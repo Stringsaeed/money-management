@@ -73,6 +73,7 @@ export function CategorySpendingChart() {
           font: emojiFont,
           tickCount: chartData.length,
           formatXLabel: (value) => chartData[Math.round(value)]?.icon ?? "",
+          lineColor: colorMutedForeground,
         }}
         yAxis={[
           {
@@ -83,6 +84,7 @@ export function CategorySpendingChart() {
               return value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(Math.round(value));
             },
             labelColor: colorMutedForeground,
+            lineColor: colorMutedForeground,
           },
         ]}
       >

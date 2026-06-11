@@ -1,6 +1,7 @@
 import { useFont } from "@shopify/react-native-skia";
 import { View } from "react-native";
 import { CartesianChart, Line } from "victory-native";
+import { useNativeVariable } from "react-native-css";
 
 import { TinySproutGraphic } from "@/components/graphics/tiny-sprout";
 import { Text } from "@/components/ui/text";
@@ -23,6 +24,8 @@ export function TransactionTrendChart() {
 
   const data = useTransactionPoints(transactions);
   const font = useFont(fontFile, 10);
+  // @ts-expect-error - This is an unstable API and may change in the future
+  const colorMutedForeground = useNativeVariable("--color-muted-foreground");
 
   if (data.length < 2) {
     return (
@@ -47,7 +50,8 @@ export function TransactionTrendChart() {
             const idx = Math.round(value as number);
             return data[idx]?.label ?? "";
           },
-          labelColor: "#9a9896",
+          labelColor: colorMutedForeground,
+          lineColor: colorMutedForeground,
         }}
         yAxis={[
           {
@@ -58,7 +62,8 @@ export function TransactionTrendChart() {
               const abs = Math.abs(value);
               return abs >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(Math.round(value));
             },
-            labelColor: "#9a9896",
+            labelColor: colorMutedForeground,
+            lineColor: colorMutedForeground,
           },
         ]}
       >
