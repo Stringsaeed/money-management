@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { PressableProps} from "react-native";
+import type { PressableProps } from "react-native";
 import { Pressable, ScrollView, View } from "react-native";
 import { XIcon } from "phosphor-react-native";
 
