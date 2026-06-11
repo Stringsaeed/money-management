@@ -8,7 +8,7 @@ import { JournalHeader } from "./journal-header";
 
 export function HomeListHeader() {
   return (
-    <View className="pt-safe-offset-20">
+    <View className="">
       <FilterBar />
       <BalanceHero />
       <StatsCharts />

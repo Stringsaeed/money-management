@@ -1,4 +1,3 @@
-import { Stack } from "expo-router";
 import { ActivityIndicator, ScrollView, View } from "react-native";
 
 import { MarketHero } from "@/components/money-movement/market-hero";
@@ -27,7 +26,7 @@ export function MoneyMovementScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <Stack.Screen options={{ title: "Money Movement" }} />
+      {/* <Stack.Screen options={{ title: "Money Movement" }} /> */}
       <ScrollView contentContainerClassName="gap-5 pt-safe-offset-20 pb-safe-offset-10">
         <MarketHero hasApiKey={hasApiKey} isFetching={isFetching} onRefresh={handleRefresh} />
 

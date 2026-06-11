@@ -43,7 +43,7 @@ import * as Haptics from "expo-haptics";
 SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
-  anchor: "index",
+  anchor: "(tabs)",
 };
 
 const queryClient = new QueryClient({
@@ -135,10 +135,7 @@ export default function RootLayout() {
                       }}
                     >
                       <Stack.Screen name="splash" options={{ headerShown: false }} />
-                      <Stack.Screen name="index" options={{ title: "" }} />
-                      <Stack.Screen name="ledger" options={{ title: "Ledger" }} />
-                      <Stack.Screen name="money-movement" options={{ title: "Money Movement" }} />
-                      <Stack.Screen name="settings" options={{ title: "Settings" }} />
+                      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                       <Stack.Screen name="categories" options={{ title: "Categories" }} />
                       <Stack.Screen name="accounts" options={{ title: "Accounts" }} />
                       <Stack.Screen name="onboarding" options={{ headerShown: false }} />

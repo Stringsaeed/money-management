@@ -1,10 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
-import HomeScreen from "@/app/index";
+import HomeScreen from "@/app/(tabs)/index";
 
 const mockUseHomeScreen = jest.fn();
-
-const mockStackScreen = jest.fn((_: unknown) => null);
 
 jest.mock("expo-router", () => ({
   Redirect: ({ href }: { href: string }) => {
@@ -13,20 +11,10 @@ jest.mock("expo-router", () => ({
 
     return React.createElement(Text, null, `redirect:${href}`);
   },
-  Stack: {
-    Screen: (props: unknown) => mockStackScreen(props),
-  },
 }));
 
 jest.mock("@/hooks/use-home-screen", () => ({
   useHomeScreen: () => mockUseHomeScreen(),
-}));
-
-jest.mock("@/utils/home-header-items", () => ({
-  useHomeHeaderItems: () => ({
-    headerLeftItems: [{ type: "menu" }],
-    headerRightItems: [{ type: "button" }],
-  }),
 }));
 
 jest.mock("@/components/home/home-empty-state", () => ({
@@ -138,6 +126,5 @@ describe("app/index", () => {
     render(<HomeScreen />);
 
     expect(screen.getByText("journal:1")).toBeOnTheScreen();
-    expect(mockStackScreen).toHaveBeenCalled();
   });
 });
