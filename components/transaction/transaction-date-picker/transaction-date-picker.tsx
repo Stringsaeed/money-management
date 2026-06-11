@@ -3,7 +3,7 @@ import type { DateTimePickerEvent } from "@react-native-community/datetimepicker
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { PressableScale } from "pressto";
-import type { PressableProps} from "react-native";
+import type { PressableProps } from "react-native";
 import { Pressable, useColorScheme, View } from "react-native";
 import { getDisplayDateLabel } from "../utils";
 
