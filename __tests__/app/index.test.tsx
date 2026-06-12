@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
-import HomeScreen from "@/app/(tabs)/index";
+import HomeScreen from "@/app/(tabs)/(home)/index";
 
 const mockUseHomeScreen = jest.fn();
 

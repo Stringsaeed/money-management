@@ -8,7 +8,7 @@ import {
 } from "phosphor-react-native";
 
 const TAB_ICONS: Record<string, PhosphorIcon> = {
-  index: HouseIcon,
+  "(home)": HouseIcon,
   ledger: BookOpenIcon,
   "money-movement": ChartLineUpIcon,
   envelopes: EnvelopeIcon,
