@@ -1,21 +1,20 @@
 import { Activity, useState } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { ChartBarIcon, TrendUpIcon } from "phosphor-react-native";
 
 import { ToggleGroup, ToggleGroupIcon, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 import { CategorySpendingChart } from "./category-spending-chart";
 import { TransactionTrendChart } from "./transaction-trend-chart";
-import { useElevatedSurfaceStyle } from "./use-elevated-surface-style";
+import { GlassSurface } from "../navigation/glass-tab-bar/glass-surface";
 
 type ChartTab = "spending" | "trend";
 
 export function StatsCharts() {
   const [activeTab, setActiveTab] = useState<ChartTab>("spending");
-  const elevatedSurfaceStyle = useElevatedSurfaceStyle();
 
   return (
-    <View className="mx-5 mt-4 rounded-lg bg-background p-2" style={elevatedSurfaceStyle}>
+    <GlassSurface isInteractive={false} style={styles.container}>
       {/* Tab Switcher */}
       <View className="self-end">
         <ToggleGroup
@@ -42,6 +41,15 @@ export function StatsCharts() {
       <Activity mode={activeTab === "trend" ? "visible" : "hidden"}>
         <TransactionTrendChart />
       </Activity>
-    </View>
+    </GlassSurface>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    borderRadius: 8,
+    padding: 8,
+  },
+});

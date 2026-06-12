@@ -6,16 +6,17 @@ import { StyleSheet, useColorScheme, View, type StyleProp, type ViewStyle } from
 import { styles } from "./styles";
 
 interface GlassSurfaceProps {
-  style: StyleProp<ViewStyle>;
   children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+  isInteractive?: boolean;
 }
 
-export function GlassSurface({ style, children }: GlassSurfaceProps) {
+export function GlassSurface({ style, children, isInteractive = true }: GlassSurfaceProps) {
   const scheme = useColorScheme();
 
   if (isLiquidGlassAvailable()) {
     return (
-      <GlassView style={style} isInteractive glassEffectStyle="regular">
+      <GlassView style={style} isInteractive={isInteractive} glassEffectStyle="regular">
         {children}
       </GlassView>
     );
