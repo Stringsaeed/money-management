@@ -15,7 +15,7 @@ export function CreateTabButton() {
       accessibilityRole="button"
       accessibilityLabel="Create transaction"
       onPress={() => router.push("/transaction/new")}
-      className="size-14.5 items-center justify-center rounded-full"
+      className="size-14 items-center justify-center rounded-full"
     >
       <GlassSurface style={styles.create}>
         <Icon as={PlusIcon} size={26} weight="bold" className="text-foreground" />
