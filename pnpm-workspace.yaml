@@ -33,3 +33,4 @@ minimumReleaseAgeExclude:
   - expo-sqlite@56.0.5
   - expo-updates@56.0.19
   - jest-expo@56.0.5
+  - react-native-gesture-handler@3.0.1

@@ -2,7 +2,7 @@ import { Alert } from "react-native";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import SettingsScreen from "@/app/settings";
+import SettingsScreen from "@/app/(tabs)/settings";
 
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
