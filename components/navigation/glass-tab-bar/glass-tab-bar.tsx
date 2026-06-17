@@ -81,6 +81,7 @@ export function GlassTabBar({ state, descriptors, navigation }: GlassTabBarProps
               />
             );
           })}
+          <View pointerEvents="none" style={styles.insetShadow} />
         </GlassSurface>
       </GestureDetector>
       <CreateTabButton />

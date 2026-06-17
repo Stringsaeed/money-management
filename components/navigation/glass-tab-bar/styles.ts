@@ -38,6 +38,22 @@ export const styles = StyleSheet.create({
     width: TAB_WIDTH,
     height: TAB_HEIGHT,
     borderRadius: 999,
+    boxShadow: [
+      { inset: true, offsetX: 0, offsetY: 2, blurRadius: 6, color: "rgba(0,0,0,0.12)" },
+      { inset: true, offsetX: 0, offsetY: -1, blurRadius: 2, color: "rgba(255,255,255,0.5)" },
+    ],
+  },
+  insetShadow: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 999,
+    boxShadow: [
+      { inset: true, offsetX: 0, offsetY: 2, blurRadius: 6, color: "rgba(0,0,0,0.12)" },
+      { inset: true, offsetX: 0, offsetY: -1, blurRadius: 2, color: "rgba(255,255,255,0.5)" },
+    ],
   },
   create: {
     width: CREATE_SIZE,

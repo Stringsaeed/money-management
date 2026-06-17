@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { PlusIcon } from "phosphor-react-native";
-import { Pressable } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
 
@@ -19,6 +19,7 @@ export function CreateTabButton() {
     >
       <GlassSurface style={styles.create}>
         <Icon as={PlusIcon} size={26} weight="bold" className="text-foreground" />
+        <View pointerEvents="none" style={styles.insetShadow} />
       </GlassSurface>
     </Pressable>
   );
