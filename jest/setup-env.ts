@@ -103,6 +103,8 @@ jest.mock("react-native-reanimated", () => {
   const reanimated = require("react-native-reanimated/mock");
 
   reanimated.default.call = () => {};
+  // The official mock omits useReducedMotion ("ADD ME IF NEEDED").
+  reanimated.useReducedMotion = () => false;
 
   return reanimated;
 });
