@@ -1,4 +1,4 @@
-import { Activity, useState } from "react";
+import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { ChartBarIcon, TrendUpIcon } from "phosphor-react-native";
 
@@ -35,12 +35,7 @@ export function StatsCharts() {
         </ToggleGroup>
       </View>
 
-      <Activity mode={activeTab === "spending" ? "visible" : "hidden"}>
-        <CategorySpendingChart />
-      </Activity>
-      <Activity mode={activeTab === "trend" ? "visible" : "hidden"}>
-        <TransactionTrendChart />
-      </Activity>
+      {activeTab === "spending" ? <CategorySpendingChart /> : <TransactionTrendChart />}
     </GlassSurface>
   );
 }
