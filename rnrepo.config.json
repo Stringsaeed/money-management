@@ -1,0 +1,5 @@
+{
+  "denylist": {
+    "ios": ["react-native-screens"]
+  }
+}
