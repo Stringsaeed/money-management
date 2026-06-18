@@ -51,6 +51,17 @@ jest.mock("@expo/ui/swift-ui", () => {
   };
 });
 
+jest.mock("@expo/ui", () => {
+  const { Text, View } = require("react-native");
+
+  return {
+    ColorPicker: View,
+    Host: View,
+    Picker: View,
+    Text,
+  };
+});
+
 jest.mock("@expo/ui/swift-ui/modifiers", () => ({
   Animation: {
     spring: jest.fn((config) => config),
@@ -105,6 +116,30 @@ jest.mock("react-native-reanimated", () => {
   reanimated.default.call = () => {};
   // The official mock omits useReducedMotion ("ADD ME IF NEEDED").
   reanimated.useReducedMotion = () => false;
+
+  // The official mock's makeMutable is the identity function, so makeMutable(null)
+  // returns null and any library calling .get()/.set() on the result (e.g. pressto's
+  // default context) crashes. Return a minimal SharedValue-like object instead.
+  reanimated.makeMutable = (initial: unknown) => {
+    let current = initial;
+
+    return {
+      value: current,
+      get: () => current,
+      set: (next: unknown) => {
+        current = next;
+      },
+    };
+  };
+
+  // The official mock omits isSharedValue ("ADD ME IF NEEDED"); gesture-handler v3
+  // calls it to decide whether to unwrap a config value. Detect our get/set-backed
+  // SharedValue stand-ins (useSharedValue / makeMutable above).
+  reanimated.isSharedValue = (value: unknown) =>
+    value != null &&
+    typeof value === "object" &&
+    typeof (value as { get?: unknown }).get === "function" &&
+    typeof (value as { set?: unknown }).set === "function";
 
   return reanimated;
 });
