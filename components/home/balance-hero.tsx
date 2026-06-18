@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { View } from "react-native";
-import { Host, Text as SwiftUIText } from "@expo/ui/swift-ui";
+import { Host, Text as ExpoUIText } from "@expo/ui";
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
@@ -57,9 +57,9 @@ export function BalanceHero() {
   const balance = useLoadAfterTimeout(filteredBalance, 0, 500);
 
   return (
-    <View className="px-5 pb-2 bg-background">
+    <View className="px-5 pb-2 bg-background min-h-[55px]">
       <Host matchContents>
-        <SwiftUIText
+        <ExpoUIText
           modifiers={[
             monospacedDigit(),
             contentTransition("numericText"),
@@ -79,7 +79,7 @@ export function BalanceHero() {
           ]}
         >
           {formatCents(balance, currency)}
-        </SwiftUIText>
+        </ExpoUIText>
       </Host>
     </View>
   );

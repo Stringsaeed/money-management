@@ -55,6 +55,7 @@ jest.mock("expo-status-bar", () => ({
 }));
 
 jest.mock("react-native-gesture-handler", () => ({
+  ...jest.requireActual("react-native-gesture-handler"),
   GestureHandlerRootView: ({ children }: { children: React.ReactNode }) => children,
 }));
 

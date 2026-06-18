@@ -51,6 +51,17 @@ jest.mock("@expo/ui/swift-ui", () => {
   };
 });
 
+jest.mock("@expo/ui", () => {
+  const { Text, View } = require("react-native");
+
+  return {
+    ColorPicker: View,
+    Host: View,
+    Picker: View,
+    Text,
+  };
+});
+
 jest.mock("@expo/ui/swift-ui/modifiers", () => ({
   Animation: {
     spring: jest.fn((config) => config),
@@ -98,16 +109,13 @@ jest.mock("@swmansion/react-native-bottom-sheet", () => {
     ModalBottomSheet: Passthrough,
   };
 });
+// Reanimated 4 runs its own JS implementation under Jest, so we use the real
+// module and let setUpTests() register matchers, as recommended in the docs:
+// https://docs.swmansion.com/react-native-reanimated/docs/guides/testing/
+// (The legacy `react-native-reanimated/mock` ships incomplete stubs — e.g.
+// makeMutable is the identity fn and isSharedValue is missing.) The underlying
+// Worklets runtime has no native part under Jest, so that one is mocked.
 jest.mock("react-native-worklets", () => require("react-native-worklets/lib/module/mock"));
-jest.mock("react-native-reanimated", () => {
-  const reanimated = require("react-native-reanimated/mock");
-
-  reanimated.default.call = () => {};
-  // The official mock omits useReducedMotion ("ADD ME IF NEEDED").
-  reanimated.useReducedMotion = () => false;
-
-  return reanimated;
-});
 
 require("react-native-reanimated").setUpTests();
 

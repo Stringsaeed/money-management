@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CreateTabButton } from "./create-tab-button";
 import { GlassSurface } from "./glass-surface";
 import { GlassTabButton } from "./glass-tab-button";
+import { ScrollFade } from "./scroll-fade";
 import { styles } from "./styles";
 import { getTabIcon, hasTabIcon } from "./tab-icons";
 import type { GlassTabBarProps } from "./types";
@@ -56,6 +57,7 @@ export function GlassTabBar({ state, descriptors, navigation }: GlassTabBarProps
 
   return (
     <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: insets.bottom + 8 }]}>
+      <ScrollFade />
       <GestureDetector gesture={panGesture}>
         <GlassSurface style={styles.pill}>
           <Animated.View

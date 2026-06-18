@@ -57,6 +57,11 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 🚀 Create preview
+        # Non-blocking: the EAS project is mid-rebrand (app slug "trove" vs the
+        # project the configured projectId resolves to), so `eas update` can fail
+        # on a slug mismatch. That is an Expo-side config issue, not a PR defect,
+        # so a failed preview should not block merges. Remove once EAS is realigned.
+        continue-on-error: true
         uses: expo/expo-github-action/preview@v8
         with:
           command: eas update --channel preview --message "Preview from ${{ github.actor }} for ${{ github.event.pull_request.title || github.ref_name }}"
