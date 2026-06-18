@@ -109,40 +109,13 @@ jest.mock("@swmansion/react-native-bottom-sheet", () => {
     ModalBottomSheet: Passthrough,
   };
 });
+// Reanimated 4 runs its own JS implementation under Jest, so we use the real
+// module and let setUpTests() register matchers, as recommended in the docs:
+// https://docs.swmansion.com/react-native-reanimated/docs/guides/testing/
+// (The legacy `react-native-reanimated/mock` ships incomplete stubs — e.g.
+// makeMutable is the identity fn and isSharedValue is missing.) The underlying
+// Worklets runtime has no native part under Jest, so that one is mocked.
 jest.mock("react-native-worklets", () => require("react-native-worklets/lib/module/mock"));
-jest.mock("react-native-reanimated", () => {
-  const reanimated = require("react-native-reanimated/mock");
-
-  reanimated.default.call = () => {};
-  // The official mock omits useReducedMotion ("ADD ME IF NEEDED").
-  reanimated.useReducedMotion = () => false;
-
-  // The official mock's makeMutable is the identity function, so makeMutable(null)
-  // returns null and any library calling .get()/.set() on the result (e.g. pressto's
-  // default context) crashes. Return a minimal SharedValue-like object instead.
-  reanimated.makeMutable = (initial: unknown) => {
-    let current = initial;
-
-    return {
-      value: current,
-      get: () => current,
-      set: (next: unknown) => {
-        current = next;
-      },
-    };
-  };
-
-  // The official mock omits isSharedValue ("ADD ME IF NEEDED"); gesture-handler v3
-  // calls it to decide whether to unwrap a config value. Detect our get/set-backed
-  // SharedValue stand-ins (useSharedValue / makeMutable above).
-  reanimated.isSharedValue = (value: unknown) =>
-    value != null &&
-    typeof value === "object" &&
-    typeof (value as { get?: unknown }).get === "function" &&
-    typeof (value as { set?: unknown }).set === "function";
-
-  return reanimated;
-});
 
 require("react-native-reanimated").setUpTests();
 
