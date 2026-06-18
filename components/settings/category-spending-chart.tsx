@@ -5,9 +5,11 @@ import { CartesianChart, Bar } from "victory-native";
 import { TinySproutGraphic } from "@/components/graphics/tiny-sprout";
 import { Text } from "@/components/ui/text";
 import { useCategorySpending } from "@/hooks/use-chart-data";
-import { useNativeVariable } from "react-native-css";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
+import { useNativeVariable } from "react-native-css";
+
+import { formatCompactChartAmount } from "./chart-utils";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const fontFile = require("@expo-google-fonts/plus-jakarta-sans/400Regular/PlusJakartaSans_400Regular.ttf");
 
@@ -39,7 +41,8 @@ export function CategorySpendingChart() {
 
   const data = useCategorySpending(transactions);
 
-  const font = useFont(fontFile, 10);
+  const axisFont = useFont(fontFile, 10);
+  const labelFont = useFont(fontFile, 9);
   // @ts-expect-error - This is an unstable API and may change in the future
   const colorInk = useNativeVariable("--color-ink");
   // @ts-expect-error - This is an unstable API and may change in the future
@@ -69,28 +72,31 @@ export function CategorySpendingChart() {
         xKey="x"
         yKeys={["amount"]}
         domainPadding={{ left: 24, right: 24, top: 16 }}
+        frame={{ lineColor: "transparent" }}
         xAxis={{
           font: emojiFont,
           tickCount: chartData.length,
           formatXLabel: (value) => chartData[Math.round(value)]?.icon ?? "",
-          lineColor: colorMutedForeground,
+          lineColor: "transparent",
         }}
         yAxis={[
           {
-            font,
+            font: axisFont,
             tickCount: 5,
-            formatYLabel: (v) => {
-              const value = v as number;
-              return value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(Math.round(value));
-            },
+            formatYLabel: (value) => formatCompactChartAmount(value as number),
             labelColor: colorMutedForeground,
-            lineColor: colorMutedForeground,
+            lineColor: "transparent",
           },
         ]}
       >
         {({ points, chartBounds }) => (
           <Bar
-            labels={{ position: "top", font, color: colorInk }}
+            labels={{
+              position: "top",
+              font: labelFont,
+              color: colorInk,
+              formatLabel: (value) => formatCompactChartAmount(Number(value ?? 0)),
+            }}
             points={points.amount}
             barCount={points.amount.length}
             chartBounds={chartBounds}

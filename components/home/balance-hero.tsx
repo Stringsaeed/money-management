@@ -64,7 +64,7 @@ export function BalanceHero() {
             monospacedDigit(),
             contentTransition("numericText"),
             font({
-              family: "Newsreader-Regular",
+              family: "Newsreader-Medium",
               size: 48,
             }),
             animation(

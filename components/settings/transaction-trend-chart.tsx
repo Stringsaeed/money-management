@@ -9,6 +9,8 @@ import { useTransactions } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
 import { useTransactionPoints } from "@/hooks/use-chart-data";
 
+import { formatCompactChartAmount } from "./chart-utils";
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const fontFile = require("@expo-google-fonts/plus-jakarta-sans/400Regular/PlusJakartaSans_400Regular.ttf");
 
@@ -57,11 +59,7 @@ export function TransactionTrendChart() {
           {
             font,
             tickCount: 4,
-            formatYLabel: (v) => {
-              const value = v as number;
-              const abs = Math.abs(value);
-              return abs >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(Math.round(value));
-            },
+            formatYLabel: (value) => formatCompactChartAmount(value as number),
             labelColor: colorMutedForeground,
             lineColor: colorMutedForeground,
           },
