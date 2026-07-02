@@ -61,7 +61,7 @@ export function TransactionRow({ transaction: t, showAccount = false }: Transact
         <Text className="font-body-medium text-[15px] text-ink" numberOfLines={1}>
           {t.description || t.category?.name || (isTransfer ? "Transfer" : "Transaction")}
         </Text>
-        <Text className="font-body-normal text-xs text-ink/40" numberOfLines={1}>
+        <Text className="font-body-normal text-xs text-ink/60" numberOfLines={1}>
           {t.category?.name ?? (isTransfer ? "Transfer" : "")}
           {showAccount && t.account?.name ? ` · ${t.account.name}` : ""}
           {isTransfer && t.toAccount ? ` → ${t.toAccount.name}` : ""}
