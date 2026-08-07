@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { CaretRightIcon } from "phosphor-react-native";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
+import { Pressable } from "react-native-gesture-handler";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -31,7 +32,7 @@ export function AccountRow({ account }: AccountRowProps) {
   return (
     <Pressable
       onPress={() => router.push(`/account/${account.id}`)}
-      className="flex-row items-center px-4 py-3.5 gap-3 active:bg-surface-dim"
+      className="flex-row items-center px-4 py-3.5 gap-3 bg-surface-container active:bg-surface-dim"
     >
       <View
         style={{ backgroundColor: `${account.color}20` }}

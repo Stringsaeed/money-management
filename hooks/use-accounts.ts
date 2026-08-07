@@ -138,6 +138,9 @@ export function useDeleteAccount() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: accountKeys.all });
       qc.invalidateQueries({ queryKey: accountKeys.balances });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      qc.invalidateQueries({ queryKey: ["month-summary"] });
+      qc.invalidateQueries({ queryKey: ["recurring-payments"] });
     },
   });
 }
