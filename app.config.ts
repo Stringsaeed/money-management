@@ -87,6 +87,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "expo-build-properties",
       "@rnrepo/expo-config-plugin",
       "./plugins/withRocketSimConnect.js",
+      "react-native-nitro-fetch"
     ],
     experiments: {
       typedRoutes: true,
