@@ -26,7 +26,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   return {
     ...config,
     name: getAppName(),
-    slug: "trove",
+    slug: "money-management",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
