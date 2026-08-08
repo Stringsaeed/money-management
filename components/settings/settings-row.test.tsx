@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { render, screen } from "@testing-library/react-native";
+import { fireGestureHandler, getByGestureTestId } from "react-native-gesture-handler/jest-utils";
 
 import { SettingsRow } from "@/components/settings/settings-row";
 
@@ -12,11 +13,12 @@ describe("SettingsRow", () => {
         label="Accounts"
         subtitle="2 total"
         rightLabel="2"
+        testID="accounts-settings-row"
         onPress={onPress}
       />,
     );
 
-    fireEvent.press(screen.getByText("Accounts"));
+    fireGestureHandler(getByGestureTestId("accounts-settings-row"));
 
     expect(screen.getByText("2 total")).toBeOnTheScreen();
     expect(screen.getByText("2")).toBeOnTheScreen();
