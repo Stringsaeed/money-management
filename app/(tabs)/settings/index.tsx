@@ -10,6 +10,7 @@ import { DevToolsSection } from "@/components/settings/dev-tools-section";
 import { Divider } from "@/components/settings/divider";
 import { SectionHeader } from "@/components/settings/section-header";
 import { SettingsRow } from "@/components/settings/settings-row";
+import { UpdateSection } from "@/components/settings/update-section";
 import { Text } from "@/components/ui/text";
 import { useDatabase } from "@/db/client";
 import {
@@ -121,6 +122,8 @@ export default function SettingsScreen() {
           noChevron
         />
       </Card>
+
+      <UpdateSection />
 
       {/* About */}
       <SectionHeader title="About ℹ️" />

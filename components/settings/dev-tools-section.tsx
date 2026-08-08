@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { Alert, View } from "react-native";
+import { Alert } from "react-native";
 import * as Updates from "expo-updates";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Text } from "@/components/ui/text";
 import { useDatabase } from "@/db/client";
 import { seedDatabase } from "@/db/seed";
 
@@ -16,7 +15,6 @@ export function DevToolsSection() {
   const db = useDatabase();
   const qc = useQueryClient();
   const [seeding, setSeeding] = useState(false);
-  const updates = Updates.useUpdates();
 
   async function handleSeed() {
     setSeeding(true);
@@ -34,26 +32,6 @@ export function DevToolsSection() {
   return (
     <>
       <SectionHeader title="Dev Tools 🧑‍💻" />
-
-      {updates.isUpdateAvailable && (
-        <Card>
-          <View className="flex-row items-center gap-3 px-4 py-3.5">
-            <Text className="text-xl w-7 text-center">🔄</Text>
-            <View className="flex-1">
-              <Text className="font-body-medium text-base text-ink">Update Available</Text>
-              <Text className="font-body-normal text-xs text-ink/40 mt-0.5">
-                A new version is ready to install
-              </Text>
-            </View>
-          </View>
-          <Divider />
-          <SettingsRow
-            emoji="⬇️"
-            label="Download & Restart"
-            onPress={() => Updates.reloadAsync()}
-          />
-        </Card>
-      )}
 
       <Card>
         <SettingsRow
