@@ -1,7 +1,6 @@
 import { router } from "expo-router";
 import { CaretRightIcon } from "phosphor-react-native";
-import { View } from "react-native";
-import { Pressable } from "react-native-gesture-handler";
+import { Pressable, View } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";

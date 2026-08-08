@@ -1,5 +1,5 @@
 import { TrashIcon } from "phosphor-react-native";
-import { Pressable } from "react-native-gesture-handler";
+import { Pressable } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
