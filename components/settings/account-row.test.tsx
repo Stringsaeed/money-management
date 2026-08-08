@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { AccountRow } from "@/components/settings/account-row";
 import { createAccountWithBalance } from "@/tests/test-utils/factories";
@@ -13,7 +14,11 @@ jest.mock("expo-router", () => ({
 
 describe("AccountRow", () => {
   it("renders account details and routes to the account screen", () => {
-    render(<AccountRow account={createAccountWithBalance({ id: "account-1", name: "Wallet" })} />);
+    render(
+      <GestureHandlerRootView>
+        <AccountRow account={createAccountWithBalance({ id: "account-1", name: "Wallet" })} />
+      </GestureHandlerRootView>,
+    );
 
     fireEvent.press(screen.getByText("Wallet"));
 

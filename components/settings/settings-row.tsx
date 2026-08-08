@@ -14,10 +14,15 @@ export function SettingsRow({
   onPress,
   rightLabel,
   noChevron,
+  testID,
 }: SettingsRowProps) {
   return (
     <PressableOpacity
+      accessibilityLabel={onPress ? label : undefined}
+      accessibilityRole={onPress ? "button" : undefined}
+      enabled={onPress !== undefined}
       onPress={onPress}
+      testID={testID}
       style={{
         flexDirection: "row",
         alignItems: "center",
