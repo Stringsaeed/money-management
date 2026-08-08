@@ -12,11 +12,12 @@ describe("SettingsRow", () => {
         label="Accounts"
         subtitle="2 total"
         rightLabel="2"
+        testID="accounts-settings-row"
         onPress={onPress}
       />,
     );
 
-    fireEvent.press(screen.getByText("Accounts"));
+    fireEvent.press(screen.getByTestId("accounts-settings-row"));
 
     expect(screen.getByText("2 total")).toBeOnTheScreen();
     expect(screen.getByText("2")).toBeOnTheScreen();

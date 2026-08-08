@@ -13,11 +13,16 @@ export function SettingsRow({
   onPress,
   rightLabel,
   noChevron,
+  testID,
 }: SettingsRowProps) {
   return (
     <Pressable
+      accessibilityLabel={onPress ? label : undefined}
+      accessibilityRole={onPress ? "button" : undefined}
+      disabled={onPress === undefined}
       onPress={onPress}
       className="flex-row items-center gap-3 px-4 py-3.5 active:opacity-70"
+      testID={testID}
     >
       <Text className="text-xl w-7 text-center">{emoji}</Text>
       <View className="flex-1">

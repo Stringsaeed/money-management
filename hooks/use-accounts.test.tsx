@@ -169,6 +169,9 @@ describe("use-accounts hooks", () => {
     expect(db.delete).toHaveBeenCalledWith(accounts);
     expect(db.__builders.delete.where).toHaveBeenCalled();
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["account-balances"] });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["transactions"] });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["month-summary"] });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["recurring-payments"] });
     expect(transactions).toBeDefined();
   });
 });

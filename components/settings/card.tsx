@@ -8,9 +8,10 @@ import { useElevatedSurfaceStyle } from "./use-elevated-surface-style";
 interface CardProps {
   children: React.ReactNode;
   animated?: boolean;
+  clipContent?: boolean;
 }
 
-export function Card({ children, animated }: CardProps) {
+export function Card({ children, animated, clipContent }: CardProps) {
   const Component = animated ? Animated.View : View;
   const elevatedSurfaceStyle = useElevatedSurfaceStyle();
 
@@ -20,7 +21,7 @@ export function Card({ children, animated }: CardProps) {
       className="bg-surface-container mx-5 mt-4"
       style={elevatedSurfaceStyle}
     >
-      {children}
+      {clipContent ? <View className="overflow-hidden rounded-lg">{children}</View> : children}
     </Component>
   );
 }

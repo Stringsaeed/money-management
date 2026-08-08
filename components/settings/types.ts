@@ -7,6 +7,7 @@ export interface SettingsRowProps {
   onPress?: () => void;
   rightLabel?: string;
   noChevron?: boolean;
+  testID?: string;
 }
 
 export interface AccountRowProps {

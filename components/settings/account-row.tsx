@@ -31,7 +31,7 @@ export function AccountRow({ account }: AccountRowProps) {
   return (
     <Pressable
       onPress={() => router.push(`/account/${account.id}`)}
-      className="flex-row items-center px-4 py-3.5 gap-3 active:bg-surface-dim"
+      className="flex-row items-center px-4 py-3.5 gap-3 bg-surface-container active:bg-surface-dim"
     >
       <View
         style={{ backgroundColor: `${account.color}20` }}
