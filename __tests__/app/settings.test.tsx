@@ -197,6 +197,15 @@ jest.mock("@/components/settings/dev-tools-section", () => ({
   },
 }));
 
+jest.mock("@/components/settings/update-section", () => ({
+  UpdateSection: () => {
+    const React = require("react");
+    const { Text } = require("react-native");
+
+    return React.createElement(Text, null, "software-update");
+  },
+}));
+
 describe("app/settings", () => {
   const client = new QueryClient({
     defaultOptions: {
@@ -221,6 +230,7 @@ describe("app/settings", () => {
     expect(screen.getByText("Manage 🛠️")).toBeOnTheScreen();
     expect(screen.getByText("1 account")).toBeOnTheScreen();
     expect(screen.getByText("Categories")).toBeOnTheScreen();
+    expect(screen.getByText("software-update")).toBeOnTheScreen();
     expect(screen.getByText("dev-tools")).toBeOnTheScreen();
   });
 

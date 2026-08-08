@@ -64,4 +64,4 @@ jobs:
         continue-on-error: true
         uses: expo/expo-github-action/preview@v8
         with:
-          command: eas update --channel preview --message "Preview from ${{ github.actor }} for ${{ github.event.pull_request.title || github.ref_name }}"
+          command: eas update --channel preview --environment preview --message "Preview from ${{ github.actor }} for ${{ github.event.pull_request.title || github.ref_name }}"

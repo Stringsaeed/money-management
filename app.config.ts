@@ -1,5 +1,7 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
+const isOtaUpdateMandatory = process.env.EXPO_PUBLIC_OTA_UPDATE_MANDATORY === "true";
+
 const getAppName = () => {
   switch (process.env.APP_ENV) {
     case "production":
@@ -87,7 +89,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "expo-build-properties",
       "@rnrepo/expo-config-plugin",
       "./plugins/withRocketSimConnect.js",
-      "react-native-nitro-fetch"
+      "react-native-nitro-fetch",
     ],
     experiments: {
       typedRoutes: true,
@@ -98,8 +100,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       eas: {
         projectId: "a33b24c0-b380-4d0a-8ce6-b2f4b61da346",
       },
+      ota: {
+        mandatory: isOtaUpdateMandatory,
+      },
     },
     updates: {
+      checkAutomatically: "ON_ERROR_RECOVERY",
       url: "https://u.expo.dev/a33b24c0-b380-4d0a-8ce6-b2f4b61da346",
     },
     runtimeVersion: {
