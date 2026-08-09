@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import { ActivityIndicator, Pressable, ScrollView, useColorScheme, View } from "react-native";
+import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 
 import { EmptyState } from "@/components/common/empty-state";
@@ -39,12 +40,9 @@ export default function RecurringListScreen() {
           title="No recurring payments"
           message="Set up recurring payments for rent, subscriptions, or regular income."
           action={
-            <Pressable
-              onPress={() => router.push("/recurring/new")}
-              className="bg-brand rounded-[10px] px-5 py-3"
-            >
-              <Text className="text-brand-foreground font-semibold">Add Recurring</Text>
-            </Pressable>
+            <Button onPress={() => router.push("/recurring/new")}>
+              <Text>Add Recurring</Text>
+            </Button>
           }
         />
       ) : (
@@ -97,23 +95,18 @@ export default function RecurringListScreen() {
       )}
 
       {/* FAB */}
-      <Pressable
+      <Button
         onPress={() => router.push("/recurring/new")}
+        size="fab"
         style={{
           position: "absolute",
           bottom: 32,
           right: 20,
-          width: 56,
-          height: 56,
-          borderRadius: 28,
-          alignItems: "center",
-          justifyContent: "center",
           boxShadow: `0 4px 8px ${colorScheme === "dark" ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.3)"}`,
         }}
-        className="bg-brand"
       >
-        <Text style={{ color: "white", fontSize: 28, lineHeight: 30 }}>+</Text>
-      </Pressable>
+        <Text className="text-3xl">+</Text>
+      </Button>
     </View>
   );
 }

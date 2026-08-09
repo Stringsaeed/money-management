@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 
 import { ColorPicker } from "@/components/common/color-picker";
@@ -139,16 +140,9 @@ export default function EditAccountScreen() {
 
         {error ? <Text className="text-destructive text-center">{error}</Text> : null}
 
-        <Pressable
-          onPress={handleSave}
-          disabled={saving}
-          className="bg-brand rounded-xl p-4 items-center"
-          style={{ opacity: saving ? 0.6 : 1 }}
-        >
-          <Text className="text-brand-foreground text-[17px] font-semibold">
-            {saving ? "Saving…" : "Save Changes"}
-          </Text>
-        </Pressable>
+        <Button onPress={handleSave} disabled={saving} size="xl">
+          <Text>{saving ? "Saving…" : "Save Changes"}</Text>
+        </Button>
 
         <Pressable onPress={handleDelete} className="items-center py-3">
           <Text className="text-destructive text-[15px] font-medium">Delete Account</Text>

@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 
 import { AccountPicker } from "@/components/account/account-picker";
@@ -216,16 +217,9 @@ export default function NewRecurringScreen() {
 
         {error ? <Text className="text-destructive text-center">{error}</Text> : null}
 
-        <Pressable
-          onPress={handleCreate}
-          disabled={saving}
-          className="bg-brand rounded-xl p-4 items-center"
-          style={{ opacity: saving ? 0.6 : 1 }}
-        >
-          <Text className="text-brand-foreground text-[17px] font-semibold">
-            {saving ? "Creating…" : "Create Recurring Payment"}
-          </Text>
-        </Pressable>
+        <Button onPress={handleCreate} disabled={saving} size="xl">
+          <Text>{saving ? "Creating…" : "Create Recurring Payment"}</Text>
+        </Button>
       </ScrollView>
     </KeyboardAvoidingView>
   );

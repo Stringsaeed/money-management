@@ -14,6 +14,7 @@ import { SeedPacketsGraphic } from "@/components/graphics/seed-packets";
 import { Card } from "@/components/settings/card";
 import { CategoryRow } from "@/components/settings/category-row";
 import { Divider } from "@/components/settings/divider";
+import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { useCategories } from "@/hooks/use-categories";
@@ -113,22 +114,17 @@ export default function CategoriesScreen() {
       </ScrollView>
 
       <CategoryFormBottomSheet initialType={fabInitialType}>
-        <Pressable
+        <Button
+          size="fab"
           style={{
             position: "absolute",
             bottom: 32,
             right: 20,
-            width: 56,
-            height: 56,
-            borderRadius: 28,
-            alignItems: "center",
-            justifyContent: "center",
             boxShadow: `0 4px 8px ${colorScheme === "dark" ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.3)"}`,
           }}
-          className="bg-brand"
         >
-          <Icon as={PlusIcon} size={24} className="text-white" />
-        </Pressable>
+          <Icon as={PlusIcon} size={24} />
+        </Button>
       </CategoryFormBottomSheet>
     </View>
   );

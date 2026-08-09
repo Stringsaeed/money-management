@@ -4,6 +4,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, TextInput, View } from "react-native";
 import { GardenRowGraphic } from "@/components/graphics/garden-row";
+import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 
 import { AccountTypeColors, ColorPalette } from "@/constants/theme";
@@ -201,16 +202,9 @@ export default function OnboardingScreen() {
         </Animated.ScrollView>
       </KeyboardAvoidingView>
       <Animated.View className="px-4 pb-safe py-2">
-        <Pressable
-          onPress={handleCreate}
-          disabled={saving}
-          className="bg-brand rounded-xl p-4 items-center"
-          style={{ opacity: saving ? 0.6 : 1 }}
-        >
-          <Text className="text-brand-foreground text-[17px] font-semibold">
-            {saving ? "Creating…" : "Create Account"}
-          </Text>
-        </Pressable>
+        <Button onPress={handleCreate} disabled={saving} size="xl">
+          <Text>{saving ? "Creating…" : "Create Account"}</Text>
+        </Button>
       </Animated.View>
     </View>
   );

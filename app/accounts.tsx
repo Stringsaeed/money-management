@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { PlusIcon } from "phosphor-react-native";
@@ -9,6 +9,7 @@ import { Card } from "@/components/settings/card";
 import { Divider } from "@/components/settings/divider";
 import { SwipeableAccountRow } from "@/components/settings/swipeable-account-row";
 import { layoutTransition } from "@/components/transaction/constants";
+import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { useAccountsWithBalances, useDeleteAccount } from "@/hooks/use-accounts";
@@ -52,22 +53,17 @@ export default function AccountsScreen() {
       </ScrollView>
 
       <AccountFormBottomSheet>
-        <Pressable
+        <Button
+          size="fab"
           style={{
             position: "absolute",
             bottom: 32,
             right: 20,
-            width: 56,
-            height: 56,
-            borderRadius: 28,
-            alignItems: "center",
-            justifyContent: "center",
             boxShadow: `0 4px 8px ${colorScheme === "dark" ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.3)"}`,
           }}
-          className="bg-brand"
         >
-          <Icon as={PlusIcon} size={24} className="text-white" />
-        </Pressable>
+          <Icon as={PlusIcon} size={24} />
+        </Button>
       </AccountFormBottomSheet>
     </View>
   );
