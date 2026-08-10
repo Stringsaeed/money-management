@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { Text } from "react-native";
 
 import { Button } from "@/components/ui/button";
@@ -17,5 +18,19 @@ describe("Button", () => {
 
     expect(screen.getByText("Save")).toBeOnTheScreen();
     expect(onPress).toHaveBeenCalled();
+  });
+
+  it("uses the emphasis gradient from the design specification", () => {
+    const { UNSAFE_getByType } = render(
+      <Button>
+        <Text>Add domain</Text>
+      </Button>,
+    );
+
+    const gradient = UNSAFE_getByType(LinearGradient);
+
+    expect(gradient.props.colors).toEqual(["#5491f6", "#005aeb"]);
+    expect(gradient.props.start).toEqual({ x: 0, y: 0 });
+    expect(gradient.props.end).toEqual({ x: 0, y: 1 });
   });
 });

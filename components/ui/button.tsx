@@ -8,13 +8,13 @@ import { Platform, Pressable, useColorScheme } from "react-native";
 
 type ButtonVariant = NonNullable<VariantProps<typeof buttonVariants>["variant"]>;
 
-// Gradient stops mirror the Garden Ledger palette (see global.css @theme).
+// The default stops are sRGB equivalents of the supplied OKLCH emphasis-button tokens.
 const BUTTON_GRADIENTS: Partial<
   Record<ButtonVariant, { light: readonly [string, string]; dark: readonly [string, string] }>
 > = {
   default: {
-    light: ["#5da37c", "#2c5f47"],
-    dark: ["#e8f4ec", "#9cc2ae"],
+    light: ["#5491f6", "#005aeb"],
+    dark: ["#5491f6", "#005aeb"],
   },
   destructive: {
     light: ["#d97a62", "#c4452f"],
@@ -31,7 +31,7 @@ const HIGHLIGHT_FADE = "rgba(255, 255, 255, 0)";
 
 const buttonVariants = cva(
   cn(
-    "group shrink-0 flex-row items-center justify-center gap-2 overflow-hidden rounded-xl shadow-none",
+    "group shrink-0 flex-row items-center justify-center gap-2 overflow-hidden rounded-lg shadow-none",
     Platform.select({
       web: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
     }),
@@ -40,7 +40,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: cn(
-          "border border-white/25 shadow-sm shadow-black/5 active:opacity-90",
+          "inset-shadow-[0_1px_0_0_#5491f6] active:opacity-90",
           Platform.select({ web: "hover:opacity-90" }),
         ),
         destructive: cn(
@@ -66,7 +66,7 @@ const buttonVariants = cva(
         link: "",
       },
       size: {
-        default: cn("h-10 px-4 py-2 sm:h-9", Platform.select({ web: "has-[>svg]:px-3" })),
+        default: cn("h-9 px-4", Platform.select({ web: "has-[>svg]:px-3" })),
         sm: cn("h-9 gap-1.5 px-3 sm:h-8", Platform.select({ web: "has-[>svg]:px-2.5" })),
         lg: cn("h-11 px-6 sm:h-10", Platform.select({ web: "has-[>svg]:px-4" })),
         xl: "h-14 px-6",
@@ -83,7 +83,7 @@ const buttonVariants = cva(
 
 const buttonTextVariants = cva(
   cn(
-    "text-foreground text-sm font-semibold",
+    "text-foreground text-sm font-medium leading-[21px] tracking-[-0.16px]",
     Platform.select({ web: "pointer-events-none transition-colors" }),
   ),
   {
@@ -122,7 +122,7 @@ type ButtonProps = React.ComponentProps<typeof Pressable> &
   React.RefAttributes<typeof Pressable> &
   VariantProps<typeof buttonVariants>;
 
-function Button({ className, variant, size, children, ...props }: ButtonProps) {
+function Button({ className, variant = "default", size, children, ...props }: ButtonProps) {
   const colorScheme = useColorScheme();
   const gradient = variant ? BUTTON_GRADIENTS[variant] : undefined;
   const colors = gradient ? gradient[colorScheme === "dark" ? "dark" : "light"] : undefined;
@@ -141,17 +141,33 @@ function Button({ className, variant, size, children, ...props }: ButtonProps) {
                 <LinearGradient
                   colors={colors}
                   start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  className="absolute inset-0"
-                  pointerEvents="none"
-                />
-                <LinearGradient
-                  colors={[TOP_HIGHLIGHT, HIGHLIGHT_FADE]}
-                  start={{ x: 0, y: 0 }}
                   end={{ x: 0, y: 1 }}
-                  className="absolute inset-x-0 top-0 h-1/2"
                   pointerEvents="none"
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    width: "100%",
+                  }}
                 />
+                {variant !== "default" ? (
+                  <LinearGradient
+                    colors={[TOP_HIGHLIGHT, HIGHLIGHT_FADE]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    pointerEvents="none"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: "50%",
+                      width: "100%",
+                    }}
+                  />
+                ) : null}
               </>
             ) : null}
             {typeof children === "function" ? children(state) : children}
