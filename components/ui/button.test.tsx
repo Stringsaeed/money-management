@@ -32,5 +32,12 @@ describe("Button", () => {
     expect(gradient.props.colors).toEqual(["#5491f6", "#005aeb"]);
     expect(gradient.props.start).toEqual({ x: 0, y: 0 });
     expect(gradient.props.end).toEqual({ x: 0, y: 1 });
+    expect(gradient.props.style).toEqual({
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+    });
   });
 });

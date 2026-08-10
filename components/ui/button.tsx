@@ -149,7 +149,6 @@ function Button({ className, variant = "default", size, children, ...props }: Bu
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    width: "100%",
                   }}
                 />
                 {variant !== "default" ? (
@@ -164,7 +163,6 @@ function Button({ className, variant = "default", size, children, ...props }: Bu
                       left: 0,
                       right: 0,
                       height: "50%",
-                      width: "100%",
                     }}
                   />
                 ) : null}
