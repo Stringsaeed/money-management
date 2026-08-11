@@ -2,27 +2,52 @@ import { TextClassContext } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import { LinearGradient } from "expo-linear-gradient";
+import { useState } from "react";
 import { Platform, Pressable, useColorScheme } from "react-native";
 
 // NOTE: group-* is not supported yet by Uniwind
 
 type ButtonVariant = NonNullable<VariantProps<typeof buttonVariants>["variant"]>;
 
-// The default stops are sRGB equivalents of the supplied OKLCH emphasis-button tokens.
+type GradientState = {
+  idle: readonly [string, string];
+  interactive: readonly [string, string];
+};
+
+// Kumo defines these colors with OKLCH color-mix(). React Native does not parse OKLCH,
+// so the primary stops below are their clipped sRGB equivalents.
 const BUTTON_GRADIENTS: Partial<
-  Record<ButtonVariant, { light: readonly [string, string]; dark: readonly [string, string] }>
+  Record<ButtonVariant, { light: GradientState; dark: GradientState }>
 > = {
   default: {
-    light: ["#5491f6", "#005aeb"],
-    dark: ["#5491f6", "#005aeb"],
+    light: {
+      idle: ["#3c86ff", "#056dff"],
+      interactive: ["#619eff", "#056dff"],
+    },
+    dark: {
+      idle: ["#2c77f0", "#005aeb"],
+      interactive: ["#5491f6", "#005aeb"],
+    },
   },
   destructive: {
-    light: ["#d97a62", "#c4452f"],
-    dark: ["#e9907a", "#c4452f"],
+    light: {
+      idle: ["#ff5b57", "#fb2c36"],
+      interactive: ["#ff7d75", "#fb2c36"],
+    },
+    dark: {
+      idle: ["#f0463e", "#e7000b"],
+      interactive: ["#f86e62", "#e7000b"],
+    },
   },
   secondary: {
-    light: ["#8db99e", "#6e9c80"],
-    dark: ["#a3c3b0", "#6e9c80"],
+    light: {
+      idle: ["#8db99e", "#6e9c80"],
+      interactive: ["#8db99e", "#6e9c80"],
+    },
+    dark: {
+      idle: ["#a3c3b0", "#6e9c80"],
+      interactive: ["#a3c3b0", "#6e9c80"],
+    },
   },
 };
 
@@ -31,22 +56,24 @@ const HIGHLIGHT_FADE = "rgba(255, 255, 255, 0)";
 
 const buttonVariants = cva(
   cn(
-    "group shrink-0 flex-row items-center justify-center gap-2 overflow-hidden rounded-lg shadow-none",
+    "group shrink-0 flex-row items-center justify-center overflow-hidden border-0 shadow-xs select-none",
     Platform.select({
-      web: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+      web: "cursor-pointer whitespace-nowrap outline-none disabled:pointer-events-none disabled:cursor-not-allowed [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
     }),
   ),
   {
     variants: {
       variant: {
         default: cn(
-          "inset-shadow-[0_1px_0_0_#5491f6] active:opacity-90",
-          Platform.select({ web: "hover:opacity-90" }),
+          "relative bg-[#619eff] text-white ring ring-[#045ede] inset-shadow-[0_1px_0_0_#619eff] disabled:opacity-50 dark:bg-[#5491f6] dark:ring-[#004dcc] dark:inset-shadow-[0_1px_0_0_#5491f6]",
+          Platform.select({
+            web: "focus:ring-[#045ede] focus-visible:ring-2 focus-visible:ring-[#045ede] active:ring-[#045ede] dark:focus:ring-[#004dcc] dark:focus-visible:ring-[#004dcc] dark:active:ring-[#004dcc]",
+          }),
         ),
         destructive: cn(
-          "border border-white/25 shadow-sm shadow-black/5 active:opacity-90",
+          "relative bg-[#ff7d75] text-white ring ring-[#da252e] inset-shadow-[0_1px_0_0_#ff7d75] disabled:opacity-50 dark:bg-[#f86e62] dark:ring-[#c90008] dark:inset-shadow-[0_1px_0_0_#f86e62]",
           Platform.select({
-            web: "hover:opacity-90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
+            web: "focus:ring-[#da252e] focus-visible:ring-2 focus-visible:ring-[#da252e] active:ring-[#da252e] dark:focus:ring-[#c90008] dark:focus-visible:ring-[#c90008] dark:active:ring-[#c90008]",
           }),
         ),
         secondary: cn(
@@ -66,12 +93,12 @@ const buttonVariants = cva(
         link: "",
       },
       size: {
-        default: cn("h-9 px-4", Platform.select({ web: "has-[>svg]:px-3" })),
-        sm: cn("h-9 gap-1.5 px-3 sm:h-8", Platform.select({ web: "has-[>svg]:px-2.5" })),
-        lg: cn("h-11 px-6 sm:h-10", Platform.select({ web: "has-[>svg]:px-4" })),
-        xl: "h-14 px-6",
+        default: "h-9 gap-1.5 rounded-lg px-3",
+        sm: "h-6.5 gap-1 rounded-md px-2",
+        lg: "h-10 gap-2 rounded-lg px-4",
+        xl: "h-14 gap-2 rounded-lg px-6",
         fab: "size-14 rounded-full",
-        icon: "h-10 w-10 sm:h-9 sm:w-9",
+        icon: "size-9 rounded-lg p-0",
       },
     },
     defaultVariants: {
@@ -83,7 +110,7 @@ const buttonVariants = cva(
 
 const buttonTextVariants = cva(
   cn(
-    "text-foreground text-sm font-medium leading-[21px] tracking-[-0.16px]",
+    "text-foreground text-sm font-medium leading-[21px] tracking-normal",
     Platform.select({ web: "pointer-events-none transition-colors" }),
   ),
   {
@@ -104,7 +131,7 @@ const buttonTextVariants = cva(
       },
       size: {
         default: "",
-        sm: "",
+        sm: "text-xs",
         lg: "",
         xl: "text-[17px]",
         fab: "",
@@ -122,24 +149,47 @@ type ButtonProps = React.ComponentProps<typeof Pressable> &
   React.RefAttributes<typeof Pressable> &
   VariantProps<typeof buttonVariants>;
 
-function Button({ className, variant = "default", size, children, ...props }: ButtonProps) {
+function Button({
+  className,
+  variant = "default",
+  size,
+  children,
+  onHoverIn,
+  onHoverOut,
+  ...props
+}: ButtonProps) {
   const colorScheme = useColorScheme();
+  const [isHovered, setIsHovered] = useState(false);
   const gradient = variant ? BUTTON_GRADIENTS[variant] : undefined;
-  const colors = gradient ? gradient[colorScheme === "dark" ? "dark" : "light"] : undefined;
+  const gradientState = gradient?.[colorScheme === "dark" ? "dark" : "light"];
+
+  const handleHoverIn: ButtonProps["onHoverIn"] = (event) => {
+    setIsHovered(true);
+    onHoverIn?.(event);
+  };
+
+  const handleHoverOut: ButtonProps["onHoverOut"] = (event) => {
+    setIsHovered(false);
+    onHoverOut?.(event);
+  };
 
   return (
     <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
       <Pressable
         className={cn(props.disabled && "opacity-50", buttonVariants({ variant, size }), className)}
+        onHoverIn={handleHoverIn}
+        onHoverOut={handleHoverOut}
         role="button"
         {...props}
       >
         {(state) => (
           <>
-            {colors ? (
+            {gradientState ? (
               <>
                 <LinearGradient
-                  colors={colors}
+                  colors={
+                    isHovered || state.pressed ? gradientState.interactive : gradientState.idle
+                  }
                   start={{ x: 0, y: 0 }}
                   end={{ x: 0, y: 1 }}
                   pointerEvents="none"
