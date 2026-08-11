@@ -57,6 +57,8 @@
   --color-ring: 152 33% 47%;
   --color-brand: #4a8f69;
   --color-brand-foreground: #ffffff;
+  --color-kumo-brand-emphasis-start: color-mix(in oklch, oklch(0.5772 0.2324 260), white 15%);
+  --color-kumo-brand-emphasis-end: oklch(0.5772 0.2324 260);
   --radius: 0.625rem;
   --chart-1: 12 76% 61%;
   --chart-2: 173 58% 39%;
