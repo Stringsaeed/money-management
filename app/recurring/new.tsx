@@ -113,7 +113,6 @@ export default function NewRecurringScreen() {
             onChangeText={setName}
             placeholder="e.g. Netflix, Rent"
             placeholderTextColor="#9a9896"
-            autoFocus
             className="border border-input rounded-[10px] p-3.5 text-base text-foreground"
           />
         </View>

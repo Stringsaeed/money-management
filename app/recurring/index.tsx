@@ -95,16 +95,7 @@ export default function RecurringListScreen() {
       )}
 
       {/* FAB */}
-      <Button
-        onPress={() => router.push("/recurring/new")}
-        size="fab"
-        style={{
-          position: "absolute",
-          bottom: 32,
-          right: 20,
-          boxShadow: `0 4px 8px ${colorScheme === "dark" ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.3)"}`,
-        }}
-      >
+      <Button onPress={() => router.push("/recurring/new")} size="fab">
         <Text className="text-3xl">+</Text>
       </Button>
     </View>

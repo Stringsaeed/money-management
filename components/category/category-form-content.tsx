@@ -55,7 +55,6 @@ export function CategoryFormContent({
             <View className="gap-2">
               <Text className={sectionLabelClassName}>Name</Text>
               <TextInputComponent
-                autoFocus
                 className={inputClassName}
                 onChangeText={field.handleChange}
                 placeholder="e.g. Groceries"

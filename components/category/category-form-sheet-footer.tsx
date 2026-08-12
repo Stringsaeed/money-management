@@ -1,9 +1,9 @@
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 import type { UseCategoryFormReturn } from "./form";
 
@@ -28,18 +28,17 @@ export function CategoryFormSheetFooter({ error, form, onSubmit }: CategoryFormS
 
       <form.Subscribe selector={(state) => state.isSubmitting}>
         {(isSubmitting) => (
-          <Pressable
-            className={cn(
-              "items-center rounded-2xl bg-ink px-4 py-4 active:bg-ink/90",
-              isSubmitting && "opacity-60",
-            )}
+          <Button
+            className="w-full"
             disabled={isSubmitting}
             onPress={onSubmit}
+            size="lg"
+            variant="default"
           >
             <Text className="font-body-semibold text-base text-surface">
               {isSubmitting ? "Creating…" : "Create Category"}
             </Text>
-          </Pressable>
+          </Button>
         )}
       </form.Subscribe>
     </View>

@@ -13,10 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { useAccountsWithBalances, useDeleteAccount } from "@/hooks/use-accounts";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export default function AccountsScreen() {
-  const colorScheme = useColorScheme();
   const { data: accounts = [] } = useAccountsWithBalances();
   const deleteAccount = useDeleteAccount();
 
@@ -53,15 +51,7 @@ export default function AccountsScreen() {
       </ScrollView>
 
       <AccountFormBottomSheet>
-        <Button
-          size="fab"
-          style={{
-            position: "absolute",
-            bottom: 32,
-            right: 20,
-            boxShadow: `0 4px 8px ${colorScheme === "dark" ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.3)"}`,
-          }}
-        >
+        <Button size="fab">
           <Icon as={PlusIcon} size={24} />
         </Button>
       </AccountFormBottomSheet>

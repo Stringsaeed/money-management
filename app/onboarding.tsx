@@ -97,7 +97,6 @@ export default function OnboardingScreen() {
             placeholder="e.g. Main Checking"
             placeholderTextColor="#9a9896"
             className="border border-input rounded-[10px] p-3.5 text-base text-foreground mb-5"
-            autoFocus
             returnKeyType="next"
           />
 

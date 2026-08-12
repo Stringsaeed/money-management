@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { useCategories } from "@/hooks/use-categories";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { cn } from "@/lib/utils";
 
 type CategoryFilter = "all" | "income" | "expense";
@@ -36,7 +35,6 @@ const FILTERS: FilterOption[] = [
 ];
 
 export default function CategoriesScreen() {
-  const colorScheme = useColorScheme();
   const [filter, setFilter] = useState<CategoryFilter>("all");
 
   const { data: categories = [] } = useCategories();
@@ -114,15 +112,7 @@ export default function CategoriesScreen() {
       </ScrollView>
 
       <CategoryFormBottomSheet initialType={fabInitialType}>
-        <Button
-          size="fab"
-          style={{
-            position: "absolute",
-            bottom: 32,
-            right: 20,
-            boxShadow: `0 4px 8px ${colorScheme === "dark" ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.3)"}`,
-          }}
-        >
+        <Button size="fab">
           <Icon as={PlusIcon} size={24} />
         </Button>
       </CategoryFormBottomSheet>
