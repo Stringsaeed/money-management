@@ -160,14 +160,6 @@ export default function RootLayout() {
                         }}
                       />
                       <Stack.Screen
-                        name="category/[id]/edit"
-                        options={{
-                          presentation: "modal",
-                          title: "Edit Category",
-                          headerTransparent: false,
-                        }}
-                      />
-                      <Stack.Screen
                         name="recurring/index"
                         options={{ title: "Recurring Payments" }}
                       />

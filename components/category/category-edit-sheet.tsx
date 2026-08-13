@@ -1,23 +1,28 @@
-import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import { Alert, Pressable } from "react-native";
 
 import { CategoryFormContent } from "@/components/category/category-form-content";
 import { CreateResourceBottomSheet } from "@/components/resource/create-resource-bottom-sheet";
 import { CreateResourceSheetFooter } from "@/components/resource/create-resource-sheet-footer";
 import { Text } from "@/components/ui/text";
-import { useCategory, useDeleteCategory } from "@/hooks/use-categories";
+import { useDeleteCategory } from "@/hooks/use-categories";
 import type { Category } from "@/types";
 
-import { useEditCategoryForm } from "@/components/category/form";
+import { useEditCategoryForm } from "./form";
 
-function EditCategorySheet({ category }: { category: Category }) {
+interface CategoryEditSheetProps {
+  category: Category;
+  onDismiss: VoidFunction;
+  onUpdated: VoidFunction;
+}
+
+export function CategoryEditSheet({ category, onDismiss, onUpdated }: CategoryEditSheetProps) {
   const [error, setError] = useState("");
   const deleteCategory = useDeleteCategory();
   const form = useEditCategoryForm({
     category,
     onError: setError,
-    onUpdated: () => router.back(),
+    onUpdated,
   });
 
   function handleDelete() {
@@ -31,7 +36,7 @@ function EditCategorySheet({ category }: { category: Category }) {
           style: "destructive",
           onPress: async () => {
             await deleteCategory.mutateAsync(category.id);
-            router.back();
+            onDismiss();
           },
         },
       ],
@@ -68,23 +73,8 @@ function EditCategorySheet({ category }: { category: Category }) {
           </Pressable>
         </>
       }
-      onDismiss={() => router.back()}
+      onDismiss={onDismiss}
       title="Edit Category"
     />
   );
-}
-
-export default function EditCategoryScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: category, isLoading } = useCategory(id);
-
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
-  return category ? <EditCategorySheet category={category} /> : null;
 }

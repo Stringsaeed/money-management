@@ -16,4 +16,5 @@ export interface AccountRowProps {
 
 export interface CategoryRowProps {
   category: Category;
+  onPress?: () => void;
 }

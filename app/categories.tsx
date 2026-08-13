@@ -10,6 +10,7 @@ import {
 } from "phosphor-react-native";
 
 import { CategoryFormBottomSheet } from "@/components/category/category-form-sheet";
+import { CategoryEditSheet } from "@/components/category/category-edit-sheet";
 import { SeedPacketsGraphic } from "@/components/graphics/seed-packets";
 import { Card } from "@/components/settings/card";
 import { CategoryRow } from "@/components/settings/category-row";
@@ -18,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { useCategories } from "@/hooks/use-categories";
+import type { Category } from "@/types";
 import { cn } from "@/lib/utils";
 
 type CategoryFilter = "all" | "income" | "expense";
@@ -36,6 +38,7 @@ const FILTERS: FilterOption[] = [
 
 export default function CategoriesScreen() {
   const [filter, setFilter] = useState<CategoryFilter>("all");
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
   const { data: categories = [] } = useCategories();
 
@@ -104,7 +107,7 @@ export default function CategoriesScreen() {
             {filtered.map((cat, i) => (
               <Animated.View key={cat.id} entering={FadeIn} exiting={FadeOut}>
                 {i > 0 && <Divider />}
-                <CategoryRow category={cat} />
+                <CategoryRow category={cat} onPress={() => setEditingCategory(cat)} />
               </Animated.View>
             ))}
           </Card>
@@ -116,6 +119,13 @@ export default function CategoriesScreen() {
           <Icon as={PlusIcon} size={24} />
         </Button>
       </CategoryFormBottomSheet>
+      {editingCategory ? (
+        <CategoryEditSheet
+          category={editingCategory}
+          onDismiss={() => setEditingCategory(null)}
+          onUpdated={() => setEditingCategory(null)}
+        />
+      ) : null}
     </View>
   );
 }
