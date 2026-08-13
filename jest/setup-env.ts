@@ -88,19 +88,6 @@ jest.mock("@tanstack/devtools-event-client", () => ({
   },
 }));
 
-jest.mock("@gorhom/bottom-sheet", () => {
-  const mock = require("@gorhom/bottom-sheet/mock");
-
-  const BottomSheetHandle = ({ children }: { children?: React.ReactNode }) => children ?? null;
-  const BottomSheetFooter = ({ children }: { children?: React.ReactNode }) => children ?? null;
-
-  return {
-    ...mock,
-    BottomSheetHandle,
-    BottomSheetFooter,
-  };
-});
-
 jest.mock("@swmansion/react-native-bottom-sheet", () => {
   const React = require("react");
   const { View } = require("react-native");

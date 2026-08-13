@@ -32,10 +32,6 @@ jest.mock("expo-sqlite", () => ({
   SQLiteProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-jest.mock("@gorhom/bottom-sheet", () => ({
-  BottomSheetModalProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 jest.mock("@rn-primitives/portal", () => ({
   PortalHost: () => {
     const React = require("react");

@@ -78,8 +78,8 @@ The app follows the **Paper Ledger** design system — a clean, editorial aesthe
 
 ### Shared Constants
 
-- `components/transaction/constants.ts` exports reusable values: `INK`, `INK_MUTED`, `SURFACE_CONTAINER`, `DESTRUCTIVE`, `SHEET_BG`, `SHEET_HANDLE`, `layoutTransition`.
-- Bottom sheets use `SHEET_BG` and `SHEET_HANDLE` for consistent appearance.
+- `components/transaction/constants.ts` exports the shared `layoutTransition`.
+- Bottom sheets use `@swmansion/react-native-bottom-sheet` and the Paper Ledger theme classes for consistent appearance.
 
 ## Code Style & Imports
 
@@ -126,11 +126,11 @@ The app follows the **Paper Ledger** design system — a clean, editorial aesthe
 When creating picker components (account, category, date, etc.), follow this established pattern:
 
 - Each picker lives in its own directory: `components/transaction/<name>-picker/` with `<name>-picker.tsx` and `types.ts`.
-- The picker manages its own `BottomSheetModal` ref internally — callers never touch refs.
+- The picker manages its own controlled sheet index internally — callers never control sheet state.
 - Accept `children` as trigger: use `React.Children.only` + `React.cloneElement` to inject `onPress` on the child element.
 - Accept `onChange` callback for value changes.
-- Use `@gorhom/bottom-sheet` with `enableDynamicSizing`, `SHEET_BG`, `SHEET_HANDLE` from constants.
-- Dismiss the sheet after selection via `ref.current?.dismiss()`.
+- Use `ModalBottomSheet` from `@swmansion/react-native-bottom-sheet` with the root `BottomSheetProvider`, a closed/open index of `0`/`1`, and Paper Ledger theme classes.
+- Dismiss the sheet after selection by setting its controlled index to `0`.
 
 ## Form State Management
 

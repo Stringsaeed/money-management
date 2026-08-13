@@ -1,8 +1,7 @@
-import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { ArrowCounterClockwiseIcon, FunnelSimpleIcon } from "phosphor-react-native";
-import { useRef } from "react";
-import { Pressable, useColorScheme, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useState } from "react";
+import { Pressable, ScrollView, View } from "react-native";
+import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -43,9 +42,7 @@ function FilterSection({ title, children }: { title: string; children: React.Rea
 }
 
 export function FiltersButton() {
-  const ref = useRef<BottomSheetModal>(null);
-  const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const [sheetIndex, setSheetIndex] = useState(0);
 
   const {
     activeAccountId,
@@ -66,15 +63,12 @@ export function FiltersButton() {
   ).length;
   const availableMonths = monthsBetween(dateRange?.minDate, dateRange?.maxDate);
 
-  const sheetBg = { backgroundColor: colorScheme === "dark" ? "#141312" : "#F9F8F6" };
-  const sheetHandle = { backgroundColor: colorScheme === "dark" ? "#282624" : "#EBE8E3" };
-
   return (
     <>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Filters"
-        onPress={() => ref.current?.present()}
+        onPress={() => setSheetIndex(1)}
         className="mr-1 h-9 w-9 items-center justify-center"
       >
         <Icon as={FunnelSimpleIcon} size={22} className="text-foreground" />
@@ -85,17 +79,13 @@ export function FiltersButton() {
         ) : null}
       </Pressable>
 
-      <BottomSheetModal
-        enableDynamicSizing
-        ref={ref}
-        backgroundStyle={sheetBg}
-        topInset={insets.top}
-        handleIndicatorStyle={sheetHandle}
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} />
-        )}
+      <ModalBottomSheet
+        index={sheetIndex}
+        onIndexChange={setSheetIndex}
+        scrimColor="rgba(0, 0, 0, 0.5)"
+        surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
       >
-        <BottomSheetScrollView
+        <ScrollView
           contentContainerClassName="pb-safe-offset-6 px-5 gap-5"
           showsVerticalScrollIndicator={false}
         >
@@ -168,8 +158,8 @@ export function FiltersButton() {
               />
             ))}
           </FilterSection>
-        </BottomSheetScrollView>
-      </BottomSheetModal>
+        </ScrollView>
+      </ModalBottomSheet>
     </>
   );
 }

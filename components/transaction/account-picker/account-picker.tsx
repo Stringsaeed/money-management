@@ -1,11 +1,11 @@
-import React, { useRef } from "react";
+import React, { useState } from "react";
 import type { PressableProps } from "react-native";
-import { Pressable, useColorScheme, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { CheckIcon } from "phosphor-react-native";
+import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 
 import { Icon } from "@/components/ui/icon";
-import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { cn } from "@/lib/utils";
 
 import { Text } from "@/components/ui/text";
 import type { AccountPickerProps } from "./types";
@@ -16,15 +16,10 @@ export default function AccountPicker({
   onChange,
   children,
 }: AccountPickerProps) {
-  const ref = useRef<BottomSheetModal>(null);
-  const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-
-  const sheetBg = { backgroundColor: colorScheme === "dark" ? "#141312" : "#F9F8F6" };
-  const sheetHandle = { backgroundColor: colorScheme === "dark" ? "#282624" : "#EBE8E3" };
+  const [sheetIndex, setSheetIndex] = useState(0);
 
   const onOpen = () => {
-    ref.current?.present();
+    setSheetIndex(1);
   };
 
   const renderTrigger = () => {
@@ -40,17 +35,13 @@ export default function AccountPicker({
   return (
     <>
       {renderTrigger()}
-      <BottomSheetModal
-        enableDynamicSizing
-        ref={ref}
-        backgroundStyle={sheetBg}
-        topInset={insets.top}
-        handleIndicatorStyle={sheetHandle}
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} />
-        )}
+      <ModalBottomSheet
+        index={sheetIndex}
+        onIndexChange={setSheetIndex}
+        scrimColor="rgba(0, 0, 0, 0.5)"
+        surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
       >
-        <BottomSheetView className="pb-safe px-5 gap-4">
+        <View className="pb-safe px-5 pt-5 gap-4">
           <Text className="font-heading-normal text-xl italic text-ink">Account</Text>
 
           <View className="gap-2">
@@ -61,21 +52,28 @@ export default function AccountPicker({
                   key={acc.id}
                   onPress={() => {
                     onChange(acc.id);
-                    ref.current?.dismiss();
+                    setSheetIndex(0);
                   }}
-                  className={`flex-row items-center gap-3 px-4 py-3.5 rounded-xl ${
-                    isSelected ? "bg-ink" : "bg-surface-container"
-                  }`}
+                  className={cn(
+                    "flex-row items-center gap-3 px-4 py-3.5 rounded-xl",
+                    isSelected ? "bg-ink" : "bg-surface-container",
+                  )}
                 >
                   <Text className="text-lg">🏦</Text>
                   <View className="flex-1">
                     <Text
-                      className={`font-body-medium text-[15px] ${isSelected ? "text-surface" : "text-ink"}`}
+                      className={cn(
+                        "font-body-medium text-[15px]",
+                        isSelected ? "text-surface" : "text-ink",
+                      )}
                     >
                       {acc.name}
                     </Text>
                     <Text
-                      className={`font-body-normal text-xs ${isSelected ? "text-surface/60" : "text-ink/40"}`}
+                      className={cn(
+                        "font-body-normal text-xs",
+                        isSelected ? "text-surface/60" : "text-ink/40",
+                      )}
                     >
                       {acc.currency}
                     </Text>
@@ -89,8 +87,8 @@ export default function AccountPicker({
           </View>
 
           <View className="h-4" />
-        </BottomSheetView>
-      </BottomSheetModal>
+        </View>
+      </ModalBottomSheet>
     </>
   );
 }

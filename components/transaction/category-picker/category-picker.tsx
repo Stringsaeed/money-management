@@ -1,8 +1,7 @@
-import React, { useRef } from "react";
+import React, { useState } from "react";
 import type { PressableProps } from "react-native";
 import { Pressable, useColorScheme, View } from "react-native";
-import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 
 import { Text } from "@/components/ui/text";
 import type { CategoryPickerProps } from "./types";
@@ -55,24 +54,20 @@ export default function CategoryPicker({
   onChange,
   children,
 }: CategoryPickerProps) {
-  const ref = useRef<BottomSheetModal>(null);
-  const insets = useSafeAreaInsets();
+  const [sheetIndex, setSheetIndex] = useState(0);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-
-  const sheetBg = { backgroundColor: isDark ? "#141312" : "#F9F8F6" };
-  const sheetHandle = { backgroundColor: isDark ? "#282624" : "#EBE8E3" };
 
   const incomeCategories = categories.filter((c) => c.type === "income");
   const expenseCategories = categories.filter((c) => c.type === "expense");
 
   const onOpen = () => {
-    ref.current?.present();
+    setSheetIndex(1);
   };
 
   const handleSelect = (id: string) => {
     onChange(id);
-    ref.current?.dismiss();
+    setSheetIndex(0);
   };
 
   const renderTrigger = () => {
@@ -88,17 +83,13 @@ export default function CategoryPicker({
   return (
     <>
       {renderTrigger()}
-      <BottomSheetModal
-        enableDynamicSizing
-        ref={ref}
-        backgroundStyle={sheetBg}
-        topInset={insets.top}
-        handleIndicatorStyle={sheetHandle}
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} />
-        )}
+      <ModalBottomSheet
+        index={sheetIndex}
+        onIndexChange={setSheetIndex}
+        scrimColor="rgba(0, 0, 0, 0.5)"
+        surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
       >
-        <BottomSheetView className="pb-safe px-5 gap-5">
+        <View className="pb-safe px-5 pt-5 gap-5">
           <Text className="font-heading-normal text-xl italic text-ink">Category</Text>
 
           {expenseCategories.length > 0 ? (
@@ -130,8 +121,8 @@ export default function CategoryPicker({
           ) : null}
 
           <View className="h-4" />
-        </BottomSheetView>
-      </BottomSheetModal>
+        </View>
+      </ModalBottomSheet>
     </>
   );
 }

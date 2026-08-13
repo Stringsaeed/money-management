@@ -1,7 +1,7 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
+import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { PressableScale } from "pressto";
 import type { PressableProps } from "react-native";
 import { Pressable, useColorScheme, View } from "react-native";
@@ -19,12 +19,10 @@ export default function TransactionDatePicker({
   onChange,
   children,
 }: ExtendedDatePickerProps) {
-  const ref = useRef<BottomSheetModal>(null);
+  const [sheetIndex, setSheetIndex] = useState(0);
   const [selected, setSelected] = useState<Date>(date);
   const colorScheme = useColorScheme();
 
-  const sheetBg = { backgroundColor: colorScheme === "dark" ? "#141312" : "#F9F8F6" };
-  const sheetHandle = { backgroundColor: colorScheme === "dark" ? "#282624" : "#EBE8E3" };
   const accentColor = colorScheme === "dark" ? "#E8E6E3" : "#1C1B1A";
 
   const handleChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -34,7 +32,7 @@ export default function TransactionDatePicker({
   };
 
   const onOpen = () => {
-    ref.current?.present();
+    setSheetIndex(1);
   };
 
   const renderTrigger = () => {
@@ -64,16 +62,13 @@ export default function TransactionDatePicker({
   return (
     <>
       {renderTrigger()}
-      <BottomSheetModal
-        enableDynamicSizing
-        ref={ref}
-        backgroundStyle={sheetBg}
-        handleIndicatorStyle={sheetHandle}
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} />
-        )}
+      <ModalBottomSheet
+        index={sheetIndex}
+        onIndexChange={setSheetIndex}
+        scrimColor="rgba(0, 0, 0, 0.5)"
+        surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
       >
-        <BottomSheetView className="flex-1 pb-safe w-full px-5 gap-4">
+        <View className="flex-1 pb-safe w-full px-5 pt-5 gap-4">
           <DateTimePicker
             value={selected}
             mode="datetime"
@@ -85,7 +80,7 @@ export default function TransactionDatePicker({
 
           <Pressable
             onPress={() => {
-              ref.current?.dismiss();
+              setSheetIndex(0);
               onChange?.(selected);
             }}
             className="mx-8 py-3 bg-ink items-center active:opacity-80"
@@ -95,8 +90,8 @@ export default function TransactionDatePicker({
               Done
             </Text>
           </Pressable>
-        </BottomSheetView>
-      </BottomSheetModal>
+        </View>
+      </ModalBottomSheet>
     </>
   );
 }
