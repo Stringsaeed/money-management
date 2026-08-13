@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Alert, Pressable } from "react-native";
+import { Alert } from "react-native";
 
 import { CategoryFormContent } from "@/components/category/category-form-content";
 import { CreateResourceBottomSheet } from "@/components/resource/create-resource-bottom-sheet";
 import { CreateResourceSheetFooter } from "@/components/resource/create-resource-sheet-footer";
-import { Text } from "@/components/ui/text";
+import { ResourceSheetDeleteButton } from "@/components/resource/resource-sheet-delete-button";
 import { useDeleteCategory } from "@/hooks/use-categories";
 import type { Category } from "@/types";
 
@@ -27,7 +27,7 @@ export function CategoryEditSheet({ category, onDismiss, onUpdated }: CategoryEd
 
   function handleDelete() {
     Alert.alert(
-      "Delete Category",
+      `Delete ${category.name}?`,
       "Transactions using this category will keep their data but lose the category link.",
       [
         { text: "Cancel", style: "cancel" },
@@ -35,8 +35,15 @@ export function CategoryEditSheet({ category, onDismiss, onUpdated }: CategoryEd
           text: "Delete",
           style: "destructive",
           onPress: async () => {
-            await deleteCategory.mutateAsync(category.id);
-            onDismiss();
+            try {
+              await deleteCategory.mutateAsync(category.id);
+              onDismiss();
+            } catch {
+              Alert.alert(
+                "Couldn't Delete Category",
+                "The category was not deleted. Please try again.",
+              );
+            }
           },
         },
       ],
@@ -54,24 +61,23 @@ export function CategoryEditSheet({ category, onDismiss, onUpdated }: CategoryEd
         />
       }
       footer={
-        <>
-          <form.Subscribe selector={(state) => state.isSubmitting}>
-            {(isSubmitting) => (
-              <CreateResourceSheetFooter
-                error={error}
-                isSubmitting={isSubmitting}
-                onSubmit={() => {
-                  setError("");
-                  form.handleSubmit();
-                }}
-                submitLabel="Save Changes"
-              />
-            )}
-          </form.Subscribe>
-          <Pressable className="items-center px-5 pb-5" onPress={handleDelete}>
-            <Text className="font-body-medium text-sm text-destructive">Delete Category</Text>
-          </Pressable>
-        </>
+        <form.Subscribe selector={(state) => state.isSubmitting}>
+          {(isSubmitting) => (
+            <CreateResourceSheetFooter
+              error={error}
+              isSubmitting={isSubmitting}
+              onSubmit={() => {
+                setError("");
+                form.handleSubmit();
+              }}
+              submitLabel="Save Changes"
+              submittingLabel="Saving…"
+            />
+          )}
+        </form.Subscribe>
+      }
+      headerRight={
+        <ResourceSheetDeleteButton label={`Delete ${category.name}`} onPress={handleDelete} />
       }
       onDismiss={onDismiss}
       title="Edit Category"

@@ -12,6 +12,7 @@ interface CreateResourceBottomSheetProps {
   children?: React.ReactElement<PressableProps>;
   content: React.ReactNode;
   footer: React.ReactNode;
+  headerRight?: React.ReactNode;
   onDismiss?: VoidFunction;
   title: string;
 }
@@ -21,6 +22,7 @@ export function CreateResourceBottomSheet({
   children,
   content,
   footer,
+  headerRight,
   onDismiss,
   title,
 }: CreateResourceBottomSheetProps) {
@@ -64,7 +66,7 @@ export function CreateResourceBottomSheet({
             <Text className="flex-1 text-center font-heading-normal text-xl italic text-ink">
               {title}
             </Text>
-            <View className="h-10 w-10" />
+            {headerRight ?? <View className="h-10 w-10" />}
           </View>
           <ScrollView contentContainerClassName="gap-4 px-5 py-4 pb-8">{content}</ScrollView>
           <View className="bg-background">{footer}</View>

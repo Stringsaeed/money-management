@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Alert, Pressable } from "react-native";
+import { Alert } from "react-native";
 
 import { AccountFormContent } from "@/components/account/account-form-content";
 import { ACCOUNT_TYPE_META } from "@/components/account/account-form-options";
 import { CreateResourceBottomSheet } from "@/components/resource/create-resource-bottom-sheet";
 import { CreateResourceSheetFooter } from "@/components/resource/create-resource-sheet-footer";
-import { Text } from "@/components/ui/text";
+import { ResourceSheetDeleteButton } from "@/components/resource/resource-sheet-delete-button";
 import { useDeleteAccount } from "@/hooks/use-accounts";
 import type { AccountType, AccountWithBalance } from "@/types";
 
@@ -47,8 +47,8 @@ export function AccountEditSheet({ account, onDismiss, onUpdated }: AccountEditS
 
   function handleDelete() {
     Alert.alert(
-      "Delete Account?",
-      `This will permanently delete ${account.name} and all its transactions. This cannot be undone.`,
+      `Delete ${account.name}?`,
+      "This will permanently delete the account and all its transactions. This cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -87,25 +87,23 @@ export function AccountEditSheet({ account, onDismiss, onUpdated }: AccountEditS
         />
       }
       footer={
-        <>
-          <form.Subscribe selector={(state) => state.isSubmitting}>
-            {(isSubmitting) => (
-              <CreateResourceSheetFooter
-                error={error}
-                isSubmitting={isSubmitting}
-                onSubmit={() => {
-                  setError("");
-                  form.handleSubmit();
-                }}
-                submitLabel="Save Changes"
-                submittingLabel="Saving…"
-              />
-            )}
-          </form.Subscribe>
-          <Pressable className="items-center px-5 pb-5" onPress={handleDelete}>
-            <Text className="font-body-medium text-sm text-destructive">Delete Account</Text>
-          </Pressable>
-        </>
+        <form.Subscribe selector={(state) => state.isSubmitting}>
+          {(isSubmitting) => (
+            <CreateResourceSheetFooter
+              error={error}
+              isSubmitting={isSubmitting}
+              onSubmit={() => {
+                setError("");
+                form.handleSubmit();
+              }}
+              submitLabel="Save Changes"
+              submittingLabel="Saving…"
+            />
+          )}
+        </form.Subscribe>
+      }
+      headerRight={
+        <ResourceSheetDeleteButton label={`Delete ${account.name}`} onPress={handleDelete} />
       }
       onDismiss={onDismiss}
       title="Edit Account"
