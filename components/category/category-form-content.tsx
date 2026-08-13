@@ -9,7 +9,7 @@ import {
   ResourceFormField,
   resourceInputClassName,
 } from "@/components/resource/resource-form-field";
-import type { CategoryType } from "@/components/category/category-form-options";
+import { CATEGORY_TYPE_META, type CategoryType } from "@/components/category/category-form-options";
 import { Text } from "@/components/ui/text";
 
 import type { UseCategoryFormReturn } from "./form";
@@ -19,7 +19,8 @@ type SheetTextInputProps = ComponentProps<typeof TextInput>;
 interface CategoryFormContentProps {
   form: UseCategoryFormReturn;
   onColorChange: (color: string) => void;
-  onTypeChange: (type: CategoryType) => void;
+  onTypeChange?: (type: CategoryType) => void;
+  typeEditable?: boolean;
   TextInputComponent?: ComponentType<SheetTextInputProps>;
 }
 
@@ -27,6 +28,7 @@ export function CategoryFormContent({
   form,
   onColorChange,
   onTypeChange,
+  typeEditable = true,
   TextInputComponent = TextInput,
 }: CategoryFormContentProps) {
   return (
@@ -68,7 +70,18 @@ export function CategoryFormContent({
           {(field) => (
             <View className="gap-2">
               <Text className="font-body-medium text-sm text-ink/60">Type</Text>
-              <CategoryTypePicker onChange={onTypeChange} value={field.state.value} />
+              {typeEditable ? (
+                <CategoryTypePicker
+                  onChange={(type) => onTypeChange?.(type)}
+                  value={field.state.value}
+                />
+              ) : (
+                <View className="rounded-2xl border border-ledger-outline bg-surface px-4 py-3">
+                  <Text className="font-body-medium text-base text-ink">
+                    {CATEGORY_TYPE_META[field.state.value].label}
+                  </Text>
+                </View>
+              )}
             </View>
           )}
         </form.Field>

@@ -1,6 +1,7 @@
 import { formOptions, useForm } from "@tanstack/react-form";
 
-import { useCreateCategory } from "@/hooks/use-categories";
+import { useCreateCategory, useUpdateCategory } from "@/hooks/use-categories";
+import type { Category } from "@/types";
 
 import {
   CATEGORY_TYPE_META,
@@ -18,6 +19,12 @@ export interface CategoryFormValues {
 interface UseCategoryFormArgs {
   initialType?: CategoryType;
   onCreated?: VoidFunction;
+}
+
+interface UseEditCategoryFormArgs {
+  category: Category;
+  onError?: (message: string) => void;
+  onUpdated?: VoidFunction;
 }
 
 export const categoryFormOptions = formOptions({
@@ -59,3 +66,32 @@ export function useCategoryForm({ initialType = "expense", onCreated }: UseCateg
 }
 
 export type UseCategoryFormReturn = ReturnType<typeof useCategoryForm>;
+
+export function useEditCategoryForm({ category, onError, onUpdated }: UseEditCategoryFormArgs) {
+  const updateCategory = useUpdateCategory();
+
+  return useForm({
+    ...categoryFormOptions,
+    defaultValues: {
+      name: category.name,
+      type: category.type,
+      color: category.color,
+      icon: category.icon,
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        await updateCategory.mutateAsync({
+          id: category.id,
+          data: {
+            name: value.name.trim(),
+            color: value.color,
+            icon: value.icon,
+          },
+        });
+        onUpdated?.();
+      } catch {
+        onError?.("Failed to update category.");
+      }
+    },
+  });
+}

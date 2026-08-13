@@ -12,6 +12,7 @@ interface CreateResourceBottomSheetProps {
   children?: React.ReactElement<PressableProps>;
   content: React.ReactNode;
   footer: React.ReactNode;
+  onDismiss?: VoidFunction;
   title: string;
 }
 
@@ -20,9 +21,15 @@ export function CreateResourceBottomSheet({
   children,
   content,
   footer,
+  onDismiss,
   title,
 }: CreateResourceBottomSheetProps) {
   const [index, setIndex] = React.useState(autoPresent ? 1 : 0);
+
+  function handleIndexChange(nextIndex: number) {
+    setIndex(nextIndex);
+    if (nextIndex === 0) onDismiss?.();
+  }
 
   function renderTrigger() {
     if (!children) return null;
@@ -38,7 +45,11 @@ export function CreateResourceBottomSheet({
   return (
     <>
       {renderTrigger()}
-      <ModalBottomSheet scrimColor="rgba(0, 0, 0, 0.5)" index={index} onIndexChange={setIndex}>
+      <ModalBottomSheet
+        scrimColor="rgba(0, 0, 0, 0.5)"
+        index={index}
+        onIndexChange={handleIndexChange}
+      >
         <View className="mx-4 mb-safe flex-1 rounded-3xl bg-background">
           <View className="flex-row items-center px-3 py-3">
             <Pressable
@@ -46,7 +57,7 @@ export function CreateResourceBottomSheet({
               accessibilityRole="button"
               className="h-10 w-10 items-center justify-center rounded-full active:bg-surface-dim"
               hitSlop={8}
-              onPress={() => setIndex(0)}
+              onPress={() => handleIndexChange(0)}
             >
               <Icon as={XIcon} size={20} className="text-ink" />
             </Pressable>
