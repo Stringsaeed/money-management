@@ -1,20 +1,12 @@
 import { useMemo } from "react";
 import { View } from "react-native";
-import { Host, Text as ExpoUIText } from "@expo/ui";
+
+import { NumberFlow } from "@/components/ui/number-flow";
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
+import { useLoadAfterTimeout } from "@/hooks/use-load-after-timeout";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
-import { formatCents } from "@/utils/currency";
 import { groupByDay } from "@/utils/transaction";
-import {
-  Animation,
-  animation,
-  contentTransition,
-  font,
-  frame,
-  monospacedDigit,
-} from "@expo/ui/swift-ui/modifiers";
-import { useLoadAfterTimeout } from "@/hooks/use-load-after-timeout";
 
 export function BalanceHero() {
   const { selectedYear, selectedMonth, activeAccountId, selectedCategoryId } = useUIStore();
@@ -58,29 +50,16 @@ export function BalanceHero() {
 
   return (
     <View className="px-5 pb-2 bg-background min-h-[55px]">
-      <Host matchContents>
-        <ExpoUIText
-          modifiers={[
-            monospacedDigit(),
-            contentTransition("numericText"),
-            font({
-              family: "Newsreader-Medium",
-              size: 48,
-            }),
-            animation(
-              Animation.spring({
-                response: 0.4,
-                dampingFraction: 0.6,
-                duration: 500,
-              }),
-              balance,
-            ),
-            frame({ maxWidth: 400, alignment: "leading" }),
-          ]}
-        >
-          {formatCents(balance, currency)}
-        </ExpoUIText>
-      </Host>
+      <NumberFlow
+        className="font-heading-medium text-5xl tabular-nums text-ink"
+        value={balance / 100}
+        format={{
+          style: "currency",
+          currency,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }}
+      />
     </View>
   );
 }

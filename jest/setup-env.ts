@@ -40,41 +40,6 @@ jest.mock("react-native-nitro-fetch", () => ({
   fetch: global.fetch,
 }));
 
-jest.mock("@expo/ui/swift-ui", () => {
-  const { Text, View } = require("react-native");
-
-  return {
-    ColorPicker: View,
-    Host: View,
-    Picker: View,
-    Text,
-  };
-});
-
-jest.mock("@expo/ui", () => {
-  const { Text, View } = require("react-native");
-
-  return {
-    ColorPicker: View,
-    Host: View,
-    Picker: View,
-    Text,
-  };
-});
-
-jest.mock("@expo/ui/swift-ui/modifiers", () => ({
-  Animation: {
-    spring: jest.fn((config) => config),
-  },
-  animation: jest.fn(),
-  contentTransition: jest.fn(),
-  font: jest.fn(),
-  frame: jest.fn(),
-  monospacedDigit: jest.fn(),
-  pickerStyle: jest.fn(),
-  tag: jest.fn(),
-}));
-
 jest.mock("@tanstack/devtools-event-client", () => ({
   EventClient: class {
     emit() {

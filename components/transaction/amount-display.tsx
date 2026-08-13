@@ -1,16 +1,9 @@
-import { useWindowDimensions } from "react-native";
-import { Host, HStack, Text as SwiftUIText } from "@expo/ui/swift-ui";
-import {
-  Animation,
-  animation,
-  contentTransition,
-  font,
-  foregroundStyle,
-  frame,
-  monospacedDigit,
-} from "@expo/ui/swift-ui/modifiers";
-import { useNativeVariable } from "react-native-css";
+import { View } from "react-native";
+
+import { NumberFlow } from "@/components/ui/number-flow";
+import { Text } from "@/components/ui/text";
 import type useNumPadNumber from "@/hooks/use-num-pad-number";
+import { cn } from "@/lib/utils";
 
 interface AmountDisplayProps {
   currencySymbol: string;
@@ -18,98 +11,33 @@ interface AmountDisplayProps {
 }
 
 export function AmountDisplay({ currencySymbol, numPadConfig }: AmountDisplayProps) {
-  const { width } = useWindowDimensions();
-
   const integralPart = Math.floor(numPadConfig.value);
   const fractionalPart = Math.round((numPadConfig.value - integralPart) * 100);
 
-  // @ts-expect-error - This is an unstable API and may change in the future
-  const colorInk = useNativeVariable("--color-ink");
-  // @ts-expect-error - This is an unstable API and may change in the future
-  const colorMutedForeground = useNativeVariable("--color-muted-foreground");
-
   return (
-    <Host matchContents>
-      <HStack
-        alignment="lastTextBaseline"
-        modifiers={[
-          frame({
-            width: width,
-            height: 60,
-            alignment: "center",
-          }),
-          animation(Animation.easeInOut(), integralPart),
-        ]}
+    <View className="h-15 w-full flex-row items-end justify-center">
+      <Text className="font-heading-normal text-4xl tabular-nums text-ink">{currencySymbol}</Text>
+      <NumberFlow
+        className="font-heading-normal text-5xl tabular-nums text-ink"
+        value={integralPart}
+        format={{ maximumFractionDigits: 0, useGrouping: false }}
+      />
+      <Text
+        className={cn(
+          "font-heading-normal text-4xl tabular-nums",
+          numPadConfig.isDecimal ? "text-ink" : "text-muted-foreground",
+        )}
       >
-        <SwiftUIText
-          modifiers={[
-            monospacedDigit(),
-            contentTransition("numericText"),
-            font({
-              family: "Newsreader-Regular",
-              size: 35,
-            }),
-            foregroundStyle(colorInk),
-          ]}
-        >
-          {currencySymbol}
-        </SwiftUIText>
-        <SwiftUIText
-          modifiers={[
-            monospacedDigit(),
-            contentTransition("numericText"),
-            font({
-              family: "Newsreader-Regular",
-              size: 52,
-            }),
-            animation(
-              Animation.spring({
-                response: 0.4,
-                dampingFraction: 0.6,
-                duration: 500,
-              }),
-              integralPart,
-            ),
-            foregroundStyle(colorInk),
-          ]}
-        >
-          {integralPart}
-        </SwiftUIText>
-        <SwiftUIText
-          modifiers={[
-            contentTransition("opacity"),
-            font({
-              family: "Newsreader-Regular",
-              size: 35,
-            }),
-            animation(Animation.easeInOut(), numPadConfig.isDecimal),
-            foregroundStyle(numPadConfig.isDecimal ? colorInk : colorMutedForeground),
-          ]}
-        >
-          .
-        </SwiftUIText>
-        <SwiftUIText
-          modifiers={[
-            monospacedDigit(),
-            contentTransition("numericText"),
-            font({
-              family: "Newsreader-Regular",
-              size: 35,
-            }),
-            animation(
-              Animation.spring({
-                response: 0.4,
-                dampingFraction: 0.6,
-                duration: 500,
-              }),
-              fractionalPart,
-            ),
-            foregroundStyle(fractionalPart ? colorInk : colorMutedForeground),
-          ]}
-        >
-          {fractionalPart.toString().padStart(2, "0")}
-        </SwiftUIText>
-      </HStack>
-    </Host>
+        .
+      </Text>
+      <NumberFlow
+        className={cn(
+          "font-heading-normal text-4xl tabular-nums",
+          fractionalPart ? "text-ink" : "text-muted-foreground",
+        )}
+        value={fractionalPart}
+        format={{ minimumIntegerDigits: 2, maximumFractionDigits: 0, useGrouping: false }}
+      />
+    </View>
   );
 }

@@ -24,7 +24,6 @@
   "dependencies": {
     "@expo-google-fonts/newsreader": "^0.4.1",
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
-    "@expo/ui": "~57.0.10",
     "@react-native-community/datetimepicker": "9.1.0",
     "@rn-primitives/portal": "^1.5.3",
     "@rn-primitives/slot": "^1.5.2",
@@ -61,6 +60,7 @@
     "expo-updates": "~57.0.13",
     "expo-web-browser": "~57.0.2",
     "nativewind": "5.0.0-preview.4",
+    "number-flow-react-native": "^0.4.2",
     "phosphor-react-native": "^3.0.3",
     "pressto": "^0.7.0",
     "react": "19.2.3",
