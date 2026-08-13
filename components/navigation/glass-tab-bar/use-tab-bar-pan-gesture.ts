@@ -38,6 +38,10 @@ export const useTabBarPanGesture = ({
 
   const panGesture = usePanGesture({
     activeOffsetX: [-8, 8],
+    onBegin: (event) => {
+      isDragging.value = true;
+      offset.value = offsetFromTouch(event.x);
+    },
     onActivate: (event) => {
       isDragging.value = true;
       offset.value = offsetFromTouch(event.x);
