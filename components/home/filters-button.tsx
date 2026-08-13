@@ -1,6 +1,6 @@
 import { ArrowCounterClockwiseIcon, FunnelSimpleIcon } from "phosphor-react-native";
 import { useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 
 import { Icon } from "@/components/ui/icon";
@@ -34,7 +34,7 @@ function FilterRow({
 
 function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <View className="gap-2.5">
+    <View className="gap-1.5">
       <Text className="font-heading-normal text-lg italic text-ink">{title}</Text>
       <View className="flex-row flex-wrap gap-2">{children}</View>
     </View>
@@ -85,10 +85,7 @@ export function FiltersButton() {
         scrimColor="rgba(0, 0, 0, 0.5)"
         surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
       >
-        <ScrollView
-          contentContainerClassName="pb-safe-offset-6 px-5 gap-5"
-          showsVerticalScrollIndicator={false}
-        >
+        <View className="p-4.5 pb-safe gap-4">
           <View className="flex-row items-center justify-between">
             <Text className="font-heading-normal text-2xl italic text-ink">Filters</Text>
             {activeFilterCount > 0 ? (
@@ -158,7 +155,7 @@ export function FiltersButton() {
               />
             ))}
           </FilterSection>
-        </ScrollView>
+        </View>
       </ModalBottomSheet>
     </>
   );
