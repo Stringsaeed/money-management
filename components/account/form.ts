@@ -23,7 +23,11 @@ export const accountFormOptions = formOptions({
   } as AccountFormValues,
 });
 
-export function useAccountForm() {
+interface UseAccountFormArgs {
+  onCreated?: VoidFunction;
+}
+
+export function useAccountForm({ onCreated }: UseAccountFormArgs = {}) {
   const createAccount = useCreateAccount();
 
   return useForm({
@@ -42,6 +46,7 @@ export function useAccountForm() {
           sortOrder: 0,
           type: value.type,
         });
+        onCreated?.();
       } catch {
         // Surfaced by the mutation's error state; the form stays open so the
         // user can retry.

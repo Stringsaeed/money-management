@@ -6,6 +6,10 @@ import { AccountColorPicker } from "@/components/account/account-color-picker";
 import { AccountCurrencyPicker } from "@/components/account/account-currency-picker";
 import { AccountFormPreview } from "@/components/account/account-form-preview";
 import { AccountTypePicker } from "@/components/account/account-type-picker";
+import {
+  ResourceFormField,
+  resourceInputClassName,
+} from "@/components/resource/resource-form-field";
 import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
 import type { AccountType } from "@/types";
@@ -22,11 +26,6 @@ interface AccountFormContentProps {
   onTypeChange: (type: AccountType) => void;
   TextInputComponent?: ComponentType<SheetTextInputProps>;
 }
-
-const inputClassName =
-  "rounded-2xl border border-ledger-outline bg-surface px-4 py-3 text-base text-ink";
-
-const sectionLabelClassName = "font-body-medium text-sm text-ink/60";
 
 const AMOUNT_PATTERN = /^\d*(\.\d{0,2})?$/;
 
@@ -61,27 +60,21 @@ export function AccountFormContent({
           }}
         >
           {(field) => (
-            <View className="gap-2">
-              <Text className={sectionLabelClassName}>Name</Text>
+            <ResourceFormField label="Name" error={field.state.meta.errors[0]}>
               <TextInputComponent
-                className={inputClassName}
+                className={resourceInputClassName}
                 onChangeText={field.handleChange}
                 placeholder="e.g. Main Checking"
                 placeholderTextColor="#9a9896"
                 returnKeyType="next"
                 value={field.state.value}
               />
-              {field.state.meta.errors.length > 0 ? (
-                <Text className="font-body-medium text-xs text-destructive">
-                  {field.state.meta.errors[0]}
-                </Text>
-              ) : null}
-            </View>
+            </ResourceFormField>
           )}
         </form.Field>
 
         <View className="gap-2">
-          <Text className={sectionLabelClassName}>Starting balance</Text>
+          <Text className="font-body-medium text-sm text-ink/60">Starting balance</Text>
           <View className="flex-row items-start gap-2">
             <form.Field
               name="amount"
@@ -96,7 +89,7 @@ export function AccountFormContent({
               {(field) => (
                 <View className="min-w-0 flex-1 gap-2">
                   <TextInputComponent
-                    className={inputClassName}
+                    className={resourceInputClassName}
                     keyboardType="decimal-pad"
                     onChangeText={field.handleChange}
                     placeholder="0.00"
@@ -149,7 +142,7 @@ export function AccountFormContent({
         <form.Field name="type">
           {(field) => (
             <View className="gap-2">
-              <Text className={sectionLabelClassName}>Account type</Text>
+              <Text className="font-body-medium text-sm text-ink/60">Account type</Text>
               <AccountTypePicker onChange={onTypeChange} value={field.state.value} />
             </View>
           )}
@@ -158,7 +151,7 @@ export function AccountFormContent({
         <form.Field name="color">
           {(field) => (
             <View className="gap-2">
-              <Text className={sectionLabelClassName}>Accent</Text>
+              <Text className="font-body-medium text-sm text-ink/60">Accent</Text>
               <AccountColorPicker onChange={onColorChange} value={field.state.value} />
             </View>
           )}

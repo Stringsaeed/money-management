@@ -5,6 +5,10 @@ import { CategoryColorPicker } from "@/components/category/category-color-picker
 import { CategoryFormPreview } from "@/components/category/category-form-preview";
 import { CategoryIconPicker } from "@/components/category/category-icon-picker";
 import { CategoryTypePicker } from "@/components/category/category-type-picker";
+import {
+  ResourceFormField,
+  resourceInputClassName,
+} from "@/components/resource/resource-form-field";
 import type { CategoryType } from "@/components/category/category-form-options";
 import { Text } from "@/components/ui/text";
 
@@ -18,11 +22,6 @@ interface CategoryFormContentProps {
   onTypeChange: (type: CategoryType) => void;
   TextInputComponent?: ComponentType<SheetTextInputProps>;
 }
-
-const inputClassName =
-  "rounded-2xl border border-ledger-outline bg-surface px-4 py-3 text-base text-ink";
-
-const sectionLabelClassName = "font-body-medium text-sm text-ink/60";
 
 export function CategoryFormContent({
   form,
@@ -52,29 +51,23 @@ export function CategoryFormContent({
           }}
         >
           {(field) => (
-            <View className="gap-2">
-              <Text className={sectionLabelClassName}>Name</Text>
+            <ResourceFormField label="Name" error={field.state.meta.errors[0]}>
               <TextInputComponent
-                className={inputClassName}
+                className={resourceInputClassName}
                 onChangeText={field.handleChange}
                 placeholder="e.g. Groceries"
                 placeholderTextColor="#9a9896"
                 returnKeyType="next"
                 value={field.state.value}
               />
-              {field.state.meta.errors.length > 0 ? (
-                <Text className="font-body-medium text-xs text-destructive">
-                  {field.state.meta.errors[0]}
-                </Text>
-              ) : null}
-            </View>
+            </ResourceFormField>
           )}
         </form.Field>
 
         <form.Field name="type">
           {(field) => (
             <View className="gap-2">
-              <Text className={sectionLabelClassName}>Type</Text>
+              <Text className="font-body-medium text-sm text-ink/60">Type</Text>
               <CategoryTypePicker onChange={onTypeChange} value={field.state.value} />
             </View>
           )}
@@ -83,7 +76,7 @@ export function CategoryFormContent({
         <form.Field name="icon">
           {(field) => (
             <View className="gap-2">
-              <Text className={sectionLabelClassName}>Icon</Text>
+              <Text className="font-body-medium text-sm text-ink/60">Icon</Text>
               <CategoryIconPicker onChange={field.handleChange} value={field.state.value} />
             </View>
           )}
@@ -92,7 +85,7 @@ export function CategoryFormContent({
         <form.Field name="color">
           {(field) => (
             <View className="gap-2">
-              <Text className={sectionLabelClassName}>Accent</Text>
+              <Text className="font-body-medium text-sm text-ink/60">Accent</Text>
               <CategoryColorPicker onChange={onColorChange} value={field.state.value} />
             </View>
           )}
