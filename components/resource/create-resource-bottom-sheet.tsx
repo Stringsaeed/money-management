@@ -52,7 +52,7 @@ export function CreateResourceBottomSheet({
         index={index}
         onIndexChange={handleIndexChange}
       >
-        <View className="mx-4 mb-safe flex-1 rounded-3xl bg-background">
+        <View className="mx-4 mb-safe flex-1 rounded-3xl overflow-hidden bg-background">
           <View className="flex-row items-center px-3 py-3">
             <Pressable
               accessibilityLabel="Close"
