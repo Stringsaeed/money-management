@@ -13,4 +13,11 @@ describe("ColorPicker", () => {
 
     expect(onChange).toHaveBeenCalledWith(ColorPalette[1]);
   });
+
+  it("marks the selected color with a check indicator", async () => {
+    await render(<ColorPicker value={ColorPalette[0]!} onChange={jest.fn()} />);
+
+    expect(screen.getAllByRole("button")[0]?.props.accessibilityState).toEqual({ selected: true });
+    expect(screen.getByTestId("selected-color-check")).toBeOnTheScreen();
+  });
 });
