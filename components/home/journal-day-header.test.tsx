@@ -3,8 +3,8 @@ import { render, screen } from "@testing-library/react-native";
 import { JournalDayHeader } from "@/components/home/journal-day-header";
 
 describe("JournalDayHeader", () => {
-  it("renders the header and net amount", () => {
-    render(
+  it("renders the header and net amount", async () => {
+    await render(
       <JournalDayHeader
         item={{
           type: "section-header",

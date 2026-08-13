@@ -77,7 +77,7 @@ describe("use-transactions hooks", () => {
     });
     mockUseDatabase.mockReturnValue(db);
 
-    const { result } = renderHookWithProviders(() =>
+    const { result } = await renderHookWithProviders(() =>
       useTransactions({ year: 2026, month: 3, accountId: "account-1" }),
     );
 
@@ -144,7 +144,7 @@ describe("use-transactions hooks", () => {
     });
     mockUseDatabase.mockReturnValue(detailDb);
 
-    const enabledHook = renderHookWithProviders(() => useTransaction("transaction-1"));
+    const enabledHook = await renderHookWithProviders(() => useTransaction("transaction-1"));
 
     await waitFor(() => {
       expect(enabledHook.result.current.isSuccess).toBe(true);
@@ -155,7 +155,7 @@ describe("use-transactions hooks", () => {
     const disabledDb = createMockDb();
     mockUseDatabase.mockReturnValue(disabledDb);
 
-    const disabledHook = renderHookWithProviders(() => useTransaction(undefined));
+    const disabledHook = await renderHookWithProviders(() => useTransaction(undefined));
 
     await waitFor(() => {
       expect(disabledHook.result.current.fetchStatus).toBe("idle");
@@ -170,7 +170,7 @@ describe("use-transactions hooks", () => {
     });
     mockUseDatabase.mockReturnValue(db);
 
-    const { result } = renderHookWithProviders(() => useTransactionDateRange());
+    const { result } = await renderHookWithProviders(() => useTransactionDateRange());
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
@@ -193,7 +193,7 @@ describe("use-transactions hooks", () => {
     });
     mockUseDatabase.mockReturnValue(db);
 
-    const { result } = renderHookWithProviders(() => useMonthSummary(2026, 3, "account-1"));
+    const { result } = await renderHookWithProviders(() => useMonthSummary(2026, 3, "account-1"));
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
@@ -210,7 +210,7 @@ describe("use-transactions hooks", () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
-    const { result, client } = renderHookWithProviders(() => useCreateTransaction());
+    const { result, client } = await renderHookWithProviders(() => useCreateTransaction());
     const invalidateQueries = jest.spyOn(client, "invalidateQueries");
 
     await act(async () => {
@@ -240,7 +240,7 @@ describe("use-transactions hooks", () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
-    const { result, client } = renderHookWithProviders(() => useUpdateTransaction());
+    const { result, client } = await renderHookWithProviders(() => useUpdateTransaction());
     const invalidateQueries = jest.spyOn(client, "invalidateQueries");
 
     await act(async () => {
@@ -258,7 +258,7 @@ describe("use-transactions hooks", () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
-    const { result, client } = renderHookWithProviders(() => useDeleteTransaction());
+    const { result, client } = await renderHookWithProviders(() => useDeleteTransaction());
     const invalidateQueries = jest.spyOn(client, "invalidateQueries");
 
     await act(async () => {

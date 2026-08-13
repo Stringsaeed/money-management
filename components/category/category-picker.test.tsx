@@ -19,24 +19,24 @@ describe("CategoryPicker", () => {
     });
   });
 
-  it("toggles the selected category off in wrapped mode", () => {
+  it("toggles the selected category off in wrapped mode", async () => {
     const onChange = jest.fn();
 
-    render(
+    await render(
       <CategoryPicker value="category-1" onChange={onChange} type="expense" label="Category" />,
     );
 
-    fireEvent.press(screen.getByText("Groceries"));
+    await fireEvent.press(screen.getByText("Groceries"));
 
     expect(onChange).toHaveBeenCalledWith(null);
   });
 
-  it("supports horizontal mode and selects a new category", () => {
+  it("supports horizontal mode and selects a new category", async () => {
     const onChange = jest.fn();
 
-    render(<CategoryPicker value={null} onChange={onChange} type="expense" horizontal />);
+    await render(<CategoryPicker value={null} onChange={onChange} type="expense" horizontal />);
 
-    fireEvent.press(screen.getByText("Dining"));
+    await fireEvent.press(screen.getByText("Dining"));
 
     expect(onChange).toHaveBeenCalledWith("category-2");
   });

@@ -45,8 +45,8 @@ jest.mock("@/components/home/journal-day-header", () => ({
 }));
 
 describe("HomeJournalList", () => {
-  it("renders journal sections and rows", () => {
-    render(
+  it("renders journal sections and rows", async () => {
+    await render(
       <HomeJournalList
         groups={[createDayGroup()]}
         currency="USD"

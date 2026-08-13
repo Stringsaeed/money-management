@@ -13,14 +13,14 @@ jest.mock("expo-router", () => ({
 }));
 
 describe("AccountRow", () => {
-  it("renders account details and routes to the account screen", () => {
-    render(
+  it("renders account details and routes to the account screen", async () => {
+    await render(
       <GestureHandlerRootView>
         <AccountRow account={createAccountWithBalance({ id: "account-1", name: "Wallet" })} />
       </GestureHandlerRootView>,
     );
 
-    fireEvent.press(screen.getByText("Wallet"));
+    await fireEvent.press(screen.getByText("Wallet"));
 
     expect(screen.getByText(/Checking/)).toBeOnTheScreen();
     expect(screen.getByText("$250.00")).toBeOnTheScreen();

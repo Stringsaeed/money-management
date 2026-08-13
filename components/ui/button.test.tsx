@@ -4,23 +4,23 @@ import { Text } from "react-native";
 import { Button } from "@/components/ui/button";
 
 describe("Button", () => {
-  it("renders button content and handles presses", () => {
+  it("renders button content and handles presses", async () => {
     const onPress = jest.fn();
 
-    render(
+    await render(
       <Button onPress={onPress}>
         <Text>Save</Text>
       </Button>,
     );
 
-    fireEvent.press(screen.getByRole("button"));
+    await fireEvent.press(screen.getByRole("button"));
 
     expect(screen.getByText("Save")).toBeOnTheScreen();
     expect(onPress).toHaveBeenCalled();
   });
 
-  it("uses Kumo's primary emphasis gradient utilities", () => {
-    render(
+  it("uses Kumo's primary emphasis gradient utilities", async () => {
+    await render(
       <Button>
         <Text>Add domain</Text>
       </Button>,

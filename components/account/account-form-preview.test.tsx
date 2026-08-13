@@ -4,8 +4,8 @@ import { AccountFormPreview } from "@/components/account/account-form-preview";
 import { AccountTypeColors } from "@/constants/theme";
 
 describe("AccountFormPreview", () => {
-  it("shows placeholder name and zero balance when fields are empty", () => {
-    render(
+  it("shows placeholder name and zero balance when fields are empty", async () => {
+    await render(
       <AccountFormPreview
         values={{
           amount: "",
@@ -22,8 +22,8 @@ describe("AccountFormPreview", () => {
     expect(screen.getByText(/Checking · USD/)).toBeOnTheScreen();
   });
 
-  it("shows trimmed name and formatted balance", () => {
-    render(
+  it("shows trimmed name and formatted balance", async () => {
+    await render(
       <AccountFormPreview
         values={{
           amount: "250.50",

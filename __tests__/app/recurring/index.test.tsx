@@ -52,26 +52,26 @@ describe("app/recurring/index", () => {
     });
   });
 
-  it("renders the empty state", () => {
+  it("renders the empty state", async () => {
     mockUseRecurringPayments.mockReturnValue({ data: [], isLoading: false });
 
-    render(<RecurringListScreen />);
+    await render(<RecurringListScreen />);
 
-    fireEvent.press(screen.getByText("Add Recurring"));
+    await fireEvent.press(screen.getByText("Add Recurring"));
 
     expect(screen.getByText("No recurring payments")).toBeOnTheScreen();
     expect(mockPush).toHaveBeenCalledWith("/recurring/new");
   });
 
-  it("renders recurring payments and routes to edit", () => {
+  it("renders recurring payments and routes to edit", async () => {
     mockUseRecurringPayments.mockReturnValue({
       isLoading: false,
       data: [createRecurringPayment({ id: "recurring-1", name: "Rent" })],
     });
 
-    render(<RecurringListScreen />);
+    await render(<RecurringListScreen />);
 
-    fireEvent.press(screen.getByText("Rent"));
+    await fireEvent.press(screen.getByText("Rent"));
 
     expect(screen.getByText(/Monthly/)).toBeOnTheScreen();
     expect(mockPush).toHaveBeenCalledWith("/recurring/recurring-1/edit");

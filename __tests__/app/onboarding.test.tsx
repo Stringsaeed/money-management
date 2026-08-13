@@ -39,19 +39,19 @@ describe("app/onboarding", () => {
   });
 
   it("shows validation when the account name is missing", async () => {
-    render(<OnboardingScreen />);
+    await render(<OnboardingScreen />);
 
-    fireEvent.press(screen.getByText("Create Account"));
+    await fireEvent.press(screen.getByText("Create Account"));
 
     expect(await screen.findByText("Account name is required")).toBeOnTheScreen();
   });
 
   it("creates the first account and redirects home", async () => {
-    render(<OnboardingScreen />);
+    await render(<OnboardingScreen />);
 
-    fireEvent.changeText(screen.getByPlaceholderText("e.g. Main Checking"), "Main Checking");
-    fireEvent.changeText(screen.getByPlaceholderText("0.00"), "12.34");
-    fireEvent.press(screen.getByText("Create Account"));
+    await fireEvent.changeText(screen.getByPlaceholderText("e.g. Main Checking"), "Main Checking");
+    await fireEvent.changeText(screen.getByPlaceholderText("0.00"), "12.34");
+    await fireEvent.press(screen.getByText("Create Account"));
 
     await waitFor(() => {
       expect(values).toHaveBeenCalled();
@@ -65,10 +65,10 @@ describe("app/onboarding", () => {
   it("shows a failure message when account creation fails", async () => {
     values.mockRejectedValueOnce(new Error("boom"));
 
-    render(<OnboardingScreen />);
+    await render(<OnboardingScreen />);
 
-    fireEvent.changeText(screen.getByPlaceholderText("e.g. Main Checking"), "Main Checking");
-    fireEvent.press(screen.getByText("Create Account"));
+    await fireEvent.changeText(screen.getByPlaceholderText("e.g. Main Checking"), "Main Checking");
+    await fireEvent.press(screen.getByText("Create Account"));
 
     expect(
       await screen.findByText("Failed to create account. Please try again."),

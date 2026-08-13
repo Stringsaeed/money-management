@@ -44,7 +44,7 @@ describe("app/account/[id]", () => {
     mockUseLocalSearchParams.mockReturnValue({ id: "account-1" });
   });
 
-  it("renders account details, month navigation, and grouped transactions", () => {
+  it("renders account details, month navigation, and grouped transactions", async () => {
     mockUseAccount.mockReturnValue({
       data: createAccount({
         id: "account-1",
@@ -72,17 +72,17 @@ describe("app/account/[id]", () => {
       isLoading: false,
     });
 
-    render(<AccountDetailScreen />);
+    await render(<AccountDetailScreen />);
 
     expect(screen.getByText("Main Checking")).toBeOnTheScreen();
     expect(screen.getByText("+$500.00")).toBeOnTheScreen();
     expect(screen.getByText("-$125.00")).toBeOnTheScreen();
     expect(mockTransactionGroup).toHaveBeenCalled();
 
-    fireEvent.press(screen.getByText("← Back"));
-    fireEvent.press(screen.getByText("‹"));
-    fireEvent.press(screen.getByText("›"));
-    fireEvent.press(screen.getByText("+"));
+    await fireEvent.press(screen.getByText("← Back"));
+    await fireEvent.press(screen.getByText("‹"));
+    await fireEvent.press(screen.getByText("›"));
+    await fireEvent.press(screen.getByText("+"));
 
     expect(mockBack).toHaveBeenCalled();
     expect(mockSetSelectedMonth).toHaveBeenNthCalledWith(1, 2026, 2);
@@ -90,7 +90,7 @@ describe("app/account/[id]", () => {
     expect(mockPush).toHaveBeenCalledWith("/transaction/new");
   });
 
-  it("shows loading and empty states", () => {
+  it("shows loading and empty states", async () => {
     mockUseAccount.mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -100,7 +100,7 @@ describe("app/account/[id]", () => {
       isLoading: false,
     });
 
-    const { rerender } = render(<AccountDetailScreen />);
+    const { rerender } = await render(<AccountDetailScreen />);
 
     expect(screen.queryByText("No transactions this month")).not.toBeOnTheScreen();
 
@@ -113,7 +113,7 @@ describe("app/account/[id]", () => {
       isLoading: false,
     });
 
-    rerender(<AccountDetailScreen />);
+    await rerender(<AccountDetailScreen />);
 
     expect(screen.getByText("No transactions this month")).toBeOnTheScreen();
   });

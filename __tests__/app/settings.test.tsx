@@ -220,8 +220,8 @@ describe("app/settings", () => {
     });
   });
 
-  it("renders settings content and dev tools", () => {
-    render(
+  it("renders settings content and dev tools", async () => {
+    await render(
       <QueryClientProvider client={client}>
         <SettingsScreen />
       </QueryClientProvider>,
@@ -237,13 +237,13 @@ describe("app/settings", () => {
   it("erases data after destructive confirmation", async () => {
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
 
-    render(
+    await render(
       <QueryClientProvider client={client}>
         <SettingsScreen />
       </QueryClientProvider>,
     );
 
-    fireEvent.press(screen.getByText("Erase All Data"));
+    await fireEvent.press(screen.getByText("Erase All Data"));
 
     const destructiveAction = alertSpy.mock.calls[0]?.[2]?.[1];
     await act(async () => {

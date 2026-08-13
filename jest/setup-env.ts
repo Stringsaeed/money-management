@@ -77,9 +77,13 @@ jest.mock("@expo/ui/swift-ui/modifiers", () => ({
 
 jest.mock("@tanstack/devtools-event-client", () => ({
   EventClient: class {
-    emit() {}
+    emit() {
+      // No devtools listener under Jest.
+    }
     on() {
-      return () => {};
+      return () => {
+        // Unsubscribe is a no-op.
+      };
     }
   },
 }));
@@ -119,10 +123,11 @@ jest.mock("react-native-worklets", () => require("react-native-worklets/lib/modu
 
 require("react-native-reanimated").setUpTests();
 
+// RNTL v14's `act` is always async, so it cannot wrap the synchronous notify
+// callback. Notify directly instead — `render`, `fireEvent` and `waitFor` are
+// async in v14 and flush query notifications inside their own act scope.
 notifyManager.setNotifyFunction((callback) => {
-  act(() => {
-    callback();
-  });
+  callback();
 });
 notifyManager.setScheduler((callback) => {
   callback();
@@ -130,8 +135,8 @@ notifyManager.setScheduler((callback) => {
 
 const initialUIStoreState = useUIStore.getState();
 
-afterEach(() => {
-  act(() => {
+afterEach(async () => {
+  await act(() => {
     useUIStore.setState(initialUIStoreState, true);
   });
   jest.clearAllMocks();

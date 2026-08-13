@@ -16,8 +16,8 @@ jest.mock("expo-symbols", () => ({
 }));
 
 describe("TransactionRow", () => {
-  it("renders transaction details and routes to edit", () => {
-    render(
+  it("renders transaction details and routes to edit", async () => {
+    await render(
       <TransactionRow
         transaction={createTransactionWithDetails({
           id: "transaction-1",
@@ -28,7 +28,7 @@ describe("TransactionRow", () => {
       />,
     );
 
-    fireEvent.press(screen.getByText("Coffee"));
+    await fireEvent.press(screen.getByText("Coffee"));
 
     expect(screen.getByText("Groceries · Main Checking")).toBeOnTheScreen();
     expect(screen.getByText("-$10.00")).toBeOnTheScreen();

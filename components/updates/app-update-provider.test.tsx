@@ -61,7 +61,7 @@ describe("AppUpdateProvider", () => {
   it("stays disabled and skips the launch check when updates are unavailable", async () => {
     mockIsEnabled = false;
 
-    const { result } = renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
+    const { result } = await renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
 
     expect(result.current.status).toBe("disabled");
     await waitFor(() => {
@@ -70,7 +70,7 @@ describe("AppUpdateProvider", () => {
   });
 
   it("reports the app as current when the launch check finds no update", async () => {
-    const { result } = renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
+    const { result } = await renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
 
     await waitFor(() => {
       expect(result.current.status).toBe("current");
@@ -82,7 +82,7 @@ describe("AppUpdateProvider", () => {
   it("exposes an optional update without downloading it", async () => {
     mockCheckForUpdateAsync.mockResolvedValue(optionalUpdateResult);
 
-    const { result } = renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
+    const { result } = await renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
 
     await waitFor(() => {
       expect(result.current.status).toBe("available");
@@ -95,7 +95,7 @@ describe("AppUpdateProvider", () => {
   it("downloads and reloads immediately for a mandatory update", async () => {
     mockCheckForUpdateAsync.mockResolvedValue(mandatoryUpdateResult);
 
-    const { result } = renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
+    const { result } = await renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
 
     await waitFor(() => {
       expect(result.current.status).toBe("restarting");
@@ -113,7 +113,7 @@ describe("AppUpdateProvider", () => {
       }),
     );
 
-    const { result } = renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
+    const { result } = await renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
 
     await waitFor(() => {
       expect(mockCheckForUpdateAsync).toHaveBeenCalledTimes(1);
@@ -121,7 +121,7 @@ describe("AppUpdateProvider", () => {
 
     let firstCheck!: Promise<void>;
     let secondCheck!: Promise<void>;
-    act(() => {
+    await act(() => {
       firstCheck = result.current.checkForUpdate();
       secondCheck = result.current.checkForUpdate();
     });
@@ -139,7 +139,7 @@ describe("AppUpdateProvider", () => {
   it("surfaces a launch check failure with recovery guidance", async () => {
     mockCheckForUpdateAsync.mockRejectedValue(new Error("offline"));
 
-    const { result } = renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
+    const { result } = await renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
 
     await waitFor(() => {
       expect(result.current.status).toBe("error");
@@ -151,7 +151,7 @@ describe("AppUpdateProvider", () => {
     mockCheckForUpdateAsync.mockResolvedValue(optionalUpdateResult);
     mockFetchUpdateAsync.mockRejectedValue(new Error("download interrupted"));
 
-    const { result } = renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
+    const { result } = await renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
     await waitFor(() => {
       expect(result.current.status).toBe("available");
     });
@@ -174,7 +174,7 @@ describe("AppUpdateProvider", () => {
     });
     mockCheckForUpdateAsync.mockResolvedValue(optionalUpdateResult);
 
-    const { result } = renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
+    const { result } = await renderHook(() => useAppUpdate(), { wrapper: AppUpdateProvider });
     await waitFor(() => {
       expect(result.current.status).toBe("available");
     });

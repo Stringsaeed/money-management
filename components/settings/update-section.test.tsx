@@ -30,48 +30,48 @@ describe("UpdateSection", () => {
     setUpdateState();
   });
 
-  it("shows the current state and lets the user check again", () => {
-    render(<UpdateSection />);
+  it("shows the current state and lets the user check again", async () => {
+    await render(<UpdateSection />);
 
     expect(screen.getByText("Trove is up to date")).toBeOnTheScreen();
-    fireEvent.press(screen.getByRole("button", { name: "Check for Update" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Check for Update" }));
     expect(mockCheckForUpdate).toHaveBeenCalledTimes(1);
   });
 
-  it("offers installation when an update is available", () => {
+  it("offers installation when an update is available", async () => {
     setUpdateState({ status: "available" });
 
-    render(<UpdateSection />);
+    await render(<UpdateSection />);
 
     expect(screen.getByText("Update available")).toBeOnTheScreen();
-    fireEvent.press(screen.getByRole("button", { name: "Update Now" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Update Now" }));
     expect(mockInstallUpdate).toHaveBeenCalledTimes(1);
   });
 
-  it("shows download progress and disables another check", () => {
+  it("shows download progress and disables another check", async () => {
     setUpdateState({ status: "downloading", progress: 0.42 });
 
-    render(<UpdateSection />);
+    await render(<UpdateSection />);
 
     expect(screen.getByText("Keep Trove open while it downloads. 42%")).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Check for Update" })).toBeDisabled();
   });
 
-  it("shows update errors and keeps retrying available", () => {
+  it("shows update errors and keeps retrying available", async () => {
     setUpdateState({ status: "error", error: "Check your connection and try again." });
 
-    render(<UpdateSection />);
+    await render(<UpdateSection />);
 
     expect(screen.getByText("Update check failed")).toBeOnTheScreen();
     expect(screen.getByText("Check your connection and try again.")).toBeOnTheScreen();
-    fireEvent.press(screen.getByRole("button", { name: "Check for Update" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Check for Update" }));
     expect(mockCheckForUpdate).toHaveBeenCalledTimes(1);
   });
 
-  it("explains disabled updates without rendering actions", () => {
+  it("explains disabled updates without rendering actions", async () => {
     setUpdateState({ status: "disabled" });
 
-    render(<UpdateSection />);
+    await render(<UpdateSection />);
 
     expect(screen.getByText("Updates unavailable")).toBeOnTheScreen();
     expect(screen.queryByRole("button")).not.toBeOnTheScreen();

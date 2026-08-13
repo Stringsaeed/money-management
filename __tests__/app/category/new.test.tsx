@@ -31,18 +31,18 @@ describe("app/category/new", () => {
   });
 
   it("validates the category name", async () => {
-    render(<NewCategoryScreen />);
+    await render(<NewCategoryScreen />);
 
-    fireEvent.press(screen.getByText("Create Category"));
+    await fireEvent.press(screen.getByText("Create Category"));
 
     expect(await screen.findByText("Category name is required")).toBeOnTheScreen();
   });
 
   it("creates a category and navigates back", async () => {
-    render(<NewCategoryScreen />);
+    await render(<NewCategoryScreen />);
 
-    fireEvent.changeText(screen.getByPlaceholderText("e.g. Groceries"), "Bills");
-    fireEvent.press(screen.getByText("Create Category"));
+    await fireEvent.changeText(screen.getByPlaceholderText("e.g. Groceries"), "Bills");
+    await fireEvent.press(screen.getByText("Create Category"));
 
     await waitFor(() => {
       expect(mockMutateAsync).toHaveBeenCalled();

@@ -3,10 +3,10 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { SettingsRow } from "@/components/settings/settings-row";
 
 describe("SettingsRow", () => {
-  it("renders row details and handles presses", () => {
+  it("renders row details and handles presses", async () => {
     const onPress = jest.fn();
 
-    render(
+    await render(
       <SettingsRow
         emoji="💳"
         label="Accounts"
@@ -17,7 +17,7 @@ describe("SettingsRow", () => {
       />,
     );
 
-    fireEvent.press(screen.getByTestId("accounts-settings-row"));
+    await fireEvent.press(screen.getByTestId("accounts-settings-row"));
 
     expect(screen.getByText("2 total")).toBeOnTheScreen();
     expect(screen.getByText("2")).toBeOnTheScreen();

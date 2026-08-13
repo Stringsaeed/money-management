@@ -12,10 +12,12 @@ jest.mock("expo-router", () => ({
 }));
 
 describe("CategoryRow", () => {
-  it("renders category details and routes to edit", () => {
-    render(<CategoryRow category={createCategory({ id: "category-1", name: "Groceries" })} />);
+  it("renders category details and routes to edit", async () => {
+    await render(
+      <CategoryRow category={createCategory({ id: "category-1", name: "Groceries" })} />,
+    );
 
-    fireEvent.press(screen.getByText("Groceries"));
+    await fireEvent.press(screen.getByText("Groceries"));
 
     expect(mockPush).toHaveBeenCalledWith("/category/category-1/edit");
   });

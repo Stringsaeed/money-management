@@ -55,7 +55,7 @@ jest.mock("@/components/home/home-list-header", () => ({
 }));
 
 describe("app/index", () => {
-  it("redirects to onboarding when there are no accounts", () => {
+  it("redirects to onboarding when there are no accounts", async () => {
     mockUseHomeScreen.mockReturnValue({
       accounts: [],
       loadingAccounts: false,
@@ -67,12 +67,12 @@ describe("app/index", () => {
       resetFilters: jest.fn(),
     });
 
-    render(<HomeScreen />);
+    await render(<HomeScreen />);
 
     expect(screen.getByText("redirect:/onboarding")).toBeOnTheScreen();
   });
 
-  it("renders loading state", () => {
+  it("renders loading state", async () => {
     mockUseHomeScreen.mockReturnValue({
       accounts: [{}],
       loadingAccounts: false,
@@ -84,13 +84,13 @@ describe("app/index", () => {
       resetFilters: jest.fn(),
     });
 
-    render(<HomeScreen />);
+    await render(<HomeScreen />);
 
     expect(screen.getByText("header")).toBeOnTheScreen();
     expect(screen.queryByText(/journal:/)).not.toBeOnTheScreen();
   });
 
-  it("renders the empty state and allows filters to reset", () => {
+  it("renders the empty state and allows filters to reset", async () => {
     const resetFilters = jest.fn();
 
     mockUseHomeScreen.mockReturnValue({
@@ -104,14 +104,14 @@ describe("app/index", () => {
       resetFilters,
     });
 
-    render(<HomeScreen />);
+    await render(<HomeScreen />);
 
-    fireEvent.press(screen.getByText("empty:2"));
+    await fireEvent.press(screen.getByText("empty:2"));
 
     expect(resetFilters).toHaveBeenCalled();
   });
 
-  it("renders the journal list when groups exist", () => {
+  it("renders the journal list when groups exist", async () => {
     mockUseHomeScreen.mockReturnValue({
       accounts: [{ currency: "USD" }],
       loadingAccounts: false,
@@ -123,7 +123,7 @@ describe("app/index", () => {
       resetFilters: jest.fn(),
     });
 
-    render(<HomeScreen />);
+    await render(<HomeScreen />);
 
     expect(screen.getByText("journal:1")).toBeOnTheScreen();
   });

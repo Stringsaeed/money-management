@@ -1,4 +1,4 @@
-const DEFAULTS: Record<string, any> = {
+const DEFAULTS = {
   WIDTH: 300,
   HEIGHT: 60,
   BORDER_RADIUS: 100,

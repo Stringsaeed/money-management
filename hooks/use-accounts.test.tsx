@@ -36,7 +36,7 @@ describe("use-accounts hooks", () => {
     });
     mockUseDatabase.mockReturnValue(db);
 
-    const { result } = renderHookWithProviders(() => useAccounts());
+    const { result } = await renderHookWithProviders(() => useAccounts());
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
@@ -55,7 +55,7 @@ describe("use-accounts hooks", () => {
     });
     mockUseDatabase.mockReturnValue(db);
 
-    const { result } = renderHookWithProviders(() => useAccount("account-1"));
+    const { result } = await renderHookWithProviders(() => useAccount("account-1"));
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
@@ -83,7 +83,7 @@ describe("use-accounts hooks", () => {
     });
     mockUseDatabase.mockReturnValue(db);
 
-    const { result } = renderHookWithProviders(() => useAccountsWithBalances());
+    const { result } = await renderHookWithProviders(() => useAccountsWithBalances());
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
@@ -99,7 +99,7 @@ describe("use-accounts hooks", () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
-    const { result, client } = renderHookWithProviders(() => useCreateAccount());
+    const { result, client } = await renderHookWithProviders(() => useCreateAccount());
     const invalidateQueries = jest.spyOn(client, "invalidateQueries");
 
     await act(async () => {
@@ -137,7 +137,7 @@ describe("use-accounts hooks", () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
-    const { result, client } = renderHookWithProviders(() => useUpdateAccount());
+    const { result, client } = await renderHookWithProviders(() => useUpdateAccount());
     const invalidateQueries = jest.spyOn(client, "invalidateQueries");
 
     await act(async () => {
@@ -159,7 +159,7 @@ describe("use-accounts hooks", () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
-    const { result, client } = renderHookWithProviders(() => useDeleteAccount());
+    const { result, client } = await renderHookWithProviders(() => useDeleteAccount());
     const invalidateQueries = jest.spyOn(client, "invalidateQueries");
 
     await act(async () => {

@@ -40,7 +40,7 @@ describe("SwipeableAccountRow", () => {
     const onDelete = jest.fn().mockResolvedValue(undefined);
     const alert = jest.spyOn(Alert, "alert");
 
-    render(
+    await render(
       <GestureHandlerRootView>
         <SwipeableAccountRow
           account={createAccountWithBalance({ id: "account-1", name: "Wallet" })}
@@ -49,7 +49,7 @@ describe("SwipeableAccountRow", () => {
       </GestureHandlerRootView>,
     );
 
-    fireEvent.press(screen.getByLabelText("Delete Wallet"));
+    await fireEvent.press(screen.getByLabelText("Delete Wallet"));
 
     expect(alert).toHaveBeenCalledWith(
       "Delete Account?",
@@ -73,7 +73,7 @@ describe("SwipeableAccountRow", () => {
     const onDelete = jest.fn().mockRejectedValue(new Error("database unavailable"));
     const alert = jest.spyOn(Alert, "alert");
 
-    render(
+    await render(
       <GestureHandlerRootView>
         <SwipeableAccountRow
           account={createAccountWithBalance({ id: "account-1", name: "Wallet" })}
@@ -82,7 +82,7 @@ describe("SwipeableAccountRow", () => {
       </GestureHandlerRootView>,
     );
 
-    fireEvent.press(screen.getByLabelText("Delete Wallet"));
+    await fireEvent.press(screen.getByLabelText("Delete Wallet"));
     const deleteButton = alert.mock.calls[0]?.[2]?.find((button) => button.text === "Delete");
 
     await act(async () => {

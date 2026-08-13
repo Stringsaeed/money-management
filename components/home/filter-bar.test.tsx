@@ -38,7 +38,7 @@ describe("FilterBar", () => {
     });
   });
 
-  it("renders active filters and allows them to clear", () => {
+  it("renders active filters and allows them to clear", async () => {
     useUIStore.setState({
       activeAccountId: "account-1",
       selectedYear: 2026,
@@ -46,21 +46,21 @@ describe("FilterBar", () => {
       selectedCategoryId: "category-1",
     });
 
-    render(<FilterBar />);
+    await render(<FilterBar />);
 
-    fireEvent.press(screen.getByText("Wallet"));
+    await fireEvent.press(screen.getByText("Wallet"));
     expect(useUIStore.getState().activeAccountId).toBeNull();
 
-    fireEvent.press(screen.getByText("March 2026"));
+    await fireEvent.press(screen.getByText("March 2026"));
     expect(useUIStore.getState().selectedYear).toBeNull();
     expect(useUIStore.getState().selectedMonth).toBeNull();
 
-    fireEvent.press(screen.getByText("Food"));
+    await fireEvent.press(screen.getByText("Food"));
     expect(useUIStore.getState().selectedCategoryId).toBeNull();
   });
 
-  it("renders nothing when there are no active chips", () => {
-    const { toJSON } = render(<FilterBar />);
+  it("renders nothing when there are no active chips", async () => {
+    const { toJSON } = await render(<FilterBar />);
 
     expect(toJSON()).toBeNull();
   });

@@ -60,7 +60,7 @@ describe("app/transaction/[id]", () => {
     mockUseLocalSearchParams.mockReturnValue({ id: "new" });
     mockUseTransaction.mockReturnValue({ data: undefined, isLoading: false });
 
-    render(<TransactionScreen />);
+    await render(<TransactionScreen />);
 
     const screenCall = mockStackScreen.mock.calls.at(-1)?.[0] as unknown as {
       options: { title: string };
@@ -89,11 +89,11 @@ describe("app/transaction/[id]", () => {
     expect(baseRouter.back).toHaveBeenCalled();
   });
 
-  it("renders loading state while fetching an existing transaction", () => {
+  it("renders loading state while fetching an existing transaction", async () => {
     mockUseLocalSearchParams.mockReturnValue({ id: "transaction-1" });
     mockUseTransaction.mockReturnValue({ data: undefined, isLoading: true });
 
-    const { queryByText } = render(<TransactionScreen />);
+    const { queryByText } = await render(<TransactionScreen />);
 
     expect(queryByText("transaction-form")).not.toBeOnTheScreen();
   });
@@ -118,7 +118,7 @@ describe("app/transaction/[id]", () => {
       },
     });
 
-    render(<TransactionScreen />);
+    await render(<TransactionScreen />);
 
     await act(async () => {
       await capturedFormProps?.onSubmit({
@@ -168,7 +168,7 @@ describe("app/transaction/[id]", () => {
       },
     });
 
-    render(<TransactionScreen />);
+    await render(<TransactionScreen />);
 
     const screenCall = mockStackScreen.mock.calls.at(-1)?.[0] as unknown as {
       options: { unstable_headerRightItems: () => { label: string; onPress: () => void }[] };

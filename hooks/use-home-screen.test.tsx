@@ -23,7 +23,7 @@ jest.mock("@/hooks/use-recurring-processor", () => ({
 }));
 
 describe("useHomeScreen", () => {
-  it("wires query data, store filters, and grouped transactions", () => {
+  it("wires query data, store filters, and grouped transactions", async () => {
     mockUseAccountsWithBalances.mockReturnValue({
       data: [
         createAccountWithBalance({ id: "account-1", currency: "EUR", balance: 100_00 }),
@@ -42,7 +42,7 @@ describe("useHomeScreen", () => {
       ],
       isLoading: false,
     });
-    const { result } = renderHook(() => useHomeScreen());
+    const { result } = await renderHook(() => useHomeScreen());
 
     expect(mockUseRecurringProcessor).toHaveBeenCalled();
     expect(result.current.accounts).toHaveLength(2);
@@ -52,7 +52,7 @@ describe("useHomeScreen", () => {
     expect(result.current.loadingTx).toBe(false);
   });
 
-  it("passes filters to SQL query and derives active filter count", () => {
+  it("passes filters to SQL query and derives active filter count", async () => {
     const { useUIStore } = jest.requireActual("@/stores/ui-store");
 
     useUIStore.setState({
@@ -77,7 +77,7 @@ describe("useHomeScreen", () => {
       isLoading: false,
     });
 
-    const { result } = renderHook(() => useHomeScreen());
+    const { result } = await renderHook(() => useHomeScreen());
 
     expect(mockUseTransactions).toHaveBeenCalledWith({
       year: 2026,
@@ -91,7 +91,7 @@ describe("useHomeScreen", () => {
     expect(result.current.currency).toBe("GBP");
   });
 
-  it("falls back from transaction currency to the default USD when no account currency exists", () => {
+  it("falls back from transaction currency to the default USD when no account currency exists", async () => {
     mockUseAccountsWithBalances.mockReturnValue({
       data: [createAccountWithBalance({ id: "account-1", currency: undefined })],
       isLoading: true,
@@ -101,18 +101,18 @@ describe("useHomeScreen", () => {
       isLoading: true,
     });
 
-    const { result } = renderHook(() => useHomeScreen());
+    const { result } = await renderHook(() => useHomeScreen());
 
     expect(result.current.currency).toBe("JPY");
     expect(result.current.loadingAccounts).toBe(true);
     expect(result.current.loadingTx).toBe(true);
   });
 
-  it("falls back to USD when no currencies are available anywhere", () => {
+  it("falls back to USD when no currencies are available anywhere", async () => {
     mockUseAccountsWithBalances.mockReturnValue({ data: [], isLoading: false });
     mockUseTransactions.mockReturnValue({ data: [], isLoading: false });
 
-    const { result } = renderHook(() => useHomeScreen());
+    const { result } = await renderHook(() => useHomeScreen());
 
     expect(result.current.currency).toBe("USD");
     expect(result.current.activeFilterCount).toBe(0);

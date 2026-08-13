@@ -39,7 +39,7 @@ const TestProviders = ({ children, client }: TestProvidersProps) => (
   <QueryClientProvider client={client}>{children}</QueryClientProvider>
 );
 
-export const renderWithProviders = (
+export const renderWithProviders = async (
   ui: ReactElement,
   options?: Omit<RenderOptions, "wrapper"> & { client?: QueryClient },
 ) => {
@@ -48,14 +48,14 @@ export const renderWithProviders = (
 
   return {
     client,
-    ...render(ui, {
+    ...(await render(ui, {
       ...options,
       wrapper: ({ children }) => <TestProviders client={client}>{children}</TestProviders>,
-    }),
+    })),
   };
 };
 
-export const renderHookWithProviders = <TProps, TResult>(
+export const renderHookWithProviders = async <TProps, TResult>(
   hook: (props: TProps) => TResult,
   options?: Omit<RenderHookOptions<TProps>, "wrapper"> & { client?: QueryClient },
 ) => {
@@ -64,9 +64,9 @@ export const renderHookWithProviders = <TProps, TResult>(
 
   return {
     client,
-    ...renderHook(hook, {
+    ...(await renderHook(hook, {
       ...options,
       wrapper: ({ children }) => <TestProviders client={client}>{children}</TestProviders>,
-    }),
+    })),
   };
 };

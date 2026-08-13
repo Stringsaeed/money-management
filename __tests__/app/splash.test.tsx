@@ -18,24 +18,24 @@ jest.mock("@/hooks/use-accounts", () => ({
 }));
 
 describe("app/splash", () => {
-  it("redirects to onboarding when there are no accounts", () => {
+  it("redirects to onboarding when there are no accounts", async () => {
     mockUseAccountsWithBalances.mockReturnValue({
       data: [],
       isLoading: false,
     });
 
-    render(<Splash />);
+    await render(<Splash />);
 
     expect(screen.getByText("redirect:/onboarding")).toBeOnTheScreen();
   });
 
-  it("redirects home when accounts exist", () => {
+  it("redirects home when accounts exist", async () => {
     mockUseAccountsWithBalances.mockReturnValue({
       data: [{ id: "account-1" }],
       isLoading: false,
     });
 
-    render(<Splash />);
+    await render(<Splash />);
 
     expect(screen.getByText("redirect:/")).toBeOnTheScreen();
   });

@@ -2,7 +2,7 @@ import { Icon } from "@/components/ui/icon";
 import { TextClassContext } from "@/components/ui/text";
 import { toggleVariants } from "@/components/ui/toggle";
 import { cn } from "@/lib/utils";
-import * as ToggleGroupPrimitive from "@rn-primitives/toggle-group";
+import { Root, Item, useRootContext, utils } from "@rn-primitives/toggle-group";
 import type { VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { Platform } from "react-native";
@@ -15,9 +15,9 @@ function ToggleGroup({
   size,
   children,
   ...props
-}: React.ComponentProps<typeof ToggleGroupPrimitive.Root> & VariantProps<typeof toggleVariants>) {
+}: React.ComponentProps<typeof Root> & VariantProps<typeof toggleVariants>) {
   return (
-    <ToggleGroupPrimitive.Root
+    <Root
       className={cn(
         "flex flex-row items-center rounded-md shadow-none",
         Platform.select({ web: "w-fit" }),
@@ -29,7 +29,7 @@ function ToggleGroup({
       <ToggleGroupContext.Provider value={{ variant, size }}>
         {children}
       </ToggleGroupContext.Provider>
-    </ToggleGroupPrimitive.Root>
+    </Root>
   );
 }
 
@@ -51,31 +51,31 @@ function ToggleGroupItem({
   isFirst,
   isLast,
   ...props
-}: React.ComponentProps<typeof ToggleGroupPrimitive.Item> &
+}: React.ComponentProps<typeof Item> &
   VariantProps<typeof toggleVariants> & {
     isFirst?: boolean;
     isLast?: boolean;
   }) {
   const context = useToggleGroupContext();
-  const { value } = ToggleGroupPrimitive.useRootContext();
+  const { value } = useRootContext();
 
   return (
     <TextClassContext.Provider
       value={cn(
         "text-sm text-foreground font-medium",
-        ToggleGroupPrimitive.utils.getIsSelected(value, props.value)
+        utils.getIsSelected(value, props.value)
           ? "text-accent-foreground"
           : Platform.select({ web: "group-hover:text-muted-foreground" }),
       )}
     >
-      <ToggleGroupPrimitive.Item
+      <Item
         className={cn(
           toggleVariants({
             variant: context.variant || variant,
             size: context.size || size,
           }),
           props.disabled && "opacity-50",
-          ToggleGroupPrimitive.utils.getIsSelected(value, props.value) && "bg-accent",
+          utils.getIsSelected(value, props.value) && "bg-accent",
           "min-w-0 shrink-0 rounded-none shadow-none",
           isFirst && "rounded-l-md",
           isLast && "rounded-r-md",
@@ -89,7 +89,7 @@ function ToggleGroupItem({
         {...props}
       >
         {children}
-      </ToggleGroupPrimitive.Item>
+      </Item>
     </TextClassContext.Provider>
   );
 }

@@ -42,7 +42,10 @@ export function useAccountForm() {
           sortOrder: 0,
           type: value.type,
         });
-      } catch {}
+      } catch {
+        // Surfaced by the mutation's error state; the form stays open so the
+        // user can retry.
+      }
     },
   });
 }

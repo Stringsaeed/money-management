@@ -19,17 +19,17 @@ describe("AccountPicker", () => {
     });
   });
 
-  it("renders a label, filters excluded accounts, and reports presses", () => {
+  it("renders a label, filters excluded accounts, and reports presses", async () => {
     const onChange = jest.fn();
 
-    render(
+    await render(
       <AccountPicker value={null} onChange={onChange} label="Account" exclude={["account-1"]} />,
     );
 
     expect(screen.getByText("Account")).toBeOnTheScreen();
     expect(screen.queryByText("Checking")).not.toBeOnTheScreen();
 
-    fireEvent.press(screen.getByText("Savings"));
+    await fireEvent.press(screen.getByText("Savings"));
 
     expect(onChange).toHaveBeenCalledWith("account-2");
   });

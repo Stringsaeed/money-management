@@ -33,7 +33,7 @@ describe("use-categories hooks", () => {
     });
     mockUseDatabase.mockReturnValue(db);
 
-    const { result } = renderHookWithProviders(() => useCategories("expense"));
+    const { result } = await renderHookWithProviders(() => useCategories("expense"));
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
@@ -50,7 +50,7 @@ describe("use-categories hooks", () => {
     });
     mockUseDatabase.mockReturnValue(db);
 
-    const { result } = renderHookWithProviders(() => useCategory("category-1"));
+    const { result } = await renderHookWithProviders(() => useCategory("category-1"));
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
@@ -65,7 +65,7 @@ describe("use-categories hooks", () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
-    const { result, client } = renderHookWithProviders(() => useCreateCategory());
+    const { result, client } = await renderHookWithProviders(() => useCreateCategory());
     const invalidateQueries = jest.spyOn(client, "invalidateQueries");
 
     await act(async () => {
@@ -87,7 +87,7 @@ describe("use-categories hooks", () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
-    const { result, client } = renderHookWithProviders(() => useUpdateCategory());
+    const { result, client } = await renderHookWithProviders(() => useUpdateCategory());
     const invalidateQueries = jest.spyOn(client, "invalidateQueries");
 
     await act(async () => {
@@ -105,7 +105,7 @@ describe("use-categories hooks", () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
-    const { result, client } = renderHookWithProviders(() => useDeleteCategory());
+    const { result, client } = await renderHookWithProviders(() => useDeleteCategory());
     const invalidateQueries = jest.spyOn(client, "invalidateQueries");
 
     await act(async () => {

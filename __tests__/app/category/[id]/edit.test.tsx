@@ -61,16 +61,16 @@ describe("app/category/[id]/edit", () => {
   });
 
   it("validates and saves category changes", async () => {
-    render(<EditCategoryScreen />);
+    await render(<EditCategoryScreen />);
 
-    fireEvent.changeText(screen.getByDisplayValue("Groceries"), " ");
-    fireEvent.press(screen.getByText("Save Changes"));
+    await fireEvent.changeText(screen.getByDisplayValue("Groceries"), " ");
+    await fireEvent.press(screen.getByText("Save Changes"));
     expect(await screen.findByText("Category name is required")).toBeOnTheScreen();
 
-    fireEvent.changeText(screen.getByDisplayValue(" "), "Gifts");
-    fireEvent.press(screen.getByText("pick-emoji"));
-    fireEvent.press(screen.getByText("pick-color"));
-    fireEvent.press(screen.getByText("Save Changes"));
+    await fireEvent.changeText(screen.getByDisplayValue(" "), "Gifts");
+    await fireEvent.press(screen.getByText("pick-emoji"));
+    await fireEvent.press(screen.getByText("pick-color"));
+    await fireEvent.press(screen.getByText("Save Changes"));
 
     await waitFor(() => {
       expect(mockUpdateCategory).toHaveBeenCalledWith({
@@ -85,9 +85,9 @@ describe("app/category/[id]/edit", () => {
   it("confirms deletion", async () => {
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
 
-    render(<EditCategoryScreen />);
+    await render(<EditCategoryScreen />);
 
-    fireEvent.press(screen.getByText("Delete Category"));
+    await fireEvent.press(screen.getByText("Delete Category"));
 
     const destructiveAction = alertSpy.mock.calls[0]?.[2]?.[1];
     await destructiveAction?.onPress?.();

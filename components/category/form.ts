@@ -50,7 +50,10 @@ export function useCategoryForm({ initialType = "expense", onCreated }: UseCateg
           sortOrder: 0,
         });
         onCreated?.();
-      } catch {}
+      } catch {
+        // Surfaced by the mutation's error state; the form stays open so the
+        // user can retry.
+      }
     },
   });
 }

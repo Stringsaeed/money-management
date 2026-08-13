@@ -72,10 +72,10 @@ jest.mock("@/db/seed", () => ({
 }));
 
 describe("app/_layout", () => {
-  it("renders the loading fallback before fonts are ready", () => {
+  it("renders the loading fallback before fonts are ready", async () => {
     mockUseFonts.mockReturnValue([false, null]);
 
-    render(<RootLayout />);
+    await render(<RootLayout />);
 
     expect(screen.queryByText("stack-ready")).not.toBeOnTheScreen();
   });
@@ -83,7 +83,7 @@ describe("app/_layout", () => {
   it("renders the provider tree and hides the splash screen once fonts load", async () => {
     mockUseFonts.mockReturnValue([true, null]);
 
-    render(<RootLayout />);
+    await render(<RootLayout />);
 
     expect(screen.getByText("stack-ready")).toBeOnTheScreen();
     expect(screen.getByText("portal-host")).toBeOnTheScreen();

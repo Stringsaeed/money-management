@@ -24,9 +24,9 @@ describe("BalanceHero", () => {
     });
   });
 
-  it("renders total account balance when no filters are active", () => {
-    render(<BalanceHero />);
-    act(() => {
+  it("renders total account balance when no filters are active", async () => {
+    await render(<BalanceHero />);
+    await act(() => {
       jest.advanceTimersByTime(500);
     });
 

@@ -51,7 +51,7 @@ describe("useRecurringProcessor", () => {
     });
     const invalidateQueries = jest.spyOn(client, "invalidateQueries");
 
-    renderHook(() => useRecurringProcessor(), {
+    await renderHook(() => useRecurringProcessor(), {
       wrapper: createWrapper(client),
     });
 
@@ -114,7 +114,7 @@ describe("useRecurringProcessor", () => {
       defaultOptions: { queries: { retry: false } },
     });
 
-    renderHook(() => useRecurringProcessor(), {
+    await renderHook(() => useRecurringProcessor(), {
       wrapper: createWrapper(client),
     });
 

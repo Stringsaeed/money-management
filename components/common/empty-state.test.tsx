@@ -4,8 +4,8 @@ import { Text } from "react-native";
 import { EmptyState } from "@/components/common/empty-state";
 
 describe("EmptyState", () => {
-  it("renders icon, title, message, and action content", () => {
-    render(
+  it("renders icon, title, message, and action content", async () => {
+    await render(
       <EmptyState
         icon="📋"
         title="No data"

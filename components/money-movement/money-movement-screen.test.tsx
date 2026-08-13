@@ -52,16 +52,16 @@ describe("MoneyMovementScreen", () => {
     });
   });
 
-  it("shows setup state when market API keys are missing", () => {
+  it("shows setup state when market API keys are missing", async () => {
     mockHasTwelveDataApiKey.mockReturnValue(false);
 
-    render(<MoneyMovementScreen />);
+    await render(<MoneyMovementScreen />);
 
     expect(screen.getByText(/Live board for top US stocks/)).toBeOnTheScreen();
     expect(screen.getByText("Connect market APIs 🔌")).toBeOnTheScreen();
   });
 
-  it("renders grouped market quotes and refreshes feed", () => {
+  it("renders grouped market quotes and refreshes feed", async () => {
     mockUseMarketQuotes.mockReturnValue({
       data: [
         buildQuote({ symbol: "NVDA", label: "NVIDIA", group: "Stocks" }),
@@ -88,7 +88,7 @@ describe("MoneyMovementScreen", () => {
       refetch: mockRefetch,
     });
 
-    render(<MoneyMovementScreen />);
+    await render(<MoneyMovementScreen />);
 
     expect(screen.getByText("Stocks")).toBeOnTheScreen();
     expect(screen.getByText("Metals")).toBeOnTheScreen();
@@ -97,12 +97,12 @@ describe("MoneyMovementScreen", () => {
     expect(screen.getByText("Gold Spot")).toBeOnTheScreen();
     expect(screen.getByText("Bitcoin")).toBeOnTheScreen();
 
-    fireEvent.press(screen.getByRole("button"));
+    await fireEvent.press(screen.getByRole("button"));
 
     expect(mockRefetch).toHaveBeenCalledTimes(1);
   });
 
-  it("shows error and empty states", () => {
+  it("shows error and empty states", async () => {
     mockUseMarketQuotes.mockReturnValue({
       data: [],
       isFetching: false,
@@ -111,7 +111,7 @@ describe("MoneyMovementScreen", () => {
       refetch: mockRefetch,
     });
 
-    const { rerender } = render(<MoneyMovementScreen />);
+    const { rerender } = await render(<MoneyMovementScreen />);
 
     expect(screen.getByText("Market feed paused")).toBeOnTheScreen();
     expect(screen.getByText("Quota reached")).toBeOnTheScreen();
@@ -124,7 +124,7 @@ describe("MoneyMovementScreen", () => {
       refetch: mockRefetch,
     });
 
-    rerender(<MoneyMovementScreen />);
+    await rerender(<MoneyMovementScreen />);
 
     expect(screen.getByText("No quotes yet")).toBeOnTheScreen();
   });

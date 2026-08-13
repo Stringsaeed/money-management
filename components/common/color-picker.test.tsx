@@ -4,12 +4,12 @@ import { ColorPalette } from "@/constants/theme";
 import { ColorPicker } from "@/components/common/color-picker";
 
 describe("ColorPicker", () => {
-  it("renders the palette and reports the pressed color", () => {
+  it("renders the palette and reports the pressed color", async () => {
     const onChange = jest.fn();
 
-    render(<ColorPicker value={ColorPalette[0]!} onChange={onChange} />);
+    await render(<ColorPicker value={ColorPalette[0]!} onChange={onChange} />);
 
-    fireEvent.press(screen.getAllByRole("button")[1]!);
+    await fireEvent.press(screen.getAllByRole("button")[1]!);
 
     expect(onChange).toHaveBeenCalledWith(ColorPalette[1]);
   });

@@ -33,7 +33,7 @@ describe("use-recurring-payments hooks", () => {
     });
     mockUseDatabase.mockReturnValue(db);
 
-    const { result } = renderHookWithProviders(() => useRecurringPayments());
+    const { result } = await renderHookWithProviders(() => useRecurringPayments());
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
@@ -48,7 +48,7 @@ describe("use-recurring-payments hooks", () => {
     });
     mockUseDatabase.mockReturnValue(db);
 
-    const { result } = renderHookWithProviders(() => useRecurringPayment("recurring-1"));
+    const { result } = await renderHookWithProviders(() => useRecurringPayment("recurring-1"));
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
@@ -61,7 +61,7 @@ describe("use-recurring-payments hooks", () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
-    const { result, client } = renderHookWithProviders(() => useCreateRecurringPayment());
+    const { result, client } = await renderHookWithProviders(() => useCreateRecurringPayment());
     const invalidateQueries = jest.spyOn(client, "invalidateQueries");
 
     await act(async () => {
@@ -93,7 +93,7 @@ describe("use-recurring-payments hooks", () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
-    const { result, client } = renderHookWithProviders(() => useUpdateRecurringPayment());
+    const { result, client } = await renderHookWithProviders(() => useUpdateRecurringPayment());
     const invalidateQueries = jest.spyOn(client, "invalidateQueries");
 
     await act(async () => {
@@ -113,7 +113,7 @@ describe("use-recurring-payments hooks", () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
-    const { result, client } = renderHookWithProviders(() => useDeleteRecurringPayment());
+    const { result, client } = await renderHookWithProviders(() => useDeleteRecurringPayment());
     const invalidateQueries = jest.spyOn(client, "invalidateQueries");
 
     await act(async () => {

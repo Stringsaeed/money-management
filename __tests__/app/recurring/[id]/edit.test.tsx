@@ -78,17 +78,17 @@ describe("app/recurring/[id]/edit", () => {
   });
 
   it("validates and saves recurring edits", async () => {
-    render(<EditRecurringScreen />);
+    await render(<EditRecurringScreen />);
 
-    fireEvent.changeText(screen.getByDisplayValue("Rent"), " ");
-    fireEvent.press(screen.getByText("Save Changes"));
+    await fireEvent.changeText(screen.getByDisplayValue("Rent"), " ");
+    await fireEvent.press(screen.getByText("Save Changes"));
     expect(await screen.findByText("Name is required")).toBeOnTheScreen();
 
-    fireEvent.changeText(screen.getByDisplayValue(" "), "Gym");
-    fireEvent.press(screen.getByText("pick-account"));
-    fireEvent.press(screen.getByText("set-amount"));
-    fireEvent(screen.getByRole("switch"), "valueChange", false);
-    fireEvent.press(screen.getByText("Save Changes"));
+    await fireEvent.changeText(screen.getByDisplayValue(" "), "Gym");
+    await fireEvent.press(screen.getByText("pick-account"));
+    await fireEvent.press(screen.getByText("set-amount"));
+    await fireEvent(screen.getByRole("switch"), "valueChange", false);
+    await fireEvent.press(screen.getByText("Save Changes"));
 
     await waitFor(() => {
       expect(mockUpdateRecurring).toHaveBeenCalledWith({
@@ -103,9 +103,9 @@ describe("app/recurring/[id]/edit", () => {
   it("confirms deletion", async () => {
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
 
-    render(<EditRecurringScreen />);
+    await render(<EditRecurringScreen />);
 
-    fireEvent.press(screen.getByText("Delete Recurring Payment"));
+    await fireEvent.press(screen.getByText("Delete Recurring Payment"));
 
     const destructiveAction = alertSpy.mock.calls[0]?.[2]?.[1];
     await destructiveAction?.onPress?.();

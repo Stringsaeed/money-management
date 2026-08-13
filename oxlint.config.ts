@@ -131,15 +131,7 @@ export default defineConfig({
           },
         ],
         "@typescript-eslint/no-extra-non-null-assertion": "warn",
-        "no-unused-vars": [
-          "error",
-          {
-            vars: "all",
-            args: "none",
-            ignoreRestSiblings: true,
-            caughtErrors: "all",
-          },
-        ],
+        "no-unused-vars": "error",
         "no-useless-constructor": "warn",
         "no-undef": "error",
         "@typescript-eslint/no-require-imports": [

@@ -7,8 +7,8 @@ jest.mock("expo-router", () => ({
 }));
 
 describe("app/modal", () => {
-  it("renders the modal copy and dismiss link", () => {
-    render(<ModalScreen />);
+  it("renders the modal copy and dismiss link", async () => {
+    await render(<ModalScreen />);
 
     expect(screen.getByText("This is a modal")).toBeOnTheScreen();
     expect(screen.getByText("Go to home screen")).toBeOnTheScreen();

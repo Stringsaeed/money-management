@@ -72,24 +72,24 @@ describe("app/recurring/new", () => {
   });
 
   it("validates the name before creating", async () => {
-    render(<NewRecurringScreen />);
+    await render(<NewRecurringScreen />);
 
-    fireEvent.press(screen.getByText("Create Recurring Payment"));
+    await fireEvent.press(screen.getByText("Create Recurring Payment"));
 
     expect(await screen.findByText("Name is required")).toBeOnTheScreen();
   });
 
   it("creates a recurring payment and navigates back", async () => {
-    render(<NewRecurringScreen />);
+    await render(<NewRecurringScreen />);
 
-    fireEvent.changeText(screen.getByPlaceholderText("e.g. Netflix, Rent"), "Rent");
-    fireEvent.press(screen.getByText("Income"));
-    fireEvent.press(screen.getByText("pick-account"));
-    fireEvent.press(screen.getByText("pick-category"));
-    fireEvent.press(screen.getByText("set-amount"));
-    fireEvent.changeText(screen.getByPlaceholderText("1"), "9");
-    fireEvent.changeText(screen.getByPlaceholderText("Add a note…"), "Monthly");
-    fireEvent.press(screen.getByText("Create Recurring Payment"));
+    await fireEvent.changeText(screen.getByPlaceholderText("e.g. Netflix, Rent"), "Rent");
+    await fireEvent.press(screen.getByText("Income"));
+    await fireEvent.press(screen.getByText("pick-account"));
+    await fireEvent.press(screen.getByText("pick-category"));
+    await fireEvent.press(screen.getByText("set-amount"));
+    await fireEvent.changeText(screen.getByPlaceholderText("1"), "9");
+    await fireEvent.changeText(screen.getByPlaceholderText("Add a note…"), "Monthly");
+    await fireEvent.press(screen.getByText("Create Recurring Payment"));
 
     await waitFor(() => {
       expect(mockMutateAsync).toHaveBeenCalledWith(

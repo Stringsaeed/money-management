@@ -3,12 +3,12 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { EmojiPicker } from "@/components/common/emoji-picker";
 
 describe("EmojiPicker", () => {
-  it("renders emoji options and reports selection changes", () => {
+  it("renders emoji options and reports selection changes", async () => {
     const onChange = jest.fn();
 
-    render(<EmojiPicker value="💰" onChange={onChange} />);
+    await render(<EmojiPicker value="💰" onChange={onChange} />);
 
-    fireEvent.press(screen.getByText("🛒"));
+    await fireEvent.press(screen.getByText("🛒"));
 
     expect(onChange).toHaveBeenCalledWith("🛒");
   });

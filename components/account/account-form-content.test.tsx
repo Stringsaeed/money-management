@@ -59,12 +59,12 @@ function AccountFormContentHarness({
 }
 
 describe("AccountFormContent", () => {
-  it("does not submit when the account name is blank", () => {
+  it("does not submit when the account name is blank", async () => {
     const onSubmit = jest.fn();
 
-    render(<AccountFormContentHarness onSubmit={onSubmit} />);
+    await render(<AccountFormContentHarness onSubmit={onSubmit} />);
 
-    fireEvent.press(screen.getByText("Create Account"));
+    await fireEvent.press(screen.getByText("Create Account"));
 
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -72,11 +72,11 @@ describe("AccountFormContent", () => {
   it("submits account values", async () => {
     const onSubmit = jest.fn();
 
-    render(<AccountFormContentHarness onSubmit={onSubmit} />);
+    await render(<AccountFormContentHarness onSubmit={onSubmit} />);
 
-    fireEvent.changeText(screen.getByPlaceholderText("e.g. Main Checking"), "Wallet");
-    fireEvent.changeText(screen.getByPlaceholderText("0.00"), "8.50");
-    fireEvent.press(screen.getByText("Create Account"));
+    await fireEvent.changeText(screen.getByPlaceholderText("e.g. Main Checking"), "Wallet");
+    await fireEvent.changeText(screen.getByPlaceholderText("0.00"), "8.50");
+    await fireEvent.press(screen.getByText("Create Account"));
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalled();

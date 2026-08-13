@@ -50,16 +50,16 @@ describe("app/account/[id]/edit", () => {
   });
 
   it("validates, saves changes, and navigates back", async () => {
-    render(<EditAccountScreen />);
+    await render(<EditAccountScreen />);
 
-    fireEvent.changeText(screen.getByDisplayValue("Wallet"), " ");
-    fireEvent.press(screen.getByText("Save Changes"));
+    await fireEvent.changeText(screen.getByDisplayValue("Wallet"), " ");
+    await fireEvent.press(screen.getByText("Save Changes"));
     expect(await screen.findByText("Account name is required")).toBeOnTheScreen();
 
-    fireEvent.changeText(screen.getByDisplayValue(" "), "Travel Fund");
-    fireEvent.press(screen.getByText("pick-color"));
-    fireEvent.press(screen.getByText("Savings"));
-    fireEvent.press(screen.getByText("Save Changes"));
+    await fireEvent.changeText(screen.getByDisplayValue(" "), "Travel Fund");
+    await fireEvent.press(screen.getByText("pick-color"));
+    await fireEvent.press(screen.getByText("Savings"));
+    await fireEvent.press(screen.getByText("Save Changes"));
 
     await waitFor(() => {
       expect(mockUpdateAccount).toHaveBeenCalledWith({
@@ -74,9 +74,9 @@ describe("app/account/[id]/edit", () => {
   it("confirms deletion and routes back to settings", async () => {
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
 
-    render(<EditAccountScreen />);
+    await render(<EditAccountScreen />);
 
-    fireEvent.press(screen.getByText("Delete Account"));
+    await fireEvent.press(screen.getByText("Delete Account"));
 
     const destructiveAction = alertSpy.mock.calls[0]?.[2]?.[1];
     await destructiveAction?.onPress?.();

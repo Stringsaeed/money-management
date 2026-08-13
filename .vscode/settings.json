@@ -60,7 +60,5 @@
   },
   "[yaml]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
-  },
-  "typescript.experimental.useTsgo": true,
-  "typescript.native-preview.tsdk": "/Users/saeed/Work/money-management/node_modules/@typescript/native-preview"
+  }
 }

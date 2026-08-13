@@ -9,20 +9,20 @@ jest.mock("@/hooks/use-color-scheme", () => ({
 }));
 
 describe("useThemeColor", () => {
-  it("prefers an explicit light or dark override", () => {
+  it("prefers an explicit light or dark override", async () => {
     mockUseColorScheme.mockReturnValue("dark");
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useThemeColor({ light: "#fff", dark: "#111" }, "background"),
     );
 
     expect(result.current).toBe("#111");
   });
 
-  it("falls back to the theme palette when no override is provided", () => {
+  it("falls back to the theme palette when no override is provided", async () => {
     mockUseColorScheme.mockReturnValue(undefined);
 
-    const { result } = renderHook(() => useThemeColor({}, "text"));
+    const { result } = await renderHook(() => useThemeColor({}, "text"));
 
     expect(result.current).toBeDefined();
   });
