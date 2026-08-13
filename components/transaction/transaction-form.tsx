@@ -154,11 +154,7 @@ export function TransactionForm({ initialData, onSubmit, formRef }: TransactionF
                 layout={layoutTransition}
                 className="flex-1 items-center justify-center px-5"
               >
-                <AmountDisplay
-                  currencySymbol={symbol}
-                  numPadConfig={numPad}
-                  value={numPad.displayValue}
-                />
+                <AmountDisplay currencySymbol={symbol} numPadConfig={numPad} />
               </Animated.View>
             );
           }}

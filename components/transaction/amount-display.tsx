@@ -14,11 +14,10 @@ import type useNumPadNumber from "@/hooks/use-num-pad-number";
 
 interface AmountDisplayProps {
   currencySymbol: string;
-  value: string;
   numPadConfig: ReturnType<typeof useNumPadNumber>;
 }
 
-export function AmountDisplay({ currencySymbol, value, numPadConfig }: AmountDisplayProps) {
+export function AmountDisplay({ currencySymbol, numPadConfig }: AmountDisplayProps) {
   const { width } = useWindowDimensions();
 
   const integralPart = Math.floor(numPadConfig.value);

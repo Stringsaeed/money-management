@@ -1,9 +1,9 @@
-import { Pressable, View, type ViewStyle } from "react-native";
+import { View, type ViewStyle } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 import type { UseAccountFormReturn } from "./form";
 
@@ -29,18 +29,11 @@ export function AccountFormSheetFooter({ error, form, onSubmit }: AccountFormShe
 
       <form.Subscribe selector={(state) => state.isSubmitting}>
         {(isSubmitting) => (
-          <Pressable
-            className={cn(
-              "items-center rounded-2xl bg-ink px-4 py-4 active:bg-ink/90",
-              isSubmitting && "opacity-60",
-            )}
-            disabled={isSubmitting}
-            onPress={onSubmit}
-          >
+          <Button disabled={isSubmitting} onPress={onSubmit} size="lg">
             <Text className="font-body-semibold text-base text-surface">
               {isSubmitting ? "Creating…" : "Create Account"}
             </Text>
-          </Pressable>
+          </Button>
         )}
       </form.Subscribe>
     </View>
