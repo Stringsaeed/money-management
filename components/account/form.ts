@@ -1,14 +1,18 @@
-import { AccountTypeColors } from "@/constants/theme";
-import type { AccountType } from "@/types";
 import { formOptions, useForm } from "@tanstack/react-form";
-import { ACCOUNT_TYPE_META } from "./account-form-options";
+
+import { AccountTypeColors } from "@/constants/theme";
+import { useCreateAccount, useUpdateAccount } from "@/hooks/use-accounts";
+import type { Account, AccountType } from "@/types";
 import { decimalStringToCents } from "@/utils/currency";
-import { useCreateAccount } from "@/hooks/use-accounts";
+
+import { ACCOUNT_TYPE_META } from "./account-form-options";
+import { accountDisplayIcon } from "./utils";
 
 export interface AccountFormValues {
   amount: string;
   color: string;
   currency: string;
+  icon: string;
   name: string;
   type: AccountType;
 }
@@ -18,6 +22,7 @@ export const accountFormOptions = formOptions({
     amount: "",
     color: AccountTypeColors.checking,
     currency: "USD",
+    icon: ACCOUNT_TYPE_META.checking.emoji,
     name: "",
     type: "checking",
   } as AccountFormValues,
@@ -25,6 +30,12 @@ export const accountFormOptions = formOptions({
 
 interface UseAccountFormArgs {
   onCreated?: VoidFunction;
+}
+
+interface UseEditAccountFormArgs {
+  account: Account;
+  onError?: (message: string) => void;
+  onUpdated?: VoidFunction;
 }
 
 export function useAccountForm({ onCreated }: UseAccountFormArgs = {}) {
@@ -40,7 +51,7 @@ export function useAccountForm({ onCreated }: UseAccountFormArgs = {}) {
           color: value.color,
           currency: value.currency,
           excludeFromTotal: false,
-          icon: ACCOUNT_TYPE_META[value.type].systemIcon,
+          icon: value.icon,
           initialBalance: decimalStringToCents(value.amount),
           name: trimmedName,
           sortOrder: 0,
@@ -56,3 +67,39 @@ export function useAccountForm({ onCreated }: UseAccountFormArgs = {}) {
 }
 
 export type UseAccountFormReturn = ReturnType<typeof useAccountForm>;
+
+export function useEditAccountForm({ account, onError, onUpdated }: UseEditAccountFormArgs) {
+  const updateAccount = useUpdateAccount();
+
+  return useForm({
+    ...accountFormOptions,
+    defaultValues: {
+      amount: "",
+      color: account.color,
+      currency: account.currency,
+      icon: accountDisplayIcon(account),
+      name: account.name,
+      type: account.type,
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        await updateAccount.mutateAsync({
+          id: account.id,
+          data: {
+            color: value.color,
+            currency: value.currency,
+            icon: value.icon,
+            name: value.name.trim(),
+            type: value.type,
+          },
+        });
+        onUpdated?.();
+      } catch {
+        onError?.("Failed to update account.");
+      }
+    },
+  });
+}
+
+export type UseEditAccountFormReturn = ReturnType<typeof useEditAccountForm>;
+export type AccountFormApi = UseAccountFormReturn | UseEditAccountFormReturn;

@@ -66,8 +66,8 @@ export function CreateResourceBottomSheet({
             </Text>
             <View className="h-10 w-10" />
           </View>
-          <ScrollView contentContainerClassName="gap-4 px-5 py-4">{content}</ScrollView>
-          {footer}
+          <ScrollView contentContainerClassName="gap-4 px-5 py-4 pb-8">{content}</ScrollView>
+          <View className="bg-background">{footer}</View>
         </View>
       </ModalBottomSheet>
     </>

@@ -11,6 +11,7 @@ describe("AccountFormPreview", () => {
           amount: "",
           color: AccountTypeColors.checking,
           currency: "USD",
+          icon: "💳",
           name: "",
           type: "checking",
         }}
@@ -29,6 +30,7 @@ describe("AccountFormPreview", () => {
           amount: "250.50",
           color: AccountTypeColors.savings,
           currency: "EUR",
+          icon: "🏦",
           name: "  Vacation  ",
           type: "savings",
         }}
@@ -38,5 +40,25 @@ describe("AccountFormPreview", () => {
     expect(screen.getByText("Vacation")).toBeOnTheScreen();
     expect(screen.getByText(/Savings · EUR/)).toBeOnTheScreen();
     expect(screen.getByText(/250\.50/)).toBeOnTheScreen();
+  });
+
+  it("shows the locked balance instead of the amount field", async () => {
+    await render(
+      <AccountFormPreview
+        lockedBalanceCents={180_00}
+        values={{
+          amount: "12.00",
+          color: AccountTypeColors.checking,
+          currency: "USD",
+          icon: "💎",
+          name: "Wallet",
+          type: "checking",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("$180.00")).toBeOnTheScreen();
+    expect(screen.queryByText("$12.00")).not.toBeOnTheScreen();
+    expect(screen.getByText("💎")).toBeOnTheScreen();
   });
 });

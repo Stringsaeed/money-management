@@ -12,6 +12,7 @@ export interface SettingsRowProps {
 
 export interface AccountRowProps {
   account: AccountWithBalance;
+  onPress?: () => void;
 }
 
 export interface CategoryRowProps {

@@ -10,6 +10,7 @@ interface CreateResourceSheetFooterProps {
   isSubmitting: boolean;
   onSubmit: VoidFunction;
   submitLabel: string;
+  submittingLabel?: string;
 }
 
 export function CreateResourceSheetFooter({
@@ -17,6 +18,7 @@ export function CreateResourceSheetFooter({
   isSubmitting,
   onSubmit,
   submitLabel,
+  submittingLabel = "Creating…",
 }: CreateResourceSheetFooterProps) {
   return (
     <View className="gap-3 p-5">
@@ -31,7 +33,7 @@ export function CreateResourceSheetFooter({
       ) : null}
       <Button disabled={isSubmitting} onPress={onSubmit} size="lg">
         <Text className="font-body-semibold text-base text-surface">
-          {isSubmitting ? "Creating…" : submitLabel}
+          {isSubmitting ? submittingLabel : submitLabel}
         </Text>
       </Button>
     </View>

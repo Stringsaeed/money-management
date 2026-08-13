@@ -10,7 +10,7 @@ export interface Account {
   type: AccountType;
   currency: string; // ISO 4217 e.g. "USD"
   color: string; // hex e.g. "#4A90D9"
-  icon: string; // SF Symbol / Material icon name
+  icon: string; // emoji, with legacy SF Symbol names still supported
   initialBalance: number; // integer cents in account's currency
   excludeFromTotal: boolean;
   sortOrder: number;

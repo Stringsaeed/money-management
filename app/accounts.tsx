@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { PlusIcon } from "phosphor-react-native";
 
+import { AccountEditSheet } from "@/components/account/account-edit-sheet";
 import { AccountFormBottomSheet } from "@/components/account/account-form-sheet";
 import { CoinPlantGraphic } from "@/components/graphics/coin-plant";
 import { Card } from "@/components/settings/card";
@@ -13,8 +15,10 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { useAccountsWithBalances, useDeleteAccount } from "@/hooks/use-accounts";
+import type { AccountWithBalance } from "@/types";
 
 export default function AccountsScreen() {
+  const [editingAccount, setEditingAccount] = useState<AccountWithBalance | null>(null);
   const { data: accounts = [] } = useAccountsWithBalances();
   const deleteAccount = useDeleteAccount();
 
@@ -43,7 +47,11 @@ export default function AccountsScreen() {
                 layout={layoutTransition}
               >
                 {i > 0 && <Divider />}
-                <SwipeableAccountRow account={account} onDelete={deleteAccount.mutateAsync} />
+                <SwipeableAccountRow
+                  account={account}
+                  onDelete={deleteAccount.mutateAsync}
+                  onPress={() => setEditingAccount(account)}
+                />
               </Animated.View>
             ))}
           </Card>
@@ -55,6 +63,13 @@ export default function AccountsScreen() {
           <Icon as={PlusIcon} size={24} />
         </Button>
       </AccountFormBottomSheet>
+      {editingAccount ? (
+        <AccountEditSheet
+          account={editingAccount}
+          onDismiss={() => setEditingAccount(null)}
+          onUpdated={() => setEditingAccount(null)}
+        />
+      ) : null}
     </View>
   );
 }

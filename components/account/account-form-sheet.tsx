@@ -21,12 +21,14 @@ export function AccountFormBottomSheet({
   onCreated,
 }: AccountFormBottomSheetProps) {
   const [hasCustomColor, setHasCustomColor] = useState(false);
+  const [hasCustomIcon, setHasCustomIcon] = useState(false);
   const [currencyExpanded, setCurrencyExpanded] = useState(false);
 
   const form = useAccountForm({
     onCreated: () => {
       form.reset();
       setHasCustomColor(false);
+      setHasCustomIcon(false);
       setCurrencyExpanded(false);
       onCreated?.();
     },
@@ -35,11 +37,17 @@ export function AccountFormBottomSheet({
   function handleTypeChange(nextType: AccountType) {
     form.setFieldValue("type", nextType);
     if (!hasCustomColor) form.setFieldValue("color", ACCOUNT_TYPE_META[nextType].color);
+    if (!hasCustomIcon) form.setFieldValue("icon", ACCOUNT_TYPE_META[nextType].emoji);
   }
 
   function handleColorChange(nextColor: string) {
     setHasCustomColor(true);
     form.setFieldValue("color", nextColor);
+  }
+
+  function handleIconChange(nextIcon: string) {
+    setHasCustomIcon(true);
+    form.setFieldValue("icon", nextIcon);
   }
 
   return (
@@ -52,6 +60,7 @@ export function AccountFormBottomSheet({
           onColorChange={handleColorChange}
           onCurrencyCollapse={() => setCurrencyExpanded(false)}
           onCurrencyExpandToggle={() => setCurrencyExpanded((expanded) => !expanded)}
+          onIconChange={handleIconChange}
           onTypeChange={handleTypeChange}
         />
       }

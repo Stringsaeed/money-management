@@ -59,12 +59,13 @@ const EMOJI_OPTIONS = [
 interface EmojiPickerProps {
   value: string;
   onChange: (emoji: string) => void;
+  options?: readonly string[];
 }
 
-export function EmojiPicker({ value, onChange }: EmojiPickerProps) {
+export function EmojiPicker({ value, onChange, options = EMOJI_OPTIONS }: EmojiPickerProps) {
   return (
     <View className="flex-row flex-wrap gap-2 py-1">
-      {EMOJI_OPTIONS.map((emoji) => (
+      {options.map((emoji) => (
         <Pressable
           key={emoji}
           onPress={() => onChange(emoji)}

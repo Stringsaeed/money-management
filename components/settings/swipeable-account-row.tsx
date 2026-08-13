@@ -11,7 +11,7 @@ interface SwipeableAccountRowProps extends AccountRowProps {
   onDelete: (id: string) => Promise<void>;
 }
 
-export function SwipeableAccountRow({ account, onDelete }: SwipeableAccountRowProps) {
+export function SwipeableAccountRow({ account, onDelete, onPress }: SwipeableAccountRowProps) {
   function confirmDelete(swipeable: SwipeableMethods) {
     Alert.alert(
       "Delete Account?",
@@ -58,7 +58,7 @@ export function SwipeableAccountRow({ account, onDelete }: SwipeableAccountRowPr
       renderRightActions={renderRightActions}
       rightThreshold={48}
     >
-      <AccountRow account={account} />
+      <AccountRow account={account} onPress={onPress} />
     </Swipeable>
   );
 }

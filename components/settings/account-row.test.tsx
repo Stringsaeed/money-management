@@ -4,19 +4,16 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AccountRow } from "@/components/settings/account-row";
 import { createAccountWithBalance } from "@/tests/test-utils/factories";
 
-const mockPush = jest.fn();
-
-jest.mock("expo-router", () => ({
-  router: {
-    push: (...args: unknown[]) => mockPush(...args),
-  },
-}));
-
 describe("AccountRow", () => {
-  it("renders account details and routes to the account screen", async () => {
+  it("renders account details and reports press", async () => {
+    const onPress = jest.fn();
+
     await render(
       <GestureHandlerRootView>
-        <AccountRow account={createAccountWithBalance({ id: "account-1", name: "Wallet" })} />
+        <AccountRow
+          account={createAccountWithBalance({ id: "account-1", name: "Wallet" })}
+          onPress={onPress}
+        />
       </GestureHandlerRootView>,
     );
 
@@ -24,6 +21,6 @@ describe("AccountRow", () => {
 
     expect(screen.getByText(/Checking/)).toBeOnTheScreen();
     expect(screen.getByText("$250.00")).toBeOnTheScreen();
-    expect(mockPush).toHaveBeenCalledWith("/account/account-1");
+    expect(onPress).toHaveBeenCalledTimes(1);
   });
 });

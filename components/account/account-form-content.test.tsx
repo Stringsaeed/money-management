@@ -12,8 +12,12 @@ jest.mock("@/components/common/color-picker", () => ({
 }));
 
 function AccountFormContentHarness({
+  amountEditable = true,
+  lockedBalanceCents,
   onSubmit,
 }: {
+  amountEditable?: boolean;
+  lockedBalanceCents?: number;
   onSubmit: (values: AccountFormValues) => void;
 }) {
   const [error, setError] = useState("");
@@ -38,14 +42,19 @@ function AccountFormContentHarness({
   return (
     <>
       <AccountFormContent
+        amountEditable={amountEditable}
         currencyExpanded={currencyExpanded}
         form={form}
+        lockedBalanceCents={lockedBalanceCents}
         onColorChange={(color) => {
           setHasCustomColor(true);
           form.setFieldValue("color", color);
         }}
         onCurrencyCollapse={() => setCurrencyExpanded(false)}
         onCurrencyExpandToggle={() => setCurrencyExpanded((expanded) => !expanded)}
+        onIconChange={(icon) => {
+          form.setFieldValue("icon", icon);
+        }}
         onTypeChange={(type) => {
           form.setFieldValue("type", type);
           if (!hasCustomColor) {
@@ -86,10 +95,25 @@ describe("AccountFormContent", () => {
       expect.objectContaining({
         color: "#4A90D9",
         currency: "USD",
+        icon: "💳",
         name: "Wallet",
         amount: "8.50",
         type: "checking",
       }),
     );
+  });
+
+  it("hides the starting amount field when editing", async () => {
+    await render(
+      <AccountFormContentHarness
+        amountEditable={false}
+        lockedBalanceCents={250_00}
+        onSubmit={jest.fn()}
+      />,
+    );
+
+    expect(screen.queryByPlaceholderText("0.00")).not.toBeOnTheScreen();
+    expect(screen.getAllByText("$250.00").length).toBeGreaterThan(0);
+    expect(screen.getByText(/Balance updates through transactions/)).toBeOnTheScreen();
   });
 });

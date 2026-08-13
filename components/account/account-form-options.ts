@@ -69,6 +69,29 @@ export const ACCOUNT_TYPE_META = ACCOUNT_TYPE_OPTIONS.reduce(
   {} as Record<AccountType, AccountTypeOption>,
 );
 
+export const ACCOUNT_ICON_OPTIONS = [
+  "💳",
+  "🏦",
+  "💵",
+  "💰",
+  "📈",
+  "🏧",
+  "💸",
+  "🪙",
+  "💴",
+  "💶",
+  "💷",
+  "💎",
+  "🏠",
+  "🚗",
+  "✈️",
+  "📱",
+  "💼",
+  "📊",
+  "🔐",
+  "✨",
+] as const;
+
 export const ACCOUNT_CURRENCIES = [
   "USD",
   "EUR",

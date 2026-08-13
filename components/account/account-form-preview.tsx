@@ -10,14 +10,17 @@ import { decimalStringToCents, formatCents } from "@/utils/currency";
 import type { AccountFormValues } from "./form";
 
 interface AccountFormPreviewProps {
+  lockedBalanceCents?: number;
   values: AccountFormValues;
 }
 
-export function AccountFormPreview({ values }: AccountFormPreviewProps) {
+export function AccountFormPreview({ lockedBalanceCents, values }: AccountFormPreviewProps) {
   const meta = ACCOUNT_TYPE_META[values.type];
-  const displayName = values.name.trim() || "New account";
-  const balanceCents = decimalStringToCents(values.amount);
+  const displayName =
+    values.name.trim() || (lockedBalanceCents == null ? "New account" : "Account");
+  const balanceCents = lockedBalanceCents ?? decimalStringToCents(values.amount);
   const isNegative = balanceCents < 0;
+  const icon = values.icon || meta.emoji;
 
   return (
     <Animated.View
@@ -31,7 +34,7 @@ export function AccountFormPreview({ values }: AccountFormPreviewProps) {
           style={{ backgroundColor: `${values.color}20` }}
           className="h-9 w-9 items-center justify-center rounded-full"
         >
-          <Text className="text-base">{meta.emoji}</Text>
+          <Text className="text-base">{icon}</Text>
         </Animated.View>
         <View className="min-w-0 flex-1">
           <Animated.View
