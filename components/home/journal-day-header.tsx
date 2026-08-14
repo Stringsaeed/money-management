@@ -17,9 +17,9 @@ export function JournalDayHeader({ item }: JournalDayHeaderProps) {
       </Text>
       {(item.totalIncome > 0 || item.totalExpense > 0) && (
         <MoneyText
-          cents={Math.abs(net)}
+          cents={net}
           currency={item.currency}
-          sign={net >= 0 ? "+" : "-"}
+          sign={net >= 0 ? "+" : ""}
           className={cn(
             "font-heading-normal text-[13px]",
             net >= 0 ? "text-sage" : "text-terracotta",

@@ -25,9 +25,9 @@ export function TransactionGroup({ group, currency = "USD", showAccount }: Trans
         </Text>
         {(group.totalIncome > 0 || group.totalExpense > 0) && (
           <MoneyText
-            cents={Math.abs(net)}
+            cents={net}
             currency={currency}
-            sign={net >= 0 ? "+" : "-"}
+            sign={net >= 0 ? "+" : ""}
             className={`font-heading-normal text-[13px] ${net >= 0 ? "text-sage" : "text-terracotta"}`}
             style={{ fontVariant: ["tabular-nums"] }}
           />
