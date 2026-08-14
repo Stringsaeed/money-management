@@ -10,14 +10,20 @@ import type { AccountType } from "@/types";
 interface AccountTypePickerProps {
   value: AccountType;
   onChange: (value: AccountType) => void;
+  /** Override the scroller's padding when the row bleeds past its container. */
+  contentContainerClassName?: string;
 }
 
-export function AccountTypePicker({ value, onChange }: AccountTypePickerProps) {
+export function AccountTypePicker({
+  value,
+  onChange,
+  contentContainerClassName = "gap-2 pr-5",
+}: AccountTypePickerProps) {
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerClassName="gap-2 pr-5"
+      contentContainerClassName={contentContainerClassName}
     >
       {ACCOUNT_TYPE_OPTIONS.map((option) => {
         const isSelected = option.value === value;

@@ -34,6 +34,7 @@ import { PostHogProvider } from "posthog-react-native";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { runMigrations } from "@/db/migrate";
+import { markDatabaseReset, resetDatabaseIfNeeded } from "@/db/reset";
 import { seedDatabase } from "@/db/seed";
 import { PortalHost } from "@rn-primitives/portal";
 import { PressablesConfig } from "pressto";
@@ -64,8 +65,17 @@ async function onDatabaseInit(db: SQLiteDatabase) {
   try {
     console.log("Initializing database...");
     const drizzleDb = drizzle(db);
+
+    // Order matters: the wipe takes app_settings with it, so the reset version
+    // can only be recorded once migrations have rebuilt the schema.
+    const didReset = await resetDatabaseIfNeeded(db);
+    if (didReset) console.log("Reset database to a clean baseline.");
+
     console.log("Running migrations...");
     await runMigrations(drizzleDb);
+
+    if (didReset) await markDatabaseReset(drizzleDb);
+
     console.log("Seeding database...");
     await seedDatabase(drizzleDb);
   } catch (error) {
@@ -115,7 +125,7 @@ export default function RootLayout() {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <PostHogProvider
-        debug
+        debug={__DEV__}
         apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY}
         options={{
           host: "https://us.i.posthog.com",

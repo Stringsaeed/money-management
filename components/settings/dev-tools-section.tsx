@@ -19,7 +19,7 @@ export function DevToolsSection() {
   async function handleSeed() {
     setSeeding(true);
     try {
-      await seedDatabase(db);
+      await seedDatabase(db, { force: true });
       qc.invalidateQueries();
       Alert.alert("Done", "Seed data has been inserted.");
     } catch {

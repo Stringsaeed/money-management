@@ -2,76 +2,117 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react-nativ
 
 import OnboardingScreen from "@/app/onboarding";
 
-const mockRouter = {
-  replace: jest.fn(),
-};
-const values = jest.fn();
-const mockInsert = jest.fn(() => ({ values }));
+const mockReplace = jest.fn();
+const mockMutateAsync = jest.fn();
 
 jest.mock("expo-router", () => ({
   router: {
-    replace: (href: string) => mockRouter.replace(href),
+    replace: (href: string) => mockReplace(href),
   },
 }));
 
-jest.mock("expo-sqlite", () => ({
-  useSQLiteContext: () => ({}),
+jest.mock("@/hooks/use-accounts", () => ({
+  useCreateAccount: () => ({ mutateAsync: mockMutateAsync }),
+  useUpdateAccount: () => ({ mutateAsync: jest.fn() }),
 }));
 
-jest.mock("drizzle-orm/expo-sqlite", () => ({
-  drizzle: () => ({
-    insert: mockInsert,
-  }),
-}));
+/** Walks the flow from the welcome screen up to the given step. */
+async function advanceTo(step: "name" | "balance" | "style") {
+  await fireEvent.press(screen.getByTestId("onboarding-start"));
+  if (step === "name") return;
 
-jest.mock("@/utils/id", () => ({
-  generateId: jest.fn(() => "generated-id"),
-}));
+  await fireEvent.changeText(screen.getByTestId("onboarding-name-input"), "Main Checking");
+  await fireEvent.press(screen.getByTestId("onboarding-continue"));
+  if (step === "balance") return;
 
-jest.mock("@/utils/date", () => ({
-  nowIso: jest.fn(() => "2026-03-28T12:00:00.000Z"),
-}));
+  await fireEvent.press(screen.getByTestId("onboarding-continue"));
+}
 
 describe("app/onboarding", () => {
   beforeEach(() => {
-    mockRouter.replace.mockClear();
-    values.mockResolvedValue(undefined);
+    mockReplace.mockClear();
+    mockMutateAsync.mockReset();
+    mockMutateAsync.mockResolvedValue("account-id");
   });
 
-  it("shows validation when the account name is missing", async () => {
+  it("opens on the welcome screen", async () => {
     await render(<OnboardingScreen />);
 
-    await fireEvent.press(screen.getByText("Create Account"));
-
-    expect(await screen.findByText("Account name is required")).toBeOnTheScreen();
+    expect(screen.getByText("Trove")).toBeOnTheScreen();
+    expect(screen.getByTestId("onboarding-start")).toBeOnTheScreen();
   });
 
-  it("creates the first account and redirects home", async () => {
+  it("blocks the first step until the account has a name", async () => {
     await render(<OnboardingScreen />);
+    await advanceTo("name");
 
-    await fireEvent.changeText(screen.getByPlaceholderText("e.g. Main Checking"), "Main Checking");
-    await fireEvent.changeText(screen.getByPlaceholderText("0.00"), "12.34");
-    await fireEvent.press(screen.getByText("Create Account"));
+    expect(screen.getByTestId("onboarding-continue")).toBeDisabled();
+
+    await fireEvent.changeText(screen.getByTestId("onboarding-name-input"), "Main Checking");
+
+    expect(screen.getByTestId("onboarding-continue")).not.toBeDisabled();
+  });
+
+  it("rejects a starting balance with too many decimals", async () => {
+    await render(<OnboardingScreen />);
+    await advanceTo("balance");
+
+    await fireEvent.changeText(screen.getByTestId("onboarding-amount-input"), "12.345");
+
+    expect(screen.getByTestId("onboarding-continue")).toBeDisabled();
+  });
+
+  it("steps back to the previous step", async () => {
+    await render(<OnboardingScreen />);
+    await advanceTo("balance");
+
+    expect(screen.getByText("What's in it today?")).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByTestId("onboarding-back"));
+
+    expect(screen.getByText("Name your first plot")).toBeOnTheScreen();
+  });
+
+  it("creates the account and hands off to the app", async () => {
+    await render(<OnboardingScreen />);
+    await advanceTo("balance");
+
+    await fireEvent.changeText(screen.getByTestId("onboarding-amount-input"), "12.34");
+    await fireEvent.press(screen.getByTestId("onboarding-continue"));
+
+    expect(screen.getByText("Make it yours")).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByTestId("onboarding-continue"));
 
     await waitFor(() => {
-      expect(values).toHaveBeenCalled();
+      expect(mockMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          currency: "USD",
+          initialBalance: 1234,
+          name: "Main Checking",
+          type: "checking",
+        }),
+      );
     });
 
-    await values.mock.results[0]?.value;
+    const finish = await screen.findByTestId("onboarding-finish");
+    expect(screen.getByText("Your garden is planted")).toBeOnTheScreen();
 
-    expect(mockRouter.replace).toHaveBeenCalledWith("/");
+    await fireEvent.press(finish);
+
+    expect(mockReplace).toHaveBeenCalledWith("/");
   });
 
-  it("shows a failure message when account creation fails", async () => {
-    values.mockRejectedValueOnce(new Error("boom"));
+  it("surfaces a message when account creation fails", async () => {
+    mockMutateAsync.mockRejectedValueOnce(new Error("boom"));
 
     await render(<OnboardingScreen />);
+    await advanceTo("style");
 
-    await fireEvent.changeText(screen.getByPlaceholderText("e.g. Main Checking"), "Main Checking");
-    await fireEvent.press(screen.getByText("Create Account"));
+    await fireEvent.press(screen.getByTestId("onboarding-continue"));
 
     expect(
-      await screen.findByText("Failed to create account. Please try again."),
+      await screen.findByText("Could not create the account. Please try again."),
     ).toBeOnTheScreen();
   });
 });

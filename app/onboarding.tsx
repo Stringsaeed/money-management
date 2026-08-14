@@ -1,210 +1,279 @@
-import { drizzle } from "drizzle-orm/expo-sqlite";
+import { useCallback, useEffect, useState } from "react";
+import { BackHandler, KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, TextInput, View } from "react-native";
-import { GardenRowGraphic } from "@/components/graphics/garden-row";
-import { Button } from "@/components/ui/button";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+
+import { AccountFormPreview } from "@/components/account/account-form-preview";
+import { ACCOUNT_TYPE_META } from "@/components/account/account-form-options";
+import { useAccountForm } from "@/components/account/form";
+import { GrowingGarden } from "@/components/graphics/growing-garden";
+import { layoutTransition, stepEntering } from "@/components/onboarding/motion";
+import { OnboardingBackground } from "@/components/onboarding/onboarding-background";
+import { OnboardingBalanceStep } from "@/components/onboarding/onboarding-balance-step";
+import { OnboardingCompleteStep } from "@/components/onboarding/onboarding-complete-step";
+import { OnboardingCta } from "@/components/onboarding/onboarding-cta";
+import { OnboardingHeader } from "@/components/onboarding/onboarding-header";
+import { OnboardingNameStep } from "@/components/onboarding/onboarding-name-step";
+import { OnboardingStyleStep } from "@/components/onboarding/onboarding-style-step";
+import { OnboardingWelcomeStep } from "@/components/onboarding/onboarding-welcome-step";
+import {
+  FORM_STEPS,
+  gardenStageForStep,
+  WELCOME_GARDEN_STAGE,
+  type FormStep,
+} from "@/components/onboarding/steps";
+import { useKeyboardVisible } from "@/components/onboarding/use-keyboard-visible";
 import { Text } from "@/components/ui/text";
-
-import { AccountTypeColors, ColorPalette } from "@/constants/theme";
-import { accounts } from "@/db/schema";
+import { cn } from "@/lib/utils";
 import type { AccountType } from "@/types";
-import { decimalStringToCents } from "@/utils/currency";
-import { nowIso } from "@/utils/date";
-import { generateId } from "@/utils/id";
-import Animated, { Easing, LinearTransition } from "react-native-reanimated";
-import { twMerge } from "tailwind-merge";
 
-const ACCOUNT_TYPES: { value: AccountType; label: string; icon: string }[] = [
-  { value: "checking", label: "Checking", icon: "💳" },
-  { value: "savings", label: "Savings", icon: "🏦" },
-  { value: "cash", label: "Cash", icon: "💵" },
-  { value: "credit_card", label: "Credit Card", icon: "💳" },
-  { value: "investment", label: "Investment", icon: "📈" },
-  { value: "other", label: "Other", icon: "🏧" },
-];
+const GARDEN_WIDTH = 168;
+const GARDEN_HEIGHT = Math.round((GARDEN_WIDTH * 148) / 200);
 
-const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "SAR", "AED"];
+const AMOUNT_PATTERN = /^\d*(\.\d{0,2})?$/;
 
 export default function OnboardingScreen() {
-  const sqliteDb = useSQLiteContext();
-  const db = drizzle(sqliteDb);
-
-  const [name, setName] = useState("");
-  const [type, setType] = useState<AccountType>("checking");
-  const [currency, setCurrency] = useState("USD");
-  const [balance, setBalance] = useState("0");
-  const [color, setColor] = useState(ColorPalette[0]);
-  const [saving, setSaving] = useState(false);
+  const [phase, setPhase] = useState<"welcome" | "form" | "complete">("welcome");
+  const [stepIndex, setStepIndex] = useState(0);
   const [error, setError] = useState("");
 
-  async function handleCreate() {
-    if (!name.trim()) {
-      setError("Account name is required");
+  // Type drives the default accent and mark, but only until the user overrides
+  // one — after that the type picker stops rewriting their choice.
+  const [hasCustomColor, setHasCustomColor] = useState(false);
+  const [hasCustomIcon, setHasCustomIcon] = useState(false);
+
+  const keyboardVisible = useKeyboardVisible();
+
+  const form = useAccountForm({
+    onCreated: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setPhase("complete");
+    },
+    onError: setError,
+  });
+
+  const goBack = useCallback(() => {
+    setError("");
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setStepIndex((index) => {
+      if (index === 0) {
+        setPhase("welcome");
+        return 0;
+      }
+      return index - 1;
+    });
+  }, []);
+
+  // Android's system back walks the flow rather than dropping out of it.
+  useEffect(() => {
+    if (phase !== "form") return;
+
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      goBack();
+      return true;
+    });
+
+    return () => subscription.remove();
+  }, [goBack, phase]);
+
+  function handleStart() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setPhase("form");
+    setStepIndex(0);
+  }
+
+  function handleContinue() {
+    setError("");
+
+    if (stepIndex < FORM_STEPS.length - 1) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setStepIndex((index) => index + 1);
       return;
     }
-    setSaving(true);
-    setError("");
-    try {
-      const now = nowIso();
-      await db.insert(accounts).values({
-        id: generateId(),
-        name: name.trim(),
-        type,
-        currency,
-        color: color ?? AccountTypeColors[type],
-        icon: "banknote.fill",
-        initialBalance: decimalStringToCents(balance),
-        excludeFromTotal: false,
-        sortOrder: 0,
-        createdAt: now,
-        updatedAt: now,
-      });
-      router.replace("/");
-    } catch {
-      setError("Failed to create account. Please try again.");
-    } finally {
-      setSaving(false);
-    }
+
+    form.handleSubmit();
+  }
+
+  function handleTypeChange(nextType: AccountType) {
+    Haptics.selectionAsync();
+    form.setFieldValue("type", nextType);
+    if (!hasCustomColor) form.setFieldValue("color", ACCOUNT_TYPE_META[nextType].color);
+    if (!hasCustomIcon) form.setFieldValue("icon", ACCOUNT_TYPE_META[nextType].emoji);
+  }
+
+  function handleColorChange(nextColor: string) {
+    Haptics.selectionAsync();
+    setHasCustomColor(true);
+    form.setFieldValue("color", nextColor);
+  }
+
+  function handleIconChange(nextIcon: string) {
+    Haptics.selectionAsync();
+    setHasCustomIcon(true);
+    form.setFieldValue("icon", nextIcon);
   }
 
   return (
     <View className="flex-1 bg-background">
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <Animated.ScrollView
+      <OnboardingBackground />
+
+      {phase === "welcome" ? (
+        <Animated.View
           className="flex-1"
-          contentContainerClassName="grow px-4 pt-safe-offset-2"
-          keyboardShouldPersistTaps="handled"
+          entering={FadeIn.duration(240)}
+          exiting={FadeOut.duration(160)}
         >
-          {/* Header */}
-          <View className="mb-8 mt-12">
-            <GardenRowGraphic />
-            <Text className="text-[32px] font-bold text-foreground mb-2 mt-4">Welcome 👋</Text>
-            <Text className="text-base text-muted-foreground">
-              Let&apos;s set up your first account to get started.
-            </Text>
-          </View>
+          <OnboardingWelcomeStep onStart={handleStart} />
+        </Animated.View>
+      ) : null}
 
-          {/* Account Name */}
-          <Text className="text-sm font-semibold text-foreground mb-2">Account Name</Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="e.g. Main Checking"
-            placeholderTextColor="#9a9896"
-            className="border border-input rounded-[10px] p-3.5 text-base text-foreground mb-5"
-            returnKeyType="next"
-          />
-
-          {/* Account Type */}
-          <Text className="text-sm font-semibold text-foreground mb-2">Account Type</Text>
-          <Animated.View
-            layout={LinearTransition.easing(Easing.ease)}
-            className="flex-row flex-wrap gap-2 mb-5"
+      {phase === "form" ? (
+        <Animated.View className="flex-1" entering={FadeIn.duration(280)}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            className="flex-1"
           >
-            {ACCOUNT_TYPES.map((at) => (
-              <Animated.View key={at.value} layout={LinearTransition.easing(Easing.ease)}>
-                <Pressable
-                  onPress={() => setType(at.value)}
-                  style={{
-                    borderColor: type === at.value ? AccountTypeColors[at.value] : undefined,
-                    backgroundColor:
-                      type === at.value ? `${AccountTypeColors[at.value]}20` : undefined,
-                  }}
-                  className={twMerge(
-                    "px-3.5 py-2 rounded-full border-2 border-input",
-                    type === at.value && "border-transparent",
-                  )}
-                >
-                  <Text
-                    className={twMerge(
-                      "text-sm text-foreground",
-                      type === at.value && "font-semibold",
-                    )}
-                  >
-                    {at.icon} {at.label}
-                  </Text>
-                </Pressable>
-              </Animated.View>
-            ))}
-          </Animated.View>
+            <View className="pt-safe-offset-2">
+              <OnboardingHeader current={stepIndex} onBack={goBack} total={FORM_STEPS.length} />
+            </View>
 
-          {/* Currency */}
-          <Text className="text-sm font-semibold text-foreground mb-2">Currency</Text>
-          <Animated.ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginHorizontal: -16, flexShrink: 1, flexGrow: 0, marginBottom: 20 }}
-            contentContainerClassName="px-4 gap-2 grow"
-            layout={LinearTransition.easing(Easing.ease)}
-          >
-            {CURRENCIES.map((c) => (
-              <Animated.View key={c} layout={LinearTransition.easing(Easing.ease)}>
-                <Pressable
-                  key={c}
-                  onPress={() => setCurrency(c)}
-                  className={twMerge(
-                    "self-start px-4 py-2 rounded-full border-2 border-input",
-                    currency === c && "border-brand bg-brand/10",
-                  )}
-                >
-                  <Text className={twMerge("text-foreground", currency === c && "font-semibold")}>
-                    {c}
-                  </Text>
-                </Pressable>
-              </Animated.View>
-            ))}
-          </Animated.ScrollView>
-
-          {/* Initial Balance */}
-          <Text className="text-sm font-semibold text-foreground mb-2">Starting Balance</Text>
-          <TextInput
-            value={balance}
-            onChangeText={setBalance}
-            keyboardType="decimal-pad"
-            className="border border-input rounded-[10px] p-3.5 text-base text-foreground mb-5"
-            placeholder="0.00"
-            placeholderTextColor="#9a9896"
-          />
-
-          {/* Color */}
-          <Text className="text-sm font-semibold text-foreground">Color</Text>
-          <Animated.ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginHorizontal: -16, flexShrink: 1, flexGrow: 1, marginBottom: 32 }}
-            contentContainerClassName="px-4 gap-2.5 grow pt-4"
-            layout={LinearTransition.easing(Easing.ease)}
-          >
-            {ColorPalette.map((c) => (
-              <Animated.View key={c} layout={LinearTransition.easing(Easing.ease)}>
-                <Pressable
-                  onPress={() => setColor(c)}
-                  style={{ backgroundColor: c }}
-                  className={
-                    color === c
-                      ? "w-9 h-9 rounded-full border-[3px] border-background shadow"
-                      : "w-9 h-9 rounded-full"
-                  }
+            {/* The garden and the preview are pinned: they persist across all
+                three steps, so the plant keeps growing and the account the
+                user is building never scrolls out from under them. The garden
+                folds away while the keyboard is up to buy back the room. */}
+            <View className="gap-4 px-6 pb-2 pt-2">
+              <Animated.View
+                className="items-center overflow-hidden"
+                style={{
+                  height: keyboardVisible ? 0 : GARDEN_HEIGHT,
+                  opacity: keyboardVisible ? 0 : 1,
+                  transitionProperty: ["height", "opacity"],
+                  transitionDuration: [280, 180],
+                  transitionTimingFunction: "ease-out",
+                }}
+              >
+                <GrowingGarden
+                  initialStage={WELCOME_GARDEN_STAGE}
+                  stage={gardenStageForStep(stepIndex)}
+                  width={GARDEN_WIDTH}
                 />
               </Animated.View>
-            ))}
-          </Animated.ScrollView>
 
-          {error ? <Text className="text-destructive mb-4 text-center">{error}</Text> : null}
+              <form.Subscribe
+                selector={(state) => ({
+                  amount: state.values.amount,
+                  color: state.values.color,
+                  currency: state.values.currency,
+                  icon: state.values.icon,
+                  name: state.values.name,
+                  type: state.values.type,
+                })}
+              >
+                {(values) => <AccountFormPreview values={values} />}
+              </form.Subscribe>
+            </View>
 
-          {/* Create Button */}
-        </Animated.ScrollView>
-      </KeyboardAvoidingView>
-      <Animated.View className="px-4 pb-safe py-2">
-        <Button onPress={handleCreate} disabled={saving} size="xl">
-          <Text>{saving ? "Creating…" : "Create Account"}</Text>
-        </Button>
-      </Animated.View>
+            <ScrollView
+              className="flex-1"
+              contentContainerClassName="grow px-6 pb-6 pt-4"
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <Animated.View key={FORM_STEPS[stepIndex]} entering={stepEntering}>
+                <StepContent
+                  form={form}
+                  onColorChange={handleColorChange}
+                  onIconChange={handleIconChange}
+                  onTypeChange={handleTypeChange}
+                  step={FORM_STEPS[stepIndex]}
+                />
+              </Animated.View>
+            </ScrollView>
+
+            {/* KeyboardAvoidingView already lifts this clear of the keyboard,
+                so re-adding the home-indicator inset would double it up. */}
+            <View className={cn("gap-3 px-6 pt-2", keyboardVisible ? "pb-3" : "pb-safe-offset-3")}>
+              {error ? (
+                <Animated.View
+                  entering={FadeIn.duration(200)}
+                  exiting={FadeOut.duration(150)}
+                  layout={layoutTransition}
+                >
+                  <Text className="text-center font-body-medium text-sm text-destructive">
+                    {error}
+                  </Text>
+                </Animated.View>
+              ) : null}
+
+              <form.Subscribe
+                selector={(state) => ({
+                  amount: state.values.amount,
+                  isSubmitting: state.isSubmitting,
+                  name: state.values.name,
+                })}
+              >
+                {({ amount, isSubmitting, name }) => (
+                  <OnboardingCta
+                    disabled={isSubmitting || !canContinue(stepIndex, { amount, name })}
+                    label={ctaLabel(stepIndex, isSubmitting)}
+                    onPress={handleContinue}
+                    showArrow={stepIndex < FORM_STEPS.length - 1}
+                    testID="onboarding-continue"
+                  />
+                )}
+              </form.Subscribe>
+            </View>
+          </KeyboardAvoidingView>
+        </Animated.View>
+      ) : null}
+
+      {phase === "complete" ? (
+        <Animated.View className="flex-1" entering={FadeIn.duration(320)}>
+          <form.Subscribe selector={(state) => state.values}>
+            {(values) => (
+              <OnboardingCompleteStep onFinish={() => router.replace("/")} values={values} />
+            )}
+          </form.Subscribe>
+        </Animated.View>
+      ) : null}
     </View>
   );
+}
+
+interface StepContentProps {
+  form: ReturnType<typeof useAccountForm>;
+  onColorChange: (color: string) => void;
+  onIconChange: (icon: string) => void;
+  onTypeChange: (type: AccountType) => void;
+  step: FormStep;
+}
+
+function StepContent({ form, onColorChange, onIconChange, onTypeChange, step }: StepContentProps) {
+  if (step === "name") {
+    return <OnboardingNameStep form={form} onTypeChange={onTypeChange} />;
+  }
+
+  if (step === "balance") {
+    return <OnboardingBalanceStep form={form} />;
+  }
+
+  return (
+    <OnboardingStyleStep form={form} onColorChange={onColorChange} onIconChange={onIconChange} />
+  );
+}
+
+function ctaLabel(stepIndex: number, isSubmitting: boolean) {
+  if (stepIndex < FORM_STEPS.length - 1) return "Continue";
+  return isSubmitting ? "Planting…" : "Plant it";
+}
+
+/** Gates the forward action so the user never meets a validation error. */
+function canContinue(stepIndex: number, values: { amount: string; name: string }) {
+  if (FORM_STEPS[stepIndex] === "name") return values.name.trim().length > 0;
+  if (FORM_STEPS[stepIndex] === "balance") {
+    const amount = values.amount.trim();
+    return !amount || AMOUNT_PATTERN.test(amount);
+  }
+  return true;
 }

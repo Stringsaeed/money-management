@@ -6,6 +6,7 @@ import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useLoadAfterTimeout } from "@/hooks/use-load-after-timeout";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
+import { currencyAffixes } from "@/utils/currency";
 import { groupByDay } from "@/utils/transaction";
 
 export function BalanceHero() {
@@ -48,14 +49,19 @@ export function BalanceHero() {
   }, [activeFilterCount, accounts, groups]);
   const balance = useLoadAfterTimeout(filteredBalance, 0, 500);
 
+  // The currency rides along as prefix/suffix instead of going through
+  // NumberFlow's own currency formatting — see currencyAffixes for why.
+  const { prefix, suffix } = useMemo(() => currencyAffixes(currency), [currency]);
+
   return (
     <View className="px-5 pb-2 bg-background min-h-[55px]">
       <NumberFlow
         className="font-heading-medium text-5xl tabular-nums text-ink"
         value={balance / 100}
+        prefix={prefix}
+        suffix={suffix}
         format={{
-          style: "currency",
-          currency,
+          style: "decimal",
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         }}

@@ -11,6 +11,8 @@ interface AccountCurrencyPickerProps {
   onChange: (value: string) => void;
   compact?: boolean;
   onCompactPress?: VoidFunction;
+  /** Override the scroller's padding when the row bleeds past its container. */
+  contentContainerClassName?: string;
 }
 
 export function AccountCurrencyPicker({
@@ -18,6 +20,7 @@ export function AccountCurrencyPicker({
   onChange,
   compact = false,
   onCompactPress,
+  contentContainerClassName = "gap-2 pr-5",
 }: AccountCurrencyPickerProps) {
   if (compact) {
     return (
@@ -34,7 +37,7 @@ export function AccountCurrencyPicker({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerClassName="gap-2 pr-5"
+      contentContainerClassName={contentContainerClassName}
     >
       {ACCOUNT_CURRENCIES.map((currency) => {
         const isSelected = currency === value;
