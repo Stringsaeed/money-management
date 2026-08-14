@@ -30,6 +30,7 @@ export const accountFormOptions = formOptions({
 
 interface UseAccountFormArgs {
   onCreated?: VoidFunction;
+  onError?: (message: string) => void;
 }
 
 interface UseEditAccountFormArgs {
@@ -38,7 +39,7 @@ interface UseEditAccountFormArgs {
   onUpdated?: VoidFunction;
 }
 
-export function useAccountForm({ onCreated }: UseAccountFormArgs = {}) {
+export function useAccountForm({ onCreated, onError }: UseAccountFormArgs = {}) {
   const createAccount = useCreateAccount();
 
   return useForm({
@@ -59,8 +60,10 @@ export function useAccountForm({ onCreated }: UseAccountFormArgs = {}) {
         });
         onCreated?.();
       } catch {
-        // Surfaced by the mutation's error state; the form stays open so the
-        // user can retry.
+        // The form stays open so the user can retry. Callers that render an
+        // error slot opt in via onError; the sheet relies on the mutation's
+        // own error state instead.
+        onError?.("Could not create the account. Please try again.");
       }
     },
   });

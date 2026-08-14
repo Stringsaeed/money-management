@@ -17,6 +17,7 @@ jest.mock("expo-splash-screen", () => ({
 jest.mock("expo-haptics", () => ({
   notificationAsync: jest.fn(),
   impactAsync: jest.fn(),
+  selectionAsync: jest.fn(),
   ImpactFeedbackStyle: {
     Light: "light",
     Medium: "medium",

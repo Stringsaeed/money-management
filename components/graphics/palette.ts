@@ -6,6 +6,8 @@ const light = {
   sage: "#4a8f69",
   terracotta: "#d46a4c",
   surfaceDim: "#d9e4db",
+  outline: "#cfddd2",
+  placeholder: "#9aada1",
 };
 
 const dark = {
@@ -13,6 +15,8 @@ const dark = {
   sage: "#6fb58a",
   terracotta: "#e0816a",
   surfaceDim: "#223029",
+  outline: "#2a3a31",
+  placeholder: "#5d7568",
 };
 
 export type GraphicPalette = typeof light;
