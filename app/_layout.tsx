@@ -1,23 +1,15 @@
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import { useFonts } from "expo-font";
 import {
-  Newsreader_200ExtraLight,
-  Newsreader_300Light,
-  Newsreader_400Regular,
-  Newsreader_500Medium,
-  Newsreader_600SemiBold,
-  Newsreader_700Bold,
-  Newsreader_800ExtraBold,
-} from "@expo-google-fonts/newsreader";
-import {
-  PlusJakartaSans_200ExtraLight,
-  PlusJakartaSans_300Light,
-  PlusJakartaSans_400Regular,
-  PlusJakartaSans_500Medium,
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-  PlusJakartaSans_800ExtraBold,
-} from "@expo-google-fonts/plus-jakarta-sans";
+  Nunito_200ExtraLight,
+  Nunito_300Light,
+  Nunito_400Regular,
+  Nunito_500Medium,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
+  Nunito_900Black,
+} from "@expo-google-fonts/nunito";
 import { Stack } from "expo-router";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import * as SplashScreen from "expo-splash-screen";
@@ -95,21 +87,14 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   const [fontsLoaded, fontError] = useFonts({
-    Newsreader_200ExtraLight,
-    Newsreader_300Light,
-    Newsreader_400Regular,
-    Newsreader_500Medium,
-    Newsreader_600SemiBold,
-    Newsreader_700Bold,
-    Newsreader_800ExtraBold,
-
-    PlusJakartaSans_200ExtraLight,
-    PlusJakartaSans_300Light,
-    PlusJakartaSans_400Regular,
-    PlusJakartaSans_500Medium,
-    PlusJakartaSans_600SemiBold,
-    PlusJakartaSans_700Bold,
-    PlusJakartaSans_800ExtraBold,
+    Nunito_200ExtraLight,
+    Nunito_300Light,
+    Nunito_400Regular,
+    Nunito_500Medium,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+    Nunito_900Black,
   });
 
   useEffect(() => {
@@ -149,8 +134,8 @@ export default function RootLayout() {
                           headerTransparent: true,
                           headerShadowVisible: false,
                           headerBlurEffect: "none",
-                          headerLargeTitleStyle: { fontFamily: "Newsreader_400Regular" },
-                          headerTitleStyle: { fontFamily: "Newsreader_400Regular" },
+                          headerLargeTitleStyle: { fontFamily: "Nunito_400Regular" },
+                          headerTitleStyle: { fontFamily: "Nunito_400Regular" },
                           headerBackButtonDisplayMode: "minimal",
                         }}
                       >

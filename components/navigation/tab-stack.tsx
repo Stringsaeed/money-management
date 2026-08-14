@@ -15,6 +15,6 @@ export function useTabStackScreenOptions() {
   return {
     // headerStyle: { backgroundColor: colors.background },
     headerTintColor: colors.foreground,
-    headerTitleStyle: { fontFamily: "Newsreader_500Medium", color: colors.foreground },
+    headerTitleStyle: { fontFamily: "Nunito_500Medium", color: colors.foreground },
   } as const;
 }
