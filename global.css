@@ -5,26 +5,26 @@
 @import "nativewind/theme";
 
 @theme {
-  --font-heading-thin: "Newsreader_200ExtraLight";
-  --font-heading-light: "Newsreader_300Light";
-  --font-heading-normal: "Newsreader_400Regular";
-  --font-heading-medium: "Newsreader_500Medium";
-  --font-heading-semibold: "Newsreader_600SemiBold";
-  --font-heading-bold: "Newsreader_700Bold";
-  --font-heading-black: "Newsreader_900Black";
+  --font-heading-thin: "Nunito_200ExtraLight";
+  --font-heading-light: "Nunito_300Light";
+  --font-heading-normal: "Nunito_400Regular";
+  --font-heading-medium: "Nunito_500Medium";
+  --font-heading-semibold: "Nunito_600SemiBold";
+  --font-heading-bold: "Nunito_700Bold";
+  --font-heading-black: "Nunito_900Black";
 
-  --font-body-thin: "PlusJakartaSans_200ExtraLight";
-  --font-body-light: "PlusJakartaSans_300Light";
-  --font-body-normal: "PlusJakartaSans_400Regular";
-  --font-body-medium: "PlusJakartaSans_500Medium";
-  --font-body-semibold: "PlusJakartaSans_600SemiBold";
-  --font-body-bold: "PlusJakartaSans_700Bold";
-  --font-body-black: "PlusJakartaSans_800ExtraBold";
+  --font-body-thin: "Nunito_200ExtraLight";
+  --font-body-light: "Nunito_300Light";
+  --font-body-normal: "Nunito_400Regular";
+  --font-body-medium: "Nunito_500Medium";
+  --font-body-semibold: "Nunito_600SemiBold";
+  --font-body-bold: "Nunito_700Bold";
+  --font-body-black: "Nunito_800ExtraBold";
 
   --font-mono: monospace;
 
-  --font-serif: "Newsreader_400Regular", serif;
-  --font-sans: "PlusJakartaSans_400Regular", sans-serif;
+  --font-serif: "Nunito_400Regular", serif;
+  --font-sans: "Nunito_400Regular", sans-serif;
 
   --shadow-ledger: 0 10px 40px rgba(28, 27, 26, 0.04);
 

@@ -11,7 +11,7 @@ import { useNativeVariable } from "react-native-css";
 
 import { formatCompactChartAmount } from "./chart-utils";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const fontFile = require("@expo-google-fonts/plus-jakarta-sans/400Regular/PlusJakartaSans_400Regular.ttf");
+const fontFile = require("@expo-google-fonts/nunito/400Regular/Nunito_400Regular.ttf");
 
 interface BarDatum {
   x: number;

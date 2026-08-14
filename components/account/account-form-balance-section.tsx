@@ -5,8 +5,8 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import { AccountCurrencyPicker } from "@/components/account/account-currency-picker";
 import { inputTextStyle, resourceInputClassName } from "@/components/resource/resource-form-field";
 import { layoutTransition } from "@/components/transaction/constants";
+import { MoneyText } from "@/components/ui/money-text";
 import { Text } from "@/components/ui/text";
-import { formatCents } from "@/utils/currency";
 
 import type { AccountFormApi } from "./form";
 
@@ -41,12 +41,12 @@ export function AccountFormBalanceSection({
           <form.Subscribe selector={(state) => state.values.currency}>
             {(currency) => (
               <View className="rounded-2xl border border-ledger-outline bg-surface-container px-4 py-3">
-                <Text
+                <MoneyText
+                  cents={lockedBalanceCents ?? 0}
+                  currency={currency}
                   className="font-body-medium text-base leading-5 text-ink/70"
                   style={{ fontVariant: ["tabular-nums"], includeFontPadding: false }}
-                >
-                  {formatCents(lockedBalanceCents ?? 0, currency)}
-                </Text>
+                />
               </View>
             )}
           </form.Subscribe>

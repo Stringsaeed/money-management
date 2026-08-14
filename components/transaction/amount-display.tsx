@@ -36,7 +36,7 @@ export function AmountDisplay({ currencySymbol, numPadConfig }: AmountDisplayPro
       <Text
         className={cn(
           "font-heading-normal text-4xl leading-none tabular-nums",
-          numPadConfig.isDecimal ? "text-ink" : "text-muted-foreground",
+          numPadConfig.isDecimal ? "text-ink" : "text-muted-foreground/75",
         )}
         style={{ includeFontPadding: false }}
       >
@@ -45,7 +45,7 @@ export function AmountDisplay({ currencySymbol, numPadConfig }: AmountDisplayPro
       <NumberFlow
         className={cn(
           "font-heading-normal text-4xl tabular-nums",
-          fractionalPart ? "text-ink" : "text-muted-foreground",
+          fractionalPart ? "text-ink" : "text-muted-foreground/75",
         )}
         value={fractionalPart}
         format={{ minimumIntegerDigits: 2, maximumFractionDigits: 0, useGrouping: false }}
