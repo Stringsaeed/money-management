@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import type { PressableProps } from "react-native";
-import { Pressable, useColorScheme, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 
 import { Text } from "@/components/ui/text";
+import { cn } from "@/lib/utils";
 import type { CategoryPickerProps } from "./types";
 
 type CategoryItem = CategoryPickerProps["categories"][number];
@@ -12,17 +13,11 @@ function CategoryGrid({
   items,
   selectedId,
   onSelect,
-  isDark,
 }: {
   items: CategoryItem[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  isDark: boolean;
 }) {
-  const surfaceContainer = isDark ? "#1E1D1C" : "#F1F0EE";
-  const inkColor = isDark ? "#E8E6E3" : "#1C1B1A";
-  const inkMuted = isDark ? "#E8E6E366" : "#1C1B1A66";
-
   return (
     <View className="flex-row flex-wrap gap-2">
       {items.map((cat) => {
@@ -31,13 +26,15 @@ function CategoryGrid({
           <Pressable
             key={cat.id}
             onPress={() => onSelect(cat.id)}
-            className="items-center gap-1.5 px-4 py-3 rounded-xl"
-            style={{ backgroundColor: isSelected ? `${cat.color}20` : surfaceContainer }}
+            className={cn(
+              "items-center gap-1.5 px-4 py-3 rounded-xl",
+              !isSelected && "bg-kumo-fill",
+            )}
+            style={isSelected ? { backgroundColor: `${cat.color}20` } : undefined}
           >
             <Text className="text-2xl">{cat.icon}</Text>
             <Text
-              className="font-body-medium text-xs"
-              style={{ color: isSelected ? inkColor : inkMuted }}
+              className={cn("font-body-medium text-xs", isSelected ? "text-ink" : "text-ink/40")}
             >
               {cat.name}
             </Text>
@@ -55,8 +52,6 @@ export default function CategoryPicker({
   children,
 }: CategoryPickerProps) {
   const [sheetIndex, setSheetIndex] = useState(0);
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
 
   const incomeCategories = categories.filter((c) => c.type === "income");
   const expenseCategories = categories.filter((c) => c.type === "expense");
@@ -101,7 +96,6 @@ export default function CategoryPicker({
                 items={expenseCategories}
                 selectedId={selectedId}
                 onSelect={handleSelect}
-                isDark={isDark}
               />
             </View>
           ) : null}
@@ -115,7 +109,6 @@ export default function CategoryPicker({
                 items={incomeCategories}
                 selectedId={selectedId}
                 onSelect={handleSelect}
-                isDark={isDark}
               />
             </View>
           ) : null}

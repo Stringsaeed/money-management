@@ -16,17 +16,29 @@ export function AmountDisplay({ currencySymbol, numPadConfig }: AmountDisplayPro
 
   return (
     <View className="h-15 w-full flex-row items-end justify-center">
-      <Text className="font-heading-normal text-4xl tabular-nums text-ink">{currencySymbol}</Text>
-      <NumberFlow
-        className="font-heading-normal text-5xl tabular-nums text-ink"
-        value={integralPart}
-        format={{ maximumFractionDigits: 0, useGrouping: false }}
-      />
+      <Text
+        className="font-heading-normal text-4xl leading-none tabular-nums text-ink"
+        style={{ includeFontPadding: false }}
+      >
+        {currencySymbol}
+      </Text>
+      {/* The integer uses a larger size than the currency/decimal/fraction. NumberFlow
+          positions its baseline at (box bottom − descent), and the row is bottom-aligned,
+          so the larger descent lifts the integer's baseline above the rest. Nudge it back
+          down onto the shared baseline. */}
+      <View style={{ transform: [{ translateY: 3 }] }}>
+        <NumberFlow
+          className="font-heading-normal text-5xl tabular-nums text-ink"
+          value={integralPart}
+          format={{ maximumFractionDigits: 0, useGrouping: false }}
+        />
+      </View>
       <Text
         className={cn(
-          "font-heading-normal text-4xl tabular-nums",
+          "font-heading-normal text-4xl leading-none tabular-nums",
           numPadConfig.isDecimal ? "text-ink" : "text-muted-foreground",
         )}
+        style={{ includeFontPadding: false }}
       >
         .
       </Text>

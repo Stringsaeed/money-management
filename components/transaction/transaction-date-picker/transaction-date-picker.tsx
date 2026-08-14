@@ -4,10 +4,11 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { PressableScale } from "pressto";
 import type { PressableProps } from "react-native";
-import { Pressable, useColorScheme, View } from "react-native";
+import { useColorScheme, View } from "react-native";
 import { getDisplayDateLabel } from "../utils";
 
 import type { TransactionDatePickerProps } from "./types";
+import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 
 interface ExtendedDatePickerProps extends TransactionDatePickerProps {
@@ -68,7 +69,7 @@ export default function TransactionDatePicker({
         scrimColor="rgba(0, 0, 0, 0.5)"
         surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
       >
-        <View className="flex-1 pb-safe w-full px-5 pt-5 gap-4">
+        <View className="pb-safe w-full px-5 pt-5 gap-4">
           <DateTimePicker
             value={selected}
             mode="datetime"
@@ -78,18 +79,16 @@ export default function TransactionDatePicker({
             style={{ width: "100%", alignSelf: "center" }}
           />
 
-          <Pressable
+          <Button
+            size="xl"
+            className="mx-8"
             onPress={() => {
               setSheetIndex(0);
               onChange?.(selected);
             }}
-            className="mx-8 py-3 bg-ink items-center active:opacity-80"
-            style={{ borderCurve: "continuous" }}
           >
-            <Text className="font-body-semibold text-[13px] text-surface uppercase tracking-wide">
-              Done
-            </Text>
-          </Pressable>
+            <Text>Done</Text>
+          </Button>
         </View>
       </ModalBottomSheet>
     </>
