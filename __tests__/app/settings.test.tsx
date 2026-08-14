@@ -13,6 +13,12 @@ const updateBuilder = {
   set: jest.fn().mockReturnThis(),
   where: jest.fn().mockResolvedValue(undefined),
 };
+// Erasing rewinds the seed version via clearSeedVersion, which upserts.
+const insertBuilder = {
+  values: jest.fn().mockReturnThis(),
+  onConflictDoUpdate: jest.fn().mockReturnThis(),
+  run: jest.fn().mockResolvedValue(undefined),
+};
 const mockAccounts = [
   {
     id: "account-1",
@@ -217,6 +223,7 @@ describe("app/settings", () => {
     mockUseDatabase.mockReturnValue({
       delete: jest.fn(() => deleteBuilder),
       update: jest.fn(() => updateBuilder),
+      insert: jest.fn(() => insertBuilder),
     });
   });
 

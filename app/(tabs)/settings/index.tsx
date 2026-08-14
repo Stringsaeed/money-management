@@ -2,7 +2,6 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
-import { eq } from "drizzle-orm";
 import * as Updates from "expo-updates";
 
 import { Card } from "@/components/settings/card";
@@ -15,12 +14,12 @@ import { Text } from "@/components/ui/text";
 import { useDatabase } from "@/db/client";
 import {
   accounts as accountsTable,
-  appSettings,
   categories,
   exchangeRates,
   recurringPayments,
   transactions,
 } from "@/db/schema";
+import { clearSeedVersion } from "@/db/seed";
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import { useRecurringPayments } from "@/hooks/use-recurring-payments";
@@ -55,10 +54,9 @@ export default function SettingsScreen() {
               await db.delete(categories);
               await db.delete(exchangeRates);
               await db.delete(accountsTable);
-              await db
-                .update(appSettings)
-                .set({ value: "false" })
-                .where(eq(appSettings.key, "seeded"));
+              // Rewind the seed so the next launch re-inserts the default
+              // categories the erase just removed.
+              await clearSeedVersion(db);
               qc.invalidateQueries();
               router.replace("/onboarding");
             } catch {

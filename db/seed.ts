@@ -1,59 +1,29 @@
 /**
- * Demo seed — inserts realistic accounts, categories & transactions.
- * Safe to call repeatedly: uses `seeded` flag + onConflictDoNothing.
+ * Demo seed — inserts realistic categories.
+ *
+ * Versioned rather than a boolean flag: bumping {@link SEED_VERSION} re-runs the
+ * seed on every install at next launch, so edits to {@link CATEGORIES} — new
+ * rows, renames, recoloured icons — reach existing users instead of only new
+ * ones. Rows are upserted by id, so a user's own categories are untouched and
+ * their edits to a seeded row are overwritten by the new canonical values.
+ *
+ * Safe to call repeatedly.
  */
 import { eq } from "drizzle-orm";
 import type { drizzle } from "drizzle-orm/expo-sqlite";
 
 import { nowIso } from "@/utils/date";
 
-import { accounts, appSettings, categories, transactions } from "./schema";
+import { appSettings, categories } from "./schema";
 
 type DB = ReturnType<typeof drizzle>;
 
-const NOW = nowIso();
+/** Bump when {@link CATEGORIES} changes and every user should pick it up. */
+export const SEED_VERSION = 2;
 
-const ACCOUNTS = [
-  {
-    id: "seed_acc_checking",
-    name: "Main Checking",
-    type: "checking",
-    currency: "USD",
-    color: "#3B82F6",
-    icon: "creditcard.fill",
-    initialBalance: 500000, // $5,000
-    excludeFromTotal: false,
-    sortOrder: 0,
-    createdAt: NOW,
-    updatedAt: NOW,
-  },
-  {
-    id: "seed_acc_savings",
-    name: "Savings",
-    type: "savings",
-    currency: "USD",
-    color: "#10B981",
-    icon: "banknote.fill",
-    initialBalance: 1200000, // $12,000
-    excludeFromTotal: false,
-    sortOrder: 1,
-    createdAt: NOW,
-    updatedAt: NOW,
-  },
-  {
-    id: "seed_acc_cash",
-    name: "Cash Wallet",
-    type: "cash",
-    currency: "USD",
-    color: "#F59E0B",
-    icon: "dollarsign.circle.fill",
-    initialBalance: 20000, // $200
-    excludeFromTotal: false,
-    sortOrder: 2,
-    createdAt: NOW,
-    updatedAt: NOW,
-  },
-] as const;
+const SEED_VERSION_KEY = "seedVersion";
+
+const NOW = nowIso();
 
 const CATEGORIES = [
   // ── Expense ───────────────────────────────────────────────────────────────
@@ -181,125 +151,58 @@ const CATEGORIES = [
   },
 ] as const;
 
-type TxRow = {
-  id: string;
-  type: string;
-  amount: number;
-  currency: string;
-  date: string;
-  accountId: string;
-  toAccountId: string | null;
-  categoryId: string | null;
-  description: string;
-  originalAmount: null;
-  originalCurrency: null;
-  exchangeRate: null;
-  recurringPaymentId: null;
-  createdAt: string;
-  updatedAt: string;
-};
-
-function tx(
-  id: string,
-  type: "income" | "expense" | "transfer",
-  amount: number, // dollars — converted to cents inside
-  date: string,
-  accountId: string,
-  categoryId: string | null,
-  description: string,
-  toAccountId: string | null = null,
-): TxRow {
-  return {
-    id,
-    type,
-    amount: Math.round(amount * 100),
-    currency: "USD",
-    date,
-    accountId,
-    toAccountId,
-    categoryId,
-    description,
-    originalAmount: null,
-    originalCurrency: null,
-    exchangeRate: null,
-    recurringPaymentId: null,
-    createdAt: NOW,
-    updatedAt: NOW,
-  };
+interface SeedOptions {
+  /** Re-run even when the stored version is current — for the dev tools row. */
+  force?: boolean;
 }
 
-const C = "seed_acc_checking";
-const S = "seed_acc_savings";
-const W = "seed_acc_cash";
-
-const TRANSACTIONS: TxRow[] = [
-  // ── January 2026 ────────────────────────────────────────────────────────
-  tx("s_j01", "income", 4500, "2026-01-01", C, "seed_cat_salary", "January Salary"),
-  tx("s_j02", "expense", 1200, "2026-01-02", C, "seed_cat_housing", "Rent"),
-  tx("s_j03", "expense", 85, "2026-01-03", C, "seed_cat_food", "Grocery Run"),
-  tx("s_j04", "expense", 42, "2026-01-05", W, "seed_cat_food", "Lunch"),
-  tx("s_j05", "expense", 55, "2026-01-07", C, "seed_cat_transport", "Uber"),
-  tx("s_j06", "expense", 14.99, "2026-01-08", C, "seed_cat_subscriptions", "Netflix"),
-  tx("s_j07", "expense", 9.99, "2026-01-08", C, "seed_cat_subscriptions", "Spotify"),
-  tx("s_j08", "expense", 350, "2026-01-10", C, "seed_cat_shopping", "Winter Jacket"),
-  tx("s_j09", "expense", 62, "2026-01-12", W, "seed_cat_food", "Coffee Shop"),
-  tx("s_j10", "expense", 98, "2026-01-14", C, "seed_cat_utilities", "Electric Bill"),
-  tx("s_j11", "income", 850, "2026-01-15", C, "seed_cat_freelance", "Logo Design Project"),
-  tx("s_j12", "expense", 75, "2026-01-16", C, "seed_cat_food", "Dinner Out"),
-  tx("s_j13", "expense", 120, "2026-01-18", C, "seed_cat_health", "Dentist"),
-  tx("s_j14", "expense", 25, "2026-01-20", W, "seed_cat_transport", "Bus Pass"),
-  tx("s_j15", "expense", 32, "2026-01-22", C, "seed_cat_entertainment", "Cinema Tickets"),
-  tx("s_j16", "expense", 48, "2026-01-25", C, "seed_cat_food", "Supermarket"),
-  tx("s_j17", "transfer", 500, "2026-01-26", C, null, "Monthly Savings", S),
-
-  // ── February 2026 ───────────────────────────────────────────────────────
-  tx("s_f01", "income", 4500, "2026-02-01", C, "seed_cat_salary", "February Salary"),
-  tx("s_f02", "expense", 1200, "2026-02-02", C, "seed_cat_housing", "Rent"),
-  tx("s_f03", "expense", 92, "2026-02-03", C, "seed_cat_food", "Weekly Groceries"),
-  tx("s_f04", "expense", 45, "2026-02-05", W, "seed_cat_food", "Street Food"),
-  tx("s_f05", "expense", 14.99, "2026-02-07", C, "seed_cat_subscriptions", "Netflix"),
-  tx("s_f06", "expense", 9.99, "2026-02-07", C, "seed_cat_subscriptions", "Spotify"),
-  tx("s_f07", "expense", 68, "2026-02-08", C, "seed_cat_utilities", "Internet Bill"),
-  tx("s_f08", "expense", 180, "2026-02-10", C, "seed_cat_shopping", "Shoes"),
-  tx("s_f09", "income", 1200, "2026-02-10", C, "seed_cat_freelance", "App Development"),
-  tx("s_f10", "expense", 55, "2026-02-12", C, "seed_cat_transport", "Gas"),
-  tx("s_f11", "expense", 89, "2026-02-13", C, "seed_cat_food", "Valentine's Dinner 🌹"),
-  tx("s_f12", "income", 230, "2026-02-14", S, "seed_cat_investment", "Dividend Payout"),
-  tx("s_f13", "expense", 42, "2026-02-15", W, "seed_cat_food", "Coffee & Snacks"),
-  tx("s_f14", "expense", 250, "2026-02-16", C, "seed_cat_entertainment", "Concert Tickets 🎵"),
-  tx("s_f15", "expense", 72, "2026-02-18", C, "seed_cat_health", "Gym Membership"),
-  tx("s_f16", "expense", 110, "2026-02-20", C, "seed_cat_food", "Groceries"),
-  tx("s_f17", "expense", 36, "2026-02-22", W, "seed_cat_transport", "Parking"),
-  tx("s_f18", "expense", 59, "2026-02-24", C, "seed_cat_shopping", "Books 📚"),
-  tx("s_f19", "transfer", 500, "2026-02-26", C, null, "Monthly Savings", S),
-
-  // ── March 2026 (first few days) ─────────────────────────────────────────
-  tx("s_m01", "income", 4500, "2026-03-01", C, "seed_cat_salary", "March Salary"),
-  tx("s_m02", "expense", 1200, "2026-03-01", C, "seed_cat_housing", "Rent"),
-  tx("s_m03", "expense", 38, "2026-03-02", W, "seed_cat_food", "Morning Coffee ☕"),
-  tx("s_m04", "expense", 72, "2026-03-02", C, "seed_cat_food", "Lunch with Team"),
-  tx("s_m05", "expense", 14.99, "2026-03-03", C, "seed_cat_subscriptions", "Netflix"),
-  tx("s_m06", "expense", 45, "2026-03-03", C, "seed_cat_transport", "Taxi"),
-];
-
-export async function seedDatabase(db: DB): Promise<void> {
-  // Check the seeded flag first — skip entirely if already seeded
-  const seededRow = await db.select().from(appSettings).where(eq(appSettings.key, "seeded")).get();
-
-  if (seededRow?.value === "true") return;
+export async function seedDatabase(db: DB, { force = false }: SeedOptions = {}): Promise<void> {
+  if (!force && (await readSeedVersion(db)) >= SEED_VERSION) return;
 
   await db.transaction(async (txDb) => {
-    for (const row of ACCOUNTS) {
-      await txDb.insert(accounts).values(row).onConflictDoNothing();
-    }
     for (const row of CATEGORIES) {
-      await txDb.insert(categories).values(row).onConflictDoNothing();
+      await txDb
+        .insert(categories)
+        .values(row)
+        .onConflictDoUpdate({
+          target: categories.id,
+          // createdAt is left alone so a re-seed does not rewrite history.
+          set: {
+            name: row.name,
+            type: row.type,
+            color: row.color,
+            icon: row.icon,
+            sortOrder: row.sortOrder,
+            updatedAt: row.updatedAt,
+          },
+        });
     }
-    for (const row of TRANSACTIONS) {
-      await txDb.insert(transactions).values(row).onConflictDoNothing();
-    }
-  });
 
-  // Mark as seeded so subsequent app launches skip this entirely
-  await db.insert(appSettings).values({ key: "seeded", value: "true" }).onConflictDoNothing().run();
+    await txDb
+      .insert(appSettings)
+      .values({ key: SEED_VERSION_KEY, value: String(SEED_VERSION) })
+      .onConflictDoUpdate({
+        target: appSettings.key,
+        set: { value: String(SEED_VERSION) },
+      });
+  });
+}
+
+/** Sends the seed back to square one, so the next launch re-inserts it. */
+export async function clearSeedVersion(db: DB): Promise<void> {
+  await db
+    .insert(appSettings)
+    .values({ key: SEED_VERSION_KEY, value: "0" })
+    .onConflictDoUpdate({ target: appSettings.key, set: { value: "0" } })
+    .run();
+}
+
+async function readSeedVersion(db: DB): Promise<number> {
+  const row = await db
+    .select()
+    .from(appSettings)
+    .where(eq(appSettings.key, SEED_VERSION_KEY))
+    .get();
+
+  return Number(row?.value) || 0;
 }
