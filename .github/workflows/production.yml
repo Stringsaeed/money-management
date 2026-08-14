@@ -1,0 +1,75 @@
+name: Production with EAS
+
+concurrency:
+  # Serialised rather than cancelled: an in-flight publish that gets killed
+  # partway can leave a half-uploaded update as the newest one on the channel.
+  # Queue pushes instead so they land in order.
+  group: production-update
+  cancel-in-progress: false
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  update-production:
+    name: Publish production update
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: 🔍 Check for EXPO_TOKEN
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
+            exit 1
+          fi
+
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: 🌿 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # jest.yml and typescript.yml only run on pull_request, so a direct push
+      # to main would otherwise reach users unchecked. These two gates are the
+      # only thing standing between a bad commit and every install.
+      - name: 🔍 Run Typescript check
+        run: pnpm run ts:check
+
+      - name: 🎭 Run Jest
+        run: pnpm test:ci
+
+      - name: 🚀 Publish production update
+        env:
+          # Passed through the environment, not interpolated into the run block —
+          # a commit message is attacker-controllable text and would otherwise be
+          # a script-injection vector.
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          # First line only: update messages are single-line. workflow_dispatch
+          # has no head_commit, so fall back to the short SHA.
+          MESSAGE="$(printf '%s' "$COMMIT_MESSAGE" | head -n 1)"
+          eas update \
+            --branch production \
+            --environment production \
+            --message "${MESSAGE:-Manual update from ${GITHUB_SHA::7}}" \
+            --non-interactive
