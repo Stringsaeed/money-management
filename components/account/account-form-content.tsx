@@ -7,6 +7,7 @@ import { AccountFormPreview } from "@/components/account/account-form-preview";
 import { AccountIconPicker } from "@/components/account/account-icon-picker";
 import { AccountTypePicker } from "@/components/account/account-type-picker";
 import {
+  inputTextStyle,
   ResourceFormField,
   resourceInputClassName,
 } from "@/components/resource/resource-form-field";
@@ -74,6 +75,7 @@ export function AccountFormContent({
                 placeholder="e.g. Main Checking"
                 placeholderTextColor="#9a9896"
                 returnKeyType="next"
+                style={inputTextStyle}
                 value={field.state.value}
               />
             </ResourceFormField>
@@ -94,7 +96,13 @@ export function AccountFormContent({
           {(field) => (
             <View className="gap-2">
               <Text className="font-body-medium text-sm text-ink/60">Account type</Text>
-              <AccountTypePicker onChange={onTypeChange} value={field.state.value} />
+              <View className="-mx-5">
+                <AccountTypePicker
+                  contentContainerClassName="gap-2 px-5"
+                  onChange={onTypeChange}
+                  value={field.state.value}
+                />
+              </View>
             </View>
           )}
         </form.Field>

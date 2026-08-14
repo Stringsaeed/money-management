@@ -1,5 +1,6 @@
 import { TextInput, useColorScheme, View } from "react-native";
 
+import { inputTextStyle } from "@/components/ui/input-style";
 import { Text } from "@/components/ui/text";
 
 interface NoteInputProps {
@@ -20,7 +21,8 @@ export function NoteInput({ value, onChange }: NoteInputProps) {
           onChangeText={onChange}
           placeholder="Add a note..."
           placeholderTextColor={placeholderColor}
-          className="flex-1 font-body-normal text-[15px] text-ink py-0"
+          className="flex-1 font-body-normal text-[15px] leading-5 text-ink py-0"
+          style={inputTextStyle}
         />
       </View>
     </View>

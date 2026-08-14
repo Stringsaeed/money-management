@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { Button } from "@/components/ui/button";
+import { inputTextStyle } from "@/components/ui/input-style";
 import { Text } from "@/components/ui/text";
 
 import { AccountPicker } from "@/components/account/account-picker";
@@ -102,7 +103,8 @@ export default function EditRecurringScreen() {
             value={name}
             onChangeText={setName}
             placeholderTextColor="#9a9896"
-            className="border border-input rounded-[10px] p-3.5 text-base text-foreground"
+            className="border border-input rounded-[10px] p-3.5 text-base leading-5 text-foreground"
+            style={inputTextStyle}
           />
         </View>
 

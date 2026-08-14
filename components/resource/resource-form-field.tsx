@@ -1,10 +1,13 @@
 import type { ReactNode } from "react";
 import { View } from "react-native";
 
+import { inputTextStyle } from "@/components/ui/input-style";
 import { Text } from "@/components/ui/text";
 
 export const resourceInputClassName =
-  "rounded-2xl border border-ledger-outline bg-surface px-4 py-3 text-base text-ink";
+  "rounded-2xl border border-ledger-outline bg-surface px-4 py-3 text-base leading-5 text-ink";
+
+export { inputTextStyle };
 
 interface ResourceFormFieldProps {
   children: ReactNode;

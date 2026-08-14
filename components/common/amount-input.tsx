@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
+import { inputTextStyle } from "@/components/ui/input-style";
 import { Text } from "@/components/ui/text";
 
 import { centsToDecimalString, decimalStringToCents } from "@/utils/currency";
@@ -35,8 +36,8 @@ export function AmountInput({ valueCents, onChangeCents, currency = "USD" }: Amo
           onChangeText={handleChange}
           keyboardType="decimal-pad"
           placeholder="0.00"
-          className="flex-1 text-[22px] font-semibold text-foreground"
-          style={{ fontVariant: ["tabular-nums"] }}
+          className="flex-1 text-[22px] leading-7 font-semibold text-foreground"
+          style={{ ...inputTextStyle, fontVariant: ["tabular-nums"] }}
           returnKeyType="done"
         />
       </View>

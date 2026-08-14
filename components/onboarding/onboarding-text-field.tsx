@@ -3,6 +3,7 @@ import { TextInput, View, type TextInputProps } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { useGraphicPalette } from "@/components/graphics/palette";
+import { inputTextStyle } from "@/components/ui/input-style";
 import { cn } from "@/lib/utils";
 
 interface OnboardingTextFieldProps extends TextInputProps {
@@ -56,9 +57,9 @@ export function OnboardingTextField({
           "flex-1 text-ink",
           emphasis
             ? "py-3 font-heading-normal text-[34px] leading-[42px]"
-            : "py-4 font-body-medium text-[17px]",
+            : "py-4 font-body-medium text-[17px] leading-[22px]",
         )}
-        style={emphasis ? { fontVariant: ["tabular-nums"] } : undefined}
+        style={emphasis ? { ...inputTextStyle, fontVariant: ["tabular-nums"] } : inputTextStyle}
       />
     </Animated.View>
   );

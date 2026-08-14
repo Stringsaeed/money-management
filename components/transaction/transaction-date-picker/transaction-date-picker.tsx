@@ -4,13 +4,13 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { PressableScale } from "pressto";
 import type { PressableProps } from "react-native";
-import { useColorScheme, View } from "react-native";
-import { getDisplayDateLabel } from "../utils";
+import { View } from "react-native";
+import { useNativeVariable } from "react-native-css";
 
-import type { TransactionDatePickerProps } from "./types";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-
+import type { TransactionDatePickerProps } from "./types";
+import { getDisplayDateLabel } from "../utils";
 interface ExtendedDatePickerProps extends TransactionDatePickerProps {
   children?: React.ReactNode;
 }
@@ -22,9 +22,8 @@ export default function TransactionDatePicker({
 }: ExtendedDatePickerProps) {
   const [sheetIndex, setSheetIndex] = useState(0);
   const [selected, setSelected] = useState<Date>(date);
-  const colorScheme = useColorScheme();
-
-  const accentColor = colorScheme === "dark" ? "#E8E6E3" : "#1C1B1A";
+  // @ts-expect-error: useNativeVariable is not typed correctly
+  const colorInk = useNativeVariable("--color-ink");
 
   const handleChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (selectedDate) {
@@ -75,7 +74,7 @@ export default function TransactionDatePicker({
             mode="datetime"
             display="inline"
             onChange={handleChange}
-            accentColor={accentColor}
+            accentColor={colorInk}
             style={{ width: "100%", alignSelf: "center" }}
           />
 

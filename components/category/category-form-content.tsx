@@ -6,6 +6,7 @@ import { CategoryFormPreview } from "@/components/category/category-form-preview
 import { CategoryIconPicker } from "@/components/category/category-icon-picker";
 import { CategoryTypePicker } from "@/components/category/category-type-picker";
 import {
+  inputTextStyle,
   ResourceFormField,
   resourceInputClassName,
 } from "@/components/resource/resource-form-field";
@@ -60,6 +61,7 @@ export function CategoryFormContent({
                 placeholder="e.g. Groceries"
                 placeholderTextColor="#9a9896"
                 returnKeyType="next"
+                style={inputTextStyle}
                 value={field.state.value}
               />
             </ResourceFormField>
