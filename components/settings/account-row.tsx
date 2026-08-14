@@ -4,9 +4,9 @@ import { Pressable, View } from "react-native";
 import { ACCOUNT_TYPE_META } from "@/components/account/account-form-options";
 import { accountDisplayIcon } from "@/components/account/utils";
 import { Icon } from "@/components/ui/icon";
+import { MoneyText } from "@/components/ui/money-text";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
-import { formatCents } from "@/utils/currency";
 
 import type { AccountRowProps } from "./types";
 
@@ -30,16 +30,16 @@ export function AccountRow({ account, onPress }: AccountRowProps) {
           {typeMeta?.label ?? account.type} · {account.currency}
         </Text>
       </View>
-      <Text
+      <MoneyText
+        cents={Math.abs(account.balance)}
+        currency={account.currency}
+        sign={account.balance < 0 ? "-" : ""}
         className={cn(
           "font-heading-normal text-base",
           account.balance < 0 ? "text-terracotta" : "text-ink",
         )}
         style={{ fontVariant: ["tabular-nums"] }}
-      >
-        {account.balance < 0 ? "-" : ""}
-        {formatCents(Math.abs(account.balance), account.currency)}
-      </Text>
+      />
       <Icon as={CaretRightIcon} className="text-ink/20 ml-1" size={16} />
     </Pressable>
   );

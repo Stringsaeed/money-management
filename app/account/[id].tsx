@@ -2,11 +2,11 @@ import { router, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, Pressable, ScrollView, useColorScheme, View } from "react-native";
 import { Text } from "@/components/ui/text";
 
+import { MoneyText } from "@/components/ui/money-text";
 import { TransactionGroup } from "@/components/transaction/transaction-group";
 import { useAccount } from "@/hooks/use-accounts";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
-import { formatCents } from "@/utils/currency";
 import { formatMonth, addMonths } from "@/utils/date";
 import type { DayGroup } from "@/types";
 
@@ -111,15 +111,21 @@ export default function AccountDetailScreen() {
         <View style={{ flexDirection: "row", marginTop: 16, gap: 20 }}>
           <View>
             <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>INCOME</Text>
-            <Text style={{ color: "white", fontSize: 15, fontWeight: "600" }}>
-              +{formatCents(totalIncome, account.currency)}
-            </Text>
+            <MoneyText
+              cents={totalIncome}
+              currency={account.currency}
+              sign="+"
+              style={{ color: "white", fontSize: 15, fontWeight: "600" }}
+            />
           </View>
           <View>
             <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>EXPENSES</Text>
-            <Text style={{ color: "white", fontSize: 15, fontWeight: "600" }}>
-              -{formatCents(totalExpense, account.currency)}
-            </Text>
+            <MoneyText
+              cents={totalExpense}
+              currency={account.currency}
+              sign="-"
+              style={{ color: "white", fontSize: 15, fontWeight: "600" }}
+            />
           </View>
         </View>
       </View>

@@ -3,9 +3,10 @@ import Animated, { FadeIn } from "react-native-reanimated";
 
 import { ACCOUNT_TYPE_META } from "@/components/account/account-form-options";
 import { layoutTransition } from "@/components/transaction/constants";
+import { MoneyText } from "@/components/ui/money-text";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
-import { decimalStringToCents, formatCents } from "@/utils/currency";
+import { decimalStringToCents } from "@/utils/currency";
 
 import type { AccountFormValues } from "./form";
 
@@ -50,16 +51,16 @@ export function AccountFormPreview({ lockedBalanceCents, values }: AccountFormPr
             {meta.label} · {values.currency}
           </Text>
         </View>
-        <Text
+        <MoneyText
+          cents={Math.abs(balanceCents)}
+          currency={values.currency}
+          sign={isNegative ? "-" : ""}
           className={cn(
             "font-heading-normal text-base italic",
             isNegative ? "text-terracotta" : "text-ink",
           )}
           style={{ fontVariant: ["tabular-nums"] }}
-        >
-          {isNegative ? "-" : ""}
-          {formatCents(Math.abs(balanceCents), values.currency)}
-        </Text>
+        />
       </View>
     </Animated.View>
   );

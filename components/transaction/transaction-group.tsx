@@ -1,8 +1,9 @@
 import { View } from "react-native";
+
+import { MoneyText } from "@/components/ui/money-text";
 import { Text } from "@/components/ui/text";
 
 import { TransactionRow } from "./transaction-row";
-import { formatCents } from "@/utils/currency";
 import { formatDayHeader } from "@/utils/date";
 import type { DayGroup } from "@/types";
 
@@ -23,13 +24,13 @@ export function TransactionGroup({ group, currency = "USD", showAccount }: Trans
           {formatDayHeader(group.date)}
         </Text>
         {(group.totalIncome > 0 || group.totalExpense > 0) && (
-          <Text
+          <MoneyText
+            cents={Math.abs(net)}
+            currency={currency}
+            sign={net >= 0 ? "+" : "-"}
             className={`font-heading-normal text-[13px] ${net >= 0 ? "text-sage" : "text-terracotta"}`}
             style={{ fontVariant: ["tabular-nums"] }}
-          >
-            {net >= 0 ? "+" : ""}
-            {formatCents(net, currency)}
-          </Text>
+          />
         )}
       </View>
 

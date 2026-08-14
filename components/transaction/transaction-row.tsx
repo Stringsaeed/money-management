@@ -1,9 +1,9 @@
 import { router } from "expo-router";
 import { Pressable, useColorScheme, View } from "react-native";
-import { Text } from "@/components/ui/text";
 import { SymbolView } from "expo-symbols";
 
-import { formatCents } from "@/utils/currency";
+import { MoneyText } from "@/components/ui/money-text";
+import { Text } from "@/components/ui/text";
 import type { TransactionWithDetails } from "@/types";
 
 interface TransactionRowProps {
@@ -69,13 +69,13 @@ export function TransactionRow({ transaction: t, showAccount = false }: Transact
       </View>
 
       {/* Amount */}
-      <Text
+      <MoneyText
+        cents={t.amount}
+        currency={t.currency}
+        sign={amountPrefix}
         className={`font-heading-normal text-[15px] ${amountColor}`}
         style={{ fontVariant: ["tabular-nums"] }}
-      >
-        {amountPrefix}
-        {formatCents(t.amount, t.currency)}
-      </Text>
+      />
     </Pressable>
   );
 }
