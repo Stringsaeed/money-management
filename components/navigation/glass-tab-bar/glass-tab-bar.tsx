@@ -1,7 +1,8 @@
-import { GestureDetector } from "react-native-gesture-handler";
 import { View } from "react-native";
+import { GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { usePostHog } from "posthog-react-native";
 
 import { CreateTabButton } from "./create-tab-button";
 import { GlassSurface } from "./glass-surface";
@@ -13,9 +14,18 @@ import type { GlassTabBarProps } from "./types";
 import { useTabBarPanGesture } from "./use-tab-bar-pan-gesture";
 
 export function GlassTabBar({ state, descriptors, navigation }: GlassTabBarProps) {
+  const posthog = usePostHog();
   const insets = useSafeAreaInsets();
+  const isMoneyMovementEnabled = posthog.getFeatureFlag("enable-money-movement");
 
-  const tabRoutes = state.routes.filter((route) => hasTabIcon(route.name));
+  const tabRoutes = state.routes
+    .filter((route) => hasTabIcon(route.name))
+    .filter((route) => {
+      if (route.name === "money-movement" && !isMoneyMovementEnabled) {
+        return false;
+      }
+      return true;
+    });
   const focusedKey = state.routes[state.index]?.key;
   const focusedTabIndex = Math.max(
     0,

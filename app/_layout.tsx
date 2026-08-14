@@ -30,6 +30,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import "../global.css";
 import { BottomSheetProvider } from "@swmansion/react-native-bottom-sheet";
+import { PostHogProvider } from "posthog-react-native";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { runMigrations } from "@/db/migrate";
@@ -113,83 +114,91 @@ export default function RootLayout() {
 
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <SQLiteProvider databaseName={DB_NAME} onInit={onDatabaseInit} useSuspense>
-        <QueryClientProvider client={queryClient}>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <PressablesConfig
-              globalHandlers={{
-                onPress: () => {
-                  Haptics.selectionAsync();
-                },
-              }}
-            >
-              <BottomSheetProvider>
-                <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-                  <AppUpdateProvider>
-                    <Stack
-                      screenOptions={{
-                        headerTransparent: true,
-                        headerShadowVisible: false,
-                        headerBlurEffect: "none",
-                        headerLargeTitleStyle: { fontFamily: "Newsreader_400Regular" },
-                        headerTitleStyle: { fontFamily: "Newsreader_400Regular" },
-                        headerBackButtonDisplayMode: "minimal",
-                      }}
-                    >
-                      <Stack.Screen name="splash" options={{ headerShown: false }} />
-                      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                      <Stack.Screen name="categories" options={{ title: "Categories" }} />
-                      <Stack.Screen name="accounts" options={{ title: "Accounts" }} />
-                      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-                      <Stack.Screen name="transaction/[id]" options={{ presentation: "card" }} />
-                      <Stack.Screen name="account/[id]" options={{ headerShown: false }} />
-                      <Stack.Screen
-                        name="account/[id]/edit"
-                        options={{
-                          presentation: "modal",
-                          title: "Edit Account",
-                          headerTransparent: false,
+      <PostHogProvider
+        debug
+        apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY}
+        options={{
+          host: "https://us.i.posthog.com",
+        }}
+      >
+        <SQLiteProvider databaseName={DB_NAME} onInit={onDatabaseInit} useSuspense>
+          <QueryClientProvider client={queryClient}>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <PressablesConfig
+                globalHandlers={{
+                  onPress: () => {
+                    Haptics.selectionAsync();
+                  },
+                }}
+              >
+                <BottomSheetProvider>
+                  <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+                    <AppUpdateProvider>
+                      <Stack
+                        screenOptions={{
+                          headerTransparent: true,
+                          headerShadowVisible: false,
+                          headerBlurEffect: "none",
+                          headerLargeTitleStyle: { fontFamily: "Newsreader_400Regular" },
+                          headerTitleStyle: { fontFamily: "Newsreader_400Regular" },
+                          headerBackButtonDisplayMode: "minimal",
                         }}
-                      />
-                      <Stack.Screen
-                        name="category/new"
-                        options={{
-                          presentation: "modal",
-                          title: "New Category",
-                          headerTransparent: false,
-                        }}
-                      />
-                      <Stack.Screen
-                        name="recurring/index"
-                        options={{ title: "Recurring Payments" }}
-                      />
-                      <Stack.Screen
-                        name="recurring/new"
-                        options={{
-                          presentation: "modal",
-                          title: "New Recurring",
-                          headerTransparent: false,
-                        }}
-                      />
-                      <Stack.Screen
-                        name="recurring/[id]/edit"
-                        options={{
-                          presentation: "modal",
-                          title: "Edit Recurring",
-                          headerTransparent: false,
-                        }}
-                      />
-                    </Stack>
-                    <StatusBar style="auto" />
-                    <MandatoryUpdateGate />
-                    <PortalHost />
-                  </AppUpdateProvider>
-                </ThemeProvider>
-              </BottomSheetProvider>
-            </PressablesConfig>
-          </GestureHandlerRootView>
-        </QueryClientProvider>
-      </SQLiteProvider>
+                      >
+                        <Stack.Screen name="splash" options={{ headerShown: false }} />
+                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                        <Stack.Screen name="categories" options={{ title: "Categories" }} />
+                        <Stack.Screen name="accounts" options={{ title: "Accounts" }} />
+                        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+                        <Stack.Screen name="transaction/[id]" options={{ presentation: "card" }} />
+                        <Stack.Screen name="account/[id]" options={{ headerShown: false }} />
+                        <Stack.Screen
+                          name="account/[id]/edit"
+                          options={{
+                            presentation: "modal",
+                            title: "Edit Account",
+                            headerTransparent: false,
+                          }}
+                        />
+                        <Stack.Screen
+                          name="category/new"
+                          options={{
+                            presentation: "modal",
+                            title: "New Category",
+                            headerTransparent: false,
+                          }}
+                        />
+                        <Stack.Screen
+                          name="recurring/index"
+                          options={{ title: "Recurring Payments" }}
+                        />
+                        <Stack.Screen
+                          name="recurring/new"
+                          options={{
+                            presentation: "modal",
+                            title: "New Recurring",
+                            headerTransparent: false,
+                          }}
+                        />
+                        <Stack.Screen
+                          name="recurring/[id]/edit"
+                          options={{
+                            presentation: "modal",
+                            title: "Edit Recurring",
+                            headerTransparent: false,
+                          }}
+                        />
+                      </Stack>
+                      <StatusBar style="auto" />
+                      <MandatoryUpdateGate />
+                      <PortalHost />
+                    </AppUpdateProvider>
+                  </ThemeProvider>
+                </BottomSheetProvider>
+              </PressablesConfig>
+            </GestureHandlerRootView>
+          </QueryClientProvider>
+        </SQLiteProvider>
+      </PostHogProvider>
     </Suspense>
   );
 }
