@@ -15,11 +15,17 @@ on:
   workflow_dispatch:
 
 jobs:
-  update-production:
-    name: Publish production update
+  # Always runs. Gates every downstream job on ts:check + jest (jest.yml and
+  # typescript.yml only run on pull_request, so a direct push to main would
+  # otherwise reach users unchecked), then fingerprints the commit to decide
+  # whether the change is native (needs a build) or JS-only (an OTA suffices).
+  gate:
+    name: Gate & fingerprint
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    outputs:
+      native-changed: ${{ steps.decide.outputs.native-changed }}
     steps:
       - name: 🔍 Check for EXPO_TOKEN
         run: |
@@ -28,6 +34,78 @@ jobs:
             exit 1
           fi
 
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v4
+        with:
+          # The fingerprint diff needs both the previous and current commits.
+          fetch-depth: 0
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: 🌿 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔍 Run Typescript check
+        run: pnpm run ts:check
+
+      - name: 🎭 Run Jest
+        run: pnpm test:ci
+
+      - name: 🫆 Fingerprint diff
+        id: fingerprint
+        uses: expo/expo-github-action/fingerprint@v8
+        with:
+          packager: pnpm
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # github.event.before is the SHA of main prior to this push. It is
+          # empty for workflow_dispatch (and all-zeros for a brand-new branch),
+          # which the decide step treats as "native change" — the safe default.
+          previous-git-commit: ${{ github.event.before }}
+          current-git-commit: ${{ github.sha }}
+
+      - name: 🧭 Decide release type
+        id: decide
+        env:
+          # fingerprint-diff is a JSON array; "[]" means no native change.
+          FINGERPRINT_DIFF: ${{ steps.fingerprint.outputs.fingerprint-diff }}
+          PREVIOUS_COMMIT: ${{ github.event.before }}
+        run: |
+          # No previous commit to diff against (manual run / new branch) -> build
+          # natively rather than risk an OTA landing on an incompatible binary.
+          if [ -z "$PREVIOUS_COMMIT" ] || [ "$PREVIOUS_COMMIT" = "0000000000000000000000000000000000000000" ]; then
+            echo "native-changed=true" >> "$GITHUB_OUTPUT"
+            echo "No comparable previous commit — treating as a native release."
+          elif [ -z "$FINGERPRINT_DIFF" ] || [ "$FINGERPRINT_DIFF" = "[]" ]; then
+            echo "native-changed=false" >> "$GITHUB_OUTPUT"
+            echo "Fingerprint unchanged — publishing an OTA update."
+          else
+            echo "native-changed=true" >> "$GITHUB_OUTPUT"
+            echo "Fingerprint changed — a native release is required."
+          fi
+
+  # JS-only change: deliver over-the-air. Only reaches native builds with a
+  # matching fingerprint runtime version (see runtimeVersion.policy in app.config.ts).
+  ota-update:
+    name: Publish production update (OTA)
+    needs: gate
+    if: needs.gate.outputs.native-changed == 'false'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
       - name: 🏗 Setup repo
         uses: actions/checkout@v4
 
@@ -49,15 +127,6 @@ jobs:
       - name: 📦 Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # jest.yml and typescript.yml only run on pull_request, so a direct push
-      # to main would otherwise reach users unchecked. These two gates are the
-      # only thing standing between a bad commit and every install.
-      - name: 🔍 Run Typescript check
-        run: pnpm run ts:check
-
-      - name: 🎭 Run Jest
-        run: pnpm test:ci
-
       - name: 🚀 Publish production update
         env:
           # Passed through the environment, not interpolated into the run block —
@@ -73,3 +142,43 @@ jobs:
             --environment production \
             --message "${MESSAGE:-Manual update from ${GITHUB_SHA::7}}" \
             --non-interactive
+
+  # Native change: OTA can't carry it, so build iOS and ship it to TestFlight.
+  # --auto-submit requires an App Store Connect API Key registered with EAS
+  # (one-time `eas credentials` / dashboard setup); no extra GitHub secret needed.
+  native-release:
+    name: Build & submit iOS to TestFlight
+    needs: gate
+    if: needs.gate.outputs.native-changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: 🌿 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🍏 Build & submit iOS to TestFlight
+        run: |
+          eas build \
+            --platform ios \
+            --profile production \
+            --non-interactive \
+            --auto-submit
