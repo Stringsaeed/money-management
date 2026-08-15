@@ -108,9 +108,11 @@ jobs:
             --message "${MESSAGE:-Manual update from ${GITHUB_SHA::7}}" \
             --non-interactive
 
-  # Native change: OTA can't carry it, so build iOS and ship it to TestFlight.
-  # --auto-submit requires an App Store Connect API Key registered with EAS
-  # (one-time `eas credentials` / dashboard setup); no extra GitHub secret needed.
+  # Native change: OTA can't carry it, so hand off to the EAS Workflow that
+  # builds iOS and distributes to TestFlight (.eas/workflows/build-and-submit-ios.yml).
+  # `eas workflow:run` defaults to not waiting, so this returns once the run is
+  # queued; the build + TestFlight submission happen on EAS. TestFlight submission
+  # requires an App Store Connect API Key registered with EAS (one-time setup).
   native-release:
     name: Build & submit iOS to TestFlight
     needs: gate
@@ -127,11 +129,7 @@ jobs:
         with:
           expo-token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: 🍏 Build & submit iOS to TestFlight
+      - name: 🍏 Trigger iOS build + TestFlight (EAS Workflow)
         run: |
-          eas build \
-            --platform ios \
-            --profile production \
-            --non-interactive \
-            --auto-submit \
-            --no-wait
+          eas workflow:run .eas/workflows/build-and-submit-ios.yml \
+            --non-interactive

@@ -1,0 +1,22 @@
+name: Build and submit iOS to TestFlight
+
+# Triggered by the GitHub Actions production gate (see
+# .github/workflows/production.yml) via `eas workflow:run` when the commit's
+# fingerprint indicates a native change. Not auto-triggered here, so it never
+# double-builds alongside the gate.
+
+jobs:
+  build_ios:
+    name: Build iOS
+    type: build
+    params:
+      platform: ios
+      profile: production
+
+  testflight:
+    name: Distribute to TestFlight
+    needs: [build_ios]
+    type: testflight
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      profile: production
