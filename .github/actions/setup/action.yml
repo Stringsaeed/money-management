@@ -1,0 +1,32 @@
+name: Setup project
+description: >-
+  Set up pnpm (with cache), optionally install and authenticate the EAS CLI,
+  and install project dependencies. Assumes the repo is already checked out.
+
+inputs:
+  expo-token:
+    description: >-
+      EAS auth token. When provided, the EAS CLI is installed and authenticated
+      (and EXPO_TOKEN is exported to later job steps). Omit for jobs that only
+      need pnpm + dependencies (e.g. lint/type/test).
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/setup@v1
+      with:
+        runtime: node@24
+        cache: true
+
+    - name: Λ Setup EAS
+      if: inputs.expo-token != ''
+      uses: expo/expo-github-action@v8
+      with:
+        eas-version: latest
+        token: ${{ inputs.expo-token }}
+
+    - name: 📦 Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
