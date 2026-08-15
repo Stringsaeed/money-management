@@ -29,7 +29,7 @@
   "submit": {
     "production": {
       "ios": {
-        "ascAppId": "3MZMRBLV7S"
+        "ascApiKeyId": "3MZMRBLV7S"
       }
     }
   }
