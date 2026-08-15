@@ -27,10 +27,6 @@
     }
   },
   "submit": {
-    "production": {
-      "ios": {
-        "ascApiKeyId": "3MZMRBLV7S"
-      }
-    }
+    "production": {}
   }
 }
