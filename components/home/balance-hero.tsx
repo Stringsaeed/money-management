@@ -54,9 +54,9 @@ export function BalanceHero() {
   const { prefix, suffix } = useMemo(() => currencyAffixes(currency), [currency]);
 
   return (
-    <View className="px-5 pb-2 bg-background min-h-[55px]">
+    <View className="px-5 overflow-hidden rounded-2xl">
       <NumberFlow
-        className="font-heading-medium text-5xl tabular-nums text-ink"
+        className="font-body-medium text-5xl tabular-nums text-ink leading-none"
         value={balance / 100}
         prefix={prefix}
         suffix={suffix}

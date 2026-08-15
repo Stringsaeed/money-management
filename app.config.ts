@@ -75,10 +75,67 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       [
         "expo-font",
         {
-          fonts: [
-            "node_modules/@expo-google-fonts/newsreader/400Regular/Newsreader_400Regular.ttf",
-            "node_modules/@expo-google-fonts/plus-jakarta-sans/400Regular/PlusJakartaSans_400Regular.ttf",
-          ],
+          android: {
+            fonts: [
+              {
+                fontFamily: "Nunito",
+                fontDefinitions: [
+                  {
+                    path: "./node_modules/@expo-google-fonts/nunito/200ExtraLight/Nunito_200ExtraLight.ttf",
+                    weight: 200,
+                    style: "normal",
+                  },
+                  {
+                    path: "./node_modules/@expo-google-fonts/nunito/700Bold/Nunito_700Bold.ttf",
+                    weight: 700,
+                    style: "normal",
+                  },
+                  {
+                    path: "./node_modules/@expo-google-fonts/nunito/300Light/Nunito_300Light.ttf",
+                    weight: 300,
+                    style: "normal",
+                  },
+                  {
+                    path: "./node_modules/@expo-google-fonts/nunito/400Regular/Nunito_400Regular.ttf",
+                    weight: 400,
+                    style: "normal",
+                  },
+                  {
+                    path: "./node_modules/@expo-google-fonts/nunito/500Medium/Nunito_500Medium.ttf",
+                    weight: 500,
+                    style: "normal",
+                  },
+                  {
+                    path: "./node_modules/@expo-google-fonts/nunito/600SemiBold/Nunito_600SemiBold.ttf",
+                    weight: 600,
+                    style: "normal",
+                  },
+                  {
+                    path: "./node_modules/@expo-google-fonts/nunito/800ExtraBold/Nunito_800ExtraBold.ttf",
+                    weight: 800,
+                    style: "normal",
+                  },
+                  {
+                    path: "./node_modules/@expo-google-fonts/nunito/900Black/Nunito_900Black.ttf",
+                    weight: 900,
+                    style: "normal",
+                  },
+                ],
+              },
+            ],
+          },
+          ios: {
+            fonts: [
+              "./node_modules/@expo-google-fonts/nunito/200ExtraLight/Nunito_200ExtraLight.ttf",
+              "./node_modules/@expo-google-fonts/nunito/300Light/Nunito_300Light.ttf",
+              "./node_modules/@expo-google-fonts/nunito/400Regular/Nunito_400Regular.ttf",
+              "./node_modules/@expo-google-fonts/nunito/500Medium/Nunito_500Medium.ttf",
+              "./node_modules/@expo-google-fonts/nunito/600SemiBold/Nunito_600SemiBold.ttf",
+              "./node_modules/@expo-google-fonts/nunito/700Bold/Nunito_700Bold.ttf",
+              "./node_modules/@expo-google-fonts/nunito/800ExtraBold/Nunito_800ExtraBold.ttf",
+              "./node_modules/@expo-google-fonts/nunito/900Black/Nunito_900Black.ttf",
+            ],
+          },
         },
       ],
       "expo-image",
