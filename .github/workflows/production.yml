@@ -58,30 +58,30 @@ jobs:
       - name: 🎭 Run Jest
         run: pnpm test:ci
 
-      # Fingerprint the current commit and look up an existing iOS EAS build whose
-      # fingerprint matches. `ios-build-id` is empty when no compatible build
-      # exists — i.e. native code changed and a new build is required. When a
-      # match exists (including after reverting to an earlier native state) an
-      # OTA update suffices. We gate on iOS since that's the platform we ship.
-      - name: 🫆 Get fingerprint info
-        id: fingerprint
-        uses: expo/expo-github-action/continuous-deploy-fingerprint-info@main
-        with:
-          profile: production
-          platform: ios
-          environment: production
-
-      - name: 🧭 Decide release type
+      # Fingerprint the current commit (EAS algorithm, production profile) and
+      # check whether any finished production iOS build already carries that
+      # exact fingerprint. A match means an installable binary can run this
+      # commit — including after reverting to an earlier native state — so an
+      # OTA suffices; no match means native code changed and we must build.
+      #
+      # NB: this is deliberately a plain script rather than Expo's
+      # continuous-deploy-fingerprint-info action: that action runs its own
+      # pnpm/setup, which errors against our pinned `packageManager` field
+      # (ERR_PNPM_BAD_PM_VERSION). We gate on iOS since that's the platform we ship.
+      - name: 🫆 Decide release type
         id: decide
-        env:
-          IOS_BUILD_ID: ${{ steps.fingerprint.outputs.ios-build-id }}
         run: |
-          if [ -z "$IOS_BUILD_ID" ]; then
-            echo "native-changed=true" >> "$GITHUB_OUTPUT"
-            echo "→ No iOS build matches this fingerprint: build + TestFlight."
-          else
+          set -euo pipefail
+          CURRENT="$(eas fingerprint:generate --platform ios --build-profile production --json --non-interactive | jq -r '.hash')"
+          echo "Current fingerprint: $CURRENT"
+          MATCH="$(eas build:list --platform ios --profile production --status finished --limit 50 --json --non-interactive \
+            | jq -r --arg h "$CURRENT" '[.[] | select(.fingerprint.hash == $h)] | length')"
+          if [ "$MATCH" -gt 0 ]; then
             echo "native-changed=false" >> "$GITHUB_OUTPUT"
-            echo "→ Matching iOS build $IOS_BUILD_ID exists: publishing an OTA update."
+            echo "→ Matching iOS build exists: publishing an OTA update."
+          else
+            echo "native-changed=true" >> "$GITHUB_OUTPUT"
+            echo "→ No matching iOS build: build + TestFlight."
           fi
 
   # JS-only change: deliver over-the-air. Only reaches native builds with a
