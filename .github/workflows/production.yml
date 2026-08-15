@@ -36,9 +36,6 @@ jobs:
 
       - name: 🏗 Setup repo
         uses: actions/checkout@v4
-        with:
-          # The fingerprint diff needs both the previous and current commits.
-          fetch-depth: 0
 
       - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v4
@@ -64,36 +61,25 @@ jobs:
       - name: 🎭 Run Jest
         run: pnpm test:ci
 
-      - name: 🫆 Fingerprint diff
-        id: fingerprint
-        uses: expo/expo-github-action/fingerprint@v8
-        with:
-          packager: pnpm
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          # github.event.before is the SHA of main prior to this push. It is
-          # empty for workflow_dispatch (and all-zeros for a brand-new branch),
-          # which the decide step treats as "native change" — the safe default.
-          previous-git-commit: ${{ github.event.before }}
-          current-git-commit: ${{ github.sha }}
-
-      - name: 🧭 Decide release type
+      # Compare the current commit's native fingerprint against the fingerprint
+      # EAS recorded on the most recent finished production iOS build. Both are
+      # produced by the same EAS algorithm, so they're directly comparable — a
+      # match means the installed binary can run this commit and an OTA suffices;
+      # a mismatch (or no prior build) means native code changed and we must build.
+      - name: 🫆 Decide release type
         id: decide
-        env:
-          # fingerprint-diff is a JSON array; "[]" means no native change.
-          FINGERPRINT_DIFF: ${{ steps.fingerprint.outputs.fingerprint-diff }}
-          PREVIOUS_COMMIT: ${{ github.event.before }}
         run: |
-          # No previous commit to diff against (manual run / new branch) -> build
-          # natively rather than risk an OTA landing on an incompatible binary.
-          if [ -z "$PREVIOUS_COMMIT" ] || [ "$PREVIOUS_COMMIT" = "0000000000000000000000000000000000000000" ]; then
+          set -euo pipefail
+          CURRENT="$(eas fingerprint:generate --platform ios --build-profile production --json --non-interactive | jq -r '.hash')"
+          echo "Current fingerprint:    $CURRENT"
+          LAST="$(eas build:list --platform ios --profile production --status finished --limit 1 --json --non-interactive | jq -r '.[0].fingerprint.hash // empty')"
+          echo "Last build fingerprint: ${LAST:-<none>}"
+          if [ -z "$LAST" ] || [ "$CURRENT" != "$LAST" ]; then
             echo "native-changed=true" >> "$GITHUB_OUTPUT"
-            echo "No comparable previous commit — treating as a native release."
-          elif [ -z "$FINGERPRINT_DIFF" ] || [ "$FINGERPRINT_DIFF" = "[]" ]; then
-            echo "native-changed=false" >> "$GITHUB_OUTPUT"
-            echo "Fingerprint unchanged — publishing an OTA update."
+            echo "→ Native change (or no prior build): iOS build + TestFlight."
           else
-            echo "native-changed=true" >> "$GITHUB_OUTPUT"
-            echo "Fingerprint changed — a native release is required."
+            echo "native-changed=false" >> "$GITHUB_OUTPUT"
+            echo "→ No native change: publishing an OTA update."
           fi
 
   # JS-only change: deliver over-the-air. Only reaches native builds with a
