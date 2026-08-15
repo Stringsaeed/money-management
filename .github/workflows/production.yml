@@ -133,4 +133,5 @@ jobs:
             --platform ios \
             --profile production \
             --non-interactive \
-            --auto-submit
+            --auto-submit \
+            --no-wait
