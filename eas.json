@@ -27,6 +27,12 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "mohameddiabaya@gmail.com",
+        "ascAppId": "6799272091",
+        "appleTeamId": "V3HN8HXZYK"
+      }
+    }
   }
 }
