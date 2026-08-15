@@ -75,7 +75,7 @@ jobs:
           fi
 
   # JS-only change: deliver over-the-air. Only reaches native builds with a
-  # matching fingerprint runtime version (see runtimeVersion.policy in app.config.ts).
+  # matching app-version runtime (see runtimeVersion.policy in app.config.ts).
   ota-update:
     name: Publish production update (OTA)
     needs: gate
