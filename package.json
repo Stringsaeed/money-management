@@ -18,7 +18,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --runInBand --coverage --ci --watchman=false --forceExit",
-    "ts:check": "npx tsgo --noEmit",
+    "ts:check": "npx tsc --noEmit",
     "prebuild": "expo prebuild"
   },
   "dependencies": {
@@ -103,7 +103,6 @@
     "knip": "^6.32.2",
     "oxfmt": "^0.63.0",
     "oxlint": "^1.78.0",
-    "oxlint-tsgolint": "^7.0.2001",
     "postcss": "^8.5.8",
     "react-test-renderer": "19.2.3",
     "tailwindcss": "^4.3.3",

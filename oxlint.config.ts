@@ -4,7 +4,7 @@ import strict from "@rnx-kit/oxlint-config";
 
 export default defineConfig({
   extends: [strict],
-  plugins: ["import", "react", "jest"],
+  plugins: ["import", "react"],
   categories: {
     correctness: "off",
   },
@@ -95,13 +95,6 @@ export default defineConfig({
     process: "readonly",
     setImmediate: "readonly",
     "shared-node-browser": "writable",
-    jest: "readonly",
-    describe: "readonly",
-    expect: "readonly",
-    it: "readonly",
-    beforeAll: "readonly",
-    beforeEach: "readonly",
-    afterEach: "readonly",
   },
   ignorePatterns: ["android/app/build", "dist/*"],
   jsPlugins: ["eslint-plugin-expo"],
@@ -144,6 +137,32 @@ export default defineConfig({
         ],
       },
       plugins: ["typescript"],
+    },
+    {
+      // test patterns
+      files: [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "jest/setup-env.ts",
+        "tests/**/*.ts",
+        "tests/**/*.{ts,tsx}",
+      ],
+      plugins: ["jest"],
+      env: {
+        "jest/globals": true,
+      },
+      rules: {
+        "typescript/no-require-imports": "off",
+      },
+      globals: {
+        jest: "readonly",
+        describe: "readonly",
+        expect: "readonly",
+        it: "readonly",
+        beforeAll: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+      },
     },
   ],
 });

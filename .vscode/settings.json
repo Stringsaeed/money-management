@@ -36,7 +36,6 @@
     "ListHeaderComponentClassName"
   ],
   "tailwindCSS.classFunctions": ["useResolveClassNames"],
-  "oxc.typeAware": true,
   "oxc.fmt.configPath": ".oxfmtrc.json",
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSave": true,
