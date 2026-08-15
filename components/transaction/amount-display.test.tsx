@@ -21,7 +21,7 @@ describe("AmountDisplay", () => {
 
     expect(screen.getByText("$")).toBeOnTheScreen();
     expect(screen.getByText(".")).toBeOnTheScreen();
-    expect(screen.getByLabelText("12")).toBeOnTheScreen();
-    expect(screen.getByLabelText("30")).toBeOnTheScreen();
+    expect(screen.getByText("12")).toBeOnTheScreen();
+    expect(screen.getByText("30")).toBeOnTheScreen();
   });
 });
