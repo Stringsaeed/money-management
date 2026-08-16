@@ -1,24 +1,21 @@
-import type { Category, RecurringPayment } from "@/types";
+import type { RecurringRuleDraft } from "@/modules/recurring-rules";
+import type { Category } from "@/types";
 import { toDateString } from "@/utils/date";
 
 import type { TransactionFormData } from "../types";
 
-export type NewRecurringPayment = Omit<RecurringPayment, "id" | "createdAt" | "updatedAt">;
-
 const TYPE_LABEL = { income: "Income", expense: "Expense", transfer: "Transfer" } as const;
 
-/** Maps submitted form data onto a recurring-payment rule (start date = `date`). */
-export function toRecurringPayment(
+export function toRecurringRuleDraft(
   data: TransactionFormData,
   categories: Category[],
-): NewRecurringPayment {
-  const category = categories.find((c) => c.id === data.categoryId);
-  const name = data.description || category?.name || TYPE_LABEL[data.type];
-
+  timeZone: string,
+): RecurringRuleDraft {
+  const category = categories.find((candidate) => candidate.id === data.categoryId);
   return {
-    name,
+    name: data.description || category?.name || TYPE_LABEL[data.type],
     type: data.type,
-    amount: data.amount,
+    amountMinor: data.amount,
     currency: data.currency,
     accountId: data.accountId,
     toAccountId: data.toAccountId,
@@ -26,13 +23,9 @@ export function toRecurringPayment(
     description: data.description,
     frequency: data.recurrence.frequency,
     intervalCount: data.recurrence.intervalCount,
-    dayOfMonth: null,
-    dayOfWeek: null,
-    monthOfYear: null,
     startDate: toDateString(data.date),
     endDate: data.recurrence.endDate ? toDateString(data.recurrence.endDate) : null,
     endCount: data.recurrence.endCount,
-    lastGeneratedDate: null,
-    isActive: true,
+    timeZone,
   };
 }

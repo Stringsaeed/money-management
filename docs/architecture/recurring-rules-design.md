@@ -1,7 +1,9 @@
 # Recurring Rules Architecture
 
-- **Status:** Design complete; implementation not started
+- **Status:** Implemented and verified on `feat/recurring-rules`
 - **Recorded:** 2026-08-16
+- **Implemented:** 2026-08-17
+- **Editor consolidated:** 2026-08-17
 - **Decision history:** [Recurring Rules Decision Log](./recurring-rules-decision-log.md)
 - **Domain language:** [Money Management Context](../../CONTEXT.md)
 
@@ -26,6 +28,47 @@ The first delivery is a complete essential vertical slice:
 - delete the replaced shallow implementation and tests.
 
 Rich Occurrence-history browsing, advanced recurrence expressions, synchronization, event sourcing, and ordinary hard deletion are outside this delivery.
+
+## Implementation record
+
+The implementation followed the delivery sequence below as focused Conventional Commits:
+
+1. `docs: record recurring rules architecture`
+2. `feat(recurring): add atomic rules migration`
+3. `feat(recurring): add rules domain module`
+4. `feat(recurring): add react adapters and runtime`
+5. `feat(accounts): coordinate recurring rule impacts`
+6. `feat(recurring): complete rules cutover`
+7. the follow-up editor consolidation that removes the duplicate Rule-detail UI
+
+The final cutover:
+
+- installs the code-backed migration after the legacy Drizzle migrations and before seeding;
+- mounts one Recurring Rules module per live Expo SQLite connection;
+- settles on launch and foreground transitions;
+- migrates Home, Settings, transaction creation, Rule list/detail, and Account flows;
+- adds Current, Needs Attention, and Archived list filters;
+- adds preview-backed creation and lifecycle changes, repair through the shared transaction form, and root Settlement feedback;
+- coordinates Account currency changes and deletion with Rule health and lifecycle changes; and
+- removes the legacy processor, CRUD hooks, mapper, row, scheduler helpers, and their replaced tests.
+
+The editor consolidation makes `app/transaction/[id].tsx` the only authoring and preview route:
+
+- new Rules use `/transaction/new?recurring=true`;
+- existing Rules use `/transaction/<rule-id>?recurring=true`;
+- the Recurring list remains the browse and filter surface;
+- lifecycle state is reinforced by the screen surface and tinted header actions;
+- healthy Rules have no in-content status card; and
+- Needs-Attention Rules receive one actionable warning banner above the shared form.
+
+### Verification record
+
+- TypeScript strict check, lint fixing, formatting, and the complete Jest CI suite passed (75 suites, 221 tests).
+- Real SQLite tests cover migration rollback, lineage reconstruction, calendar boundaries, confirmation, revisions, coalesced Settlement, per-Rule failure isolation, lifecycle gaps, repair backlog, completion, and Account coordination.
+- iPhone 17 Pro simulator QA on iOS 26.5 verified startup migration, all three list filters, shared-form creation, overdue preview and confirmation, Generated Transaction materialization, upcoming projection, status display, pause, resume, archive, restore, and post-Metro-reload mutation.
+- Simulator QA exposed and fixed a stale database binding retained across Fast Refresh. The provider now replaces its module when Expo SQLite supplies a new connection; a regression test preserves that behavior.
+- The final debugger session contained no application errors. The remaining DateTimePicker deprecation warning predates this change.
+- Consolidation QA on the same simulator verified that Home and Recurring-list entries open the transaction editor, new Rules open in recurring mode, healthy Rules have no status card, and Active, Paused, and Archived states remain distinguishable through their screen surfaces and accessible Pause, Resume, and Restore header actions.
 
 ## Canonical model
 
@@ -295,10 +338,11 @@ Changing an Account's currency marks affected Rules Needs Attention until their 
 ## React and UI integration
 
 - Keep the existing shared `TransactionForm` as the Rule authoring surface.
-- Keep the existing Rule detail route and add lifecycle, health, preview, confirmation, and repair behavior around the form.
+- Use `app/transaction/[id].tsx` as the single transaction and Recurring Rule editor. Select Rule mode with the `recurring=true` route parameter and remove the duplicate Rule detail route.
 - Use caller-friendly named React Query hooks as thin adapters over `read`, `change`, and `settle`.
 - Exclude Archived Rules from the default list and provide an explicit Archived filter with restore actions.
-- Show per-Rule lifecycle, health, and unresolved settlement information.
+- Reinforce Active, Paused, Archived, and Completed lifecycle state with the editor surface and accessible header-action labels. Do not add a second status card.
+- Show an actionable warning banner only when a Rule Needs Attention. Unresolved Settlement errors remain visible through the root feedback banner.
 - Use “Recurring” in compact navigation and “Recurring Rule” where a noun is required. Remove user-facing “Recurring Payment” language because Rules may represent income or transfers.
 - Show successful Settlement summaries transiently in a dismissible root-level banner.
 - Keep unresolved items visible and link the banner to the appropriately filtered Recurring list.
@@ -347,6 +391,7 @@ Implementation should proceed in focused, verifiable commits:
 - Account deletion archives and detaches affected Rules atomically.
 - Legacy data migration is lossless and rollback-safe.
 - Existing authoring remains in the shared Transaction form.
+- The transaction route is the only Rule authoring, preview, repair, and lifecycle-action screen.
 - Unexpected failures are visible without blocking unrelated Rules.
 - The old recurring processor and shallow persistence hooks no longer exist.
 

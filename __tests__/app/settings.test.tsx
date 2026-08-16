@@ -66,20 +66,28 @@ const mockRecurring = [
     id: "recurring-1",
     name: "Rent",
     type: "expense",
-    amount: 1200_00,
+    amountMinor: 1200_00,
     currency: "USD",
     accountId: "account-1",
     toAccountId: null,
     categoryId: "expense-1",
     description: "Monthly rent",
-    interval: "monthly",
-    dayOfMonth: 1,
-    dayOfWeek: null,
-    monthOfYear: null,
+    frequency: "month",
+    intervalCount: 1,
     startDate: "2026-01-01",
     endDate: null,
-    lastGeneratedDate: null,
-    isActive: true,
+    endCount: null,
+    timeZone: "Asia/Dubai",
+    lifecycle: "active",
+    health: "ready",
+    attentionReasons: [],
+    attentionDetails: null,
+    eligibilityFloor: "2026-01-01",
+    revision: 1,
+    lifecycleChangedAt: null,
+    healthChangedAt: null,
+    lastSettlementAttemptAt: null,
+    lastSettlementError: null,
     createdAt: "2026-03-28T10:00:00.000Z",
     updatedAt: "2026-03-28T10:00:00.000Z",
   },
@@ -98,7 +106,7 @@ const mockTransactions = [
     toAccountId: null,
     categoryId: "expense-1",
     description: "Coffee",
-    recurringPaymentId: null,
+    recurringRuleId: null,
     createdAt: "2026-03-28T10:00:00.000Z",
     updatedAt: "2026-03-28T10:00:00.000Z",
     account: {
@@ -164,8 +172,8 @@ jest.mock("@/hooks/use-categories", () => ({
   }),
 }));
 
-jest.mock("@/hooks/use-recurring-payments", () => ({
-  useRecurringPayments: () => ({
+jest.mock("@/hooks/use-recurring-rules", () => ({
+  useRecurringRulesList: () => ({
     data: mockRecurring,
   }),
 }));
@@ -237,6 +245,7 @@ describe("app/settings", () => {
     expect(screen.getByText("Manage 🛠️")).toBeOnTheScreen();
     expect(screen.getByText("1 account")).toBeOnTheScreen();
     expect(screen.getByText("Categories")).toBeOnTheScreen();
+    expect(screen.getByText("Recurring Rules")).toBeOnTheScreen();
     expect(screen.getByText("software-update")).toBeOnTheScreen();
     expect(screen.getByText("dev-tools")).toBeOnTheScreen();
   });

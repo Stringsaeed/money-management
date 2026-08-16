@@ -8,6 +8,7 @@ import { Text } from "@/components/ui/text";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import useNumPadNumber from "@/hooks/use-num-pad-number";
+import { cn } from "@/lib/utils";
 import type { TransactionType } from "@/types";
 
 import AccountPicker from "./account-picker/account-picker";
@@ -36,6 +37,8 @@ export function TransactionForm({
   isRecurring,
   onSubmit,
   formRef,
+  bannerContent,
+  surfaceClassName,
 }: TransactionFormProps) {
   const { data: accounts = [] } = useAccounts();
   const { data: categories = [] } = useCategories();
@@ -106,11 +109,12 @@ export function TransactionForm({
   }
 
   return (
-    <View className="flex-1 bg-surface pt-safe-offset-20">
+    <View className={cn("flex-1 bg-surface pt-safe-offset-20", surfaceClassName)}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
+        {bannerContent}
         {/* Breadcrumb: Account › Category › Date */}
         <View className="pt-2 pb-3">
           <Animated.ScrollView

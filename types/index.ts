@@ -54,34 +54,7 @@ export interface Transaction {
   categoryId: string | null;
   isRecurring: boolean;
   description: string;
-  recurringPaymentId: string | null; // set when auto-generated
-  createdAt: string;
-  updatedAt: string;
-}
-
-// ── RecurringPayment ──────────────────────────────────────────────────────────
-
-export interface RecurringPayment {
-  id: string;
-  name: string;
-  type: TransactionType;
-  amount: number; // integer cents
-  currency: string;
-  accountId: string;
-  toAccountId: string | null;
-  categoryId: string | null;
-  description: string;
-  frequency: RecurrenceFrequency; // the unit the rule repeats on
-  intervalCount: number; // repeat every N units (1 = daily/weekly/…, 2 = bi-weekly, …)
-  // Legacy anchors kept nullable; timing is now derived from `startDate`.
-  dayOfMonth: number | null; // 1–31 for monthly/yearly
-  dayOfWeek: number | null; // 0–6 (Sun–Sat) for weekly
-  monthOfYear: number | null; // 1–12 for yearly
-  startDate: string; // "YYYY-MM-DD" — the recurrence anchor
-  endDate: string | null; // "on_date" end; null when never / after_count
-  endCount: number | null; // "after_count" end: stop after N occurrences
-  lastGeneratedDate: string | null;
-  isActive: boolean;
+  recurringRuleId: string | null; // preserved lineage for a Generated Transaction
   createdAt: string;
   updatedAt: string;
 }

@@ -16,13 +16,14 @@ import {
   accounts as accountsTable,
   categories,
   exchangeRates,
-  recurringPayments,
+  recurringOccurrences,
+  recurringRules,
   transactions,
 } from "@/db/schema";
 import { clearSeedVersion } from "@/db/seed";
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
-import { useRecurringPayments } from "@/hooks/use-recurring-payments";
+import { useRecurringRulesList } from "@/hooks/use-recurring-rules";
 import { useTransactions } from "@/hooks/use-transactions";
 
 export default function SettingsScreen() {
@@ -31,11 +32,11 @@ export default function SettingsScreen() {
   const [erasing, setErasing] = useState(false);
   const { data: accounts = [] } = useAccountsWithBalances();
   const { data: allCategories = [] } = useCategories();
-  const { data: recurring = [] } = useRecurringPayments();
+  const { data: recurring = [] } = useRecurringRulesList("current");
   const { data: allTransactions = [] } = useTransactions({});
 
   const totalCategories = allCategories.length;
-  const activeRecurring = recurring.filter((r) => r.isActive).length;
+  const activeRecurring = recurring.filter((rule) => rule.lifecycle === "active").length;
 
   function handleEraseAll() {
     Alert.alert(
@@ -49,8 +50,9 @@ export default function SettingsScreen() {
           onPress: async () => {
             setErasing(true);
             try {
+              await db.delete(recurringOccurrences);
               await db.delete(transactions);
-              await db.delete(recurringPayments);
+              await db.delete(recurringRules);
               await db.delete(categories);
               await db.delete(exchangeRates);
               await db.delete(accountsTable);
@@ -95,7 +97,7 @@ export default function SettingsScreen() {
         <Divider />
         <SettingsRow
           emoji="🔁"
-          label="Recurring Payments"
+          label="Recurring Rules"
           subtitle={`${activeRecurring} active`}
           onPress={() => router.push("/recurring")}
         />
@@ -115,7 +117,7 @@ export default function SettingsScreen() {
         <Divider />
         <SettingsRow
           emoji="🔁"
-          label="Active Recurring"
+          label="Active Rules"
           rightLabel={String(activeRecurring)}
           noChevron
         />

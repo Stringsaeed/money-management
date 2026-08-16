@@ -11,6 +11,8 @@ The recurring-payment deepening was shaped through a structured grilling process
 
 The user selected the recommended answer throughout. Q69 supersedes the original single-state formulation in Q28 after later scenarios revealed that lifecycle and health are independent concepts.
 
+On 2026-08-17, the implemented authoring locality was tightened further: Q71's shared-form decision remains, but its separate Rule-detail route was superseded. `app/transaction/[id].tsx` is now the single editor and preview surface for transactions and Recurring Rules. Healthy lifecycle state is communicated by the screen surface and accessible header actions; only Needs Attention receives an in-content warning banner.
+
 ## Process
 
 1. Establish canonical domain language and the intended module depth.
@@ -139,7 +141,7 @@ The selected design uses the minimal three-entry core and caller-friendly named 
 - **Q68 — First Settlement:** Run normal automatic catch-up after migration while blocking Needs-Attention Rules.
 - **Q69 — Lifecycle versus health:** Replace Q28's single dimension with independent discriminated lifecycle and health values, still avoiding boolean flags.
 - **Q70 — Archived access:** Exclude Archived Rules from the default list and expose an explicit Archived filter with restoration.
-- **Q71 — Authoring locality:** Keep the shared `TransactionForm` and add lifecycle and status behavior around the existing Rule detail route.
+- **Q71 — Authoring locality:** Keep the shared `TransactionForm` and add lifecycle and status behavior around the existing Rule detail route. The 2026-08-17 consolidation amendment supersedes the separate-route portion of this decision while preserving the shared-form intent.
 - **Q72 — Confirmation breadth:** Preview every user action that would first materialize overdue Occurrences; keep background Settlement automatic.
 
 ### Round 10 — Final semantic frontier

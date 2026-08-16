@@ -53,7 +53,7 @@ describe("use-transactions hooks", () => {
               toAccountId: null,
               categoryId: "category-1",
               isRecurring: true,
-              recurringPaymentId: null,
+              recurringRuleId: null,
               description: "Coffee",
               createdAt: "2026-03-28T12:00:00.000Z",
               updatedAt: "2026-03-28T12:00:00.000Z",
@@ -126,7 +126,7 @@ describe("use-transactions hooks", () => {
             toAccountId: null,
             categoryId: "category-1",
             isRecurring: false,
-            recurringPaymentId: null,
+            recurringRuleId: null,
             description: "",
             createdAt: "2026-03-28T00:00:00.000Z",
             updatedAt: "2026-03-28T00:00:00.000Z",
@@ -230,7 +230,7 @@ describe("use-transactions hooks", () => {
         categoryId: "category-1",
         description: "Coffee",
         isRecurring: true,
-        recurringPaymentId: null,
+        recurringRuleId: null,
       });
     });
 

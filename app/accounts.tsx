@@ -14,13 +14,18 @@ import { layoutTransition } from "@/components/transaction/constants";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { useAccountsWithBalances, useDeleteAccount } from "@/hooks/use-accounts";
+import {
+  useAccountsWithBalances,
+  useDeleteAccount,
+  usePreviewAccountDeletion,
+} from "@/hooks/use-accounts";
 import type { AccountWithBalance } from "@/types";
 
 export default function AccountsScreen() {
   const [editingAccount, setEditingAccount] = useState<AccountWithBalance | null>(null);
   const { data: accounts = [] } = useAccountsWithBalances();
   const deleteAccount = useDeleteAccount();
+  const previewAccountDeletion = usePreviewAccountDeletion();
 
   return (
     <View className="flex-1 bg-surface">
@@ -50,6 +55,7 @@ export default function AccountsScreen() {
                 <SwipeableAccountRow
                   account={account}
                   onDelete={deleteAccount.mutateAsync}
+                  onPreviewDelete={previewAccountDeletion.mutateAsync}
                   onPress={() => setEditingAccount(account)}
                 />
               </Animated.View>
