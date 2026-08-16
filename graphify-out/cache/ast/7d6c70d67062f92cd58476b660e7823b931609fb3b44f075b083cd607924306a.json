@@ -1,1 +1,687 @@
-{"nodes": [{"id": "users_saeed_work_money_management_vscode_settings_json", "label": "settings.json", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L1"}, {"id": "vscode_settings_editor_codeactionsonsave", "label": "editor.codeActionsOnSave", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L2"}, {"id": "vscode_settings_editor_codeactionsonsave_source_fixall_oxc", "label": "source.fixAll.oxc", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L3"}, {"id": "vscode_settings_files_associations", "label": "files.associations", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L5"}, {"id": "vscode_settings_files_associations_css", "label": "*.css", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L6"}, {"id": "vscode_settings_tailwindcss_classattributes", "label": "tailwindCSS.classAttributes", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L8"}, {"id": "vscode_settings_tailwindcss_classfunctions", "label": "tailwindCSS.classFunctions", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L38"}, {"id": "vscode_settings_oxc_fmt_configpath", "label": "oxc.fmt.configPath", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L39"}, {"id": "vscode_settings_editor_defaultformatter", "label": "editor.defaultFormatter", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L40"}, {"id": "vscode_settings_editor_formatonsave", "label": "editor.formatOnSave", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L41"}, {"id": "vscode_settings_javascript", "label": "[javascript]", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L42"}, {"id": "vscode_settings_javascript_editor_defaultformatter", "label": "editor.defaultFormatter", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L43"}, {"id": "vscode_settings_javascript_editor_formatonsave", "label": "editor.formatOnSave", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L44"}, {"id": "vscode_settings_typescript", "label": "[typescript]", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L46"}, {"id": "vscode_settings_typescript_editor_defaultformatter", "label": "editor.defaultFormatter", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L47"}, {"id": "vscode_settings_typescript_editor_formatonsave", "label": "editor.formatOnSave", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L48"}, {"id": "vscode_settings_typescriptreact", "label": "[typescriptreact]", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L50"}, {"id": "vscode_settings_typescriptreact_editor_defaultformatter", "label": "editor.defaultFormatter", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L51"}, {"id": "vscode_settings_typescriptreact_editor_formatonsave", "label": "editor.formatOnSave", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L52"}, {"id": "vscode_settings_json", "label": "[json]", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L54"}, {"id": "vscode_settings_json_editor_defaultformatter", "label": "editor.defaultFormatter", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L55"}, {"id": "vscode_settings_jsonc", "label": "[jsonc]", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L57"}, {"id": "vscode_settings_jsonc_editor_defaultformatter", "label": "editor.defaultFormatter", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L58"}, {"id": "vscode_settings_yaml", "label": "[yaml]", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L60"}, {"id": "vscode_settings_yaml_editor_defaultformatter", "label": "editor.defaultFormatter", "file_type": "code", "source_file": ".vscode/settings.json", "source_location": "L61"}], "edges": [{"source": "users_saeed_work_money_management_vscode_settings_json", "target": "vscode_settings_editor_codeactionsonsave", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L2", "weight": 1.0}, {"source": "vscode_settings_editor_codeactionsonsave", "target": "vscode_settings_editor_codeactionsonsave_source_fixall_oxc", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L3", "weight": 1.0}, {"source": "users_saeed_work_money_management_vscode_settings_json", "target": "vscode_settings_files_associations", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L5", "weight": 1.0}, {"source": "vscode_settings_files_associations", "target": "vscode_settings_files_associations_css", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L6", "weight": 1.0}, {"source": "users_saeed_work_money_management_vscode_settings_json", "target": "vscode_settings_tailwindcss_classattributes", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_class", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_classname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_headerclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_contentcontainerclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_columnwrapperclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_endfillcolorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_imageclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_tintcolorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_ios_backgroundcolorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_thumbcolorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_trackcoloronclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_trackcoloroffclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_selectioncolorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_cursorcolorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_underlinecolorandroidclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_placeholdertextcolorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_selectionhandlecolorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_colorsclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_progressbackgroundcolorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_titlecolorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_underlaycolorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_colorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_drawerbackgroundcolorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_statusbarbackgroundcolorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_backdropcolorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_backgroundcolorclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_listfootercomponentclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "vscode_settings_tailwindcss_classattributes", "target": "ref_listheadercomponentclassname", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L8", "weight": 1.0, "context": "import"}, {"source": "users_saeed_work_money_management_vscode_settings_json", "target": "vscode_settings_tailwindcss_classfunctions", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L38", "weight": 1.0}, {"source": "vscode_settings_tailwindcss_classfunctions", "target": "ref_useresolveclassnames", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L38", "weight": 1.0, "context": "import"}, {"source": "users_saeed_work_money_management_vscode_settings_json", "target": "vscode_settings_oxc_fmt_configpath", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L39", "weight": 1.0}, {"source": "users_saeed_work_money_management_vscode_settings_json", "target": "vscode_settings_editor_defaultformatter", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L40", "weight": 1.0}, {"source": "users_saeed_work_money_management_vscode_settings_json", "target": "vscode_settings_editor_formatonsave", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L41", "weight": 1.0}, {"source": "users_saeed_work_money_management_vscode_settings_json", "target": "vscode_settings_javascript", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L42", "weight": 1.0}, {"source": "vscode_settings_javascript", "target": "vscode_settings_javascript_editor_defaultformatter", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L43", "weight": 1.0}, {"source": "vscode_settings_javascript", "target": "vscode_settings_javascript_editor_formatonsave", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L44", "weight": 1.0}, {"source": "users_saeed_work_money_management_vscode_settings_json", "target": "vscode_settings_typescript", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L46", "weight": 1.0}, {"source": "vscode_settings_typescript", "target": "vscode_settings_typescript_editor_defaultformatter", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L47", "weight": 1.0}, {"source": "vscode_settings_typescript", "target": "vscode_settings_typescript_editor_formatonsave", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L48", "weight": 1.0}, {"source": "users_saeed_work_money_management_vscode_settings_json", "target": "vscode_settings_typescriptreact", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L50", "weight": 1.0}, {"source": "vscode_settings_typescriptreact", "target": "vscode_settings_typescriptreact_editor_defaultformatter", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L51", "weight": 1.0}, {"source": "vscode_settings_typescriptreact", "target": "vscode_settings_typescriptreact_editor_formatonsave", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L52", "weight": 1.0}, {"source": "users_saeed_work_money_management_vscode_settings_json", "target": "vscode_settings_json", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L54", "weight": 1.0}, {"source": "vscode_settings_json", "target": "vscode_settings_json_editor_defaultformatter", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L55", "weight": 1.0}, {"source": "users_saeed_work_money_management_vscode_settings_json", "target": "vscode_settings_jsonc", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L57", "weight": 1.0}, {"source": "vscode_settings_jsonc", "target": "vscode_settings_jsonc_editor_defaultformatter", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L58", "weight": 1.0}, {"source": "users_saeed_work_money_management_vscode_settings_json", "target": "vscode_settings_yaml", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L60", "weight": 1.0}, {"source": "vscode_settings_yaml", "target": "vscode_settings_yaml_editor_defaultformatter", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".vscode/settings.json", "source_location": "L61", "weight": 1.0}]}
+{
+  "nodes": [
+    {
+      "id": "users_saeed_work_money_management_vscode_settings_json",
+      "label": "settings.json",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L1"
+    },
+    {
+      "id": "vscode_settings_editor_codeactionsonsave",
+      "label": "editor.codeActionsOnSave",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L2"
+    },
+    {
+      "id": "vscode_settings_editor_codeactionsonsave_source_fixall_oxc",
+      "label": "source.fixAll.oxc",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L3"
+    },
+    {
+      "id": "vscode_settings_files_associations",
+      "label": "files.associations",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L5"
+    },
+    {
+      "id": "vscode_settings_files_associations_css",
+      "label": "*.css",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L6"
+    },
+    {
+      "id": "vscode_settings_tailwindcss_classattributes",
+      "label": "tailwindCSS.classAttributes",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8"
+    },
+    {
+      "id": "vscode_settings_tailwindcss_classfunctions",
+      "label": "tailwindCSS.classFunctions",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L38"
+    },
+    {
+      "id": "vscode_settings_oxc_fmt_configpath",
+      "label": "oxc.fmt.configPath",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L39"
+    },
+    {
+      "id": "vscode_settings_editor_defaultformatter",
+      "label": "editor.defaultFormatter",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L40"
+    },
+    {
+      "id": "vscode_settings_editor_formatonsave",
+      "label": "editor.formatOnSave",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L41"
+    },
+    {
+      "id": "vscode_settings_javascript",
+      "label": "[javascript]",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L42"
+    },
+    {
+      "id": "vscode_settings_javascript_editor_defaultformatter",
+      "label": "editor.defaultFormatter",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L43"
+    },
+    {
+      "id": "vscode_settings_javascript_editor_formatonsave",
+      "label": "editor.formatOnSave",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L44"
+    },
+    {
+      "id": "vscode_settings_typescript",
+      "label": "[typescript]",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L46"
+    },
+    {
+      "id": "vscode_settings_typescript_editor_defaultformatter",
+      "label": "editor.defaultFormatter",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L47"
+    },
+    {
+      "id": "vscode_settings_typescript_editor_formatonsave",
+      "label": "editor.formatOnSave",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L48"
+    },
+    {
+      "id": "vscode_settings_typescriptreact",
+      "label": "[typescriptreact]",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L50"
+    },
+    {
+      "id": "vscode_settings_typescriptreact_editor_defaultformatter",
+      "label": "editor.defaultFormatter",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L51"
+    },
+    {
+      "id": "vscode_settings_typescriptreact_editor_formatonsave",
+      "label": "editor.formatOnSave",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L52"
+    },
+    {
+      "id": "vscode_settings_json",
+      "label": "[json]",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L54"
+    },
+    {
+      "id": "vscode_settings_json_editor_defaultformatter",
+      "label": "editor.defaultFormatter",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L55"
+    },
+    {
+      "id": "vscode_settings_jsonc",
+      "label": "[jsonc]",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L57"
+    },
+    {
+      "id": "vscode_settings_jsonc_editor_defaultformatter",
+      "label": "editor.defaultFormatter",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L58"
+    },
+    {
+      "id": "vscode_settings_yaml",
+      "label": "[yaml]",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L60"
+    },
+    {
+      "id": "vscode_settings_yaml_editor_defaultformatter",
+      "label": "editor.defaultFormatter",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L61"
+    }
+  ],
+  "edges": [
+    {
+      "source": "users_saeed_work_money_management_vscode_settings_json",
+      "target": "vscode_settings_editor_codeactionsonsave",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "vscode_settings_editor_codeactionsonsave",
+      "target": "vscode_settings_editor_codeactionsonsave_source_fixall_oxc",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "users_saeed_work_money_management_vscode_settings_json",
+      "target": "vscode_settings_files_associations",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "vscode_settings_files_associations",
+      "target": "vscode_settings_files_associations_css",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "users_saeed_work_money_management_vscode_settings_json",
+      "target": "vscode_settings_tailwindcss_classattributes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_class",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_classname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_headerclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_contentcontainerclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_columnwrapperclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_endfillcolorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_imageclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_tintcolorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_ios_backgroundcolorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_thumbcolorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_trackcoloronclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_trackcoloroffclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_selectioncolorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_cursorcolorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_underlinecolorandroidclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_placeholdertextcolorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_selectionhandlecolorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_colorsclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_progressbackgroundcolorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_titlecolorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_underlaycolorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_colorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_drawerbackgroundcolorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_statusbarbackgroundcolorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_backdropcolorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_backgroundcolorclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_listfootercomponentclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classattributes",
+      "target": "ref_listheadercomponentclassname",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "users_saeed_work_money_management_vscode_settings_json",
+      "target": "vscode_settings_tailwindcss_classfunctions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "vscode_settings_tailwindcss_classfunctions",
+      "target": "ref_useresolveclassnames",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L38",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "users_saeed_work_money_management_vscode_settings_json",
+      "target": "vscode_settings_oxc_fmt_configpath",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "users_saeed_work_money_management_vscode_settings_json",
+      "target": "vscode_settings_editor_defaultformatter",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "users_saeed_work_money_management_vscode_settings_json",
+      "target": "vscode_settings_editor_formatonsave",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L41",
+      "weight": 1.0
+    },
+    {
+      "source": "users_saeed_work_money_management_vscode_settings_json",
+      "target": "vscode_settings_javascript",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L42",
+      "weight": 1.0
+    },
+    {
+      "source": "vscode_settings_javascript",
+      "target": "vscode_settings_javascript_editor_defaultformatter",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L43",
+      "weight": 1.0
+    },
+    {
+      "source": "vscode_settings_javascript",
+      "target": "vscode_settings_javascript_editor_formatonsave",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L44",
+      "weight": 1.0
+    },
+    {
+      "source": "users_saeed_work_money_management_vscode_settings_json",
+      "target": "vscode_settings_typescript",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "vscode_settings_typescript",
+      "target": "vscode_settings_typescript_editor_defaultformatter",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L47",
+      "weight": 1.0
+    },
+    {
+      "source": "vscode_settings_typescript",
+      "target": "vscode_settings_typescript_editor_formatonsave",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "users_saeed_work_money_management_vscode_settings_json",
+      "target": "vscode_settings_typescriptreact",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L50",
+      "weight": 1.0
+    },
+    {
+      "source": "vscode_settings_typescriptreact",
+      "target": "vscode_settings_typescriptreact_editor_defaultformatter",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "vscode_settings_typescriptreact",
+      "target": "vscode_settings_typescriptreact_editor_formatonsave",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L52",
+      "weight": 1.0
+    },
+    {
+      "source": "users_saeed_work_money_management_vscode_settings_json",
+      "target": "vscode_settings_json",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "vscode_settings_json",
+      "target": "vscode_settings_json_editor_defaultformatter",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L55",
+      "weight": 1.0
+    },
+    {
+      "source": "users_saeed_work_money_management_vscode_settings_json",
+      "target": "vscode_settings_jsonc",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L57",
+      "weight": 1.0
+    },
+    {
+      "source": "vscode_settings_jsonc",
+      "target": "vscode_settings_jsonc_editor_defaultformatter",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "users_saeed_work_money_management_vscode_settings_json",
+      "target": "vscode_settings_yaml",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "vscode_settings_yaml",
+      "target": "vscode_settings_yaml_editor_defaultformatter",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L61",
+      "weight": 1.0
+    }
+  ]
+}

@@ -1,16 +1,16 @@
 # Graph Report - money-management  (2026-08-16)
 
 ## Corpus Check
-- 300 files · ~240,944 words
+- 308 files · ~243,770 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1973 nodes · 3482 edges · 152 communities (139 shown, 13 thin omitted)
+- 2005 nodes · 3584 edges · 167 communities (152 shown, 15 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 12 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7fd32a2a`
+- Built from commit: `1738b07f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -157,18 +157,33 @@
 - [[_COMMUNITY_Community 149|Community 149]]
 - [[_COMMUNITY_Community 150|Community 150]]
 - [[_COMMUNITY_Community 151|Community 151]]
+- [[_COMMUNITY_Community 152|Community 152]]
+- [[_COMMUNITY_Community 153|Community 153]]
+- [[_COMMUNITY_Community 154|Community 154]]
+- [[_COMMUNITY_Community 155|Community 155]]
+- [[_COMMUNITY_Community 156|Community 156]]
+- [[_COMMUNITY_Community 157|Community 157]]
+- [[_COMMUNITY_Community 158|Community 158]]
+- [[_COMMUNITY_Community 159|Community 159]]
+- [[_COMMUNITY_Community 160|Community 160]]
+- [[_COMMUNITY_Community 161|Community 161]]
+- [[_COMMUNITY_Community 162|Community 162]]
+- [[_COMMUNITY_Community 163|Community 163]]
+- [[_COMMUNITY_Community 164|Community 164]]
+- [[_COMMUNITY_Community 165|Community 165]]
+- [[_COMMUNITY_Community 166|Community 166]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `Text()` - 68 edges
-2. `cn()` - 41 edges
+1. `Text()` - 72 edges
+2. `cn()` - 44 edges
 3. `useDatabase()` - 34 edges
-4. `Icon()` - 24 edges
+4. `Icon()` - 27 edges
 5. `useGraphicPalette()` - 21 edges
 6. `columns` - 20 edges
 7. `columns` - 20 edges
-8. `useTransactions()` - 19 edges
-9. `useUIStore` - 19 edges
-10. `columns` - 17 edges
+8. `useCategories()` - 19 edges
+9. `useTransactions()` - 19 edges
+10. `useUIStore` - 19 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Manual-First Multi-Currency Product` --conceptually_related_to--> `accounts`  [INFERRED]
@@ -177,10 +192,10 @@
   docs/research/personal-finance-app-market-research-2026.md → db/schema.ts
 - `Manual-First Multi-Currency Product` --conceptually_related_to--> `exchangeRates`  [INFERRED]
   docs/research/personal-finance-app-market-research-2026.md → db/schema.ts
-- `HomeScreen()` --calls--> `useHomeScreen()`  [EXTRACTED]
-  app/(tabs)/(home)/index.tsx → hooks/use-home-screen.ts
-- `LedgerScreen()` --calls--> `useHomeScreen()`  [EXTRACTED]
-  app/(tabs)/ledger/index.tsx → hooks/use-home-screen.ts
+- `onDatabaseInit()` --conceptually_related_to--> `accounts`  [INFERRED]
+  app/_layout.tsx → db/schema.ts
+- `TransactionForm()` --calls--> `useNumPadNumber()`  [EXTRACTED]
+  components/transaction/transaction-form.tsx → hooks/use-num-pad-number.ts
 
 ## Import Cycles
 - 1-file cycle: `metro.config.js -> metro.config.js`
@@ -192,55 +207,55 @@
 - **Application runtime provider stack** — app_layout_rootlayout, components_updates_appupdateprovider, app_layout_ondatabaseinit, app_layout_loadingfallback [EXTRACTED 1.00]
 - **Market research aligned with product data model** — docs_personal_finance_app_market_research_2026_manual_first_multi_currency, db_schema_accounts, db_schema_transactions, db_schema_exchangerates [INFERRED 0.85]
 
-## Communities (152 total, 13 thin omitted)
+## Communities (167 total, 15 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.17
-Nodes (13): useAppUpdate(), Card(), CardProps, DevToolsSection(), Divider(), SectionHeader(), STATUS_COPY, mockCheckForUpdate (+5 more)
+Cohesion: 0.13
+Nodes (18): AccountCurrencyPicker(), AccountCurrencyPickerProps, AccountFormBalanceSection(), AccountFormBalanceSectionProps, SheetTextInputProps, ACCOUNT_CURRENCIES, AccountFormBottomSheet(), AccountsScreen() (+10 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.09
-Nodes (31): CategoryColorPicker(), CategoryColorPickerProps, CategoryFormContent(), CategoryFormContentProps, SheetTextInputProps, CATEGORY_TYPE_META, CATEGORY_TYPE_OPTIONS, CategoryType (+23 more)
+Cohesion: 0.07
+Nodes (40): CategoryColorPicker(), CategoryColorPickerProps, CategoryEditSheet(), CategoryEditSheetProps, CategoryFormContent(), CategoryFormContentProps, SheetTextInputProps, CATEGORY_TYPE_META (+32 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.21
-Nodes (17): useDatabase(), recurringPayments, useAccounts(), useCategories(), NewRecurring, recurringKeys, mockUseDatabase, useCreateRecurringPayment() (+9 more)
+Cohesion: 0.19
+Nodes (13): useAccounts(), NewRecurring, recurringKeys, mockUseDatabase, useCreateRecurringPayment(), useDeleteRecurringPayment(), useRecurringPayment(), useRecurringPayments() (+5 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.03
 Nodes (64): dependencies, class-variance-authority, clsx, date-fns, drizzle-orm, expo, expo-application, expo-blur (+56 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.11
-Nodes (18): CoinPlantGraphic(), CoinPlantGraphicProps, GardenRowGraphic(), GardenRowGraphicProps, dark, GraphicPalette, light, useGraphicPalette() (+10 more)
+Cohesion: 0.13
+Nodes (16): CoinPlantGraphic(), CoinPlantGraphicProps, GardenRowGraphic(), GardenRowGraphicProps, dark, GraphicPalette, light, useGraphicPalette() (+8 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.07
-Nodes (34): Action, addCommasToInteger(), createStateFromValue(), formatDisplayValue(), handleAppendDigit(), handleDecimalPoint(), handleDeleteDigit(), numberReducer() (+26 more)
+Cohesion: 0.22
+Nodes (9): BreadcrumbSegment(), BreadcrumbSegmentProps, FormValues, RecurrenceConfig, TransactionFormProps, getCurrencySymbol(), getDateDisplayValue(), triggerErrorHaptic() (+1 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.11
-Nodes (17): Splash(), mockUseAccountsWithBalances, BalanceHero(), FilterBar(), FilterChip(), FiltersButton(), useAccountsWithBalances(), useHomeScreen() (+9 more)
+Cohesion: 0.10
+Nodes (21): CategoriesScreen(), Splash(), mockUseAccountsWithBalances, BalanceHero(), FilterBar(), FilterChip(), FiltersButton(), HomeListHeader() (+13 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.08
 Nodes (30): fetchCryptoQuotes(), fetchMarketQuotes(), fetchMetalQuotes(), fetchStockQuote(), FreeCryptoApiResponse, FreeCryptoQuoteResponse, getCryptoSymbol(), getMetalKey() (+22 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.24
-Nodes (21): addMonths(), buildDateString(), clampDay(), daysInMonth(), formatDayHeader(), formatMonth(), monthBounds(), monthsBetween() (+13 more)
+Cohesion: 0.32
+Nodes (13): AccountDetailScreen(), groupByDay(), TransactionGroup(), addMonths(), buildDateString(), clampDay(), daysInMonth(), formatDayHeader() (+5 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.05
-Nodes (39): transactions_account_id_accounts_id_fk, transactions_category_id_categories_id_fk, transactions_recurring_payment_id_recurring_payments_id_fk, transactions_to_account_id_accounts_id_fk, transactions, columnsFrom, columnsTo, name (+31 more)
+Cohesion: 0.25
+Nodes (8): transactions_account_id_accounts_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo
 
 ### Community 10 - "Community 10"
 Cohesion: 0.06
 Nodes (38): format_on_save, formatter, prettier, format_on_save, formatter, prettier, format_on_save, formatter (+30 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.17
-Nodes (18): AccountCurrencyPicker(), AccountFormSheetFooterProps, UseAccountFormReturn, layoutTransition, SETTLED_SPRING, SNAPPY_SPRING, stepExiting, stepItemEntering() (+10 more)
+Cohesion: 0.20
+Nodes (16): UseAccountFormReturn, layoutTransition, SETTLED_SPRING, SNAPPY_SPRING, stepExiting, stepItemEntering(), OnboardingBalanceStep(), OnboardingBalanceStepProps (+8 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.11
@@ -251,48 +266,48 @@ Cohesion: 0.06
 Nodes (31): recurring_payments_account_id_accounts_id_fk, recurring_payments_category_id_categories_id_fk, recurring_payments_to_account_id_accounts_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate (+23 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.20
-Nodes (14): HomeJournalList(), JournalDayHeader(), JournalListItemRow(), JournalListItemRowProps, RecentJournalSection(), mockPush, HomeJournalListProps, JournalDayHeaderProps (+6 more)
+Cohesion: 0.15
+Nodes (18): JournalDayHeader(), JournalListItemRow(), JournalListItemRowProps, HomeJournalListProps, JournalDayHeaderProps, RecentJournalSectionProps, TransactionFilters, TransactionGroupProps (+10 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.24
-Nodes (9): AccountFormContentProps, ACCOUNT_ICON_OPTIONS, ACCOUNT_TYPE_OPTIONS, AccountTypeOption, AccountIconPicker(), AccountIconPickerProps, AccountTypePickerProps, AccountType (+1 more)
+Cohesion: 0.30
+Nodes (10): Action, addCommasToInteger(), createStateFromValue(), formatDisplayValue(), handleAppendDigit(), handleDecimalPoint(), handleDeleteDigit(), numberReducer() (+2 more)
 
 ### Community 16 - "Community 16"
-Cohesion: 0.26
-Nodes (7): AccountDeleteAction(), AccountDeleteActionProps, AccountRow(), SettingsRow(), SwipeableAccountRowProps, AccountRowProps, SettingsRowProps
+Cohesion: 0.24
+Nodes (8): AccountEditSheetProps, AccountDeleteAction(), AccountDeleteActionProps, SwipeableAccountRow(), SwipeableAccountRowProps, AccountRowProps, SettingsRowProps, AccountWithBalance
 
 ### Community 17 - "Community 17"
-Cohesion: 0.14
-Nodes (16): mockUpdateAccount, mockUseAccountsWithBalances, mockUseRecurringProcessor, mockUseTransactions, mockPush, mockUseAccounts, mockUseCategories, mockUseRecurringPayments (+8 more)
+Cohesion: 0.11
+Nodes (21): mockUpdateAccount, mockBack, mockPush, mockSetSelectedMonth, mockTransactionGroup, mockUseAccount, mockUseLocalSearchParams, mockUseTransactions (+13 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.08
 Nodes (24): editor.codeActionsOnSave, source.fixAll.oxc, editor.defaultFormatter, editor.formatOnSave, files.associations, *.css, [javascript], editor.defaultFormatter (+16 more)
 
 ### Community 19 - "Community 19"
-Cohesion: 0.14
-Nodes (14): RefreshMarketButton(), RefreshMarketButtonProps, OnboardingCtaProps, CreateResourceBottomSheetProps, NumberPadProps, Icon(), IconProps, IconStyled (+6 more)
+Cohesion: 0.11
+Nodes (18): CategoryItem, CategoryPickerProps, MarketHero(), MarketHeroProps, MarketSourceBadge(), RefreshMarketButton(), RefreshMarketButtonProps, NumberPadProps (+10 more)
 
 ### Community 20 - "Community 20"
 Cohesion: 0.09
 Nodes (23): build, development, preview, production, cli, appVersionSource, version, developmentClient (+15 more)
 
 ### Community 21 - "Community 21"
-Cohesion: 0.30
-Nodes (10): AccountEditSheet(), AccountEditSheetProps, useEditAccountForm(), UseEditAccountFormArgs, accountDisplayIcon(), isCustomAccountIcon(), AccountsScreen(), useDeleteAccount() (+2 more)
+Cohesion: 0.27
+Nodes (9): FREQUENCY_LABELS, presetKeyFor(), REPEAT_PRESETS, RepeatPreset, RepeatPresetKey, RepeatControl(), RepeatControlProps, UNIT_OPTIONS (+1 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.27
-Nodes (12): cn(), ChartTab, styles, TextClassContext, ToggleGroup(), ToggleGroupContext, ToggleGroupIcon(), ToggleGroupItem() (+4 more)
+Cohesion: 0.12
+Nodes (23): AccountPickerProps, CategoryFilter, FilterOption, FILTERS, cn(), formatPrice(), formatSignedPercent(), QuoteRow() (+15 more)
 
 ### Community 23 - "Community 23"
-Cohesion: 0.10
-Nodes (20): checkConstraints, columns, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, key (+12 more)
+Cohesion: 0.15
+Nodes (13): columns, key, value, autoincrement, name, notNull, primaryKey, type (+5 more)
 
 ### Community 24 - "Community 24"
-Cohesion: 0.07
-Nodes (29): entry, expo, config, entry, ignore, ignoreDependencies, project, $schema (+21 more)
+Cohesion: 0.10
+Nodes (20): devDependencies, babel-plugin-inline-import, drizzle-kit, eas-build-cache-provider, eslint, eslint-config-expo, jest, jest-expo (+12 more)
 
 ### Community 25 - "Community 25"
 Cohesion: 0.19
@@ -307,20 +322,20 @@ Cohesion: 0.12
 Nodes (15): aliases, components, hooks, lib, ui, utils, rsc, $schema (+7 more)
 
 ### Community 28 - "Community 28"
-Cohesion: 0.22
-Nodes (10): AccountFormContent(), ACCOUNT_TYPE_META, AccountFormBottomSheet(), AccountFormBottomSheetProps, AccountFormSheetFooter(), accountFormOptions, useAccountForm(), UseAccountFormArgs (+2 more)
+Cohesion: 0.11
+Nodes (27): AccountEditSheet(), AccountFormContent(), AccountFormContentProps, SheetTextInputProps, ACCOUNT_ICON_OPTIONS, ACCOUNT_TYPE_META, ACCOUNT_TYPE_OPTIONS, AccountTypeOption (+19 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.12
-Nodes (14): GARDEN_HEIGHT, OnboardingScreen(), StepContentProps, mockMutateAsync, mockReplace, stepEntering, OnboardingWelcomeStep(), OnboardingWelcomeStepProps (+6 more)
+Cohesion: 0.09
+Nodes (25): AccountFormPreview(), AccountFormPreviewProps, AccountFormValues, useAccountForm(), GARDEN_HEIGHT, OnboardingScreen(), StepContentProps, GrowingGarden() (+17 more)
 
 ### Community 30 - "Community 30"
 Cohesion: 0.14
 Nodes (13): fill, automatic-gradient, orientation, groups, start, stop, x, y (+5 more)
 
 ### Community 31 - "Community 31"
-Cohesion: 0.15
-Nodes (17): accounts, exchangeRates, transactions, Manual-First Multi-Currency Product, UAE and Global Bank-Connectivity Gap, accountKeys, mockUseDatabase, useCreateAccount() (+9 more)
+Cohesion: 0.16
+Nodes (15): accounts, exchangeRates, recurringPayments, transactions, Envelope Budgets, Forward Cash-Flow Forecast, Manual-First Multi-Currency Product, Personal Finance App Market Map (+7 more)
 
 ### Community 32 - "Community 32"
 Cohesion: 0.15
@@ -331,40 +346,40 @@ Cohesion: 0.15
 Nodes (12): dialect, enums, id, internal, indexes, _meta, columns, schemas (+4 more)
 
 ### Community 34 - "Community 34"
-Cohesion: 0.10
-Nodes (20): columns, created_at, icon, parent_id, autoincrement, name, notNull, primaryKey (+12 more)
+Cohesion: 0.11
+Nodes (19): columns, created_at, name, parent_id, autoincrement, name, notNull, primaryKey (+11 more)
 
 ### Community 35 - "Community 35"
 Cohesion: 0.10
-Nodes (20): date, description, original_amount, autoincrement, name, notNull, primaryKey, type (+12 more)
+Nodes (20): description, exchange_rate, original_amount, autoincrement, default, name, notNull, primaryKey (+12 more)
 
 ### Community 36 - "Community 36"
-Cohesion: 0.08
-Nodes (25): from_currency, rate, to_currency, updated_at, columns, autoincrement, name, notNull (+17 more)
+Cohesion: 0.11
+Nodes (19): from_currency, rate, to_currency, columns, autoincrement, name, notNull, primaryKey (+11 more)
 
 ### Community 37 - "Community 37"
-Cohesion: 0.29
-Nodes (7): MarketHero(), MarketHeroProps, MarketSourceBadge(), Badge(), BadgeProps, badgeTextVariants, badgeVariants
+Cohesion: 0.20
+Nodes (9): entry, expo, config, entry, ignore, ignoreDependencies, project, $schema (+1 more)
 
 ### Community 38 - "Community 38"
 Cohesion: 0.23
 Nodes (8): DEFAULTS, shader, SpectralWave, SpectralWaveComponent(), styles, ISpectralWave, RGBA, colorToRGBA()
 
 ### Community 39 - "Community 39"
-Cohesion: 0.11
-Nodes (19): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, checkConstraints, compositePrimaryKeys (+11 more)
+Cohesion: 0.17
+Nodes (12): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, uq_exchange_rate, tables (+4 more)
 
 ### Community 40 - "Community 40"
-Cohesion: 0.31
-Nodes (9): ColorPicker(), ColorPickerProps, AccountTypeColors, ColorPalette, useAccount(), useUpdateAccount(), ACCOUNT_TYPES, EditAccountScreen() (+1 more)
+Cohesion: 0.16
+Nodes (16): AccountColorPicker(), AccountColorPickerProps, ColorPicker(), ColorPickerProps, AccountTypeColors, ColorPalette, useAccount(), useDeleteAccount() (+8 more)
 
 ### Community 41 - "Community 41"
-Cohesion: 0.25
-Nodes (8): onDatabaseInit(), queryClient, unstable_settings, DEFAULT_SETTINGS, runMigrations(), seedDefaultSettings(), markDatabaseReset(), appSettings
+Cohesion: 0.23
+Nodes (11): onDatabaseInit(), queryClient, unstable_settings, DEFAULT_SETTINGS, runMigrations(), seedDefaultSettings(), dropAllTables(), markDatabaseReset() (+3 more)
 
 ### Community 42 - "Community 42"
-Cohesion: 0.19
-Nodes (9): AppUpdateContext, AppUpdateProvider(), AppUpdateProviderProps, UpdateOperation, ExpoClientManifest, isMandatoryUpdateManifest(), UpdateManifest, AppUpdateContextValue (+1 more)
+Cohesion: 0.29
+Nodes (6): AppUpdateContext, AppUpdateProvider(), AppUpdateProviderProps, UpdateOperation, AppUpdateContextValue, AppUpdateStatus
 
 ### Community 43 - "Community 43"
 Cohesion: 0.05
@@ -380,15 +395,11 @@ Nodes (7): mandatoryUpdateResult, mockCheckForUpdateAsync, mockFetchUpdateAsync,
 
 ### Community 46 - "Community 46"
 Cohesion: 0.25
-Nodes (7): mockBack, mockPush, mockSetSelectedMonth, mockTransactionGroup, mockUseAccount, mockUseLocalSearchParams, mockUseTransactions
-
-### Community 47 - "Community 47"
-Cohesion: 0.36
-Nodes (4): dropAllTables(), readResetVersion(), resetDatabaseIfNeeded(), FakeDb
+Nodes (6): CountStepper(), CountStepperProps, EndsControl(), EndsControlProps, EndType, OPTIONS
 
 ### Community 48 - "Community 48"
-Cohesion: 0.29
-Nodes (7): CATEGORIES, clearSeedVersion(), DB, NOW, readSeedVersion(), seedDatabase(), SeedOptions
+Cohesion: 0.19
+Nodes (12): CATEGORIES, clearSeedVersion(), DB, NOW, readSeedVersion(), seedDatabase(), SeedOptions, DevToolsSection() (+4 more)
 
 ### Community 49 - "Community 49"
 Cohesion: 0.25
@@ -407,8 +418,8 @@ Cohesion: 0.05
 Nodes (37): 1. Subscription-funded software, 2. Freemium, 3. Financial-service acquisition, 4. Success fee, A clear budgeting philosophy, A fast review loop, Detailed app comparison, Executive summary (+29 more)
 
 ### Community 53 - "Community 53"
-Cohesion: 0.06
-Nodes (31): recurring_payments_account_id_accounts_id_fk, recurring_payments_category_id_categories_id_fk, recurring_payments_to_account_id_accounts_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate (+23 more)
+Cohesion: 0.25
+Nodes (8): recurring_payments_account_id_accounts_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo
 
 ### Community 54 - "Community 54"
 Cohesion: 0.29
@@ -420,19 +431,19 @@ Nodes (7): currency, autoincrement, default, name, notNull, primaryKey, type
 
 ### Community 56 - "Community 56"
 Cohesion: 0.11
-Nodes (19): day_of_month, end_date, last_generated_date, autoincrement, name, notNull, primaryKey, type (+11 more)
+Nodes (19): day_of_month, end_date, start_date, autoincrement, name, notNull, primaryKey, type (+11 more)
 
 ### Community 57 - "Community 57"
-Cohesion: 0.08
-Nodes (25): date, exchange_rate, original_amount, original_currency, autoincrement, name, notNull, primaryKey (+17 more)
+Cohesion: 0.11
+Nodes (19): date, exchange_rate, original_currency, autoincrement, name, notNull, primaryKey, type (+11 more)
 
 ### Community 58 - "Community 58"
-Cohesion: 0.10
-Nodes (21): columns, exclude_from_total, initial_balance, name, autoincrement, default, name, notNull (+13 more)
+Cohesion: 0.13
+Nodes (15): columns, exclude_from_total, initial_balance, autoincrement, default, name, notNull, primaryKey (+7 more)
 
 ### Community 59 - "Community 59"
-Cohesion: 0.08
-Nodes (25): from_currency, id, rate, to_currency, columns, autoincrement, name, notNull (+17 more)
+Cohesion: 0.11
+Nodes (19): from_currency, id, updated_at, columns, autoincrement, name, notNull, primaryKey (+11 more)
 
 ### Community 60 - "Community 60"
 Cohesion: 0.10
@@ -463,8 +474,8 @@ Cohesion: 0.33
 Nodes (6): day_of_week, autoincrement, name, notNull, primaryKey, type
 
 ### Community 67 - "Community 67"
-Cohesion: 0.10
-Nodes (20): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, checkConstraints, compositePrimaryKeys (+12 more)
+Cohesion: 0.29
+Nodes (6): dialect, id, prevId, tables, version, views
 
 ### Community 68 - "Community 68"
 Cohesion: 0.33
@@ -475,8 +486,8 @@ Cohesion: 0.33
 Nodes (6): interval, autoincrement, name, notNull, primaryKey, type
 
 ### Community 70 - "Community 70"
-Cohesion: 0.10
-Nodes (21): columns, initial_balance, name, sort_order, autoincrement, default, name, notNull (+13 more)
+Cohesion: 0.29
+Nodes (7): initial_balance, autoincrement, default, name, notNull, primaryKey, type
 
 ### Community 71 - "Community 71"
 Cohesion: 0.33
@@ -484,11 +495,11 @@ Nodes (6): month_of_year, autoincrement, name, notNull, primaryKey, type
 
 ### Community 72 - "Community 72"
 Cohesion: 0.17
-Nodes (14): AccountDetailScreen(), groupByDay(), CategorySpendingDatum, TransactionPointDatum, useCategorySpending(), useTransactionPoints(), useTransactions(), BarDatum (+6 more)
+Nodes (14): TinySproutGraphic(), TinySproutGraphicProps, CategorySpendingDatum, TransactionPointDatum, useCategorySpending(), useTransactionPoints(), useTransactions(), BarDatum (+6 more)
 
 ### Community 73 - "Community 73"
-Cohesion: 0.10
-Nodes (20): checkConstraints, columns, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, key (+12 more)
+Cohesion: 0.15
+Nodes (13): columns, key, value, autoincrement, name, notNull, primaryKey, type (+5 more)
 
 ### Community 74 - "Community 74"
 Cohesion: 0.33
@@ -499,40 +510,40 @@ Cohesion: 0.33
 Nodes (6): recurring_payment_id, autoincrement, name, notNull, primaryKey, type
 
 ### Community 76 - "Community 76"
-Cohesion: 0.33
-Nodes (6): start_date, autoincrement, name, notNull, primaryKey, type
+Cohesion: 0.22
+Nodes (8): mockCreateRecurring, mockCreateTransaction, mockDeleteTransaction, mockStackScreen, mockUpdateTransaction, mockUseLocalSearchParams, mockUseRouter, mockUseTransaction
 
 ### Community 77 - "Community 77"
 Cohesion: 0.33
 Nodes (6): to_account_id, autoincrement, name, notNull, primaryKey, type
 
 ### Community 78 - "Community 78"
-Cohesion: 0.10
-Nodes (20): columns, autoincrement, default, name, notNull, primaryKey, type, color (+12 more)
+Cohesion: 0.08
+Nodes (28): columns, columns, autoincrement, default, name, notNull, primaryKey, type (+20 more)
 
 ### Community 79 - "Community 79"
-Cohesion: 0.19
-Nodes (11): AmountInput(), AmountInputProps, TYPE_EMOJI, UpcomingRecurringRow(), MoneyText(), MoneyTextProps, centsToDecimalString(), currencyAffixes (+3 more)
+Cohesion: 0.14
+Nodes (16): AmountInput(), AmountInputProps, TYPE_EMOJI, UpcomingRecurringRow(), mockPush, mockUseRecurringPayments, UpcomingRecurringSection(), MoneyText() (+8 more)
 
 ### Community 80 - "Community 80"
-Cohesion: 0.73
-Nodes (3): formatPrice(), formatSignedPercent(), QuoteRow()
+Cohesion: 0.25
+Nodes (8): transactions_category_id_categories_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo
 
 ### Community 81 - "Community 81"
-Cohesion: 0.40
-Nodes (4): OnboardingHeader(), OnboardingHeaderProps, OnboardingProgress(), OnboardingProgressProps
+Cohesion: 0.25
+Nodes (8): transactions_recurring_payment_id_recurring_payments_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo
 
 ### Community 82 - "Community 82"
-Cohesion: 0.17
-Nodes (11): reactNativeDirectoryCheck, expo, doctor, install, exclude, main, name, packageManager (+3 more)
+Cohesion: 0.33
+Nodes (5): main, name, packageManager, private, version
 
 ### Community 83 - "Community 83"
 Cohesion: 0.12
-Nodes (15): AnimatedPath, COIN_WINDOW, GardenLayer(), GardenLayerProps, GrowingGarden(), GrowingGardenProps, GROWTH_SPRING, GrowthPartProps (+7 more)
+Nodes (14): AnimatedPath, COIN_WINDOW, GardenLayer(), GardenLayerProps, GrowingGardenProps, GROWTH_SPRING, GrowthPartProps, LEAF_HIGH_WINDOW (+6 more)
 
 ### Community 85 - "Community 85"
-Cohesion: 0.24
-Nodes (7): Button(), ButtonProps, buttonTextVariants, buttonVariants, MandatoryUpdateGate(), mockRetryMandatoryUpdate, mockUseAppUpdate
+Cohesion: 0.38
+Nodes (4): useAppUpdate(), MandatoryUpdateGate(), mockRetryMandatoryUpdate, mockUseAppUpdate
 
 ### Community 86 - "Community 86"
 Cohesion: 0.40
@@ -544,19 +555,19 @@ Nodes (3): dialect, entries, version
 
 ### Community 88 - "Community 88"
 Cohesion: 0.11
-Nodes (19): day_of_month, day_of_week, month_of_year, autoincrement, name, notNull, primaryKey, type (+11 more)
+Nodes (19): day_of_month, day_of_week, interval, autoincrement, name, notNull, primaryKey, type (+11 more)
 
 ### Community 89 - "Community 89"
-Cohesion: 0.20
-Nodes (14): EnrichedRow, enrichedSelect, NewTransaction, mockUseDatabase, toAccounts, TransactionFilters, transactionKeys, useCreateTransaction() (+6 more)
+Cohesion: 0.17
+Nodes (16): EnrichedRow, enrichedSelect, NewTransaction, mockUseDatabase, toAccounts, transactionKeys, useCreateTransaction(), useDeleteTransaction() (+8 more)
 
 ### Community 90 - "Community 90"
 Cohesion: 0.50
 Nodes (3): mockHideAsync, mockStackScreen, mockUseFonts
 
 ### Community 91 - "Community 91"
-Cohesion: 0.19
-Nodes (12): categories, categoryKeys, mockUseDatabase, useCategory(), useCreateCategory(), useDeleteCategory(), useUpdateCategory(), createTestQueryClient() (+4 more)
+Cohesion: 0.24
+Nodes (12): useDatabase(), categories, categoryKeys, mockUseDatabase, useCategory(), useCreateCategory(), useDeleteCategory(), useUpdateCategory() (+4 more)
 
 ### Community 92 - "Community 92"
 Cohesion: 0.50
@@ -575,52 +586,52 @@ Cohesion: 0.25
 Nodes (7): Get started, Manila, Manual-First Money Management Strategy, Over-the-Air Updates, Over-the-air updates, Testing, Verification
 
 ### Community 102 - "Community 102"
-Cohesion: 0.21
-Nodes (10): AccountColorPicker(), AccountColorPickerProps, AccountFormBalanceSection(), AccountFormBalanceSectionProps, SheetTextInputProps, SheetTextInputProps, AccountTypePicker(), AccountFormApi (+2 more)
+Cohesion: 0.25
+Nodes (8): transactions_to_account_id_accounts_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo
 
 ### Community 118 - "Community 118"
 Cohesion: 0.25
 Nodes (7): EnvelopesStackLayout(), HomeStackLayout(), LedgerStackLayout(), MoneyMovementStackLayout(), COLORS, useTabStackScreenOptions(), SettingsStackLayout()
 
 ### Community 119 - "Community 119"
-Cohesion: 0.21
-Nodes (8): mockUseHomeScreen, HomeListHeader(), HomeScreen(), mockPush, mockUseTransactions, UpcomingRecurringSection(), StatsCharts(), today()
+Cohesion: 0.25
+Nodes (8): recurring_payments_category_id_categories_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo
 
 ### Community 120 - "Community 120"
-Cohesion: 0.24
-Nodes (8): CategoriesScreen(), CategoryFilter, FilterOption, FILTERS, CategoryEditSheetProps, CategoryRow(), CategoryRowProps, Category
+Cohesion: 0.25
+Nodes (8): recurring_payments_to_account_id_accounts_id_fk, columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo
 
 ### Community 121 - "Community 121"
 Cohesion: 0.18
 Nodes (11): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, uq_exchange_rate, exchange_rates (+3 more)
 
 ### Community 122 - "Community 122"
-Cohesion: 0.27
-Nodes (7): UpcomingRecurringRowProps, TransactionGroup(), TransactionGroupProps, mockPush, TransactionRow(), TransactionRowProps, TransactionWithDetails
+Cohesion: 0.22
+Nodes (17): UpcomingRecurringRowProps, RecurringPaymentRow(), RecurringPaymentRowProps, TYPE_EMOJI, RecurringPayment, addInterval(), endBound(), estimateSteps() (+9 more)
 
 ### Community 123 - "Community 123"
-Cohesion: 0.31
-Nodes (5): AccountFormPreview(), AccountFormPreviewProps, AccountFormValues, CreateResourceSheetFooterProps, layoutTransition
+Cohesion: 0.29
+Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, app_settings
 
 ### Community 124 - "Community 124"
 Cohesion: 0.31
 Nodes (4): EmptyState(), EmptyStateProps, SeedPacketsGraphic(), SeedPacketsGraphicProps
 
 ### Community 125 - "Community 125"
-Cohesion: 0.25
-Nodes (7): OnboardingBloomBurst(), OnboardingBloomBurstProps, Spark(), SparkProps, OnboardingCompleteStep(), OnboardingCompleteStepProps, OnboardingCta()
+Cohesion: 0.40
+Nodes (4): OnboardingBloomBurst(), OnboardingBloomBurstProps, Spark(), SparkProps
 
 ### Community 126 - "Community 126"
 Cohesion: 0.29
-Nodes (3): AccountCurrencyPickerProps, ACCOUNT_CURRENCIES, AccountPickerProps
+Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, categories
 
 ### Community 127 - "Community 127"
-Cohesion: 0.36
-Nodes (5): CategoryEditSheet(), useEditCategoryForm(), CreateResourceBottomSheet(), ResourceSheetDeleteButton(), ResourceSheetDeleteButtonProps
+Cohesion: 0.29
+Nodes (7): icon, autoincrement, default, name, notNull, primaryKey, type
 
 ### Community 128 - "Community 128"
-Cohesion: 0.36
-Nodes (4): HomeEmptyState(), HomeEmptyStateProps, LedgerScreen(), LedgerListHeader()
+Cohesion: 0.18
+Nodes (10): mockUseHomeScreen, HomeEmptyState(), HomeJournalList(), HomeScreen(), RecentJournalSection(), mockPush, HomeEmptyStateProps, LedgerScreen() (+2 more)
 
 ### Community 129 - "Community 129"
 Cohesion: 0.33
@@ -644,7 +655,7 @@ Nodes (7): exclude_from_total, autoincrement, default, name, notNull, primaryKey
 
 ### Community 134 - "Community 134"
 Cohesion: 0.29
-Nodes (7): icon, autoincrement, default, name, notNull, primaryKey, type
+Nodes (7): transactions, checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints
 
 ### Community 135 - "Community 135"
 Cohesion: 0.29
@@ -654,9 +665,13 @@ Nodes (7): is_active, autoincrement, default, name, notNull, primaryKey, type
 Cohesion: 0.29
 Nodes (7): is_recurring, autoincrement, default, name, notNull, primaryKey, type
 
+### Community 137 - "Community 137"
+Cohesion: 0.29
+Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, accounts
+
 ### Community 138 - "Community 138"
-Cohesion: 0.33
-Nodes (6): exchange_rate, autoincrement, name, notNull, primaryKey, type
+Cohesion: 0.29
+Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, app_settings
 
 ### Community 139 - "Community 139"
 Cohesion: 0.33
@@ -679,8 +694,8 @@ Cohesion: 0.33
 Nodes (6): end_date, autoincrement, name, notNull, primaryKey, type
 
 ### Community 144 - "Community 144"
-Cohesion: 0.33
-Nodes (6): interval, autoincrement, name, notNull, primaryKey, type
+Cohesion: 0.29
+Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, categories
 
 ### Community 145 - "Community 145"
 Cohesion: 0.33
@@ -703,32 +718,84 @@ Cohesion: 0.33
 Nodes (6): type, autoincrement, name, notNull, primaryKey, type
 
 ### Community 150 - "Community 150"
+Cohesion: 0.29
+Nodes (7): sort_order, autoincrement, default, name, notNull, primaryKey, type
+
+### Community 151 - "Community 151"
+Cohesion: 0.29
+Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, recurring_payments
+
+### Community 152 - "Community 152"
+Cohesion: 0.29
+Nodes (5): mockCheckForUpdate, mockInstallUpdate, mockRetryMandatoryUpdate, mockUseAppUpdate, UpdateSection()
+
+### Community 153 - "Community 153"
+Cohesion: 0.38
+Nodes (5): createTestQueryClient(), renderHookWithProviders(), renderWithProviders(), TestProvidersProps, trackedClients
+
+### Community 154 - "Community 154"
+Cohesion: 0.33
+Nodes (6): date, autoincrement, name, notNull, primaryKey, type
+
+### Community 155 - "Community 155"
+Cohesion: 0.33
+Nodes (6): last_generated_date, autoincrement, name, notNull, primaryKey, type
+
+### Community 156 - "Community 156"
 Cohesion: 0.33
 Nodes (6): updated_at, autoincrement, name, notNull, primaryKey, type
 
-### Community 151 - "Community 151"
+### Community 157 - "Community 157"
+Cohesion: 0.33
+Nodes (6): created_at, autoincrement, name, notNull, primaryKey, type
+
+### Community 158 - "Community 158"
+Cohesion: 0.33
+Nodes (6): month_of_year, autoincrement, name, notNull, primaryKey, type
+
+### Community 159 - "Community 159"
+Cohesion: 0.33
+Nodes (6): original_amount, autoincrement, name, notNull, primaryKey, type
+
+### Community 160 - "Community 160"
+Cohesion: 0.33
+Nodes (6): rate, autoincrement, name, notNull, primaryKey, type
+
+### Community 161 - "Community 161"
+Cohesion: 0.33
+Nodes (6): to_currency, autoincrement, name, notNull, primaryKey, type
+
+### Community 162 - "Community 162"
+Cohesion: 0.33
+Nodes (6): reactNativeDirectoryCheck, expo, doctor, install, exclude, exclude
+
+### Community 163 - "Community 163"
+Cohesion: 0.47
+Nodes (3): ExtendedDatePickerProps, TransactionDatePickerProps, getDisplayDateLabel()
+
+### Community 165 - "Community 165"
 Cohesion: 0.50
-Nodes (4): Envelope Budgets, Forward Cash-Flow Forecast, Personal Finance App Market Map, Safe-to-Spend Number
+Nodes (3): ExpoClientManifest, isMandatoryUpdateManifest(), UpdateManifest
 
 ## Knowledge Gaps
-- **1055 isolated node(s):** `allow`, `$schema`, `ignorePatterns`, `provider_key`, `model_id` (+1050 more)
+- **1064 isolated node(s):** `mockPush`, `mockUseRecurringPayments`, `mockUseLocalSearchParams`, `mockUseRouter`, `mockUseTransaction` (+1059 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **13 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **15 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Text()` connect `Community 19` to `Community 128`, `Community 129`, `Community 1`, `Community 130`, `Community 2`, `Community 0`, `Community 6`, `Community 7`, `Community 5`, `Community 137`, `Community 11`, `Community 14`, `Community 15`, `Community 16`, `Community 21`, `Community 22`, `Community 25`, `Community 29`, `Community 37`, `Community 40`, `Community 72`, `Community 79`, `Community 80`, `Community 85`, `Community 102`, `Community 119`, `Community 120`, `Community 122`, `Community 123`, `Community 124`, `Community 125`, `Community 126`?**
-  _High betweenness centrality (0.042) - this node is a cross-community bridge._
-- **Why does `columns` connect `Community 88` to `Community 131`, `Community 132`, `Community 70`, `Community 135`, `Community 140`, `Community 141`, `Community 78`, `Community 142`, `Community 143`, `Community 144`, `Community 145`, `Community 147`, `Community 148`, `Community 149`, `Community 150`, `Community 53`, `Community 59`?**
-  _High betweenness centrality (0.014) - this node is a cross-community bridge._
-- **Why does `columns` connect `Community 57` to `Community 131`, `Community 132`, `Community 136`, `Community 43`, `Community 140`, `Community 141`, `Community 78`, `Community 142`, `Community 146`, `Community 148`, `Community 149`, `Community 150`, `Community 59`?**
+- **Why does `Text()` connect `Community 19` to `Community 0`, `Community 129`, `Community 1`, `Community 130`, `Community 128`, `Community 2`, `Community 6`, `Community 7`, `Community 8`, `Community 5`, `Community 11`, `Community 14`, `Community 16`, `Community 21`, `Community 22`, `Community 25`, `Community 28`, `Community 29`, `Community 163`, `Community 40`, `Community 46`, `Community 48`, `Community 72`, `Community 79`, `Community 85`, `Community 122`, `Community 124`?**
+  _High betweenness centrality (0.045) - this node is a cross-community bridge._
+- **Why does `columns` connect `Community 88` to `Community 131`, `Community 132`, `Community 135`, `Community 140`, `Community 141`, `Community 142`, `Community 143`, `Community 78`, `Community 145`, `Community 147`, `Community 148`, `Community 149`, `Community 151`, `Community 59`, `Community 157`, `Community 158`?**
+  _High betweenness centrality (0.015) - this node is a cross-community bridge._
+- **Why does `columns` connect `Community 57` to `Community 131`, `Community 132`, `Community 136`, `Community 43`, `Community 140`, `Community 141`, `Community 142`, `Community 146`, `Community 148`, `Community 149`, `Community 59`, `Community 157`, `Community 159`?**
   _High betweenness centrality (0.012) - this node is a cross-community bridge._
-- **What connects `allow`, `$schema`, `ignorePatterns` to the rest of the system?**
-  _1057 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `mockPush`, `mockUseRecurringPayments`, `mockUseLocalSearchParams` to the rest of the system?**
+  _1066 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Community 0` be split into smaller, more focused modules?**
+  _Cohesion score 0.12698412698412698 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.0919661733615222 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07207792207792207 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**
   _Cohesion score 0.03125 - nodes in this community are weakly interconnected._
-- **Should `Community 4` be split into smaller, more focused modules?**
-  _Cohesion score 0.11384615384615385 - nodes in this community are weakly interconnected._

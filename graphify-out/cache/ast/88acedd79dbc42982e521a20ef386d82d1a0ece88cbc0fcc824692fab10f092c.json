@@ -1,1 +1,607 @@
-{"nodes": [{"id": "users_saeed_work_money_management_docs_research_personal_finance_app_market_research_2026_md", "label": "personal-finance-app-market-research-2026.md", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L1"}, {"id": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research", "label": "Personal Finance App Market Research", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L1"}, {"id": "research_personal_finance_app_market_research_2026_executive_summary", "label": "Executive summary", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L7"}, {"id": "research_personal_finance_app_market_research_2026_methodology_and_rating_caveats", "label": "Methodology and rating caveats", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L34"}, {"id": "research_personal_finance_app_market_research_2026_the_ten_products_most_worth_studying", "label": "The ten products most worth studying", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L44"}, {"id": "research_personal_finance_app_market_research_2026_high_rated_apps_with_meaningful_review_volume", "label": "High-rated apps with meaningful review volume", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L59"}, {"id": "research_personal_finance_app_market_research_2026_platform_quality_can_diverge", "label": "Platform quality can diverge", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L78"}, {"id": "research_personal_finance_app_market_research_2026_detailed_app_comparison", "label": "Detailed app comparison", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L82"}, {"id": "research_personal_finance_app_market_research_2026_mainstream_budgeting_and_money_management_apps", "label": "Mainstream budgeting and money-management apps", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L84"}, {"id": "research_personal_finance_app_market_research_2026_international_and_manual_first_apps", "label": "International and manual-first apps", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L98"}, {"id": "research_personal_finance_app_market_research_2026_planning_net_worth_and_wealth_apps", "label": "Planning, net-worth, and wealth apps", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L107"}, {"id": "research_personal_finance_app_market_research_2026_regional_and_adjacent_products", "label": "Regional and adjacent products", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L118"}, {"id": "research_personal_finance_app_market_research_2026_feature_coverage_matrix", "label": "Feature coverage matrix", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L132"}, {"id": "research_personal_finance_app_market_research_2026_pricing_and_business_model_patterns", "label": "Pricing and business-model patterns", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L155"}, {"id": "research_personal_finance_app_market_research_2026_1_subscription_funded_software", "label": "1. Subscription-funded software", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L157"}, {"id": "research_personal_finance_app_market_research_2026_2_freemium", "label": "2. Freemium", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L168"}, {"id": "research_personal_finance_app_market_research_2026_3_financial_service_acquisition", "label": "3. Financial-service acquisition", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L179"}, {"id": "research_personal_finance_app_market_research_2026_4_success_fee", "label": "4. Success fee", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L183"}, {"id": "research_personal_finance_app_market_research_2026_what_the_market_consistently_rewards", "label": "What the market consistently rewards", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L187"}, {"id": "research_personal_finance_app_market_research_2026_a_clear_budgeting_philosophy", "label": "A clear budgeting philosophy", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L189"}, {"id": "research_personal_finance_app_market_research_2026_a_fast_review_loop", "label": "A fast review loop", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L201"}, {"id": "research_personal_finance_app_market_research_2026_forward_looking_answers", "label": "Forward-looking answers", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L213"}, {"id": "research_personal_finance_app_market_research_2026_household_collaboration", "label": "Household collaboration", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L224"}, {"id": "research_personal_finance_app_market_research_2026_trust_and_portability", "label": "Trust and portability", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L235"}, {"id": "research_personal_finance_app_market_research_2026_uae_and_global_market_findings", "label": "UAE and global-market findings", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L248"}, {"id": "research_personal_finance_app_market_research_2026_the_gap", "label": "The gap", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L250"}, {"id": "research_personal_finance_app_market_research_2026_uae_global_features_worth_prioritizing", "label": "UAE/global features worth prioritizing", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L269"}, {"id": "research_personal_finance_app_market_research_2026_implications_for_manila_s_current_product", "label": "Implications for Manila\u2019s current product", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L284"}, {"id": "research_personal_finance_app_market_research_2026_recommended_sequence", "label": "Recommended sequence", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L298"}, {"id": "research_personal_finance_app_market_research_2026_phase_1_make_the_ledger_actionable", "label": "Phase 1 \u2014 Make the ledger actionable", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L300"}, {"id": "research_personal_finance_app_market_research_2026_phase_2_differentiate_for_global_households", "label": "Phase 2 \u2014 Differentiate for global households", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L340"}, {"id": "research_personal_finance_app_market_research_2026_phase_3_add_intelligence_after_data_quality", "label": "Phase 3 \u2014 Add intelligence after data quality", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L371"}, {"id": "research_personal_finance_app_market_research_2026_features_to_defer", "label": "Features to defer", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L388"}, {"id": "research_personal_finance_app_market_research_2026_suggested_positioning_and_monetization_hypothesis", "label": "Suggested positioning and monetization hypothesis", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L397"}, {"id": "research_personal_finance_app_market_research_2026_positioning", "label": "Positioning", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L399"}, {"id": "research_personal_finance_app_market_research_2026_freemium_boundary_to_test", "label": "Freemium boundary to test", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L405"}, {"id": "research_personal_finance_app_market_research_2026_price_hypothesis", "label": "Price hypothesis", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L426"}, {"id": "research_personal_finance_app_market_research_2026_final_conclusions", "label": "Final conclusions", "file_type": "document", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L440"}], "edges": [{"source": "users_saeed_work_money_management_docs_research_personal_finance_app_market_research_2026_md", "target": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L1", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research", "target": "research_personal_finance_app_market_research_2026_executive_summary", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L7", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research", "target": "research_personal_finance_app_market_research_2026_methodology_and_rating_caveats", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L34", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research", "target": "research_personal_finance_app_market_research_2026_the_ten_products_most_worth_studying", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L44", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research", "target": "research_personal_finance_app_market_research_2026_high_rated_apps_with_meaningful_review_volume", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L59", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_high_rated_apps_with_meaningful_review_volume", "target": "research_personal_finance_app_market_research_2026_platform_quality_can_diverge", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L78", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research", "target": "research_personal_finance_app_market_research_2026_detailed_app_comparison", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L82", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_detailed_app_comparison", "target": "research_personal_finance_app_market_research_2026_mainstream_budgeting_and_money_management_apps", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L84", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_detailed_app_comparison", "target": "research_personal_finance_app_market_research_2026_international_and_manual_first_apps", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L98", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_detailed_app_comparison", "target": "research_personal_finance_app_market_research_2026_planning_net_worth_and_wealth_apps", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L107", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_detailed_app_comparison", "target": "research_personal_finance_app_market_research_2026_regional_and_adjacent_products", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L118", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research", "target": "research_personal_finance_app_market_research_2026_feature_coverage_matrix", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L132", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research", "target": "research_personal_finance_app_market_research_2026_pricing_and_business_model_patterns", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L155", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_pricing_and_business_model_patterns", "target": "research_personal_finance_app_market_research_2026_1_subscription_funded_software", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L157", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_pricing_and_business_model_patterns", "target": "research_personal_finance_app_market_research_2026_2_freemium", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L168", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_pricing_and_business_model_patterns", "target": "research_personal_finance_app_market_research_2026_3_financial_service_acquisition", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L179", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_pricing_and_business_model_patterns", "target": "research_personal_finance_app_market_research_2026_4_success_fee", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L183", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research", "target": "research_personal_finance_app_market_research_2026_what_the_market_consistently_rewards", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L187", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_what_the_market_consistently_rewards", "target": "research_personal_finance_app_market_research_2026_a_clear_budgeting_philosophy", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L189", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_what_the_market_consistently_rewards", "target": "research_personal_finance_app_market_research_2026_a_fast_review_loop", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L201", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_what_the_market_consistently_rewards", "target": "research_personal_finance_app_market_research_2026_forward_looking_answers", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L213", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_what_the_market_consistently_rewards", "target": "research_personal_finance_app_market_research_2026_household_collaboration", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L224", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_what_the_market_consistently_rewards", "target": "research_personal_finance_app_market_research_2026_trust_and_portability", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L235", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research", "target": "research_personal_finance_app_market_research_2026_uae_and_global_market_findings", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L248", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_uae_and_global_market_findings", "target": "research_personal_finance_app_market_research_2026_the_gap", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L250", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_uae_and_global_market_findings", "target": "research_personal_finance_app_market_research_2026_uae_global_features_worth_prioritizing", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L269", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research", "target": "research_personal_finance_app_market_research_2026_implications_for_manila_s_current_product", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L284", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_implications_for_manila_s_current_product", "target": "research_personal_finance_app_market_research_2026_recommended_sequence", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L298", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_recommended_sequence", "target": "research_personal_finance_app_market_research_2026_phase_1_make_the_ledger_actionable", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L300", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_recommended_sequence", "target": "research_personal_finance_app_market_research_2026_phase_2_differentiate_for_global_households", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L340", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_recommended_sequence", "target": "research_personal_finance_app_market_research_2026_phase_3_add_intelligence_after_data_quality", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L371", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_implications_for_manila_s_current_product", "target": "research_personal_finance_app_market_research_2026_features_to_defer", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L388", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research", "target": "research_personal_finance_app_market_research_2026_suggested_positioning_and_monetization_hypothesis", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L397", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_suggested_positioning_and_monetization_hypothesis", "target": "research_personal_finance_app_market_research_2026_positioning", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L399", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_suggested_positioning_and_monetization_hypothesis", "target": "research_personal_finance_app_market_research_2026_freemium_boundary_to_test", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L405", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_suggested_positioning_and_monetization_hypothesis", "target": "research_personal_finance_app_market_research_2026_price_hypothesis", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L426", "weight": 1.0}, {"source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research", "target": "research_personal_finance_app_market_research_2026_final_conclusions", "relation": "contains", "confidence": "EXTRACTED", "source_file": "docs/research/personal-finance-app-market-research-2026.md", "source_location": "L440", "weight": 1.0}], "input_tokens": 0, "output_tokens": 0}
+{
+  "nodes": [
+    {
+      "id": "users_saeed_work_money_management_docs_research_personal_finance_app_market_research_2026_md",
+      "label": "personal-finance-app-market-research-2026.md",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research",
+      "label": "Personal Finance App Market Research",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_executive_summary",
+      "label": "Executive summary",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L7"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_methodology_and_rating_caveats",
+      "label": "Methodology and rating caveats",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L34"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_the_ten_products_most_worth_studying",
+      "label": "The ten products most worth studying",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L44"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_high_rated_apps_with_meaningful_review_volume",
+      "label": "High-rated apps with meaningful review volume",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L59"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_platform_quality_can_diverge",
+      "label": "Platform quality can diverge",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L78"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_detailed_app_comparison",
+      "label": "Detailed app comparison",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L82"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_mainstream_budgeting_and_money_management_apps",
+      "label": "Mainstream budgeting and money-management apps",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L84"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_international_and_manual_first_apps",
+      "label": "International and manual-first apps",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L98"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_planning_net_worth_and_wealth_apps",
+      "label": "Planning, net-worth, and wealth apps",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L107"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_regional_and_adjacent_products",
+      "label": "Regional and adjacent products",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L118"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_feature_coverage_matrix",
+      "label": "Feature coverage matrix",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L132"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_pricing_and_business_model_patterns",
+      "label": "Pricing and business-model patterns",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L155"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_1_subscription_funded_software",
+      "label": "1. Subscription-funded software",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L157"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_2_freemium",
+      "label": "2. Freemium",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L168"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_3_financial_service_acquisition",
+      "label": "3. Financial-service acquisition",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L179"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_4_success_fee",
+      "label": "4. Success fee",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L183"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_what_the_market_consistently_rewards",
+      "label": "What the market consistently rewards",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L187"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_a_clear_budgeting_philosophy",
+      "label": "A clear budgeting philosophy",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L189"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_a_fast_review_loop",
+      "label": "A fast review loop",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L201"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_forward_looking_answers",
+      "label": "Forward-looking answers",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L213"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_household_collaboration",
+      "label": "Household collaboration",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L224"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_trust_and_portability",
+      "label": "Trust and portability",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L235"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_uae_and_global_market_findings",
+      "label": "UAE and global-market findings",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L248"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_the_gap",
+      "label": "The gap",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L250"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_uae_global_features_worth_prioritizing",
+      "label": "UAE/global features worth prioritizing",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L269"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_implications_for_manila_s_current_product",
+      "label": "Implications for Manila\u2019s current product",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L284"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_recommended_sequence",
+      "label": "Recommended sequence",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L298"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_phase_1_make_the_ledger_actionable",
+      "label": "Phase 1 \u2014 Make the ledger actionable",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L300"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_phase_2_differentiate_for_global_households",
+      "label": "Phase 2 \u2014 Differentiate for global households",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L340"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_phase_3_add_intelligence_after_data_quality",
+      "label": "Phase 3 \u2014 Add intelligence after data quality",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L371"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_features_to_defer",
+      "label": "Features to defer",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L388"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_suggested_positioning_and_monetization_hypothesis",
+      "label": "Suggested positioning and monetization hypothesis",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L397"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_positioning",
+      "label": "Positioning",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L399"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_freemium_boundary_to_test",
+      "label": "Freemium boundary to test",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L405"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_price_hypothesis",
+      "label": "Price hypothesis",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L426"
+    },
+    {
+      "id": "research_personal_finance_app_market_research_2026_final_conclusions",
+      "label": "Final conclusions",
+      "file_type": "document",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L440"
+    }
+  ],
+  "edges": [
+    {
+      "source": "users_saeed_work_money_management_docs_research_personal_finance_app_market_research_2026_md",
+      "target": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research",
+      "target": "research_personal_finance_app_market_research_2026_executive_summary",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research",
+      "target": "research_personal_finance_app_market_research_2026_methodology_and_rating_caveats",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research",
+      "target": "research_personal_finance_app_market_research_2026_the_ten_products_most_worth_studying",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L44",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research",
+      "target": "research_personal_finance_app_market_research_2026_high_rated_apps_with_meaningful_review_volume",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L59",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_high_rated_apps_with_meaningful_review_volume",
+      "target": "research_personal_finance_app_market_research_2026_platform_quality_can_diverge",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L78",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research",
+      "target": "research_personal_finance_app_market_research_2026_detailed_app_comparison",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L82",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_detailed_app_comparison",
+      "target": "research_personal_finance_app_market_research_2026_mainstream_budgeting_and_money_management_apps",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L84",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_detailed_app_comparison",
+      "target": "research_personal_finance_app_market_research_2026_international_and_manual_first_apps",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L98",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_detailed_app_comparison",
+      "target": "research_personal_finance_app_market_research_2026_planning_net_worth_and_wealth_apps",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L107",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_detailed_app_comparison",
+      "target": "research_personal_finance_app_market_research_2026_regional_and_adjacent_products",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L118",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research",
+      "target": "research_personal_finance_app_market_research_2026_feature_coverage_matrix",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L132",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research",
+      "target": "research_personal_finance_app_market_research_2026_pricing_and_business_model_patterns",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L155",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_pricing_and_business_model_patterns",
+      "target": "research_personal_finance_app_market_research_2026_1_subscription_funded_software",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L157",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_pricing_and_business_model_patterns",
+      "target": "research_personal_finance_app_market_research_2026_2_freemium",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L168",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_pricing_and_business_model_patterns",
+      "target": "research_personal_finance_app_market_research_2026_3_financial_service_acquisition",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L179",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_pricing_and_business_model_patterns",
+      "target": "research_personal_finance_app_market_research_2026_4_success_fee",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L183",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research",
+      "target": "research_personal_finance_app_market_research_2026_what_the_market_consistently_rewards",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L187",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_what_the_market_consistently_rewards",
+      "target": "research_personal_finance_app_market_research_2026_a_clear_budgeting_philosophy",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L189",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_what_the_market_consistently_rewards",
+      "target": "research_personal_finance_app_market_research_2026_a_fast_review_loop",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L201",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_what_the_market_consistently_rewards",
+      "target": "research_personal_finance_app_market_research_2026_forward_looking_answers",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L213",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_what_the_market_consistently_rewards",
+      "target": "research_personal_finance_app_market_research_2026_household_collaboration",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L224",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_what_the_market_consistently_rewards",
+      "target": "research_personal_finance_app_market_research_2026_trust_and_portability",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L235",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research",
+      "target": "research_personal_finance_app_market_research_2026_uae_and_global_market_findings",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L248",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_uae_and_global_market_findings",
+      "target": "research_personal_finance_app_market_research_2026_the_gap",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L250",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_uae_and_global_market_findings",
+      "target": "research_personal_finance_app_market_research_2026_uae_global_features_worth_prioritizing",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L269",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research",
+      "target": "research_personal_finance_app_market_research_2026_implications_for_manila_s_current_product",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L284",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_implications_for_manila_s_current_product",
+      "target": "research_personal_finance_app_market_research_2026_recommended_sequence",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L298",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_recommended_sequence",
+      "target": "research_personal_finance_app_market_research_2026_phase_1_make_the_ledger_actionable",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L300",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_recommended_sequence",
+      "target": "research_personal_finance_app_market_research_2026_phase_2_differentiate_for_global_households",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L340",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_recommended_sequence",
+      "target": "research_personal_finance_app_market_research_2026_phase_3_add_intelligence_after_data_quality",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L371",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_implications_for_manila_s_current_product",
+      "target": "research_personal_finance_app_market_research_2026_features_to_defer",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L388",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research",
+      "target": "research_personal_finance_app_market_research_2026_suggested_positioning_and_monetization_hypothesis",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L397",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_suggested_positioning_and_monetization_hypothesis",
+      "target": "research_personal_finance_app_market_research_2026_positioning",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L399",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_suggested_positioning_and_monetization_hypothesis",
+      "target": "research_personal_finance_app_market_research_2026_freemium_boundary_to_test",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L405",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_suggested_positioning_and_monetization_hypothesis",
+      "target": "research_personal_finance_app_market_research_2026_price_hypothesis",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L426",
+      "weight": 1.0
+    },
+    {
+      "source": "research_personal_finance_app_market_research_2026_personal_finance_app_market_research",
+      "target": "research_personal_finance_app_market_research_2026_final_conclusions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/research/personal-finance-app-market-research-2026.md",
+      "source_location": "L440",
+      "weight": 1.0
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

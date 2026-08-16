@@ -1,1 +1,45 @@
-{"nodes": [{"id": "users_saeed_work_money_management_oxfmtrc_json", "label": ".oxfmtrc.json", "file_type": "code", "source_file": ".oxfmtrc.json", "source_location": "L1"}, {"id": "money_management_oxfmtrc_schema", "label": "$schema", "file_type": "code", "source_file": ".oxfmtrc.json", "source_location": "L2"}, {"id": "money_management_oxfmtrc_ignorepatterns", "label": "ignorePatterns", "file_type": "code", "source_file": ".oxfmtrc.json", "source_location": "L3"}], "edges": [{"source": "users_saeed_work_money_management_oxfmtrc_json", "target": "money_management_oxfmtrc_schema", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".oxfmtrc.json", "source_location": "L2", "weight": 1.0}, {"source": "users_saeed_work_money_management_oxfmtrc_json", "target": "money_management_oxfmtrc_ignorepatterns", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".oxfmtrc.json", "source_location": "L3", "weight": 1.0}]}
+{
+  "nodes": [
+    {
+      "id": "users_saeed_work_money_management_oxfmtrc_json",
+      "label": ".oxfmtrc.json",
+      "file_type": "code",
+      "source_file": ".oxfmtrc.json",
+      "source_location": "L1"
+    },
+    {
+      "id": "money_management_oxfmtrc_schema",
+      "label": "$schema",
+      "file_type": "code",
+      "source_file": ".oxfmtrc.json",
+      "source_location": "L2"
+    },
+    {
+      "id": "money_management_oxfmtrc_ignorepatterns",
+      "label": "ignorePatterns",
+      "file_type": "code",
+      "source_file": ".oxfmtrc.json",
+      "source_location": "L3"
+    }
+  ],
+  "edges": [
+    {
+      "source": "users_saeed_work_money_management_oxfmtrc_json",
+      "target": "money_management_oxfmtrc_schema",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".oxfmtrc.json",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "users_saeed_work_money_management_oxfmtrc_json",
+      "target": "money_management_oxfmtrc_ignorepatterns",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".oxfmtrc.json",
+      "source_location": "L3",
+      "weight": 1.0
+    }
+  ]
+}

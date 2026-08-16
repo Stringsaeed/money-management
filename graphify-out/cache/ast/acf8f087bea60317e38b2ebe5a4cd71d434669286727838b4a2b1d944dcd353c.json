@@ -1,1 +1,61 @@
-{"nodes": [{"id": "users_saeed_work_money_management_sc_last_chat_settings_json", "label": "last-chat-settings.json", "file_type": "code", "source_file": ".sc/last-chat-settings.json", "source_location": "L1"}, {"id": "sc_last_chat_settings_provider_key", "label": "provider_key", "file_type": "code", "source_file": ".sc/last-chat-settings.json", "source_location": "L2"}, {"id": "sc_last_chat_settings_model_id", "label": "model_id", "file_type": "code", "source_file": ".sc/last-chat-settings.json", "source_location": "L3"}, {"id": "sc_last_chat_settings_reasoning_effort", "label": "reasoning_effort", "file_type": "code", "source_file": ".sc/last-chat-settings.json", "source_location": "L4"}], "edges": [{"source": "users_saeed_work_money_management_sc_last_chat_settings_json", "target": "sc_last_chat_settings_provider_key", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".sc/last-chat-settings.json", "source_location": "L2", "weight": 1.0}, {"source": "users_saeed_work_money_management_sc_last_chat_settings_json", "target": "sc_last_chat_settings_model_id", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".sc/last-chat-settings.json", "source_location": "L3", "weight": 1.0}, {"source": "users_saeed_work_money_management_sc_last_chat_settings_json", "target": "sc_last_chat_settings_reasoning_effort", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".sc/last-chat-settings.json", "source_location": "L4", "weight": 1.0}]}
+{
+  "nodes": [
+    {
+      "id": "users_saeed_work_money_management_sc_last_chat_settings_json",
+      "label": "last-chat-settings.json",
+      "file_type": "code",
+      "source_file": ".sc/last-chat-settings.json",
+      "source_location": "L1"
+    },
+    {
+      "id": "sc_last_chat_settings_provider_key",
+      "label": "provider_key",
+      "file_type": "code",
+      "source_file": ".sc/last-chat-settings.json",
+      "source_location": "L2"
+    },
+    {
+      "id": "sc_last_chat_settings_model_id",
+      "label": "model_id",
+      "file_type": "code",
+      "source_file": ".sc/last-chat-settings.json",
+      "source_location": "L3"
+    },
+    {
+      "id": "sc_last_chat_settings_reasoning_effort",
+      "label": "reasoning_effort",
+      "file_type": "code",
+      "source_file": ".sc/last-chat-settings.json",
+      "source_location": "L4"
+    }
+  ],
+  "edges": [
+    {
+      "source": "users_saeed_work_money_management_sc_last_chat_settings_json",
+      "target": "sc_last_chat_settings_provider_key",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".sc/last-chat-settings.json",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "users_saeed_work_money_management_sc_last_chat_settings_json",
+      "target": "sc_last_chat_settings_model_id",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".sc/last-chat-settings.json",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "users_saeed_work_money_management_sc_last_chat_settings_json",
+      "target": "sc_last_chat_settings_reasoning_effort",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".sc/last-chat-settings.json",
+      "source_location": "L4",
+      "weight": 1.0
+    }
+  ]
+}

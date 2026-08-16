@@ -1,1 +1,325 @@
-{"nodes": [{"id": "users_saeed_work_money_management_claude_settings_local_json", "label": "settings.local.json", "file_type": "code", "source_file": ".claude/settings.local.json", "source_location": "L1"}, {"id": "claude_settings_local_permissions", "label": "permissions", "file_type": "code", "source_file": ".claude/settings.local.json", "source_location": "L2"}, {"id": "claude_settings_local_permissions_allow", "label": "allow", "file_type": "code", "source_file": ".claude/settings.local.json", "source_location": "L3"}], "edges": [{"source": "users_saeed_work_money_management_claude_settings_local_json", "target": "claude_settings_local_permissions", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L2", "weight": 1.0}, {"source": "claude_settings_local_permissions", "target": "claude_settings_local_permissions_allow", "relation": "contains", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_ls_la_users_saeed_work_money_management_app_tabs", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_add_claude_md", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_commit_m_chore_add_claude_md_with_project_guidance_and_workflow_conventions", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_commit_m_docs_add_skills_guidance_to_claude_md", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_webfetch_domain_reactnativereusables_com", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_add", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_commit", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_checkout", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_bun_add", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_bun_run_lint_fix", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_bun_run_format", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_npx_expo_install", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_c_users_saeed_work_money_management_status", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_c_users_saeed_work_money_management_diff_stat", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_c_users_saeed_work_money_management_log_oneline_3", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_c_users_saeed_work_money_management_add", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_c", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_gh_pr_create", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_webfetch_domain_raw_githubusercontent_com", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_webfetch_domain_github_com", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_webfetch_domain_zeego_dev", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_push_u_origin_feat_filter_sheet_dropdowns", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_stash", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_switch_main", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_fetch_origin", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_pull_origin_main", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_worktree_prune", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}, {"source": "claude_settings_local_permissions_allow", "target": "ref_bash_git_push_u_origin_feat_emoji_categories_and_settings", "relation": "extends", "confidence": "EXTRACTED", "source_file": ".claude/settings.local.json", "source_location": "L3", "weight": 1.0, "context": "import"}]}
+{
+  "nodes": [
+    {
+      "id": "users_saeed_work_money_management_claude_settings_local_json",
+      "label": "settings.local.json",
+      "file_type": "code",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L1"
+    },
+    {
+      "id": "claude_settings_local_permissions",
+      "label": "permissions",
+      "file_type": "code",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L2"
+    },
+    {
+      "id": "claude_settings_local_permissions_allow",
+      "label": "allow",
+      "file_type": "code",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3"
+    }
+  ],
+  "edges": [
+    {
+      "source": "users_saeed_work_money_management_claude_settings_local_json",
+      "target": "claude_settings_local_permissions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_settings_local_permissions",
+      "target": "claude_settings_local_permissions_allow",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_ls_la_users_saeed_work_money_management_app_tabs",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_add_claude_md",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_commit_m_chore_add_claude_md_with_project_guidance_and_workflow_conventions",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_commit_m_docs_add_skills_guidance_to_claude_md",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_webfetch_domain_reactnativereusables_com",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_add",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_commit",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_checkout",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_bun_add",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_bun_run_lint_fix",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_bun_run_format",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_npx_expo_install",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_c_users_saeed_work_money_management_status",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_c_users_saeed_work_money_management_diff_stat",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_c_users_saeed_work_money_management_log_oneline_3",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_c_users_saeed_work_money_management_add",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_c",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_gh_pr_create",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_webfetch_domain_raw_githubusercontent_com",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_webfetch_domain_github_com",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_webfetch_domain_zeego_dev",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_push_u_origin_feat_filter_sheet_dropdowns",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_stash",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_switch_main",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_fetch_origin",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_pull_origin_main",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_worktree_prune",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_push_u_origin_feat_emoji_categories_and_settings",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    }
+  ]
+}
