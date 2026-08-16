@@ -1,9 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   RecurringSettlementError,
   type RecurringChange,
   type RecurringChangeResult,
+  type RecurringRule,
 } from "@/modules/recurring-rules";
 import { useRecurringRulesModule } from "@/modules/recurring-rules/provider";
 
@@ -86,8 +87,29 @@ function useRecurringChange<Kind extends RecurringChange["kind"]>(kind: Kind) {
     mutationFn: (variables) => recurringRules.change({ kind, ...variables } as ChangeOfKind<Kind>),
     onSuccess: (result) => {
       if (result.kind === "applied") {
+        updateRecurringRuleLifecycle(queryClient, kind, result);
         return invalidateRecurringEffects(queryClient, result.effects);
       }
     },
   });
+}
+
+const lifecycleByChange: Partial<Record<RecurringChange["kind"], RecurringRule["lifecycle"]>> = {
+  pause: "paused",
+  resume: "active",
+  archive: "archived",
+  restore: "active",
+};
+
+function updateRecurringRuleLifecycle(
+  queryClient: QueryClient,
+  kind: RecurringChange["kind"],
+  result: Extract<RecurringChangeResult, { kind: "applied" }>,
+) {
+  const lifecycle = lifecycleByChange[kind];
+  if (!lifecycle) return;
+
+  queryClient.setQueryData<RecurringRule | null>(recurringRuleKeys.detail(result.ruleId), (rule) =>
+    rule ? { ...rule, lifecycle, revision: result.revision } : rule,
+  );
 }

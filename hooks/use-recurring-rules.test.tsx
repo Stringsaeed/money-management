@@ -1,7 +1,13 @@
 import { act, waitFor } from "@testing-library/react-native";
 
-import { useCreateRecurringRule, useRecurringRulesList } from "@/hooks/use-recurring-rules";
+import {
+  useCreateRecurringRule,
+  usePauseRecurringRule,
+  useRecurringRule,
+  useRecurringRulesList,
+} from "@/hooks/use-recurring-rules";
 import type { RecurringRuleDraft, RecurringRules } from "@/modules/recurring-rules";
+import { createRecurringRule } from "@/tests/test-utils/factories";
 import { renderHookWithProviders } from "@/tests/test-utils/render";
 
 const mockModule: jest.Mocked<RecurringRules> = {
@@ -68,6 +74,42 @@ describe("Recurring Rules hooks", () => {
     ]) {
       expect(invalidateQueries).toHaveBeenCalledWith({ queryKey });
     }
+  });
+
+  it("refreshes the active rule detail immediately after an applied change", async () => {
+    let storedRule = createRecurringRule({ id: "rule-1" });
+    mockModule.read.mockImplementation(async (query) => {
+      if (query.kind !== "detail") throw new Error("Expected a detail read.");
+      return { kind: "detail", rule: storedRule };
+    });
+    mockModule.change.mockImplementation(async () => {
+      storedRule = createRecurringRule({
+        id: "rule-1",
+        lifecycle: "paused",
+        revision: 2,
+      });
+      return {
+        kind: "applied",
+        ruleId: "rule-1",
+        revision: 2,
+        settlement: { generatedCount: 0, totalMinor: 0 },
+        effects: ["rules", "upcoming"],
+      };
+    });
+
+    const { result, client } = await renderHookWithProviders(() => ({
+      detail: useRecurringRule("rule-1"),
+      pause: usePauseRecurringRule(),
+    }));
+
+    await waitFor(() => expect(result.current.detail.data?.lifecycle).toBe("active"));
+    jest.spyOn(client, "invalidateQueries").mockResolvedValue(undefined);
+
+    await act(async () => {
+      await result.current.pause.mutateAsync({ ruleId: "rule-1", expectedRevision: 1 });
+    });
+
+    expect(result.current.detail.data).toMatchObject({ lifecycle: "paused", revision: 2 });
   });
 
   it("returns previews without invalidating settled data", async () => {
