@@ -1,9 +1,14 @@
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useRef } from "react";
-import { ActivityIndicator, Alert, View } from "react-native";
 import type { NativeStackHeaderItem } from "expo-router/build/react-navigation/native-stack";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useRef, type MutableRefObject } from "react";
+import { ActivityIndicator, Alert, View } from "react-native";
 
-import { toRecurringPayment } from "@/components/transaction/recurrence/to-recurring-payment";
+import {
+  presentRecurringPreview,
+  recurringChangeFailureMessage,
+} from "@/components/recurring/recurring-change-feedback";
+import { RecurringRuleStatus } from "@/components/recurring/recurring-rule-status";
+import { toRecurringRuleDraft } from "@/components/transaction/recurrence/to-recurring-rule";
 import {
   TransactionForm,
   type TransactionFormData,
@@ -11,11 +16,17 @@ import {
 import type { TransactionFormHandle } from "@/components/transaction/types";
 import { useCategories } from "@/hooks/use-categories";
 import {
-  useCreateRecurringPayment,
-  useDeleteRecurringPayment,
-  useRecurringPayment,
-  useUpdateRecurringPayment,
-} from "@/hooks/use-recurring-payments";
+  useArchiveRecurringRule,
+  useCreateRecurringRule,
+  useEditRecurringRule,
+  usePauseRecurringRule,
+  useRecurringRule,
+  useRepairRecurringRule,
+  useRestoreRecurringRule,
+  useResumeRecurringRule,
+} from "@/hooks/use-recurring-rules";
+import type { RecurringRuleLifecycle } from "@/modules/recurring-rules";
+import { getSystemTimeZone } from "@/modules/recurring-rules/clock";
 import { parseDate } from "@/utils/date";
 
 const NEW_ID = "new";
@@ -24,91 +35,118 @@ export default function RecurringScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const isNew = id === NEW_ID;
-
   const formRef = useRef<TransactionFormHandle | null>(null);
 
   const { data: categories = [] } = useCategories();
-  const { data: rule, isLoading } = useRecurringPayment(isNew ? "" : id);
-  const createRecurring = useCreateRecurringPayment();
-  const updateRecurring = useUpdateRecurringPayment();
-  const deleteRecurring = useDeleteRecurringPayment();
+  const { data: rule, isLoading } = useRecurringRule(isNew ? undefined : id);
+  const createRule = useCreateRecurringRule();
+  const editRule = useEditRecurringRule();
+  const repairRule = useRepairRecurringRule();
+  const pauseRule = usePauseRecurringRule();
+  const resumeRule = useResumeRecurringRule();
+  const archiveRule = useArchiveRecurringRule();
+  const restoreRule = useRestoreRecurringRule();
 
   if (!isNew && isLoading) {
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 items-center justify-center bg-surface">
         <ActivityIndicator />
       </View>
     );
   }
-
   if (!isNew && !rule) return null;
 
-  async function handleSubmit(data: TransactionFormData) {
-    const rule = toRecurringPayment(data, categories);
+  async function handleSubmit(data: TransactionFormData, confirmationToken?: string) {
+    const draft = toRecurringRuleDraft(data, categories, rule?.timeZone ?? getSystemTimeZone());
+    const result = isNew
+      ? await createRule.mutateAsync({ rule: draft, confirmationToken })
+      : rule?.health === "needs_attention"
+        ? await repairRule.mutateAsync({
+            ruleId: id,
+            expectedRevision: rule.revision,
+            rule: draft,
+            confirmationToken,
+          })
+        : await editRule.mutateAsync({
+            ruleId: id,
+            expectedRevision: rule!.revision,
+            rule: draft,
+            confirmationToken,
+          });
 
-    if (isNew) {
-      await createRecurring.mutateAsync(rule);
-    } else {
-      // Preserve generation progress and active state on edit.
-      const { lastGeneratedDate: _lastGeneratedDate, isActive: _isActive, ...updatable } = rule;
-      await updateRecurring.mutateAsync({ id, data: updatable });
+    if (result.kind === "preview_required") {
+      presentRecurringPreview(result, {
+        title: isNew ? "Create overdue transactions?" : "Apply this Rule change?",
+        confirmLabel: isNew ? "Create Rule" : "Apply Change",
+        onConfirm: () => handleSubmit(data, result.confirmationToken),
+      });
+      return;
     }
-
-    if (router.canGoBack()) router.back();
-    else if (router.canDismiss()) router.dismiss();
+    if (result.kind !== "applied") throw new Error(recurringChangeFailureMessage(result));
+    finishNavigation();
   }
 
-  function handleDelete() {
+  async function changeLifecycle(
+    lifecycle: "pause" | "resume" | "archive" | "restore",
+    confirmationToken?: string,
+  ) {
+    if (!rule) return;
+    const variables = { ruleId: rule.id, expectedRevision: rule.revision };
+    const result = await (lifecycle === "pause"
+      ? pauseRule.mutateAsync({ ...variables, confirmationToken })
+      : lifecycle === "resume"
+        ? resumeRule.mutateAsync(variables)
+        : lifecycle === "archive"
+          ? archiveRule.mutateAsync({ ...variables, confirmationToken })
+          : restoreRule.mutateAsync(variables));
+
+    if (result.kind === "preview_required") {
+      presentRecurringPreview(result, {
+        title: lifecycle === "archive" ? "Archive after settling?" : "Pause after settling?",
+        confirmLabel: lifecycle === "archive" ? "Archive Rule" : "Pause Rule",
+        onConfirm: () => changeLifecycle(lifecycle, result.confirmationToken),
+      });
+      return;
+    }
+    if (result.kind !== "applied") {
+      Alert.alert("Couldn't Update Rule", recurringChangeFailureMessage(result));
+      return;
+    }
+    if (lifecycle === "archive") finishNavigation();
+  }
+
+  function confirmArchive() {
     Alert.alert(
-      "Delete Recurring Payment",
-      "Stop this recurring payment? Already-generated transactions are kept.",
+      "Archive Recurring Rule?",
+      "Future dates will be skipped. Generated transactions and Rule history are kept.",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Delete",
+          text: "Archive",
           style: "destructive",
-          onPress: async () => {
-            await deleteRecurring.mutateAsync(id);
-            router.back();
+          onPress: () => {
+            void changeLifecycle("archive");
           },
         },
       ],
     );
   }
 
-  const headerRightItems: NativeStackHeaderItem[] = isNew
-    ? [
-        {
-          label: "save",
-          type: "button",
-          onPress: () => formRef.current?.submit(),
-          icon: { type: "sfSymbol", name: "checkmark" },
-        },
-      ]
-    : [
-        {
-          label: "delete",
-          type: "button",
-          onPress: handleDelete,
-          icon: { type: "sfSymbol", name: "trash" },
-          tintColor: "red",
-          sharesBackground: false,
-        },
-        {
-          label: "save",
-          type: "button",
-          onPress: () => formRef.current?.submit(),
-          icon: { type: "sfSymbol", name: "checkmark" },
-          sharesBackground: false,
-        },
-      ];
+  function finishNavigation() {
+    if (router.canGoBack()) router.back();
+    else if (router.canDismiss()) router.dismiss();
+  }
+
+  const headerRightItems = isNew
+    ? newRuleHeaderItems(formRef)
+    : existingRuleHeaderItems(rule!.lifecycle, formRef, changeLifecycle, confirmArchive);
 
   return (
     <>
       <Stack.Screen
         options={{
           headerShown: true,
-          title: "",
+          title: isNew ? "New Recurring Rule" : "Recurring Rule",
           headerBackButtonDisplayMode: "minimal",
           unstable_headerRightItems: () => headerRightItems,
         }}
@@ -118,8 +156,8 @@ export default function RecurringScreen() {
           rule
             ? {
                 type: rule.type,
-                amount: rule.amount,
-                accountId: rule.accountId,
+                amount: rule.amountMinor ?? 0,
+                accountId: rule.accountId ?? undefined,
                 toAccountId: rule.toAccountId,
                 categoryId: rule.categoryId,
                 isRecurring: true,
@@ -141,7 +179,72 @@ export default function RecurringScreen() {
         isRecurring
         onSubmit={handleSubmit}
         formRef={formRef}
+        statusContent={rule ? <RecurringRuleStatus rule={rule} /> : undefined}
       />
     </>
   );
+}
+
+function newRuleHeaderItems(
+  formRef: MutableRefObject<TransactionFormHandle | null>,
+): NativeStackHeaderItem[] {
+  return [
+    {
+      label: "save",
+      type: "button",
+      onPress: () => formRef.current?.submit(),
+      icon: { type: "sfSymbol", name: "checkmark" },
+    },
+  ];
+}
+
+function existingRuleHeaderItems(
+  lifecycle: RecurringRuleLifecycle,
+  formRef: MutableRefObject<TransactionFormHandle | null>,
+  changeLifecycle: (lifecycle: "pause" | "resume" | "archive" | "restore") => Promise<void>,
+  confirmArchive: VoidFunction,
+): NativeStackHeaderItem[] {
+  const lifecycleItem: NativeStackHeaderItem | null =
+    lifecycle === "active"
+      ? {
+          label: "pause",
+          type: "button",
+          onPress: () => void changeLifecycle("pause"),
+          icon: { type: "sfSymbol", name: "pause.circle" },
+        }
+      : lifecycle === "paused"
+        ? {
+            label: "resume",
+            type: "button",
+            onPress: () => void changeLifecycle("resume"),
+            icon: { type: "sfSymbol", name: "play.circle" },
+          }
+        : lifecycle === "archived"
+          ? {
+              label: "restore",
+              type: "button",
+              onPress: () => void changeLifecycle("restore"),
+              icon: { type: "sfSymbol", name: "arrow.uturn.backward.circle" },
+            }
+          : null;
+  const archiveItem: NativeStackHeaderItem | null =
+    lifecycle === "archived"
+      ? null
+      : {
+          label: "archive",
+          type: "button",
+          onPress: confirmArchive,
+          icon: { type: "sfSymbol", name: "archivebox" },
+          tintColor: "#B48A7B",
+        };
+  const items: NativeStackHeaderItem[] = [];
+  if (lifecycleItem) items.push(lifecycleItem);
+  if (archiveItem) items.push(archiveItem);
+  items.push({
+    label: "save",
+    type: "button",
+    onPress: () => formRef.current?.submit(),
+    icon: { type: "sfSymbol", name: "checkmark" },
+  });
+  return items;
 }

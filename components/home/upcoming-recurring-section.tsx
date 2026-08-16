@@ -3,19 +3,16 @@ import { SymbolView } from "expo-symbols";
 import { ActivityIndicator, Pressable, useColorScheme, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
+import { UpcomingRecurringRow } from "@/components/home/upcoming-recurring-row";
 import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
+import { useUpcomingRecurringRules } from "@/hooks/use-recurring-rules";
 import { today } from "@/utils/date";
-import { useRecurringPayments } from "@/hooks/use-recurring-payments";
-import { getUpcomingRecurringPayments } from "@/utils/recurring";
-
-import { UpcomingRecurringRow } from "@/components/home/upcoming-recurring-row";
 
 export function UpcomingRecurringSection() {
   const colorScheme = useColorScheme();
   const todayString = today();
-  const { data: rules = [], isError, isLoading } = useRecurringPayments();
-  const upcoming = getUpcomingRecurringPayments(rules, todayString, 3);
+  const { data: upcoming = [], isError, isLoading } = useUpcomingRecurringRules(3);
 
   return (
     <Animated.View
@@ -32,7 +29,7 @@ export function UpcomingRecurringSection() {
           <Text className="font-heading-normal text-xl italic text-ink">Upcoming payments</Text>
         </View>
         <Pressable
-          accessibilityLabel="View all recurring payments"
+          accessibilityLabel="View all recurring rules"
           accessibilityRole="button"
           className="px-1 py-1 active:opacity-50"
           onPress={() => router.push("/recurring")}
@@ -58,7 +55,7 @@ export function UpcomingRecurringSection() {
         >
           <Text className="font-body-medium text-sm text-ink">Upcoming payments unavailable</Text>
           <Text className="font-body-normal text-xs leading-5 text-ink/45">
-            Open recurring payments to try loading them again.
+            Open Recurring Rules to try loading them again.
           </Text>
         </Animated.View>
       ) : upcoming.length === 0 ? (
@@ -72,11 +69,11 @@ export function UpcomingRecurringSection() {
           <View className="flex-1">
             <Text className="font-body-medium text-sm text-ink">Nothing scheduled yet</Text>
             <Text className="font-body-normal text-xs leading-5 text-ink/45">
-              Add subscriptions or recurring payments to see what’s next.
+              Add a Recurring Rule to see what’s next.
             </Text>
           </View>
           <Pressable
-            accessibilityLabel="Add a recurring payment"
+            accessibilityLabel="Add a recurring rule"
             accessibilityRole="button"
             className="px-1 py-2 active:opacity-50"
             onPress={() =>
@@ -96,14 +93,14 @@ export function UpcomingRecurringSection() {
           exiting={FadeOut.duration(150)}
           layout={layoutTransition}
         >
-          {upcoming.map(({ payment, occurrenceDate }, index) => (
-            <Animated.View key={payment.id} layout={layoutTransition}>
+          {upcoming.map(({ rule, scheduledDate }, index) => (
+            <Animated.View key={rule.id} layout={layoutTransition}>
               <UpcomingRecurringRow
-                payment={payment}
-                occurrenceDate={occurrenceDate}
+                rule={rule}
+                occurrenceDate={scheduledDate}
                 today={todayString}
                 onPress={() =>
-                  router.push({ pathname: "/recurring/[id]", params: { id: payment.id } })
+                  router.push({ pathname: "/recurring/[id]", params: { id: rule.id } })
                 }
               />
               {index < upcoming.length - 1 ? (

@@ -15,8 +15,14 @@ import { inputTextStyle } from "@/components/ui/input-style";
 import { Text } from "@/components/ui/text";
 
 import { ColorPicker } from "@/components/common/color-picker";
+import { accountDeletionMessage } from "@/components/account/account-deletion-message";
 import { AccountTypeColors } from "@/constants/theme";
-import { useAccount, useDeleteAccount, useUpdateAccount } from "@/hooks/use-accounts";
+import {
+  useAccount,
+  useDeleteAccount,
+  usePreviewAccountDeletion,
+  useUpdateAccount,
+} from "@/hooks/use-accounts";
 import type { AccountType } from "@/types";
 
 const ACCOUNT_TYPES: { value: AccountType; label: string }[] = [
@@ -33,6 +39,7 @@ export default function EditAccountScreen() {
   const { data: account, isLoading } = useAccount(id);
   const updateAccount = useUpdateAccount();
   const deleteAccount = useDeleteAccount();
+  const previewAccountDeletion = usePreviewAccountDeletion();
 
   const [name, setName] = useState(account?.name ?? "");
   const [type, setType] = useState<AccountType>((account?.type as AccountType) ?? "checking");
@@ -49,6 +56,7 @@ export default function EditAccountScreen() {
     );
   }
   if (!account) return null;
+  const accountName = account.name;
 
   async function handleSave() {
     if (!name.trim()) {
@@ -70,11 +78,10 @@ export default function EditAccountScreen() {
     }
   }
 
-  function handleDelete() {
-    Alert.alert(
-      "Delete Account",
-      "This will permanently delete the account and all its transactions. This cannot be undone.",
-      [
+  async function handleDelete() {
+    try {
+      const preview = await previewAccountDeletion.mutateAsync(id);
+      Alert.alert("Delete Account", accountDeletionMessage(accountName, preview), [
         { text: "Cancel", style: "cancel" },
         {
           text: "Delete",
@@ -84,8 +91,13 @@ export default function EditAccountScreen() {
             router.replace("/settings");
           },
         },
-      ],
-    );
+      ]);
+    } catch {
+      Alert.alert(
+        "Couldn't Check Recurring Rules",
+        "The account was not deleted. Please try again.",
+      );
+    }
   }
 
   return (
@@ -146,7 +158,7 @@ export default function EditAccountScreen() {
           <Text>{saving ? "Saving…" : "Save Changes"}</Text>
         </Button>
 
-        <Pressable onPress={handleDelete} className="items-center py-3">
+        <Pressable onPress={() => void handleDelete()} className="items-center py-3">
           <Text className="text-destructive text-[15px] font-medium">Delete Account</Text>
         </Pressable>
       </ScrollView>

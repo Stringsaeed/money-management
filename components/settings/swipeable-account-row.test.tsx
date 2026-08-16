@@ -38,6 +38,7 @@ jest.mock("react-native-gesture-handler/ReanimatedSwipeable", () => {
 describe("SwipeableAccountRow", () => {
   it("asks for confirmation before deleting the account", async () => {
     const onDelete = jest.fn().mockResolvedValue(undefined);
+    const onPreviewDelete = jest.fn().mockResolvedValue({ accountId: "account-1", rules: [] });
     const alert = jest.spyOn(Alert, "alert");
 
     await render(
@@ -45,11 +46,14 @@ describe("SwipeableAccountRow", () => {
         <SwipeableAccountRow
           account={createAccountWithBalance({ id: "account-1", name: "Wallet" })}
           onDelete={onDelete}
+          onPreviewDelete={onPreviewDelete}
         />
       </GestureHandlerRootView>,
     );
 
     await fireEvent.press(screen.getByLabelText("Delete Wallet"));
+
+    expect(onPreviewDelete).toHaveBeenCalledWith("account-1");
 
     expect(alert).toHaveBeenCalledWith(
       "Delete Account?",
@@ -71,6 +75,7 @@ describe("SwipeableAccountRow", () => {
 
   it("reports a failed deletion", async () => {
     const onDelete = jest.fn().mockRejectedValue(new Error("database unavailable"));
+    const onPreviewDelete = jest.fn().mockResolvedValue({ accountId: "account-1", rules: [] });
     const alert = jest.spyOn(Alert, "alert");
 
     await render(
@@ -78,6 +83,7 @@ describe("SwipeableAccountRow", () => {
         <SwipeableAccountRow
           account={createAccountWithBalance({ id: "account-1", name: "Wallet" })}
           onDelete={onDelete}
+          onPreviewDelete={onPreviewDelete}
         />
       </GestureHandlerRootView>,
     );

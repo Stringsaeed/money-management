@@ -33,6 +33,7 @@ export interface TransactionFormProps {
   isRecurring: boolean;
   onSubmit: (data: TransactionFormData) => Promise<void>;
   formRef?: React.MutableRefObject<TransactionFormHandle | null>;
+  statusContent?: React.ReactNode;
 }
 
 export interface FormValues {

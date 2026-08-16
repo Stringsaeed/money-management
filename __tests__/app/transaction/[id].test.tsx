@@ -49,8 +49,12 @@ jest.mock("@/hooks/use-categories", () => ({
   useCategories: () => ({ data: [] }),
 }));
 
-jest.mock("@/hooks/use-recurring-payments", () => ({
-  useCreateRecurringPayment: () => ({ mutateAsync: mockCreateRecurring }),
+jest.mock("@/hooks/use-recurring-rules", () => ({
+  useCreateRecurringRule: () => ({ mutateAsync: mockCreateRecurring }),
+}));
+
+jest.mock("@/modules/recurring-rules/clock", () => ({
+  getSystemTimeZone: () => "Asia/Dubai",
 }));
 
 describe("app/transaction/[id]", () => {
@@ -64,6 +68,13 @@ describe("app/transaction/[id]", () => {
   beforeEach(() => {
     capturedFormProps = null;
     mockUseRouter.mockReturnValue(baseRouter);
+    mockCreateRecurring.mockResolvedValue({
+      kind: "applied",
+      ruleId: "recurring-1",
+      revision: 1,
+      settlement: { generatedCount: 0, totalMinor: 0 },
+      effects: ["rules"],
+    });
   });
 
   it("renders new-entry mode and creates a transaction", async () => {
@@ -138,7 +149,7 @@ describe("app/transaction/[id]", () => {
     });
   });
 
-  it("creates a recurring payment when saved in recurring mode", async () => {
+  it("creates a Recurring Rule when saved in recurring mode", async () => {
     mockUseLocalSearchParams.mockReturnValue({ id: "new", recurring: "true" });
     mockUseTransaction.mockReturnValue({ data: undefined, isLoading: false });
 
@@ -164,17 +175,18 @@ describe("app/transaction/[id]", () => {
       });
     });
 
-    expect(mockCreateRecurring).toHaveBeenCalledWith(
-      expect.objectContaining({
+    expect(mockCreateRecurring).toHaveBeenCalledWith({
+      rule: expect.objectContaining({
         name: "Rent",
         frequency: "month",
         intervalCount: 1,
         startDate: "2026-03-28",
         endDate: null,
         endCount: null,
-        isActive: true,
+        timeZone: "Asia/Dubai",
       }),
-    );
+      confirmationToken: undefined,
+    });
     expect(mockCreateTransaction).not.toHaveBeenCalled();
   });
 

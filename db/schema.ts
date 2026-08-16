@@ -30,38 +30,6 @@ export const categories = sqliteTable("categories", {
   updatedAt: text("updated_at").notNull(),
 });
 
-// ── Recurring Payments ────────────────────────────────────────────────────────
-
-export const recurringPayments = sqliteTable("recurring_payments", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  type: text("type").notNull(), // TransactionType
-  amount: integer("amount").notNull(), // cents
-  currency: text("currency").notNull().default("USD"),
-  accountId: text("account_id")
-    .notNull()
-    .references(() => accounts.id, { onDelete: "cascade" }),
-  toAccountId: text("to_account_id").references(() => accounts.id, {
-    onDelete: "set null",
-  }),
-  categoryId: text("category_id").references(() => categories.id, {
-    onDelete: "set null",
-  }),
-  description: text("description").notNull().default(""),
-  frequency: text("frequency").notNull(), // RecurrenceFrequency: day | week | month | year
-  intervalCount: integer("interval_count").notNull().default(1), // every N units
-  dayOfMonth: integer("day_of_month"),
-  dayOfWeek: integer("day_of_week"),
-  monthOfYear: integer("month_of_year"),
-  startDate: text("start_date").notNull(),
-  endDate: text("end_date"),
-  endCount: integer("end_count"), // stop after N occurrences (after_count end type)
-  lastGeneratedDate: text("last_generated_date"),
-  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull(),
-});
-
 // ── Recurring Rules ──────────────────────────────────────────────────────────
 
 export const recurringRules = sqliteTable("recurring_rules", {
@@ -119,7 +87,7 @@ export const transactions = sqliteTable("transactions", {
     onDelete: "set null",
   }),
   isRecurring: integer("is_recurring", { mode: "boolean" }).notNull().default(false),
-  recurringPaymentId: text("recurring_payment_id").references(() => recurringPayments.id, {
+  recurringRuleId: text("recurring_rule_id").references(() => recurringRules.id, {
     onDelete: "set null",
   }),
   description: text("description").notNull().default(""),

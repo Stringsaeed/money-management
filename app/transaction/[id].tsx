@@ -3,14 +3,18 @@ import { useRef, useState } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
 import type { NativeStackHeaderItem } from "expo-router/build/react-navigation/native-stack";
 
-import { toRecurringPayment } from "@/components/transaction/recurrence/to-recurring-payment";
+import { toRecurringRuleDraft } from "@/components/transaction/recurrence/to-recurring-rule";
 import {
   TransactionForm,
   type TransactionFormData,
 } from "@/components/transaction/transaction-form";
 import type { TransactionFormHandle } from "@/components/transaction/types";
+import {
+  presentRecurringPreview,
+  recurringChangeFailureMessage,
+} from "@/components/recurring/recurring-change-feedback";
 import { useCategories } from "@/hooks/use-categories";
-import { useCreateRecurringPayment } from "@/hooks/use-recurring-payments";
+import { useCreateRecurringRule } from "@/hooks/use-recurring-rules";
 import {
   useCreateTransaction,
   useDeleteTransaction,
@@ -18,6 +22,7 @@ import {
   useUpdateTransaction,
 } from "@/hooks/use-transactions";
 import { toDateString } from "@/utils/date";
+import { getSystemTimeZone } from "@/modules/recurring-rules/clock";
 
 const NEW_ID = "new";
 
@@ -32,7 +37,7 @@ export default function TransactionScreen() {
   const { data: categories = [] } = useCategories();
   const { data: transaction, isLoading } = useTransaction(isNew ? undefined : id);
   const createTransaction = useCreateTransaction();
-  const createRecurring = useCreateRecurringPayment();
+  const createRecurring = useCreateRecurringRule();
   const updateTransaction = useUpdateTransaction();
   const deleteTransaction = useDeleteTransaction();
 
@@ -48,13 +53,14 @@ export default function TransactionScreen() {
 
   async function handleSubmit(data: TransactionFormData) {
     if (isNew && isRecurring) {
-      await createRecurring.mutateAsync(toRecurringPayment(data, categories));
+      await submitRecurringRule(data);
+      return;
     } else if (isNew) {
       await createTransaction.mutateAsync({
         ...data,
         date: toDateString(data.date),
         isRecurring: false,
-        recurringPaymentId: null,
+        recurringRuleId: null,
       });
     } else {
       await updateTransaction.mutateAsync({
@@ -63,6 +69,30 @@ export default function TransactionScreen() {
       });
     }
 
+    finishNavigation();
+  }
+
+  async function submitRecurringRule(data: TransactionFormData, confirmationToken?: string) {
+    const result = await createRecurring.mutateAsync({
+      rule: toRecurringRuleDraft(data, categories, getSystemTimeZone()),
+      confirmationToken,
+    });
+    if (result.kind === "applied") {
+      finishNavigation();
+      return;
+    }
+    if (result.kind === "preview_required") {
+      presentRecurringPreview(result, {
+        title: "Create overdue transactions?",
+        confirmLabel: "Create Rule",
+        onConfirm: () => submitRecurringRule(data, result.confirmationToken),
+      });
+      return;
+    }
+    throw new Error(recurringChangeFailureMessage(result));
+  }
+
+  function finishNavigation() {
     if (router.canGoBack()) {
       router.back();
     } else if (router.canDismiss()) {

@@ -36,6 +36,7 @@ export function TransactionForm({
   isRecurring,
   onSubmit,
   formRef,
+  statusContent,
 }: TransactionFormProps) {
   const { data: accounts = [] } = useAccounts();
   const { data: categories = [] } = useCategories();
@@ -111,6 +112,7 @@ export function TransactionForm({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
+        {statusContent}
         {/* Breadcrumb: Account › Category › Date */}
         <View className="pt-2 pb-3">
           <Animated.ScrollView

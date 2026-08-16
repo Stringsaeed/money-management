@@ -4,19 +4,26 @@ import type { SharedValue } from "react-native-reanimated";
 
 import { AccountDeleteAction } from "@/components/settings/account-delete-action";
 import { AccountRow } from "@/components/settings/account-row";
+import { accountDeletionMessage } from "@/components/account/account-deletion-message";
+import type { AccountDeletionPreview } from "@/modules/account-recurring-coordinator";
 
 import type { AccountRowProps } from "./types";
 
 interface SwipeableAccountRowProps extends AccountRowProps {
-  onDelete: (id: string) => Promise<void>;
+  onDelete: (id: string) => Promise<unknown>;
+  onPreviewDelete: (id: string) => Promise<AccountDeletionPreview>;
 }
 
-export function SwipeableAccountRow({ account, onDelete, onPress }: SwipeableAccountRowProps) {
-  function confirmDelete(swipeable: SwipeableMethods) {
-    Alert.alert(
-      "Delete Account?",
-      `This will permanently delete ${account.name} and all its transactions. This cannot be undone.`,
-      [
+export function SwipeableAccountRow({
+  account,
+  onDelete,
+  onPreviewDelete,
+  onPress,
+}: SwipeableAccountRowProps) {
+  async function confirmDelete(swipeable: SwipeableMethods) {
+    try {
+      const preview = await onPreviewDelete(account.id);
+      Alert.alert("Delete Account?", accountDeletionMessage(account.name, preview), [
         {
           text: "Cancel",
           style: "cancel",
@@ -37,8 +44,14 @@ export function SwipeableAccountRow({ account, onDelete, onPress }: SwipeableAcc
             }
           },
         },
-      ],
-    );
+      ]);
+    } catch {
+      swipeable.close();
+      Alert.alert(
+        "Couldn't Check Recurring Rules",
+        "The account was not deleted. Please try again.",
+      );
+    }
   }
 
   function renderRightActions(
@@ -47,7 +60,10 @@ export function SwipeableAccountRow({ account, onDelete, onPress }: SwipeableAcc
     swipeable: SwipeableMethods,
   ) {
     return (
-      <AccountDeleteAction accountName={account.name} onPress={() => confirmDelete(swipeable)} />
+      <AccountDeleteAction
+        accountName={account.name}
+        onPress={() => void confirmDelete(swipeable)}
+      />
     );
   }
 

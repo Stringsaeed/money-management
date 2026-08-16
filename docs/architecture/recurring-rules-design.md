@@ -1,7 +1,8 @@
 # Recurring Rules Architecture
 
-- **Status:** Design complete; implementation not started
+- **Status:** Implemented and verified on `feat/recurring-rules`
 - **Recorded:** 2026-08-16
+- **Implemented:** 2026-08-17
 - **Decision history:** [Recurring Rules Decision Log](./recurring-rules-decision-log.md)
 - **Domain language:** [Money Management Context](../../CONTEXT.md)
 
@@ -26,6 +27,36 @@ The first delivery is a complete essential vertical slice:
 - delete the replaced shallow implementation and tests.
 
 Rich Occurrence-history browsing, advanced recurrence expressions, synchronization, event sourcing, and ordinary hard deletion are outside this delivery.
+
+## Implementation record
+
+The implementation followed the delivery sequence below as focused Conventional Commits:
+
+1. `docs: record recurring rules architecture`
+2. `feat(recurring): add atomic rules migration`
+3. `feat(recurring): add rules domain module`
+4. `feat(recurring): add react adapters and runtime`
+5. `feat(accounts): coordinate recurring rule impacts`
+6. the final application cutover, legacy-path removal, runtime feedback, and verification commit
+
+The final cutover:
+
+- installs the code-backed migration after the legacy Drizzle migrations and before seeding;
+- mounts one Recurring Rules module per live Expo SQLite connection;
+- settles on launch and foreground transitions;
+- migrates Home, Settings, transaction creation, Rule list/detail, and Account flows;
+- adds Current, Needs Attention, and Archived list filters;
+- adds preview-backed creation and lifecycle changes, repair through the shared transaction form, and root Settlement feedback;
+- coordinates Account currency changes and deletion with Rule health and lifecycle changes; and
+- removes the legacy processor, CRUD hooks, mapper, row, scheduler helpers, and their replaced tests.
+
+### Verification record
+
+- TypeScript strict check, lint fixing, formatting, and the complete Jest CI suite passed.
+- Real SQLite tests cover migration rollback, lineage reconstruction, calendar boundaries, confirmation, revisions, coalesced Settlement, per-Rule failure isolation, lifecycle gaps, repair backlog, completion, and Account coordination.
+- iPhone 17 Pro simulator QA on iOS 26.5 verified startup migration, all three list filters, shared-form creation, overdue preview and confirmation, Generated Transaction materialization, upcoming projection, status display, pause, resume, archive, restore, and post-Metro-reload mutation.
+- Simulator QA exposed and fixed a stale database binding retained across Fast Refresh. The provider now replaces its module when Expo SQLite supplies a new connection; a regression test preserves that behavior.
+- The final debugger session contained no application errors. The remaining DateTimePicker deprecation warning predates this change.
 
 ## Canonical model
 
