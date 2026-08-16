@@ -1,0 +1,1567 @@
+{
+  "/Users/saeed/Work/money-management/.claude/settings.local.json": {
+    "mtime": 1772747815.8425019,
+    "ast_hash": "804c9f4228c64b45c25190ad12ebb84f",
+    "semantic_hash": "804c9f4228c64b45c25190ad12ebb84f"
+  },
+  "/Users/saeed/Work/money-management/.oxfmtrc.json": {
+    "mtime": 1772297664.0314534,
+    "ast_hash": "2a321d56ea9d5ad02fd9a179ff2faa4c",
+    "semantic_hash": "2a321d56ea9d5ad02fd9a179ff2faa4c"
+  },
+  "/Users/saeed/Work/money-management/.sc/last-chat-settings.json": {
+    "mtime": 1786312739.8844466,
+    "ast_hash": "8a8bd91b6b3963166c9106dfeff6f3fd",
+    "semantic_hash": "8a8bd91b6b3963166c9106dfeff6f3fd"
+  },
+  "/Users/saeed/Work/money-management/.vscode/extensions.json": {
+    "mtime": 1772497370.6653092,
+    "ast_hash": "d9301575218da62c89dfced1f095e24c",
+    "semantic_hash": "d9301575218da62c89dfced1f095e24c"
+  },
+  "/Users/saeed/Work/money-management/.vscode/settings.json": {
+    "mtime": 1786831626.1027873,
+    "ast_hash": "4738ebbdf6242c218bf0b3335a741b1e",
+    "semantic_hash": "4738ebbdf6242c218bf0b3335a741b1e"
+  },
+  "/Users/saeed/Work/money-management/.zed/settings.json": {
+    "mtime": 1786579408.66172,
+    "ast_hash": "34ba8acb60d0d516ab65f75101d8acd6",
+    "semantic_hash": "34ba8acb60d0d516ab65f75101d8acd6"
+  },
+  "/Users/saeed/Work/money-management/__tests__/app/_layout.test.tsx": {
+    "mtime": 1786583393.5962818,
+    "ast_hash": "ed007017ad11e83350d69b5f5f841913",
+    "semantic_hash": "ed007017ad11e83350d69b5f5f841913"
+  },
+  "/Users/saeed/Work/money-management/__tests__/app/account/[id].test.tsx": {
+    "mtime": 1786581493.1265438,
+    "ast_hash": "9948fd1b059738d875b82af92c1b445f",
+    "semantic_hash": "9948fd1b059738d875b82af92c1b445f"
+  },
+  "/Users/saeed/Work/money-management/__tests__/app/account/[id]/edit.test.tsx": {
+    "mtime": 1786581398.0110805,
+    "ast_hash": "8bd1d50f1f01d7fe0eea0322e8588590",
+    "semantic_hash": "8bd1d50f1f01d7fe0eea0322e8588590"
+  },
+  "/Users/saeed/Work/money-management/__tests__/app/category/new.test.tsx": {
+    "mtime": 1786581398.0142922,
+    "ast_hash": "87f16637f725d86e870649cd747a152a",
+    "semantic_hash": "87f16637f725d86e870649cd747a152a"
+  },
+  "/Users/saeed/Work/money-management/__tests__/app/index.test.tsx": {
+    "mtime": 1786581398.0166683,
+    "ast_hash": "099cfbe14a295dfa0682a4ce3275e9fa",
+    "semantic_hash": "099cfbe14a295dfa0682a4ce3275e9fa"
+  },
+  "/Users/saeed/Work/money-management/__tests__/app/modal.test.tsx": {
+    "mtime": 1786581398.0171704,
+    "ast_hash": "a77b693a976c8b0a1fa4879234b8c82f",
+    "semantic_hash": "a77b693a976c8b0a1fa4879234b8c82f"
+  },
+  "/Users/saeed/Work/money-management/__tests__/app/onboarding.test.tsx": {
+    "mtime": 1786726073.2944372,
+    "ast_hash": "7845b8e1b4252fb70ccb70f50c3a317e",
+    "semantic_hash": "7845b8e1b4252fb70ccb70f50c3a317e"
+  },
+  "/Users/saeed/Work/money-management/__tests__/app/recurring/[id]/edit.test.tsx": {
+    "mtime": 1786581398.0197148,
+    "ast_hash": "cc23e89212db95aec3308eb458c68f30",
+    "semantic_hash": "cc23e89212db95aec3308eb458c68f30"
+  },
+  "/Users/saeed/Work/money-management/__tests__/app/recurring/index.test.tsx": {
+    "mtime": 1786581398.0207305,
+    "ast_hash": "19d3b292dded5c6d9ae3f04f0790d71f",
+    "semantic_hash": "19d3b292dded5c6d9ae3f04f0790d71f"
+  },
+  "/Users/saeed/Work/money-management/__tests__/app/recurring/new.test.tsx": {
+    "mtime": 1786581398.022257,
+    "ast_hash": "3730f7edbe357ff16608b90e1800cc67",
+    "semantic_hash": "3730f7edbe357ff16608b90e1800cc67"
+  },
+  "/Users/saeed/Work/money-management/__tests__/app/settings.test.tsx": {
+    "mtime": 1786726073.294791,
+    "ast_hash": "f3c4f7245ccbb31c9718539d50752bdb",
+    "semantic_hash": "f3c4f7245ccbb31c9718539d50752bdb"
+  },
+  "/Users/saeed/Work/money-management/__tests__/app/splash.test.tsx": {
+    "mtime": 1786581398.0264065,
+    "ast_hash": "3337eee1a468fd558e894c516c4664f5",
+    "semantic_hash": "3337eee1a468fd558e894c516c4664f5"
+  },
+  "/Users/saeed/Work/money-management/__tests__/app/transaction/[id].test.tsx": {
+    "mtime": 1786581398.0297465,
+    "ast_hash": "8e609bb8306204dc8a57ac17fdf3ed3b",
+    "semantic_hash": "8e609bb8306204dc8a57ac17fdf3ed3b"
+  },
+  "/Users/saeed/Work/money-management/app.config.ts": {
+    "mtime": 1786831306.4224458,
+    "ast_hash": "c4b409c9b32d5eb047da0a6b817026d2",
+    "semantic_hash": "c4b409c9b32d5eb047da0a6b817026d2"
+  },
+  "/Users/saeed/Work/money-management/app/(tabs)/(home)/_layout.tsx": {
+    "mtime": 1781264712.98435,
+    "ast_hash": "e31d8f6098795944019feafdb30b79c4",
+    "semantic_hash": "e31d8f6098795944019feafdb30b79c4"
+  },
+  "/Users/saeed/Work/money-management/app/(tabs)/(home)/index.tsx": {
+    "mtime": 1781282373.143124,
+    "ast_hash": "17987f81dffda3f16ed6e3dfb333c073",
+    "semantic_hash": "17987f81dffda3f16ed6e3dfb333c073"
+  },
+  "/Users/saeed/Work/money-management/app/(tabs)/_layout.tsx": {
+    "mtime": 1781264712.9846241,
+    "ast_hash": "94353d2f812bc5731503138bf55b1e52",
+    "semantic_hash": "94353d2f812bc5731503138bf55b1e52"
+  },
+  "/Users/saeed/Work/money-management/app/(tabs)/envelopes/_layout.tsx": {
+    "mtime": 1781264712.98482,
+    "ast_hash": "49f4105d97fccc61f13ea147f916949f",
+    "semantic_hash": "49f4105d97fccc61f13ea147f916949f"
+  },
+  "/Users/saeed/Work/money-management/app/(tabs)/envelopes/index.tsx": {
+    "mtime": 1781264712.9849567,
+    "ast_hash": "978d6c7f81c50e16937f9ee4b73d9893",
+    "semantic_hash": "978d6c7f81c50e16937f9ee4b73d9893"
+  },
+  "/Users/saeed/Work/money-management/app/(tabs)/ledger/_layout.tsx": {
+    "mtime": 1781264712.9851289,
+    "ast_hash": "f3a1f381f4087a89f42f0d544351721a",
+    "semantic_hash": "f3a1f381f4087a89f42f0d544351721a"
+  },
+  "/Users/saeed/Work/money-management/app/(tabs)/ledger/index.tsx": {
+    "mtime": 1781264712.9852672,
+    "ast_hash": "2e455809111534b1cdab46af33c9c5f6",
+    "semantic_hash": "2e455809111534b1cdab46af33c9c5f6"
+  },
+  "/Users/saeed/Work/money-management/app/(tabs)/money-movement/_layout.tsx": {
+    "mtime": 1781264712.9854782,
+    "ast_hash": "3d3a523f73ec0ec04521380541044433",
+    "semantic_hash": "3d3a523f73ec0ec04521380541044433"
+  },
+  "/Users/saeed/Work/money-management/app/(tabs)/money-movement/index.tsx": {
+    "mtime": 1781264712.9856255,
+    "ast_hash": "5123e6b6d8e1bfa32d8f9b3b140971aa",
+    "semantic_hash": "5123e6b6d8e1bfa32d8f9b3b140971aa"
+  },
+  "/Users/saeed/Work/money-management/app/(tabs)/settings/_layout.tsx": {
+    "mtime": 1781264712.9858196,
+    "ast_hash": "1d43f14f17b2f8cd0f1542476554b284",
+    "semantic_hash": "1d43f14f17b2f8cd0f1542476554b284"
+  },
+  "/Users/saeed/Work/money-management/app/(tabs)/settings/index.tsx": {
+    "mtime": 1786726073.29548,
+    "ast_hash": "f8438ecf99dd363d368947f04be4889c",
+    "semantic_hash": "f8438ecf99dd363d368947f04be4889c"
+  },
+  "/Users/saeed/Work/money-management/app/_layout.tsx": {
+    "mtime": 1786748284.011583,
+    "ast_hash": "b3a11cec494391b7f577854531419385",
+    "semantic_hash": "b3a11cec494391b7f577854531419385"
+  },
+  "/Users/saeed/Work/money-management/app/account/[id].tsx": {
+    "mtime": 1786748284.0120993,
+    "ast_hash": "8d158eb886d28ffcc23f9fa7af7ba0ba",
+    "semantic_hash": "8d158eb886d28ffcc23f9fa7af7ba0ba"
+  },
+  "/Users/saeed/Work/money-management/app/account/[id]/edit.tsx": {
+    "mtime": 1786741574.7507842,
+    "ast_hash": "2c3216446f2179b6d1dc14a1d738e408",
+    "semantic_hash": "2c3216446f2179b6d1dc14a1d738e408"
+  },
+  "/Users/saeed/Work/money-management/app/accounts.tsx": {
+    "mtime": 1786657706.0190928,
+    "ast_hash": "3739f3dd1db59c1acea7a70dd83dd46a",
+    "semantic_hash": "3739f3dd1db59c1acea7a70dd83dd46a"
+  },
+  "/Users/saeed/Work/money-management/app/categories.tsx": {
+    "mtime": 1786654255.548326,
+    "ast_hash": "cea287194dff69f3f9a257e26d6da354",
+    "semantic_hash": "cea287194dff69f3f9a257e26d6da354"
+  },
+  "/Users/saeed/Work/money-management/app/category/new.tsx": {
+    "mtime": 1780188739.0773914,
+    "ast_hash": "2496a429742defd701aed0fb96a911aa",
+    "semantic_hash": "2496a429742defd701aed0fb96a911aa"
+  },
+  "/Users/saeed/Work/money-management/app/modal.tsx": {
+    "mtime": 1774666816.1313543,
+    "ast_hash": "2fcf797dcbaba39917c32dba5d69c82c",
+    "semantic_hash": "2fcf797dcbaba39917c32dba5d69c82c"
+  },
+  "/Users/saeed/Work/money-management/app/onboarding.tsx": {
+    "mtime": 1786726073.2961922,
+    "ast_hash": "5f28118dd84b3505472671ca4c04bbf2",
+    "semantic_hash": "5f28118dd84b3505472671ca4c04bbf2"
+  },
+  "/Users/saeed/Work/money-management/app/recurring/[id]/edit.tsx": {
+    "mtime": 1786741567.5890172,
+    "ast_hash": "f2fc39b7f7532edf03cacb6a4554111d",
+    "semantic_hash": "f2fc39b7f7532edf03cacb6a4554111d"
+  },
+  "/Users/saeed/Work/money-management/app/recurring/index.tsx": {
+    "mtime": 1786748284.012411,
+    "ast_hash": "3e0cfd8237510a0531b567fc6ecda005",
+    "semantic_hash": "3e0cfd8237510a0531b567fc6ecda005"
+  },
+  "/Users/saeed/Work/money-management/app/recurring/new.tsx": {
+    "mtime": 1786741559.2811425,
+    "ast_hash": "768fdc5260e418bca9e82436e383b2e8",
+    "semantic_hash": "768fdc5260e418bca9e82436e383b2e8"
+  },
+  "/Users/saeed/Work/money-management/app/splash.tsx": {
+    "mtime": 1774395004.7981288,
+    "ast_hash": "0420f9652eb61d753807c30391d5642f",
+    "semantic_hash": "0420f9652eb61d753807c30391d5642f"
+  },
+  "/Users/saeed/Work/money-management/app/transaction/[id].tsx": {
+    "mtime": 1780129793.012422,
+    "ast_hash": "ef2dc0c123ea09402270c96c0ccff599",
+    "semantic_hash": "ef2dc0c123ea09402270c96c0ccff599"
+  },
+  "/Users/saeed/Work/money-management/assets/icon.icon/icon.json": {
+    "mtime": 1781167423.909487,
+    "ast_hash": "16b0acc1438a6560c767f4e64569fc1a",
+    "semantic_hash": "16b0acc1438a6560c767f4e64569fc1a"
+  },
+  "/Users/saeed/Work/money-management/babel.config.js": {
+    "mtime": 1772321574.9275305,
+    "ast_hash": "6811754e679ad3d99158869f33257f43",
+    "semantic_hash": "6811754e679ad3d99158869f33257f43"
+  },
+  "/Users/saeed/Work/money-management/component.config.json": {
+    "mtime": 1772850303.9505858,
+    "ast_hash": "3a74945777562d02a69ad3ae06e5db9f",
+    "semantic_hash": "3a74945777562d02a69ad3ae06e5db9f"
+  },
+  "/Users/saeed/Work/money-management/components.json": {
+    "mtime": 1774304747.675034,
+    "ast_hash": "d50cb056404aa9b301267f0155c4b3e3",
+    "semantic_hash": "d50cb056404aa9b301267f0155c4b3e3"
+  },
+  "/Users/saeed/Work/money-management/components/account/account-color-picker.tsx": {
+    "mtime": 1780129793.012567,
+    "ast_hash": "a11e4afd00a592201e9a97b3f37a706e",
+    "semantic_hash": "a11e4afd00a592201e9a97b3f37a706e"
+  },
+  "/Users/saeed/Work/money-management/components/account/account-currency-picker.tsx": {
+    "mtime": 1786726073.296805,
+    "ast_hash": "bf68905d62490c6946cf056edf9a8728",
+    "semantic_hash": "bf68905d62490c6946cf056edf9a8728"
+  },
+  "/Users/saeed/Work/money-management/components/account/account-edit-sheet.tsx": {
+    "mtime": 1786658200.590488,
+    "ast_hash": "d6d466463c3b5f7e2a41dd044b619006",
+    "semantic_hash": "d6d466463c3b5f7e2a41dd044b619006"
+  },
+  "/Users/saeed/Work/money-management/components/account/account-form-balance-section.tsx": {
+    "mtime": 1786748284.012746,
+    "ast_hash": "d017387821990006c67aa9d20fdf11fc",
+    "semantic_hash": "d017387821990006c67aa9d20fdf11fc"
+  },
+  "/Users/saeed/Work/money-management/components/account/account-form-content.test.tsx": {
+    "mtime": 1786657737.004912,
+    "ast_hash": "564ed371c8890586a9235e00f3d0fd33",
+    "semantic_hash": "564ed371c8890586a9235e00f3d0fd33"
+  },
+  "/Users/saeed/Work/money-management/components/account/account-form-content.tsx": {
+    "mtime": 1786741956.2546241,
+    "ast_hash": "de26e510f47ad822d469c3ff70e2fbda",
+    "semantic_hash": "de26e510f47ad822d469c3ff70e2fbda"
+  },
+  "/Users/saeed/Work/money-management/components/account/account-form-options.ts": {
+    "mtime": 1786657619.6279137,
+    "ast_hash": "35a75b5d1dea301cc089f61688aaa474",
+    "semantic_hash": "35a75b5d1dea301cc089f61688aaa474"
+  },
+  "/Users/saeed/Work/money-management/components/account/account-form-preview.test.tsx": {
+    "mtime": 1786657737.0008273,
+    "ast_hash": "f3e6417466689f29c223bbf721989fa0",
+    "semantic_hash": "f3e6417466689f29c223bbf721989fa0"
+  },
+  "/Users/saeed/Work/money-management/components/account/account-form-preview.tsx": {
+    "mtime": 1786748284.013007,
+    "ast_hash": "05c8fcc4411ef23eaa9f4579d6d6f1c4",
+    "semantic_hash": "05c8fcc4411ef23eaa9f4579d6d6f1c4"
+  },
+  "/Users/saeed/Work/money-management/components/account/account-form-sheet-footer.tsx": {
+    "mtime": 1786639211.01155,
+    "ast_hash": "580872990d7e0d4376bd0dd8e7b0fbf9",
+    "semantic_hash": "580872990d7e0d4376bd0dd8e7b0fbf9"
+  },
+  "/Users/saeed/Work/money-management/components/account/account-form-sheet.tsx": {
+    "mtime": 1786657679.0332074,
+    "ast_hash": "e120f484fc1da48883fbe53946624e5d",
+    "semantic_hash": "e120f484fc1da48883fbe53946624e5d"
+  },
+  "/Users/saeed/Work/money-management/components/account/account-icon-picker.tsx": {
+    "mtime": 1786657619.6280289,
+    "ast_hash": "a3698f0d6be19b3b5fc5aac286e5d306",
+    "semantic_hash": "a3698f0d6be19b3b5fc5aac286e5d306"
+  },
+  "/Users/saeed/Work/money-management/components/account/account-picker.test.tsx": {
+    "mtime": 1786581398.0329967,
+    "ast_hash": "b73844357013bcb862286573e011c49a",
+    "semantic_hash": "b73844357013bcb862286573e011c49a"
+  },
+  "/Users/saeed/Work/money-management/components/account/account-picker.tsx": {
+    "mtime": 1774395004.8221164,
+    "ast_hash": "277fbea98693a591c44b075b579ba05b",
+    "semantic_hash": "277fbea98693a591c44b075b579ba05b"
+  },
+  "/Users/saeed/Work/money-management/components/account/account-type-picker.tsx": {
+    "mtime": 1786726073.2971318,
+    "ast_hash": "edfcea022020acfba4753303f9b8df2b",
+    "semantic_hash": "edfcea022020acfba4753303f9b8df2b"
+  },
+  "/Users/saeed/Work/money-management/components/account/form.test.tsx": {
+    "mtime": 1786657751.1053932,
+    "ast_hash": "a6d0e2e19a7382629faac3ed8ceac23a",
+    "semantic_hash": "a6d0e2e19a7382629faac3ed8ceac23a"
+  },
+  "/Users/saeed/Work/money-management/components/account/form.ts": {
+    "mtime": 1786726073.2973561,
+    "ast_hash": "a2bb07fe60a09c503fd86852f6371ed7",
+    "semantic_hash": "a2bb07fe60a09c503fd86852f6371ed7"
+  },
+  "/Users/saeed/Work/money-management/components/account/utils.test.ts": {
+    "mtime": 1786657723.4958293,
+    "ast_hash": "8f29dcd16c567712a634569fbde25a0b",
+    "semantic_hash": "8f29dcd16c567712a634569fbde25a0b"
+  },
+  "/Users/saeed/Work/money-management/components/account/utils.ts": {
+    "mtime": 1786657723.4956455,
+    "ast_hash": "36486bd2ab8aeb46cce88a6c8f419093",
+    "semantic_hash": "36486bd2ab8aeb46cce88a6c8f419093"
+  },
+  "/Users/saeed/Work/money-management/components/category/category-color-picker.tsx": {
+    "mtime": 1780188739.0780172,
+    "ast_hash": "573de3f052bbeeccaf488e96d72d0226",
+    "semantic_hash": "573de3f052bbeeccaf488e96d72d0226"
+  },
+  "/Users/saeed/Work/money-management/components/category/category-edit-sheet.tsx": {
+    "mtime": 1786658200.5905068,
+    "ast_hash": "696fb7a5c9f6fba945d95f4010ac77d0",
+    "semantic_hash": "696fb7a5c9f6fba945d95f4010ac77d0"
+  },
+  "/Users/saeed/Work/money-management/components/category/category-form-content.tsx": {
+    "mtime": 1786741457.1141944,
+    "ast_hash": "8511046947b727d0f10da96b8bbd5abb",
+    "semantic_hash": "8511046947b727d0f10da96b8bbd5abb"
+  },
+  "/Users/saeed/Work/money-management/components/category/category-form-options.ts": {
+    "mtime": 1780188739.078795,
+    "ast_hash": "f84b1a55c7c3f252f56714859657d805",
+    "semantic_hash": "f84b1a55c7c3f252f56714859657d805"
+  },
+  "/Users/saeed/Work/money-management/components/category/category-form-preview.tsx": {
+    "mtime": 1780188739.079037,
+    "ast_hash": "ad9950dc6c286465e5a77f81b373606a",
+    "semantic_hash": "ad9950dc6c286465e5a77f81b373606a"
+  },
+  "/Users/saeed/Work/money-management/components/category/category-form-sheet-footer.tsx": {
+    "mtime": 1786639211.0099955,
+    "ast_hash": "4e268e1ebc39037be9b5e5e6413001dd",
+    "semantic_hash": "4e268e1ebc39037be9b5e5e6413001dd"
+  },
+  "/Users/saeed/Work/money-management/components/category/category-form-sheet.tsx": {
+    "mtime": 1786639211.0103238,
+    "ast_hash": "4cc87035e01df6596320de9271554844",
+    "semantic_hash": "4cc87035e01df6596320de9271554844"
+  },
+  "/Users/saeed/Work/money-management/components/category/category-icon-picker.tsx": {
+    "mtime": 1780188739.0798044,
+    "ast_hash": "9bec4c6f4afa3a7343b30fa9d635984b",
+    "semantic_hash": "9bec4c6f4afa3a7343b30fa9d635984b"
+  },
+  "/Users/saeed/Work/money-management/components/category/category-picker.test.tsx": {
+    "mtime": 1786581398.036015,
+    "ast_hash": "15e50a77a8b6cbaea4f0bdb1aa2ae027",
+    "semantic_hash": "15e50a77a8b6cbaea4f0bdb1aa2ae027"
+  },
+  "/Users/saeed/Work/money-management/components/category/category-picker.tsx": {
+    "mtime": 1774395004.8225632,
+    "ast_hash": "e415f149c8719ceb8eaab1875a541a48",
+    "semantic_hash": "e415f149c8719ceb8eaab1875a541a48"
+  },
+  "/Users/saeed/Work/money-management/components/category/category-type-picker.tsx": {
+    "mtime": 1780188739.0800328,
+    "ast_hash": "519c5035291533befd8c31a60a8aa9e0",
+    "semantic_hash": "519c5035291533befd8c31a60a8aa9e0"
+  },
+  "/Users/saeed/Work/money-management/components/category/form.ts": {
+    "mtime": 1786653955.024507,
+    "ast_hash": "42646c997c3852f61295e096cff049b5",
+    "semantic_hash": "42646c997c3852f61295e096cff049b5"
+  },
+  "/Users/saeed/Work/money-management/components/common/amount-input.test.tsx": {
+    "mtime": 1786581398.0366771,
+    "ast_hash": "a3d97db9c72f82367b799f231e613834",
+    "semantic_hash": "a3d97db9c72f82367b799f231e613834"
+  },
+  "/Users/saeed/Work/money-management/components/common/amount-input.tsx": {
+    "mtime": 1786741518.8232784,
+    "ast_hash": "7716ccccc7ef19beee16a467ec04acdb",
+    "semantic_hash": "7716ccccc7ef19beee16a467ec04acdb"
+  },
+  "/Users/saeed/Work/money-management/components/common/color-picker.test.tsx": {
+    "mtime": 1786655305.985878,
+    "ast_hash": "33ed592fe19d7c71cc14b4ae462dea91",
+    "semantic_hash": "33ed592fe19d7c71cc14b4ae462dea91"
+  },
+  "/Users/saeed/Work/money-management/components/common/color-picker.tsx": {
+    "mtime": 1786656782.8700883,
+    "ast_hash": "a6636ad9b521bd80f41ea5463d2e8618",
+    "semantic_hash": "a6636ad9b521bd80f41ea5463d2e8618"
+  },
+  "/Users/saeed/Work/money-management/components/common/emoji-picker.test.tsx": {
+    "mtime": 1786581398.0374806,
+    "ast_hash": "8630ba2c04889629c98f8d23cc2b843a",
+    "semantic_hash": "8630ba2c04889629c98f8d23cc2b843a"
+  },
+  "/Users/saeed/Work/money-management/components/common/emoji-picker.tsx": {
+    "mtime": 1786657619.6279352,
+    "ast_hash": "ea43b78f7a1c4e1210596f1ee40ad8e8",
+    "semantic_hash": "ea43b78f7a1c4e1210596f1ee40ad8e8"
+  },
+  "/Users/saeed/Work/money-management/components/common/empty-state.test.tsx": {
+    "mtime": 1786581398.0378861,
+    "ast_hash": "bb3cc16631e15c9bbbdb09c0b3f25dd7",
+    "semantic_hash": "bb3cc16631e15c9bbbdb09c0b3f25dd7"
+  },
+  "/Users/saeed/Work/money-management/components/common/empty-state.tsx": {
+    "mtime": 1781167423.9100447,
+    "ast_hash": "ae14238d31f94f61e4f68341f90834dd",
+    "semantic_hash": "ae14238d31f94f61e4f68341f90834dd"
+  },
+  "/Users/saeed/Work/money-management/components/graphics/coin-plant.tsx": {
+    "mtime": 1781167309.421158,
+    "ast_hash": "95008fa8ceb7fce088a4a1e56c3763e8",
+    "semantic_hash": "95008fa8ceb7fce088a4a1e56c3763e8"
+  },
+  "/Users/saeed/Work/money-management/components/graphics/garden-row.tsx": {
+    "mtime": 1781167309.422338,
+    "ast_hash": "9a8b0dbee341893ce21fd79363c6902d",
+    "semantic_hash": "9a8b0dbee341893ce21fd79363c6902d"
+  },
+  "/Users/saeed/Work/money-management/components/graphics/growing-garden.tsx": {
+    "mtime": 1786726073.2979045,
+    "ast_hash": "49a641c40eb21cf99e43017b3705f97d",
+    "semantic_hash": "49a641c40eb21cf99e43017b3705f97d"
+  },
+  "/Users/saeed/Work/money-management/components/graphics/palette.ts": {
+    "mtime": 1786726073.2981682,
+    "ast_hash": "4dc68c202f57613f89b9679e5e73189e",
+    "semantic_hash": "4dc68c202f57613f89b9679e5e73189e"
+  },
+  "/Users/saeed/Work/money-management/components/graphics/seed-packets.tsx": {
+    "mtime": 1781167141.1382422,
+    "ast_hash": "2c08271072cb97898233286361f3e695",
+    "semantic_hash": "2c08271072cb97898233286361f3e695"
+  },
+  "/Users/saeed/Work/money-management/components/graphics/sprout-ledger.tsx": {
+    "mtime": 1781723125.8968644,
+    "ast_hash": "2cbd62214883daab962e136ef694b35a",
+    "semantic_hash": "2cbd62214883daab962e136ef694b35a"
+  },
+  "/Users/saeed/Work/money-management/components/graphics/tiny-sprout.tsx": {
+    "mtime": 1781723125.8941016,
+    "ast_hash": "3e8702c280fd6022a48d993eeb770f38",
+    "semantic_hash": "3e8702c280fd6022a48d993eeb770f38"
+  },
+  "/Users/saeed/Work/money-management/components/graphics/watering-can.tsx": {
+    "mtime": 1781167309.421648,
+    "ast_hash": "b3b2eb75d86183b9d203f2f0087a9115",
+    "semantic_hash": "b3b2eb75d86183b9d203f2f0087a9115"
+  },
+  "/Users/saeed/Work/money-management/components/home/balance-hero.test.tsx": {
+    "mtime": 1786581398.0384812,
+    "ast_hash": "09746807b159ab11fa0213e730348fb4",
+    "semantic_hash": "09746807b159ab11fa0213e730348fb4"
+  },
+  "/Users/saeed/Work/money-management/components/home/balance-hero.tsx": {
+    "mtime": 1786752769.6080165,
+    "ast_hash": "50df2657177247d8e850e5c6dac616d5",
+    "semantic_hash": "50df2657177247d8e850e5c6dac616d5"
+  },
+  "/Users/saeed/Work/money-management/components/home/filter-bar.test.tsx": {
+    "mtime": 1786581398.0396743,
+    "ast_hash": "c300e947e5dd8801d47c4b3e755c4b40",
+    "semantic_hash": "c300e947e5dd8801d47c4b3e755c4b40"
+  },
+  "/Users/saeed/Work/money-management/components/home/filter-bar.tsx": {
+    "mtime": 1774988477.9218802,
+    "ast_hash": "3d8a8d2b648485d1c61789da937d13e5",
+    "semantic_hash": "3d8a8d2b648485d1c61789da937d13e5"
+  },
+  "/Users/saeed/Work/money-management/components/home/filter-chip.tsx": {
+    "mtime": 1774988477.9221878,
+    "ast_hash": "05ada6b0fdd7b02ad71e14fd61bf39be",
+    "semantic_hash": "05ada6b0fdd7b02ad71e14fd61bf39be"
+  },
+  "/Users/saeed/Work/money-management/components/home/filters-button.tsx": {
+    "mtime": 1786658914.119308,
+    "ast_hash": "40e8d39720a090c489975f4977298cac",
+    "semantic_hash": "40e8d39720a090c489975f4977298cac"
+  },
+  "/Users/saeed/Work/money-management/components/home/home-brand.test.tsx": {
+    "mtime": 1786581398.0402827,
+    "ast_hash": "87e4b8697d36bee77c32e1ccd4364948",
+    "semantic_hash": "87e4b8697d36bee77c32e1ccd4364948"
+  },
+  "/Users/saeed/Work/money-management/components/home/home-brand.tsx": {
+    "mtime": 1781727699.7073388,
+    "ast_hash": "18cfc71fa20c6296705bb5e5d9a720e8",
+    "semantic_hash": "18cfc71fa20c6296705bb5e5d9a720e8"
+  },
+  "/Users/saeed/Work/money-management/components/home/home-empty-state.test.tsx": {
+    "mtime": 1786581398.0427082,
+    "ast_hash": "75cda2b54e49fa785eed4b1a47f85243",
+    "semantic_hash": "75cda2b54e49fa785eed4b1a47f85243"
+  },
+  "/Users/saeed/Work/money-management/components/home/home-empty-state.tsx": {
+    "mtime": 1781167423.910545,
+    "ast_hash": "92d4cef995bc0ed43d884a1bc0c435fd",
+    "semantic_hash": "92d4cef995bc0ed43d884a1bc0c435fd"
+  },
+  "/Users/saeed/Work/money-management/components/home/home-journal-list.test.tsx": {
+    "mtime": 1786581398.0436583,
+    "ast_hash": "983834ea58e2e5d1e8596fb6da479edd",
+    "semantic_hash": "983834ea58e2e5d1e8596fb6da479edd"
+  },
+  "/Users/saeed/Work/money-management/components/home/home-journal-list.tsx": {
+    "mtime": 1781186263.4612443,
+    "ast_hash": "701c0d955b5c377124f605c94c467057",
+    "semantic_hash": "701c0d955b5c377124f605c94c467057"
+  },
+  "/Users/saeed/Work/money-management/components/home/home-list-header.tsx": {
+    "mtime": 1781205857.2418365,
+    "ast_hash": "c91e11ef361b86bee6e0e638b69a5a3b",
+    "semantic_hash": "c91e11ef361b86bee6e0e638b69a5a3b"
+  },
+  "/Users/saeed/Work/money-management/components/home/journal-day-header.test.tsx": {
+    "mtime": 1786581398.0439212,
+    "ast_hash": "4a90522cbad09229abf74868ecad1a28",
+    "semantic_hash": "4a90522cbad09229abf74868ecad1a28"
+  },
+  "/Users/saeed/Work/money-management/components/home/journal-day-header.tsx": {
+    "mtime": 1786748284.0132573,
+    "ast_hash": "fc24485273f45f9740d9c003423e2dee",
+    "semantic_hash": "fc24485273f45f9740d9c003423e2dee"
+  },
+  "/Users/saeed/Work/money-management/components/home/journal-header.tsx": {
+    "mtime": 1774666808.6813612,
+    "ast_hash": "d88bcb0d841968282a65f4703f8c4797",
+    "semantic_hash": "d88bcb0d841968282a65f4703f8c4797"
+  },
+  "/Users/saeed/Work/money-management/components/home/types.ts": {
+    "mtime": 1774988477.9225914,
+    "ast_hash": "c01bb8f85dc8cf0dce49599be0b8170a",
+    "semantic_hash": "c01bb8f85dc8cf0dce49599be0b8170a"
+  },
+  "/Users/saeed/Work/money-management/components/ledger/ledger-list-header.tsx": {
+    "mtime": 1786658907.656312,
+    "ast_hash": "af281a7b0438d4e4187b573993fb280a",
+    "semantic_hash": "af281a7b0438d4e4187b573993fb280a"
+  },
+  "/Users/saeed/Work/money-management/components/money-movement/market-formatters.test.ts": {
+    "mtime": 1777367491.317914,
+    "ast_hash": "69c72cc3bf974da33b66a238c5a23835",
+    "semantic_hash": "69c72cc3bf974da33b66a238c5a23835"
+  },
+  "/Users/saeed/Work/money-management/components/money-movement/market-formatters.ts": {
+    "mtime": 1777367249.698646,
+    "ast_hash": "12d7fed9c1f189dc20bf0557eac0529c",
+    "semantic_hash": "12d7fed9c1f189dc20bf0557eac0529c"
+  },
+  "/Users/saeed/Work/money-management/components/money-movement/market-hero.tsx": {
+    "mtime": 1777503345.5455675,
+    "ast_hash": "482b4a1bbea3e48af67cf8fbc05cdc5d",
+    "semantic_hash": "482b4a1bbea3e48af67cf8fbc05cdc5d"
+  },
+  "/Users/saeed/Work/money-management/components/money-movement/market-source-badge.tsx": {
+    "mtime": 1777381360.543181,
+    "ast_hash": "1138882064b56e4415965b558a883a01",
+    "semantic_hash": "1138882064b56e4415965b558a883a01"
+  },
+  "/Users/saeed/Work/money-management/components/money-movement/market-state-card.tsx": {
+    "mtime": 1777367249.698541,
+    "ast_hash": "749439036f11cf3d1bb375b677ebf52f",
+    "semantic_hash": "749439036f11cf3d1bb375b677ebf52f"
+  },
+  "/Users/saeed/Work/money-management/components/money-movement/money-movement-screen.test.tsx": {
+    "mtime": 1786581494.4223971,
+    "ast_hash": "3938e52a9869e2e37ac4dc037eabc6f3",
+    "semantic_hash": "3938e52a9869e2e37ac4dc037eabc6f3"
+  },
+  "/Users/saeed/Work/money-management/components/money-movement/money-movement-screen.tsx": {
+    "mtime": 1781264712.986636,
+    "ast_hash": "f8017fff1107d18b2026557cd9021778",
+    "semantic_hash": "f8017fff1107d18b2026557cd9021778"
+  },
+  "/Users/saeed/Work/money-management/components/money-movement/quote-row.tsx": {
+    "mtime": 1777367249.698056,
+    "ast_hash": "c09998c78d866d0771d8801bf28971b9",
+    "semantic_hash": "c09998c78d866d0771d8801bf28971b9"
+  },
+  "/Users/saeed/Work/money-management/components/money-movement/quote-section.tsx": {
+    "mtime": 1777367249.6978106,
+    "ast_hash": "900cb775278495d91ffd9f0f4598f2c8",
+    "semantic_hash": "900cb775278495d91ffd9f0f4598f2c8"
+  },
+  "/Users/saeed/Work/money-management/components/money-movement/refresh-market-button.tsx": {
+    "mtime": 1777367465.5739913,
+    "ast_hash": "46b9e2672e69c86fc57a620f76c88779",
+    "semantic_hash": "46b9e2672e69c86fc57a620f76c88779"
+  },
+  "/Users/saeed/Work/money-management/components/navigation/glass-tab-bar/constants.ts": {
+    "mtime": 1781823580.3785622,
+    "ast_hash": "29c5c80d902e60ff68091abeceea9885",
+    "semantic_hash": "29c5c80d902e60ff68091abeceea9885"
+  },
+  "/Users/saeed/Work/money-management/components/navigation/glass-tab-bar/create-tab-button.tsx": {
+    "mtime": 1781727510.918848,
+    "ast_hash": "69b453cf31fb063651a565d9eb7829d4",
+    "semantic_hash": "69b453cf31fb063651a565d9eb7829d4"
+  },
+  "/Users/saeed/Work/money-management/components/navigation/glass-tab-bar/glass-surface.tsx": {
+    "mtime": 1781264720.3976974,
+    "ast_hash": "fea9d296ecd734c52d78daca9c2bb78b",
+    "semantic_hash": "fea9d296ecd734c52d78daca9c2bb78b"
+  },
+  "/Users/saeed/Work/money-management/components/navigation/glass-tab-bar/glass-tab-bar.tsx": {
+    "mtime": 1786663780.2212398,
+    "ast_hash": "f91c3bbf15fd93bbc7f711cbe957d7c7",
+    "semantic_hash": "f91c3bbf15fd93bbc7f711cbe957d7c7"
+  },
+  "/Users/saeed/Work/money-management/components/navigation/glass-tab-bar/glass-tab-button.tsx": {
+    "mtime": 1781264712.98735,
+    "ast_hash": "dd02a889ddbf088f3251e28f3df6b7a3",
+    "semantic_hash": "dd02a889ddbf088f3251e28f3df6b7a3"
+  },
+  "/Users/saeed/Work/money-management/components/navigation/glass-tab-bar/index.tsx": {
+    "mtime": 1781264712.9874692,
+    "ast_hash": "65973e079c8068e04d78afc938af4b73",
+    "semantic_hash": "65973e079c8068e04d78afc938af4b73"
+  },
+  "/Users/saeed/Work/money-management/components/navigation/glass-tab-bar/scroll-fade.tsx": {
+    "mtime": 1781823580.3790982,
+    "ast_hash": "289f3ca09fa7916c783f162f400aeb09",
+    "semantic_hash": "289f3ca09fa7916c783f162f400aeb09"
+  },
+  "/Users/saeed/Work/money-management/components/navigation/glass-tab-bar/styles.ts": {
+    "mtime": 1781727515.7655144,
+    "ast_hash": "58f1b8d632c609ab4842afdc8bda8e52",
+    "semantic_hash": "58f1b8d632c609ab4842afdc8bda8e52"
+  },
+  "/Users/saeed/Work/money-management/components/navigation/glass-tab-bar/tab-icons.ts": {
+    "mtime": 1786662225.3435748,
+    "ast_hash": "0c1257cd6eee7ca19302fbbe4bf098a8",
+    "semantic_hash": "0c1257cd6eee7ca19302fbbe4bf098a8"
+  },
+  "/Users/saeed/Work/money-management/components/navigation/glass-tab-bar/types.ts": {
+    "mtime": 1781264712.9878178,
+    "ast_hash": "d6670f34bb46a483b1ee4d64688b854a",
+    "semantic_hash": "d6670f34bb46a483b1ee4d64688b854a"
+  },
+  "/Users/saeed/Work/money-management/components/navigation/glass-tab-bar/use-tab-bar-pan-gesture.test.ts": {
+    "mtime": 1786585627.2548263,
+    "ast_hash": "31fdcf5f6202f649a3320761ffd97d27",
+    "semantic_hash": "31fdcf5f6202f649a3320761ffd97d27"
+  },
+  "/Users/saeed/Work/money-management/components/navigation/glass-tab-bar/use-tab-bar-pan-gesture.ts": {
+    "mtime": 1786585573.118203,
+    "ast_hash": "02538ad95e656343abb547dfe4fedf31",
+    "semantic_hash": "02538ad95e656343abb547dfe4fedf31"
+  },
+  "/Users/saeed/Work/money-management/components/navigation/tab-stack.tsx": {
+    "mtime": 1786748284.013499,
+    "ast_hash": "7731643f5d574e5345bb4be19e681d2b",
+    "semantic_hash": "7731643f5d574e5345bb4be19e681d2b"
+  },
+  "/Users/saeed/Work/money-management/components/onboarding/motion.ts": {
+    "mtime": 1786726073.2991009,
+    "ast_hash": "0de2fac92ad412a68feabf7c7f63520a",
+    "semantic_hash": "0de2fac92ad412a68feabf7c7f63520a"
+  },
+  "/Users/saeed/Work/money-management/components/onboarding/onboarding-background.tsx": {
+    "mtime": 1786726073.2992523,
+    "ast_hash": "c0d7fde962b6cc44cca8a5f621450495",
+    "semantic_hash": "c0d7fde962b6cc44cca8a5f621450495"
+  },
+  "/Users/saeed/Work/money-management/components/onboarding/onboarding-balance-step.tsx": {
+    "mtime": 1786726073.2994,
+    "ast_hash": "54f86fc6072d93a84949fa32ac0faa61",
+    "semantic_hash": "54f86fc6072d93a84949fa32ac0faa61"
+  },
+  "/Users/saeed/Work/money-management/components/onboarding/onboarding-bloom-burst.tsx": {
+    "mtime": 1786726073.299556,
+    "ast_hash": "2995297b0d3026a20a2913f2bafb97ff",
+    "semantic_hash": "2995297b0d3026a20a2913f2bafb97ff"
+  },
+  "/Users/saeed/Work/money-management/components/onboarding/onboarding-complete-step.tsx": {
+    "mtime": 1786726073.2997134,
+    "ast_hash": "eb4393d8b6aad5aafbf1b67a84ee4a9e",
+    "semantic_hash": "eb4393d8b6aad5aafbf1b67a84ee4a9e"
+  },
+  "/Users/saeed/Work/money-management/components/onboarding/onboarding-cta.tsx": {
+    "mtime": 1786726073.299907,
+    "ast_hash": "b8f8776f76f279b2e19729e4f520bb32",
+    "semantic_hash": "b8f8776f76f279b2e19729e4f520bb32"
+  },
+  "/Users/saeed/Work/money-management/components/onboarding/onboarding-header.tsx": {
+    "mtime": 1786726073.3000758,
+    "ast_hash": "9206c29b152da47f855205be3d2e5a1e",
+    "semantic_hash": "9206c29b152da47f855205be3d2e5a1e"
+  },
+  "/Users/saeed/Work/money-management/components/onboarding/onboarding-name-step.tsx": {
+    "mtime": 1786726073.300343,
+    "ast_hash": "794f202f9e19ae9200d63d7938dda308",
+    "semantic_hash": "794f202f9e19ae9200d63d7938dda308"
+  },
+  "/Users/saeed/Work/money-management/components/onboarding/onboarding-progress.tsx": {
+    "mtime": 1786726073.300498,
+    "ast_hash": "a9fe24e06f97bd911849c07a551cd354",
+    "semantic_hash": "a9fe24e06f97bd911849c07a551cd354"
+  },
+  "/Users/saeed/Work/money-management/components/onboarding/onboarding-step-heading.tsx": {
+    "mtime": 1786726073.300644,
+    "ast_hash": "70f95a3143a4bae5483582e1190600c0",
+    "semantic_hash": "70f95a3143a4bae5483582e1190600c0"
+  },
+  "/Users/saeed/Work/money-management/components/onboarding/onboarding-style-step.tsx": {
+    "mtime": 1786726073.300791,
+    "ast_hash": "c767105bf4f0097bad6b79090bac895f",
+    "semantic_hash": "c767105bf4f0097bad6b79090bac895f"
+  },
+  "/Users/saeed/Work/money-management/components/onboarding/onboarding-text-field.tsx": {
+    "mtime": 1786741530.1277626,
+    "ast_hash": "8f403dcab988b2c62e71e3109ca8b4c1",
+    "semantic_hash": "8f403dcab988b2c62e71e3109ca8b4c1"
+  },
+  "/Users/saeed/Work/money-management/components/onboarding/onboarding-welcome-step.tsx": {
+    "mtime": 1786726073.301109,
+    "ast_hash": "00452e0129fe42943635982782c07708",
+    "semantic_hash": "00452e0129fe42943635982782c07708"
+  },
+  "/Users/saeed/Work/money-management/components/onboarding/steps.ts": {
+    "mtime": 1786726073.3012474,
+    "ast_hash": "39df904fe351ff8aa43d8c1147b57895",
+    "semantic_hash": "39df904fe351ff8aa43d8c1147b57895"
+  },
+  "/Users/saeed/Work/money-management/components/onboarding/use-keyboard-visible.ts": {
+    "mtime": 1786726073.3013794,
+    "ast_hash": "911d807cf32c8ca7b41a3240545ff17f",
+    "semantic_hash": "911d807cf32c8ca7b41a3240545ff17f"
+  },
+  "/Users/saeed/Work/money-management/components/resource/create-resource-bottom-sheet.tsx": {
+    "mtime": 1786658479.903702,
+    "ast_hash": "d08ff5916e74adb07085645231da7c97",
+    "semantic_hash": "d08ff5916e74adb07085645231da7c97"
+  },
+  "/Users/saeed/Work/money-management/components/resource/create-resource-sheet-footer.tsx": {
+    "mtime": 1786657619.634102,
+    "ast_hash": "87c201004e76aef4840fbe4396287fc1",
+    "semantic_hash": "87c201004e76aef4840fbe4396287fc1"
+  },
+  "/Users/saeed/Work/money-management/components/resource/resource-form-field.tsx": {
+    "mtime": 1786741502.3493295,
+    "ast_hash": "4c95e30e91895364ef9df998d958c8bc",
+    "semantic_hash": "4c95e30e91895364ef9df998d958c8bc"
+  },
+  "/Users/saeed/Work/money-management/components/resource/resource-sheet-delete-button.test.tsx": {
+    "mtime": 1786658200.5860684,
+    "ast_hash": "f58bdea0206482145979223e8d106261",
+    "semantic_hash": "f58bdea0206482145979223e8d106261"
+  },
+  "/Users/saeed/Work/money-management/components/resource/resource-sheet-delete-button.tsx": {
+    "mtime": 1786658200.586031,
+    "ast_hash": "68ce082670dec661410dd048d828a71e",
+    "semantic_hash": "68ce082670dec661410dd048d828a71e"
+  },
+  "/Users/saeed/Work/money-management/components/settings/account-delete-action.tsx": {
+    "mtime": 1786205804.6488073,
+    "ast_hash": "bd5bdf078cb5f6f8eb70fb53426a4373",
+    "semantic_hash": "bd5bdf078cb5f6f8eb70fb53426a4373"
+  },
+  "/Users/saeed/Work/money-management/components/settings/account-row.test.tsx": {
+    "mtime": 1786657723.496032,
+    "ast_hash": "28ae350fa3c9da6ca2068941a6214aa1",
+    "semantic_hash": "28ae350fa3c9da6ca2068941a6214aa1"
+  },
+  "/Users/saeed/Work/money-management/components/settings/account-row.tsx": {
+    "mtime": 1786748284.0137548,
+    "ast_hash": "976d23590eba9acd92457ad4bddd2a97",
+    "semantic_hash": "976d23590eba9acd92457ad4bddd2a97"
+  },
+  "/Users/saeed/Work/money-management/components/settings/card.tsx": {
+    "mtime": 1786205804.6499054,
+    "ast_hash": "2081011de67c953a66e96ca45932cd49",
+    "semantic_hash": "2081011de67c953a66e96ca45932cd49"
+  },
+  "/Users/saeed/Work/money-management/components/settings/category-row.test.tsx": {
+    "mtime": 1786654293.172473,
+    "ast_hash": "4686306f326ea86e62cf047c1260d9c8",
+    "semantic_hash": "4686306f326ea86e62cf047c1260d9c8"
+  },
+  "/Users/saeed/Work/money-management/components/settings/category-row.tsx": {
+    "mtime": 1786654255.5476844,
+    "ast_hash": "95cd16e4b70f4db97d4c80367c1906d7",
+    "semantic_hash": "95cd16e4b70f4db97d4c80367c1906d7"
+  },
+  "/Users/saeed/Work/money-management/components/settings/category-spending-chart.tsx": {
+    "mtime": 1786748284.014004,
+    "ast_hash": "bdc696a8c6a484da45c2bcbd667069d0",
+    "semantic_hash": "bdc696a8c6a484da45c2bcbd667069d0"
+  },
+  "/Users/saeed/Work/money-management/components/settings/chart-utils.test.ts": {
+    "mtime": 1783031671.3980005,
+    "ast_hash": "125842b5cc7e85fc67047ee3a5464be2",
+    "semantic_hash": "125842b5cc7e85fc67047ee3a5464be2"
+  },
+  "/Users/saeed/Work/money-management/components/settings/chart-utils.ts": {
+    "mtime": 1783031671.3980994,
+    "ast_hash": "5d8d34f772aa9f41745e66d556ccbdee",
+    "semantic_hash": "5d8d34f772aa9f41745e66d556ccbdee"
+  },
+  "/Users/saeed/Work/money-management/components/settings/dev-tools-section.tsx": {
+    "mtime": 1786726073.3019795,
+    "ast_hash": "b43627f32d1ae6c0e091c4165ff843de",
+    "semantic_hash": "b43627f32d1ae6c0e091c4165ff843de"
+  },
+  "/Users/saeed/Work/money-management/components/settings/divider.tsx": {
+    "mtime": 1774569545.919175,
+    "ast_hash": "c0f794d47e585306fdf53c3d340ef4af",
+    "semantic_hash": "c0f794d47e585306fdf53c3d340ef4af"
+  },
+  "/Users/saeed/Work/money-management/components/settings/section-header.tsx": {
+    "mtime": 1774569545.919409,
+    "ast_hash": "26a8246948fb2c49cb2dbba8abfdccfc",
+    "semantic_hash": "26a8246948fb2c49cb2dbba8abfdccfc"
+  },
+  "/Users/saeed/Work/money-management/components/settings/settings-row.test.tsx": {
+    "mtime": 1786581398.0469112,
+    "ast_hash": "badcc3c63f41b4d4f2584bd5cc01a019",
+    "semantic_hash": "badcc3c63f41b4d4f2584bd5cc01a019"
+  },
+  "/Users/saeed/Work/money-management/components/settings/settings-row.tsx": {
+    "mtime": 1786205804.6508975,
+    "ast_hash": "68d6cca5bdf1230dc9a35200945e4604",
+    "semantic_hash": "68d6cca5bdf1230dc9a35200945e4604"
+  },
+  "/Users/saeed/Work/money-management/components/settings/stats-charts.tsx": {
+    "mtime": 1781723007.1223934,
+    "ast_hash": "f772d5c8abed6556191be1bd5c559757",
+    "semantic_hash": "f772d5c8abed6556191be1bd5c559757"
+  },
+  "/Users/saeed/Work/money-management/components/settings/swipeable-account-row.test.tsx": {
+    "mtime": 1786581398.047969,
+    "ast_hash": "2cac8fb22eeb9fc11bac5c0f75b93a05",
+    "semantic_hash": "2cac8fb22eeb9fc11bac5c0f75b93a05"
+  },
+  "/Users/saeed/Work/money-management/components/settings/swipeable-account-row.tsx": {
+    "mtime": 1786657706.014464,
+    "ast_hash": "f098f3c59e5c05d0d7ad924669d7dce0",
+    "semantic_hash": "f098f3c59e5c05d0d7ad924669d7dce0"
+  },
+  "/Users/saeed/Work/money-management/components/settings/transaction-trend-chart.tsx": {
+    "mtime": 1786748284.0142865,
+    "ast_hash": "2ef793d68ce9f4565acdefd075ea068c",
+    "semantic_hash": "2ef793d68ce9f4565acdefd075ea068c"
+  },
+  "/Users/saeed/Work/money-management/components/settings/types.ts": {
+    "mtime": 1786657706.0137925,
+    "ast_hash": "6ef9c905564c7a66bd4447c24a4e1ac8",
+    "semantic_hash": "6ef9c905564c7a66bd4447c24a4e1ac8"
+  },
+  "/Users/saeed/Work/money-management/components/settings/update-section.test.tsx": {
+    "mtime": 1786581398.0492642,
+    "ast_hash": "711c0721f59760af5420904b1af391c8",
+    "semantic_hash": "711c0721f59760af5420904b1af391c8"
+  },
+  "/Users/saeed/Work/money-management/components/settings/update-section.tsx": {
+    "mtime": 1786205804.6525035,
+    "ast_hash": "a1e8ebf055da1d4660bc36b06b407733",
+    "semantic_hash": "a1e8ebf055da1d4660bc36b06b407733"
+  },
+  "/Users/saeed/Work/money-management/components/settings/use-elevated-surface-style.ts": {
+    "mtime": 1781161686.3138025,
+    "ast_hash": "f4fc23533929c8563b1f4881c92b20bc",
+    "semantic_hash": "f4fc23533929c8563b1f4881c92b20bc"
+  },
+  "/Users/saeed/Work/money-management/components/themed-text.tsx": {
+    "mtime": 1773678262.0820239,
+    "ast_hash": "94e1087e18be8b2b864ee56cb65dd79b",
+    "semantic_hash": "94e1087e18be8b2b864ee56cb65dd79b"
+  },
+  "/Users/saeed/Work/money-management/components/themed-view.tsx": {
+    "mtime": 1773678262.5691454,
+    "ast_hash": "1b8dfa67df1c65ca2f77ceff37b6ab36",
+    "semantic_hash": "1b8dfa67df1c65ca2f77ceff37b6ab36"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/account-picker/account-picker.tsx": {
+    "mtime": 1786583435.7147448,
+    "ast_hash": "7ce2db6586a48cf04c0a9e5571a74625",
+    "semantic_hash": "7ce2db6586a48cf04c0a9e5571a74625"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/account-picker/types.ts": {
+    "mtime": 1774304747.6756196,
+    "ast_hash": "1310fc40ce7883791ee4a7979dcc5ad1",
+    "semantic_hash": "1310fc40ce7883791ee4a7979dcc5ad1"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/amount-display.test.tsx": {
+    "mtime": 1786818759.9010124,
+    "ast_hash": "5cec29d54860c9641e716c9d339810a1",
+    "semantic_hash": "5cec29d54860c9641e716c9d339810a1"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/amount-display.tsx": {
+    "mtime": 1786752769.6081178,
+    "ast_hash": "976ef79831c761d5bfaa968d909177b5",
+    "semantic_hash": "976ef79831c761d5bfaa968d909177b5"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/breadcrumb-segment.tsx": {
+    "mtime": 1774304747.6761916,
+    "ast_hash": "5c3091a2f58e63db291fe529de3f58aa",
+    "semantic_hash": "5c3091a2f58e63db291fe529de3f58aa"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/category-picker/category-picker.tsx": {
+    "mtime": 1786726706.0449831,
+    "ast_hash": "466a9ebb5a9e038944f9b427ad063c74",
+    "semantic_hash": "466a9ebb5a9e038944f9b427ad063c74"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/category-picker/types.ts": {
+    "mtime": 1774304747.6769593,
+    "ast_hash": "b522a5dfe2d2f6ca948a285a43fa0871",
+    "semantic_hash": "b522a5dfe2d2f6ca948a285a43fa0871"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/constants.ts": {
+    "mtime": 1781167423.9117048,
+    "ast_hash": "ea7e9ee64be88e24d9761de11054bcb8",
+    "semantic_hash": "ea7e9ee64be88e24d9761de11054bcb8"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/note-input.tsx": {
+    "mtime": 1786741511.2209487,
+    "ast_hash": "78ca9eb8c85e24532d80cbd326d46f12",
+    "semantic_hash": "78ca9eb8c85e24532d80cbd326d46f12"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/num-pad.tsx": {
+    "mtime": 1786759427.7201085,
+    "ast_hash": "26a05e55bbb11835015d4a7b94a86ff4",
+    "semantic_hash": "26a05e55bbb11835015d4a7b94a86ff4"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/transaction-date-picker/transaction-date-picker.tsx": {
+    "mtime": 1786741547.7418687,
+    "ast_hash": "03bb1267f45fa73a1dbc3a27e8930a8a",
+    "semantic_hash": "03bb1267f45fa73a1dbc3a27e8930a8a"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/transaction-date-picker/types.ts": {
+    "mtime": 1773489116.4999852,
+    "ast_hash": "80e5c3d5be48ef0abc3df439325237d3",
+    "semantic_hash": "80e5c3d5be48ef0abc3df439325237d3"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/transaction-form.tsx": {
+    "mtime": 1786746397.8605561,
+    "ast_hash": "9a66df394d14bc5915b1a0a4ab6d874b",
+    "semantic_hash": "9a66df394d14bc5915b1a0a4ab6d874b"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/transaction-group.tsx": {
+    "mtime": 1786748284.0148063,
+    "ast_hash": "90be8971246af9f10cfe289e477646cd",
+    "semantic_hash": "90be8971246af9f10cfe289e477646cd"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/transaction-row.test.tsx": {
+    "mtime": 1786581398.0497,
+    "ast_hash": "e6d351323bb03e363578c0f53852ae1a",
+    "semantic_hash": "e6d351323bb03e363578c0f53852ae1a"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/transaction-row.tsx": {
+    "mtime": 1786748284.015054,
+    "ast_hash": "5dec43171c00b220ff4d2ba7148d0913",
+    "semantic_hash": "5dec43171c00b220ff4d2ba7148d0913"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/types.ts": {
+    "mtime": 1774569545.9205592,
+    "ast_hash": "8d42321c27d6b243a5a3125712bf04d4",
+    "semantic_hash": "8d42321c27d6b243a5a3125712bf04d4"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/utils.test.ts": {
+    "mtime": 1774724010.9570546,
+    "ast_hash": "cbe56663a46f8ede50a3156a2886669e",
+    "semantic_hash": "cbe56663a46f8ede50a3156a2886669e"
+  },
+  "/Users/saeed/Work/money-management/components/transaction/utils.ts": {
+    "mtime": 1774304747.6802337,
+    "ast_hash": "6b669ae7e16a32e47e851361c02d5973",
+    "semantic_hash": "6b669ae7e16a32e47e851361c02d5973"
+  },
+  "/Users/saeed/Work/money-management/components/ui/badge.tsx": {
+    "mtime": 1780273502.025748,
+    "ast_hash": "fb8cb3a1e6322db09f6fae17fbf0da46",
+    "semantic_hash": "fb8cb3a1e6322db09f6fae17fbf0da46"
+  },
+  "/Users/saeed/Work/money-management/components/ui/button.test.tsx": {
+    "mtime": 1786581398.0503867,
+    "ast_hash": "8e5311264d19eb79f8f3f80b3dc42f3b",
+    "semantic_hash": "8e5311264d19eb79f8f3f80b3dc42f3b"
+  },
+  "/Users/saeed/Work/money-management/components/ui/button.tsx": {
+    "mtime": 1786486919.089521,
+    "ast_hash": "122a8839a5a7f925865d3daa8e45b9d5",
+    "semantic_hash": "122a8839a5a7f925865d3daa8e45b9d5"
+  },
+  "/Users/saeed/Work/money-management/components/ui/icon.tsx": {
+    "mtime": 1780273502.0291798,
+    "ast_hash": "7bb5b39fb32398020d9144a80cfaddb1",
+    "semantic_hash": "7bb5b39fb32398020d9144a80cfaddb1"
+  },
+  "/Users/saeed/Work/money-management/components/ui/input-style.ts": {
+    "mtime": 1786741496.187362,
+    "ast_hash": "79b50008968f4ab78b7fa7e24aee3274",
+    "semantic_hash": "79b50008968f4ab78b7fa7e24aee3274"
+  },
+  "/Users/saeed/Work/money-management/components/ui/money-text.tsx": {
+    "mtime": 1786748284.015307,
+    "ast_hash": "6933d9c8ed2b8d4396c57efd636d4239",
+    "semantic_hash": "6933d9c8ed2b8d4396c57efd636d4239"
+  },
+  "/Users/saeed/Work/money-management/components/ui/number-flow.tsx": {
+    "mtime": 1786584851.4109993,
+    "ast_hash": "ceb963d6f1b44818d1b5aa9553ab5505",
+    "semantic_hash": "ceb963d6f1b44818d1b5aa9553ab5505"
+  },
+  "/Users/saeed/Work/money-management/components/ui/organisms/spectral-wave/conf.ts": {
+    "mtime": 1786581540.0840719,
+    "ast_hash": "dbf529119e795ef2b22b89d96c06015f",
+    "semantic_hash": "dbf529119e795ef2b22b89d96c06015f"
+  },
+  "/Users/saeed/Work/money-management/components/ui/organisms/spectral-wave/const.ts": {
+    "mtime": 1774666808.6827135,
+    "ast_hash": "d8de7d65519542d4345ca8f7c3aa6fe4",
+    "semantic_hash": "d8de7d65519542d4345ca8f7c3aa6fe4"
+  },
+  "/Users/saeed/Work/money-management/components/ui/organisms/spectral-wave/index.tsx": {
+    "mtime": 1774715232.688657,
+    "ast_hash": "fbdf3f97ced79b731657bbecef99c682",
+    "semantic_hash": "fbdf3f97ced79b731657bbecef99c682"
+  },
+  "/Users/saeed/Work/money-management/components/ui/organisms/spectral-wave/types.ts": {
+    "mtime": 1774666808.682932,
+    "ast_hash": "e3099403bfe607c4a77da90ff5a80d12",
+    "semantic_hash": "e3099403bfe607c4a77da90ff5a80d12"
+  },
+  "/Users/saeed/Work/money-management/components/ui/organisms/spectral-wave/utils.ts": {
+    "mtime": 1774666808.6830528,
+    "ast_hash": "92fdf4251b8c2868f7fbcfe932841687",
+    "semantic_hash": "92fdf4251b8c2868f7fbcfe932841687"
+  },
+  "/Users/saeed/Work/money-management/components/ui/text.test.tsx": {
+    "mtime": 1786581398.0506942,
+    "ast_hash": "b79c1dfea4cecd268303a167bd59512f",
+    "semantic_hash": "b79c1dfea4cecd268303a167bd59512f"
+  },
+  "/Users/saeed/Work/money-management/components/ui/text.tsx": {
+    "mtime": 1774304747.6817303,
+    "ast_hash": "9fdf8525adc04c162a3c1da846b17fdc",
+    "semantic_hash": "9fdf8525adc04c162a3c1da846b17fdc"
+  },
+  "/Users/saeed/Work/money-management/components/ui/toggle-group.tsx": {
+    "mtime": 1786580414.9129786,
+    "ast_hash": "0f7d46b0d8ea92c5fd9a378147682155",
+    "semantic_hash": "0f7d46b0d8ea92c5fd9a378147682155"
+  },
+  "/Users/saeed/Work/money-management/components/ui/toggle.tsx": {
+    "mtime": 1786580310.0405407,
+    "ast_hash": "0900b5dff8fa3e6a95acccfc7aca7dc5",
+    "semantic_hash": "0900b5dff8fa3e6a95acccfc7aca7dc5"
+  },
+  "/Users/saeed/Work/money-management/components/updates/app-update-context.ts": {
+    "mtime": 1786205804.6527836,
+    "ast_hash": "821ed2cf6f410061d7ea8141eb7be59d",
+    "semantic_hash": "821ed2cf6f410061d7ea8141eb7be59d"
+  },
+  "/Users/saeed/Work/money-management/components/updates/app-update-provider.test.tsx": {
+    "mtime": 1786581398.0528772,
+    "ast_hash": "6584a3b86041214bc37b2303970c75eb",
+    "semantic_hash": "6584a3b86041214bc37b2303970c75eb"
+  },
+  "/Users/saeed/Work/money-management/components/updates/app-update-provider.tsx": {
+    "mtime": 1786205804.6531875,
+    "ast_hash": "48c9335923cb2dda635faa289a754ca9",
+    "semantic_hash": "48c9335923cb2dda635faa289a754ca9"
+  },
+  "/Users/saeed/Work/money-management/components/updates/mandatory-policy.test.ts": {
+    "mtime": 1786205804.6534717,
+    "ast_hash": "405996ff7b7be42c273771cca36166a5",
+    "semantic_hash": "405996ff7b7be42c273771cca36166a5"
+  },
+  "/Users/saeed/Work/money-management/components/updates/mandatory-policy.ts": {
+    "mtime": 1786205804.653662,
+    "ast_hash": "1aaf7e3e743941d29cff8bb5699b6d4e",
+    "semantic_hash": "1aaf7e3e743941d29cff8bb5699b6d4e"
+  },
+  "/Users/saeed/Work/money-management/components/updates/mandatory-update-gate.test.tsx": {
+    "mtime": 1786581398.0534112,
+    "ast_hash": "c84c241d9597aecc51fb47f222a19ba9",
+    "semantic_hash": "c84c241d9597aecc51fb47f222a19ba9"
+  },
+  "/Users/saeed/Work/money-management/components/updates/mandatory-update-gate.tsx": {
+    "mtime": 1786205804.6540375,
+    "ast_hash": "d4e7c7528756b2d333a4cef660c4e13e",
+    "semantic_hash": "d4e7c7528756b2d333a4cef660c4e13e"
+  },
+  "/Users/saeed/Work/money-management/components/updates/types.ts": {
+    "mtime": 1786205804.654196,
+    "ast_hash": "ea2bb1f7e1e4ccef22ea5ed26c047a1a",
+    "semantic_hash": "ea2bb1f7e1e4ccef22ea5ed26c047a1a"
+  },
+  "/Users/saeed/Work/money-management/constants/theme.ts": {
+    "mtime": 1786656797.0811565,
+    "ast_hash": "5aa73548aa1b2015303b7e647cde80d4",
+    "semantic_hash": "5aa73548aa1b2015303b7e647cde80d4"
+  },
+  "/Users/saeed/Work/money-management/db/client.ts": {
+    "mtime": 1773678245.1056805,
+    "ast_hash": "2aa3ebd26103388011c637d8f2006de6",
+    "semantic_hash": "2aa3ebd26103388011c637d8f2006de6"
+  },
+  "/Users/saeed/Work/money-management/db/migrate.ts": {
+    "mtime": 1774379942.9985435,
+    "ast_hash": "cd7eb9e3901d2144a61a72e8cfb7b931",
+    "semantic_hash": "cd7eb9e3901d2144a61a72e8cfb7b931"
+  },
+  "/Users/saeed/Work/money-management/db/migrations/0000_true_leper_queen.sql": {
+    "mtime": 1772321574.9322348,
+    "ast_hash": "1d6fc5fc3def7b552d1d8a3c65e9d28f",
+    "semantic_hash": "1d6fc5fc3def7b552d1d8a3c65e9d28f"
+  },
+  "/Users/saeed/Work/money-management/db/migrations/meta/0000_snapshot.json": {
+    "mtime": 1772321574.9326415,
+    "ast_hash": "cd420629f5d4d3b696ce01af95e8e3ca",
+    "semantic_hash": "cd420629f5d4d3b696ce01af95e8e3ca"
+  },
+  "/Users/saeed/Work/money-management/db/migrations/meta/_journal.json": {
+    "mtime": 1772321574.932811,
+    "ast_hash": "62604035aecb3ae55c2aea9c0f8c900b",
+    "semantic_hash": "62604035aecb3ae55c2aea9c0f8c900b"
+  },
+  "/Users/saeed/Work/money-management/db/migrations/migrations.js": {
+    "mtime": 1772321574.9329796,
+    "ast_hash": "518b9b1854d4d51c08c1a86757bc12a6",
+    "semantic_hash": "518b9b1854d4d51c08c1a86757bc12a6"
+  },
+  "/Users/saeed/Work/money-management/db/reset.test.ts": {
+    "mtime": 1786726073.302326,
+    "ast_hash": "352a86fe0344eb376ad7d760667f4e3c",
+    "semantic_hash": "352a86fe0344eb376ad7d760667f4e3c"
+  },
+  "/Users/saeed/Work/money-management/db/reset.ts": {
+    "mtime": 1786726073.3025777,
+    "ast_hash": "8532c469eff1378083730444fdbf2175",
+    "semantic_hash": "8532c469eff1378083730444fdbf2175"
+  },
+  "/Users/saeed/Work/money-management/db/schema.ts": {
+    "mtime": 1772776736.4578278,
+    "ast_hash": "3b94104600b8eca8eeae297c397ef332",
+    "semantic_hash": "3b94104600b8eca8eeae297c397ef332"
+  },
+  "/Users/saeed/Work/money-management/db/seed.ts": {
+    "mtime": 1786726073.3029857,
+    "ast_hash": "7791519e36a1618ab1fd2c64cb2c4962",
+    "semantic_hash": "7791519e36a1618ab1fd2c64cb2c4962"
+  },
+  "/Users/saeed/Work/money-management/drizzle.config.ts": {
+    "mtime": 1772321574.9333558,
+    "ast_hash": "d8bf0970886851be64c6a53dcac72293",
+    "semantic_hash": "d8bf0970886851be64c6a53dcac72293"
+  },
+  "/Users/saeed/Work/money-management/eas.json": {
+    "mtime": 1786824155.6824157,
+    "ast_hash": "a0ba9e578f16e9cc75fbf40c41eb35e8",
+    "semantic_hash": "a0ba9e578f16e9cc75fbf40c41eb35e8"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-accounts.test.tsx": {
+    "mtime": 1786581457.5297923,
+    "ast_hash": "aa584416bfdb734bd0e0a53858528f13",
+    "semantic_hash": "aa584416bfdb734bd0e0a53858528f13"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-accounts.ts": {
+    "mtime": 1786205804.6551456,
+    "ast_hash": "7dd2fccff1855dcdbc932f85f8433650",
+    "semantic_hash": "7dd2fccff1855dcdbc932f85f8433650"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-app-update.ts": {
+    "mtime": 1786205804.655314,
+    "ast_hash": "b7dfafa58b6bd74c5585e1874335f0ec",
+    "semantic_hash": "b7dfafa58b6bd74c5585e1874335f0ec"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-categories.test.tsx": {
+    "mtime": 1786581457.53155,
+    "ast_hash": "4f2022d883b9cc91dba75c054c4a5946",
+    "semantic_hash": "4f2022d883b9cc91dba75c054c4a5946"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-categories.ts": {
+    "mtime": 1774569545.9213321,
+    "ast_hash": "fb0a8d904f67231d94f06b866e978d5d",
+    "semantic_hash": "fb0a8d904f67231d94f06b866e978d5d"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-chart-data.ts": {
+    "mtime": 1780129793.0171242,
+    "ast_hash": "e774c9d767b2a6023d876e1ee60c95bf",
+    "semantic_hash": "e774c9d767b2a6023d876e1ee60c95bf"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-color-scheme.ts": {
+    "mtime": 1772297664.1025453,
+    "ast_hash": "937111bf4f1feaa14bbbce4873f9e2b5",
+    "semantic_hash": "937111bf4f1feaa14bbbce4873f9e2b5"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-home-screen.test.tsx": {
+    "mtime": 1786581398.0572135,
+    "ast_hash": "a5ba4197c508037091507885a03a3580",
+    "semantic_hash": "a5ba4197c508037091507885a03a3580"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-home-screen.ts": {
+    "mtime": 1774988477.925015,
+    "ast_hash": "2880b2518d2313aec06089b72d6a5944",
+    "semantic_hash": "2880b2518d2313aec06089b72d6a5944"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-load-after-timeout.ts": {
+    "mtime": 1775672281.003222,
+    "ast_hash": "c56cbfb146909bd66cacd6b8b740f04c",
+    "semantic_hash": "c56cbfb146909bd66cacd6b8b740f04c"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-market-quotes.test.ts": {
+    "mtime": 1780129793.0176594,
+    "ast_hash": "992e343e2e7373fc09b7bda5d634251e",
+    "semantic_hash": "992e343e2e7373fc09b7bda5d634251e"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-market-quotes.ts": {
+    "mtime": 1780129793.0181646,
+    "ast_hash": "4ae46bb468a1c45cd922bd71e278351a",
+    "semantic_hash": "4ae46bb468a1c45cd922bd71e278351a"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-num-pad-number.test.ts": {
+    "mtime": 1786581318.2151585,
+    "ast_hash": "e12c438183ad2e266016e803d2555e34",
+    "semantic_hash": "e12c438183ad2e266016e803d2555e34"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-num-pad-number.ts": {
+    "mtime": 1774724010.958557,
+    "ast_hash": "be341ff9d465002736437b5042f2cf62",
+    "semantic_hash": "be341ff9d465002736437b5042f2cf62"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-recurring-payments.test.tsx": {
+    "mtime": 1786581457.519378,
+    "ast_hash": "34fe9037851b82c77167fa41b9f50b07",
+    "semantic_hash": "34fe9037851b82c77167fa41b9f50b07"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-recurring-payments.ts": {
+    "mtime": 1774569545.9219887,
+    "ast_hash": "f96116dee7a55a30bffcec1b0706c176",
+    "semantic_hash": "f96116dee7a55a30bffcec1b0706c176"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-recurring-processor.test.tsx": {
+    "mtime": 1786581398.0604997,
+    "ast_hash": "6e8390c6843b9283495728d3fcb3f1b4",
+    "semantic_hash": "6e8390c6843b9283495728d3fcb3f1b4"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-recurring-processor.ts": {
+    "mtime": 1772321574.9340901,
+    "ast_hash": "673c69a337f5a6464bbce5dd8a11dcc7",
+    "semantic_hash": "673c69a337f5a6464bbce5dd8a11dcc7"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-theme-color.test.ts": {
+    "mtime": 1786581398.0609686,
+    "ast_hash": "2b2d15317c9ddaf4da8fb3a1c53f92ea",
+    "semantic_hash": "2b2d15317c9ddaf4da8fb3a1c53f92ea"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-theme-color.ts": {
+    "mtime": 1774569545.922462,
+    "ast_hash": "cee90b97b230ef74b2c222a175334981",
+    "semantic_hash": "cee90b97b230ef74b2c222a175334981"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-transactions.test.tsx": {
+    "mtime": 1786581457.526524,
+    "ast_hash": "15db2638a5ee443a30ee2d23ce841afe",
+    "semantic_hash": "15db2638a5ee443a30ee2d23ce841afe"
+  },
+  "/Users/saeed/Work/money-management/hooks/use-transactions.ts": {
+    "mtime": 1774988477.925832,
+    "ast_hash": "eed8999922931264dcd974992214286f",
+    "semantic_hash": "eed8999922931264dcd974992214286f"
+  },
+  "/Users/saeed/Work/money-management/images.d.ts": {
+    "mtime": 1781264720.4166138,
+    "ast_hash": "6587d2ffb8cdf2c1df2d79d17be0887f",
+    "semantic_hash": "6587d2ffb8cdf2c1df2d79d17be0887f"
+  },
+  "/Users/saeed/Work/money-management/jest.config.js": {
+    "mtime": 1786584903.100802,
+    "ast_hash": "95b528efb543e26e282d77610202bbdb",
+    "semantic_hash": "95b528efb543e26e282d77610202bbdb"
+  },
+  "/Users/saeed/Work/money-management/jest/mocks/slot.js": {
+    "mtime": 1774724010.9595613,
+    "ast_hash": "4b4933aae3dfe7af3d90b22b0cfd959e",
+    "semantic_hash": "4b4933aae3dfe7af3d90b22b0cfd959e"
+  },
+  "/Users/saeed/Work/money-management/jest/mocks/style.js": {
+    "mtime": 1774724010.959702,
+    "ast_hash": "2f3d1a73eac1104259f9bfd70dd740d3",
+    "semantic_hash": "2f3d1a73eac1104259f9bfd70dd740d3"
+  },
+  "/Users/saeed/Work/money-management/jest/setup-env.ts": {
+    "mtime": 1786726073.3033054,
+    "ast_hash": "4d50864af106e443086d98b3684dd92f",
+    "semantic_hash": "4d50864af106e443086d98b3684dd92f"
+  },
+  "/Users/saeed/Work/money-management/knip.json": {
+    "mtime": 1780129793.0187848,
+    "ast_hash": "dced5ce79cea18bfa563aac072542a77",
+    "semantic_hash": "dced5ce79cea18bfa563aac072542a77"
+  },
+  "/Users/saeed/Work/money-management/lib/utils.ts": {
+    "mtime": 1774304747.6825063,
+    "ast_hash": "d9837f38cc05303254571985e3164050",
+    "semantic_hash": "d9837f38cc05303254571985e3164050"
+  },
+  "/Users/saeed/Work/money-management/metro.config.js": {
+    "mtime": 1786328915.8717227,
+    "ast_hash": "7ab2fbfaa6112d017208c0e180a5d8f3",
+    "semantic_hash": "7ab2fbfaa6112d017208c0e180a5d8f3"
+  },
+  "/Users/saeed/Work/money-management/nativewind-env.d.ts": {
+    "mtime": 1774304747.6830187,
+    "ast_hash": "d4d589c153ac8b5e7bf0fb130a5b5a7d",
+    "semantic_hash": "d4d589c153ac8b5e7bf0fb130a5b5a7d"
+  },
+  "/Users/saeed/Work/money-management/oxlint.config.ts": {
+    "mtime": 1786832043.2504122,
+    "ast_hash": "64163c7705b5bbd9104a5b84fc9b8072",
+    "semantic_hash": "64163c7705b5bbd9104a5b84fc9b8072"
+  },
+  "/Users/saeed/Work/money-management/package.json": {
+    "mtime": 1786831630.1191826,
+    "ast_hash": "8f16cb5d07eda766a0ac51754fda0369",
+    "semantic_hash": "8f16cb5d07eda766a0ac51754fda0369"
+  },
+  "/Users/saeed/Work/money-management/plugins/withRocketSimConnect.js": {
+    "mtime": 1777464684.8673425,
+    "ast_hash": "b691f0023870928430189ffe3d5a13e3",
+    "semantic_hash": "b691f0023870928430189ffe3d5a13e3"
+  },
+  "/Users/saeed/Work/money-management/postcss.config.mjs": {
+    "mtime": 1772296328.9120424,
+    "ast_hash": "0f8aa602547b154dc06be77b007c51d2",
+    "semantic_hash": "0f8aa602547b154dc06be77b007c51d2"
+  },
+  "/Users/saeed/Work/money-management/rnrepo.config.json": {
+    "mtime": 1781722227.8003418,
+    "ast_hash": "a481ef6b43f326e49aa12685fc8f7028",
+    "semantic_hash": "a481ef6b43f326e49aa12685fc8f7028"
+  },
+  "/Users/saeed/Work/money-management/scripts/reset-project.js": {
+    "mtime": 1772297664.102539,
+    "ast_hash": "d286d2d640613ab8b1a88aaec8f665cb",
+    "semantic_hash": "d286d2d640613ab8b1a88aaec8f665cb"
+  },
+  "/Users/saeed/Work/money-management/stores/ui-store.test.ts": {
+    "mtime": 1774724010.960838,
+    "ast_hash": "aa4df6f54448dc1a893a81177b231768",
+    "semantic_hash": "aa4df6f54448dc1a893a81177b231768"
+  },
+  "/Users/saeed/Work/money-management/stores/ui-store.ts": {
+    "mtime": 1772746646.1894372,
+    "ast_hash": "bd315d2925687c50bebdabab32948163",
+    "semantic_hash": "bd315d2925687c50bebdabab32948163"
+  },
+  "/Users/saeed/Work/money-management/tests/test-utils/factories.ts": {
+    "mtime": 1774724010.9611142,
+    "ast_hash": "cd208acbb462615f3afced011477a395",
+    "semantic_hash": "cd208acbb462615f3afced011477a395"
+  },
+  "/Users/saeed/Work/money-management/tests/test-utils/mock-db.ts": {
+    "mtime": 1774724010.9612746,
+    "ast_hash": "e7fcd694908ceda88aaf754043733f7b",
+    "semantic_hash": "e7fcd694908ceda88aaf754043733f7b"
+  },
+  "/Users/saeed/Work/money-management/tests/test-utils/render.tsx": {
+    "mtime": 1786581450.2812808,
+    "ast_hash": "d207647fda4f2d21889dc5f29de5cf9c",
+    "semantic_hash": "d207647fda4f2d21889dc5f29de5cf9c"
+  },
+  "/Users/saeed/Work/money-management/tsconfig.json": {
+    "mtime": 1786576178.0508046,
+    "ast_hash": "1c1f09ec336e4a9485c381aa4feabc9e",
+    "semantic_hash": "1c1f09ec336e4a9485c381aa4feabc9e"
+  },
+  "/Users/saeed/Work/money-management/types/global-css.d.ts": {
+    "mtime": 1780129793.0210187,
+    "ast_hash": "fb8214c6467938c43691a41c63101314",
+    "semantic_hash": "fb8214c6467938c43691a41c63101314"
+  },
+  "/Users/saeed/Work/money-management/types/index.ts": {
+    "mtime": 1786657619.6280582,
+    "ast_hash": "ce3e1dd7f2d8070f7a1a974a7672b488",
+    "semantic_hash": "ce3e1dd7f2d8070f7a1a974a7672b488"
+  },
+  "/Users/saeed/Work/money-management/utils/currency.test.ts": {
+    "mtime": 1786726073.3037086,
+    "ast_hash": "7003c25f1744a218e6d29050713f64a5",
+    "semantic_hash": "7003c25f1744a218e6d29050713f64a5"
+  },
+  "/Users/saeed/Work/money-management/utils/currency.ts": {
+    "mtime": 1786726073.3039975,
+    "ast_hash": "02e0170d7fc75d7e3b6db753e19f256f",
+    "semantic_hash": "02e0170d7fc75d7e3b6db753e19f256f"
+  },
+  "/Users/saeed/Work/money-management/utils/date.test.ts": {
+    "mtime": 1774724010.9617157,
+    "ast_hash": "61f3e44c165a2f0d30e2266d4ada5da0",
+    "semantic_hash": "61f3e44c165a2f0d30e2266d4ada5da0"
+  },
+  "/Users/saeed/Work/money-management/utils/date.ts": {
+    "mtime": 1774715232.6903093,
+    "ast_hash": "7564b0f973aeac5d650cf65fc3d662b9",
+    "semantic_hash": "7564b0f973aeac5d650cf65fc3d662b9"
+  },
+  "/Users/saeed/Work/money-management/utils/id.test.ts": {
+    "mtime": 1775667439.7314186,
+    "ast_hash": "f49bf37b84ec9f84cd91c72fa843205f",
+    "semantic_hash": "f49bf37b84ec9f84cd91c72fa843205f"
+  },
+  "/Users/saeed/Work/money-management/utils/id.ts": {
+    "mtime": 1772321574.9367003,
+    "ast_hash": "e47d949b2a454a870a894999927e8e4d",
+    "semantic_hash": "e47d949b2a454a870a894999927e8e4d"
+  },
+  "/Users/saeed/Work/money-management/utils/journal-list.test.ts": {
+    "mtime": 1774724010.9622061,
+    "ast_hash": "5ce876c2b131e876fa3931da50f1eb34",
+    "semantic_hash": "5ce876c2b131e876fa3931da50f1eb34"
+  },
+  "/Users/saeed/Work/money-management/utils/journal-list.ts": {
+    "mtime": 1774666808.6840577,
+    "ast_hash": "8249781273d92dd1359042f9e0ca5e5f",
+    "semantic_hash": "8249781273d92dd1359042f9e0ca5e5f"
+  },
+  "/Users/saeed/Work/money-management/utils/recurring.test.ts": {
+    "mtime": 1774724010.9630647,
+    "ast_hash": "eb83fbc1bcda0096677ef3ccc66e86b0",
+    "semantic_hash": "eb83fbc1bcda0096677ef3ccc66e86b0"
+  },
+  "/Users/saeed/Work/money-management/utils/recurring.ts": {
+    "mtime": 1773428990.188231,
+    "ast_hash": "b1f5e6a97824273f13e2490d92a86889",
+    "semantic_hash": "b1f5e6a97824273f13e2490d92a86889"
+  },
+  "/Users/saeed/Work/money-management/utils/transaction.test.ts": {
+    "mtime": 1774724010.963246,
+    "ast_hash": "f778b721755381860a521f6db9737dfe",
+    "semantic_hash": "f778b721755381860a521f6db9737dfe"
+  },
+  "/Users/saeed/Work/money-management/utils/transaction.ts": {
+    "mtime": 1774395004.8284678,
+    "ast_hash": "f1debf29e69500cef97a066011d740ac",
+    "semantic_hash": "f1debf29e69500cef97a066011d740ac"
+  },
+  "/Users/saeed/Work/money-management/.eas/workflows/build-and-submit-ios.yml": {
+    "mtime": 1786830228.6041102,
+    "ast_hash": "1fd8a11412970faa95bead918fb31e61",
+    "semantic_hash": "1fd8a11412970faa95bead918fb31e61"
+  },
+  "/Users/saeed/Work/money-management/.github/actions/setup/action.yml": {
+    "mtime": 1786822805.8138983,
+    "ast_hash": "6681e44029c948fb229fc9383397dd33",
+    "semantic_hash": "6681e44029c948fb229fc9383397dd33"
+  },
+  "/Users/saeed/Work/money-management/.github/workflows/jest.yml": {
+    "mtime": 1786822832.96906,
+    "ast_hash": "5b8da687fe989037015155f2e8838ac2",
+    "semantic_hash": "5b8da687fe989037015155f2e8838ac2"
+  },
+  "/Users/saeed/Work/money-management/.github/workflows/preview.yml": {
+    "mtime": 1786822827.3051786,
+    "ast_hash": "75f267039e31d28e4ef0b42b03961831",
+    "semantic_hash": "75f267039e31d28e4ef0b42b03961831"
+  },
+  "/Users/saeed/Work/money-management/.github/workflows/production.yml": {
+    "mtime": 1786835027.4784188,
+    "ast_hash": "17a18fb1f98a2aa9a725e27749319855",
+    "semantic_hash": "17a18fb1f98a2aa9a725e27749319855"
+  },
+  "/Users/saeed/Work/money-management/.github/workflows/pullfrog.yml": {
+    "mtime": 1786726706.0422328,
+    "ast_hash": "6b16dd93a558d1de21a2de62bff873b2",
+    "semantic_hash": "6b16dd93a558d1de21a2de62bff873b2"
+  },
+  "/Users/saeed/Work/money-management/.github/workflows/typescript.yml": {
+    "mtime": 1786822837.8742435,
+    "ast_hash": "6ed3c6ddb037780f2120230899826496",
+    "semantic_hash": "6ed3c6ddb037780f2120230899826496"
+  },
+  "/Users/saeed/Work/money-management/AGENTS.md": {
+    "mtime": 1786583393.5965993,
+    "ast_hash": "59d06b435d2bc74904420d952ad1c1cf",
+    "semantic_hash": "59d06b435d2bc74904420d952ad1c1cf"
+  },
+  "/Users/saeed/Work/money-management/README.md": {
+    "mtime": 1786205804.6451344,
+    "ast_hash": "039fb8f5015525450d1016cb575372ee",
+    "semantic_hash": "039fb8f5015525450d1016cb575372ee"
+  },
+  "/Users/saeed/Work/money-management/docs/research/personal-finance-app-market-research-2026.md": {
+    "mtime": 1786755710.0426114,
+    "ast_hash": "15d62b035e85a2e5730559ad1c9df69d",
+    "semantic_hash": "15d62b035e85a2e5730559ad1c9df69d"
+  },
+  "/Users/saeed/Work/money-management/pnpm-workspace.yaml": {
+    "mtime": 1786826222.672844,
+    "ast_hash": "e1c946589e5e7ec15b842562a9cc72d5",
+    "semantic_hash": "e1c946589e5e7ec15b842562a9cc72d5"
+  },
+  "/Users/saeed/Work/money-management/assets/icon.icon/Assets/Image 2.png": {
+    "mtime": 1780273356.850501,
+    "ast_hash": "b4435b1209d227713a409af77e8d941b",
+    "semantic_hash": "b4435b1209d227713a409af77e8d941b"
+  },
+  "/Users/saeed/Work/money-management/assets/icon.png": {
+    "mtime": 1780284792.9689388,
+    "ast_hash": "55f3a96b69d828e52b02a13a6f97e59a",
+    "semantic_hash": "55f3a96b69d828e52b02a13a6f97e59a"
+  },
+  "/Users/saeed/Work/money-management/assets/images/adaptive-icon.png": {
+    "mtime": 1774395004.8062253,
+    "ast_hash": "5431a1ae21ac6a0e092af297628a634d",
+    "semantic_hash": "5431a1ae21ac6a0e092af297628a634d"
+  },
+  "/Users/saeed/Work/money-management/assets/images/android-icon-background.png": {
+    "mtime": 499162500.0,
+    "ast_hash": "2d65569cc0e2afdcea0af9f9902d4173",
+    "semantic_hash": "2d65569cc0e2afdcea0af9f9902d4173"
+  },
+  "/Users/saeed/Work/money-management/assets/images/android-icon-foreground.png": {
+    "mtime": 499162500.0,
+    "ast_hash": "72e71a9c846c6aa4ae32476641a00e18",
+    "semantic_hash": "72e71a9c846c6aa4ae32476641a00e18"
+  },
+  "/Users/saeed/Work/money-management/assets/images/android-icon-monochrome.png": {
+    "mtime": 499162500.0,
+    "ast_hash": "1e097dab989759fc0b69440092ca22cd",
+    "semantic_hash": "1e097dab989759fc0b69440092ca22cd"
+  },
+  "/Users/saeed/Work/money-management/assets/images/favicon.png": {
+    "mtime": 1774395004.806579,
+    "ast_hash": "4394deb4dce45302424273c064adea5d",
+    "semantic_hash": "4394deb4dce45302424273c064adea5d"
+  },
+  "/Users/saeed/Work/money-management/assets/images/icon.png": {
+    "mtime": 1781282091.1908555,
+    "ast_hash": "b4435b1209d227713a409af77e8d941b",
+    "semantic_hash": "b4435b1209d227713a409af77e8d941b"
+  },
+  "/Users/saeed/Work/money-management/assets/images/splash-icon.png": {
+    "mtime": 1781282488.873769,
+    "ast_hash": "b4435b1209d227713a409af77e8d941b",
+    "semantic_hash": "b4435b1209d227713a409af77e8d941b"
+  }
+}
