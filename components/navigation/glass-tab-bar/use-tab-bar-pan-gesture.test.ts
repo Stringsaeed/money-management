@@ -18,6 +18,10 @@ jest.mock("react-native-reanimated", () => ({
 }));
 
 describe("useTabBarPanGesture", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it("moves the capsule to the finger as soon as the touch begins", async () => {
     await renderHook(() =>
       useTabBarPanGesture({ focusedIndex: 0, tabCount: 4, onSelect: jest.fn() }),
@@ -30,5 +34,35 @@ describe("useTabBarPanGesture", () => {
     });
 
     expect(offset?.value).toBe(TAB_WIDTH * 2);
+  });
+
+  it("settles on the pressed tab without flicking to the previous tab", async () => {
+    await renderHook(() =>
+      useTabBarPanGesture({ focusedIndex: 0, tabCount: 4, onSelect: jest.fn() }),
+    );
+    const gesture = jest.mocked(usePanGesture).mock.calls[0]?.[0];
+    const offset = jest.mocked(useSharedValue).mock.results[0]?.value;
+
+    await act(() => {
+      gesture?.onBegin?.({ x: PILL_PADDING + TAB_WIDTH * 1.25 } as never);
+      gesture?.onFinalize?.({} as never);
+    });
+
+    expect(offset?.value).toBe(TAB_WIDTH);
+  });
+
+  it("returns to the focused tab after pressing its inner edge", async () => {
+    await renderHook(() =>
+      useTabBarPanGesture({ focusedIndex: 1, tabCount: 4, onSelect: jest.fn() }),
+    );
+    const gesture = jest.mocked(usePanGesture).mock.calls[0]?.[0];
+    const offset = jest.mocked(useSharedValue).mock.results[0]?.value;
+
+    await act(() => {
+      gesture?.onBegin?.({ x: PILL_PADDING + TAB_WIDTH * 1.1 } as never);
+      gesture?.onFinalize?.({} as never);
+    });
+
+    expect(offset?.value).toBe(TAB_WIDTH);
   });
 });

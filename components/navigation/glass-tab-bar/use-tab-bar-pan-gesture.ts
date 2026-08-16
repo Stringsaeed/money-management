@@ -20,6 +20,7 @@ export const useTabBarPanGesture = ({
 
   const offset = useSharedValue(focusedIndex * TAB_WIDTH);
   const isDragging = useSharedValue(false);
+  const didActivate = useSharedValue(false);
 
   const offsetFromTouch = (x: number) => {
     "worklet";
@@ -39,10 +40,12 @@ export const useTabBarPanGesture = ({
   const panGesture = usePanGesture({
     activeOffsetX: [-8, 8],
     onBegin: (event) => {
+      didActivate.value = false;
       isDragging.value = true;
       offset.value = offsetFromTouch(event.x);
     },
     onActivate: (event) => {
+      didActivate.value = true;
       isDragging.value = true;
       offset.value = offsetFromTouch(event.x);
     },
@@ -58,6 +61,13 @@ export const useTabBarPanGesture = ({
       scheduleOnRN(onSelect, index);
     },
     onFinalize: () => {
+      if (!didActivate.value) {
+        const index = Math.min(Math.max(Math.round(offset.value / TAB_WIDTH), 0), tabCount - 1);
+        offset.value = withTiming(index * TAB_WIDTH, {
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
+        });
+      }
       isDragging.value = false;
     },
   });
