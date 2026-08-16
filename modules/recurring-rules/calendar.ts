@@ -1,4 +1,14 @@
-import { addDays, addMonths, addWeeks, addYears, isAfter, isBefore } from "date-fns";
+import {
+  addDays,
+  addMonths,
+  addWeeks,
+  addYears,
+  differenceInCalendarDays,
+  differenceInCalendarMonths,
+  differenceInCalendarYears,
+  isAfter,
+  isBefore,
+} from "date-fns";
 
 import { parseDate, toDateString } from "@/utils/date";
 
@@ -40,6 +50,24 @@ export function dateAfter(date: string): string {
   return toDateString(addDays(parseDate(date), 1));
 }
 
+export function nextScheduledDateOnOrAfter(
+  calendar: RecurringRuleCalendar,
+  floorDate: string,
+): string | null {
+  if (!Number.isSafeInteger(calendar.intervalCount) || calendar.intervalCount < 1) {
+    throw new Error("Recurring Rule interval must be a positive integer.");
+  }
+
+  const floor = parseDate(floorDate);
+  const anchor = parseDate(calendar.startDate);
+  const index = firstIndexOnOrAfter(calendar, anchor, floor);
+  if (calendar.endCount !== null && index >= calendar.endCount) return null;
+
+  const occurrence = occurrenceAt(calendar, index);
+  if (calendar.endDate && isAfter(occurrence, parseDate(calendar.endDate))) return null;
+  return toDateString(occurrence);
+}
+
 function occurrenceAt(calendar: RecurringRuleCalendar, index: number): Date {
   const anchor = parseDate(calendar.startDate);
   const distance = index * calendar.intervalCount;
@@ -54,4 +82,24 @@ function occurrenceAt(calendar: RecurringRuleCalendar, index: number): Date {
     case "year":
       return addYears(anchor, distance);
   }
+}
+
+function firstIndexOnOrAfter(calendar: RecurringRuleCalendar, anchor: Date, floor: Date): number {
+  if (!isBefore(anchor, floor)) return 0;
+
+  const estimatedUnits = (() => {
+    switch (calendar.frequency) {
+      case "day":
+        return differenceInCalendarDays(floor, anchor);
+      case "week":
+        return differenceInCalendarDays(floor, anchor) / 7;
+      case "month":
+        return differenceInCalendarMonths(floor, anchor);
+      case "year":
+        return differenceInCalendarYears(floor, anchor);
+    }
+  })();
+  let index = Math.max(0, Math.floor(estimatedUnits / calendar.intervalCount) - 1);
+  while (isBefore(occurrenceAt(calendar, index), floor)) index += 1;
+  return index;
 }
