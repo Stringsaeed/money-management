@@ -9,7 +9,7 @@ export default function HomeStackLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: "",
+          title: "Home",
           headerTransparent: true,
           headerRight: () => <FiltersButton />,
         }}
