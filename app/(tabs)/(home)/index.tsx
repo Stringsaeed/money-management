@@ -1,9 +1,8 @@
 import { Redirect } from "expo-router";
-import { ActivityIndicator, View } from "react-native";
+import { ScrollView } from "react-native";
 
-import { HomeEmptyState } from "@/components/home/home-empty-state";
-import { HomeJournalList } from "@/components/home/home-journal-list";
 import { HomeListHeader } from "@/components/home/home-list-header";
+import { RecentJournalSection } from "@/components/home/recent-journal-section";
 import { useHomeScreen } from "@/hooks/use-home-screen";
 
 export default function HomeScreen() {
@@ -24,28 +23,20 @@ export default function HomeScreen() {
     return <Redirect href="/onboarding" />;
   }
 
-  const listHeader = <HomeListHeader />;
-
   return (
-    <View className="flex-1 bg-background">
-      {loadingTx ? (
-        <>
-          {listHeader}
-          <ActivityIndicator className="mt-10" />
-        </>
-      ) : groups.length === 0 ? (
-        <>
-          {listHeader}
-          <HomeEmptyState activeFilterCount={activeFilterCount} onResetFilters={resetFilters} />
-        </>
-      ) : (
-        <HomeJournalList
-          groups={groups}
-          currency={currency}
-          showAccount={showAccount}
-          ListHeaderComponent={listHeader}
-        />
-      )}
-    </View>
+    <ScrollView
+      className="flex-1 bg-background"
+      contentContainerClassName="pt-safe-offset-20 pb-safe-offset-32"
+    >
+      <HomeListHeader />
+      <RecentJournalSection
+        activeFilterCount={activeFilterCount}
+        currency={currency}
+        groups={groups}
+        isLoading={loadingTx}
+        onResetFilters={resetFilters}
+        showAccount={showAccount}
+      />
+    </ScrollView>
   );
 }

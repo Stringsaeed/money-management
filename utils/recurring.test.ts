@@ -1,5 +1,12 @@
 import { createRecurringPayment } from "@/tests/test-utils/factories";
-import { getPendingOccurrences } from "@/utils/recurring";
+import { intlFormat } from "date-fns";
+import { parseDate } from "@/utils/date";
+import {
+  formatUpcomingOccurrence,
+  getNextOccurrence,
+  getPendingOccurrences,
+  getUpcomingRecurringPayments,
+} from "@/utils/recurring";
 
 describe("getPendingOccurrences", () => {
   it("returns no occurrences for inactive rules", () => {
@@ -159,5 +166,119 @@ describe("getPendingOccurrences", () => {
         "2027-03-25",
       ),
     ).toEqual(["2027-02-01"]);
+  });
+});
+
+describe("upcoming recurring payments", () => {
+  it.each([
+    ["daily", {}, "2026-03-29"],
+    ["weekly", { dayOfWeek: 1 }, "2026-03-30"],
+    ["monthly", { dayOfMonth: 31 }, "2026-03-31"],
+    ["yearly", { monthOfYear: 2, dayOfMonth: 29 }, "2027-02-28"],
+  ] as const)("finds the next %s occurrence", (interval, overrides, expected) => {
+    expect(
+      getNextOccurrence(
+        createRecurringPayment({ interval, startDate: "2024-01-01", ...overrides }),
+        "2026-03-28",
+      ),
+    ).toBe(expected);
+  });
+
+  it("excludes paused and ended rules", () => {
+    expect(getNextOccurrence(createRecurringPayment({ isActive: false }), "2026-03-28")).toBeNull();
+    expect(
+      getNextOccurrence(
+        createRecurringPayment({ interval: "daily", endDate: "2026-03-28" }),
+        "2026-03-28",
+      ),
+    ).toBeNull();
+  });
+
+  it("uses the generated date and future start date as effective floors", () => {
+    expect(
+      getNextOccurrence(
+        createRecurringPayment({
+          interval: "daily",
+          lastGeneratedDate: "2026-04-02",
+        }),
+        "2026-03-28",
+      ),
+    ).toBe("2026-04-03");
+    expect(
+      getNextOccurrence(
+        createRecurringPayment({
+          interval: "weekly",
+          startDate: "2026-04-01",
+          dayOfWeek: null,
+        }),
+        "2026-03-28",
+      ),
+    ).toBe("2026-04-06");
+  });
+
+  it("uses default monthly and yearly schedule fields", () => {
+    expect(
+      getNextOccurrence(
+        createRecurringPayment({ interval: "monthly", dayOfMonth: null }),
+        "2026-03-28",
+      ),
+    ).toBe("2026-04-01");
+    expect(
+      getNextOccurrence(
+        createRecurringPayment({
+          interval: "yearly",
+          monthOfYear: null,
+          dayOfMonth: null,
+          startDate: "2024-01-01",
+        }),
+        "2025-12-30",
+      ),
+    ).toBe("2026-01-01");
+    expect(
+      getNextOccurrence(
+        createRecurringPayment({
+          interval: "yearly",
+          monthOfYear: 12,
+          dayOfMonth: 31,
+        }),
+        "2026-03-28",
+      ),
+    ).toBe("2026-12-31");
+  });
+
+  it("respects an end date that falls around the next scheduled occurrence", () => {
+    const payment = createRecurringPayment({ interval: "monthly", dayOfMonth: 5 });
+
+    expect(getNextOccurrence({ ...payment, endDate: "2026-04-05" }, "2026-03-28")).toBe(
+      "2026-04-05",
+    );
+    expect(getNextOccurrence({ ...payment, endDate: "2026-04-02" }, "2026-03-28")).toBeNull();
+  });
+
+  it("sorts upcoming rules and applies the requested limit", () => {
+    const results = getUpcomingRecurringPayments(
+      [
+        createRecurringPayment({ id: "later", interval: "monthly", dayOfMonth: 10 }),
+        createRecurringPayment({ id: "tomorrow", interval: "daily" }),
+        createRecurringPayment({ id: "paused", isActive: false }),
+      ],
+      "2026-03-28",
+      1,
+    );
+
+    expect(results).toHaveLength(1);
+    expect(results[0]?.payment.id).toBe("tomorrow");
+    expect(results[0]?.occurrenceDate).toBe("2026-03-29");
+  });
+
+  it("formats tomorrow and later dates", () => {
+    expect(formatUpcomingOccurrence("2026-03-29", "2026-03-28")).toBe("Tomorrow");
+    expect(formatUpcomingOccurrence("2026-04-05", "2026-03-28")).toBe(
+      intlFormat(parseDate("2026-04-05"), {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      }),
+    );
   });
 });

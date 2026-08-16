@@ -17,9 +17,18 @@
     "babel-plugin-inline-import",
     "tailwind-variants",
     "tailwindcss-animate",
-    "eas-build-cache-provider"
+    "eas-build-cache-provider",
+    "victory-native"
   ],
-  "ignore": ["components/ui/*.{ts,tsx}", "jest/**/*.{ts,tsx,js}", "__tests__/**/*.{ts,tsx,js}"],
+  "ignore": [
+    "components/ui/*.{ts,tsx}",
+    "components/settings/category-spending-chart.tsx",
+    "components/settings/stats-charts.tsx",
+    "components/settings/transaction-trend-chart.tsx",
+    "hooks/use-chart-data.ts",
+    "jest/**/*.{ts,tsx,js}",
+    "__tests__/**/*.{ts,tsx,js}"
+  ],
   "expo": {
     "config": ["app.config.ts"],
     "entry": ["app/**/*.{ts,tsx}"]

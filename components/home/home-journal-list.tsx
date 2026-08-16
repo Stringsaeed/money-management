@@ -1,11 +1,8 @@
-import { View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 
-import { TransactionRow } from "@/components/transaction/transaction-row";
+import { JournalListItemRow } from "@/components/home/journal-list-item-row";
+import type { HomeJournalListProps } from "@/components/home/types";
 import { buildJournalList, type JournalListItem } from "@/utils/journal-list";
-
-import { JournalDayHeader } from "./journal-day-header";
-import type { HomeJournalListProps } from "./types";
 
 export function HomeJournalList({
   groups,
@@ -15,18 +12,7 @@ export function HomeJournalList({
 }: HomeJournalListProps) {
   const items = buildJournalList(groups, currency, showAccount);
 
-  const renderItem = ({ item }: { item: JournalListItem }) => {
-    if (item.type === "section-header") {
-      return <JournalDayHeader item={item} />;
-    }
-
-    return (
-      <View>
-        <TransactionRow transaction={item.data} showAccount={item.showAccount} />
-        {!item.isLast && <View className="ml-16 h-px bg-ledger-outline" />}
-      </View>
-    );
-  };
+  const renderItem = ({ item }: { item: JournalListItem }) => <JournalListItemRow item={item} />;
 
   const getItemType = (item: JournalListItem) => item.type;
 
