@@ -49,6 +49,7 @@ export interface Transaction {
   accountId: string;
   toAccountId: string | null; // only for transfers
   categoryId: string | null;
+  isRecurring: boolean;
   description: string;
   recurringPaymentId: string | null; // set when auto-generated
   createdAt: string;

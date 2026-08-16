@@ -166,22 +166,6 @@ export default function RootLayout() {
                           name="recurring/index"
                           options={{ title: "Recurring Payments" }}
                         />
-                        <Stack.Screen
-                          name="recurring/new"
-                          options={{
-                            presentation: "modal",
-                            title: "New Recurring",
-                            headerTransparent: false,
-                          }}
-                        />
-                        <Stack.Screen
-                          name="recurring/[id]/edit"
-                          options={{
-                            presentation: "modal",
-                            title: "Edit Recurring",
-                            headerTransparent: false,
-                          }}
-                        />
                       </Stack>
                       <StatusBar style="auto" />
                       <MandatoryUpdateGate />

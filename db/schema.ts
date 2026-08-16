@@ -80,6 +80,7 @@ export const transactions = sqliteTable("transactions", {
   categoryId: text("category_id").references(() => categories.id, {
     onDelete: "set null",
   }),
+  isRecurring: integer("is_recurring", { mode: "boolean" }).notNull().default(false),
   recurringPaymentId: text("recurring_payment_id").references(() => recurringPayments.id, {
     onDelete: "set null",
   }),

@@ -68,6 +68,7 @@ export function useRecurringProcessor() {
               accountId: rule.accountId,
               toAccountId: rule.toAccountId,
               categoryId: rule.categoryId,
+              isRecurring: true,
               recurringPaymentId: rule.id,
               description: rule.description || rule.name,
               createdAt: now,

@@ -4,16 +4,23 @@ import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
-import { useRecurringPayments } from "@/hooks/use-recurring-payments";
 import { today } from "@/utils/date";
-import { getUpcomingRecurringPayments } from "@/utils/recurring";
+import { useTransactions } from "@/hooks/use-transactions";
 
 import { UpcomingRecurringRow } from "@/components/home/upcoming-recurring-row";
 
 export function UpcomingRecurringSection() {
-  const { data: recurringPayments = [], isError, isLoading } = useRecurringPayments();
   const todayString = today();
-  const upcoming = getUpcomingRecurringPayments(recurringPayments, todayString);
+  const {
+    data: upcoming = [],
+    isError,
+    isLoading,
+  } = useTransactions({
+    isRecurring: true,
+    startsOnOrAfter: todayString,
+    sort: "asc",
+    limit: 3,
+  });
 
   return (
     <Animated.View
@@ -70,7 +77,12 @@ export function UpcomingRecurringSection() {
             accessibilityLabel="Add a recurring payment"
             accessibilityRole="button"
             className="px-1 py-2 active:opacity-50"
-            onPress={() => router.push("/recurring/new")}
+            onPress={() =>
+              router.push({
+                pathname: "/transaction/[id]",
+                params: { id: "new", recurring: "true" },
+              })
+            }
           >
             <Text className="font-body-semibold text-xs text-ink">Add →</Text>
           </Pressable>
@@ -82,12 +94,12 @@ export function UpcomingRecurringSection() {
           exiting={FadeOut.duration(150)}
           layout={layoutTransition}
         >
-          {upcoming.map((item, index) => (
-            <Animated.View key={item.payment.id} layout={layoutTransition}>
+          {upcoming.map((transaction, index) => (
+            <Animated.View key={transaction.id} layout={layoutTransition}>
               <UpcomingRecurringRow
-                item={item}
+                transaction={transaction}
                 today={todayString}
-                onPress={() => router.push(`/recurring/${item.payment.id}/edit`)}
+                onPress={() => router.push(`/transaction/${transaction.id}`)}
               />
               {index < upcoming.length - 1 ? (
                 <View className="ml-16 h-px bg-ledger-outline" />

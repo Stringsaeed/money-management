@@ -4,21 +4,14 @@ import { MoneyText } from "@/components/ui/money-text";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 import { formatCents } from "@/utils/currency";
-import type { UpcomingRecurringPayment } from "@/utils/recurring";
 import { formatUpcomingOccurrence } from "@/utils/recurring";
+import type { TransactionWithDetails } from "@/types";
 
 interface UpcomingRecurringRowProps {
-  item: UpcomingRecurringPayment;
+  transaction: TransactionWithDetails;
   today: string;
   onPress: () => void;
 }
-
-const INTERVAL_LABELS = {
-  daily: "Daily",
-  weekly: "Weekly",
-  monthly: "Monthly",
-  yearly: "Yearly",
-} as const;
 
 const TYPE_EMOJI = {
   expense: "🧾",
@@ -26,42 +19,43 @@ const TYPE_EMOJI = {
   transfer: "🔁",
 } as const;
 
-export function UpcomingRecurringRow({ item, today, onPress }: UpcomingRecurringRowProps) {
-  const { payment, occurrenceDate } = item;
-  const occurrenceLabel = formatUpcomingOccurrence(occurrenceDate, today);
-  const formattedAmount = formatCents(payment.amount, payment.currency);
+export function UpcomingRecurringRow({ transaction, today, onPress }: UpcomingRecurringRowProps) {
+  const occurrenceLabel = formatUpcomingOccurrence(transaction.date, today);
+  const formattedAmount = formatCents(transaction.amount, transaction.currency);
   const amountLabel =
-    payment.type === "income"
+    transaction.type === "income"
       ? `plus ${formattedAmount}`
-      : payment.type === "expense"
+      : transaction.type === "expense"
         ? `minus ${formattedAmount}`
         : formattedAmount;
 
   return (
     <Pressable
-      accessibilityLabel={`${payment.name}, ${occurrenceLabel}, ${amountLabel}`}
+      accessibilityLabel={`${transaction.description || transaction.category?.name || "Transaction"}, ${occurrenceLabel}, ${amountLabel}`}
       accessibilityRole="button"
       className="flex-row items-center gap-3 px-4 py-3 active:bg-surface-dim"
       onPress={onPress}
     >
       <View className="size-10 items-center justify-center rounded-full bg-surface">
-        <Text className="text-lg">{TYPE_EMOJI[payment.type]}</Text>
+        <Text className="text-lg">{TYPE_EMOJI[transaction.type]}</Text>
       </View>
       <View className="flex-1 gap-0.5">
         <Text className="font-body-semibold text-sm text-ink" numberOfLines={1}>
-          {payment.name}
+          {transaction.description || transaction.category?.name || "Transaction"}
         </Text>
         <Text className="font-body-normal text-xs text-ink/40">
-          {INTERVAL_LABELS[payment.interval]} · {occurrenceLabel}
+          {transaction.category?.name ??
+            (transaction.type === "transfer" ? "Transfer" : "Recurring")}{" "}
+          · {occurrenceLabel}
         </Text>
       </View>
       <MoneyText
-        cents={payment.amount}
-        currency={payment.currency}
-        sign={payment.type === "income" ? "+" : payment.type === "expense" ? "−" : ""}
+        cents={transaction.amount}
+        currency={transaction.currency}
+        sign={transaction.type === "income" ? "+" : transaction.type === "expense" ? "−" : ""}
         className={cn(
           "font-heading-medium text-base",
-          payment.type === "income" ? "text-sage" : "text-ink",
+          transaction.type === "income" ? "text-sage" : "text-ink",
         )}
         style={{ fontVariant: ["tabular-nums"] }}
       />

@@ -256,19 +256,18 @@ describe("upcoming recurring payments", () => {
   });
 
   it("sorts upcoming rules and applies the requested limit", () => {
-    const results = getUpcomingRecurringPayments(
-      [
-        createRecurringPayment({ id: "later", interval: "monthly", dayOfMonth: 10 }),
-        createRecurringPayment({ id: "tomorrow", interval: "daily" }),
-        createRecurringPayment({ id: "paused", isActive: false }),
-      ],
-      "2026-03-28",
-      1,
-    );
+    const payments = [
+      createRecurringPayment({ id: "later", interval: "monthly", dayOfMonth: 10 }),
+      createRecurringPayment({ id: "tomorrow", interval: "daily" }),
+      createRecurringPayment({ id: "paused", isActive: false }),
+    ];
+    const results = getUpcomingRecurringPayments(payments, "2026-03-28", 1);
 
     expect(results).toHaveLength(1);
     expect(results[0]?.payment.id).toBe("tomorrow");
     expect(results[0]?.occurrenceDate).toBe("2026-03-29");
+
+    expect(getUpcomingRecurringPayments(payments, "2026-03-28")).toHaveLength(2);
   });
 
   it("formats tomorrow and later dates", () => {

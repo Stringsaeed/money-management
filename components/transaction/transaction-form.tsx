@@ -21,7 +21,12 @@ import { getCurrencySymbol, getDateDisplayValue, triggerErrorHaptic } from "./ut
 
 export type { TransactionFormData } from "./types";
 
-export function TransactionForm({ initialData, onSubmit, formRef }: TransactionFormProps) {
+export function TransactionForm({
+  initialData,
+  isRecurring,
+  onSubmit,
+  formRef,
+}: TransactionFormProps) {
   const { data: accounts = [] } = useAccounts();
   const { data: categories = [] } = useCategories();
 
@@ -60,6 +65,7 @@ export function TransactionForm({ initialData, onSubmit, formRef }: TransactionF
         accountId: value.accountId,
         toAccountId: type === "transfer" ? value.toAccountId : null,
         categoryId: type === "transfer" ? null : value.categoryId,
+        isRecurring,
         description: value.description.trim(),
         date: value.date,
         currency,

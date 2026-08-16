@@ -1,18 +1,18 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
 import { UpcomingRecurringSection } from "@/components/home/upcoming-recurring-section";
-import { createRecurringPayment } from "@/tests/test-utils/factories";
+import { createTransactionWithDetails } from "@/tests/test-utils/factories";
 import { formatCents } from "@/utils/currency";
 
 const mockPush = jest.fn();
-const mockUseRecurringPayments = jest.fn();
+const mockUseTransactions = jest.fn();
 
 jest.mock("expo-router", () => ({
   router: { push: (href: string) => mockPush(href) },
 }));
 
-jest.mock("@/hooks/use-recurring-payments", () => ({
-  useRecurringPayments: () => mockUseRecurringPayments(),
+jest.mock("@/hooks/use-transactions", () => ({
+  useTransactions: (filters: unknown) => mockUseTransactions(filters),
 }));
 
 jest.mock("@/utils/date", () => ({
@@ -23,11 +23,11 @@ jest.mock("@/utils/date", () => ({
 describe("UpcomingRecurringSection", () => {
   beforeEach(() => {
     mockPush.mockClear();
-    mockUseRecurringPayments.mockReturnValue({ data: [], isError: false, isLoading: false });
+    mockUseTransactions.mockReturnValue({ data: [], isError: false, isLoading: false });
   });
 
   it("distinguishes a failed query from an empty schedule", async () => {
-    mockUseRecurringPayments.mockReturnValue({ data: [], isError: true, isLoading: false });
+    mockUseTransactions.mockReturnValue({ data: [], isError: true, isLoading: false });
 
     await render(<UpcomingRecurringSection />);
 
@@ -38,12 +38,21 @@ describe("UpcomingRecurringSection", () => {
   it("shows a compact prompt when no recurring payments exist", async () => {
     await render(<UpcomingRecurringSection />);
 
+    expect(mockUseTransactions).toHaveBeenCalledWith({
+      isRecurring: true,
+      startsOnOrAfter: "2026-03-28",
+      sort: "asc",
+      limit: 3,
+    });
     expect(screen.queryByText("Subscriptions & recurring")).not.toBeOnTheScreen();
     expect(screen.getByText("Nothing scheduled yet")).toBeOnTheScreen();
     expect(screen.getByText(/Add subscriptions or recurring payments/)).toBeOnTheScreen();
 
     fireEvent.press(screen.getByRole("button", { name: "Add a recurring payment" }));
-    expect(mockPush).toHaveBeenCalledWith("/recurring/new");
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: "/transaction/[id]",
+      params: { id: "new", recurring: "true" },
+    });
   });
 
   it("opens the complete recurring payments list", async () => {
@@ -54,15 +63,21 @@ describe("UpcomingRecurringSection", () => {
   });
 
   it("shows the next active payments and opens their editor", async () => {
-    mockUseRecurringPayments.mockReturnValue({
+    mockUseTransactions.mockReturnValue({
       data: [
-        createRecurringPayment({ id: "rent", name: "Rent", dayOfMonth: 5 }),
-        createRecurringPayment({
+        createTransactionWithDetails({
+          id: "rent",
+          description: "Rent",
+          date: "2026-04-05",
+          isRecurring: true,
+        }),
+        createTransactionWithDetails({
           id: "salary",
-          name: "Salary",
+          description: "Salary",
           type: "income",
-          interval: "daily",
           amount: 3000_00,
+          date: "2026-03-29",
+          isRecurring: true,
         }),
       ],
       isError: false,
@@ -72,7 +87,7 @@ describe("UpcomingRecurringSection", () => {
     await render(<UpcomingRecurringSection />);
 
     expect(screen.getByText("Salary")).toBeOnTheScreen();
-    expect(screen.getByText("Daily · Tomorrow")).toBeOnTheScreen();
+    expect(screen.getByText("Groceries · Tomorrow")).toBeOnTheScreen();
     expect(screen.getByText("Rent")).toBeOnTheScreen();
 
     fireEvent.press(
@@ -80,6 +95,6 @@ describe("UpcomingRecurringSection", () => {
         name: `Salary, Tomorrow, plus ${formatCents(3000_00, "USD")}`,
       }),
     );
-    expect(mockPush).toHaveBeenCalledWith("/recurring/salary/edit");
+    expect(mockPush).toHaveBeenCalledWith("/transaction/salary");
   });
 });

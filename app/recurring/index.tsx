@@ -1,101 +1,49 @@
 import { router } from "expo-router";
-import { ActivityIndicator, Pressable, ScrollView, useColorScheme, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
+
+import { TransactionRow } from "@/components/transaction/transaction-row";
 import { Button } from "@/components/ui/button";
-import { MoneyText } from "@/components/ui/money-text";
 import { Text } from "@/components/ui/text";
 
 import { EmptyState } from "@/components/common/empty-state";
 import { WateringCanGraphic } from "@/components/graphics/watering-can";
-import { useRecurringPayments } from "@/hooks/use-recurring-payments";
-import { useAccounts } from "@/hooks/use-accounts";
-import { useCategories } from "@/hooks/use-categories";
-import { Colors } from "@/constants/theme";
-import type { RecurringPayment } from "@/types";
+import { useTransactions } from "@/hooks/use-transactions";
 
-const INTERVAL_LABELS: Record<RecurringPayment["interval"], string> = {
-  daily: "Daily",
-  weekly: "Weekly",
-  monthly: "Monthly",
-  yearly: "Yearly",
+const newRecurringTransactionRoute = {
+  pathname: "/transaction/[id]" as const,
+  params: { id: "new", recurring: "true" },
 };
 
 export default function RecurringListScreen() {
-  const { data: recurring = [], isLoading } = useRecurringPayments();
-  const { data: accounts = [] } = useAccounts();
-  const { data: categories = [] } = useCategories();
-  const colorScheme = useColorScheme();
-
-  const accountMap = new Map(accounts.map((a) => [a.id, a]));
-  const categoryMap = new Map(categories.map((c) => [c.id, c]));
-
-  const colors = colorScheme === "dark" ? Colors.dark : Colors.light;
+  const { data: recurringTransactions = [], isLoading } = useTransactions({ isRecurring: true });
 
   return (
     <View className="flex-1 bg-background pt-safe-offset-20">
       {isLoading ? (
         <ActivityIndicator className="mt-10" />
-      ) : recurring.length === 0 ? (
+      ) : recurringTransactions.length === 0 ? (
         <EmptyState
           illustration={<WateringCanGraphic />}
           title="No recurring payments"
           message="Set up recurring payments for rent, subscriptions, or regular income."
           action={
-            <Button onPress={() => router.push("/recurring/new")}>
+            <Button onPress={() => router.push(newRecurringTransactionRoute)}>
               <Text>Add Recurring</Text>
             </Button>
           }
         />
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-          {recurring.map((r) => {
-            const account = accountMap.get(r.accountId);
-            const category = r.categoryId ? categoryMap.get(r.categoryId) : undefined;
-            const typeColor =
-              r.type === "income"
-                ? colors.income
-                : r.type === "expense"
-                  ? colors.expense
-                  : colors.transfer;
-
-            return (
-              <Pressable
-                key={r.id}
-                onPress={() => router.push(`/recurring/${r.id}/edit`)}
-                className="bg-card rounded-xl p-4 active:opacity-80"
-                style={{ borderLeftWidth: 4, borderLeftColor: typeColor }}
-              >
-                <View className="flex-row justify-between">
-                  <Text className="text-base font-semibold text-foreground">{r.name}</Text>
-                  <MoneyText
-                    cents={r.amount}
-                    currency={r.currency}
-                    sign={r.type === "income" ? "+" : r.type === "expense" ? "-" : ""}
-                    className="text-base font-bold"
-                    style={{ color: typeColor, fontVariant: ["tabular-nums"] }}
-                  />
-                </View>
-                <View className="flex-row gap-2 mt-1.5 items-center">
-                  <Text className="text-xs text-muted-foreground">
-                    {INTERVAL_LABELS[r.interval]}
-                  </Text>
-                  {account ? (
-                    <Text className="text-xs text-muted-foreground">· {account.name}</Text>
-                  ) : null}
-                  {category ? (
-                    <Text className="text-xs text-muted-foreground">· {category.name}</Text>
-                  ) : null}
-                  {!r.isActive ? (
-                    <Text className="text-xs text-muted-foreground/60 italic">(paused)</Text>
-                  ) : null}
-                </View>
-              </Pressable>
-            );
-          })}
+        <ScrollView>
+          <View className="gap-1 py-3">
+            {recurringTransactions.map((transaction) => (
+              <TransactionRow key={transaction.id} transaction={transaction} showAccount />
+            ))}
+          </View>
         </ScrollView>
       )}
 
       {/* FAB */}
-      <Button onPress={() => router.push("/recurring/new")} size="fab">
+      <Button onPress={() => router.push(newRecurringTransactionRoute)} size="fab">
         <Text className="text-3xl">+</Text>
       </Button>
     </View>

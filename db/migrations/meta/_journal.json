@@ -8,6 +8,13 @@
       "when": 1772303632909,
       "tag": "0000_true_leper_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1786853814001,
+      "tag": "0001_add_recurring_transaction_flag",
+      "breakpoints": true
     }
   ]
 }

@@ -16,6 +16,7 @@ let capturedFormProps: {
   onSubmit: (data: TransactionFormData) => Promise<void>;
   formRef?: React.MutableRefObject<{ submit: () => void } | null>;
   initialData?: Partial<TransactionFormData>;
+  isRecurring: boolean;
 } | null = null;
 
 jest.mock("expo-router", () => ({
@@ -66,7 +67,7 @@ describe("app/transaction/[id]", () => {
       options: { title: string };
     };
 
-    expect(screenCall.options.title).toBe("New Entry");
+    expect(screenCall.options.title).toBe("");
     expect(capturedFormProps).not.toBeNull();
 
     await act(async () => {
@@ -76,6 +77,7 @@ describe("app/transaction/[id]", () => {
         accountId: "account-1",
         toAccountId: null,
         categoryId: "category-1",
+        isRecurring: false,
         description: "Coffee",
         date: new Date("2026-03-28T00:00:00.000Z"),
         currency: "USD",
@@ -86,7 +88,47 @@ describe("app/transaction/[id]", () => {
     });
 
     expect(mockCreateTransaction).toHaveBeenCalled();
+    expect(mockCreateTransaction).toHaveBeenCalledWith(
+      expect.objectContaining({ isRecurring: false }),
+    );
     expect(baseRouter.back).toHaveBeenCalled();
+  });
+
+  it("starts recurring entries in recurring mode and lets the header toggle it", async () => {
+    mockUseLocalSearchParams.mockReturnValue({ id: "new", recurring: "true" });
+    mockUseTransaction.mockReturnValue({ data: undefined, isLoading: false });
+
+    await render(<TransactionScreen />);
+
+    let screenCall = mockStackScreen.mock.calls.at(-1)?.[0] as unknown as {
+      options: {
+        title: string;
+        unstable_headerRightItems: () => {
+          icon: { name: string };
+          label: string;
+          onPress: () => void;
+        }[];
+      };
+    };
+
+    expect(screenCall.options.title).toBe("");
+    expect(capturedFormProps?.isRecurring).toBe(true);
+    expect(screenCall.options.unstable_headerRightItems()[0]).toMatchObject({
+      label: "Make one-time",
+      icon: { name: "repeat.circle" },
+    });
+
+    await act(async () => {
+      screenCall.options.unstable_headerRightItems()[0]?.onPress();
+    });
+
+    screenCall = mockStackScreen.mock.calls.at(-1)?.[0] as typeof screenCall;
+    expect(screenCall.options.title).toBe("");
+    expect(capturedFormProps?.isRecurring).toBe(false);
+    expect(screenCall.options.unstable_headerRightItems()[0]).toMatchObject({
+      label: "Make recurring",
+      icon: { name: "1.circle" },
+    });
   });
 
   it("renders loading state while fetching an existing transaction", async () => {
@@ -109,6 +151,7 @@ describe("app/transaction/[id]", () => {
         accountId: "account-1",
         toAccountId: null,
         categoryId: "category-1",
+        isRecurring: true,
         description: "Coffee",
         date: "2026-03-28",
         currency: "USD",
@@ -127,6 +170,7 @@ describe("app/transaction/[id]", () => {
         accountId: "account-1",
         toAccountId: null,
         categoryId: "category-1",
+        isRecurring: true,
         description: "Dinner",
         date: new Date("2026-03-28T00:00:00.000Z"),
         currency: "USD",
@@ -159,6 +203,7 @@ describe("app/transaction/[id]", () => {
         accountId: "account-1",
         toAccountId: null,
         categoryId: "category-1",
+        isRecurring: false,
         description: "Coffee",
         date: "2026-03-28",
         currency: "USD",
@@ -173,7 +218,9 @@ describe("app/transaction/[id]", () => {
     const screenCall = mockStackScreen.mock.calls.at(-1)?.[0] as unknown as {
       options: { unstable_headerRightItems: () => { label: string; onPress: () => void }[] };
     };
-    const deleteButton = screenCall.options.unstable_headerRightItems()[0];
+    const deleteButton = screenCall.options
+      .unstable_headerRightItems()
+      .find((item) => item.label === "delete");
 
     deleteButton?.onPress();
 

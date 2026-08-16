@@ -1,5 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
 import type { NativeStackHeaderItem } from "expo-router/build/react-navigation/native-stack";
 
@@ -20,15 +20,20 @@ const NEW_ID = "new";
 
 export default function TransactionScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, recurring } = useLocalSearchParams<{ id: string; recurring?: string }>();
   const isNew = id === NEW_ID;
 
   const formRef = useRef<TransactionFormHandle | null>(null);
+  const [isRecurring, setIsRecurring] = useState(recurring === "true");
 
   const { data: transaction, isLoading } = useTransaction(isNew ? undefined : id);
   const createTransaction = useCreateTransaction();
   const updateTransaction = useUpdateTransaction();
   const deleteTransaction = useDeleteTransaction();
+
+  useEffect(() => {
+    if (transaction) setIsRecurring(transaction.isRecurring);
+  }, [transaction]);
 
   if (!isNew && isLoading) {
     return (
@@ -45,12 +50,13 @@ export default function TransactionScreen() {
       await createTransaction.mutateAsync({
         ...data,
         date: toDateString(data.date),
+        isRecurring,
         recurringPaymentId: null,
       });
     } else {
       await updateTransaction.mutateAsync({
         id,
-        data: { ...data, date: toDateString(data.date) },
+        data: { ...data, date: toDateString(data.date), isRecurring },
       });
     }
 
@@ -82,6 +88,13 @@ export default function TransactionScreen() {
   const headerRightItems: NativeStackHeaderItem[] = isNew
     ? [
         {
+          label: isRecurring ? "Make one-time" : "Make recurring",
+          type: "button",
+          onPress: () => setIsRecurring((current) => !current),
+          icon: { type: "sfSymbol", name: isRecurring ? "repeat.circle" : "1.circle" },
+          sharesBackground: false,
+        },
+        {
           label: "save",
           type: "button",
           onPress: () => formRef.current?.submit(),
@@ -89,6 +102,13 @@ export default function TransactionScreen() {
         },
       ]
     : [
+        {
+          label: isRecurring ? "Make one-time" : "Make recurring",
+          type: "button",
+          onPress: () => setIsRecurring((current) => !current),
+          icon: { type: "sfSymbol", name: isRecurring ? "repeat.circle" : "1.circle" },
+          sharesBackground: false,
+        },
         {
           label: "delete",
           type: "button",
@@ -110,7 +130,7 @@ export default function TransactionScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: isNew ? "New Entry" : "Edit Entry",
+          title: "",
           headerBackButtonDisplayMode: "minimal",
           unstable_headerRightItems: () => headerRightItems,
         }}
@@ -124,6 +144,7 @@ export default function TransactionScreen() {
                 accountId: transaction.accountId,
                 toAccountId: transaction.toAccountId,
                 categoryId: transaction.categoryId,
+                isRecurring: transaction.isRecurring,
                 description: transaction.description,
                 date: new Date(transaction.date),
                 currency: transaction.currency,
@@ -133,6 +154,7 @@ export default function TransactionScreen() {
               }
             : undefined
         }
+        isRecurring={isRecurring}
         onSubmit={handleSubmit}
         formRef={formRef}
       />

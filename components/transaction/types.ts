@@ -6,6 +6,7 @@ export interface TransactionFormData {
   accountId: string;
   toAccountId: string | null;
   categoryId: string | null;
+  isRecurring: boolean;
   description: string;
   date: Date;
   currency: string;
@@ -20,6 +21,7 @@ export interface TransactionFormHandle {
 
 export interface TransactionFormProps {
   initialData?: Partial<TransactionFormData>;
+  isRecurring: boolean;
   onSubmit: (data: TransactionFormData) => Promise<void>;
   formRef?: React.MutableRefObject<TransactionFormHandle | null>;
 }

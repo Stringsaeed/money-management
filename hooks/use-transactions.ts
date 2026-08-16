@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { aliasedTable, and, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { aliasedTable, and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
 
 import { useDatabase } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
@@ -25,6 +25,9 @@ interface TransactionFilters {
   accountId?: string | null;
   categoryId?: string | null;
   type?: Transaction["type"];
+  isRecurring?: boolean;
+  startsOnOrAfter?: string;
+  sort?: "asc" | "desc";
   limit?: number;
 }
 
@@ -43,6 +46,7 @@ const enrichedSelect = {
   accountId: transactions.accountId,
   toAccountId: transactions.toAccountId,
   categoryId: transactions.categoryId,
+  isRecurring: transactions.isRecurring,
   recurringPaymentId: transactions.recurringPaymentId,
   description: transactions.description,
   createdAt: transactions.createdAt,
@@ -63,7 +67,7 @@ const enrichedSelect = {
   categoryIcon: categories.icon,
 };
 
-type EnrichedRow = Record<keyof typeof enrichedSelect, string | number | null>;
+type EnrichedRow = Record<keyof typeof enrichedSelect, string | number | boolean | null>;
 
 function mapRowToTransaction(row: EnrichedRow): TransactionWithDetails {
   return {
@@ -78,6 +82,7 @@ function mapRowToTransaction(row: EnrichedRow): TransactionWithDetails {
     accountId: row.accountId as string,
     toAccountId: row.toAccountId as string | null,
     categoryId: row.categoryId as string | null,
+    isRecurring: row.isRecurring as boolean,
     recurringPaymentId: row.recurringPaymentId as string | null,
     description: row.description as string,
     createdAt: row.createdAt as string,
@@ -144,6 +149,12 @@ export function useTransactions(filters: TransactionFilters) {
       if (filters.type) {
         conditions.push(eq(transactions.type, filters.type));
       }
+      if (filters.isRecurring !== undefined) {
+        conditions.push(eq(transactions.isRecurring, filters.isRecurring));
+      }
+      if (filters.startsOnOrAfter) {
+        conditions.push(gte(transactions.date, filters.startsOnOrAfter));
+      }
 
       let query = db
         .select(enrichedSelect)
@@ -152,7 +163,10 @@ export function useTransactions(filters: TransactionFilters) {
         .leftJoin(toAccounts, eq(transactions.toAccountId, toAccounts.id))
         .leftJoin(categories, eq(transactions.categoryId, categories.id))
         .where(conditions.length ? and(...conditions) : undefined)
-        .orderBy(desc(transactions.date), desc(transactions.createdAt));
+        .orderBy(
+          filters.sort === "asc" ? asc(transactions.date) : desc(transactions.date),
+          desc(transactions.createdAt),
+        );
 
       if (filters.limit) {
         query = query.limit(filters.limit) as typeof query;
@@ -245,7 +259,9 @@ export function useMonthSummary(
 
 // ── Mutations ──────────────────────────────────────────────────────────────────
 
-type NewTransaction = Omit<Transaction, "id" | "createdAt" | "updatedAt">;
+type NewTransaction = Omit<Transaction, "id" | "createdAt" | "updatedAt" | "isRecurring"> & {
+  isRecurring?: boolean;
+};
 
 export function useCreateTransaction() {
   const db = useDatabase();
@@ -256,7 +272,14 @@ export function useCreateTransaction() {
       const now = nowIso();
       const id = generateId();
       const date = isDate(data.date) ? toDateString(data.date as unknown as Date) : data.date;
-      await db.insert(transactions).values({ ...data, date, id, createdAt: now, updatedAt: now });
+      await db.insert(transactions).values({
+        ...data,
+        isRecurring: data.isRecurring ?? false,
+        date,
+        id,
+        createdAt: now,
+        updatedAt: now,
+      });
       return id;
     },
     onSuccess: () => {

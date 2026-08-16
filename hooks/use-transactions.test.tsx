@@ -52,6 +52,7 @@ describe("use-transactions hooks", () => {
               accountId: "account-1",
               toAccountId: null,
               categoryId: "category-1",
+              isRecurring: true,
               recurringPaymentId: null,
               description: "Coffee",
               createdAt: "2026-03-28T12:00:00.000Z",
@@ -90,6 +91,7 @@ describe("use-transactions hooks", () => {
         id: "transaction-1",
         amount: 40_00,
         date: "2026-03-28",
+        isRecurring: true,
         account: {
           id: "account-1",
           name: "Main Checking",
@@ -123,6 +125,7 @@ describe("use-transactions hooks", () => {
             accountId: "account-1",
             toAccountId: null,
             categoryId: "category-1",
+            isRecurring: false,
             recurringPaymentId: null,
             description: "",
             createdAt: "2026-03-28T00:00:00.000Z",
@@ -226,11 +229,15 @@ describe("use-transactions hooks", () => {
         toAccountId: null,
         categoryId: "category-1",
         description: "Coffee",
+        isRecurring: true,
         recurringPaymentId: null,
       });
     });
 
     expect(db.insert).toHaveBeenCalledWith(transactions);
+    expect(db.__builders.insert.values).toHaveBeenCalledWith(
+      expect.objectContaining({ isRecurring: true }),
+    );
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["transactions"] });
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["account-balances"] });
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["month-summary"] });

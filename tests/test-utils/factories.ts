@@ -59,6 +59,7 @@ export const createTransaction = (overrides: Partial<Transaction> = {}): Transac
   accountId: "account-1",
   toAccountId: null,
   categoryId: "category-1",
+  isRecurring: false,
   description: "Coffee",
   recurringPaymentId: null,
   createdAt: nowIso(),
