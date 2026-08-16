@@ -1,0 +1,607 @@
+{
+  "nodes": [
+    {
+      "id": "users_saeed_work_money_management_docs_architecture_recurring_rules_design_md",
+      "label": "recurring-rules-design.md",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "label": "Recurring Rules Architecture",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "architecture_recurring_rules_design_purpose",
+      "label": "Purpose",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L8"
+    },
+    {
+      "id": "architecture_recurring_rules_design_scope",
+      "label": "Scope",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L14"
+    },
+    {
+      "id": "architecture_recurring_rules_design_canonical_model",
+      "label": "Canonical model",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L30"
+    },
+    {
+      "id": "architecture_recurring_rules_design_recurring_rule",
+      "label": "Recurring Rule",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L32"
+    },
+    {
+      "id": "architecture_recurring_rules_design_occurrence",
+      "label": "Occurrence",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L48"
+    },
+    {
+      "id": "architecture_recurring_rules_design_generated_transaction",
+      "label": "Generated Transaction",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L58"
+    },
+    {
+      "id": "architecture_recurring_rules_design_money",
+      "label": "Money",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L64"
+    },
+    {
+      "id": "architecture_recurring_rules_design_invariants",
+      "label": "Invariants",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L68"
+    },
+    {
+      "id": "architecture_recurring_rules_design_lifecycle_and_health",
+      "label": "Lifecycle and health",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L81"
+    },
+    {
+      "id": "architecture_recurring_rules_design_lifecycle",
+      "label": "Lifecycle",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L85"
+    },
+    {
+      "id": "architecture_recurring_rules_design_health",
+      "label": "Health",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L92"
+    },
+    {
+      "id": "architecture_recurring_rules_design_combined_behavior",
+      "label": "Combined behavior",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L97"
+    },
+    {
+      "id": "architecture_recurring_rules_design_calendar_semantics",
+      "label": "Calendar semantics",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L108"
+    },
+    {
+      "id": "architecture_recurring_rules_design_change_semantics",
+      "label": "Change semantics",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L122"
+    },
+    {
+      "id": "architecture_recurring_rules_design_prospective_editing",
+      "label": "Prospective editing",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L124"
+    },
+    {
+      "id": "architecture_recurring_rules_design_pause_and_archive",
+      "label": "Pause and archive",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L136"
+    },
+    {
+      "id": "architecture_recurring_rules_design_repair",
+      "label": "Repair",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L142"
+    },
+    {
+      "id": "architecture_recurring_rules_design_confirmation",
+      "label": "Confirmation",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L150"
+    },
+    {
+      "id": "architecture_recurring_rules_design_settlement",
+      "label": "Settlement",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L164"
+    },
+    {
+      "id": "architecture_recurring_rules_design_triggers",
+      "label": "Triggers",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L166"
+    },
+    {
+      "id": "architecture_recurring_rules_design_rule_local_algorithm",
+      "label": "Rule-local algorithm",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L176"
+    },
+    {
+      "id": "architecture_recurring_rules_design_outcomes_and_failures",
+      "label": "Outcomes and failures",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L189"
+    },
+    {
+      "id": "architecture_recurring_rules_design_module_design",
+      "label": "Module design",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L195"
+    },
+    {
+      "id": "architecture_recurring_rules_design_public_interface",
+      "label": "Public interface",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L211"
+    },
+    {
+      "id": "architecture_recurring_rules_design_change_effects",
+      "label": "Change effects",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L229"
+    },
+    {
+      "id": "architecture_recurring_rules_design_dependencies_and_testing_seam",
+      "label": "Dependencies and testing seam",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L241"
+    },
+    {
+      "id": "architecture_recurring_rules_design_persistence_model",
+      "label": "Persistence model",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L247"
+    },
+    {
+      "id": "architecture_recurring_rules_design_recurring_rules",
+      "label": "`recurring_rules`",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L249"
+    },
+    {
+      "id": "architecture_recurring_rules_design_recurring_occurrences",
+      "label": "`recurring_occurrences`",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L266"
+    },
+    {
+      "id": "architecture_recurring_rules_design_transactions",
+      "label": "Transactions",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L277"
+    },
+    {
+      "id": "architecture_recurring_rules_design_account_coordination",
+      "label": "Account coordination",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L281"
+    },
+    {
+      "id": "architecture_recurring_rules_design_react_and_ui_integration",
+      "label": "React and UI integration",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L295"
+    },
+    {
+      "id": "architecture_recurring_rules_design_legacy_migration",
+      "label": "Legacy migration",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L308"
+    },
+    {
+      "id": "architecture_recurring_rules_design_delivery_sequence",
+      "label": "Delivery sequence",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L325"
+    },
+    {
+      "id": "architecture_recurring_rules_design_acceptance_criteria",
+      "label": "Acceptance criteria",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L338"
+    },
+    {
+      "id": "architecture_recurring_rules_design_explicit_non_goals",
+      "label": "Explicit non-goals",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L353"
+    }
+  ],
+  "edges": [
+    {
+      "source": "users_saeed_work_money_management_docs_architecture_recurring_rules_design_md",
+      "target": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_purpose",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_scope",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_canonical_model",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L30",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_canonical_model",
+      "target": "architecture_recurring_rules_design_recurring_rule",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L32",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_canonical_model",
+      "target": "architecture_recurring_rules_design_occurrence",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_canonical_model",
+      "target": "architecture_recurring_rules_design_generated_transaction",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_canonical_model",
+      "target": "architecture_recurring_rules_design_money",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L64",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_invariants",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L68",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_lifecycle_and_health",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L81",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_lifecycle_and_health",
+      "target": "architecture_recurring_rules_design_lifecycle",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L85",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_lifecycle_and_health",
+      "target": "architecture_recurring_rules_design_health",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L92",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_lifecycle_and_health",
+      "target": "architecture_recurring_rules_design_combined_behavior",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L97",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_calendar_semantics",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L108",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_change_semantics",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L122",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_change_semantics",
+      "target": "architecture_recurring_rules_design_prospective_editing",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L124",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_change_semantics",
+      "target": "architecture_recurring_rules_design_pause_and_archive",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L136",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_change_semantics",
+      "target": "architecture_recurring_rules_design_repair",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L142",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_change_semantics",
+      "target": "architecture_recurring_rules_design_confirmation",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L150",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_settlement",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L164",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_settlement",
+      "target": "architecture_recurring_rules_design_triggers",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L166",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_settlement",
+      "target": "architecture_recurring_rules_design_rule_local_algorithm",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L176",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_settlement",
+      "target": "architecture_recurring_rules_design_outcomes_and_failures",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L189",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_module_design",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L195",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_module_design",
+      "target": "architecture_recurring_rules_design_public_interface",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L211",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_module_design",
+      "target": "architecture_recurring_rules_design_change_effects",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L229",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_module_design",
+      "target": "architecture_recurring_rules_design_dependencies_and_testing_seam",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L241",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_persistence_model",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L247",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_persistence_model",
+      "target": "architecture_recurring_rules_design_recurring_rules",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L249",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_persistence_model",
+      "target": "architecture_recurring_rules_design_recurring_occurrences",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L266",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_persistence_model",
+      "target": "architecture_recurring_rules_design_transactions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L277",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_account_coordination",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L281",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_react_and_ui_integration",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L295",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_legacy_migration",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L308",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_delivery_sequence",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L325",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_acceptance_criteria",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L338",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_design_recurring_rules_architecture",
+      "target": "architecture_recurring_rules_design_explicit_non_goals",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-design.md",
+      "source_location": "L353",
+      "weight": 1.0
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

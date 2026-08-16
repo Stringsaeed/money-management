@@ -1,0 +1,351 @@
+{
+  "nodes": [
+    {
+      "id": "users_saeed_work_money_management_docs_architecture_recurring_rules_decision_log_md",
+      "label": "recurring-rules-decision-log.md",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_recurring_rules_decision_log",
+      "label": "Recurring Rules Decision Log",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_why_this_record_exists",
+      "label": "Why this record exists",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L8"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_process",
+      "label": "Process",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L14"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_interface_designs_considered",
+      "label": "Interface designs considered",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L26"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_minimal_three_entry_core",
+      "label": "Minimal three-entry core",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L28"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_extensible_four_entry_catalog",
+      "label": "Extensible four-entry catalog",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L32"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_caller_optimized_named_core",
+      "label": "Caller-optimized named core",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L36"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_selected_hybrid",
+      "label": "Selected hybrid",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L40"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_decision_rounds",
+      "label": "Decision rounds",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L44"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_round_1_language_and_depth",
+      "label": "Round 1 \u2014 Language and depth",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L46"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_round_2_lifecycle_and_settlement",
+      "label": "Round 2 \u2014 Lifecycle and Settlement",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L54"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_round_3_calendar_and_historical_ownership",
+      "label": "Round 3 \u2014 Calendar and historical ownership",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L65"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_round_4_user_actions_and_durable_occurrences",
+      "label": "Round 4 \u2014 User actions and durable Occurrences",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L76"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_round_5_persistence_authority_and_dependency_changes",
+      "label": "Round 5 \u2014 Persistence authority and dependency changes",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L88"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_round_6_module_shape_and_testing",
+      "label": "Round 6 \u2014 Module shape and testing",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L98"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_round_7_interface_selection_and_persistence_mechanics",
+      "label": "Round 7 \u2014 Interface selection and persistence mechanics",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L111"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_round_8_legacy_interpretation_and_delivery_scope",
+      "label": "Round 8 \u2014 Legacy interpretation and delivery scope",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L124"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_round_9_migration_state_correction_and_ui_locality",
+      "label": "Round 9 \u2014 Migration, state correction, and UI locality",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L134"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_round_10_final_semantic_frontier",
+      "label": "Round 10 \u2014 Final semantic frontier",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L145"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_rejected_patterns",
+      "label": "Rejected patterns",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L154"
+    },
+    {
+      "id": "architecture_recurring_rules_decision_log_result",
+      "label": "Result",
+      "file_type": "document",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L170"
+    }
+  ],
+  "edges": [
+    {
+      "source": "users_saeed_work_money_management_docs_architecture_recurring_rules_decision_log_md",
+      "target": "architecture_recurring_rules_decision_log_recurring_rules_decision_log",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_recurring_rules_decision_log",
+      "target": "architecture_recurring_rules_decision_log_why_this_record_exists",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_recurring_rules_decision_log",
+      "target": "architecture_recurring_rules_decision_log_process",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_recurring_rules_decision_log",
+      "target": "architecture_recurring_rules_decision_log_interface_designs_considered",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_interface_designs_considered",
+      "target": "architecture_recurring_rules_decision_log_minimal_three_entry_core",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_interface_designs_considered",
+      "target": "architecture_recurring_rules_decision_log_extensible_four_entry_catalog",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L32",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_interface_designs_considered",
+      "target": "architecture_recurring_rules_decision_log_caller_optimized_named_core",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_interface_designs_considered",
+      "target": "architecture_recurring_rules_decision_log_selected_hybrid",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_recurring_rules_decision_log",
+      "target": "architecture_recurring_rules_decision_log_decision_rounds",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L44",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_decision_rounds",
+      "target": "architecture_recurring_rules_decision_log_round_1_language_and_depth",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_decision_rounds",
+      "target": "architecture_recurring_rules_decision_log_round_2_lifecycle_and_settlement",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_decision_rounds",
+      "target": "architecture_recurring_rules_decision_log_round_3_calendar_and_historical_ownership",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L65",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_decision_rounds",
+      "target": "architecture_recurring_rules_decision_log_round_4_user_actions_and_durable_occurrences",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L76",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_decision_rounds",
+      "target": "architecture_recurring_rules_decision_log_round_5_persistence_authority_and_dependency_changes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L88",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_decision_rounds",
+      "target": "architecture_recurring_rules_decision_log_round_6_module_shape_and_testing",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L98",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_decision_rounds",
+      "target": "architecture_recurring_rules_decision_log_round_7_interface_selection_and_persistence_mechanics",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L111",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_decision_rounds",
+      "target": "architecture_recurring_rules_decision_log_round_8_legacy_interpretation_and_delivery_scope",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L124",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_decision_rounds",
+      "target": "architecture_recurring_rules_decision_log_round_9_migration_state_correction_and_ui_locality",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L134",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_decision_rounds",
+      "target": "architecture_recurring_rules_decision_log_round_10_final_semantic_frontier",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L145",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_recurring_rules_decision_log",
+      "target": "architecture_recurring_rules_decision_log_rejected_patterns",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L154",
+      "weight": 1.0
+    },
+    {
+      "source": "architecture_recurring_rules_decision_log_recurring_rules_decision_log",
+      "target": "architecture_recurring_rules_decision_log_result",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/architecture/recurring-rules-decision-log.md",
+      "source_location": "L170",
+      "weight": 1.0
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}
