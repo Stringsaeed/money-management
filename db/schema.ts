@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 // ── Accounts ──────────────────────────────────────────────────────────────────
 
@@ -30,34 +30,38 @@ export const categories = sqliteTable("categories", {
   updatedAt: text("updated_at").notNull(),
 });
 
-// ── Recurring Payments ────────────────────────────────────────────────────────
+// ── Recurring Rules ──────────────────────────────────────────────────────────
 
-export const recurringPayments = sqliteTable("recurring_payments", {
+export const recurringRules = sqliteTable("recurring_rules", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
-  type: text("type").notNull(), // TransactionType
-  amount: integer("amount").notNull(), // cents
-  currency: text("currency").notNull().default("USD"),
-  accountId: text("account_id")
-    .notNull()
-    .references(() => accounts.id, { onDelete: "cascade" }),
+  type: text("type").notNull(),
+  amountMinor: integer("amount_minor"),
+  currency: text("currency").notNull(),
+  accountId: text("account_id").references(() => accounts.id, { onDelete: "restrict" }),
   toAccountId: text("to_account_id").references(() => accounts.id, {
-    onDelete: "set null",
+    onDelete: "restrict",
   }),
   categoryId: text("category_id").references(() => categories.id, {
     onDelete: "set null",
   }),
   description: text("description").notNull().default(""),
-  frequency: text("frequency").notNull(), // RecurrenceFrequency: day | week | month | year
-  intervalCount: integer("interval_count").notNull().default(1), // every N units
-  dayOfMonth: integer("day_of_month"),
-  dayOfWeek: integer("day_of_week"),
-  monthOfYear: integer("month_of_year"),
+  frequency: text("frequency").notNull(),
+  intervalCount: integer("interval_count").notNull().default(1),
   startDate: text("start_date").notNull(),
   endDate: text("end_date"),
-  endCount: integer("end_count"), // stop after N occurrences (after_count end type)
-  lastGeneratedDate: text("last_generated_date"),
-  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  endCount: integer("end_count"),
+  timeZone: text("time_zone").notNull(),
+  lifecycle: text("lifecycle").notNull().default("active"),
+  health: text("health").notNull().default("ready"),
+  attentionReasons: text("attention_reasons").notNull().default("[]"),
+  attentionDetails: text("attention_details"),
+  eligibilityFloor: text("eligibility_floor").notNull(),
+  revision: integer("revision").notNull().default(1),
+  lifecycleChangedAt: text("lifecycle_changed_at"),
+  healthChangedAt: text("health_changed_at"),
+  lastSettlementAttemptAt: text("last_settlement_attempt_at"),
+  lastSettlementError: text("last_settlement_error"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -83,13 +87,31 @@ export const transactions = sqliteTable("transactions", {
     onDelete: "set null",
   }),
   isRecurring: integer("is_recurring", { mode: "boolean" }).notNull().default(false),
-  recurringPaymentId: text("recurring_payment_id").references(() => recurringPayments.id, {
+  recurringRuleId: text("recurring_rule_id").references(() => recurringRules.id, {
     onDelete: "set null",
   }),
   description: text("description").notNull().default(""),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
+
+export const recurringOccurrences = sqliteTable(
+  "recurring_occurrences",
+  {
+    ruleId: text("rule_id")
+      .notNull()
+      .references(() => recurringRules.id, { onDelete: "restrict" }),
+    scheduledDate: text("scheduled_date").notNull(),
+    transactionId: text("transaction_id").references(() => transactions.id, {
+      onDelete: "set null",
+    }),
+    settledAt: text("settled_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.ruleId, table.scheduledDate] }),
+    uniqueIndex("uq_recurring_occurrence_transaction").on(table.transactionId),
+  ],
+);
 
 // ── Exchange Rates ─────────────────────────────────────────────────────────────
 

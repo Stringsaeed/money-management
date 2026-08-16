@@ -1,10 +1,10 @@
 import { nowIso, today } from "@/utils/date";
+import type { RecurringRule } from "@/modules/recurring-rules";
 import type {
   Account,
   AccountWithBalance,
   Category,
   DayGroup,
-  RecurringPayment,
   Transaction,
   TransactionWithDetails,
 } from "@/types";
@@ -61,7 +61,7 @@ export const createTransaction = (overrides: Partial<Transaction> = {}): Transac
   categoryId: "category-1",
   isRecurring: false,
   description: "Coffee",
-  recurringPaymentId: null,
+  recurringRuleId: null,
   createdAt: nowIso(),
   updatedAt: nowIso(),
   ...overrides,
@@ -115,13 +115,11 @@ export const createDayGroup = (overrides: Partial<DayGroup> = {}): DayGroup => (
   ...overrides,
 });
 
-export const createRecurringPayment = (
-  overrides: Partial<RecurringPayment> = {},
-): RecurringPayment => ({
+export const createRecurringRule = (overrides: Partial<RecurringRule> = {}): RecurringRule => ({
   id: "recurring-1",
   name: "Rent",
   type: "expense",
-  amount: 1200_00,
+  amountMinor: 1200_00,
   currency: "USD",
   accountId: "account-1",
   toAccountId: null,
@@ -129,14 +127,20 @@ export const createRecurringPayment = (
   description: "Monthly rent",
   frequency: "month",
   intervalCount: 1,
-  dayOfMonth: 5,
-  dayOfWeek: null,
-  monthOfYear: null,
   startDate: "2026-01-05",
   endDate: null,
   endCount: null,
-  lastGeneratedDate: null,
-  isActive: true,
+  timeZone: "Asia/Dubai",
+  lifecycle: "active",
+  health: "ready",
+  attentionReasons: [],
+  attentionDetails: null,
+  eligibilityFloor: "2026-01-05",
+  revision: 1,
+  lifecycleChangedAt: null,
+  healthChangedAt: null,
+  lastSettlementAttemptAt: null,
+  lastSettlementError: null,
   createdAt: DEFAULT_TIMESTAMP,
   updatedAt: DEFAULT_TIMESTAMP,
   ...overrides,

@@ -1,67 +1,65 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
 import RecurringListScreen from "@/app/recurring/index";
-import { createRecurringPayment } from "@/tests/test-utils/factories";
+import { createRecurringRule } from "@/tests/test-utils/factories";
 
 const mockPush = jest.fn();
-const mockUseRecurringPayments = jest.fn();
+const mockUseLocalSearchParams = jest.fn();
+const mockUseRecurringRulesList = jest.fn();
 
 jest.mock("expo-router", () => ({
   router: { push: (href: unknown) => mockPush(href) },
+  useLocalSearchParams: () => mockUseLocalSearchParams(),
 }));
 
-jest.mock("@/hooks/use-recurring-payments", () => ({
-  useRecurringPayments: () => mockUseRecurringPayments(),
-}));
-
-jest.mock("@/components/recurring/recurring-payment-row", () => ({
-  RecurringPaymentRow: ({
-    payment,
-    onPress,
-  }: {
-    payment: { name: string };
-    onPress: () => void;
-  }) => {
-    const { Text, Pressable } = require("react-native");
-
-    return (
-      <Pressable onPress={onPress}>
-        <Text>{payment.name}</Text>
-      </Pressable>
-    );
-  },
+jest.mock("@/hooks/use-recurring-rules", () => ({
+  useRecurringRulesList: (filter: string) => mockUseRecurringRulesList(filter),
 }));
 
 describe("app/recurring/index", () => {
   beforeEach(() => {
     mockPush.mockClear();
-    mockUseRecurringPayments.mockReturnValue({ data: [], isLoading: false });
+    mockUseLocalSearchParams.mockReturnValue({});
+    mockUseRecurringRulesList.mockReturnValue({ data: [], isLoading: false });
   });
 
-  it("opens the new-recurring form from the empty state", async () => {
+  it("opens the requested filter from root feedback", async () => {
+    mockUseLocalSearchParams.mockReturnValue({ filter: "needs_attention" });
+
     await render(<RecurringListScreen />);
 
+    expect(mockUseRecurringRulesList).toHaveBeenCalledWith("needs_attention");
+  });
+
+  it("opens the new Rule form from the empty state", async () => {
+    await render(<RecurringListScreen />);
+
+    expect(mockUseRecurringRulesList).toHaveBeenCalledWith("current");
     fireEvent.press(screen.getByText("Add Recurring"));
 
     expect(mockPush).toHaveBeenCalledWith({
-      pathname: "/recurring/[id]",
-      params: { id: "new" },
+      pathname: "/transaction/[id]",
+      params: { id: "new", recurring: "true" },
     });
   });
 
-  it("renders rules and opens their editor", async () => {
-    mockUseRecurringPayments.mockReturnValue({
-      data: [createRecurringPayment({ id: "internet", name: "Internet" })],
+  it("loads each filter and opens a Rule editor", async () => {
+    mockUseRecurringRulesList.mockImplementation((filter: string) => ({
+      data:
+        filter === "needs_attention"
+          ? [createRecurringRule({ id: "internet", name: "Internet", health: "needs_attention" })]
+          : [],
       isLoading: false,
-    });
+    }));
 
     await render(<RecurringListScreen />);
+    fireEvent.press(screen.getByRole("button", { name: "Needs attention" }));
+    fireEvent.press(await screen.findByText("Internet"));
 
-    fireEvent.press(screen.getByText("Internet"));
-
+    expect(mockUseRecurringRulesList).toHaveBeenLastCalledWith("needs_attention");
     expect(mockPush).toHaveBeenCalledWith({
-      pathname: "/recurring/[id]",
-      params: { id: "internet" },
+      pathname: "/transaction/[id]",
+      params: { id: "internet", recurring: "true" },
     });
   });
 });

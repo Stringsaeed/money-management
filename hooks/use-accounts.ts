@@ -1,10 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { eq, sql } from "drizzle-orm";
+import { useSQLiteContext } from "expo-sqlite";
 
 import { useDatabase } from "@/db/client";
 import { accounts, transactions } from "@/db/schema";
-import { generateId } from "@/utils/id";
+import {
+  deleteAccountWithRecurringRules,
+  previewAccountDeletion,
+  updateAccountWithRecurringRules,
+} from "@/modules/account-recurring-coordinator";
 import { nowIso } from "@/utils/date";
+import { generateId } from "@/utils/id";
 import type { Account, AccountWithBalance } from "@/types";
 
 // ── Query keys ────────────────────────────────────────────────────────────────
@@ -103,7 +109,7 @@ export function useCreateAccount() {
 }
 
 export function useUpdateAccount() {
-  const db = useDatabase();
+  const database = useSQLiteContext();
   const qc = useQueryClient();
 
   return useMutation({
@@ -114,33 +120,41 @@ export function useUpdateAccount() {
       id: string;
       data: Partial<Omit<Account, "id" | "createdAt">>;
     }) => {
-      await db
-        .update(accounts)
-        .set({ ...data, updatedAt: nowIso() })
-        .where(eq(accounts.id, id));
+      return updateAccountWithRecurringRules(database, {
+        accountId: id,
+        changes: data,
+        now: nowIso(),
+      });
     },
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: accountKeys.all });
       qc.invalidateQueries({ queryKey: accountKeys.balances });
       qc.invalidateQueries({ queryKey: accountKeys.detail(id) });
+      qc.invalidateQueries({ queryKey: ["recurring-rules"] });
     },
   });
 }
 
+export function usePreviewAccountDeletion() {
+  const database = useSQLiteContext();
+  return useMutation({
+    mutationFn: (id: string) => previewAccountDeletion(database, id),
+  });
+}
+
 export function useDeleteAccount() {
-  const db = useDatabase();
+  const database = useSQLiteContext();
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      await db.delete(accounts).where(eq(accounts.id, id));
-    },
+    mutationFn: (id: string) =>
+      deleteAccountWithRecurringRules(database, { accountId: id, now: nowIso() }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: accountKeys.all });
       qc.invalidateQueries({ queryKey: accountKeys.balances });
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["month-summary"] });
-      qc.invalidateQueries({ queryKey: ["recurring-payments"] });
+      qc.invalidateQueries({ queryKey: ["recurring-rules"] });
     },
   });
 }

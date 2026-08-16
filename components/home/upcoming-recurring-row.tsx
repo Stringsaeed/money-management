@@ -3,12 +3,12 @@ import { Pressable, View } from "react-native";
 import { MoneyText } from "@/components/ui/money-text";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
+import type { RecurringRule } from "@/modules/recurring-rules";
 import { formatCents } from "@/utils/currency";
 import { formatUpcomingOccurrence } from "@/utils/recurring";
-import type { RecurringPayment } from "@/types";
 
 interface UpcomingRecurringRowProps {
-  payment: RecurringPayment;
+  rule: RecurringRule;
   occurrenceDate: string;
   today: string;
   onPress: () => void;
@@ -21,45 +21,45 @@ const TYPE_EMOJI = {
 } as const;
 
 export function UpcomingRecurringRow({
-  payment,
+  rule,
   occurrenceDate,
   today,
   onPress,
 }: UpcomingRecurringRowProps) {
   const occurrenceLabel = formatUpcomingOccurrence(occurrenceDate, today);
-  const formattedAmount = formatCents(payment.amount, payment.currency);
+  const formattedAmount = formatCents(rule.amountMinor ?? 0, rule.currency);
   const amountLabel =
-    payment.type === "income"
+    rule.type === "income"
       ? `plus ${formattedAmount}`
-      : payment.type === "expense"
+      : rule.type === "expense"
         ? `minus ${formattedAmount}`
         : formattedAmount;
 
   return (
     <Pressable
-      accessibilityLabel={`${payment.name}, ${occurrenceLabel}, ${amountLabel}`}
+      accessibilityLabel={`${rule.name}, ${occurrenceLabel}, ${amountLabel}`}
       accessibilityRole="button"
       className="flex-row items-center gap-3 px-4 py-3 active:bg-surface-dim"
       onPress={onPress}
     >
       <View className="size-10 items-center justify-center rounded-full bg-surface">
-        <Text className="text-lg">{TYPE_EMOJI[payment.type]}</Text>
+        <Text className="text-lg">{TYPE_EMOJI[rule.type]}</Text>
       </View>
       <View className="flex-1 gap-0.5">
         <Text className="font-body-semibold text-sm text-ink" numberOfLines={1}>
-          {payment.name}
+          {rule.name}
         </Text>
         <Text className="font-body-normal text-xs text-ink/40">
-          {payment.type === "transfer" ? "Transfer" : "Recurring"} · {occurrenceLabel}
+          {rule.type === "transfer" ? "Transfer" : "Recurring"} · {occurrenceLabel}
         </Text>
       </View>
       <MoneyText
-        cents={payment.amount}
-        currency={payment.currency}
-        sign={payment.type === "income" ? "+" : payment.type === "expense" ? "−" : ""}
+        cents={rule.amountMinor ?? 0}
+        currency={rule.currency}
+        sign={rule.type === "income" ? "+" : rule.type === "expense" ? "−" : ""}
         className={cn(
           "font-heading-medium text-base",
-          payment.type === "income" ? "text-sage" : "text-ink",
+          rule.type === "income" ? "text-sage" : "text-ink",
         )}
         style={{ fontVariant: ["tabular-nums"] }}
       />

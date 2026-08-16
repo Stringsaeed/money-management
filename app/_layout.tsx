@@ -34,6 +34,11 @@ import * as Haptics from "expo-haptics";
 
 import { AppUpdateProvider } from "@/components/updates/app-update-provider";
 import { MandatoryUpdateGate } from "@/components/updates/mandatory-update-gate";
+import { RecurringSettlementBanner } from "@/components/recurring/recurring-settlement-banner";
+import { RecurringSettlementProvider } from "@/components/recurring/recurring-settlement-provider";
+import { migrateRecurringRules } from "@/db/recurring-rules-migration";
+import { getSystemTimeZone, localDateInTimeZone } from "@/modules/recurring-rules/clock";
+import { RecurringRulesProvider } from "@/modules/recurring-rules/provider";
 
 // Keep the native splash screen visible while fonts load
 SplashScreen.preventAutoHideAsync();
@@ -66,12 +71,21 @@ async function onDatabaseInit(db: SQLiteDatabase) {
     console.log("Running migrations...");
     await runMigrations(drizzleDb);
 
+    const migrationInstant = new Date();
+    const timeZone = getSystemTimeZone();
+    await migrateRecurringRules(db, {
+      timeZone,
+      localDate: localDateInTimeZone(migrationInstant, timeZone),
+      now: migrationInstant.toISOString(),
+    });
+
     if (didReset) await markDatabaseReset(drizzleDb);
 
     console.log("Seeding database...");
     await seedDatabase(drizzleDb);
   } catch (error) {
     console.error("Error initializing database:", error);
+    throw error;
   }
 }
 
@@ -118,64 +132,72 @@ export default function RootLayout() {
       >
         <SQLiteProvider databaseName={DB_NAME} onInit={onDatabaseInit} useSuspense>
           <QueryClientProvider client={queryClient}>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <PressablesConfig
-                globalHandlers={{
-                  onPress: () => {
-                    Haptics.selectionAsync();
-                  },
-                }}
-                config={{ minScale: 0.7, activeOpacity: 0.6 }}
-              >
-                <BottomSheetProvider>
-                  <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-                    <AppUpdateProvider>
-                      <Stack
-                        screenOptions={{
-                          headerTransparent: true,
-                          headerShadowVisible: false,
-                          headerBlurEffect: "none",
-                          headerLargeTitleStyle: { fontFamily: "Nunito_400Regular" },
-                          headerTitleStyle: { fontFamily: "Nunito_400Regular" },
-                          headerBackButtonDisplayMode: "minimal",
-                        }}
-                      >
-                        <Stack.Screen name="splash" options={{ headerShown: false }} />
-                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                        <Stack.Screen name="categories" options={{ title: "Categories" }} />
-                        <Stack.Screen name="accounts" options={{ title: "Accounts" }} />
-                        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-                        <Stack.Screen name="transaction/[id]" options={{ presentation: "card" }} />
-                        <Stack.Screen name="account/[id]" options={{ headerShown: false }} />
-                        <Stack.Screen
-                          name="account/[id]/edit"
-                          options={{
-                            presentation: "modal",
-                            title: "Edit Account",
-                            headerTransparent: false,
-                          }}
-                        />
-                        <Stack.Screen
-                          name="category/new"
-                          options={{
-                            presentation: "modal",
-                            title: "New Category",
-                            headerTransparent: false,
-                          }}
-                        />
-                        <Stack.Screen
-                          name="recurring/index"
-                          options={{ title: "Recurring Payments" }}
-                        />
-                      </Stack>
-                      <StatusBar style="auto" />
-                      <MandatoryUpdateGate />
-                      <PortalHost />
-                    </AppUpdateProvider>
-                  </ThemeProvider>
-                </BottomSheetProvider>
-              </PressablesConfig>
-            </GestureHandlerRootView>
+            <RecurringRulesProvider>
+              <RecurringSettlementProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <PressablesConfig
+                    globalHandlers={{
+                      onPress: () => {
+                        Haptics.selectionAsync();
+                      },
+                    }}
+                    config={{ minScale: 0.7, activeOpacity: 0.6 }}
+                  >
+                    <BottomSheetProvider>
+                      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+                        <AppUpdateProvider>
+                          <Stack
+                            screenOptions={{
+                              headerTransparent: true,
+                              headerShadowVisible: false,
+                              headerBlurEffect: "none",
+                              headerLargeTitleStyle: { fontFamily: "Nunito_400Regular" },
+                              headerTitleStyle: { fontFamily: "Nunito_400Regular" },
+                              headerBackButtonDisplayMode: "minimal",
+                            }}
+                          >
+                            <Stack.Screen name="splash" options={{ headerShown: false }} />
+                            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                            <Stack.Screen name="categories" options={{ title: "Categories" }} />
+                            <Stack.Screen name="accounts" options={{ title: "Accounts" }} />
+                            <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+                            <Stack.Screen
+                              name="transaction/[id]"
+                              options={{ presentation: "card" }}
+                            />
+                            <Stack.Screen name="account/[id]" options={{ headerShown: false }} />
+                            <Stack.Screen
+                              name="account/[id]/edit"
+                              options={{
+                                presentation: "modal",
+                                title: "Edit Account",
+                                headerTransparent: false,
+                              }}
+                            />
+                            <Stack.Screen
+                              name="category/new"
+                              options={{
+                                presentation: "modal",
+                                title: "New Category",
+                                headerTransparent: false,
+                              }}
+                            />
+                            <Stack.Screen
+                              name="recurring/index"
+                              options={{ title: "Recurring Rules" }}
+                            />
+                          </Stack>
+                          <StatusBar style="auto" />
+                          <MandatoryUpdateGate />
+                          <RecurringSettlementBanner />
+                          <PortalHost />
+                        </AppUpdateProvider>
+                      </ThemeProvider>
+                    </BottomSheetProvider>
+                  </PressablesConfig>
+                </GestureHandlerRootView>
+              </RecurringSettlementProvider>
+            </RecurringRulesProvider>
           </QueryClientProvider>
         </SQLiteProvider>
       </PostHogProvider>

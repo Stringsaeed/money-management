@@ -8,7 +8,6 @@ import {
 
 const mockUseAccountsWithBalances = jest.fn();
 const mockUseTransactions = jest.fn();
-const mockUseRecurringProcessor = jest.fn();
 
 jest.mock("@/hooks/use-accounts", () => ({
   useAccountsWithBalances: () => mockUseAccountsWithBalances(),
@@ -16,10 +15,6 @@ jest.mock("@/hooks/use-accounts", () => ({
 
 jest.mock("@/hooks/use-transactions", () => ({
   useTransactions: (...args: unknown[]) => mockUseTransactions(...args),
-}));
-
-jest.mock("@/hooks/use-recurring-processor", () => ({
-  useRecurringProcessor: () => mockUseRecurringProcessor(),
 }));
 
 describe("useHomeScreen", () => {
@@ -44,7 +39,6 @@ describe("useHomeScreen", () => {
     });
     const { result } = await renderHook(() => useHomeScreen());
 
-    expect(mockUseRecurringProcessor).toHaveBeenCalled();
     expect(result.current.accounts).toHaveLength(2);
     expect(result.current.groups).toHaveLength(1);
     expect(result.current.currency).toBe("EUR");

@@ -1,5 +1,4 @@
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
-import { useRecurringProcessor } from "@/hooks/use-recurring-processor";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
 import { groupByDay } from "@/utils/transaction";
@@ -9,8 +8,6 @@ interface UseHomeScreenOptions {
 }
 
 export function useHomeScreen({ limit }: UseHomeScreenOptions = {}) {
-  useRecurringProcessor();
-
   const { selectedYear, selectedMonth, activeAccountId, selectedCategoryId, resetFilters } =
     useUIStore();
 

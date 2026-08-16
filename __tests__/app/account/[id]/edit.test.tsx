@@ -10,6 +10,7 @@ const mockUseLocalSearchParams = jest.fn();
 const mockUseAccount = jest.fn();
 const mockUpdateAccount = jest.fn();
 const mockDeleteAccount = jest.fn();
+const mockPreviewAccountDeletion = jest.fn();
 
 jest.mock("expo-router", () => ({
   router: {
@@ -36,6 +37,7 @@ jest.mock("@/hooks/use-accounts", () => ({
   useAccount: (...args: unknown[]) => mockUseAccount(...args),
   useUpdateAccount: () => ({ mutateAsync: mockUpdateAccount }),
   useDeleteAccount: () => ({ mutateAsync: mockDeleteAccount }),
+  usePreviewAccountDeletion: () => ({ mutateAsync: mockPreviewAccountDeletion }),
 }));
 
 describe("app/account/[id]/edit", () => {
@@ -47,6 +49,7 @@ describe("app/account/[id]/edit", () => {
     });
     mockUpdateAccount.mockResolvedValue(undefined);
     mockDeleteAccount.mockResolvedValue(undefined);
+    mockPreviewAccountDeletion.mockResolvedValue({ accountId: "account-1", rules: [] });
   });
 
   it("validates, saves changes, and navigates back", async () => {
