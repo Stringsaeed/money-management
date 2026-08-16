@@ -3,11 +3,13 @@ import {
   addMonths as addCalendarMonths,
   addWeeks,
   addYears,
+  format,
   getDay,
   getMonth,
   getYear,
   isAfter,
   isBefore,
+  isSameDay,
   setDate as setDayOfMonth,
   setMonth,
   startOfMonth,
@@ -16,6 +18,11 @@ import {
 
 import type { RecurringPayment } from "@/types";
 import { clampDay, parseDate, toDateString } from "./date";
+
+export interface UpcomingRecurringPayment {
+  payment: RecurringPayment;
+  occurrenceDate: string;
+}
 
 /**
  * Given a recurring payment rule and today's date, returns all "YYYY-MM-DD"
@@ -57,6 +64,64 @@ export function getPendingOccurrences(rule: RecurringPayment, todayStr: string):
   }
 
   return occurrences;
+}
+
+/** Returns the first scheduled occurrence strictly after today. */
+export function getNextOccurrence(rule: RecurringPayment, todayStr: string): string | null {
+  if (!rule.isActive) return null;
+
+  const today = parseDate(todayStr);
+  const start = parseDate(rule.startDate);
+  const generatedFloor = rule.lastGeneratedDate
+    ? addDays(parseDate(rule.lastGeneratedDate), 1)
+    : start;
+  const tomorrow = addDays(today, 1);
+  const floor = [start, generatedFloor, tomorrow].reduce((latest, date) =>
+    isAfter(date, latest) ? date : latest,
+  );
+  const end = rule.endDate ? parseDate(rule.endDate) : null;
+
+  if (end && isBefore(end, floor)) return null;
+
+  let candidate: Date;
+
+  switch (rule.interval) {
+    case "daily":
+      candidate = floor;
+      break;
+    case "weekly":
+      candidate = addDays(floor, ((rule.dayOfWeek ?? 1) - getDay(floor) + 7) % 7);
+      break;
+    case "monthly":
+      candidate = monthlyOccurrenceOnOrAfter(floor, rule.dayOfMonth ?? 1);
+      break;
+    case "yearly":
+      candidate = yearlyOccurrenceOnOrAfter(floor, rule.monthOfYear ?? 1, rule.dayOfMonth ?? 1);
+      break;
+  }
+
+  return end && isAfter(candidate, end) ? null : toDateString(candidate);
+}
+
+export function getUpcomingRecurringPayments(
+  rules: RecurringPayment[],
+  todayStr: string,
+  limit = 3,
+): UpcomingRecurringPayment[] {
+  return rules
+    .map((payment) => ({ payment, occurrenceDate: getNextOccurrence(payment, todayStr) }))
+    .filter((item): item is UpcomingRecurringPayment => item.occurrenceDate !== null)
+    .sort((a, b) => a.occurrenceDate.localeCompare(b.occurrenceDate))
+    .slice(0, limit);
+}
+
+export function formatUpcomingOccurrence(dateStr: string, todayStr: string): string {
+  const date = parseDate(dateStr);
+  const tomorrow = addDays(parseDate(todayStr), 1);
+
+  if (isSameDay(date, tomorrow)) return "Tomorrow";
+
+  return format(date, "EEE, MMM d");
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -122,4 +187,34 @@ function collectYearly(
 
     cursor = addYears(cursor, 1);
   }
+}
+
+function monthlyOccurrenceOnOrAfter(from: Date, targetDay: number): Date {
+  let month = startOfMonth(from);
+  let candidate = setDayOfMonth(month, clampDay(getYear(month), getMonth(month) + 1, targetDay));
+
+  if (isBefore(candidate, from)) {
+    month = addCalendarMonths(month, 1);
+    candidate = setDayOfMonth(month, clampDay(getYear(month), getMonth(month) + 1, targetDay));
+  }
+
+  return candidate;
+}
+
+function yearlyOccurrenceOnOrAfter(from: Date, targetMonth: number, targetDay: number): Date {
+  let year = startOfYear(from);
+  let candidate = setDayOfMonth(
+    setMonth(year, targetMonth - 1),
+    clampDay(getYear(year), targetMonth, targetDay),
+  );
+
+  if (isBefore(candidate, from)) {
+    year = addYears(year, 1);
+    candidate = setDayOfMonth(
+      setMonth(year, targetMonth - 1),
+      clampDay(getYear(year), targetMonth, targetDay),
+    );
+  }
+
+  return candidate;
 }
