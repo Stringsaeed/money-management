@@ -38,8 +38,8 @@ describe("app/recurring/index", () => {
     fireEvent.press(screen.getByText("Add Recurring"));
 
     expect(mockPush).toHaveBeenCalledWith({
-      pathname: "/recurring/[id]",
-      params: { id: "new" },
+      pathname: "/transaction/[id]",
+      params: { id: "new", recurring: "true" },
     });
   });
 
@@ -58,8 +58,8 @@ describe("app/recurring/index", () => {
 
     expect(mockUseRecurringRulesList).toHaveBeenLastCalledWith("needs_attention");
     expect(mockPush).toHaveBeenCalledWith({
-      pathname: "/recurring/[id]",
-      params: { id: "internet" },
+      pathname: "/transaction/[id]",
+      params: { id: "internet", recurring: "true" },
     });
   });
 });

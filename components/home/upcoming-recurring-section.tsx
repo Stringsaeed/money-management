@@ -78,8 +78,8 @@ export function UpcomingRecurringSection() {
             className="px-1 py-2 active:opacity-50"
             onPress={() =>
               router.push({
-                pathname: "/recurring/[id]",
-                params: { id: "new" },
+                pathname: "/transaction/[id]",
+                params: { id: "new", recurring: "true" },
               })
             }
           >
@@ -100,7 +100,10 @@ export function UpcomingRecurringSection() {
                 occurrenceDate={scheduledDate}
                 today={todayString}
                 onPress={() =>
-                  router.push({ pathname: "/recurring/[id]", params: { id: rule.id } })
+                  router.push({
+                    pathname: "/transaction/[id]",
+                    params: { id: rule.id, recurring: "true" },
+                  })
                 }
               />
               {index < upcoming.length - 1 ? (

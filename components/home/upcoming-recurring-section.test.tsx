@@ -48,8 +48,8 @@ describe("UpcomingRecurringSection", () => {
 
     fireEvent.press(screen.getByRole("button", { name: "Add a recurring rule" }));
     expect(mockPush).toHaveBeenCalledWith({
-      pathname: "/recurring/[id]",
-      params: { id: "new" },
+      pathname: "/transaction/[id]",
+      params: { id: "new", recurring: "true" },
     });
   });
 
@@ -84,8 +84,8 @@ describe("UpcomingRecurringSection", () => {
       }),
     );
     expect(mockPush).toHaveBeenCalledWith({
-      pathname: "/recurring/[id]",
-      params: { id: "salary" },
+      pathname: "/transaction/[id]",
+      params: { id: "salary", recurring: "true" },
     });
   });
 });

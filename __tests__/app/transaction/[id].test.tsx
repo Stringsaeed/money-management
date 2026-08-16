@@ -3,12 +3,20 @@ import { act, render, waitFor } from "@testing-library/react-native";
 
 import TransactionScreen from "@/app/transaction/[id]";
 import type { TransactionFormData } from "@/components/transaction/types";
+import { createRecurringRule } from "@/tests/test-utils/factories";
 
 const mockUseLocalSearchParams = jest.fn();
 const mockUseRouter = jest.fn();
 const mockUseTransaction = jest.fn();
 const mockCreateTransaction = jest.fn();
 const mockCreateRecurring = jest.fn();
+const mockEditRecurring = jest.fn();
+const mockRepairRecurring = jest.fn();
+const mockPauseRecurring = jest.fn();
+const mockResumeRecurring = jest.fn();
+const mockArchiveRecurring = jest.fn();
+const mockRestoreRecurring = jest.fn();
+const mockUseRecurringRule = jest.fn();
 const mockUpdateTransaction = jest.fn();
 const mockDeleteTransaction = jest.fn();
 const mockStackScreen = jest.fn((_: unknown) => null);
@@ -18,6 +26,8 @@ let capturedFormProps: {
   formRef?: React.MutableRefObject<{ submit: () => void } | null>;
   initialData?: Partial<TransactionFormData>;
   isRecurring: boolean;
+  bannerContent?: React.ReactNode;
+  surfaceClassName?: string;
 } | null = null;
 
 jest.mock("expo-router", () => ({
@@ -50,7 +60,14 @@ jest.mock("@/hooks/use-categories", () => ({
 }));
 
 jest.mock("@/hooks/use-recurring-rules", () => ({
+  useArchiveRecurringRule: () => ({ mutateAsync: mockArchiveRecurring }),
   useCreateRecurringRule: () => ({ mutateAsync: mockCreateRecurring }),
+  useEditRecurringRule: () => ({ mutateAsync: mockEditRecurring }),
+  usePauseRecurringRule: () => ({ mutateAsync: mockPauseRecurring }),
+  useRecurringRule: (...args: unknown[]) => mockUseRecurringRule(...args),
+  useRepairRecurringRule: () => ({ mutateAsync: mockRepairRecurring }),
+  useRestoreRecurringRule: () => ({ mutateAsync: mockRestoreRecurring }),
+  useResumeRecurringRule: () => ({ mutateAsync: mockResumeRecurring }),
 }));
 
 jest.mock("@/modules/recurring-rules/clock", () => ({
@@ -68,13 +85,27 @@ describe("app/transaction/[id]", () => {
   beforeEach(() => {
     capturedFormProps = null;
     mockUseRouter.mockReturnValue(baseRouter);
-    mockCreateRecurring.mockResolvedValue({
+    mockUseRecurringRule.mockReturnValue({ data: undefined, isLoading: false });
+    const applied = {
       kind: "applied",
       ruleId: "recurring-1",
       revision: 1,
       settlement: { generatedCount: 0, totalMinor: 0 },
       effects: ["rules"],
-    });
+    };
+    const recurringMutations = [
+      mockCreateRecurring,
+      mockEditRecurring,
+      mockRepairRecurring,
+      mockPauseRecurring,
+      mockResumeRecurring,
+      mockArchiveRecurring,
+      mockRestoreRecurring,
+    ];
+    for (const mutation of recurringMutations) {
+      mutation.mockReset();
+      mutation.mockResolvedValue(applied);
+    }
   });
 
   it("renders new-entry mode and creates a transaction", async () => {
@@ -294,5 +325,86 @@ describe("app/transaction/[id]", () => {
     });
 
     expect(baseRouter.back).toHaveBeenCalled();
+  });
+
+  it("repairs a Needs-Attention Rule through the same transaction route", async () => {
+    const rule = createRecurringRule({
+      id: "rule-1",
+      revision: 2,
+      health: "needs_attention",
+      amountMinor: null,
+      accountId: null,
+    });
+    mockUseLocalSearchParams.mockReturnValue({ id: "rule-1", recurring: "true" });
+    mockUseTransaction.mockReturnValue({ data: undefined, isLoading: false });
+    mockUseRecurringRule.mockReturnValue({ data: rule, isLoading: false });
+
+    await render(<TransactionScreen />);
+
+    expect(mockUseTransaction).toHaveBeenCalledWith(undefined);
+    expect(mockUseRecurringRule).toHaveBeenCalledWith("rule-1");
+    expect(capturedFormProps?.isRecurring).toBe(true);
+    expect(capturedFormProps?.bannerContent).toBeDefined();
+    expect(capturedFormProps?.surfaceClassName).toBe("bg-terracotta/15");
+
+    await act(async () => {
+      await capturedFormProps?.onSubmit({
+        type: "expense",
+        amount: 1200_00,
+        accountId: "account-1",
+        toAccountId: null,
+        categoryId: "category-1",
+        isRecurring: true,
+        description: "Rent",
+        date: new Date("2026-03-28T00:00:00.000Z"),
+        currency: "USD",
+        originalAmount: null,
+        originalCurrency: null,
+        exchangeRate: null,
+        recurrence: { frequency: "month", intervalCount: 1, endDate: null, endCount: null },
+      });
+    });
+
+    expect(mockRepairRecurring).toHaveBeenCalledWith({
+      ruleId: "rule-1",
+      expectedRevision: 2,
+      rule: expect.objectContaining({ amountMinor: 1200_00, accountId: "account-1" }),
+      confirmationToken: undefined,
+    });
+    expect(mockEditRecurring).not.toHaveBeenCalled();
+  });
+
+  it("uses lifecycle-aware background and header actions for an existing Rule", async () => {
+    mockUseLocalSearchParams.mockReturnValue({ id: "rule-1", recurring: "true" });
+    mockUseTransaction.mockReturnValue({ data: undefined, isLoading: false });
+    mockUseRecurringRule.mockReturnValue({
+      data: createRecurringRule({ id: "rule-1", lifecycle: "paused", revision: 4 }),
+      isLoading: false,
+    });
+
+    await render(<TransactionScreen />);
+
+    expect(capturedFormProps?.surfaceClassName).toBe("bg-surface-dim");
+    expect(capturedFormProps?.bannerContent).toBeUndefined();
+    const screenCall = mockStackScreen.mock.calls.at(-1)?.[0] as unknown as {
+      options: {
+        unstable_headerRightItems: () => {
+          label: string;
+          onPress: () => void;
+          tintColor?: string;
+        }[];
+      };
+    };
+    const resume = screenCall.options
+      .unstable_headerRightItems()
+      .find((item) => item.label === "Resume paused Rule");
+
+    expect(resume).toMatchObject({ tintColor: "#2C5F47" });
+    await act(async () => resume?.onPress());
+
+    expect(mockResumeRecurring).toHaveBeenCalledWith({
+      ruleId: "rule-1",
+      expectedRevision: 4,
+    });
   });
 });

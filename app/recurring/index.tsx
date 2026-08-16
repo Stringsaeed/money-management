@@ -13,8 +13,8 @@ import { useRecurringRulesList } from "@/hooks/use-recurring-rules";
 import { cn } from "@/lib/utils";
 
 const newRecurringRoute = {
-  pathname: "/recurring/[id]" as const,
-  params: { id: "new" },
+  pathname: "/transaction/[id]" as const,
+  params: { id: "new", recurring: "true" },
 };
 
 type RuleFilter = "current" | "archived" | "needs_attention";
@@ -84,7 +84,10 @@ export default function RecurringListScreen() {
                 <RecurringRuleRow
                   rule={rule}
                   onPress={() =>
-                    router.push({ pathname: "/recurring/[id]", params: { id: rule.id } })
+                    router.push({
+                      pathname: "/transaction/[id]",
+                      params: { id: rule.id, recurring: "true" },
+                    })
                   }
                 />
               </Animated.View>
