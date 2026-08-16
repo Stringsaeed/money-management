@@ -17,12 +17,16 @@ jest.mock("@/hooks/use-home-screen", () => ({
   useHomeScreen: () => mockUseHomeScreen(),
 }));
 
-jest.mock("@/components/home/home-empty-state", () => ({
-  HomeEmptyState: ({
+jest.mock("@/components/home/recent-journal-section", () => ({
+  RecentJournalSection: ({
     activeFilterCount,
+    groups,
+    isLoading,
     onResetFilters,
   }: {
     activeFilterCount: number;
+    groups: { date: string }[];
+    isLoading: boolean;
     onResetFilters: () => void;
   }) => {
     const React = require("react");
@@ -31,17 +35,12 @@ jest.mock("@/components/home/home-empty-state", () => ({
     return React.createElement(
       Pressable,
       { onPress: onResetFilters },
-      React.createElement(Text, null, `empty:${activeFilterCount}`),
+      React.createElement(
+        Text,
+        null,
+        isLoading ? "journal:loading" : `journal:${groups.length}:filters:${activeFilterCount}`,
+      ),
     );
-  },
-}));
-
-jest.mock("@/components/home/home-journal-list", () => ({
-  HomeJournalList: ({ groups }: { groups: { date: string }[] }) => {
-    const React = require("react");
-    const { Text } = require("react-native");
-
-    return React.createElement(Text, null, `journal:${groups.length}`);
   },
 }));
 
@@ -87,7 +86,7 @@ describe("app/index", () => {
     await render(<HomeScreen />);
 
     expect(screen.getByText("header")).toBeOnTheScreen();
-    expect(screen.queryByText(/journal:/)).not.toBeOnTheScreen();
+    expect(screen.getByText("journal:loading")).toBeOnTheScreen();
   });
 
   it("renders the empty state and allows filters to reset", async () => {
@@ -106,7 +105,7 @@ describe("app/index", () => {
 
     await render(<HomeScreen />);
 
-    await fireEvent.press(screen.getByText("empty:2"));
+    await fireEvent.press(screen.getByText("journal:0:filters:2"));
 
     expect(resetFilters).toHaveBeenCalled();
   });
@@ -125,6 +124,6 @@ describe("app/index", () => {
 
     await render(<HomeScreen />);
 
-    expect(screen.getByText("journal:1")).toBeOnTheScreen();
+    expect(screen.getByText("journal:1:filters:0")).toBeOnTheScreen();
   });
 });

@@ -18,3 +18,10 @@ export interface HomeEmptyStateProps {
   activeFilterCount: number;
   onResetFilters: () => void;
 }
+
+export interface RecentJournalSectionProps extends HomeEmptyStateProps {
+  groups: DayGroup[];
+  currency: string;
+  showAccount: boolean;
+  isLoading: boolean;
+}
