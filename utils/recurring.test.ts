@@ -2,6 +2,7 @@ import { createRecurringPayment } from "@/tests/test-utils/factories";
 import { intlFormat } from "date-fns";
 import { parseDate } from "@/utils/date";
 import {
+  formatRecurrence,
   formatUpcomingOccurrence,
   getNextOccurrence,
   getPendingOccurrences,
@@ -19,7 +20,8 @@ describe("getPendingOccurrences", () => {
     expect(
       getPendingOccurrences(
         createRecurringPayment({
-          interval: "daily",
+          frequency: "day",
+          intervalCount: 1,
           startDate: "2026-03-26",
           lastGeneratedDate: null,
         }),
@@ -28,11 +30,11 @@ describe("getPendingOccurrences", () => {
     ).toEqual(["2026-03-26", "2026-03-27", "2026-03-28"]);
   });
 
-  it("starts after the last generated date", () => {
+  it("starts the day after the last generated date", () => {
     expect(
       getPendingOccurrences(
         createRecurringPayment({
-          interval: "daily",
+          frequency: "day",
           startDate: "2026-03-01",
           lastGeneratedDate: "2026-03-27",
         }),
@@ -41,41 +43,46 @@ describe("getPendingOccurrences", () => {
     ).toEqual(["2026-03-28"]);
   });
 
-  it("collects weekly occurrences by weekday", () => {
+  it("anchors weekly occurrences on the start date", () => {
     expect(
       getPendingOccurrences(
-        createRecurringPayment({
-          interval: "weekly",
-          startDate: "2026-03-01",
-          dayOfWeek: 1,
-        }),
-        "2026-03-31",
+        createRecurringPayment({ frequency: "week", intervalCount: 1, startDate: "2026-03-02" }),
+        "2026-03-30",
       ),
     ).toEqual(["2026-03-02", "2026-03-09", "2026-03-16", "2026-03-23", "2026-03-30"]);
   });
 
-  it("collects monthly occurrences and clamps invalid month days", () => {
+  it("supports bi-weekly cadence (every 2 weeks)", () => {
     expect(
       getPendingOccurrences(
-        createRecurringPayment({
-          interval: "monthly",
-          startDate: "2026-01-31",
-          dayOfMonth: 31,
-        }),
+        createRecurringPayment({ frequency: "week", intervalCount: 2, startDate: "2026-03-02" }),
+        "2026-04-13",
+      ),
+    ).toEqual(["2026-03-02", "2026-03-16", "2026-03-30", "2026-04-13"]);
+  });
+
+  it("collects monthly occurrences and clamps month-end", () => {
+    expect(
+      getPendingOccurrences(
+        createRecurringPayment({ frequency: "month", intervalCount: 1, startDate: "2026-01-31" }),
         "2026-03-31",
       ),
     ).toEqual(["2026-01-31", "2026-02-28", "2026-03-31"]);
   });
 
+  it("supports custom every-N-months cadence", () => {
+    expect(
+      getPendingOccurrences(
+        createRecurringPayment({ frequency: "month", intervalCount: 3, startDate: "2026-01-15" }),
+        "2026-07-20",
+      ),
+    ).toEqual(["2026-01-15", "2026-04-15", "2026-07-15"]);
+  });
+
   it("collects yearly occurrences and clamps leap-year dates", () => {
     expect(
       getPendingOccurrences(
-        createRecurringPayment({
-          interval: "yearly",
-          startDate: "2024-02-29",
-          monthOfYear: 2,
-          dayOfMonth: 29,
-        }),
+        createRecurringPayment({ frequency: "year", intervalCount: 1, startDate: "2024-02-29" }),
         "2026-03-01",
       ),
     ).toEqual(["2024-02-29", "2025-02-28", "2026-02-28"]);
@@ -85,7 +92,7 @@ describe("getPendingOccurrences", () => {
     expect(
       getPendingOccurrences(
         createRecurringPayment({
-          interval: "daily",
+          frequency: "day",
           startDate: "2026-03-20",
           endDate: "2026-03-22",
         }),
@@ -94,11 +101,68 @@ describe("getPendingOccurrences", () => {
     ).toEqual(["2026-03-20", "2026-03-21", "2026-03-22"]);
   });
 
-  it("returns no occurrences when the last generated date is already beyond the ceiling", () => {
+  it("stops after the requested number of occurrences (endCount)", () => {
+    expect(
+      getPendingOccurrences(
+        createRecurringPayment({ frequency: "day", startDate: "2026-03-20", endCount: 3 }),
+        "2026-03-28",
+      ),
+    ).toEqual(["2026-03-20", "2026-03-21", "2026-03-22"]);
+  });
+
+  it("uses the earlier of endDate and endCount", () => {
     expect(
       getPendingOccurrences(
         createRecurringPayment({
-          interval: "daily",
+          frequency: "day",
+          startDate: "2026-03-20",
+          endDate: "2026-03-25",
+          endCount: 3, // 3rd occurrence = 2026-03-22, earlier than endDate
+        }),
+        "2026-03-28",
+      ),
+    ).toEqual(["2026-03-20", "2026-03-21", "2026-03-22"]);
+
+    expect(
+      getPendingOccurrences(
+        createRecurringPayment({
+          frequency: "day",
+          startDate: "2026-03-20",
+          endDate: "2026-03-21", // earlier than the 5th occurrence
+          endCount: 5,
+        }),
+        "2026-03-28",
+      ),
+    ).toEqual(["2026-03-20", "2026-03-21"]);
+  });
+
+  it("ignores a non-positive endCount", () => {
+    expect(
+      getPendingOccurrences(
+        createRecurringPayment({ frequency: "day", startDate: "2026-03-26", endCount: 0 }),
+        "2026-03-28",
+      ),
+    ).toEqual(["2026-03-26", "2026-03-27", "2026-03-28"]);
+  });
+
+  it("caps at today when the end date is in the future", () => {
+    expect(
+      getPendingOccurrences(
+        createRecurringPayment({
+          frequency: "day",
+          startDate: "2026-03-26",
+          endDate: "2026-12-31",
+        }),
+        "2026-03-28",
+      ),
+    ).toEqual(["2026-03-26", "2026-03-27", "2026-03-28"]);
+  });
+
+  it("returns nothing when the last generated date is already at the ceiling", () => {
+    expect(
+      getPendingOccurrences(
+        createRecurringPayment({
+          frequency: "day",
           startDate: "2026-03-20",
           lastGeneratedDate: "2026-03-28",
         }),
@@ -107,78 +171,43 @@ describe("getPendingOccurrences", () => {
     ).toEqual([]);
   });
 
-  it("uses default weekly, monthly, and yearly values when rule fields are absent", () => {
+  it("never generates before the start date", () => {
     expect(
       getPendingOccurrences(
         createRecurringPayment({
-          interval: "weekly",
-          startDate: "2026-03-01",
-          dayOfWeek: null,
+          frequency: "day",
+          startDate: "2026-03-26",
+          lastGeneratedDate: "2026-03-20",
         }),
-        "2026-03-09",
+        "2026-03-28",
       ),
-    ).toEqual(["2026-03-02", "2026-03-09"]);
-
-    expect(
-      getPendingOccurrences(
-        createRecurringPayment({
-          interval: "monthly",
-          startDate: "2026-03-01",
-          dayOfMonth: null,
-        }),
-        "2026-04-05",
-      ),
-    ).toEqual(["2026-03-01", "2026-04-01"]);
-
-    expect(
-      getPendingOccurrences(
-        createRecurringPayment({
-          interval: "yearly",
-          startDate: "2026-01-01",
-          monthOfYear: null,
-          dayOfMonth: null,
-        }),
-        "2027-01-02",
-      ),
-    ).toEqual(["2026-01-01", "2027-01-01"]);
+    ).toEqual(["2026-03-26", "2026-03-27", "2026-03-28"]);
   });
 
-  it("skips monthly and yearly candidates that fall before the effective floor", () => {
+  it("jumps to the first occurrence within the current period", () => {
     expect(
       getPendingOccurrences(
         createRecurringPayment({
-          interval: "monthly",
-          startDate: "2026-03-20",
-          dayOfMonth: 5,
+          frequency: "month",
+          startDate: "2026-03-01",
+          lastGeneratedDate: "2026-03-14",
         }),
-        "2026-04-10",
+        "2026-05-05",
       ),
-    ).toEqual(["2026-04-05"]);
-
-    expect(
-      getPendingOccurrences(
-        createRecurringPayment({
-          interval: "yearly",
-          startDate: "2026-03-20",
-          monthOfYear: 2,
-          dayOfMonth: 1,
-        }),
-        "2027-03-25",
-      ),
-    ).toEqual(["2027-02-01"]);
+    ).toEqual(["2026-04-01", "2026-05-01"]);
   });
 });
 
-describe("upcoming recurring payments", () => {
+describe("getNextOccurrence", () => {
   it.each([
-    ["daily", {}, "2026-03-29"],
-    ["weekly", { dayOfWeek: 1 }, "2026-03-30"],
-    ["monthly", { dayOfMonth: 31 }, "2026-03-31"],
-    ["yearly", { monthOfYear: 2, dayOfMonth: 29 }, "2027-02-28"],
-  ] as const)("finds the next %s occurrence", (interval, overrides, expected) => {
+    ["day", { startDate: "2024-01-01" }, "2026-03-29"],
+    ["week", { startDate: "2026-03-02" }, "2026-03-30"],
+    ["month", { startDate: "2026-01-31" }, "2026-03-31"],
+    ["year", { startDate: "2024-01-01" }, "2027-01-01"],
+  ] as const)("finds the next %s occurrence", (frequency, overrides, expected) => {
     expect(
       getNextOccurrence(
-        createRecurringPayment({ interval, startDate: "2024-01-01", ...overrides }),
+        createRecurringPayment({ frequency, intervalCount: 1, ...overrides }),
         "2026-03-28",
       ),
     ).toBe(expected);
@@ -188,7 +217,11 @@ describe("upcoming recurring payments", () => {
     expect(getNextOccurrence(createRecurringPayment({ isActive: false }), "2026-03-28")).toBeNull();
     expect(
       getNextOccurrence(
-        createRecurringPayment({ interval: "daily", endDate: "2026-03-28" }),
+        createRecurringPayment({
+          frequency: "day",
+          startDate: "2026-01-01",
+          endDate: "2026-03-28",
+        }),
         "2026-03-28",
       ),
     ).toBeNull();
@@ -198,7 +231,8 @@ describe("upcoming recurring payments", () => {
     expect(
       getNextOccurrence(
         createRecurringPayment({
-          interval: "daily",
+          frequency: "day",
+          startDate: "2024-01-01",
           lastGeneratedDate: "2026-04-02",
         }),
         "2026-03-28",
@@ -206,59 +240,27 @@ describe("upcoming recurring payments", () => {
     ).toBe("2026-04-03");
     expect(
       getNextOccurrence(
-        createRecurringPayment({
-          interval: "weekly",
-          startDate: "2026-04-01",
-          dayOfWeek: null,
-        }),
+        createRecurringPayment({ frequency: "week", startDate: "2026-04-06" }),
         "2026-03-28",
       ),
     ).toBe("2026-04-06");
   });
 
-  it("uses default monthly and yearly schedule fields", () => {
-    expect(
-      getNextOccurrence(
-        createRecurringPayment({ interval: "monthly", dayOfMonth: null }),
-        "2026-03-28",
-      ),
-    ).toBe("2026-04-01");
-    expect(
-      getNextOccurrence(
-        createRecurringPayment({
-          interval: "yearly",
-          monthOfYear: null,
-          dayOfMonth: null,
-          startDate: "2024-01-01",
-        }),
-        "2025-12-30",
-      ),
-    ).toBe("2026-01-01");
-    expect(
-      getNextOccurrence(
-        createRecurringPayment({
-          interval: "yearly",
-          monthOfYear: 12,
-          dayOfMonth: 31,
-        }),
-        "2026-03-28",
-      ),
-    ).toBe("2026-12-31");
-  });
-
   it("respects an end date that falls around the next scheduled occurrence", () => {
-    const payment = createRecurringPayment({ interval: "monthly", dayOfMonth: 5 });
+    const payment = createRecurringPayment({ frequency: "month", startDate: "2026-01-05" });
 
     expect(getNextOccurrence({ ...payment, endDate: "2026-04-05" }, "2026-03-28")).toBe(
       "2026-04-05",
     );
     expect(getNextOccurrence({ ...payment, endDate: "2026-04-02" }, "2026-03-28")).toBeNull();
   });
+});
 
+describe("getUpcomingRecurringPayments", () => {
   it("sorts upcoming rules and applies the requested limit", () => {
     const payments = [
-      createRecurringPayment({ id: "later", interval: "monthly", dayOfMonth: 10 }),
-      createRecurringPayment({ id: "tomorrow", interval: "daily" }),
+      createRecurringPayment({ id: "later", frequency: "month", startDate: "2026-01-10" }),
+      createRecurringPayment({ id: "tomorrow", frequency: "day", startDate: "2024-01-01" }),
       createRecurringPayment({ id: "paused", isActive: false }),
     ];
     const results = getUpcomingRecurringPayments(payments, "2026-03-28", 1);
@@ -269,15 +271,24 @@ describe("upcoming recurring payments", () => {
 
     expect(getUpcomingRecurringPayments(payments, "2026-03-28")).toHaveLength(2);
   });
+});
 
+describe("formatUpcomingOccurrence", () => {
   it("formats tomorrow and later dates", () => {
     expect(formatUpcomingOccurrence("2026-03-29", "2026-03-28")).toBe("Tomorrow");
     expect(formatUpcomingOccurrence("2026-04-05", "2026-03-28")).toBe(
-      intlFormat(parseDate("2026-04-05"), {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      }),
+      intlFormat(parseDate("2026-04-05"), { weekday: "short", month: "short", day: "numeric" }),
     );
+  });
+});
+
+describe("formatRecurrence", () => {
+  it("labels presets and custom cadences", () => {
+    expect(formatRecurrence({ frequency: "day", intervalCount: 1 })).toBe("Daily");
+    expect(formatRecurrence({ frequency: "week", intervalCount: 1 })).toBe("Weekly");
+    expect(formatRecurrence({ frequency: "month", intervalCount: 1 })).toBe("Monthly");
+    expect(formatRecurrence({ frequency: "year", intervalCount: 1 })).toBe("Yearly");
+    expect(formatRecurrence({ frequency: "week", intervalCount: 2 })).toBe("Every 2 weeks");
+    expect(formatRecurrence({ frequency: "month", intervalCount: 3 })).toBe("Every 3 months");
   });
 });

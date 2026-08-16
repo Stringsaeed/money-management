@@ -1,4 +1,12 @@
-import type { TransactionType } from "@/types";
+import type { RecurrenceFrequency, TransactionType } from "@/types";
+
+/** Recurrence cadence + end condition captured by the form (start date = `date`). */
+export interface RecurrenceConfig {
+  frequency: RecurrenceFrequency;
+  intervalCount: number;
+  endDate: Date | null; // "on_date" end
+  endCount: number | null; // "after_count" end
+}
 
 export interface TransactionFormData {
   type: TransactionType;
@@ -13,6 +21,7 @@ export interface TransactionFormData {
   originalAmount: number | null;
   originalCurrency: string | null;
   exchangeRate: number | null;
+  recurrence: RecurrenceConfig;
 }
 
 export interface TransactionFormHandle {
@@ -32,4 +41,8 @@ export interface FormValues {
   categoryId: string | null;
   description: string;
   date: Date;
+  frequency: RecurrenceFrequency;
+  intervalCount: number;
+  endDate: Date | null;
+  endCount: number | null;
 }

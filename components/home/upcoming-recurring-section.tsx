@@ -6,23 +6,16 @@ import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
 import { today } from "@/utils/date";
-import { useTransactions } from "@/hooks/use-transactions";
+import { useRecurringPayments } from "@/hooks/use-recurring-payments";
+import { getUpcomingRecurringPayments } from "@/utils/recurring";
 
 import { UpcomingRecurringRow } from "@/components/home/upcoming-recurring-row";
 
 export function UpcomingRecurringSection() {
   const colorScheme = useColorScheme();
   const todayString = today();
-  const {
-    data: upcoming = [],
-    isError,
-    isLoading,
-  } = useTransactions({
-    isRecurring: true,
-    startsOnOrAfter: todayString,
-    sort: "asc",
-    limit: 3,
-  });
+  const { data: rules = [], isError, isLoading } = useRecurringPayments();
+  const upcoming = getUpcomingRecurringPayments(rules, todayString, 3);
 
   return (
     <Animated.View
@@ -88,8 +81,8 @@ export function UpcomingRecurringSection() {
             className="px-1 py-2 active:opacity-50"
             onPress={() =>
               router.push({
-                pathname: "/transaction/[id]",
-                params: { id: "new", recurring: "true" },
+                pathname: "/recurring/[id]",
+                params: { id: "new" },
               })
             }
           >
@@ -103,12 +96,15 @@ export function UpcomingRecurringSection() {
           exiting={FadeOut.duration(150)}
           layout={layoutTransition}
         >
-          {upcoming.map((transaction, index) => (
-            <Animated.View key={transaction.id} layout={layoutTransition}>
+          {upcoming.map(({ payment, occurrenceDate }, index) => (
+            <Animated.View key={payment.id} layout={layoutTransition}>
               <UpcomingRecurringRow
-                transaction={transaction}
+                payment={payment}
+                occurrenceDate={occurrenceDate}
                 today={todayString}
-                onPress={() => router.push(`/transaction/${transaction.id}`)}
+                onPress={() =>
+                  router.push({ pathname: "/recurring/[id]", params: { id: payment.id } })
+                }
               />
               {index < upcoming.length - 1 ? (
                 <View className="ml-16 h-px bg-ledger-outline" />

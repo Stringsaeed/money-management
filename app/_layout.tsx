@@ -125,6 +125,7 @@ export default function RootLayout() {
                     Haptics.selectionAsync();
                   },
                 }}
+                config={{ minScale: 0.7, activeOpacity: 0.6 }}
               >
                 <BottomSheetProvider>
                   <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>

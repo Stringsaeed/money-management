@@ -1,33 +1,34 @@
 import {
   addDays,
-  addMonths as addCalendarMonths,
+  addMonths,
   addWeeks,
   addYears,
-  getDay,
-  getMonth,
-  getYear,
+  differenceInCalendarDays,
+  differenceInCalendarMonths,
+  differenceInCalendarYears,
+  intlFormat,
   isAfter,
   isBefore,
   isSameDay,
-  intlFormat,
-  setDate as setDayOfMonth,
-  setMonth,
-  startOfMonth,
-  startOfYear,
 } from "date-fns";
 
-import type { RecurringPayment } from "@/types";
-import { clampDay, parseDate, toDateString } from "./date";
+import type { RecurrenceFrequency, RecurringPayment } from "@/types";
+import { parseDate, toDateString } from "./date";
 
 export interface UpcomingRecurringPayment {
   payment: RecurringPayment;
   occurrenceDate: string;
 }
 
+type RecurrenceRule = Pick<RecurringPayment, "frequency" | "intervalCount">;
+
 /**
  * Given a recurring payment rule and today's date, returns all "YYYY-MM-DD"
  * strings between lastGeneratedDate (exclusive) and today (inclusive) on which
  * a transaction should be generated.
+ *
+ * Occurrences are anchored on `startDate` and stepped by `intervalCount` units,
+ * so "every 2 weeks" / "every 3 months" fall out for free.
  *
  * This is a pure function — easy to test independently.
  */
@@ -35,32 +36,28 @@ export function getPendingOccurrences(rule: RecurringPayment, todayStr: string):
   if (!rule.isActive) return [];
 
   const today = parseDate(todayStr);
-  const start = parseDate(rule.startDate);
-  const end = rule.endDate ? parseDate(rule.endDate) : null;
+  const anchor = parseDate(rule.startDate);
+  const bound = endBound(rule, anchor);
 
-  // Effective ceiling: min(today, endDate)
-  const ceiling = end && isBefore(end, today) ? end : today;
+  // Effective ceiling: min(today, endBound)
+  const ceiling = bound && isBefore(bound, today) ? bound : today;
 
   // Effective floor: max(startDate, lastGeneratedDate + 1 day)
-  const floor = rule.lastGeneratedDate ? addDays(parseDate(rule.lastGeneratedDate), 1) : start;
+  const generatedFloor = rule.lastGeneratedDate
+    ? addDays(parseDate(rule.lastGeneratedDate), 1)
+    : anchor;
+  const floor = isBefore(generatedFloor, anchor) ? anchor : generatedFloor;
 
   if (isAfter(floor, ceiling)) return [];
 
   const occurrences: string[] = [];
+  let k = firstIndexOnOrAfter(anchor, floor, rule);
+  let occurrence = addInterval(anchor, k, rule);
 
-  switch (rule.interval) {
-    case "daily":
-      collectDaily(floor, ceiling, occurrences);
-      break;
-    case "weekly":
-      collectWeekly(floor, ceiling, rule.dayOfWeek ?? 1, occurrences);
-      break;
-    case "monthly":
-      collectMonthly(floor, ceiling, rule.dayOfMonth ?? 1, occurrences);
-      break;
-    case "yearly":
-      collectYearly(floor, ceiling, rule.monthOfYear ?? 1, rule.dayOfMonth ?? 1, occurrences);
-      break;
+  while (!isAfter(occurrence, ceiling)) {
+    occurrences.push(toDateString(occurrence));
+    k += 1;
+    occurrence = addInterval(anchor, k, rule);
   }
 
   return occurrences;
@@ -71,36 +68,22 @@ export function getNextOccurrence(rule: RecurringPayment, todayStr: string): str
   if (!rule.isActive) return null;
 
   const today = parseDate(todayStr);
-  const start = parseDate(rule.startDate);
+  const anchor = parseDate(rule.startDate);
+  const tomorrow = addDays(today, 1);
   const generatedFloor = rule.lastGeneratedDate
     ? addDays(parseDate(rule.lastGeneratedDate), 1)
-    : start;
-  const tomorrow = addDays(today, 1);
-  const floor = [start, generatedFloor, tomorrow].reduce((latest, date) =>
+    : anchor;
+  const floor = [anchor, generatedFloor, tomorrow].reduce((latest, date) =>
     isAfter(date, latest) ? date : latest,
   );
-  const end = rule.endDate ? parseDate(rule.endDate) : null;
 
-  if (end && isBefore(end, floor)) return null;
+  const bound = endBound(rule, anchor);
+  if (bound && isBefore(bound, floor)) return null;
 
-  let candidate: Date;
+  const k = firstIndexOnOrAfter(anchor, floor, rule);
+  const occurrence = addInterval(anchor, k, rule);
 
-  switch (rule.interval) {
-    case "daily":
-      candidate = floor;
-      break;
-    case "weekly":
-      candidate = addDays(floor, ((rule.dayOfWeek ?? 1) - getDay(floor) + 7) % 7);
-      break;
-    case "monthly":
-      candidate = monthlyOccurrenceOnOrAfter(floor, rule.dayOfMonth ?? 1);
-      break;
-    case "yearly":
-      candidate = yearlyOccurrenceOnOrAfter(floor, rule.monthOfYear ?? 1, rule.dayOfMonth ?? 1);
-      break;
-  }
-
-  return end && isAfter(candidate, end) ? null : toDateString(candidate);
+  return bound && isAfter(occurrence, bound) ? null : toDateString(occurrence);
 }
 
 export function getUpcomingRecurringPayments(
@@ -124,97 +107,83 @@ export function formatUpcomingOccurrence(dateStr: string, todayStr: string): str
   return intlFormat(date, { weekday: "short", month: "short", day: "numeric" });
 }
 
+const PRESET_LABEL: Record<RecurrenceFrequency, string> = {
+  day: "Daily",
+  week: "Weekly",
+  month: "Monthly",
+  year: "Yearly",
+};
+
+const UNIT_PLURAL: Record<RecurrenceFrequency, string> = {
+  day: "days",
+  week: "weeks",
+  month: "months",
+  year: "years",
+};
+
+/** Human-readable cadence label, e.g. "Daily", "Every 2 weeks", "Every 3 months". */
+export function formatRecurrence(rule: RecurrenceRule): string {
+  if (rule.intervalCount <= 1) return PRESET_LABEL[rule.frequency];
+  return `Every ${rule.intervalCount} ${UNIT_PLURAL[rule.frequency]}`;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function collectDaily(from: Date, to: Date, out: string[]): void {
-  let current = from;
+/** The anchor date shifted by `k` recurrence steps (k × intervalCount units). */
+function addInterval(anchor: Date, k: number, rule: RecurrenceRule): Date {
+  const step = k * rule.intervalCount;
 
-  while (!isAfter(current, to)) {
-    out.push(toDateString(current));
-    current = addDays(current, 1);
+  switch (rule.frequency) {
+    case "day":
+      return addDays(anchor, step);
+    case "week":
+      return addWeeks(anchor, step);
+    case "month":
+      return addMonths(anchor, step); // clamps month-end (Jan 31 +1mo → Feb 28)
+    case "year":
+      return addYears(anchor, step);
   }
 }
 
-function collectWeekly(
-  from: Date,
-  to: Date,
-  targetDow: number, // 0=Sun … 6=Sat
-  out: string[],
-): void {
-  let current = addDays(from, (targetDow - getDay(from) + 7) % 7);
+/** Smallest index k ≥ 0 such that the k-th occurrence is on or after `floor`. */
+function firstIndexOnOrAfter(anchor: Date, floor: Date, rule: RecurrenceRule): number {
+  if (!isBefore(anchor, floor)) return 0;
 
-  while (!isAfter(current, to)) {
-    out.push(toDateString(current));
-    current = addWeeks(current, 1);
+  // Start one step below a safe estimate (calendar diffs never undercount by more
+  // than a step), then walk up — guarantees we never skip the first occurrence.
+  const estimate = Math.floor(estimateSteps(anchor, floor, rule.frequency) / rule.intervalCount);
+  let k = Math.max(0, estimate - 1);
+
+  while (isBefore(addInterval(anchor, k, rule), floor)) k += 1;
+
+  return k;
+}
+
+/** Approximate number of `frequency` units between anchor and floor. */
+function estimateSteps(anchor: Date, floor: Date, frequency: RecurrenceFrequency): number {
+  switch (frequency) {
+    case "day":
+      return differenceInCalendarDays(floor, anchor);
+    case "week":
+      return differenceInCalendarDays(floor, anchor) / 7;
+    case "month":
+      return differenceInCalendarMonths(floor, anchor);
+    case "year":
+      return differenceInCalendarYears(floor, anchor);
   }
 }
 
-function collectMonthly(from: Date, to: Date, targetDay: number, out: string[]): void {
-  let cursor = startOfMonth(from);
+/** The date after which no more occurrences are generated (min of endDate / Nth occurrence). */
+function endBound(
+  rule: Pick<RecurringPayment, "frequency" | "intervalCount" | "endDate" | "endCount">,
+  anchor: Date,
+): Date | null {
+  let bound: Date | null = rule.endDate ? parseDate(rule.endDate) : null;
 
-  while (!isAfter(cursor, to)) {
-    const year = getYear(cursor);
-    const month = getMonth(cursor) + 1;
-    const candidate = setDayOfMonth(cursor, clampDay(year, month, targetDay));
-
-    if (!isBefore(candidate, from) && !isAfter(candidate, to)) {
-      out.push(toDateString(candidate));
-    }
-
-    cursor = addCalendarMonths(cursor, 1);
-  }
-}
-
-function collectYearly(
-  from: Date,
-  to: Date,
-  targetMonth: number,
-  targetDay: number,
-  out: string[],
-): void {
-  let cursor = startOfYear(from);
-
-  while (!isAfter(cursor, to)) {
-    const year = getYear(cursor);
-    const candidate = setDayOfMonth(
-      setMonth(cursor, targetMonth - 1),
-      clampDay(year, targetMonth, targetDay),
-    );
-
-    if (!isBefore(candidate, from) && !isAfter(candidate, to)) {
-      out.push(toDateString(candidate));
-    }
-
-    cursor = addYears(cursor, 1);
-  }
-}
-
-function monthlyOccurrenceOnOrAfter(from: Date, targetDay: number): Date {
-  let month = startOfMonth(from);
-  let candidate = setDayOfMonth(month, clampDay(getYear(month), getMonth(month) + 1, targetDay));
-
-  if (isBefore(candidate, from)) {
-    month = addCalendarMonths(month, 1);
-    candidate = setDayOfMonth(month, clampDay(getYear(month), getMonth(month) + 1, targetDay));
+  if (rule.endCount != null && rule.endCount >= 1) {
+    const nth = addInterval(anchor, rule.endCount - 1, rule);
+    if (bound === null || isBefore(nth, bound)) bound = nth;
   }
 
-  return candidate;
-}
-
-function yearlyOccurrenceOnOrAfter(from: Date, targetMonth: number, targetDay: number): Date {
-  let year = startOfYear(from);
-  let candidate = setDayOfMonth(
-    setMonth(year, targetMonth - 1),
-    clampDay(getYear(year), targetMonth, targetDay),
-  );
-
-  if (isBefore(candidate, from)) {
-    year = addYears(year, 1);
-    candidate = setDayOfMonth(
-      setMonth(year, targetMonth - 1),
-      clampDay(getYear(year), targetMonth, targetDay),
-    );
-  }
-
-  return candidate;
+  return bound;
 }

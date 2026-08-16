@@ -15,6 +15,13 @@
       "when": 1786853814001,
       "tag": "0001_add_recurring_transaction_flag",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787000000000,
+      "tag": "0002_recurring_frequency_model",
+      "breakpoints": true
     }
   ]
 }

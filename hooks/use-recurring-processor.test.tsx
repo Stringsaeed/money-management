@@ -36,7 +36,8 @@ describe("useRecurringProcessor", () => {
           all: [
             createRecurringPayment({
               id: "recurring-1",
-              interval: "daily",
+              frequency: "day",
+              intervalCount: 1,
               startDate: "2026-03-27",
               lastGeneratedDate: "2026-03-26",
             }),

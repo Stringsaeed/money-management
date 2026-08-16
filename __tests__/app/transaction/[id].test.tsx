@@ -8,6 +8,7 @@ const mockUseLocalSearchParams = jest.fn();
 const mockUseRouter = jest.fn();
 const mockUseTransaction = jest.fn();
 const mockCreateTransaction = jest.fn();
+const mockCreateRecurring = jest.fn();
 const mockUpdateTransaction = jest.fn();
 const mockDeleteTransaction = jest.fn();
 const mockStackScreen = jest.fn((_: unknown) => null);
@@ -42,6 +43,14 @@ jest.mock("@/hooks/use-transactions", () => ({
   useCreateTransaction: () => ({ mutateAsync: mockCreateTransaction }),
   useUpdateTransaction: () => ({ mutateAsync: mockUpdateTransaction }),
   useDeleteTransaction: () => ({ mutateAsync: mockDeleteTransaction }),
+}));
+
+jest.mock("@/hooks/use-categories", () => ({
+  useCategories: () => ({ data: [] }),
+}));
+
+jest.mock("@/hooks/use-recurring-payments", () => ({
+  useCreateRecurringPayment: () => ({ mutateAsync: mockCreateRecurring }),
 }));
 
 describe("app/transaction/[id]", () => {
@@ -84,6 +93,7 @@ describe("app/transaction/[id]", () => {
         originalAmount: null,
         originalCurrency: null,
         exchangeRate: null,
+        recurrence: { frequency: "month", intervalCount: 1, endDate: null, endCount: null },
       });
     });
 
@@ -94,15 +104,14 @@ describe("app/transaction/[id]", () => {
     expect(baseRouter.back).toHaveBeenCalled();
   });
 
-  it("starts recurring entries in recurring mode and lets the header toggle it", async () => {
-    mockUseLocalSearchParams.mockReturnValue({ id: "new", recurring: "true" });
+  it("toggles between one-time and recurring, revealing the recurrence fields", async () => {
+    mockUseLocalSearchParams.mockReturnValue({ id: "new" });
     mockUseTransaction.mockReturnValue({ data: undefined, isLoading: false });
 
     await render(<TransactionScreen />);
 
     let screenCall = mockStackScreen.mock.calls.at(-1)?.[0] as unknown as {
       options: {
-        title: string;
         unstable_headerRightItems: () => {
           icon: { name: string };
           label: string;
@@ -111,11 +120,10 @@ describe("app/transaction/[id]", () => {
       };
     };
 
-    expect(screenCall.options.title).toBe("");
-    expect(capturedFormProps?.isRecurring).toBe(true);
+    expect(capturedFormProps?.isRecurring).toBe(false);
     expect(screenCall.options.unstable_headerRightItems()[0]).toMatchObject({
-      label: "Make one-time",
-      icon: { name: "repeat.circle" },
+      label: "Make recurring",
+      icon: { name: "1.circle" },
     });
 
     await act(async () => {
@@ -123,12 +131,51 @@ describe("app/transaction/[id]", () => {
     });
 
     screenCall = mockStackScreen.mock.calls.at(-1)?.[0] as typeof screenCall;
-    expect(screenCall.options.title).toBe("");
-    expect(capturedFormProps?.isRecurring).toBe(false);
+    expect(capturedFormProps?.isRecurring).toBe(true);
     expect(screenCall.options.unstable_headerRightItems()[0]).toMatchObject({
-      label: "Make recurring",
-      icon: { name: "1.circle" },
+      label: "Make one-time",
+      icon: { name: "repeat.circle" },
     });
+  });
+
+  it("creates a recurring payment when saved in recurring mode", async () => {
+    mockUseLocalSearchParams.mockReturnValue({ id: "new", recurring: "true" });
+    mockUseTransaction.mockReturnValue({ data: undefined, isLoading: false });
+
+    await render(<TransactionScreen />);
+
+    expect(capturedFormProps?.isRecurring).toBe(true);
+
+    await act(async () => {
+      await capturedFormProps?.onSubmit({
+        type: "expense",
+        amount: 1200_00,
+        accountId: "account-1",
+        toAccountId: null,
+        categoryId: "category-1",
+        isRecurring: true,
+        description: "Rent",
+        date: new Date("2026-03-28T00:00:00.000Z"),
+        currency: "USD",
+        originalAmount: null,
+        originalCurrency: null,
+        exchangeRate: null,
+        recurrence: { frequency: "month", intervalCount: 1, endDate: null, endCount: null },
+      });
+    });
+
+    expect(mockCreateRecurring).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Rent",
+        frequency: "month",
+        intervalCount: 1,
+        startDate: "2026-03-28",
+        endDate: null,
+        endCount: null,
+        isActive: true,
+      }),
+    );
+    expect(mockCreateTransaction).not.toHaveBeenCalled();
   });
 
   it("renders loading state while fetching an existing transaction", async () => {
@@ -177,6 +224,7 @@ describe("app/transaction/[id]", () => {
         originalAmount: null,
         originalCurrency: null,
         exchangeRate: null,
+        recurrence: { frequency: "month", intervalCount: 1, endDate: null, endCount: null },
       });
     });
 

@@ -1,13 +1,16 @@
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
 import type { NativeStackHeaderItem } from "expo-router/build/react-navigation/native-stack";
 
+import { toRecurringPayment } from "@/components/transaction/recurrence/to-recurring-payment";
 import {
   TransactionForm,
   type TransactionFormData,
 } from "@/components/transaction/transaction-form";
 import type { TransactionFormHandle } from "@/components/transaction/types";
+import { useCategories } from "@/hooks/use-categories";
+import { useCreateRecurringPayment } from "@/hooks/use-recurring-payments";
 import {
   useCreateTransaction,
   useDeleteTransaction,
@@ -26,14 +29,12 @@ export default function TransactionScreen() {
   const formRef = useRef<TransactionFormHandle | null>(null);
   const [isRecurring, setIsRecurring] = useState(recurring === "true");
 
+  const { data: categories = [] } = useCategories();
   const { data: transaction, isLoading } = useTransaction(isNew ? undefined : id);
   const createTransaction = useCreateTransaction();
+  const createRecurring = useCreateRecurringPayment();
   const updateTransaction = useUpdateTransaction();
   const deleteTransaction = useDeleteTransaction();
-
-  useEffect(() => {
-    if (transaction) setIsRecurring(transaction.isRecurring);
-  }, [transaction]);
 
   if (!isNew && isLoading) {
     return (
@@ -46,17 +47,19 @@ export default function TransactionScreen() {
   if (!isNew && !transaction) return null;
 
   async function handleSubmit(data: TransactionFormData) {
-    if (isNew) {
+    if (isNew && isRecurring) {
+      await createRecurring.mutateAsync(toRecurringPayment(data, categories));
+    } else if (isNew) {
       await createTransaction.mutateAsync({
         ...data,
         date: toDateString(data.date),
-        isRecurring,
+        isRecurring: false,
         recurringPaymentId: null,
       });
     } else {
       await updateTransaction.mutateAsync({
         id,
-        data: { ...data, date: toDateString(data.date), isRecurring },
+        data: { ...data, date: toDateString(data.date) },
       });
     }
 
@@ -102,13 +105,6 @@ export default function TransactionScreen() {
         },
       ]
     : [
-        {
-          label: isRecurring ? "Make one-time" : "Make recurring",
-          type: "button",
-          onPress: () => setIsRecurring((current) => !current),
-          icon: { type: "sfSymbol", name: isRecurring ? "repeat.circle" : "1.circle" },
-          sharesBackground: false,
-        },
         {
           label: "delete",
           type: "button",

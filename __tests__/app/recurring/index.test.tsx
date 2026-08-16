@@ -1,54 +1,67 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
 import RecurringListScreen from "@/app/recurring/index";
-import { createTransactionWithDetails } from "@/tests/test-utils/factories";
+import { createRecurringPayment } from "@/tests/test-utils/factories";
 
 const mockPush = jest.fn();
-const mockUseTransactions = jest.fn();
+const mockUseRecurringPayments = jest.fn();
 
 jest.mock("expo-router", () => ({
   router: { push: (href: unknown) => mockPush(href) },
 }));
 
-jest.mock("@/hooks/use-transactions", () => ({
-  useTransactions: (filters: unknown) => mockUseTransactions(filters),
+jest.mock("@/hooks/use-recurring-payments", () => ({
+  useRecurringPayments: () => mockUseRecurringPayments(),
 }));
 
-jest.mock("@/components/transaction/transaction-row", () => ({
-  TransactionRow: ({ transaction }: { transaction: { description: string } }) => {
-    const { Text } = require("react-native");
+jest.mock("@/components/recurring/recurring-payment-row", () => ({
+  RecurringPaymentRow: ({
+    payment,
+    onPress,
+  }: {
+    payment: { name: string };
+    onPress: () => void;
+  }) => {
+    const { Text, Pressable } = require("react-native");
 
-    return <Text>{transaction.description}</Text>;
+    return (
+      <Pressable onPress={onPress}>
+        <Text>{payment.name}</Text>
+      </Pressable>
+    );
   },
 }));
 
 describe("app/recurring/index", () => {
   beforeEach(() => {
     mockPush.mockClear();
-    mockUseTransactions.mockReturnValue({ data: [], isLoading: false });
+    mockUseRecurringPayments.mockReturnValue({ data: [], isLoading: false });
   });
 
-  it("queries recurring transactions and opens the shared recurring form", async () => {
+  it("opens the new-recurring form from the empty state", async () => {
     await render(<RecurringListScreen />);
-
-    expect(mockUseTransactions).toHaveBeenCalledWith({ isRecurring: true });
 
     fireEvent.press(screen.getByText("Add Recurring"));
 
     expect(mockPush).toHaveBeenCalledWith({
-      pathname: "/transaction/[id]",
-      params: { id: "new", recurring: "true" },
+      pathname: "/recurring/[id]",
+      params: { id: "new" },
     });
   });
 
-  it("renders transactions returned by the recurring query", async () => {
-    mockUseTransactions.mockReturnValue({
-      data: [createTransactionWithDetails({ description: "Internet", isRecurring: true })],
+  it("renders rules and opens their editor", async () => {
+    mockUseRecurringPayments.mockReturnValue({
+      data: [createRecurringPayment({ id: "internet", name: "Internet" })],
       isLoading: false,
     });
 
     await render(<RecurringListScreen />);
 
-    expect(screen.getByText("Internet")).toBeOnTheScreen();
+    fireEvent.press(screen.getByText("Internet"));
+
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: "/recurring/[id]",
+      params: { id: "internet" },
+    });
   });
 });

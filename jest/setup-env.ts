@@ -66,6 +66,7 @@ jest.mock("@swmansion/react-native-bottom-sheet", () => {
     ModalBottomSheet: Passthrough,
   };
 });
+
 // Reanimated 4 runs its own JS implementation under Jest, so we use the real
 // module and let setUpTests() register matchers, as recommended in the docs:
 // https://docs.swmansion.com/react-native-reanimated/docs/guides/testing/

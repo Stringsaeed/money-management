@@ -1,6 +1,7 @@
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
+import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { useForm } from "@tanstack/react-form";
+import { batch } from "@tanstack/react-store";
 
 import NumberPad from "@/components/transaction/num-pad";
 import { Text } from "@/components/ui/text";
@@ -15,9 +16,18 @@ import { BreadcrumbSegment } from "./breadcrumb-segment";
 import CategoryPicker from "./category-picker/category-picker";
 import { layoutTransition } from "./constants";
 import { NoteInput } from "./note-input";
+import { EndsControl } from "./recurrence/ends-control";
+import { RepeatControl } from "./recurrence/repeat-control";
 import TransactionDatePicker from "./transaction-date-picker/transaction-date-picker";
 import type { FormValues, TransactionFormProps } from "./types";
 import { getCurrencySymbol, getDateDisplayValue, triggerErrorHaptic } from "./utils";
+import { formatRecurrence } from "@/utils/recurring";
+
+function formatEndsLabel(endDate: Date | null, endCount: number | null): string {
+  if (endCount !== null) return `${endCount}×`;
+  if (endDate !== null) return `Until ${getDateDisplayValue(endDate)}`;
+  return "No end";
+}
 
 export type { TransactionFormData } from "./types";
 
@@ -42,6 +52,10 @@ export function TransactionForm({
       categoryId: initialData?.categoryId ?? null,
       description: initialData?.description ?? "",
       date: initialData?.date ?? new Date(),
+      frequency: initialData?.recurrence?.frequency ?? "month",
+      intervalCount: initialData?.recurrence?.intervalCount ?? 1,
+      endDate: initialData?.recurrence?.endDate ?? null,
+      endCount: initialData?.recurrence?.endCount ?? null,
     } as FormValues,
     onSubmit: async ({ value }) => {
       const amountCents = Math.round(numPad.value * 100);
@@ -58,6 +72,10 @@ export function TransactionForm({
         triggerErrorHaptic();
         throw new Error("Pick the source account.");
       }
+      if (isRecurring && value.endDate && value.endDate < value.date) {
+        triggerErrorHaptic();
+        throw new Error("End date can't be before the start date.");
+      }
 
       await onSubmit({
         type,
@@ -72,6 +90,12 @@ export function TransactionForm({
         originalAmount: null,
         originalCurrency: null,
         exchangeRate: null,
+        recurrence: {
+          frequency: value.frequency,
+          intervalCount: value.intervalCount,
+          endDate: value.endDate,
+          endCount: value.endCount,
+        },
       });
     },
   });
@@ -89,7 +113,8 @@ export function TransactionForm({
       >
         {/* Breadcrumb: Account › Category › Date */}
         <View className="pt-2 pb-3">
-          <ScrollView
+          <Animated.ScrollView
+            layout={LinearTransition.springify(400)}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 20, gap: 8, alignItems: "center" }}
@@ -142,11 +167,82 @@ export function TransactionForm({
             <form.Subscribe selector={(s) => s.values.date}>
               {(date) => (
                 <TransactionDatePicker date={date} onChange={(d) => form.setFieldValue("date", d)}>
-                  <BreadcrumbSegment emoji="📅" label={getDateDisplayValue(date)} active />
+                  <BreadcrumbSegment
+                    emoji={isRecurring ? "▶️" : "📅"}
+                    label={getDateDisplayValue(date)}
+                    active
+                  />
                 </TransactionDatePicker>
               )}
             </form.Subscribe>
-          </ScrollView>
+
+            {isRecurring ? (
+              <Animated.View
+                entering={FadeIn.duration(200)}
+                exiting={FadeOut.duration(150)}
+                layout={LinearTransition.springify(400)}
+                style={{ flexDirection: "row", alignItems: "center", columnGap: 8 }}
+              >
+                <Text className="font-heading-normal text-sm italic text-ink/25">›</Text>
+                <form.Subscribe selector={(s) => s.values.frequency}>
+                  {(frequency) => (
+                    <form.Subscribe selector={(s) => s.values.intervalCount}>
+                      {(intervalCount) => (
+                        <RepeatControl
+                          frequency={frequency}
+                          intervalCount={intervalCount}
+                          onChange={(nextFrequency, nextCount) =>
+                            batch(() => {
+                              form.setFieldValue("frequency", nextFrequency);
+                              form.setFieldValue("intervalCount", nextCount);
+                            })
+                          }
+                        >
+                          <BreadcrumbSegment
+                            emoji="🔁"
+                            label={formatRecurrence({ frequency, intervalCount })}
+                            active
+                          />
+                        </RepeatControl>
+                      )}
+                    </form.Subscribe>
+                  )}
+                </form.Subscribe>
+
+                <Text className="font-heading-normal text-sm italic text-ink/25">›</Text>
+
+                <form.Subscribe selector={(s) => s.values.date}>
+                  {(date) => (
+                    <form.Subscribe selector={(s) => s.values.endDate}>
+                      {(endDate) => (
+                        <form.Subscribe selector={(s) => s.values.endCount}>
+                          {(endCount) => (
+                            <EndsControl
+                              startDate={date}
+                              endDate={endDate}
+                              endCount={endCount}
+                              onChange={(patch) =>
+                                batch(() => {
+                                  form.setFieldValue("endDate", patch.endDate);
+                                  form.setFieldValue("endCount", patch.endCount);
+                                })
+                              }
+                            >
+                              <BreadcrumbSegment
+                                emoji="🏁"
+                                label={formatEndsLabel(endDate, endCount)}
+                                active={endDate !== null || endCount !== null}
+                              />
+                            </EndsControl>
+                          )}
+                        </form.Subscribe>
+                      )}
+                    </form.Subscribe>
+                  )}
+                </form.Subscribe>
+              </Animated.View>
+            ) : null}
+          </Animated.ScrollView>
         </View>
 
         {/* Amount */}

@@ -3,13 +3,11 @@ import { Pressable, View } from "react-native";
 import { MoneyText } from "@/components/ui/money-text";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
-import { formatCents } from "@/utils/currency";
-import { formatUpcomingOccurrence } from "@/utils/recurring";
 import type { RecurringPayment } from "@/types";
+import { formatRecurrence, formatUpcomingOccurrence, getNextOccurrence } from "@/utils/recurring";
 
-interface UpcomingRecurringRowProps {
+interface RecurringPaymentRowProps {
   payment: RecurringPayment;
-  occurrenceDate: string;
   today: string;
   onPress: () => void;
 }
@@ -20,26 +18,17 @@ const TYPE_EMOJI = {
   transfer: "🔁",
 } as const;
 
-export function UpcomingRecurringRow({
-  payment,
-  occurrenceDate,
-  today,
-  onPress,
-}: UpcomingRecurringRowProps) {
-  const occurrenceLabel = formatUpcomingOccurrence(occurrenceDate, today);
-  const formattedAmount = formatCents(payment.amount, payment.currency);
-  const amountLabel =
-    payment.type === "income"
-      ? `plus ${formattedAmount}`
-      : payment.type === "expense"
-        ? `minus ${formattedAmount}`
-        : formattedAmount;
+export function RecurringPaymentRow({ payment, today, onPress }: RecurringPaymentRowProps) {
+  const next = getNextOccurrence(payment, today);
+  const cadence = formatRecurrence(payment);
+  const subtitle = next
+    ? `${cadence} · ${formatUpcomingOccurrence(next, today)}`
+    : `${cadence} · Ended`;
 
   return (
     <Pressable
-      accessibilityLabel={`${payment.name}, ${occurrenceLabel}, ${amountLabel}`}
       accessibilityRole="button"
-      className="flex-row items-center gap-3 px-4 py-3 active:bg-surface-dim"
+      className="flex-row items-center gap-3 px-5 py-3.5 active:bg-surface-container/50"
       onPress={onPress}
     >
       <View className="size-10 items-center justify-center rounded-full bg-surface">
@@ -49,8 +38,8 @@ export function UpcomingRecurringRow({
         <Text className="font-body-semibold text-sm text-ink" numberOfLines={1}>
           {payment.name}
         </Text>
-        <Text className="font-body-normal text-xs text-ink/40">
-          {payment.type === "transfer" ? "Transfer" : "Recurring"} · {occurrenceLabel}
+        <Text className="font-body-normal text-xs text-ink/40" numberOfLines={1}>
+          {subtitle}
         </Text>
       </View>
       <MoneyText
