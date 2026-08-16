@@ -8,10 +8,10 @@ import { useRecurringPayments } from "@/hooks/use-recurring-payments";
 import { today } from "@/utils/date";
 import { getUpcomingRecurringPayments } from "@/utils/recurring";
 
-import { UpcomingRecurringRow } from "./upcoming-recurring-row";
+import { UpcomingRecurringRow } from "@/components/home/upcoming-recurring-row";
 
 export function UpcomingRecurringSection() {
-  const { data: recurringPayments = [], isLoading } = useRecurringPayments();
+  const { data: recurringPayments = [], isError, isLoading } = useRecurringPayments();
   const todayString = today();
   const upcoming = getUpcomingRecurringPayments(recurringPayments, todayString);
 
@@ -39,6 +39,18 @@ export function UpcomingRecurringSection() {
           exiting={FadeOut.duration(150)}
         >
           <ActivityIndicator />
+        </Animated.View>
+      ) : isError ? (
+        <Animated.View
+          className="gap-1 bg-surface-container/40 px-4 py-4"
+          entering={FadeIn.duration(200)}
+          exiting={FadeOut.duration(150)}
+          layout={layoutTransition}
+        >
+          <Text className="font-body-medium text-sm text-ink">Upcoming payments unavailable</Text>
+          <Text className="font-body-normal text-xs leading-5 text-ink/45">
+            Open recurring payments to try loading them again.
+          </Text>
         </Animated.View>
       ) : upcoming.length === 0 ? (
         <Animated.View

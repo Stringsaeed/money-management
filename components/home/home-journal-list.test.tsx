@@ -26,21 +26,20 @@ jest.mock("@shopify/flash-list", () => ({
   },
 }));
 
-jest.mock("@/components/transaction/transaction-row", () => ({
-  TransactionRow: ({ transaction }: { transaction: { id: string } }) => {
+jest.mock("@/components/home/journal-list-item-row", () => ({
+  JournalListItemRow: ({
+    item,
+  }: {
+    item: { type: "section-header"; date: string } | { type: "transaction"; data: { id: string } };
+  }) => {
     const React = require("react");
     const { Text } = require("react-native");
 
-    return React.createElement(Text, null, `transaction:${transaction.id}`);
-  },
-}));
-
-jest.mock("@/components/home/journal-day-header", () => ({
-  JournalDayHeader: ({ item }: { item: { date: string } }) => {
-    const React = require("react");
-    const { Text } = require("react-native");
-
-    return React.createElement(Text, null, `header:${item.date}`);
+    return React.createElement(
+      Text,
+      null,
+      item.type === "section-header" ? `header:${item.date}` : `transaction:${item.data.id}`,
+    );
   },
 }));
 

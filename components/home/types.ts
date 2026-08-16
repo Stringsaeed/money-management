@@ -19,9 +19,11 @@ export interface HomeEmptyStateProps {
   onResetFilters: () => void;
 }
 
-export interface RecentJournalSectionProps extends HomeEmptyStateProps {
+export interface RecentJournalSectionProps {
   groups: DayGroup[];
   currency: string;
   showAccount: boolean;
   isLoading: boolean;
+  activeFilterCount: number;
+  onResetFilters: () => void;
 }

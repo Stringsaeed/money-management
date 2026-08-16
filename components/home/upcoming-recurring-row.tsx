@@ -3,6 +3,7 @@ import { Pressable, View } from "react-native";
 import { MoneyText } from "@/components/ui/money-text";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
+import { formatCents } from "@/utils/currency";
 import type { UpcomingRecurringPayment } from "@/utils/recurring";
 import { formatUpcomingOccurrence } from "@/utils/recurring";
 
@@ -27,10 +28,18 @@ const TYPE_EMOJI = {
 
 export function UpcomingRecurringRow({ item, today, onPress }: UpcomingRecurringRowProps) {
   const { payment, occurrenceDate } = item;
+  const occurrenceLabel = formatUpcomingOccurrence(occurrenceDate, today);
+  const formattedAmount = formatCents(payment.amount, payment.currency);
+  const amountLabel =
+    payment.type === "income"
+      ? `plus ${formattedAmount}`
+      : payment.type === "expense"
+        ? `minus ${formattedAmount}`
+        : formattedAmount;
 
   return (
     <Pressable
-      accessibilityLabel={`${payment.name}, ${formatUpcomingOccurrence(occurrenceDate, today)}`}
+      accessibilityLabel={`${payment.name}, ${occurrenceLabel}, ${amountLabel}`}
       accessibilityRole="button"
       className="flex-row items-center gap-3 px-4 py-3 active:bg-surface-dim"
       onPress={onPress}
@@ -43,7 +52,7 @@ export function UpcomingRecurringRow({ item, today, onPress }: UpcomingRecurring
           {payment.name}
         </Text>
         <Text className="font-body-normal text-xs text-ink/40">
-          {INTERVAL_LABELS[payment.interval]} · {formatUpcomingOccurrence(occurrenceDate, today)}
+          {INTERVAL_LABELS[payment.interval]} · {occurrenceLabel}
         </Text>
       </View>
       <MoneyText

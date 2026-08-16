@@ -9,21 +9,20 @@ jest.mock("expo-router", () => ({
   router: { push: (href: string) => mockPush(href) },
 }));
 
-jest.mock("@/components/home/journal-day-header", () => ({
-  JournalDayHeader: ({ item }: { item: { date: string } }) => {
+jest.mock("@/components/home/journal-list-item-row", () => ({
+  JournalListItemRow: ({
+    item,
+  }: {
+    item: { type: "section-header"; date: string } | { type: "transaction"; data: { id: string } };
+  }) => {
     const React = require("react");
     const { Text } = require("react-native");
 
-    return React.createElement(Text, null, `day:${item.date}`);
-  },
-}));
-
-jest.mock("@/components/transaction/transaction-row", () => ({
-  TransactionRow: ({ transaction }: { transaction: { id: string } }) => {
-    const React = require("react");
-    const { Text } = require("react-native");
-
-    return React.createElement(Text, null, `transaction:${transaction.id}`);
+    return React.createElement(
+      Text,
+      null,
+      item.type === "section-header" ? `day:${item.date}` : `transaction:${item.data.id}`,
+    );
   },
 }));
 

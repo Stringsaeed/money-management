@@ -3,13 +3,12 @@ import { ActivityIndicator, Pressable, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { layoutTransition } from "@/components/transaction/constants";
-import { TransactionRow } from "@/components/transaction/transaction-row";
 import { Text } from "@/components/ui/text";
 import { buildJournalList } from "@/utils/journal-list";
 
-import { HomeEmptyState } from "./home-empty-state";
-import { JournalDayHeader } from "./journal-day-header";
-import type { RecentJournalSectionProps } from "./types";
+import { HomeEmptyState } from "@/components/home/home-empty-state";
+import { JournalListItemRow } from "@/components/home/journal-list-item-row";
+import type { RecentJournalSectionProps } from "@/components/home/types";
 
 export function RecentJournalSection({
   activeFilterCount,
@@ -56,16 +55,12 @@ export function RecentJournalSection({
           exiting={FadeOut.duration(150)}
           layout={layoutTransition}
         >
-          {items.map((item) =>
-            item.type === "section-header" ? (
-              <JournalDayHeader key={`header-${item.date}`} item={item} />
-            ) : (
-              <Animated.View key={`transaction-${item.data.id}`} layout={layoutTransition}>
-                <TransactionRow transaction={item.data} showAccount={item.showAccount} />
-                {!item.isLast ? <View className="ml-16 h-px bg-ledger-outline" /> : null}
-              </Animated.View>
-            ),
-          )}
+          {items.map((item) => (
+            <JournalListItemRow
+              key={item.type === "section-header" ? `header-${item.date}` : item.data.id}
+              item={item}
+            />
+          ))}
         </Animated.View>
       )}
     </Animated.View>

@@ -1,4 +1,6 @@
 import { createRecurringPayment } from "@/tests/test-utils/factories";
+import { intlFormat } from "date-fns";
+import { parseDate } from "@/utils/date";
 import {
   formatUpcomingOccurrence,
   getNextOccurrence,
@@ -271,6 +273,12 @@ describe("upcoming recurring payments", () => {
 
   it("formats tomorrow and later dates", () => {
     expect(formatUpcomingOccurrence("2026-03-29", "2026-03-28")).toBe("Tomorrow");
-    expect(formatUpcomingOccurrence("2026-04-05", "2026-03-28")).toBe("Sun, Apr 5");
+    expect(formatUpcomingOccurrence("2026-04-05", "2026-03-28")).toBe(
+      intlFormat(parseDate("2026-04-05"), {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      }),
+    );
   });
 });

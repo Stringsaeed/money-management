@@ -3,13 +3,13 @@ import {
   addMonths as addCalendarMonths,
   addWeeks,
   addYears,
-  format,
   getDay,
   getMonth,
   getYear,
   isAfter,
   isBefore,
   isSameDay,
+  intlFormat,
   setDate as setDayOfMonth,
   setMonth,
   startOfMonth,
@@ -121,7 +121,7 @@ export function formatUpcomingOccurrence(dateStr: string, todayStr: string): str
 
   if (isSameDay(date, tomorrow)) return "Tomorrow";
 
-  return format(date, "EEE, MMM d");
+  return intlFormat(date, { weekday: "short", month: "short", day: "numeric" });
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
