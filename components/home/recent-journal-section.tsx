@@ -1,5 +1,6 @@
 import { router } from "expo-router";
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { SymbolView } from "expo-symbols";
+import { ActivityIndicator, Pressable, useColorScheme, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { layoutTransition } from "@/components/transaction/constants";
@@ -18,6 +19,7 @@ export function RecentJournalSection({
   onResetFilters,
   showAccount,
 }: RecentJournalSectionProps) {
+  const colorScheme = useColorScheme();
   const items = buildJournalList(groups, currency, showAccount);
 
   return (
@@ -26,7 +28,14 @@ export function RecentJournalSection({
       layout={layoutTransition}
     >
       <View className="flex-row items-center justify-between border-b border-ledger-outline px-4 py-3">
-        <Text className="font-heading-normal text-xl italic text-ink">Recent Journal</Text>
+        <View className="flex-row flex-1 items-center gap-2">
+          <SymbolView
+            name="newspaper"
+            size={18}
+            tintColor={colorScheme === "dark" ? "#D6E8DC" : "#1C1B1A"}
+          />
+          <Text className="font-heading-normal text-xl italic text-ink">Recent Journal</Text>
+        </View>
         <Pressable
           accessibilityLabel="View all recent transactions"
           accessibilityRole="button"

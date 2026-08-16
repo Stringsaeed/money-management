@@ -1,5 +1,6 @@
 import { router } from "expo-router";
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { SymbolView } from "expo-symbols";
+import { ActivityIndicator, Pressable, useColorScheme, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { layoutTransition } from "@/components/transaction/constants";
@@ -10,6 +11,7 @@ import { useTransactions } from "@/hooks/use-transactions";
 import { UpcomingRecurringRow } from "@/components/home/upcoming-recurring-row";
 
 export function UpcomingRecurringSection() {
+  const colorScheme = useColorScheme();
   const todayString = today();
   const {
     data: upcoming = [],
@@ -28,7 +30,14 @@ export function UpcomingRecurringSection() {
       layout={layoutTransition}
     >
       <View className="flex-row items-center justify-between border-b border-ledger-outline px-4 py-3">
-        <Text className="font-heading-normal text-xl italic text-ink">Upcoming payments</Text>
+        <View className="flex-row flex-1 items-center gap-2">
+          <SymbolView
+            name="repeat"
+            size={18}
+            tintColor={colorScheme === "dark" ? "#D6E8DC" : "#1C1B1A"}
+          />
+          <Text className="font-heading-normal text-xl italic text-ink">Upcoming payments</Text>
+        </View>
         <Pressable
           accessibilityLabel="View all recurring payments"
           accessibilityRole="button"
