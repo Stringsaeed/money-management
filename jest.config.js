@@ -21,6 +21,7 @@ module.exports = {
     "app/**/*.{ts,tsx}",
     "components/**/*.{ts,tsx}",
     "hooks/**/*.{ts,tsx}",
+    "modules/**/*.{ts,tsx}",
     "stores/**/*.{ts,tsx}",
     "utils/**/*.{ts,tsx}",
     "lib/**/*.{ts,tsx}",

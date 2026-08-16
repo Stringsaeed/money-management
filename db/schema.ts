@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 // ── Accounts ──────────────────────────────────────────────────────────────────
 
@@ -62,6 +62,42 @@ export const recurringPayments = sqliteTable("recurring_payments", {
   updatedAt: text("updated_at").notNull(),
 });
 
+// ── Recurring Rules ──────────────────────────────────────────────────────────
+
+export const recurringRules = sqliteTable("recurring_rules", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  type: text("type").notNull(),
+  amountMinor: integer("amount_minor"),
+  currency: text("currency").notNull(),
+  accountId: text("account_id").references(() => accounts.id, { onDelete: "restrict" }),
+  toAccountId: text("to_account_id").references(() => accounts.id, {
+    onDelete: "restrict",
+  }),
+  categoryId: text("category_id").references(() => categories.id, {
+    onDelete: "set null",
+  }),
+  description: text("description").notNull().default(""),
+  frequency: text("frequency").notNull(),
+  intervalCount: integer("interval_count").notNull().default(1),
+  startDate: text("start_date").notNull(),
+  endDate: text("end_date"),
+  endCount: integer("end_count"),
+  timeZone: text("time_zone").notNull(),
+  lifecycle: text("lifecycle").notNull().default("active"),
+  health: text("health").notNull().default("ready"),
+  attentionReasons: text("attention_reasons").notNull().default("[]"),
+  attentionDetails: text("attention_details"),
+  eligibilityFloor: text("eligibility_floor").notNull(),
+  revision: integer("revision").notNull().default(1),
+  lifecycleChangedAt: text("lifecycle_changed_at"),
+  healthChangedAt: text("health_changed_at"),
+  lastSettlementAttemptAt: text("last_settlement_attempt_at"),
+  lastSettlementError: text("last_settlement_error"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
 // ── Transactions ───────────────────────────────────────────────────────────────
 
 export const transactions = sqliteTable("transactions", {
@@ -90,6 +126,24 @@ export const transactions = sqliteTable("transactions", {
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
+
+export const recurringOccurrences = sqliteTable(
+  "recurring_occurrences",
+  {
+    ruleId: text("rule_id")
+      .notNull()
+      .references(() => recurringRules.id, { onDelete: "restrict" }),
+    scheduledDate: text("scheduled_date").notNull(),
+    transactionId: text("transaction_id").references(() => transactions.id, {
+      onDelete: "set null",
+    }),
+    settledAt: text("settled_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.ruleId, table.scheduledDate] }),
+    uniqueIndex("uq_recurring_occurrence_transaction").on(table.transactionId),
+  ],
+);
 
 // ── Exchange Rates ─────────────────────────────────────────────────────────────
 
