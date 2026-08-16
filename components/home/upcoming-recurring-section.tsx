@@ -16,17 +16,16 @@ export function UpcomingRecurringSection() {
   const upcoming = getUpcomingRecurringPayments(recurringPayments, todayString);
 
   return (
-    <Animated.View className="mx-5 mt-5" layout={layoutTransition}>
-      <View className="flex-row items-end justify-between border-b border-ledger-outline pb-2">
-        <View>
-          <Text className="font-body-semibold text-xs uppercase tracking-wider text-ink/40">
-            Subscriptions & recurring
-          </Text>
-          <Text className="font-heading-normal text-xl italic text-ink">Upcoming payments</Text>
-        </View>
+    <Animated.View
+      className="mx-5 mt-5 overflow-hidden rounded-lg border border-ledger-outline bg-surface shadow-sm shadow-black/5"
+      layout={layoutTransition}
+    >
+      <View className="flex-row items-center justify-between border-b border-ledger-outline px-4 py-3">
+        <Text className="font-heading-normal text-xl italic text-ink">Upcoming payments</Text>
         <Pressable
+          accessibilityLabel="View all recurring payments"
           accessibilityRole="button"
-          className="pb-0.5 active:opacity-50"
+          className="px-1 py-1 active:opacity-50"
           onPress={() => router.push("/recurring")}
         >
           <Text className="font-body-semibold text-xs text-ink/50">View all</Text>
@@ -43,7 +42,7 @@ export function UpcomingRecurringSection() {
         </Animated.View>
       ) : upcoming.length === 0 ? (
         <Animated.View
-          className="flex-row items-center gap-3 bg-surface-container px-4 py-3"
+          className="flex-row items-center gap-3 bg-surface-container/40 px-4 py-3"
           entering={FadeIn.duration(200)}
           exiting={FadeOut.duration(150)}
           layout={layoutTransition}
@@ -66,7 +65,7 @@ export function UpcomingRecurringSection() {
         </Animated.View>
       ) : (
         <Animated.View
-          className="overflow-hidden bg-surface-container"
+          className="overflow-hidden bg-surface-container/40"
           entering={FadeIn.duration(200)}
           exiting={FadeOut.duration(150)}
           layout={layoutTransition}

@@ -28,11 +28,19 @@ describe("UpcomingRecurringSection", () => {
   it("shows a compact prompt when no recurring payments exist", async () => {
     await render(<UpcomingRecurringSection />);
 
+    expect(screen.queryByText("Subscriptions & recurring")).not.toBeOnTheScreen();
     expect(screen.getByText("Nothing scheduled yet")).toBeOnTheScreen();
     expect(screen.getByText(/Add subscriptions or recurring payments/)).toBeOnTheScreen();
 
     fireEvent.press(screen.getByRole("button", { name: "Add a recurring payment" }));
     expect(mockPush).toHaveBeenCalledWith("/recurring/new");
+  });
+
+  it("opens the complete recurring payments list", async () => {
+    await render(<UpcomingRecurringSection />);
+
+    fireEvent.press(screen.getByRole("button", { name: "View all recurring payments" }));
+    expect(mockPush).toHaveBeenCalledWith("/recurring");
   });
 
   it("shows the next active payments and opens their editor", async () => {
