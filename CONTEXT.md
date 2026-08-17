@@ -67,3 +67,165 @@ _Avoid_: Failed Rule, Invalid Rule
 **Repair**:
 A confirmed change that restores a Needs-Attention Rule to Ready health. Repair may update the Rule and materialize its accrued backlog atomically, but it does not change lifecycle.
 _Avoid_: Fix, Reactivate
+
+### Envelope Budgeting
+
+**Envelope**:
+A persistent, single-currency planning container for Money assigned from available cash to a purpose. An active Envelope has at least one active expense Category; it may cover multiple Categories, but each Category belongs to at most one Envelope. It does not hold an Account balance, classify Transactions, or represent physical cash.
+_Avoid_: Cash Account, Category, Spending Limit
+
+**Category Mapping**:
+The Budget-Period-aware association that attributes a Category's expense Transactions to one Envelope. A changed mapping applies to the current and future periods while earlier periods retain their mapping unless the user explicitly backfills them.
+_Avoid_: Category Assignment, Transaction Envelope
+
+**Cash Account**:
+An Account whose balance represents physical cash held in a wallet or another real-world location. It is distinct from a budgeting Envelope.
+_Avoid_: Envelope
+
+**Archived Account**:
+A zero-balance Account retained with its Transactions and dependent history but unavailable for new activity or Funding Pool membership. Related Budget Shortfalls, Card Payment Reserves, and Unfunded Card Spending must be resolved before archival; restoration does not automatically restore Funding Membership. Only an Account without Transactions or dependent history may be permanently deleted.
+_Avoid_: Deleted Account, Closed Balance
+
+**Funding Account**:
+An Account selected by the user whose balance contributes Money to the funding pool for its currency. Checking, savings, and Cash Accounts are included by default; credit-card and investment Accounts are excluded by default.
+_Avoid_: Envelope Account, Budget Account
+
+**Funding Membership**:
+The Budget-Period-aware inclusion of an Account in its currency's Funding Pool. A changed membership applies to the current and future periods while earlier periods retain their membership unless explicitly backfilled; it is independent of whether the Account appears in Home totals.
+_Avoid_: Total-Balance Inclusion, Account Visibility
+
+**Funding Pool**:
+The sum of the current computed balances of Funding Accounts that share one currency, including initial balances and posted Transactions. Negative Funding Account balances reduce their Funding Pool; Funding Pools of different currencies remain independent.
+_Avoid_: Converted Balance, Global Budget Balance
+
+**Period Opening Funding Pool**:
+The reconstructed Funding Pool at the beginning of a Budget Period. Current-period activity is reversed from current Account balances and then replayed exactly once, including when budgeting begins or Funding Membership changes during that period.
+_Avoid_: Activation Balance, Today's Starting Balance
+
+**Unassigned Money**:
+Money contributed by a currency's Funding sources that is not assigned to an Envelope in any current or future Budget Period. A budget may retain Unassigned Money without becoming invalid, but an Assignment cannot consume more Unassigned Money than exists.
+_Avoid_: Unbudgeted Balance, Leftover Cash
+
+**Assignable Income**:
+An income Transaction posted to a Funding Account and added to Unassigned Money in that Account's currency. Expected income and future Occurrences are not Assignable Income until they materialize as Transactions.
+_Avoid_: Expected Income, Planned Income
+
+**Funding Boundary Transfer**:
+A same-currency Account transfer that enters or leaves a Funding Pool. Transfers within one Funding Pool are budget-neutral; Money entering becomes Unassigned Money, while Money leaving consumes Unassigned Money or creates a Budget Shortfall. Card Payments retain their separate reserve behavior.
+_Avoid_: Income, Expense, Assignment
+
+**Assignment**:
+An append-only, auditable budget-only movement of Money between Unassigned Money and an Envelope or between Envelopes. It first covers cash Envelope Overspending, then the oldest Unfunded Card Spending, and only then creates new availability; it does not change Account balances or create a Transaction, and corrections use a reversing Assignment followed by its replacement.
+_Avoid_: Transfer, Transaction
+
+**Future Assignment**:
+An Assignment of currently owned Unassigned Money to an Envelope in a future Budget Period. It reserves that Money immediately, never relies on expected income, and is unavailable while the currency workspace has cash Envelope Overspending or Unfunded Card Spending.
+_Avoid_: Planned Income, Forecast Assignment
+
+**Budget Period**:
+One live, recomputable calendar month of an Envelope's Assignments, spending, and Rollover. Envelopes persist across Budget Periods, and a new period begins without requiring the previous one to be closed.
+_Avoid_: Envelope Cycle, Budget Instance
+
+**Ledger Date**:
+The stored calendar date of a Transaction, which determines its Budget Period without timezone conversion. Device-local time determines the current date, but travelling or changing timezone never moves an existing Transaction between periods.
+_Avoid_: Creation Time, Settlement Time
+
+**Archived Envelope**:
+An Envelope retained with its Assignments, Category Mappings, spending, and Rollover history but unavailable for new planning activity. Its availability, overspending, Card Payment Reserve, and active Category Mappings must be resolved before archival; restoration requires valid Category Mappings before it becomes active again.
+_Avoid_: Deleted Envelope, Closed Envelope
+
+**Archived Category**:
+A Category retained with its Transactions and Category Mapping history but unavailable for new Transaction entry. Its current-period mapping remains for existing activity and ends for future periods; restoration does not recreate future mappings. Only a Category without Transactions or mapping history may be permanently deleted.
+_Avoid_: Deleted Category, Hidden Category
+
+**Envelope Spending**:
+Posted expense Transactions attributed to an Envelope through their Category. Generated Transactions count after Settlement, while future Occurrences do not reserve Money.
+_Avoid_: Planned Spending, Recurring Reservation
+
+**Assigned Money**:
+The net Money explicitly assigned to an Envelope for one Budget Period, excluding Rollover and Projected Rollover.
+_Avoid_: Available Money, Envelope Balance
+
+**Net Spent**:
+Envelope Spending minus Refunds posted during the same Budget Period. Gross expenses and Refunds remain separately visible in the Envelope's activity history.
+_Avoid_: Gross Spending, Historical Rewrite
+
+**Available Money**:
+The Money an Envelope can still support after Rollover, Assignments, Net Spent, and card-reserve routing. Cash Envelope Overspending may make it negative, while credit spending stops it at zero and continues as Unfunded Card Spending.
+_Avoid_: Assigned Money, Account Balance
+
+**Unassigned Spending**:
+Posted expense Transactions within the budget's Account scope that cannot be attributed to an Envelope. Unassigned Spending reduces Unassigned Money and remains flagged until the user resolves its Category or Envelope mapping.
+_Avoid_: Ignored Spending, Miscellaneous Envelope
+
+**Budget Shortfall**:
+Negative Unassigned Money indicating that assigned or reserved Money exceeds the Funding Pool. A Budget Shortfall remains visible until the user changes the plan or the Funding Pool increases.
+_Avoid_: Overspent Envelope, Negative Balance
+
+**Card Payment Reserve**:
+System-managed Money reserved from an Envelope when its Category attributes a credit-card purchase. Paying that credit card consumes its same-currency reserve rather than creating new available Money.
+_Avoid_: Credit Envelope, Card Account Balance
+
+**Card Credit**:
+A positive credit-card balance representing Money the card issuer owes the user. It is a temporary same-currency funding source that increases Unassigned Money; spending consumes Card Credit before creating a Card Payment Reserve or Unfunded Card Spending.
+_Avoid_: Card Payment Reserve, Available Credit
+
+**Card Payment**:
+A same-currency transfer from a Funding Account to a credit-card Account. It consumes the Card Payment Reserve, then funded Opening Card Debt, then Unassigned Money against unfunded debt; any amount beyond the total debt becomes Card Credit, while an unpaid reserve remains reserved.
+_Avoid_: Expense, Reserve Adjustment
+
+**Unfunded Card Spending**:
+The portion of a credit-card purchase that exceeds its Envelope's available Money and therefore has no cash in the Card Payment Reserve. Credit spending stops Envelope availability at zero and carries this amount separately; later Assignments route Money into the reserve until it is funded.
+_Avoid_: Card Payment Reserve, Budget Shortfall
+
+**Opening Card Debt**:
+A credit-card liability that predates the budget and therefore is not Envelope Spending. The user may assign Unassigned Money directly to its Card Payment Reserve without creating backdated expense Transactions.
+_Avoid_: Starting Expense, Unfunded Card Spending
+
+**Envelope Overspending**:
+Negative availability in an Envelope after cash Envelope Spending exceeds the Money assigned to it. It remains visible until the user explicitly assigns or moves Money to cover it and otherwise rolls into the next Budget Period; credit overspending is tracked separately as Unfunded Card Spending.
+_Avoid_: Budget Shortfall, Automatic Coverage
+
+**Envelope Health**:
+The independently discriminated readiness of an Envelope: Ready or Needs Attention. Cash Envelope Overspending and Unfunded Card Spending require attention; health does not replace the Envelope's active or archived lifecycle.
+_Avoid_: Envelope Status, Warning Color
+
+**Budget Health**:
+The independently discriminated readiness of one currency workspace: Ready or Needs Attention. Budget Shortfalls and Unsupported Currency Transfers require workspace-level attention rather than being attributed to one Envelope.
+_Avoid_: Envelope Health, Currency Status
+
+**Home Currency**:
+The user-selected currency workspace summarized on Home and preferred by future reporting. If it is unset, the first Funding Pool is used; it never authorizes combining or converting Funding Pools.
+_Avoid_: Reporting Conversion, Largest Currency
+
+**Rollover**:
+The Money carried from one Budget Period into the next. Positive availability rolls forward by default but may return to Unassigned Money for an Envelope configured to start fresh; cash overspending always carries forward. A changed Rollover setting applies to the current and future periods while earlier periods retain their setting.
+_Avoid_: Balance Reset, Period Copy
+
+**Projected Rollover**:
+The live estimate of Money a future Budget Period will receive from all preceding periods. It is displayed separately from explicit Future Assignments and recalculates whenever an earlier period changes.
+_Avoid_: Committed Rollover, Future Assignment
+
+**Historical Adjustment**:
+A visible change to a Budget Period and its later Rollovers caused by correcting or deleting a past Transaction. Historical Adjustments keep the budget reconciled with the current ledger rather than preserving a known inaccuracy.
+_Avoid_: Current-Period Correction, Locked History
+
+**Refund**:
+A full or partial return of Money linked to its original expense Transaction. Multiple same-currency Refunds may link to one expense but cannot cumulatively exceed it; card Refunds return to the original card, while cash-account Refunds may enter any same-currency Funding Account. A Refund affects its own Budget Period, restores the original Envelope, and adjusts its Card Payment Reserve; if that Envelope is archived, attribution is preserved while the returned Money becomes Unassigned Money.
+_Avoid_: Income, Transaction Deletion
+
+**Budget Reset**:
+The confirmed removal of Envelopes, Category Mappings, Assignments, Funding Memberships, Rollover settings, and Setup Drafts while retaining Accounts, Categories, Transactions, and Refund relationships. It is distinct from a full data reset.
+_Avoid_: Full Data Reset, Archive All
+
+**Setup Draft**:
+An incomplete, locally retained envelope-setup proposal with no effect on Funding Pools, Category Mappings, or Assignments until the user confirms it. The user may resume or discard it.
+_Avoid_: Active Budget, Partial Activation
+
+**Outside-Budget Spending**:
+Expense Transactions from Accounts outside the Funding Pool and outside the credit-card reserve model. They remain visible in reports but do not affect Envelopes or Unassigned Money.
+_Avoid_: Unassigned Spending, Envelope Spending
+
+**Unsupported Currency Transfer**:
+A legacy Account transfer whose source and destination currencies differ but whose record contains only one amount. It is excluded from Funding Pool calculations and marked Needs Attention until replaced with exact same-currency records or a future conversion flow.
+_Avoid_: Currency Conversion, Estimated Transfer

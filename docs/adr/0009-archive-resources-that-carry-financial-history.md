@@ -1,0 +1,3 @@
+# Archive resources that carry financial history
+
+Accounts, Categories, and Envelopes that carry Transactions, mappings, Assignments, or dependent history are archived and restorable instead of being permanently deleted. Account and Envelope state must be resolved before archival, while an Archived Category retains its current-period mapping for existing activity and ends it for future periods. Restoration makes a resource available for deliberate reconfiguration but does not automatically restore Funding Membership, future Category Mappings, or an active Envelope. Hard deletion remains available only for unused resources, because erasing established references would silently rewrite ledger classification, Envelope attribution, and later Rollovers.

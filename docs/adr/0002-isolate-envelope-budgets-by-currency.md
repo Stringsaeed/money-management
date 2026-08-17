@@ -1,0 +1,3 @@
+# Isolate Envelope budgets by currency
+
+Each Envelope and Funding Pool has one currency, and Money is assigned only within that currency instead of being converted into a reporting currency. This preserves exact amounts and keeps mutable exchange rates out of the budgeting authority. Cross-currency transfers are unavailable in the budgeting release because the current one-amount transfer model cannot represent both sides exactly; existing records of that shape are marked Needs Attention and excluded from Funding Pool calculations. A later explicit conversion flow may bridge Funding Pools without introducing cross-currency Assignments.
