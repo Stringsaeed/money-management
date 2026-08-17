@@ -25,6 +25,7 @@ import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import { useRecurringRulesList } from "@/hooks/use-recurring-rules";
 import { useTransactions } from "@/hooks/use-transactions";
+import { cohereLedgerCache } from "@/modules/ledger-cache";
 
 export default function SettingsScreen() {
   const db = useDatabase();
@@ -59,7 +60,7 @@ export default function SettingsScreen() {
               // Rewind the seed so the next launch re-inserts the default
               // categories the erase just removed.
               await clearSeedVersion(db);
-              qc.invalidateQueries();
+              await cohereLedgerCache(qc, { kind: "ledger.reset" });
               router.replace("/onboarding");
             } catch {
               Alert.alert("Error", "Failed to erase data — please try again.");

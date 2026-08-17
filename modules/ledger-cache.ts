@@ -58,6 +58,7 @@ export type LedgerChange =
   | { kind: "account.updated"; id: string }
   | { kind: "account.deleted"; id: string }
   | { kind: "category.created"; id: string }
+  | { kind: "category.batch" }
   | { kind: "category.updated"; id: string }
   | { kind: "category.deleted"; id: string }
   | { kind: "transaction.created"; id: string }
@@ -91,6 +92,7 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
     recurringRuleKeys.all,
   ],
   "category.created": [categoryKeys.all],
+  "category.batch": [categoryKeys.all, transactionKeys.all],
   "category.updated": [categoryKeys.all, transactionKeys.all],
   "category.deleted": [categoryKeys.all, transactionKeys.all, recurringRuleKeys.all],
   "transaction.created": transactionChangeQueryKeys,

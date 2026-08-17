@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { useDatabase } from "@/db/client";
 import { seedDatabase } from "@/db/seed";
+import { cohereLedgerCache } from "@/modules/ledger-cache";
 
 import { Card } from "./card";
 import { Divider } from "./divider";
@@ -20,7 +21,7 @@ export function DevToolsSection() {
     setSeeding(true);
     try {
       await seedDatabase(db, { force: true });
-      qc.invalidateQueries();
+      await cohereLedgerCache(qc, { kind: "category.batch" });
       Alert.alert("Done", "Seed data has been inserted.");
     } catch {
       Alert.alert("Error", "Failed to seed data — data may already exist.");
