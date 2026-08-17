@@ -3,6 +3,13 @@ import { aliasedTable, and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
 
 import { useDatabase } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
+import {
+  cohereLedgerCache,
+  monthSummaryKeys,
+  transactionDateRangeKeys,
+  transactionKeys,
+  type TransactionQueryFilters,
+} from "@/modules/ledger-cache";
 import { generateId } from "@/utils/id";
 import { nowIso, monthBounds, toDateString } from "@/utils/date";
 import type { Transaction, TransactionWithDetails } from "@/types";
@@ -10,26 +17,7 @@ import { isDate } from "date-fns";
 
 const toAccounts = aliasedTable(accounts, "to_accounts");
 
-// ── Query keys ────────────────────────────────────────────────────────────────
-
-const transactionKeys = {
-  all: ["transactions"] as const,
-  list: (filters: TransactionFilters) => ["transactions", "list", filters] as const,
-  recent: (limit: number) => ["transactions", "recent", limit] as const,
-  detail: (id: string) => ["transactions", id] as const,
-};
-
-interface TransactionFilters {
-  year?: number;
-  month?: number; // 1-indexed
-  accountId?: string | null;
-  categoryId?: string | null;
-  type?: Transaction["type"];
-  isRecurring?: boolean;
-  startsOnOrAfter?: string;
-  sort?: "asc" | "desc";
-  limit?: number;
-}
+type TransactionFilters = TransactionQueryFilters;
 
 // ── Helper: selected columns for joined query ────────────────────────────────
 
@@ -204,7 +192,7 @@ export function useTransaction(id: string | undefined) {
 export function useTransactionDateRange() {
   const db = useDatabase();
   return useQuery({
-    queryKey: ["transaction-date-range"],
+    queryKey: transactionDateRangeKeys.all,
     queryFn: async () => {
       const result = (await db
         .select({
@@ -228,7 +216,7 @@ export function useMonthSummary(
 ) {
   const db = useDatabase();
   return useQuery({
-    queryKey: ["month-summary", year, month, accountId],
+    queryKey: monthSummaryKeys.detail(year, month, accountId),
     enabled,
     queryFn: async () => {
       const { start, end } = monthBounds(year, month);
@@ -282,11 +270,7 @@ export function useCreateTransaction() {
       });
       return id;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: transactionKeys.all });
-      qc.invalidateQueries({ queryKey: ["account-balances"] });
-      qc.invalidateQueries({ queryKey: ["month-summary"] });
-    },
+    onSuccess: (id) => cohereLedgerCache(qc, { kind: "transaction.created", id }),
   });
 }
 
@@ -311,12 +295,7 @@ export function useUpdateTransaction() {
         })
         .where(eq(transactions.id, id));
     },
-    onSuccess: (_, { id }) => {
-      qc.invalidateQueries({ queryKey: transactionKeys.all });
-      qc.invalidateQueries({ queryKey: transactionKeys.detail(id) });
-      qc.invalidateQueries({ queryKey: ["account-balances"] });
-      qc.invalidateQueries({ queryKey: ["month-summary"] });
-    },
+    onSuccess: (_, { id }) => cohereLedgerCache(qc, { kind: "transaction.updated", id }),
   });
 }
 
@@ -328,10 +307,6 @@ export function useDeleteTransaction() {
     mutationFn: async (id: string) => {
       await db.delete(transactions).where(eq(transactions.id, id));
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: transactionKeys.all });
-      qc.invalidateQueries({ queryKey: ["account-balances"] });
-      qc.invalidateQueries({ queryKey: ["month-summary"] });
-    },
+    onSuccess: (_, id) => cohereLedgerCache(qc, { kind: "transaction.deleted", id }),
   });
 }
