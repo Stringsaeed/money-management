@@ -1,6 +1,11 @@
 import { QueryClient, QueryObserver, type QueryKey } from "@tanstack/react-query";
 
-import { cohereLedgerCache, cohereRecurringEffects, transactionKeys } from "./ledger-cache";
+import {
+  cohereLedgerCache,
+  cohereRecurringEffects,
+  recurringRuleKeys,
+  transactionKeys,
+} from "./ledger-cache";
 
 const createQueryClient = () =>
   new QueryClient({
@@ -52,6 +57,23 @@ describe("ledger cache coherence behavior", () => {
     resolvers[2]();
     await coherence;
     expect(coherenceResolved).toBe(true);
+  });
+
+  it("refetches an active upcoming query once when parent and child keys are affected", async () => {
+    const queryClient = createQueryClient();
+    const queryFn = jest.fn().mockResolvedValue("upcoming");
+    const queryKey = recurringRuleKeys.upcoming(3);
+    const options = { queryKey, queryFn, staleTime: Infinity };
+    await queryClient.fetchQuery(options);
+    const observer = new QueryObserver(queryClient, options);
+    const unsubscribe = observer.subscribe(() => undefined);
+    queryFn.mockClear();
+
+    await cohereRecurringEffects(queryClient, ["rules", "upcoming"]);
+
+    expect(queryFn).toHaveBeenCalledTimes(1);
+    unsubscribe();
+    queryClient.clear();
   });
 
   it("waits for an active affected query to finish refetching", async () => {

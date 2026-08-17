@@ -1,4 +1,4 @@
-import { hashKey, type QueryClient, type QueryKey } from "@tanstack/react-query";
+import { hashKey, partialMatchKey, type QueryClient, type QueryKey } from "@tanstack/react-query";
 
 import type { RecurringEffect } from "@/modules/recurring-rules";
 import type { Transaction } from "@/types";
@@ -132,9 +132,18 @@ async function invalidateQueryKeys(
   queryClient: QueryClient,
   queryKeys: readonly QueryKey[],
 ): Promise<void> {
-  const uniqueQueryKeys = new Map(queryKeys.map((queryKey) => [hashKey(queryKey), queryKey]));
+  const uniqueQueryKeys = [
+    ...new Map(queryKeys.map((queryKey) => [hashKey(queryKey), queryKey])).values(),
+  ];
+  const minimalQueryKeys = uniqueQueryKeys.filter(
+    (queryKey) =>
+      !uniqueQueryKeys.some(
+        (possibleAncestor) =>
+          possibleAncestor.length < queryKey.length && partialMatchKey(queryKey, possibleAncestor),
+      ),
+  );
 
   await Promise.all(
-    [...uniqueQueryKeys.values()].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+    minimalQueryKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
   );
 }
