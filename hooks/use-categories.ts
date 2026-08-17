@@ -3,17 +3,10 @@ import { eq } from "drizzle-orm";
 
 import { useDatabase } from "@/db/client";
 import { categories } from "@/db/schema";
+import { categoryKeys, cohereLedgerCache } from "@/modules/ledger-cache";
 import { generateId } from "@/utils/id";
 import { nowIso } from "@/utils/date";
 import type { Category } from "@/types";
-
-// ── Query keys ────────────────────────────────────────────────────────────────
-
-const categoryKeys = {
-  all: ["categories"] as const,
-  byType: (type: "income" | "expense") => ["categories", type] as const,
-  detail: (id: string) => ["categories", id] as const,
-};
 
 // ── Queries ────────────────────────────────────────────────────────────────────
 
@@ -53,9 +46,7 @@ export function useCreateCategory() {
       await db.insert(categories).values({ ...data, id, createdAt: now, updatedAt: now });
       return id;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: categoryKeys.all });
-    },
+    onSuccess: (id) => cohereLedgerCache(qc, { kind: "category.created", id }),
   });
 }
 
@@ -76,10 +67,7 @@ export function useUpdateCategory() {
         .set({ ...data, updatedAt: nowIso() })
         .where(eq(categories.id, id));
     },
-    onSuccess: (_, { id }) => {
-      qc.invalidateQueries({ queryKey: categoryKeys.all });
-      qc.invalidateQueries({ queryKey: categoryKeys.detail(id) });
-    },
+    onSuccess: (_, { id }) => cohereLedgerCache(qc, { kind: "category.updated", id }),
   });
 }
 
@@ -91,8 +79,6 @@ export function useDeleteCategory() {
     mutationFn: async (id: string) => {
       await db.delete(categories).where(eq(categories.id, id));
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: categoryKeys.all });
-    },
+    onSuccess: (_, id) => cohereLedgerCache(qc, { kind: "category.deleted", id }),
   });
 }
