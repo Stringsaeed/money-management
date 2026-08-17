@@ -1,4 +1,5 @@
 import { act, waitFor } from "@testing-library/react-native";
+import type { QueryClient } from "@tanstack/react-query";
 
 import { transactions } from "@/db/schema";
 import {
@@ -10,11 +11,65 @@ import {
   useTransactions,
   useUpdateTransaction,
 } from "@/hooks/use-transactions";
+import type { LedgerChange } from "@/modules/ledger-cache";
 import { createTransaction, createTransactionWithDetails } from "@/tests/test-utils/factories";
 import { createMockDb } from "@/tests/test-utils/mock-db";
 import { renderHookWithProviders } from "@/tests/test-utils/render";
 
 const mockUseDatabase = jest.fn();
+const mockCohereLedgerCache = jest.fn();
+
+interface CoherenceAwareMutation<T> {
+  expectMutationPendingUntilCoherence: () => void;
+  resolve: () => Promise<T>;
+}
+
+async function startMutationAwaitingCoherence<T>(
+  startMutation: () => Promise<T>,
+): Promise<CoherenceAwareMutation<T>> {
+  let settleCoherence!: () => void;
+  mockCohereLedgerCache.mockImplementationOnce(
+    () =>
+      new Promise<void>((resolve) => {
+        settleCoherence = resolve;
+      }),
+  );
+  let mutationSettled = false;
+  let mutation!: Promise<T>;
+
+  await act(async () => {
+    mutation = startMutation();
+    mutation.then(() => {
+      mutationSettled = true;
+    });
+  });
+
+  return {
+    expectMutationPendingUntilCoherence: () => {
+      expect(mutationSettled).toBe(false);
+    },
+    resolve: async () => {
+      let value!: T;
+      await act(async () => {
+        settleCoherence();
+        value = await mutation;
+      });
+      return value;
+    },
+  };
+}
+
+async function resolveMutationAfterSemanticCoherence<T>(
+  mutation: CoherenceAwareMutation<T>,
+  queryClient: QueryClient,
+  change: LedgerChange,
+): Promise<T> {
+  await waitFor(() => {
+    expect(mockCohereLedgerCache).toHaveBeenCalledWith(queryClient, change);
+  });
+  mutation.expectMutationPendingUntilCoherence();
+  return mutation.resolve();
+}
 
 jest.mock("@/db/client", () => ({
   useDatabase: () => mockUseDatabase(),
@@ -33,7 +88,15 @@ jest.mock("@/utils/date", () => {
   };
 });
 
+jest.mock("@/modules/ledger-cache", () => ({
+  ...jest.requireActual("@/modules/ledger-cache"),
+  cohereLedgerCache: (...args: unknown[]) => mockCohereLedgerCache(...args),
+}));
+
 describe("use-transactions hooks", () => {
+  beforeEach(() => {
+    mockCohereLedgerCache.mockResolvedValue(undefined);
+  });
   it("loads and enriches transaction lists via JOIN", async () => {
     const db = createMockDb({
       selectResults: [
@@ -209,15 +272,13 @@ describe("use-transactions hooks", () => {
     });
   });
 
-  it("creates transactions and invalidates dependent queries", async () => {
+  it("reports a committed Transaction creation and waits for coherent projections", async () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
     const { result, client } = await renderHookWithProviders(() => useCreateTransaction());
-    const invalidateQueries = jest.spyOn(client, "invalidateQueries");
-
-    await act(async () => {
-      await result.current.mutateAsync({
+    const mutation = await startMutationAwaitingCoherence(() =>
+      result.current.mutateAsync({
         type: "expense",
         amount: 40_00,
         currency: "USD",
@@ -231,50 +292,53 @@ describe("use-transactions hooks", () => {
         description: "Coffee",
         isRecurring: true,
         recurringRuleId: null,
-      });
-    });
+      }),
+    );
 
     expect(db.insert).toHaveBeenCalledWith(transactions);
     expect(db.__builders.insert.values).toHaveBeenCalledWith(
       expect.objectContaining({ isRecurring: true }),
     );
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["transactions"] });
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["account-balances"] });
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["month-summary"] });
+    await expect(
+      resolveMutationAfterSemanticCoherence(mutation, client, {
+        kind: "transaction.created",
+        id: "generated-transaction-id",
+      }),
+    ).resolves.toBe("generated-transaction-id");
   });
 
-  it("updates transactions and invalidates detail queries", async () => {
+  it("reports a committed Transaction update and waits for coherent projections", async () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
     const { result, client } = await renderHookWithProviders(() => useUpdateTransaction());
-    const invalidateQueries = jest.spyOn(client, "invalidateQueries");
-
-    await act(async () => {
-      await result.current.mutateAsync({
+    const mutation = await startMutationAwaitingCoherence(() =>
+      result.current.mutateAsync({
         id: "transaction-1",
         data: { description: "Dinner" },
-      });
-    });
+      }),
+    );
 
     expect(db.update).toHaveBeenCalledWith(transactions);
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["transactions", "transaction-1"] });
+    await resolveMutationAfterSemanticCoherence(mutation, client, {
+      kind: "transaction.updated",
+      id: "transaction-1",
+    });
   });
 
-  it("deletes transactions and invalidates dependent queries", async () => {
+  it("reports a committed Transaction deletion and waits for coherent projections", async () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
     const { result, client } = await renderHookWithProviders(() => useDeleteTransaction());
-    const invalidateQueries = jest.spyOn(client, "invalidateQueries");
-
-    await act(async () => {
-      await result.current.mutateAsync("transaction-1");
-    });
+    const mutation = await startMutationAwaitingCoherence(() =>
+      result.current.mutateAsync("transaction-1"),
+    );
 
     expect(db.delete).toHaveBeenCalledWith(transactions);
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["transactions"] });
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["account-balances"] });
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["month-summary"] });
+    await resolveMutationAfterSemanticCoherence(mutation, client, {
+      kind: "transaction.deleted",
+      id: "transaction-1",
+    });
   });
 });
