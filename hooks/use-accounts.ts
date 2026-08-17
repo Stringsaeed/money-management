@@ -9,17 +9,10 @@ import {
   previewAccountDeletion,
   updateAccountWithRecurringRules,
 } from "@/modules/account-recurring-coordinator";
+import { accountKeys, cohereLedgerCache } from "@/modules/ledger-cache";
 import { nowIso } from "@/utils/date";
 import { generateId } from "@/utils/id";
 import type { Account, AccountWithBalance } from "@/types";
-
-// ── Query keys ────────────────────────────────────────────────────────────────
-
-const accountKeys = {
-  all: ["accounts"] as const,
-  balances: ["account-balances"] as const,
-  detail: (id: string) => ["accounts", id] as const,
-};
 
 // ── Queries ────────────────────────────────────────────────────────────────────
 
@@ -101,10 +94,7 @@ export function useCreateAccount() {
       await db.insert(accounts).values({ ...data, id, createdAt: now, updatedAt: now });
       return id;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: accountKeys.all });
-      qc.invalidateQueries({ queryKey: accountKeys.balances });
-    },
+    onSuccess: (id) => cohereLedgerCache(qc, { kind: "account.created", id }),
   });
 }
 
@@ -126,12 +116,7 @@ export function useUpdateAccount() {
         now: nowIso(),
       });
     },
-    onSuccess: (_, { id }) => {
-      qc.invalidateQueries({ queryKey: accountKeys.all });
-      qc.invalidateQueries({ queryKey: accountKeys.balances });
-      qc.invalidateQueries({ queryKey: accountKeys.detail(id) });
-      qc.invalidateQueries({ queryKey: ["recurring-rules"] });
-    },
+    onSuccess: (_, { id }) => cohereLedgerCache(qc, { kind: "account.updated", id }),
   });
 }
 
@@ -149,12 +134,6 @@ export function useDeleteAccount() {
   return useMutation({
     mutationFn: (id: string) =>
       deleteAccountWithRecurringRules(database, { accountId: id, now: nowIso() }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: accountKeys.all });
-      qc.invalidateQueries({ queryKey: accountKeys.balances });
-      qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["month-summary"] });
-      qc.invalidateQueries({ queryKey: ["recurring-rules"] });
-    },
+    onSuccess: (_, id) => cohereLedgerCache(qc, { kind: "account.deleted", id }),
   });
 }

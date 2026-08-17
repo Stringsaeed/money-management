@@ -19,6 +19,7 @@ const mockUseSQLiteContext = jest.fn();
 const mockDeleteAccountWithRecurringRules = jest.fn();
 const mockPreviewAccountDeletion = jest.fn();
 const mockUpdateAccountWithRecurringRules = jest.fn();
+const mockCohereLedgerCache = jest.fn();
 
 jest.mock("@/db/client", () => ({
   useDatabase: () => mockUseDatabase(),
@@ -34,6 +35,11 @@ jest.mock("@/modules/account-recurring-coordinator", () => ({
   previewAccountDeletion: (...args: unknown[]) => mockPreviewAccountDeletion(...args),
   updateAccountWithRecurringRules: (...args: unknown[]) =>
     mockUpdateAccountWithRecurringRules(...args),
+}));
+
+jest.mock("@/modules/ledger-cache", () => ({
+  ...jest.requireActual("@/modules/ledger-cache"),
+  cohereLedgerCache: (...args: unknown[]) => mockCohereLedgerCache(...args),
 }));
 
 jest.mock("@/utils/id", () => ({
@@ -53,6 +59,7 @@ describe("use-accounts hooks", () => {
       accountId: "account-1",
       rulesNeedingAttention: [],
     });
+    mockCohereLedgerCache.mockResolvedValue(undefined);
   });
 
   it("loads sorted accounts", async () => {
@@ -122,15 +129,23 @@ describe("use-accounts hooks", () => {
     ]);
   });
 
-  it("creates an account and invalidates account queries", async () => {
+  it("reports an Account creation and waits for cache coherence", async () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
+    let settleCoherence!: () => void;
+    mockCohereLedgerCache.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          settleCoherence = resolve;
+        }),
+    );
     const { result, client } = await renderHookWithProviders(() => useCreateAccount());
-    const invalidateQueries = jest.spyOn(client, "invalidateQueries");
+    let mutationSettled = false;
 
+    let mutation!: Promise<string>;
     await act(async () => {
-      await result.current.mutateAsync({
+      mutation = result.current.mutateAsync({
         name: "Travel",
         type: "savings",
         currency: "USD",
@@ -139,6 +154,9 @@ describe("use-accounts hooks", () => {
         initialBalance: 0,
         excludeFromTotal: false,
         sortOrder: 0,
+      });
+      mutation.then(() => {
+        mutationSettled = true;
       });
     });
 
@@ -156,21 +174,43 @@ describe("use-accounts hooks", () => {
       createdAt: "2026-03-28T12:00:00.000Z",
       updatedAt: "2026-03-28T12:00:00.000Z",
     });
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["accounts"] });
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["account-balances"] });
+    await waitFor(() => {
+      expect(mockCohereLedgerCache).toHaveBeenCalledWith(client, {
+        kind: "account.created",
+        id: "generated-account-id",
+      });
+    });
+    expect(mutationSettled).toBe(false);
+
+    await act(async () => {
+      settleCoherence();
+      await expect(mutation).resolves.toBe("generated-account-id");
+    });
+    expect(mutationSettled).toBe(true);
   });
 
-  it("updates an account and invalidates detail queries", async () => {
+  it("reports an Account update after the coordinated write commits", async () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
+    let settleCoherence!: () => void;
+    mockCohereLedgerCache.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          settleCoherence = resolve;
+        }),
+    );
     const { result, client } = await renderHookWithProviders(() => useUpdateAccount());
-    const invalidateQueries = jest.spyOn(client, "invalidateQueries");
+    let mutationSettled = false;
+    let mutation!: Promise<unknown>;
 
     await act(async () => {
-      await result.current.mutateAsync({
+      mutation = result.current.mutateAsync({
         id: "account-1",
         data: { name: "Updated Name" },
+      });
+      mutation.then(() => {
+        mutationSettled = true;
       });
     });
 
@@ -182,8 +222,19 @@ describe("use-accounts hooks", () => {
         now: "2026-03-28T12:00:00.000Z",
       },
     );
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["accounts", "account-1"] });
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["recurring-rules"] });
+    await waitFor(() => {
+      expect(mockCohereLedgerCache).toHaveBeenCalledWith(client, {
+        kind: "account.updated",
+        id: "account-1",
+      });
+    });
+    expect(mutationSettled).toBe(false);
+
+    await act(async () => {
+      settleCoherence();
+      await mutation;
+    });
+    expect(mutationSettled).toBe(true);
   });
 
   it("previews affected Rules before account deletion", async () => {
@@ -196,21 +247,41 @@ describe("use-accounts hooks", () => {
     expect(mockPreviewAccountDeletion).toHaveBeenCalledWith({ raw: "database" }, "account-1");
   });
 
-  it("deletes an account through the Rule coordinator and invalidates dependencies", async () => {
+  it("reports coordinated Account deletion after Rules have been updated", async () => {
+    let settleCoherence!: () => void;
+    mockCohereLedgerCache.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          settleCoherence = resolve;
+        }),
+    );
     const { result, client } = await renderHookWithProviders(() => useDeleteAccount());
-    const invalidateQueries = jest.spyOn(client, "invalidateQueries");
+    let mutationSettled = false;
+    let mutation!: Promise<unknown>;
 
     await act(async () => {
-      await result.current.mutateAsync("account-1");
+      mutation = result.current.mutateAsync("account-1");
+      mutation.then(() => {
+        mutationSettled = true;
+      });
     });
 
     expect(mockDeleteAccountWithRecurringRules).toHaveBeenCalledWith(
       { raw: "database" },
       { accountId: "account-1", now: "2026-03-28T12:00:00.000Z" },
     );
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["account-balances"] });
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["transactions"] });
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["month-summary"] });
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["recurring-rules"] });
+    await waitFor(() => {
+      expect(mockCohereLedgerCache).toHaveBeenCalledWith(client, {
+        kind: "account.deleted",
+        id: "account-1",
+      });
+    });
+    expect(mutationSettled).toBe(false);
+
+    await act(async () => {
+      settleCoherence();
+      await mutation;
+    });
+    expect(mutationSettled).toBe(true);
   });
 });
