@@ -27,7 +27,7 @@ interface UseEditCategoryFormArgs {
   onUpdated?: VoidFunction;
 }
 
-export const categoryFormOptions = formOptions({
+const categoryFormOptions = formOptions({
   defaultValues: {
     name: "",
     type: "expense",

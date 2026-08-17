@@ -8,7 +8,7 @@ export type SectionHeaderItem = {
   currency: string;
 };
 
-export type TransactionItem = {
+type TransactionItem = {
   type: "transaction";
   data: TransactionWithDetails;
   showAccount: boolean;

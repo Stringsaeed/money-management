@@ -104,5 +104,5 @@ export function useEditAccountForm({ account, onError, onUpdated }: UseEditAccou
   });
 }
 
-export type UseEditAccountFormReturn = ReturnType<typeof useEditAccountForm>;
+type UseEditAccountFormReturn = ReturnType<typeof useEditAccountForm>;
 export type AccountFormApi = UseAccountFormReturn | UseEditAccountFormReturn;

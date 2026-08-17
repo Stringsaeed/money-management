@@ -1,7 +1,7 @@
 import type { RecurrenceFrequency, TransactionType } from "@/types";
 
 /** Recurrence cadence + end condition captured by the form (start date = `date`). */
-export interface RecurrenceConfig {
+interface RecurrenceConfig {
   frequency: RecurrenceFrequency;
   intervalCount: number;
   endDate: Date | null; // "on_date" end

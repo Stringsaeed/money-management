@@ -19,7 +19,7 @@ import { appSettings, categories } from "./schema";
 type DB = ReturnType<typeof drizzle>;
 
 /** Bump when {@link CATEGORIES} changes and every user should pick it up. */
-export const SEED_VERSION = 2;
+const SEED_VERSION = 2;
 
 const SEED_VERSION_KEY = "seedVersion";
 

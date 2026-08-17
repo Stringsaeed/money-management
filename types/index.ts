@@ -1,8 +1,6 @@
 export type TransactionType = "income" | "expense" | "transfer";
 /** The unit a recurrence repeats on. Combined with `intervalCount` for "every N units". */
 export type RecurrenceFrequency = "day" | "week" | "month" | "year";
-/** How a recurrence stops. Derived at the DB layer from which end field is set. */
-export type RecurrenceEndType = "never" | "on_date" | "after_count";
 export type AccountType = "checking" | "savings" | "cash" | "credit_card" | "investment" | "other";
 
 // ── Account ──────────────────────────────────────────────────────────────────

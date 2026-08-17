@@ -10,24 +10,17 @@
     "stores/**/*.{ts,tsx}",
     "types/**/*.{ts,tsx}",
     "utils/**/*.{ts,tsx}",
-    "scripts/**/*.{js,ts}"
+    "scripts/**/*.{js,ts}",
+    "lib/**/*.{ts,tsx}",
+    "**/*.css"
   ],
   "ignoreDependencies": [
-    "expo-linear-gradient",
-    "babel-plugin-inline-import",
     "tailwind-variants",
     "tailwindcss-animate",
     "eas-build-cache-provider",
-    "victory-native"
-  ],
-  "ignore": [
-    "components/ui/*.{ts,tsx}",
-    "components/settings/category-spending-chart.tsx",
-    "components/settings/stats-charts.tsx",
-    "components/settings/transaction-trend-chart.tsx",
-    "hooks/use-chart-data.ts",
-    "jest/**/*.{ts,tsx,js}",
-    "__tests__/**/*.{ts,tsx,js}"
+    "react-test-renderer",
+    "@types/react-test-renderer",
+    "@tanstack/query-core"
   ],
   "expo": {
     "config": ["app.config.ts"],

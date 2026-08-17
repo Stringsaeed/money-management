@@ -63,7 +63,6 @@ export const useResumeRecurringRule = () => useRecurringChange("resume");
 export const useArchiveRecurringRule = () => useRecurringChange("archive");
 export const useRestoreRecurringRule = () => useRecurringChange("restore");
 export const useRepairRecurringRule = () => useRecurringChange("repair");
-export const useChangeRecurringRuleTimeZone = () => useRecurringChange("change_time_zone");
 
 export function useSettleRecurringRules() {
   const recurringRules = useRecurringRulesModule();
