@@ -7,8 +7,7 @@ import {
   type RecurringRule,
 } from "@/modules/recurring-rules";
 import { useRecurringRulesModule } from "@/modules/recurring-rules/provider";
-
-import { invalidateRecurringEffects, recurringRuleKeys } from "./recurring-effects";
+import { cohereRecurringEffects, recurringRuleKeys } from "@/modules/ledger-cache";
 
 type ChangeOfKind<Kind extends RecurringChange["kind"]> = Extract<RecurringChange, { kind: Kind }>;
 type ChangeVariables<Kind extends RecurringChange["kind"]> = Omit<ChangeOfKind<Kind>, "kind">;
@@ -71,10 +70,10 @@ export function useSettleRecurringRules() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => recurringRules.settle(),
-    onSuccess: (report) => invalidateRecurringEffects(queryClient, report.effects),
+    onSuccess: (report) => cohereRecurringEffects(queryClient, report.effects),
     onError: (error) => {
       if (error instanceof RecurringSettlementError) {
-        return invalidateRecurringEffects(queryClient, error.report.effects);
+        return cohereRecurringEffects(queryClient, error.report.effects);
       }
     },
   });
@@ -88,7 +87,7 @@ function useRecurringChange<Kind extends RecurringChange["kind"]>(kind: Kind) {
     onSuccess: (result) => {
       if (result.kind === "applied") {
         updateRecurringRuleLifecycle(queryClient, kind, result);
-        return invalidateRecurringEffects(queryClient, result.effects);
+        return cohereRecurringEffects(queryClient, result.effects);
       }
     },
   });

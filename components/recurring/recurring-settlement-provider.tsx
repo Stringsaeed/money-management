@@ -10,7 +10,7 @@ import {
 } from "react";
 import { AppState } from "react-native";
 
-import { invalidateRecurringEffects } from "@/hooks/recurring-effects";
+import { cohereRecurringEffects } from "@/modules/ledger-cache";
 import { RecurringSettlementError, type SettlementReport } from "@/modules/recurring-rules";
 import { useRecurringRulesModule } from "@/modules/recurring-rules/provider";
 
@@ -33,14 +33,14 @@ export function RecurringSettlementProvider({ children }: PropsWithChildren) {
   const settle = async () => {
     try {
       const nextReport = await recurringRules.settle();
-      await invalidateRecurringEffects(queryClient, nextReport.effects);
+      await cohereRecurringEffects(queryClient, nextReport.effects);
       if (!mounted.current) return;
       setReport(nextReport);
       setError(null);
     } catch (cause) {
       const nextError = cause instanceof Error ? cause : new Error("Recurring Settlement failed.");
       if (cause instanceof RecurringSettlementError) {
-        await invalidateRecurringEffects(queryClient, cause.report.effects);
+        await cohereRecurringEffects(queryClient, cause.report.effects);
         if (!mounted.current) return;
         setReport(cause.report);
       }

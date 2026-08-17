@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, waitFor } from "@testing-library/react-native";
 import { AppState, Text } from "react-native";
 
+import * as ledgerCache from "@/modules/ledger-cache";
+import { RecurringSettlementError, type SettlementReport } from "@/modules/recurring-rules";
 import {
   RecurringSettlementProvider,
   useRecurringSettlementFeedback,
@@ -20,6 +22,11 @@ function FeedbackProbe() {
 }
 
 describe("RecurringSettlementProvider", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
+
   it("settles on launch and again when the app returns to the foreground", async () => {
     mockSettle.mockResolvedValue({
       localDate: "2026-04-15",
@@ -36,7 +43,9 @@ describe("RecurringSettlementProvider", () => {
       return { remove: jest.fn() };
     });
     const queryClient = new QueryClient();
-    const invalidateQueries = jest.spyOn(queryClient, "invalidateQueries");
+    const cohereRecurringEffects = jest
+      .spyOn(ledgerCache, "cohereRecurringEffects")
+      .mockResolvedValue(undefined);
     const screen = await render(
       <QueryClientProvider client={queryClient}>
         <RecurringSettlementProvider>
@@ -47,12 +56,45 @@ describe("RecurringSettlementProvider", () => {
 
     await waitFor(() => expect(mockSettle).toHaveBeenCalledTimes(1));
     expect(screen.getByText("1")).toBeOnTheScreen();
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["transactions"] });
+    expect(cohereRecurringEffects).toHaveBeenCalledWith(queryClient, ["ledger"]);
 
     await act(async () => {
       appStateListener?.("background");
       appStateListener?.("active");
     });
     await waitFor(() => expect(mockSettle).toHaveBeenCalledTimes(2));
+  });
+
+  it("coheres partially committed work from a failed foreground Settlement", async () => {
+    const report: SettlementReport = {
+      localDate: "2026-04-15",
+      startedAt: "2026-04-15T08:00:00.000Z",
+      finishedAt: "2026-04-15T08:00:00.000Z",
+      generatedCount: 1,
+      totalMinor: 120_000,
+      rules: [],
+      effects: ["rules", "ledger"],
+    };
+    mockSettle.mockRejectedValue(
+      new RecurringSettlementError(report, [
+        { ruleId: "rule-1", cause: new Error("Rule storage failed") },
+      ]),
+    );
+    const cohereRecurringEffects = jest
+      .spyOn(ledgerCache, "cohereRecurringEffects")
+      .mockResolvedValue(undefined);
+    const queryClient = new QueryClient();
+
+    await render(
+      <QueryClientProvider client={queryClient}>
+        <RecurringSettlementProvider>
+          <FeedbackProbe />
+        </RecurringSettlementProvider>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() =>
+      expect(cohereRecurringEffects).toHaveBeenCalledWith(queryClient, report.effects),
+    );
   });
 });

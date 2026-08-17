@@ -5,8 +5,15 @@ import {
   usePauseRecurringRule,
   useRecurringRule,
   useRecurringRulesList,
+  useSettleRecurringRules,
 } from "@/hooks/use-recurring-rules";
-import type { RecurringRuleDraft, RecurringRules } from "@/modules/recurring-rules";
+import * as ledgerCache from "@/modules/ledger-cache";
+import {
+  RecurringSettlementError,
+  type RecurringRuleDraft,
+  type RecurringRules,
+  type SettlementReport,
+} from "@/modules/recurring-rules";
 import { createRecurringRule } from "@/tests/test-utils/factories";
 import { renderHookWithProviders } from "@/tests/test-utils/render";
 
@@ -38,6 +45,11 @@ const draft: RecurringRuleDraft = {
 };
 
 describe("Recurring Rules hooks", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
+
   it("adapts the list read to caller-friendly query data", async () => {
     mockModule.read.mockResolvedValue({ kind: "list", rules: [] });
 
@@ -57,23 +69,22 @@ describe("Recurring Rules hooks", () => {
       effects: ["rules", "upcoming", "ledger", "balances", "summaries"],
     });
     const { result, client } = await renderHookWithProviders(() => useCreateRecurringRule());
-    const invalidateQueries = jest.spyOn(client, "invalidateQueries");
+    const cohereRecurringEffects = jest
+      .spyOn(ledgerCache, "cohereRecurringEffects")
+      .mockResolvedValue(undefined);
 
     await act(async () => {
       await result.current.mutateAsync({ rule: draft });
     });
 
     expect(mockModule.change).toHaveBeenCalledWith({ kind: "create", rule: draft });
-    for (const queryKey of [
-      ["recurring-rules"],
-      ["recurring-rules", "upcoming"],
-      ["transactions"],
-      ["account-balances"],
-      ["month-summary"],
-      ["transaction-date-range"],
-    ]) {
-      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey });
-    }
+    expect(cohereRecurringEffects).toHaveBeenCalledWith(client, [
+      "rules",
+      "upcoming",
+      "ledger",
+      "balances",
+      "summaries",
+    ]);
   });
 
   it("refreshes the active rule detail immediately after an applied change", async () => {
@@ -124,13 +135,80 @@ describe("Recurring Rules hooks", () => {
         lastDate: "2026-04-01",
       },
     });
-    const { result, client } = await renderHookWithProviders(() => useCreateRecurringRule());
-    const invalidateQueries = jest.spyOn(client, "invalidateQueries");
+    const { result } = await renderHookWithProviders(() => useCreateRecurringRule());
+    const cohereRecurringEffects = jest.spyOn(ledgerCache, "cohereRecurringEffects");
 
     await act(async () => {
       await result.current.mutateAsync({ rule: draft });
     });
 
-    expect(invalidateQueries).not.toHaveBeenCalled();
+    expect(cohereRecurringEffects).not.toHaveBeenCalled();
+  });
+
+  it("awaits coherence after an explicit successful Settlement", async () => {
+    const report: SettlementReport = {
+      localDate: "2026-04-15",
+      startedAt: "2026-04-15T08:00:00.000Z",
+      finishedAt: "2026-04-15T08:00:00.000Z",
+      generatedCount: 1,
+      totalMinor: 120_000,
+      rules: [],
+      effects: ["ledger", "balances"],
+    };
+    mockModule.settle.mockResolvedValue(report);
+    let resolveCoherence!: () => void;
+    const coherence = new Promise<void>((resolve) => {
+      resolveCoherence = resolve;
+    });
+    let signalCoherenceStarted!: () => void;
+    const coherenceStarted = new Promise<void>((resolve) => {
+      signalCoherenceStarted = resolve;
+    });
+    const cohereRecurringEffects = jest
+      .spyOn(ledgerCache, "cohereRecurringEffects")
+      .mockImplementation(() => {
+        signalCoherenceStarted();
+        return coherence;
+      });
+    const { result, client } = await renderHookWithProviders(() => useSettleRecurringRules());
+
+    await act(async () => {
+      const settlement = result.current.mutateAsync();
+      let settled = false;
+      void settlement.then(() => {
+        settled = true;
+      });
+      await coherenceStarted;
+      expect(cohereRecurringEffects).toHaveBeenCalledWith(client, report.effects);
+      expect(settled).toBe(false);
+      resolveCoherence();
+      await settlement;
+    });
+  });
+
+  it("coheres effects from a partial Settlement before surfacing its typed error", async () => {
+    const report: SettlementReport = {
+      localDate: "2026-04-15",
+      startedAt: "2026-04-15T08:00:00.000Z",
+      finishedAt: "2026-04-15T08:00:00.000Z",
+      generatedCount: 1,
+      totalMinor: 120_000,
+      rules: [],
+      effects: ["rules", "ledger"],
+    };
+    const error = new RecurringSettlementError(report, [
+      { ruleId: "rule-1", cause: new Error("Storage failed") },
+    ]);
+    mockModule.settle.mockRejectedValue(error);
+    const cohereRecurringEffects = jest
+      .spyOn(ledgerCache, "cohereRecurringEffects")
+      .mockResolvedValue(undefined);
+    const { result, client } = await renderHookWithProviders(() => useSettleRecurringRules());
+
+    await act(async () => {
+      await expect(result.current.mutateAsync()).rejects.toBe(error);
+    });
+
+    expect(cohereRecurringEffects).toHaveBeenCalledWith(client, report.effects);
   });
 });
