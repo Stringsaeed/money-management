@@ -6,8 +6,9 @@ import SettingsScreen from "@/app/(tabs)/settings";
 
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
-const mockInvalidateQueries = jest.fn();
+const mockCohereLedgerCache = jest.fn();
 const mockUseDatabase = jest.fn();
+const mockDelete = jest.fn(() => deleteBuilder);
 const deleteBuilder = { where: jest.fn().mockResolvedValue(undefined) };
 const updateBuilder = {
   set: jest.fn().mockReturnThis(),
@@ -133,16 +134,9 @@ jest.mock("expo-router", () => ({
   },
 }));
 
-jest.mock("@tanstack/react-query", () => {
-  const actual = jest.requireActual("@tanstack/react-query");
-
-  return {
-    ...actual,
-    useQueryClient: () => ({
-      invalidateQueries: (...args: unknown[]) => mockInvalidateQueries(...args),
-    }),
-  };
-});
+jest.mock("@/modules/ledger-cache", () => ({
+  cohereLedgerCache: (...args: unknown[]) => mockCohereLedgerCache(...args),
+}));
 
 jest.mock("@/db/client", () => ({
   useDatabase: () => mockUseDatabase(),
@@ -228,8 +222,14 @@ describe("app/settings", () => {
   });
 
   beforeEach(() => {
+    mockCohereLedgerCache.mockReset().mockResolvedValue(undefined);
+    mockDelete.mockClear();
+    mockReplace.mockReset();
+    insertBuilder.values.mockClear();
+    insertBuilder.onConflictDoUpdate.mockClear();
+    insertBuilder.run.mockClear();
     mockUseDatabase.mockReturnValue({
-      delete: jest.fn(() => deleteBuilder),
+      delete: mockDelete,
       update: jest.fn(() => updateBuilder),
       insert: jest.fn(() => insertBuilder),
     });
@@ -250,8 +250,14 @@ describe("app/settings", () => {
     expect(screen.getByText("dev-tools")).toBeOnTheScreen();
   });
 
-  it("erases data after destructive confirmation", async () => {
+  it("reports a full reset after erasing data and waits before navigating", async () => {
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    let resolveCoherence: (() => void) | undefined;
+    mockCohereLedgerCache.mockReturnValueOnce(
+      new Promise<void>((resolve) => {
+        resolveCoherence = resolve;
+      }),
+    );
 
     await render(
       <QueryClientProvider client={client}>
@@ -262,12 +268,27 @@ describe("app/settings", () => {
     await fireEvent.press(screen.getByText("Erase All Data"));
 
     const destructiveAction = alertSpy.mock.calls[0]?.[2]?.[1];
+    let erasePromise: Promise<void> | void | undefined;
     await act(async () => {
-      await destructiveAction?.onPress?.();
+      erasePromise = destructiveAction?.onPress?.();
     });
 
     await waitFor(() => {
-      expect(mockInvalidateQueries).toHaveBeenCalled();
+      expect(mockCohereLedgerCache).toHaveBeenCalledWith(expect.anything(), {
+        kind: "ledger.reset",
+      });
+    });
+
+    expect(mockDelete).toHaveBeenCalled();
+    expect(insertBuilder.run).toHaveBeenCalled();
+    expect(insertBuilder.run.mock.invocationCallOrder[0]).toBeLessThan(
+      mockCohereLedgerCache.mock.invocationCallOrder[0]!,
+    );
+    expect(mockReplace).not.toHaveBeenCalled();
+
+    resolveCoherence?.();
+    await act(async () => {
+      await erasePromise;
     });
 
     expect(mockReplace).toHaveBeenCalledWith("/onboarding");

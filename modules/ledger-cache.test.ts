@@ -107,6 +107,10 @@ describe("cohereLedgerCache", () => {
       expectedKeys: [["categories"]],
     },
     {
+      change: { kind: "category.batch" },
+      expectedKeys: [["categories"], ["transactions"]],
+    },
+    {
       change: { kind: "category.updated", id: "category-1" },
       expectedKeys: [["categories"], ["transactions"]],
     },
