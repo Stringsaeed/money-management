@@ -13,9 +13,55 @@ import { createMockDb } from "@/tests/test-utils/mock-db";
 import { renderHookWithProviders } from "@/tests/test-utils/render";
 
 const mockUseDatabase = jest.fn();
+const mockCohereLedgerCache = jest.fn();
+
+interface CoherenceAwareMutation<T> {
+  expectPending: () => void;
+  resolve: () => Promise<T>;
+}
+
+async function startMutationAwaitingCoherence<T>(
+  startMutation: () => Promise<T>,
+): Promise<CoherenceAwareMutation<T>> {
+  let settleCoherence!: () => void;
+  mockCohereLedgerCache.mockImplementationOnce(
+    () =>
+      new Promise<void>((resolve) => {
+        settleCoherence = resolve;
+      }),
+  );
+  let mutationSettled = false;
+  let mutation!: Promise<T>;
+
+  await act(async () => {
+    mutation = startMutation();
+    mutation.then(() => {
+      mutationSettled = true;
+    });
+  });
+
+  return {
+    expectPending: () => {
+      expect(mutationSettled).toBe(false);
+    },
+    resolve: async () => {
+      let value!: T;
+      await act(async () => {
+        settleCoherence();
+        value = await mutation;
+      });
+      return value;
+    },
+  };
+}
 
 jest.mock("@/db/client", () => ({
   useDatabase: () => mockUseDatabase(),
+}));
+
+jest.mock("@/modules/ledger-cache", () => ({
+  ...jest.requireActual("@/modules/ledger-cache"),
+  cohereLedgerCache: (...args: unknown[]) => mockCohereLedgerCache(...args),
 }));
 
 jest.mock("@/utils/id", () => ({
@@ -27,6 +73,10 @@ jest.mock("@/utils/date", () => ({
 }));
 
 describe("use-categories hooks", () => {
+  beforeEach(() => {
+    mockCohereLedgerCache.mockResolvedValue(undefined);
+  });
+
   it("loads categories with an optional type filter", async () => {
     const db = createMockDb({
       selectResults: [{ all: [createCategory({ id: "category-1", type: "expense" })] }],
@@ -61,58 +111,73 @@ describe("use-categories hooks", () => {
     );
   });
 
-  it("creates a category and invalidates the list", async () => {
+  it("reports a Category creation and waits for cache coherence", async () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
     const { result, client } = await renderHookWithProviders(() => useCreateCategory());
-    const invalidateQueries = jest.spyOn(client, "invalidateQueries");
-
-    await act(async () => {
-      await result.current.mutateAsync({
+    const mutation = await startMutationAwaitingCoherence(() =>
+      result.current.mutateAsync({
         name: "Salary",
         type: "income",
         color: "#8B9D83",
         icon: "💼",
         parentId: null,
         sortOrder: 0,
-      });
-    });
+      }),
+    );
 
     expect(db.insert).toHaveBeenCalledWith(categories);
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["categories"] });
+    await waitFor(() => {
+      expect(mockCohereLedgerCache).toHaveBeenCalledWith(client, {
+        kind: "category.created",
+        id: "generated-category-id",
+      });
+    });
+    mutation.expectPending();
+    await expect(mutation.resolve()).resolves.toBe("generated-category-id");
   });
 
-  it("updates a category and invalidates its detail query", async () => {
+  it("reports a Category update after the write commits", async () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
     const { result, client } = await renderHookWithProviders(() => useUpdateCategory());
-    const invalidateQueries = jest.spyOn(client, "invalidateQueries");
-
-    await act(async () => {
-      await result.current.mutateAsync({
+    const mutation = await startMutationAwaitingCoherence(() =>
+      result.current.mutateAsync({
         id: "category-1",
         data: { name: "Dining" },
-      });
-    });
+      }),
+    );
 
     expect(db.update).toHaveBeenCalledWith(categories);
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["categories", "category-1"] });
+    await waitFor(() => {
+      expect(mockCohereLedgerCache).toHaveBeenCalledWith(client, {
+        kind: "category.updated",
+        id: "category-1",
+      });
+    });
+    mutation.expectPending();
+    await mutation.resolve();
   });
 
-  it("deletes a category and invalidates the category list", async () => {
+  it("reports a Category deletion after the write commits", async () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
     const { result, client } = await renderHookWithProviders(() => useDeleteCategory());
-    const invalidateQueries = jest.spyOn(client, "invalidateQueries");
-
-    await act(async () => {
-      await result.current.mutateAsync("category-1");
-    });
+    const mutation = await startMutationAwaitingCoherence(() =>
+      result.current.mutateAsync("category-1"),
+    );
 
     expect(db.delete).toHaveBeenCalledWith(categories);
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["categories"] });
+    await waitFor(() => {
+      expect(mockCohereLedgerCache).toHaveBeenCalledWith(client, {
+        kind: "category.deleted",
+        id: "category-1",
+      });
+    });
+    mutation.expectPending();
+    await mutation.resolve();
   });
 });
