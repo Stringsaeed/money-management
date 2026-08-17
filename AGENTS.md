@@ -10,6 +10,20 @@
 - UI copy, labels, and decorative elements should use emojis freely to support the modern minimal design language; non-UI files (configs, scripts) remain ASCII-only.
 - Never delete or revert user-owned changes unless they ask; keep the worktree state intact outside your edits.
 
+## Agent skills
+
+### Issue tracker
+
+Issues and specs are tracked in GitHub Issues for `Stringsaeed/money-management`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the default canonical triage labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This is a single-context repository using root `CONTEXT.md` and repo-wide ADRs under `docs/adr/`. See `docs/agents/domain.md`.
+
 ## Commands & Tooling
 
 - **Package manager: pnpm** (`pnpm install`, `pnpm run ...`); avoid npm/yarn/bun.
