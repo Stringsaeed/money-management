@@ -104,8 +104,16 @@ describe("cohereBudgetingEffects", () => {
       ],
     },
     {
+      effect: "memberships",
+      expectedKeys: [["budgeting", "projections"], ["account-lifecycle-previews"]],
+    },
+    {
       effect: "projections",
       expectedKeys: [["budgeting", "projections"], ["account-lifecycle-previews"]],
+    },
+    {
+      effect: "settings",
+      expectedKeys: [["budgeting", "workspaces"]],
     },
   ])("maps $effect through the centralized coherence owner", async ({ effect, expectedKeys }) => {
     const { invalidateQueries, queryClient } = createControlledQueryClient();
@@ -113,6 +121,18 @@ describe("cohereBudgetingEffects", () => {
     await cohereBudgetingEffects(queryClient, [effect]);
 
     expect(invalidatedKeys(invalidateQueries)).toEqual(expectedKeys);
+  });
+
+  it("invalidates overlapping workspace effects only once", async () => {
+    const { invalidateQueries, queryClient } = createControlledQueryClient();
+
+    await cohereBudgetingEffects(queryClient, ["workspaces", "memberships", "settings"]);
+
+    expect(invalidatedKeys(invalidateQueries)).toEqual([
+      ["budgeting", "workspaces"],
+      ["budgeting", "projections"],
+      ["account-lifecycle-previews"],
+    ]);
   });
 });
 
