@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
@@ -6,21 +5,13 @@ import { AssignmentHistory } from "@/components/envelopes/assignment-history";
 import { MoveMoneyDetails } from "@/components/envelopes/move-money-details";
 import { MoveMoneyEndpointPicker } from "@/components/envelopes/move-money-endpoint-picker";
 import { MoveMoneyPreviewCard } from "@/components/envelopes/move-money-preview-card";
+import { useMoveMoneySheet } from "@/components/envelopes/use-move-money-sheet";
 import { CreateResourceBottomSheet } from "@/components/resource/create-resource-bottom-sheet";
 import { CreateResourceSheetFooter } from "@/components/resource/create-resource-sheet-footer";
 import { layoutTransition } from "@/components/transaction/constants";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { useAssignmentHistory, useCorrectMoveMoney, useMoveMoney } from "@/hooks/use-move-money";
-import { createBudgetingCoordinator } from "@/modules/budgeting/budgeting";
-import type {
-  BudgetProjection,
-  AssignmentHistoryEntry,
-  MoveMoneyEndpoint,
-  MoveMoneyPreview,
-  MoveMoneyRequest,
-} from "@/modules/budgeting/budgeting";
-import { useSQLiteContext } from "expo-sqlite";
+import type { BudgetProjection } from "@/modules/budgeting/budgeting";
 
 interface MoveMoneySheetProps {
   currency: string;
@@ -37,96 +28,26 @@ export function MoveMoneySheet({
   period: initialPeriod,
   projection,
 }: MoveMoneySheetProps) {
-  const database = useSQLiteContext();
-  const moveMoney = useMoveMoney();
-  const correctMoveMoney = useCorrectMoveMoney();
-  const [sourceEnvelopeId, setSourceEnvelopeId] = useState<MoveMoneyEndpoint>(null);
-  const [destinationEnvelopeId, setDestinationEnvelopeId] = useState<MoveMoneyEndpoint>(
-    projection.envelopes[0]?.id ?? null,
-  );
-  const [amount, setAmount] = useState("");
-  const [period, setPeriod] = useState(initialPeriod);
-  const [preview, setPreview] = useState<MoveMoneyPreview | null>(null);
-  const [previewError, setPreviewError] = useState<string | null>(null);
-  const [correctionId, setCorrectionId] = useState<string | null>(null);
-  const history = useAssignmentHistory(currency, period);
-  const isSubmitting = moveMoney.isPending || correctMoveMoney.isPending;
-
-  const resetPreview = () => {
-    setPreview(null);
-    setPreviewError(null);
-  };
-  const handleSourceChange = (nextSourceEnvelopeId: MoveMoneyEndpoint) => {
-    setSourceEnvelopeId(nextSourceEnvelopeId);
-    resetPreview();
-  };
-  const handleDestinationChange = (nextDestinationEnvelopeId: MoveMoneyEndpoint) => {
-    setDestinationEnvelopeId(nextDestinationEnvelopeId);
-    resetPreview();
-  };
-  const handleAmountChange = (nextAmount: string) => {
-    setAmount(nextAmount);
-    resetPreview();
-  };
-  const handlePeriodChange = (nextPeriod: string) => {
-    setPeriod(nextPeriod);
-    resetPreview();
-  };
-  const handleCorrectionSelect = (assignment: AssignmentHistoryEntry) => {
-    setAmount(String(assignment.amountMinor));
-    setCorrectionId(assignment.id);
-    setDestinationEnvelopeId(assignment.destinationEnvelopeId);
-    setPeriod(assignment.budgetPeriod);
-    setSourceEnvelopeId(assignment.sourceEnvelopeId);
-    resetPreview();
-  };
-  const createRequest = (): MoveMoneyRequest => ({
-    amountMinor: Number(amount),
-    currency,
+  const {
+    amount,
+    correctionId,
     destinationEnvelopeId,
-    id: `assignment-${Date.now()}`,
-    now: new Date().toISOString(),
+    handleAmountChange,
+    handleCorrectionSelect,
+    handleDestinationChange,
+    handlePeriodChange,
+    handlePreview,
+    handleSourceChange,
+    handleSubmit,
+    history,
+    isSubmitting,
+    moveError,
     period,
+    preview,
+    previewError,
+    selectedCorrection,
     sourceEnvelopeId,
-  });
-  const createCorrectionRequest = () => ({
-    ...createRequest(),
-    originalAssignmentId: correctionId ?? "",
-    reversalId: `assignment-reversal-${Date.now()}`,
-  });
-  const handlePreview = async () => {
-    try {
-      setPreviewError(null);
-      const budgeting = createBudgetingCoordinator(database);
-      const nextPreview = correctionId
-        ? await budgeting.previewCorrectMoveMoney(createCorrectionRequest())
-        : await budgeting.previewMoveMoney(createRequest());
-      setPreview(nextPreview);
-    } catch (error) {
-      setPreview(null);
-      setPreviewError(error instanceof Error ? error.message : "Review the Move Money details.");
-    }
-  };
-  const handleSubmit = () => {
-    if (!preview) {
-      setPreviewError("Preview the Move Money result before confirming it.");
-      return;
-    }
-    const request = createRequest();
-    if (correctionId) {
-      correctMoveMoney.mutate(
-        {
-          ...createCorrectionRequest(),
-        },
-        { onSuccess: onSaved },
-      );
-      return;
-    }
-    moveMoney.mutate(request, { onSuccess: onSaved });
-  };
-  const selectedCorrection = correctionId
-    ? (history.data?.find(({ id }) => id === correctionId) ?? null)
-    : null;
+  } = useMoveMoneySheet({ currency, onSaved, period: initialPeriod, projection });
 
   return (
     <CreateResourceBottomSheet
@@ -178,7 +99,7 @@ export function MoveMoneySheet({
       }
       footer={
         <CreateResourceSheetFooter
-          error={moveMoney.error?.message ?? correctMoveMoney.error?.message}
+          error={moveError}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit}
           submitLabel={correctionId ? "Correct Move Money" : "Move Money"}
