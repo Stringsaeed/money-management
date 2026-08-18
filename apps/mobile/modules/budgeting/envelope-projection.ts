@@ -13,6 +13,12 @@ interface EnvelopeRow {
   positiveRollover: number | null;
 }
 
+interface CategoryMappingRow {
+  id: string;
+  lifecycle: "active" | "archived";
+  type: "expense" | "income";
+}
+
 export async function getEnvelopeSummaries(
   database: SQLiteDatabase,
   currency: string,
@@ -45,8 +51,8 @@ export async function getEnvelopeSummaries(
 
   const summaries = await Promise.all(
     rows.map(async (row) => {
-      const categories = await database.getAllAsync<{ id: string }>(
-        `SELECT categories.id
+      const categories = await database.getAllAsync<CategoryMappingRow>(
+        `SELECT categories.id, categories.lifecycle, categories.type
          FROM category_mappings
          INNER JOIN categories ON categories.id = category_mappings.category_id
          WHERE category_mappings.envelope_id = ?
@@ -55,16 +61,17 @@ export async function getEnvelopeSummaries(
              category_mappings.effective_to_period IS NULL
              OR category_mappings.effective_to_period >= ?
            )
-           AND categories.lifecycle = 'active'
-           AND categories.type = 'expense'
          ORDER BY categories.id`,
         row.id,
         period,
         period,
       );
       const money = { currency, amountMinor: 0 };
+      const hasActiveExpenseCategory = categories.some(
+        (category) => category.lifecycle === "active" && category.type === "expense",
+      );
       const health =
-        categories.length > 0
+        row.lifecycle === "archived" || hasActiveExpenseCategory
           ? ({ status: "ready", reasons: [] } as const)
           : ({
               status: "needs_attention",
