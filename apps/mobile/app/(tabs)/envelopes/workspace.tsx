@@ -1,5 +1,5 @@
 import { BudgetWorkspaceScreen } from "@/components/envelopes/budget-workspace-screen";
 
-export default function WorkspaceRoute() {
-  return <BudgetWorkspaceScreen />;
-}
+const WorkspaceRoute = () => <BudgetWorkspaceScreen />;
+
+export default WorkspaceRoute;
