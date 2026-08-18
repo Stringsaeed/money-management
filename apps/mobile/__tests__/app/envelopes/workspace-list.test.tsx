@@ -105,7 +105,9 @@ describe("Envelope workspace list", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Save Envelope" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Edit Second updated Envelope" })).toBeOnTheScreen();
+      expect(
+        screen.getByRole("button", { name: "Edit Second updated Envelope" }),
+      ).toBeOnTheScreen();
     });
     await expect(
       database.getFirstAsync<{ sortOrder: number }>(

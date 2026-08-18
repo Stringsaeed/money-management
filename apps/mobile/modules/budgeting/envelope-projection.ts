@@ -95,9 +95,7 @@ export async function getEnvelopeSummaries(
   );
 
   const normalizedSummaries =
-    lifecycle === "active"
-      ? normalizeEnvelopeSortOrders(summaries)
-      : summaries;
+    lifecycle === "active" ? normalizeEnvelopeSortOrders(summaries) : summaries;
 
   return normalizedSummaries.sort((left, right) => {
     if (left.health.status !== right.health.status) {
