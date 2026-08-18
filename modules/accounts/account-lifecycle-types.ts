@@ -1,3 +1,5 @@
+import type { AccountBudgetDependency } from "@/modules/budgeting/budgeting";
+
 export interface AccountLifecycleRequest {
   accountId: string;
   localDate: string;
@@ -10,15 +12,7 @@ export interface AccountRuleBlocker {
   relationship: "source" | "destination";
 }
 
-interface AccountBudgetDependencyBase {
-  currency: string;
-  amountMinor: number;
-}
-
-export type AccountBudgetDependency =
-  | (AccountBudgetDependencyBase & { kind: "budget-shortfall" })
-  | (AccountBudgetDependencyBase & { kind: "card-payment-reserve" })
-  | (AccountBudgetDependencyBase & { kind: "unfunded-card-spending" });
+export type { AccountBudgetDependency };
 
 export type AccountArchiveBlocker =
   | {
