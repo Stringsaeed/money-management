@@ -97,6 +97,7 @@ const transactionChangeQueryKeys = [
   monthSummaryKeys.all,
   transactionDateRangeKeys.all,
   budgetKeys.projections,
+  budgetKeys.envelopeFormOptions,
   accountKeys.lifecyclePreviews,
 ] as const;
 
