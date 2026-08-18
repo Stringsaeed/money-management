@@ -46,6 +46,7 @@ export function useEnvelopeForm({
   const createEnvelope = useCreateBudgetEnvelope();
   const updateEnvelope = useUpdateBudgetEnvelope();
   const [error, setError] = useState("");
+  const editableCategoryIds = new Set(options.map((option) => option.id));
   const form = useForm({
     ...envelopeFormOptions,
     defaultValues: envelope
@@ -55,7 +56,7 @@ export function useEnvelopeForm({
           color: envelope.color,
           categoryIds: [
             ...new Set([
-              ...envelope.categoryIds,
+              ...envelope.categoryIds.filter((categoryId) => editableCategoryIds.has(categoryId)),
               ...options
                 .filter((option) => option.futureMappedEnvelopeId === envelope.id)
                 .map((option) => option.id),

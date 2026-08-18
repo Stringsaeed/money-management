@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "@jest/globals";
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import { createBudgetingCoordinator } from "@/modules/budgeting/budgeting";
+import { archiveCategory } from "@/modules/categories/category-lifecycle";
 
 import {
   activateRouteWorkspace,
@@ -161,6 +162,42 @@ describe("Envelope workspace form", () => {
       createBudgetingCoordinator(database).getProjection({ currency: "USD", period: "2026-08" }),
     ).resolves.toMatchObject({
       envelopes: [{ id: "envelope-food", categoryIds: ["category-new"] }],
+    });
+  });
+
+  it("adds an active Category without erasing archived mapping history", async () => {
+    const { database } = await setupRouteDatabase();
+    await activateRouteWorkspace(database, "USD", 100_00);
+    await insertRouteCategory(database, "category-old", "Old Category");
+    await insertRouteCategory(database, "category-new", "New Category");
+    await createRouteEnvelope(database, {
+      id: "envelope-food",
+      name: "Food",
+      categoryIds: ["category-old"],
+    });
+    await archiveCategory(database, {
+      categoryId: "category-old",
+      localDate: "2026-08-19",
+      now: "2026-08-19T09:00:00.000Z",
+    });
+    await renderWorkspaceRoute();
+
+    await fireEvent.press(await screen.findByRole("button", { name: "Edit Food Envelope" }));
+    expect(screen.queryByRole("checkbox", { name: "Old Category Category" })).not.toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole("checkbox", { name: "New Category Category" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Save Envelope" }));
+
+    await waitFor(() => expect(screen.queryByText("Edit Envelope")).not.toBeOnTheScreen());
+    await expect(
+      createBudgetingCoordinator(database).getProjection({ currency: "USD", period: "2026-08" }),
+    ).resolves.toMatchObject({
+      envelopes: [
+        {
+          id: "envelope-food",
+          categoryIds: ["category-new", "category-old"],
+          health: { status: "ready" },
+        },
+      ],
     });
   });
 });

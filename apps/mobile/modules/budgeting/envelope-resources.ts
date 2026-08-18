@@ -113,8 +113,11 @@ export async function updateEnvelope(
     const currentAndFutureCategoryRows = await transaction.getAllAsync<{ categoryId: string }>(
       `SELECT category_id AS categoryId
        FROM category_mappings
+       INNER JOIN categories ON categories.id = category_mappings.category_id
        WHERE envelope_id = ?
-         AND (effective_to_period IS NULL OR effective_to_period >= ?)`,
+         AND (effective_to_period IS NULL OR effective_to_period >= ?)
+         AND categories.lifecycle = 'active'
+         AND categories.type = 'expense'`,
       request.envelopeId,
       period,
     );
