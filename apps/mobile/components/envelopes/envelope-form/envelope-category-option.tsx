@@ -17,7 +17,7 @@ export function EnvelopeCategoryOptionRow({
   onChange,
   scheduledFromPeriod,
 }: EnvelopeCategoryOptionProps) {
-  const disabled = !option.eligible;
+  const disabled = !option.eligible && !checked;
   return (
     <Pressable
       accessibilityLabel={`${option.name} Category`}

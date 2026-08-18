@@ -123,4 +123,44 @@ describe("Envelope workspace form", () => {
       ],
     });
   });
+
+  it("replaces a selected Category that becomes incompatible", async () => {
+    const { database } = await setupRouteDatabase();
+    await activateRouteWorkspace(database, "USD", 100_00);
+    await activateRouteWorkspace(database, "AED", 100_00);
+    await insertRouteCategory(database, "category-old", "Old Category");
+    await insertRouteCategory(database, "category-new", "New Category");
+    await createRouteEnvelope(database, {
+      id: "envelope-food",
+      name: "Food",
+      categoryIds: ["category-old"],
+    });
+    await database.runAsync(
+      `INSERT INTO transactions (
+        id, type, amount, currency, date, account_id, category_id,
+        is_recurring, description, created_at, updated_at
+      ) VALUES (?, 'expense', 1000, 'AED', '2026-08-19', ?, ?, 0, '', ?, ?)`,
+      "transaction-aed",
+      "account-aed",
+      "category-old",
+      "2026-08-19T08:01:00.000Z",
+      "2026-08-19T08:01:00.000Z",
+    );
+    await createBudgetingCoordinator(database).selectWorkspace({ currency: "USD" });
+    await renderWorkspaceRoute();
+
+    await fireEvent.press(await screen.findByRole("button", { name: "Edit Food Envelope" }));
+    const oldCategory = screen.getByRole("checkbox", { name: "Old Category Category" });
+    expect(oldCategory.props.accessibilityState).toEqual({ checked: true, disabled: false });
+    await fireEvent.press(oldCategory);
+    await fireEvent.press(screen.getByRole("checkbox", { name: "New Category Category" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Save Envelope" }));
+
+    await waitFor(() => expect(screen.queryByText("Edit Envelope")).not.toBeOnTheScreen());
+    await expect(
+      createBudgetingCoordinator(database).getProjection({ currency: "USD", period: "2026-08" }),
+    ).resolves.toMatchObject({
+      envelopes: [{ id: "envelope-food", categoryIds: ["category-new"] }],
+    });
+  });
 });
