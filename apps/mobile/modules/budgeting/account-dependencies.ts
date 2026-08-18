@@ -1,8 +1,11 @@
+import { format, parseISO, subMonths } from "date-fns";
 import type { SQLiteDatabase } from "expo-sqlite";
 
-import { loadAccountDependencyFacts } from "./account-dependency-read";
+import { type AccountDependencyFacts, loadAccountDependencyFacts } from "./account-dependency-read";
 import { evaluateCardBudgetState } from "./card-dependency-evaluator";
-import type { AccountBudgetDependency } from "./types";
+import type { UnfundedCardEntry } from "./card-dependency-types";
+import { isUnsupportedCrossCurrencyTransfer } from "./card-dependency-validation";
+import type { AccountBudgetDependency, AccountDependencyOptions } from "./types";
 import { addMoney } from "./validation";
 
 const SHORTFALL_RECOVERY =
@@ -13,11 +16,14 @@ const RESERVE_RECOVERY =
   "Make a same-currency Card Payment from a Funding Account until this reserve is zero.";
 const UNFUNDED_RECOVERY =
   "Assign Money to cover this card spending, or pay it from a same-currency Funding Account.";
+const CROSS_CURRENCY_RECOVERY =
+  "Correct this Transfer to use same-currency Accounts, or remove it before archiving.";
 
 export async function getAccountBudgetDependencies(
   database: SQLiteDatabase,
   accountId: string,
   period: string,
+  options: AccountDependencyOptions = {},
 ): Promise<AccountBudgetDependency[]> {
   const account = await database.getFirstAsync<{ currency: string; type: string }>(
     "SELECT currency, type FROM accounts WHERE id = ?",
@@ -38,11 +44,29 @@ export async function getAccountBudgetDependencies(
   const dependencies: AccountBudgetDependency[] = [];
   const facts = await loadAccountDependencyFacts(database, account.currency, period);
   if (!facts) return dependencies;
-  const budgetState = evaluateCardBudgetState(facts, period);
+  const evaluationFacts = options.endingMembership
+    ? endMembershipForEvaluation(facts, accountId, period)
+    : facts;
+  for (const transaction of facts.transactions) {
+    if (
+      isUnsupportedCrossCurrencyTransfer(transaction) &&
+      (transaction.accountId === accountId || transaction.toAccountId === accountId)
+    ) {
+      dependencies.push({
+        kind: "unsupported-cross-currency-transfer",
+        amountMinor: transaction.amountMinor,
+        currency: transaction.sourceCurrency,
+        destinationCurrency: transaction.destinationCurrency,
+        recoveryAction: CROSS_CURRENCY_RECOVERY,
+        transactionId: transaction.id,
+      });
+    }
+  }
+  const budgetState = evaluateCardBudgetState(evaluationFacts, period);
   const unreservedCardPaymentMinor = budgetState.unreservedPaymentByAccount.get(accountId) ?? 0;
   if (membership || unreservedCardPaymentMinor > 0) {
     const { cashOverspendingMinor, unassignedMinor } = calculateBudgetHealth(
-      facts,
+      evaluationFacts,
       budgetState,
       period,
       account.currency,
@@ -68,9 +92,7 @@ export async function getAccountBudgetDependencies(
   }
   if (account.type !== "credit_card") return dependencies;
   const reserveMinor = budgetState.reserveByAccount.get(accountId) ?? 0;
-  const unfundedMinor = budgetState.unfunded
-    .filter((entry) => entry.accountId === accountId)
-    .reduce((total, entry) => total + entry.remainingMinor, 0);
+  const unfundedMinor = sumUnfundedCardSpending(budgetState.unfunded, accountId, account.currency);
   if (reserveMinor > 0) {
     dependencies.push({
       kind: "card-payment-reserve",
@@ -88,6 +110,35 @@ export async function getAccountBudgetDependencies(
     });
   }
   return dependencies;
+}
+
+export function sumUnfundedCardSpending(
+  entries: readonly UnfundedCardEntry[],
+  accountId: string,
+  currency: string,
+): number {
+  return entries
+    .filter((entry) => entry.accountId === accountId)
+    .reduce((total, entry) => addMoney(total, entry.remainingMinor, currency), 0);
+}
+
+function endMembershipForEvaluation(
+  facts: AccountDependencyFacts,
+  accountId: string,
+  period: string,
+): AccountDependencyFacts {
+  const priorPeriod = format(subMonths(parseISO(`${period}-01`), 1), "yyyy-MM");
+  return {
+    ...facts,
+    memberships: facts.memberships.flatMap((membership) => {
+      if (membership.accountId !== accountId) return [membership];
+      if (membership.effectiveFromPeriod >= period) return [];
+      if (membership.effectiveToPeriod !== null && membership.effectiveToPeriod < period) {
+        return [membership];
+      }
+      return [{ ...membership, effectiveToPeriod: priorPeriod }];
+    }),
+  };
 }
 
 function calculateBudgetHealth(

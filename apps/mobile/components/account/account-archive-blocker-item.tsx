@@ -17,6 +17,7 @@ const BUDGET_DEPENDENCY_LABELS = {
   "cash-envelope-overspending": "Cash Envelope Overspending",
   "card-payment-reserve": "Card Payment Reserve",
   "unfunded-card-spending": "Unfunded Card Spending",
+  "unsupported-cross-currency-transfer": "Unsupported Cross-currency Transfer",
 } as const;
 
 export function AccountArchiveBlockerItem({ account, blocker }: AccountArchiveBlockerItemProps) {
@@ -83,11 +84,17 @@ export function AccountArchiveBlockerItem({ account, blocker }: AccountArchiveBl
     (dependency) =>
       dependency.kind === "budget-shortfall" || dependency.kind === "cash-envelope-overspending",
   );
+  const hasLedgerDependency = blocker.dependencies.some(
+    (dependency) => dependency.kind === "unsupported-cross-currency-transfer",
+  );
 
   return (
     <View className="gap-2">
       {blocker.dependencies.map((dependency) => (
-        <View className="gap-1" key={`${dependency.kind}:${dependency.currency}`}>
+        <View
+          className="gap-1"
+          key={`${dependency.kind}:${dependency.currency}:${"transactionId" in dependency ? dependency.transactionId : "summary"}`}
+        >
           <Text className="font-body-normal text-sm text-ink/70">
             {BUDGET_DEPENDENCY_LABELS[dependency.kind]}:{" "}
             <MoneyText cents={dependency.amountMinor} currency={dependency.currency} />
@@ -114,6 +121,16 @@ export function AccountArchiveBlockerItem({ account, blocker }: AccountArchiveBl
           variant="outline"
         >
           <Text>Review Card Activity</Text>
+        </Button>
+      ) : null}
+      {hasLedgerDependency ? (
+        <Button
+          aria-label="Review unsupported cross-currency Transfers"
+          onPress={reviewBalance}
+          size="lg"
+          variant="outline"
+        >
+          <Text>Review Transfers</Text>
         </Button>
       ) : null}
     </View>

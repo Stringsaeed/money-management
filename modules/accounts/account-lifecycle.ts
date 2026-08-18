@@ -33,6 +33,8 @@ export async function archiveAccount(
     const preview = await previewAccountArchival(transaction, request.accountId, request.localDate);
     if (!preview.canArchive) throw new AccountArchiveBlockedError(preview);
 
+    await endAccountFundingMembership(transaction, request.accountId, period);
+    await markInactiveRulesForArchivedAccount(transaction, request.accountId, request.now);
     await transaction.runAsync(
       `UPDATE accounts
        SET lifecycle = 'archived', lifecycle_changed_at = ?, updated_at = ?
@@ -41,8 +43,6 @@ export async function archiveAccount(
       request.now,
       request.accountId,
     );
-    await endAccountFundingMembership(transaction, request.accountId, period);
-    await markInactiveRulesForArchivedAccount(transaction, request.accountId, request.now);
   });
 }
 

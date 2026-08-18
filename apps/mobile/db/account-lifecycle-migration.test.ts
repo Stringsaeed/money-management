@@ -41,7 +41,7 @@ describe("migrateAccountLifecycle", () => {
         "SELECT value FROM app_settings WHERE key = ?",
         "accountLifecycleMigrationVersion",
       ),
-    ).resolves.toEqual({ value: "2" });
+    ).resolves.toEqual({ value: "3" });
   });
 
   it("upgrades the initial lifecycle schema without resetting existing data", async () => {
@@ -62,13 +62,48 @@ describe("migrateAccountLifecycle", () => {
         "SELECT value FROM app_settings WHERE key = ?",
         "accountLifecycleMigrationVersion",
       ),
-    ).resolves.toEqual({ value: "2" });
+    ).resolves.toEqual({ value: "3" });
     await expect(
       database.getFirstAsync(
         "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
         "account_budget_history",
       ),
     ).resolves.toEqual({ name: "account_budget_history" });
+  });
+
+  it("upgrades version two with durable archived-activity guards", async () => {
+    const database = await setup();
+    await migrateAccountLifecycle(database);
+    await database.execAsync(`
+      DROP TRIGGER active_account_transaction_update;
+      CREATE TRIGGER active_account_transaction_update
+      BEFORE UPDATE OF account_id, to_account_id ON transactions
+      BEGIN
+        SELECT 1;
+      END;
+      UPDATE app_settings
+      SET value = '2'
+      WHERE key = 'accountLifecycleMigrationVersion';
+    `);
+
+    await migrateAccountLifecycle(database);
+
+    await expect(
+      database.getFirstAsync(
+        "SELECT value FROM app_settings WHERE key = ?",
+        "accountLifecycleMigrationVersion",
+      ),
+    ).resolves.toEqual({ value: "3" });
+    await expect(
+      database.getFirstAsync<{ sql: string }>(
+        "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ?",
+        "active_account_transaction_update",
+      ),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        sql: expect.stringContaining("BEFORE UPDATE ON transactions"),
+      }),
+    );
   });
 
   it("preserves durable evidence of an existing Funding Membership", async () => {
@@ -111,7 +146,7 @@ describe("migrateAccountLifecycle", () => {
     await database.runAsync(
       "INSERT INTO app_settings (key, value) VALUES (?, ?)",
       "accountLifecycleMigrationVersion",
-      "2",
+      "3",
     );
 
     await expect(migrateAccountLifecycle(database)).rejects.toThrow(
@@ -140,11 +175,7 @@ describe("migrateAccountLifecycle", () => {
   it("rolls back lifecycle columns when guard installation fails", async () => {
     const database = await setup();
     await database.execAsync(`
-      CREATE TRIGGER active_account_transaction_insert
-      BEFORE INSERT ON transactions
-      BEGIN
-        SELECT 1;
-      END;
+      CREATE TABLE account_budget_history (unsupported TEXT);
     `);
 
     await expect(migrateAccountLifecycle(database)).rejects.toThrow();

@@ -3,7 +3,11 @@ import { eachMonthOfInterval, format, parseISO } from "date-fns";
 import type { AccountDependencyFacts } from "./account-dependency-read";
 import { applyBudgetTransaction, applyLedgerBalance } from "./card-dependency-transactions";
 import type { CardBudgetState, UnfundedCardEntry } from "./card-dependency-types";
-import { addBudgetMoney, validateAccountDependencyFacts } from "./card-dependency-validation";
+import {
+  addBudgetMoney,
+  isUnsupportedCrossCurrencyTransfer,
+  validateAccountDependencyFacts,
+} from "./card-dependency-validation";
 
 export function evaluateCardBudgetState(
   facts: AccountDependencyFacts,
@@ -21,7 +25,11 @@ export function evaluateCardBudgetState(
     end: parseISO(`${throughPeriod}-01`),
   }).map((date) => format(date, "yyyy-MM"));
 
-  for (const transaction of facts.transactions.filter(
+  const supportedTransactions = facts.transactions.filter(
+    (transaction) => !isUnsupportedCrossCurrencyTransfer(transaction),
+  );
+
+  for (const transaction of supportedTransactions.filter(
     (row) => row.date.slice(0, 7) < facts.activationPeriod,
   )) {
     applyLedgerBalance(transaction, balances);
@@ -50,7 +58,9 @@ export function evaluateCardBudgetState(
         addBudgetMoney(availability, assignment.destinationEnvelopeId, remainingMinor);
       }
     }
-    for (const transaction of facts.transactions.filter((row) => row.date.slice(0, 7) === period)) {
+    for (const transaction of supportedTransactions.filter(
+      (row) => row.date.slice(0, 7) === period,
+    )) {
       applyBudgetTransaction(
         transaction,
         period,
