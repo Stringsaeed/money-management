@@ -14,13 +14,15 @@ interface InitializeDatabaseOptions {
   timeZone?: string;
 }
 
+const BUDGETING_PRESERVATION_RESET_VERSION = 1;
+
 export async function initializeDatabase(
   database: SQLiteDatabase,
   options: InitializeDatabaseOptions = {},
 ): Promise<void> {
   const drizzleDatabase = drizzle(database);
   const shouldMarkReset = await resetDatabaseIfNeeded(database, {
-    preserveExistingTables: true,
+    preserveExistingTablesThroughVersion: BUDGETING_PRESERVATION_RESET_VERSION,
   });
 
   await runMigrations(drizzleDatabase);

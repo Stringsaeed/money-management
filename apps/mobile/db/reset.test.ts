@@ -80,8 +80,20 @@ describe("db/reset", () => {
       tables: ["accounts", "transactions", "__drizzle_migrations"],
     });
 
-    await expect(resetDatabaseIfNeeded(db, { preserveExistingTables: true })).resolves.toBe(true);
+    await expect(
+      resetDatabaseIfNeeded(db, { preserveExistingTablesThroughVersion: 1 }),
+    ).resolves.toBe(true);
     expect(execAsync).not.toHaveBeenCalled();
+  });
+
+  it("does not let an older preservation gate disable a future reset", async () => {
+    const { db, execAsync } = createDb({ storedVersion: 0, tables: ["accounts"] });
+
+    await resetDatabaseIfNeeded(db, {
+      preserveExistingTablesThroughVersion: DATABASE_RESET_VERSION - 1,
+    });
+
+    expect(droppedTables(execAsync)).toEqual(['DROP TABLE IF EXISTS "accounts"']);
   });
 
   it("excludes sqlite internal tables from the wipe", async () => {

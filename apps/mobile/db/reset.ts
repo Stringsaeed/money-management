@@ -21,7 +21,7 @@ export const DATABASE_RESET_VERSION = 1;
 const RESET_VERSION_KEY = "resetVersion";
 
 interface ResetDatabaseOptions {
-  preserveExistingTables?: boolean;
+  preserveExistingTablesThroughVersion?: number;
 }
 
 /**
@@ -36,7 +36,10 @@ export async function resetDatabaseIfNeeded(
   if ((await readResetVersion(db)) >= DATABASE_RESET_VERSION) return false;
 
   const tables = await userTables(db);
-  if (!options.preserveExistingTables || tables.length === 0) {
+  const preservesThisVersion =
+    options.preserveExistingTablesThroughVersion !== undefined &&
+    DATABASE_RESET_VERSION <= options.preserveExistingTablesThroughVersion;
+  if (!preservesThisVersion || tables.length === 0) {
     await dropAllTables(db, tables);
   }
   return true;
