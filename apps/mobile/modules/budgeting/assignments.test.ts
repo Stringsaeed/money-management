@@ -96,6 +96,12 @@ describe("Move Money assignments", () => {
     );
 
     await expect(
+      budgeting.getProjection({ currency: "USD", period: "2026-08" }),
+    ).resolves.toMatchObject({
+      unassignedMoney: { amountMinor: 20_00, currency: "USD" },
+    });
+
+    await expect(
       budgeting.moveMoney(request({ id: "current-assignment", amountMinor: 30_00 })),
     ).rejects.toThrow("source owns");
     await expect(

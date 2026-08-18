@@ -1,5 +1,7 @@
-import { Pressable, View } from "react-native";
+import { Pressable } from "react-native";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
+import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
 import type { AssignmentHistoryEntry } from "@/modules/budgeting/budgeting";
 
@@ -7,7 +9,7 @@ interface AssignmentHistoryProps {
   entries: readonly AssignmentHistoryEntry[];
   error: Error | null;
   isLoading: boolean;
-  onSelectOriginal: (assignmentId: string) => void;
+  onSelectOriginal: (assignment: AssignmentHistoryEntry) => void;
   selectedOriginalId: string | null;
 }
 
@@ -18,28 +20,47 @@ export function AssignmentHistory({
   onSelectOriginal,
   selectedOriginalId,
 }: AssignmentHistoryProps) {
-  const handleSelect = (assignmentId: string) => () => onSelectOriginal(assignmentId);
-  if (isLoading)
-    return <Text className="font-body-normal text-sm text-ink/60">Loading history…</Text>;
+  const reversedAssignmentIds = new Set(
+    entries.flatMap((entry) => (entry.reversesAssignmentId ? [entry.reversesAssignmentId] : [])),
+  );
+  const handleSelect = (entry: AssignmentHistoryEntry) => () => onSelectOriginal(entry);
+  if (isLoading) {
+    return (
+      <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
+        <Text className="font-body-normal text-sm text-ink/60">Loading history…</Text>
+      </Animated.View>
+    );
+  }
   if (error) {
     return (
-      <Text role="alert" className="text-sm text-destructive">
-        Assignment history could not be loaded.
-      </Text>
+      <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
+        <Text role="alert" className="text-sm text-destructive">
+          Assignment history could not be loaded.
+        </Text>
+      </Animated.View>
     );
   }
   if (entries.length === 0) {
     return (
-      <Text className="font-body-normal text-sm text-ink/60">
-        No Assignments in this Budget Period.
-      </Text>
+      <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
+        <Text className="font-body-normal text-sm text-ink/60">
+          No Assignments in this Budget Period.
+        </Text>
+      </Animated.View>
     );
   }
   return (
-    <View accessibilityLabel="Assignment history" className="gap-2">
+    <Animated.View
+      accessibilityLabel="Assignment history"
+      className="gap-2"
+      entering={FadeIn}
+      exiting={FadeOut}
+      layout={layoutTransition}
+    >
       <Text className="font-heading-medium text-lg italic text-ink">Assignment history</Text>
       {entries.map((entry) => {
-        const isCorrectionCandidate = entry.kind === "original";
+        const isCorrectionCandidate =
+          entry.kind === "original" && !reversedAssignmentIds.has(entry.id);
         const isSelected = entry.id === selectedOriginalId;
         return (
           <Pressable
@@ -49,7 +70,7 @@ export function AssignmentHistory({
             className="rounded-xl bg-surface-container px-4 py-3"
             disabled={!isCorrectionCandidate}
             key={entry.id}
-            onPress={isCorrectionCandidate ? handleSelect(entry.id) : undefined}
+            onPress={isCorrectionCandidate ? handleSelect(entry) : undefined}
           >
             <Text className="font-body-medium text-sm text-ink">
               {entry.kind} · {entry.amountMinor} minor units
@@ -58,6 +79,6 @@ export function AssignmentHistory({
           </Pressable>
         );
       })}
-    </View>
+    </Animated.View>
   );
 }

@@ -269,17 +269,7 @@ async function assertMoveCanUseSource(
     request.period === currentPeriod
       ? projection
       : await requireProjection(database, request.currency, currentPeriod);
-  const reservationMinor = await getFutureUnassignedReservationMinor(
-    database,
-    request.currency,
-    currentPeriod,
-  );
-  const availableMinor = addMoney(
-    currentProjection.unassignedMoney.amountMinor,
-    -reservationMinor,
-    request.currency,
-  );
-  if (request.amountMinor > availableMinor) {
+  if (request.amountMinor > currentProjection.unassignedMoney.amountMinor) {
     throw new Error("Move Money cannot consume more Money than the source owns.");
   }
 }
@@ -306,35 +296,6 @@ async function assertFutureMoveIsAllowed(
       "Resolve cash Envelope Overspending and Unfunded Card Spending before planning a future Budget Period.",
     );
   }
-}
-
-async function getFutureUnassignedReservationMinor(
-  database: SQLiteDatabase,
-  currency: string,
-  currentPeriod: string,
-): Promise<number> {
-  const assignments = await database.getAllAsync<{
-    amountMinor: number;
-    destinationEnvelopeId: string | null;
-    sourceEnvelopeId: string | null;
-  }>(
-    `SELECT amount_minor AS amountMinor,
-            source_envelope_id AS sourceEnvelopeId,
-            destination_envelope_id AS destinationEnvelopeId
-     FROM assignments
-     WHERE currency = ? AND budget_period > ?`,
-    currency,
-    currentPeriod,
-  );
-  return assignments.reduce((reservationMinor, assignment) => {
-    const unassignedDeltaMinor =
-      assignment.sourceEnvelopeId === null
-        ? assignment.amountMinor
-        : assignment.destinationEnvelopeId === null
-          ? -assignment.amountMinor
-          : 0;
-    return addMoney(reservationMinor, unassignedDeltaMinor, currency);
-  }, 0);
 }
 
 function periodFromTimestamp(now: string): string {

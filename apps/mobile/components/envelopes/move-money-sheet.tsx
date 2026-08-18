@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View } from "react-native";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { AssignmentHistory } from "@/components/envelopes/assignment-history";
 import { MoveMoneyDetails } from "@/components/envelopes/move-money-details";
@@ -7,12 +8,14 @@ import { MoveMoneyEndpointPicker } from "@/components/envelopes/move-money-endpo
 import { MoveMoneyPreviewCard } from "@/components/envelopes/move-money-preview-card";
 import { CreateResourceBottomSheet } from "@/components/resource/create-resource-bottom-sheet";
 import { CreateResourceSheetFooter } from "@/components/resource/create-resource-sheet-footer";
+import { layoutTransition } from "@/components/transaction/constants";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useAssignmentHistory, useCorrectMoveMoney, useMoveMoney } from "@/hooks/use-move-money";
 import { createBudgetingCoordinator } from "@/modules/budgeting/budgeting";
 import type {
   BudgetProjection,
+  AssignmentHistoryEntry,
   MoveMoneyEndpoint,
   MoveMoneyPreview,
   MoveMoneyRequest,
@@ -69,8 +72,12 @@ export function MoveMoneySheet({
     setPeriod(nextPeriod);
     resetPreview();
   };
-  const handleCorrectionSelect = (assignmentId: string) => {
-    setCorrectionId(assignmentId);
+  const handleCorrectionSelect = (assignment: AssignmentHistoryEntry) => {
+    setAmount(String(assignment.amountMinor));
+    setCorrectionId(assignment.id);
+    setDestinationEnvelopeId(assignment.destinationEnvelopeId);
+    setPeriod(assignment.budgetPeriod);
+    setSourceEnvelopeId(assignment.sourceEnvelopeId);
     resetPreview();
   };
   const createRequest = (): MoveMoneyRequest => ({
@@ -150,9 +157,11 @@ export function MoveMoneySheet({
             period={period}
           />
           {selectedCorrection ? (
-            <Text accessibilityLiveRegion="polite" className="font-body-medium text-sm text-ink">
-              Correcting Assignment {selectedCorrection.id}
-            </Text>
+            <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
+              <Text accessibilityLiveRegion="polite" className="font-body-medium text-sm text-ink">
+                Correcting Assignment {selectedCorrection.id}
+              </Text>
+            </Animated.View>
           ) : null}
           <Button accessibilityLabel="Preview Move Money" onPress={handlePreview} variant="outline">
             <Text>Preview Move</Text>

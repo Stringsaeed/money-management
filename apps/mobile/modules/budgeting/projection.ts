@@ -130,10 +130,25 @@ export async function getProjection(
     (total, amount) => addMoney(total, amount, currency),
     0,
   );
+  const futureUnassignedReservationMinor = (facts?.assignments ?? [])
+    .filter((assignment) => assignment.period > period)
+    .reduce((total, assignment) => {
+      if (assignment.sourceEnvelopeId === null) {
+        return addMoney(total, assignment.amountMinor, currency);
+      }
+      if (assignment.destinationEnvelopeId === null) {
+        return addMoney(total, -assignment.amountMinor, currency);
+      }
+      return total;
+    }, 0);
   const money = { currency, amountMinor: fundingPoolAmount };
   const unassignedMoney = {
     currency,
-    amountMinor: addMoney(fundingPoolAmount, -assignedAvailabilityMinor - reserveMinor, currency),
+    amountMinor: addMoney(
+      fundingPoolAmount,
+      -assignedAvailabilityMinor - reserveMinor - futureUnassignedReservationMinor,
+      currency,
+    ),
   };
   const [envelopes, archivedEnvelopes] = await Promise.all([
     getEnvelopeSummaries(database, currency, period, "active"),

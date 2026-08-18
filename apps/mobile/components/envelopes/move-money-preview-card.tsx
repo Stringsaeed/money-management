@@ -1,5 +1,6 @@
-import { View } from "react-native";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
+import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
 import type { MoveMoneyPreview } from "@/modules/budgeting/budgeting";
 
@@ -11,19 +12,27 @@ interface MoveMoneyPreviewCardProps {
 export function MoveMoneyPreviewCard({ error, preview }: MoveMoneyPreviewCardProps) {
   if (error) {
     return (
-      <Text
-        accessibilityLiveRegion="polite"
-        role="alert"
-        selectable
-        className="text-sm text-destructive"
-      >
-        {error}
-      </Text>
+      <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
+        <Text
+          accessibilityLiveRegion="polite"
+          role="alert"
+          selectable
+          className="text-sm text-destructive"
+        >
+          {error}
+        </Text>
+      </Animated.View>
     );
   }
   if (!preview) return null;
   return (
-    <View accessibilityLiveRegion="polite" className="gap-1 rounded-xl bg-surface-container p-4">
+    <Animated.View
+      accessibilityLiveRegion="polite"
+      className="gap-1 rounded-xl bg-surface-container p-4"
+      entering={FadeIn}
+      exiting={FadeOut}
+      layout={layoutTransition}
+    >
       <Text className="font-body-medium text-sm text-ink">
         Source {preview.source.before.amountMinor} → {preview.source.after.amountMinor}
       </Text>
@@ -36,6 +45,6 @@ export function MoveMoneyPreviewCard({ error, preview }: MoveMoneyPreviewCardPro
         {preview.deficitRouting.unfundedCardSpendingMinor} card,{" "}
         {preview.deficitRouting.newAvailabilityMinor} new availability.
       </Text>
-    </View>
+    </Animated.View>
   );
 }
