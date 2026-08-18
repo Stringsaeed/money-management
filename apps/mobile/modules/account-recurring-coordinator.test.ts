@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from "@jest/globals";
 import type { SQLiteDatabase } from "expo-sqlite";
 
+import { migrateAccountLifecycle } from "@/db/account-lifecycle-migration";
+import { migrateBudgeting } from "@/db/budgeting-migration";
 import { migrateRecurringRules } from "@/db/recurring-rules-migration";
 import { applyLegacyMigrations, createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
 
@@ -17,6 +19,8 @@ async function setup() {
     localDate: "2026-04-15",
     now: "2026-04-15T08:00:00.000Z",
   });
+  await migrateBudgeting(testDatabase.database);
+  await migrateAccountLifecycle(testDatabase.database);
   for (const [id, name] of [
     ["account-main", "Main"],
     ["account-savings", "Savings"],
@@ -122,5 +126,21 @@ describe("Account and Recurring Rules coordination", () => {
         revision: 2,
       },
     ]);
+  });
+
+  it("refuses to rewrite archived Account details", async () => {
+    const database = await setup();
+    await database.runAsync("UPDATE accounts SET lifecycle = 'archived' WHERE id = 'account-main'");
+
+    await expect(
+      updateAccountWithRecurringRules(database, {
+        accountId: "account-main",
+        changes: { currency: "AED", type: "credit_card" },
+        now: "2026-04-15T08:00:00.000Z",
+      }),
+    ).rejects.toThrow("Restore this Account before editing its details.");
+    await expect(
+      database.getFirstAsync("SELECT currency, type FROM accounts WHERE id = 'account-main'"),
+    ).resolves.toEqual({ currency: "USD", type: "checking" });
   });
 });

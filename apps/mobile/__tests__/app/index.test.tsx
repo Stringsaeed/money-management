@@ -57,7 +57,9 @@ describe("app/index", () => {
   it("redirects to onboarding when there are no accounts", async () => {
     mockUseHomeScreen.mockReturnValue({
       accounts: [],
+      hasAnyAccounts: false,
       loadingAccounts: false,
+      loadingAllAccounts: false,
       loadingTx: false,
       groups: [],
       currency: "USD",
@@ -74,7 +76,9 @@ describe("app/index", () => {
   it("renders loading state", async () => {
     mockUseHomeScreen.mockReturnValue({
       accounts: [{}],
+      hasAnyAccounts: true,
       loadingAccounts: false,
+      loadingAllAccounts: false,
       loadingTx: true,
       groups: [],
       currency: "USD",
@@ -94,7 +98,9 @@ describe("app/index", () => {
 
     mockUseHomeScreen.mockReturnValue({
       accounts: [{}],
+      hasAnyAccounts: true,
       loadingAccounts: false,
+      loadingAllAccounts: false,
       loadingTx: false,
       groups: [],
       currency: "USD",
@@ -113,7 +119,9 @@ describe("app/index", () => {
   it("renders the journal list when groups exist", async () => {
     mockUseHomeScreen.mockReturnValue({
       accounts: [{ currency: "USD" }],
+      hasAnyAccounts: true,
       loadingAccounts: false,
+      loadingAllAccounts: false,
       loadingTx: false,
       groups: [{ date: "2026-03-28", transactions: [] }],
       currency: "USD",
@@ -125,5 +133,25 @@ describe("app/index", () => {
     await render(<HomeScreen />);
 
     expect(screen.getByText("journal:1:filters:0")).toBeOnTheScreen();
+  });
+
+  it("keeps account management reachable when every Account is archived", async () => {
+    mockUseHomeScreen.mockReturnValue({
+      accounts: [],
+      hasAnyAccounts: true,
+      loadingAccounts: false,
+      loadingAllAccounts: false,
+      loadingTx: false,
+      groups: [],
+      currency: "USD",
+      activeFilterCount: 0,
+      activeAccountId: null,
+      resetFilters: jest.fn(),
+    });
+
+    await render(<HomeScreen />);
+
+    expect(screen.queryByText("redirect:/onboarding")).not.toBeOnTheScreen();
+    expect(screen.getByText("header")).toBeOnTheScreen();
   });
 });

@@ -1,9 +1,9 @@
-import { useAccountsWithBalances } from "@/hooks/use-accounts";
+import { useAllAccountsWithBalances } from "@/hooks/use-accounts";
 import { Redirect } from "expo-router";
 import Animated from "react-native-reanimated";
 
 export default function Splash() {
-  const { data: accounts = [], isLoading: loadingAccounts } = useAccountsWithBalances();
+  const { data: accounts = [], isLoading: loadingAccounts } = useAllAccountsWithBalances();
 
   if (loadingAccounts) {
     return (

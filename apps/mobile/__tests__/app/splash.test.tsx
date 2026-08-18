@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react-native";
 
 import Splash from "@/app/splash";
 
-const mockUseAccountsWithBalances = jest.fn();
+const mockUseAllAccountsWithBalances = jest.fn();
 
 jest.mock("expo-router", () => ({
   Redirect: ({ href }: { href: string }) => {
@@ -14,12 +14,12 @@ jest.mock("expo-router", () => ({
 }));
 
 jest.mock("@/hooks/use-accounts", () => ({
-  useAccountsWithBalances: () => mockUseAccountsWithBalances(),
+  useAllAccountsWithBalances: () => mockUseAllAccountsWithBalances(),
 }));
 
 describe("app/splash", () => {
   it("redirects to onboarding when there are no accounts", async () => {
-    mockUseAccountsWithBalances.mockReturnValue({
+    mockUseAllAccountsWithBalances.mockReturnValue({
       data: [],
       isLoading: false,
     });
@@ -29,9 +29,9 @@ describe("app/splash", () => {
     expect(screen.getByText("redirect:/onboarding")).toBeOnTheScreen();
   });
 
-  it("redirects home when accounts exist", async () => {
-    mockUseAccountsWithBalances.mockReturnValue({
-      data: [{ id: "account-1" }],
+  it("redirects home when only archived Accounts exist", async () => {
+    mockUseAllAccountsWithBalances.mockReturnValue({
+      data: [{ id: "account-1", lifecycle: "archived" }],
       isLoading: false,
     });
 

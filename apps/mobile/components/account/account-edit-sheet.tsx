@@ -3,6 +3,7 @@ import { useState } from "react";
 import { AccountFormContent } from "@/components/account/account-form-content";
 import { AccountLifecycleActions } from "@/components/account/account-lifecycle-actions";
 import { ACCOUNT_TYPE_META } from "@/components/account/account-form-options";
+import { ArchivedAccountSummary } from "@/components/account/archived-account-summary";
 import { CreateResourceBottomSheet } from "@/components/resource/create-resource-bottom-sheet";
 import { CreateResourceSheetFooter } from "@/components/resource/create-resource-sheet-footer";
 import type { AccountType, AccountWithBalance } from "@/types";
@@ -42,40 +43,48 @@ export function AccountEditSheet({ account, onDismiss, onUpdated }: AccountEditS
     form.setFieldValue("icon", nextIcon);
   }
 
+  const isArchived = account.lifecycle === "archived";
+
   return (
     <CreateResourceBottomSheet
       autoPresent
       content={
         <>
-          <AccountFormContent
-            amountEditable={false}
-            currencyExpanded={false}
-            form={form}
-            lockedBalanceCents={account.balance}
-            onColorChange={handleColorChange}
-            onCurrencyCollapse={() => undefined}
-            onCurrencyExpandToggle={() => undefined}
-            onIconChange={handleIconChange}
-            onTypeChange={handleTypeChange}
-          />
+          {isArchived ? (
+            <ArchivedAccountSummary account={account} />
+          ) : (
+            <AccountFormContent
+              amountEditable={false}
+              currencyExpanded={false}
+              form={form}
+              lockedBalanceCents={account.balance}
+              onColorChange={handleColorChange}
+              onCurrencyCollapse={() => undefined}
+              onCurrencyExpandToggle={() => undefined}
+              onIconChange={handleIconChange}
+              onTypeChange={handleTypeChange}
+            />
+          )}
           <AccountLifecycleActions account={account} onCompleted={onUpdated} />
         </>
       }
       footer={
-        <form.Subscribe selector={(state) => state.isSubmitting}>
-          {(isSubmitting) => (
-            <CreateResourceSheetFooter
-              error={error}
-              isSubmitting={isSubmitting}
-              onSubmit={() => {
-                setError("");
-                form.handleSubmit();
-              }}
-              submitLabel="Save Changes"
-              submittingLabel="Saving…"
-            />
-          )}
-        </form.Subscribe>
+        isArchived ? null : (
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) => (
+              <CreateResourceSheetFooter
+                error={error}
+                isSubmitting={isSubmitting}
+                onSubmit={() => {
+                  setError("");
+                  form.handleSubmit();
+                }}
+                submitLabel="Save Changes"
+                submittingLabel="Saving…"
+              />
+            )}
+          </form.Subscribe>
+        )
       }
       onDismiss={onDismiss}
       title="Edit Account"

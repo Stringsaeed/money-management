@@ -36,12 +36,16 @@ export function updateAccountWithRecurringRules(
 async function requireAccount(
   database: SQLiteDatabase,
   accountId: string,
-): Promise<{ id: string; currency: string }> {
-  const account = await database.getFirstAsync<{ id: string; currency: string }>(
-    "SELECT id, currency FROM accounts WHERE id = ?",
-    accountId,
-  );
+): Promise<{ id: string; currency: string; lifecycle: string }> {
+  const account = await database.getFirstAsync<{
+    id: string;
+    currency: string;
+    lifecycle: string;
+  }>("SELECT id, currency, lifecycle FROM accounts WHERE id = ?", accountId);
   if (!account) throw new Error(`Account ${accountId} does not exist.`);
+  if (account.lifecycle === "archived") {
+    throw new Error("Restore this Account before editing its details.");
+  }
   return account;
 }
 

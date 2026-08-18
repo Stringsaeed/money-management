@@ -2,7 +2,6 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 import { loadAccountDependencyFacts } from "./account-dependency-read";
 import { evaluateCardBudgetState } from "./card-dependency-evaluator";
-import { getProjection } from "./projection";
 import type { AccountBudgetDependency } from "./types";
 
 const SHORTFALL_RECOVERY =
@@ -23,7 +22,6 @@ export async function getAccountBudgetDependencies(
   );
   if (!account) return [];
 
-  const dependencies: AccountBudgetDependency[] = [];
   const membership = await database.getFirstAsync<{ currency: string }>(
     `SELECT currency FROM funding_memberships
      WHERE account_id = ?
@@ -34,24 +32,24 @@ export async function getAccountBudgetDependencies(
     period,
     period,
   );
+  const dependencies: AccountBudgetDependency[] = [];
+  const facts = await loadAccountDependencyFacts(database, account.currency, period);
+  if (!facts) return dependencies;
+  const budgetState = evaluateCardBudgetState(facts, period);
   if (membership) {
-    const projection = await getProjection(database, { currency: membership.currency, period });
-    if (projection && projection.unassignedMoney.amountMinor < 0) {
+    const unassignedMinor = calculateUnassignedMoney(facts, budgetState, period);
+    if (unassignedMinor < 0) {
       dependencies.push({
         kind: "budget-shortfall",
         currency: membership.currency,
-        amountMinor: Math.abs(projection.unassignedMoney.amountMinor),
+        amountMinor: Math.abs(unassignedMinor),
         recoveryAction: SHORTFALL_RECOVERY,
       });
     }
   }
   if (account.type !== "credit_card") return dependencies;
-
-  const facts = await loadAccountDependencyFacts(database, account.currency, period);
-  if (!facts) return dependencies;
-  const cardState = evaluateCardBudgetState(facts, period);
-  const reserveMinor = cardState.reserveByAccount.get(accountId) ?? 0;
-  const unfundedMinor = cardState.unfunded
+  const reserveMinor = budgetState.reserveByAccount.get(accountId) ?? 0;
+  const unfundedMinor = budgetState.unfunded
     .filter((entry) => entry.accountId === accountId)
     .reduce((total, entry) => total + entry.remainingMinor, 0);
   if (reserveMinor > 0) {
@@ -71,4 +69,49 @@ export async function getAccountBudgetDependencies(
     });
   }
   return dependencies;
+}
+
+function calculateUnassignedMoney(
+  facts: NonNullable<Awaited<ReturnType<typeof loadAccountDependencyFacts>>>,
+  state: ReturnType<typeof evaluateCardBudgetState>,
+  period: string,
+): number {
+  const fundingAccountIds = new Set(
+    facts.memberships
+      .filter(
+        (membership) =>
+          membership.effectiveFromPeriod <= period &&
+          (membership.effectiveToPeriod === null || membership.effectiveToPeriod >= period),
+      )
+      .map((membership) => membership.accountId),
+  );
+  let fundingPoolMinor = 0;
+  for (const accountId of fundingAccountIds) {
+    fundingPoolMinor += state.balances.get(accountId) ?? 0;
+  }
+  for (const account of facts.accounts) {
+    if (account.type === "credit_card") {
+      fundingPoolMinor += Math.max(state.balances.get(account.id) ?? 0, 0);
+    }
+  }
+  const availableMinor = [...state.availability.values()].reduce(
+    (total, amountMinor) => total + Math.max(amountMinor, 0),
+    0,
+  );
+  const reserveMinor = [...state.reserveByAccount.values()].reduce(
+    (total, amountMinor) => total + Math.max(amountMinor, 0),
+    0,
+  );
+  const futureReservationMinor = facts.assignments
+    .filter((assignment) => assignment.period > period)
+    .reduce((total, assignment) => {
+      if (assignment.destinationEnvelopeId && !assignment.sourceEnvelopeId) {
+        return total + assignment.amountMinor;
+      }
+      if (assignment.sourceEnvelopeId && !assignment.destinationEnvelopeId) {
+        return total - assignment.amountMinor;
+      }
+      return total;
+    }, 0);
+  return fundingPoolMinor - availableMinor - reserveMinor - futureReservationMinor;
 }

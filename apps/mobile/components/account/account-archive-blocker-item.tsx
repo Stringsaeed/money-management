@@ -77,6 +77,9 @@ export function AccountArchiveBlockerItem({ account, blocker }: AccountArchiveBl
   const hasCardDependency = blocker.dependencies.some(
     (dependency) => dependency.kind !== "budget-shortfall",
   );
+  const hasBudgetShortfall = blocker.dependencies.some(
+    (dependency) => dependency.kind === "budget-shortfall",
+  );
 
   return (
     <View className="gap-2">
@@ -90,18 +93,26 @@ export function AccountArchiveBlockerItem({ account, blocker }: AccountArchiveBl
         </View>
       ))}
       <Text className="font-body-normal text-xs text-ink/50">{blocker.recoveryAction}</Text>
-      <Button
-        aria-label={
-          hasCardDependency
-            ? "Review blocking card activity"
-            : "Review blocking budget dependencies"
-        }
-        onPress={hasCardDependency ? reviewBalance : reviewBudget}
-        size="lg"
-        variant="outline"
-      >
-        <Text>{hasCardDependency ? "Review Card Activity" : "Review Budget"}</Text>
-      </Button>
+      {hasBudgetShortfall ? (
+        <Button
+          aria-label="Review blocking budget dependencies"
+          onPress={reviewBudget}
+          size="lg"
+          variant="outline"
+        >
+          <Text>Review Budget</Text>
+        </Button>
+      ) : null}
+      {hasCardDependency ? (
+        <Button
+          aria-label="Review blocking card activity"
+          onPress={reviewBalance}
+          size="lg"
+          variant="outline"
+        >
+          <Text>Review Card Activity</Text>
+        </Button>
+      ) : null}
     </View>
   );
 }
