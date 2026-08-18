@@ -2,10 +2,14 @@ import { act, waitFor } from "@testing-library/react-native";
 
 import { categories } from "@/db/schema";
 import {
+  useAllCategories,
+  useArchiveCategory,
   useCategories,
   useCategory,
+  useCategoryDeletionPreview,
   useCreateCategory,
   useDeleteCategory,
+  useRestoreCategory,
   useUpdateCategory,
 } from "@/hooks/use-categories";
 import { createCategory } from "@/tests/test-utils/factories";
@@ -13,7 +17,12 @@ import { createMockDb } from "@/tests/test-utils/mock-db";
 import { renderHookWithProviders } from "@/tests/test-utils/render";
 
 const mockUseDatabase = jest.fn();
+const mockUseSQLiteContext = jest.fn();
 const mockCohereLedgerCache = jest.fn();
+const mockArchiveCategory = jest.fn();
+const mockDeleteCategory = jest.fn();
+const mockPreviewCategoryDeletion = jest.fn();
+const mockRestoreCategory = jest.fn();
 
 interface CoherenceAwareMutation<T> {
   expectPending: () => void;
@@ -59,6 +68,17 @@ jest.mock("@/db/client", () => ({
   useDatabase: () => mockUseDatabase(),
 }));
 
+jest.mock("expo-sqlite", () => ({
+  useSQLiteContext: () => mockUseSQLiteContext(),
+}));
+
+jest.mock("@/modules/categories/category-lifecycle", () => ({
+  archiveCategory: (...args: unknown[]) => mockArchiveCategory(...args),
+  deleteCategory: (...args: unknown[]) => mockDeleteCategory(...args),
+  previewCategoryDeletion: (...args: unknown[]) => mockPreviewCategoryDeletion(...args),
+  restoreCategory: (...args: unknown[]) => mockRestoreCategory(...args),
+}));
+
 jest.mock("@/modules/ledger-cache", () => ({
   ...jest.requireActual("@/modules/ledger-cache"),
   cohereLedgerCache: (...args: unknown[]) => mockCohereLedgerCache(...args),
@@ -70,10 +90,23 @@ jest.mock("@/utils/id", () => ({
 
 jest.mock("@/utils/date", () => ({
   nowIso: jest.fn(() => "2026-03-28T12:00:00.000Z"),
+  today: jest.fn(() => "2026-03-28"),
 }));
 
 describe("use-categories hooks", () => {
   beforeEach(() => {
+    mockUseSQLiteContext.mockReturnValue({ raw: "database" });
+    mockArchiveCategory.mockResolvedValue(undefined);
+    mockDeleteCategory.mockResolvedValue(undefined);
+    mockPreviewCategoryDeletion.mockResolvedValue({
+      categoryId: "category-1",
+      transactionCount: 0,
+      recurringRuleCount: 0,
+      mappingCount: 0,
+      childCount: 0,
+      canDelete: true,
+    });
+    mockRestoreCategory.mockResolvedValue(undefined);
     mockCohereLedgerCache.mockResolvedValue(undefined);
   });
 
@@ -109,6 +142,18 @@ describe("use-categories hooks", () => {
     expect(result.current.data).toEqual(
       createCategory({ id: "category-1", name: "Salary", type: "income" }),
     );
+  });
+
+  it("loads every Category lifecycle for management", async () => {
+    const archived = createCategory({ id: "category-archived", lifecycle: "archived" });
+    const db = createMockDb({ selectResults: [{ all: [archived] }] });
+    mockUseDatabase.mockReturnValue(db);
+
+    const { result } = await renderHookWithProviders(() => useAllCategories());
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual([archived]);
+    });
   });
 
   it("reports a Category creation and waits for cache coherence", async () => {
@@ -162,15 +207,12 @@ describe("use-categories hooks", () => {
   });
 
   it("reports a Category deletion after the write commits", async () => {
-    const db = createMockDb();
-    mockUseDatabase.mockReturnValue(db);
-
     const { result, client } = await renderHookWithProviders(() => useDeleteCategory());
     const mutation = await startMutationAwaitingCoherence(() =>
       result.current.mutateAsync("category-1"),
     );
 
-    expect(db.delete).toHaveBeenCalledWith(categories);
+    expect(mockDeleteCategory).toHaveBeenCalledWith({ raw: "database" }, "category-1");
     await waitFor(() => {
       expect(mockCohereLedgerCache).toHaveBeenCalledWith(client, {
         kind: "category.deleted",
@@ -180,4 +222,54 @@ describe("use-categories hooks", () => {
     mutation.expectPending();
     await mutation.resolve();
   });
+
+  it("previews permanent deletion eligibility from durable dependencies", async () => {
+    const { result } = await renderHookWithProviders(() =>
+      useCategoryDeletionPreview("category-1"),
+    );
+
+    await waitFor(() => {
+      expect(result.current.data?.canDelete).toBe(true);
+    });
+    expect(mockPreviewCategoryDeletion).toHaveBeenCalledWith({ raw: "database" }, "category-1");
+  });
+
+  it.each([
+    {
+      label: "archive",
+      useLifecycleMutation: useArchiveCategory,
+      command: mockArchiveCategory,
+      change: { kind: "category.archived", id: "category-1" },
+      expectedRequest: {
+        categoryId: "category-1",
+        localDate: "2026-03-28",
+        now: "2026-03-28T12:00:00.000Z",
+      },
+    },
+    {
+      label: "restore",
+      useLifecycleMutation: useRestoreCategory,
+      command: mockRestoreCategory,
+      change: { kind: "category.restored", id: "category-1" },
+      expectedRequest: {
+        categoryId: "category-1",
+        now: "2026-03-28T12:00:00.000Z",
+      },
+    },
+  ])(
+    "reports a Category $label after the lifecycle write commits",
+    async ({ useLifecycleMutation, command, change, expectedRequest }) => {
+      const { result, client } = await renderHookWithProviders(() => useLifecycleMutation());
+      const mutation = await startMutationAwaitingCoherence(() =>
+        result.current.mutateAsync("category-1"),
+      );
+
+      expect(command).toHaveBeenCalledWith({ raw: "database" }, expectedRequest);
+      await waitFor(() => {
+        expect(mockCohereLedgerCache).toHaveBeenCalledWith(client, change);
+      });
+      mutation.expectPending();
+      await mutation.resolve();
+    },
+  );
 });

@@ -1,7 +1,7 @@
 import { ScrollView } from "react-native";
 
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
-import { useCategories } from "@/hooks/use-categories";
+import { useAllCategories } from "@/hooks/use-categories";
 import { useUIStore } from "@/stores/ui-store";
 import { formatMonth } from "@/utils/date";
 
@@ -19,7 +19,7 @@ export function FilterBar() {
   } = useUIStore();
 
   const { data: accounts = [] } = useAccountsWithBalances();
-  const { data: categories = [] } = useCategories();
+  const { data: categories = [] } = useAllCategories();
 
   const activeAccountName = accounts.find((a) => a.id === activeAccountId)?.name ?? null;
   const selectedCategoryName = categories.find((c) => c.id === selectedCategoryId)?.name ?? null;

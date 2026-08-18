@@ -4,6 +4,7 @@ import RootLayout from "@/app/_layout";
 
 const mockMarkDatabaseReset = jest.fn();
 const mockMigrateBudgeting = jest.fn();
+const mockMigrateCategoryLifecycle = jest.fn();
 const mockMigrateRecurringRules = jest.fn();
 const mockResetDatabaseIfNeeded = jest.fn();
 const mockRunMigrations = jest.fn();
@@ -87,6 +88,10 @@ jest.mock("@/db/budgeting-migration", () => ({
   migrateBudgeting: (...args: unknown[]) => mockMigrateBudgeting(...args),
 }));
 
+jest.mock("@/db/category-lifecycle-migration", () => ({
+  migrateCategoryLifecycle: (...args: unknown[]) => mockMigrateCategoryLifecycle(...args),
+}));
+
 jest.mock("@/db/seed", () => ({
   seedDatabase: (...args: unknown[]) => mockSeedDatabase(...args),
 }));
@@ -121,6 +126,7 @@ describe("app/_layout", () => {
   beforeEach(() => {
     mockMarkDatabaseReset.mockReset();
     mockMigrateBudgeting.mockReset().mockResolvedValue(undefined);
+    mockMigrateCategoryLifecycle.mockReset().mockResolvedValue(undefined);
     mockMigrateRecurringRules.mockReset();
     mockResetDatabaseIfNeeded.mockReset().mockResolvedValue(false);
     mockRunMigrations.mockReset().mockResolvedValue(undefined);
@@ -163,6 +169,7 @@ describe("app/_layout", () => {
       expect.objectContaining({ timeZone: "Asia/Dubai", localDate: "2026-08-17" }),
     );
     expect(mockMigrateBudgeting).toHaveBeenCalledWith(database);
+    expect(mockMigrateCategoryLifecycle).toHaveBeenCalledWith(database);
     expect(mockSeedDatabase).toHaveBeenCalledWith("drizzle-database");
     expect(mockRunMigrations.mock.invocationCallOrder[0]).toBeLessThan(
       mockMigrateRecurringRules.mock.invocationCallOrder[0]!,
@@ -171,6 +178,9 @@ describe("app/_layout", () => {
       mockMigrateBudgeting.mock.invocationCallOrder[0]!,
     );
     expect(mockMigrateBudgeting.mock.invocationCallOrder[0]).toBeLessThan(
+      mockMigrateCategoryLifecycle.mock.invocationCallOrder[0]!,
+    );
+    expect(mockMigrateCategoryLifecycle.mock.invocationCallOrder[0]).toBeLessThan(
       mockSeedDatabase.mock.invocationCallOrder[0]!,
     );
   });
