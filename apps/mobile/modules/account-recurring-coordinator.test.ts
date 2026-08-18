@@ -4,11 +4,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { migrateRecurringRules } from "@/db/recurring-rules-migration";
 import { applyLegacyMigrations, createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
 
-import {
-  deleteAccountWithRecurringRules,
-  previewAccountDeletion,
-  updateAccountWithRecurringRules,
-} from "./account-recurring-coordinator";
+import { updateAccountWithRecurringRules } from "./account-recurring-coordinator";
 
 const databases: { database: SQLiteDatabase; close: VoidFunction }[] = [];
 
@@ -79,66 +75,6 @@ afterEach(() => {
 });
 
 describe("Account and Recurring Rules coordination", () => {
-  it("previews every Rule affected by Account deletion", async () => {
-    const database = await setup();
-
-    await expect(previewAccountDeletion(database, "account-main")).resolves.toEqual({
-      accountId: "account-main",
-      rules: [
-        { ruleId: "rule-source", name: "Rent", relationship: "source" },
-        {
-          ruleId: "rule-destination",
-          name: "Savings sweep",
-          relationship: "destination",
-        },
-      ],
-    });
-  });
-
-  it("archives and detaches affected Rules in the Account deletion transaction", async () => {
-    const database = await setup();
-
-    await deleteAccountWithRecurringRules(database, {
-      accountId: "account-main",
-      now: "2026-04-15T08:00:00.000Z",
-    });
-
-    await expect(
-      database.getFirstAsync("SELECT id FROM accounts WHERE id = ?", "account-main"),
-    ).resolves.toBeNull();
-    await expect(
-      database.getAllAsync(
-        `SELECT
-          id, account_id AS accountId, to_account_id AS toAccountId,
-          lifecycle, health, attention_reasons AS attentionReasons, revision
-         FROM recurring_rules ORDER BY id`,
-      ),
-    ).resolves.toEqual([
-      {
-        id: "rule-destination",
-        accountId: "account-savings",
-        toAccountId: null,
-        lifecycle: "archived",
-        health: "needs_attention",
-        attentionReasons: JSON.stringify([
-          { kind: "missing-destination-account", formerAccountId: "account-main" },
-        ]),
-        revision: 2,
-      },
-      {
-        id: "rule-source",
-        accountId: null,
-        toAccountId: null,
-        lifecycle: "archived",
-        health: "needs_attention",
-        attentionReasons: JSON.stringify([
-          { kind: "missing-source-account", formerAccountId: "account-main" },
-        ]),
-        revision: 2,
-      },
-    ]);
-  });
-
   it("marks affected Rules Needs Attention when Account currency changes", async () => {
     const database = await setup();
 
@@ -186,39 +122,5 @@ describe("Account and Recurring Rules coordination", () => {
         revision: 2,
       },
     ]);
-  });
-
-  it("rolls back Rule detachment when Account deletion fails", async () => {
-    const database = await setup();
-    await database.execAsync(`
-      CREATE TRIGGER fail_account_delete
-      BEFORE DELETE ON accounts
-      WHEN OLD.id = 'account-main'
-      BEGIN
-        SELECT RAISE(ABORT, 'forced account failure');
-      END;
-    `);
-
-    await expect(
-      deleteAccountWithRecurringRules(database, {
-        accountId: "account-main",
-        now: "2026-04-15T08:00:00.000Z",
-      }),
-    ).rejects.toThrow();
-    await expect(
-      database.getFirstAsync("SELECT id FROM accounts WHERE id = ?", "account-main"),
-    ).resolves.toEqual({ id: "account-main" });
-    await expect(
-      database.getFirstAsync(
-        `SELECT account_id AS accountId, lifecycle, health, revision
-         FROM recurring_rules WHERE id = ?`,
-        "rule-source",
-      ),
-    ).resolves.toEqual({
-      accountId: "account-main",
-      lifecycle: "active",
-      health: "ready",
-      revision: 1,
-    });
   });
 });

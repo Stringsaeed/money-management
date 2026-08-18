@@ -17,7 +17,9 @@ export interface TransactionQueryFilters {
 
 export const accountKeys = {
   all: ["accounts"] as const,
+  management: ["accounts", "management"] as const,
   balances: ["account-balances"] as const,
+  managementBalances: ["account-balances", "management"] as const,
   detail: (id: string) => ["accounts", id] as const,
 };
 
@@ -67,6 +69,8 @@ export type BudgetEffect = "workspaces" | "projections";
 export type LedgerChange =
   | { kind: "account.created"; id: string }
   | { kind: "account.updated"; id: string }
+  | { kind: "account.archived"; id: string }
+  | { kind: "account.restored"; id: string }
   | { kind: "account.deleted"; id: string }
   | { kind: "category.created"; id: string }
   | { kind: "category.batch" }
@@ -90,17 +94,44 @@ const transactionChangeQueryKeys = [
 ] as const;
 
 const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKey[]> = {
-  "account.created": [accountKeys.all, accountKeys.balances, budgetKeys.projections],
+  "account.created": [
+    accountKeys.all,
+    accountKeys.management,
+    accountKeys.balances,
+    accountKeys.managementBalances,
+    budgetKeys.projections,
+  ],
   "account.updated": [
     accountKeys.all,
+    accountKeys.management,
     accountKeys.balances,
+    accountKeys.managementBalances,
     transactionKeys.all,
+    recurringRuleKeys.all,
+    budgetKeys.projections,
+  ],
+  "account.archived": [
+    accountKeys.all,
+    accountKeys.management,
+    accountKeys.balances,
+    accountKeys.managementBalances,
+    transactionKeys.all,
+    recurringRuleKeys.all,
+    budgetKeys.projections,
+  ],
+  "account.restored": [
+    accountKeys.all,
+    accountKeys.management,
+    accountKeys.balances,
+    accountKeys.managementBalances,
     recurringRuleKeys.all,
     budgetKeys.projections,
   ],
   "account.deleted": [
     accountKeys.all,
+    accountKeys.management,
     accountKeys.balances,
+    accountKeys.managementBalances,
     transactionKeys.all,
     monthSummaryKeys.all,
     transactionDateRangeKeys.all,

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "@jest/globals";
 import { QueryClient, QueryObserver } from "@tanstack/react-query";
 import type { SQLiteDatabase } from "expo-sqlite";
 
+import { migrateAccountLifecycle } from "@/db/account-lifecycle-migration";
 import { migrateBudgeting } from "@/db/budgeting-migration";
 import { migrateRecurringRules } from "@/db/recurring-rules-migration";
 import { applyLegacyMigrations, createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
@@ -21,6 +22,7 @@ async function setup(): Promise<SQLiteDatabase> {
     now: "2026-08-18T08:00:00.000Z",
   });
   await migrateBudgeting(testDatabase.database);
+  await migrateAccountLifecycle(testDatabase.database);
   return testDatabase.database;
 }
 

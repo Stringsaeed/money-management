@@ -167,7 +167,7 @@ export async function loadAccount(
   accountId: string,
 ): Promise<AccountDependency | null> {
   return database.getFirstAsync<AccountDependency>(
-    "SELECT id, currency FROM accounts WHERE id = ?",
+    "SELECT id, currency FROM accounts WHERE id = ? AND lifecycle = 'active'",
     accountId,
   );
 }

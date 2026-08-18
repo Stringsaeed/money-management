@@ -39,7 +39,9 @@ interface AccountPickerProps {
 
 export function AccountPicker({ value, onChange, exclude = [], label }: AccountPickerProps) {
   const { data: accounts = [] } = useAccounts();
-  const available = accounts.filter((a) => !exclude.includes(a.id));
+  const available = accounts.filter(
+    (account) => account.lifecycle !== "archived" && !exclude.includes(account.id),
+  );
 
   return (
     <View className="gap-2">
