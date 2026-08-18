@@ -32,12 +32,12 @@ export async function replaceEnvelopeMappings(
   for (const categoryId of request.affectedCategoryIds) {
     const category = selectedById.get(categoryId);
     const selected = selectedIds.has(categoryId);
-    const effectiveFromPeriod =
-      selected &&
-      category?.lifecycleChangedAt !== null &&
-      category?.mappedEnvelopeId !== request.envelopeId
-        ? nextPeriod(request.period)
-        : request.period;
+    const effectiveFromPeriod = mappingStartPeriod(
+      category,
+      selected,
+      request.envelopeId,
+      request.period,
+    );
     validationPoints.push(
       ...(await replaceCategoryMapping(database, {
         categoryId,
@@ -49,12 +49,68 @@ export async function replaceEnvelopeMappings(
     );
   }
 
-  const uniquePoints = new Map(
-    validationPoints.map((point) => [`${point.envelopeId}:${point.period}`, point]),
-  );
-  for (const point of uniquePoints.values()) {
+  for (const point of await expandMappingValidationPoints(database, validationPoints)) {
     await requireActiveEnvelopeMapped(database, point.envelopeId, point.period);
   }
+}
+
+function mappingStartPeriod(
+  category: EnvelopeCategoryRow | undefined,
+  selected: boolean,
+  targetEnvelopeId: string,
+  currentPeriod: string,
+): string {
+  if (!selected || category?.lifecycleChangedAt === null) return currentPeriod;
+  const hasOngoingTargetMapping =
+    category?.mappedEnvelopeId === targetEnvelopeId && category.mappedThroughPeriod === null;
+  if (hasOngoingTargetMapping) return currentPeriod;
+  if (
+    category?.futureMappedEnvelopeId === targetEnvelopeId &&
+    category.futureMappingPeriod !== null
+  ) {
+    return category.futureMappingPeriod;
+  }
+  return nextPeriod(currentPeriod);
+}
+
+async function expandMappingValidationPoints(
+  database: SQLiteDatabase,
+  seeds: readonly MappingValidationPoint[],
+): Promise<MappingValidationPoint[]> {
+  const periodsByEnvelope = new Map<string, Set<string>>();
+  for (const seed of seeds) {
+    const periods = periodsByEnvelope.get(seed.envelopeId) ?? new Set<string>();
+    periods.add(seed.period);
+    periodsByEnvelope.set(seed.envelopeId, periods);
+  }
+  for (const [envelopeId, periods] of periodsByEnvelope) {
+    const firstAffectedPeriod = [...periods].sort()[0];
+    const boundaries = await database.getAllAsync<{
+      effectiveFromPeriod: string;
+      effectiveToPeriod: string | null;
+    }>(
+      `SELECT
+         effective_from_period AS effectiveFromPeriod,
+         effective_to_period AS effectiveToPeriod
+       FROM category_mappings
+       WHERE envelope_id = ?
+         AND (effective_to_period IS NULL OR effective_to_period >= ?)`,
+      envelopeId,
+      firstAffectedPeriod,
+    );
+    for (const boundary of boundaries) {
+      if (boundary.effectiveFromPeriod >= firstAffectedPeriod) {
+        periods.add(boundary.effectiveFromPeriod);
+      }
+      if (boundary.effectiveToPeriod !== null) {
+        const periodAfterEnd = nextPeriod(boundary.effectiveToPeriod);
+        if (periodAfterEnd >= firstAffectedPeriod) periods.add(periodAfterEnd);
+      }
+    }
+  }
+  return [...periodsByEnvelope].flatMap(([envelopeId, periods]) =>
+    [...periods].map((period) => ({ envelopeId, period })),
+  );
 }
 
 async function replaceCategoryMapping(

@@ -8,12 +8,14 @@ interface EnvelopeCategoryOptionProps {
   checked: boolean;
   option: EnvelopeCategoryOption;
   onChange: (categoryId: string, checked: boolean) => void;
+  scheduledFromPeriod?: string;
 }
 
 export function EnvelopeCategoryOptionRow({
   checked,
   option,
   onChange,
+  scheduledFromPeriod,
 }: EnvelopeCategoryOptionProps) {
   const disabled = !option.eligible;
   return (
@@ -35,6 +37,10 @@ export function EnvelopeCategoryOptionRow({
         {option.ineligibilityReason === "incompatible-currency" ? (
           <Text className="font-body-normal text-xs text-destructive">
             Used by another currency
+          </Text>
+        ) : scheduledFromPeriod ? (
+          <Text className="font-body-normal text-xs text-ink/50">
+            Scheduled from {scheduledFromPeriod}
           </Text>
         ) : option.mappedEnvelopeId ? (
           <Text className="font-body-normal text-xs text-ink/50">Currently mapped</Text>

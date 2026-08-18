@@ -27,6 +27,7 @@ export function EnvelopeFormSheet({
     envelope,
     maximumSortOrder,
     onSaved,
+    options,
   });
   return (
     <CreateResourceBottomSheet

@@ -9,6 +9,9 @@ export interface EnvelopeCategoryRow {
   type: string;
   incompatibleTransactionCount: number;
   mappedEnvelopeId: string | null;
+  mappedThroughPeriod: string | null;
+  futureMappedEnvelopeId: string | null;
+  futureMappingPeriod: string | null;
 }
 
 export function requireEnvelopeFields(
@@ -72,10 +75,36 @@ export async function requireEligibleEnvelopeCategories(
            AND (effective_to_period IS NULL OR effective_to_period >= ?)
          ORDER BY effective_from_period DESC
          LIMIT 1
-       ) AS mappedEnvelopeId
+       ) AS mappedEnvelopeId,
+       (
+         SELECT effective_to_period FROM category_mappings
+         WHERE category_id = categories.id
+           AND effective_from_period <= ?
+           AND (effective_to_period IS NULL OR effective_to_period >= ?)
+         ORDER BY effective_from_period DESC
+         LIMIT 1
+       ) AS mappedThroughPeriod,
+       (
+         SELECT envelope_id FROM category_mappings
+         WHERE category_id = categories.id
+           AND effective_from_period > ?
+         ORDER BY effective_from_period
+         LIMIT 1
+       ) AS futureMappedEnvelopeId,
+       (
+         SELECT effective_from_period FROM category_mappings
+         WHERE category_id = categories.id
+           AND effective_from_period > ?
+         ORDER BY effective_from_period
+         LIMIT 1
+       ) AS futureMappingPeriod
      FROM categories
      WHERE categories.id IN (${placeholders})`,
     currency,
+    period,
+    period,
+    period,
+    period,
     period,
     period,
     ...categoryIds,
@@ -101,9 +130,13 @@ export function requireRestoredCategoryConfirmation(
 ): void {
   const confirmed = new Set(confirmedCategoryIds ?? []);
   for (const category of categories) {
+    const hasOngoingTargetMapping =
+      category.mappedEnvelopeId === targetEnvelopeId && category.mappedThroughPeriod === null;
+    const hasScheduledTargetMapping = category.futureMappedEnvelopeId === targetEnvelopeId;
     if (
       category.lifecycleChangedAt !== null &&
-      category.mappedEnvelopeId !== targetEnvelopeId &&
+      !hasOngoingTargetMapping &&
+      !hasScheduledTargetMapping &&
       !confirmed.has(category.id)
     ) {
       throw new Error(

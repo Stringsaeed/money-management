@@ -2,7 +2,7 @@ import { formOptions, useForm } from "@tanstack/react-form";
 import { useState } from "react";
 
 import { useCreateBudgetEnvelope, useUpdateBudgetEnvelope } from "@/hooks/use-budget-workspaces";
-import type { EnvelopeSummary } from "@/modules/budgeting/budgeting";
+import type { EnvelopeCategoryOption, EnvelopeSummary } from "@/modules/budgeting/budgeting";
 import { nowIso, today } from "@/utils/date";
 import { generateId } from "@/utils/id";
 
@@ -21,6 +21,7 @@ interface UseEnvelopeFormArgs {
   envelope?: EnvelopeSummary;
   maximumSortOrder: number;
   onSaved: VoidFunction;
+  options: readonly EnvelopeCategoryOption[];
 }
 
 const envelopeFormOptions = formOptions({
@@ -40,6 +41,7 @@ export function useEnvelopeForm({
   envelope,
   maximumSortOrder,
   onSaved,
+  options,
 }: UseEnvelopeFormArgs) {
   const createEnvelope = useCreateBudgetEnvelope();
   const updateEnvelope = useUpdateBudgetEnvelope();
@@ -51,7 +53,14 @@ export function useEnvelopeForm({
           name: envelope.name,
           icon: envelope.icon,
           color: envelope.color,
-          categoryIds: envelope.categoryIds,
+          categoryIds: [
+            ...new Set([
+              ...envelope.categoryIds,
+              ...options
+                .filter((option) => option.futureMappedEnvelopeId === envelope.id)
+                .map((option) => option.id),
+            ]),
+          ],
           confirmedRestoredCategoryIds: [],
           positiveRollover: envelope.positiveRollover,
           sortOrder: envelope.sortOrder,

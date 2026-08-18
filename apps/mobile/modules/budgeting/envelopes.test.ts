@@ -198,6 +198,86 @@ describe("Envelope coordinator", () => {
         },
       ],
     });
+
+    await expect(
+      budgeting.updateEnvelope({
+        ...update,
+        name: "Household bills",
+        now: "2026-08-19T08:01:00.000Z",
+      }),
+    ).resolves.toMatchObject({
+      envelopes: [
+        { id: "envelope-food", categoryIds: ["category-dining", "category-groceries"] },
+        { id: "envelope-bills", name: "Household bills", categoryIds: ["category-utilities"] },
+      ],
+    });
+    await expect(
+      budgeting.getProjection({ currency: "USD", period: "2026-09" }),
+    ).resolves.toMatchObject({
+      envelopes: [
+        { id: "envelope-food", categoryIds: ["category-groceries"] },
+        {
+          id: "envelope-bills",
+          name: "Household bills",
+          categoryIds: ["category-dining", "category-utilities"],
+        },
+      ],
+    });
+  });
+
+  it("requires confirmation before restoring a Category to its previous Envelope", async () => {
+    const database = await setupWorkspace("2026-07-12");
+    await insertCategory(database, { id: "category-groceries", name: "Groceries" });
+    await insertCategory(database, { id: "category-dining", name: "Dining" });
+    const budgeting = createBudgetingCoordinator(database);
+    await budgeting.createEnvelope({
+      id: "envelope-food",
+      currency: "USD",
+      name: "Food",
+      icon: "🍲",
+      color: "#B48A7B",
+      categoryIds: ["category-groceries", "category-dining"],
+      positiveRollover: true,
+      localDate: "2026-07-12",
+      now: "2026-07-12T08:00:00.000Z",
+    });
+    await archiveCategory(database, {
+      categoryId: "category-dining",
+      localDate: "2026-08-18",
+      now: "2026-08-18T08:00:00.000Z",
+    });
+    await restoreCategory(database, {
+      categoryId: "category-dining",
+      now: "2026-08-18T08:01:00.000Z",
+    });
+    const update = {
+      envelopeId: "envelope-food",
+      name: "Food",
+      icon: "🍲",
+      color: "#B48A7B",
+      categoryIds: ["category-groceries", "category-dining"],
+      positiveRollover: true,
+      localDate: "2026-08-19",
+      now: "2026-08-19T08:00:00.000Z",
+    } as const;
+
+    await expect(budgeting.updateEnvelope(update)).rejects.toThrow(
+      "Confirm restored Category category-dining before creating its future Mapping.",
+    );
+    await budgeting.updateEnvelope({
+      ...update,
+      confirmedRestoredCategoryIds: ["category-dining"],
+    });
+    await expect(
+      budgeting.getProjection({ currency: "USD", period: "2026-08" }),
+    ).resolves.toMatchObject({
+      envelopes: [{ id: "envelope-food", categoryIds: ["category-dining", "category-groceries"] }],
+    });
+    await expect(
+      budgeting.getProjection({ currency: "USD", period: "2026-09" }),
+    ).resolves.toMatchObject({
+      envelopes: [{ id: "envelope-food", categoryIds: ["category-dining", "category-groceries"] }],
+    });
   });
 
   it("replaces a pre-existing future Mapping when creating an Envelope", async () => {
@@ -415,6 +495,69 @@ describe("Envelope coordinator", () => {
     });
   });
 
+  it("rolls back a reassignment that empties its source at a later mapping boundary", async () => {
+    const database = await setupWorkspace();
+    for (const [id, name] of [
+      ["category-moving", "Moving"],
+      ["category-temporary", "Temporary"],
+      ["category-target", "Target"],
+    ]) {
+      await insertCategory(database, { id, name });
+    }
+    const budgeting = createBudgetingCoordinator(database);
+    await budgeting.createEnvelope({
+      id: "envelope-source",
+      currency: "USD",
+      name: "Source",
+      icon: "📦",
+      color: "#B48A7B",
+      categoryIds: ["category-moving", "category-temporary"],
+      positiveRollover: true,
+      localDate: "2026-08-19",
+      now: "2026-08-19T08:00:00.000Z",
+    });
+    await budgeting.createEnvelope({
+      id: "envelope-target",
+      currency: "USD",
+      name: "Target",
+      icon: "🎯",
+      color: "#8B9D83",
+      categoryIds: ["category-target"],
+      positiveRollover: true,
+      localDate: "2026-08-19",
+      now: "2026-08-19T08:01:00.000Z",
+    });
+    await database.runAsync(
+      `UPDATE category_mappings
+       SET effective_to_period = '2026-09'
+       WHERE category_id = 'category-temporary'`,
+    );
+
+    await expect(
+      budgeting.updateEnvelope({
+        envelopeId: "envelope-target",
+        name: "Target",
+        icon: "🎯",
+        color: "#8B9D83",
+        categoryIds: ["category-target", "category-moving"],
+        positiveRollover: true,
+        localDate: "2026-08-19",
+        now: "2026-08-19T08:02:00.000Z",
+      }),
+    ).rejects.toThrow("Envelope envelope-source requires at least one active expense Category.");
+    await expect(
+      budgeting.getProjection({ currency: "USD", period: "2026-10" }),
+    ).resolves.toMatchObject({
+      envelopes: [
+        {
+          id: "envelope-source",
+          categoryIds: ["category-moving"],
+        },
+        { id: "envelope-target", categoryIds: ["category-target"] },
+      ],
+    });
+  });
+
   it("lists only active expense Categories and explains mapping eligibility", async () => {
     const database = await setupWorkspace();
     await insertCategory(database, { id: "category-groceries", name: "Groceries" });
@@ -468,6 +611,9 @@ describe("Envelope coordinator", () => {
         icon: "🏷️",
         color: "#B48A7B",
         mappedEnvelopeId: null,
+        mappedThroughPeriod: null,
+        futureMappedEnvelopeId: null,
+        futureMappingPeriod: null,
         requiresConfirmation: true,
         eligible: true,
         ineligibilityReason: null,
@@ -478,6 +624,9 @@ describe("Envelope coordinator", () => {
         icon: "🏷️",
         color: "#B48A7B",
         mappedEnvelopeId: "envelope-food",
+        mappedThroughPeriod: null,
+        futureMappedEnvelopeId: null,
+        futureMappingPeriod: null,
         requiresConfirmation: false,
         eligible: true,
         ineligibilityReason: null,
@@ -488,6 +637,9 @@ describe("Envelope coordinator", () => {
         icon: "🏷️",
         color: "#B48A7B",
         mappedEnvelopeId: null,
+        mappedThroughPeriod: null,
+        futureMappedEnvelopeId: null,
+        futureMappingPeriod: null,
         requiresConfirmation: false,
         eligible: false,
         ineligibilityReason: "incompatible-currency",

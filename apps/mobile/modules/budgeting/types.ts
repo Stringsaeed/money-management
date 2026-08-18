@@ -76,6 +76,9 @@ export interface EnvelopeCategoryOption {
   icon: string;
   color: string;
   mappedEnvelopeId: string | null;
+  mappedThroughPeriod: string | null;
+  futureMappedEnvelopeId: string | null;
+  futureMappingPeriod: string | null;
   requiresConfirmation: boolean;
   eligible: boolean;
   ineligibilityReason: "incompatible-currency" | null;

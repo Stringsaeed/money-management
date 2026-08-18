@@ -36,6 +36,11 @@ export function EnvelopeCategoryFields({ envelopeId, form, options }: EnvelopeCa
                   key={option.id}
                   checked={field.state.value.includes(option.id)}
                   option={option}
+                  scheduledFromPeriod={
+                    option.futureMappedEnvelopeId === envelopeId
+                      ? (option.futureMappingPeriod ?? undefined)
+                      : undefined
+                  }
                   onChange={(categoryId, checked) => {
                     field.handleChange(
                       checked
@@ -57,12 +62,17 @@ export function EnvelopeCategoryFields({ envelopeId, form, options }: EnvelopeCa
 
       <form.Subscribe selector={(state) => state.values.categoryIds}>
         {(categoryIds) => {
-          const restored = options.filter(
-            (option) =>
+          const restored = options.filter((option) => {
+            const hasOngoingTargetMapping =
+              option.mappedEnvelopeId === envelopeId && option.mappedThroughPeriod === null;
+            const hasScheduledTargetMapping = option.futureMappedEnvelopeId === envelopeId;
+            return (
               option.requiresConfirmation &&
-              option.mappedEnvelopeId !== envelopeId &&
-              categoryIds.includes(option.id),
-          );
+              !hasOngoingTargetMapping &&
+              !hasScheduledTargetMapping &&
+              categoryIds.includes(option.id)
+            );
+          });
           if (restored.length === 0) return null;
           return (
             <form.Field name="confirmedRestoredCategoryIds">

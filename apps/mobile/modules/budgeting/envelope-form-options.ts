@@ -11,6 +11,9 @@ interface CategoryOptionRow {
   lifecycleChangedAt: string | null;
   incompatibleTransactionCount: number;
   mappedEnvelopeId: string | null;
+  mappedThroughPeriod: string | null;
+  futureMappedEnvelopeId: string | null;
+  futureMappingPeriod: string | null;
 }
 
 export async function getEnvelopeFormOptions(
@@ -44,11 +47,37 @@ export async function getEnvelopeFormOptions(
            AND (effective_to_period IS NULL OR effective_to_period >= ?)
          ORDER BY effective_from_period DESC
          LIMIT 1
-       ) AS mappedEnvelopeId
+       ) AS mappedEnvelopeId,
+       (
+         SELECT effective_to_period FROM category_mappings
+         WHERE category_id = categories.id
+           AND effective_from_period <= ?
+           AND (effective_to_period IS NULL OR effective_to_period >= ?)
+         ORDER BY effective_from_period DESC
+         LIMIT 1
+       ) AS mappedThroughPeriod,
+       (
+         SELECT envelope_id FROM category_mappings
+         WHERE category_id = categories.id
+           AND effective_from_period > ?
+         ORDER BY effective_from_period
+         LIMIT 1
+       ) AS futureMappedEnvelopeId,
+       (
+         SELECT effective_from_period FROM category_mappings
+         WHERE category_id = categories.id
+           AND effective_from_period > ?
+         ORDER BY effective_from_period
+         LIMIT 1
+       ) AS futureMappingPeriod
      FROM categories
      WHERE categories.lifecycle = 'active' AND categories.type = 'expense'
      ORDER BY categories.name, categories.id`,
     currency,
+    period,
+    period,
+    period,
+    period,
     period,
     period,
   );
@@ -60,6 +89,9 @@ export async function getEnvelopeFormOptions(
       icon: row.icon,
       color: row.color,
       mappedEnvelopeId: row.mappedEnvelopeId,
+      mappedThroughPeriod: row.mappedThroughPeriod,
+      futureMappedEnvelopeId: row.futureMappedEnvelopeId,
+      futureMappingPeriod: row.futureMappingPeriod,
       requiresConfirmation: row.lifecycleChangedAt !== null,
       eligible,
       ineligibilityReason: eligible ? null : "incompatible-currency",
