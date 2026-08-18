@@ -111,7 +111,7 @@ export function useAccountArchivalPreview(id: string) {
   const database = useSQLiteContext();
   const localDate = toDateString(new Date());
   return useQuery({
-    queryKey: [...accountKeys.detail(id), "archival-preview", localDate],
+    queryKey: accountKeys.archivalPreview(id, localDate),
     queryFn: () => previewAccountArchival(database, id, localDate),
   });
 }
@@ -119,7 +119,7 @@ export function useAccountArchivalPreview(id: string) {
 export function useAccountDeletionPreview(id: string) {
   const database = useSQLiteContext();
   return useQuery({
-    queryKey: [...accountKeys.detail(id), "deletion-preview"],
+    queryKey: accountKeys.deletionPreview(id),
     queryFn: () => previewAccountDeletion(database, id),
   });
 }

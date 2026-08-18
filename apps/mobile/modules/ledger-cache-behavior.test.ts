@@ -46,6 +46,7 @@ describe("ledger cache coherence behavior", () => {
     expect(invalidatedKeys(invalidateQueries)).toEqual([
       ["transactions"],
       ["budgeting", "projections"],
+      ["account-lifecycle-previews"],
       ["month-summary"],
       ["transaction-date-range"],
     ]);
@@ -61,6 +62,10 @@ describe("ledger cache coherence behavior", () => {
     expect(coherenceResolved).toBe(false);
 
     resolvers[3]();
+    await Promise.resolve();
+    expect(coherenceResolved).toBe(false);
+
+    resolvers[4]();
     await coherence;
     expect(coherenceResolved).toBe(true);
   });

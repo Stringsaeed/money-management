@@ -280,6 +280,106 @@ describe("Account lifecycle", () => {
     });
   });
 
+  it("replays post-activation cash activity for Funding Pool and card shortfall blockers", async () => {
+    const database = await setup();
+    await insertAccount(database, "account-target", 0);
+    await insertAccount(database, "account-funding", 100_00);
+    await insertAccount(database, "card-opening-debt", -100_00, "credit_card");
+    await activateWorkspace(database, ["account-target", "account-funding"], "2026-08-01");
+    await insertEnvelope(database, { assignmentAmount: 100_00, suffix: "cash-activity" });
+    await database.runAsync(
+      `INSERT INTO transactions (
+        id, type, amount, currency, date, account_id, is_recurring,
+        description, created_at, updated_at
+      ) VALUES ('unassigned-spending', 'expense', 5000, 'USD', '2026-08-05',
+        'account-funding', 0, '', ?, ?)`,
+      NOW,
+      NOW,
+    );
+
+    await expect(
+      previewAccountArchival(database, "account-target", "2026-08-18"),
+    ).resolves.toMatchObject({
+      canArchive: false,
+      blockers: [
+        {
+          kind: "budget-dependencies",
+          dependencies: [{ kind: "budget-shortfall", amountMinor: 50_00 }],
+        },
+      ],
+    });
+
+    await database.runAsync(
+      `INSERT INTO transactions (
+        id, type, amount, currency, date, account_id, to_account_id, is_recurring,
+        description, created_at, updated_at
+      ) VALUES ('opening-debt-payment', 'transfer', 10000, 'USD', '2026-08-10',
+        'account-funding', 'card-opening-debt', 0, '', ?, ?)`,
+      NOW,
+      NOW,
+    );
+    await expect(
+      previewAccountArchival(database, "card-opening-debt", "2026-08-18"),
+    ).resolves.toMatchObject({
+      canArchive: false,
+      blockers: [
+        {
+          kind: "budget-dependencies",
+          dependencies: [{ kind: "budget-shortfall", amountMinor: 100_00 }],
+        },
+      ],
+    });
+
+    await database.runAsync(
+      `INSERT INTO transactions (
+        id, type, amount, currency, date, account_id, is_recurring,
+        description, created_at, updated_at
+      ) VALUES ('funding-income', 'income', 15000, 'USD', '2026-08-12',
+        'account-funding', 0, '', ?, ?)`,
+      NOW,
+      NOW,
+    );
+    await expect(
+      previewAccountArchival(database, "account-target", "2026-08-18"),
+    ).resolves.toMatchObject({ canArchive: true, blockers: [] });
+    await expect(
+      previewAccountArchival(database, "card-opening-debt", "2026-08-18"),
+    ).resolves.toMatchObject({ canArchive: true, blockers: [] });
+  });
+
+  it("reports cash Envelope Overspending as a distinct budget dependency", async () => {
+    const database = await setup();
+    await insertAccount(database, "account-target", 0);
+    await insertAccount(database, "account-funding", 100_00);
+    await activateWorkspace(database, ["account-target", "account-funding"], "2026-08-01");
+    await insertEnvelope(database, {
+      assignmentAmount: 80_00,
+      categoryId: "category-cash-overspending",
+      suffix: "cash-overspending",
+    });
+    await database.runAsync(
+      `INSERT INTO transactions (
+        id, type, amount, currency, date, account_id, category_id, is_recurring,
+        description, created_at, updated_at
+      ) VALUES ('cash-overspending', 'expense', 10000, 'USD', '2026-08-10',
+        'account-funding', 'category-cash-overspending', 0, '', ?, ?)`,
+      NOW,
+      NOW,
+    );
+
+    await expect(
+      previewAccountArchival(database, "account-target", "2026-08-18"),
+    ).resolves.toMatchObject({
+      canArchive: false,
+      blockers: [
+        {
+          kind: "budget-dependencies",
+          dependencies: [{ kind: "cash-envelope-overspending", amountMinor: 20_00 }],
+        },
+      ],
+    });
+  });
+
   it("shares Envelope availability with cash spending and funds older card deficits first", async () => {
     const database = await setup();
     await insertAccount(database, "card-shared", 0, "credit_card");
@@ -572,6 +672,51 @@ async function insertAccount(
     type,
     initialBalance,
     NOW,
+    NOW,
+  );
+}
+
+async function insertEnvelope(
+  database: SQLiteDatabase,
+  input: { assignmentAmount: number; categoryId?: string; suffix: string },
+): Promise<void> {
+  const envelopeId = `envelope-${input.suffix}`;
+  await database.runAsync(
+    `INSERT INTO envelopes (
+      id, currency, name, icon, color, lifecycle, sort_order, created_at, updated_at
+    ) VALUES (?, 'USD', ?, '✉️', '#8B9D83', 'active', 0, ?, ?)`,
+    envelopeId,
+    envelopeId,
+    NOW,
+    NOW,
+  );
+  if (input.categoryId) {
+    await database.runAsync(
+      `INSERT INTO categories (
+        id, name, type, color, icon, sort_order, created_at, updated_at
+      ) VALUES (?, ?, 'expense', '#B48A7B', '🏷️', 0, ?, ?)`,
+      input.categoryId,
+      input.categoryId,
+      NOW,
+      NOW,
+    );
+    await database.runAsync(
+      `INSERT INTO category_mappings (
+        category_id, envelope_id, effective_from_period, effective_to_period, created_at
+      ) VALUES (?, ?, '2026-08', NULL, ?)`,
+      input.categoryId,
+      envelopeId,
+      NOW,
+    );
+  }
+  await database.runAsync(
+    `INSERT INTO assignments (
+      id, currency, budget_period, source_envelope_id, destination_envelope_id,
+      amount_minor, reverses_assignment_id, created_at
+    ) VALUES (?, 'USD', '2026-08', NULL, ?, ?, NULL, ?)`,
+    `assignment-${input.suffix}`,
+    envelopeId,
+    input.assignmentAmount,
     NOW,
   );
 }
