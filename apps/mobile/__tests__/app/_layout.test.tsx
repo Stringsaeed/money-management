@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react-native";
 import RootLayout from "@/app/_layout";
 
 const mockMarkDatabaseReset = jest.fn();
+const mockMigrateBudgeting = jest.fn();
 const mockMigrateRecurringRules = jest.fn();
 const mockResetDatabaseIfNeeded = jest.fn();
 const mockRunMigrations = jest.fn();
@@ -82,6 +83,10 @@ jest.mock("@/db/migrate", () => ({
   runMigrations: (...args: unknown[]) => mockRunMigrations(...args),
 }));
 
+jest.mock("@/db/budgeting-migration", () => ({
+  migrateBudgeting: (...args: unknown[]) => mockMigrateBudgeting(...args),
+}));
+
 jest.mock("@/db/seed", () => ({
   seedDatabase: (...args: unknown[]) => mockSeedDatabase(...args),
 }));
@@ -115,6 +120,7 @@ jest.mock("@/components/recurring/recurring-settlement-banner", () => ({
 describe("app/_layout", () => {
   beforeEach(() => {
     mockMarkDatabaseReset.mockReset();
+    mockMigrateBudgeting.mockReset().mockResolvedValue(undefined);
     mockMigrateRecurringRules.mockReset();
     mockResetDatabaseIfNeeded.mockReset().mockResolvedValue(false);
     mockRunMigrations.mockReset().mockResolvedValue(undefined);
@@ -144,7 +150,7 @@ describe("app/_layout", () => {
     expect(mockStackScreen).toHaveBeenCalled();
   });
 
-  it("migrates Recurring Rules before seeding and exposing the app", async () => {
+  it("migrates Recurring Rules then budgeting before seeding and exposing the app", async () => {
     mockUseFonts.mockReturnValue([true, null]);
     const database = { name: "money.db" };
 
@@ -156,11 +162,15 @@ describe("app/_layout", () => {
       database,
       expect.objectContaining({ timeZone: "Asia/Dubai", localDate: "2026-08-17" }),
     );
+    expect(mockMigrateBudgeting).toHaveBeenCalledWith(database);
     expect(mockSeedDatabase).toHaveBeenCalledWith("drizzle-database");
     expect(mockRunMigrations.mock.invocationCallOrder[0]).toBeLessThan(
       mockMigrateRecurringRules.mock.invocationCallOrder[0]!,
     );
     expect(mockMigrateRecurringRules.mock.invocationCallOrder[0]).toBeLessThan(
+      mockMigrateBudgeting.mock.invocationCallOrder[0]!,
+    );
+    expect(mockMigrateBudgeting.mock.invocationCallOrder[0]).toBeLessThan(
       mockSeedDatabase.mock.invocationCallOrder[0]!,
     );
   });

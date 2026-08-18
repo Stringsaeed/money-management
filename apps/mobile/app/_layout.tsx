@@ -1,4 +1,3 @@
-import { drizzle } from "drizzle-orm/expo-sqlite";
 import { useFonts } from "expo-font";
 import {
   Nunito_200ExtraLight,
@@ -25,9 +24,7 @@ import { BottomSheetProvider } from "@swmansion/react-native-bottom-sheet";
 import { PostHogProvider } from "posthog-react-native";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { runMigrations } from "@/db/migrate";
-import { markDatabaseReset, resetDatabaseIfNeeded } from "@/db/reset";
-import { seedDatabase } from "@/db/seed";
+import { initializeDatabase } from "@/db/initialize";
 import { PortalHost } from "@rn-primitives/portal";
 import { PressablesConfig } from "pressto";
 import * as Haptics from "expo-haptics";
@@ -36,8 +33,6 @@ import { AppUpdateProvider } from "@/components/updates/app-update-provider";
 import { MandatoryUpdateGate } from "@/components/updates/mandatory-update-gate";
 import { RecurringSettlementBanner } from "@/components/recurring/recurring-settlement-banner";
 import { RecurringSettlementProvider } from "@/components/recurring/recurring-settlement-provider";
-import { migrateRecurringRules } from "@/db/recurring-rules-migration";
-import { getSystemTimeZone, localDateInTimeZone } from "@/modules/recurring-rules/clock";
 import { RecurringRulesProvider } from "@/modules/recurring-rules/provider";
 
 // Keep the native splash screen visible while fonts load
@@ -61,28 +56,7 @@ const DB_NAME = "money.db";
 async function onDatabaseInit(db: SQLiteDatabase) {
   try {
     console.log("Initializing database...");
-    const drizzleDb = drizzle(db);
-
-    // Order matters: the wipe takes app_settings with it, so the reset version
-    // can only be recorded once migrations have rebuilt the schema.
-    const didReset = await resetDatabaseIfNeeded(db);
-    if (didReset) console.log("Reset database to a clean baseline.");
-
-    console.log("Running migrations...");
-    await runMigrations(drizzleDb);
-
-    const migrationInstant = new Date();
-    const timeZone = getSystemTimeZone();
-    await migrateRecurringRules(db, {
-      timeZone,
-      localDate: localDateInTimeZone(migrationInstant, timeZone),
-      now: migrationInstant.toISOString(),
-    });
-
-    if (didReset) await markDatabaseReset(drizzleDb);
-
-    console.log("Seeding database...");
-    await seedDatabase(drizzleDb);
+    await initializeDatabase(db);
   } catch (error) {
     console.error("Error initializing database:", error);
     throw error;

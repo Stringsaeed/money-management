@@ -49,6 +49,40 @@ export function createTestSQLiteDatabase(): TestSQLiteDatabase {
     withTransactionAsync: async (task: () => Promise<void>) => runTransaction(task),
     withExclusiveTransactionAsync: async (task: (transaction: SQLiteDatabase) => Promise<void>) =>
       runTransaction(() => task(database as unknown as SQLiteDatabase)),
+    prepareSync: (source: string) => {
+      const statement = nativeDatabase.prepare(source);
+      const executeRows = (params: unknown[] = []) =>
+        statement.all(...(params as SQLInputValue[])) as Record<string, unknown>[];
+
+      return {
+        executeSync: (params: unknown[] = []) => {
+          if (statement.columns().length > 0) {
+            const rows = executeRows(params);
+            return {
+              changes: 0,
+              lastInsertRowId: 0,
+              getAllSync: () => rows,
+              getFirstSync: () => rows[0] ?? null,
+            };
+          }
+
+          const result = statement.run(...(params as SQLInputValue[]));
+          return {
+            changes: Number(result.changes),
+            lastInsertRowId: Number(result.lastInsertRowid),
+            getAllSync: () => [],
+            getFirstSync: () => null,
+          };
+        },
+        executeForRawResultSync: (params: unknown[] = []) => {
+          const columns = statement.columns().map(({ name }) => name);
+          const rows = executeRows(params);
+          return {
+            getAllSync: () => rows.map((row) => columns.map((column) => row[column])),
+          };
+        },
+      };
+    },
   } as unknown as SQLiteDatabase;
 
   return {
