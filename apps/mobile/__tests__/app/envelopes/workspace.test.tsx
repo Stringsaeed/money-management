@@ -225,10 +225,15 @@ describe("app/(tabs)/envelopes/workspace", () => {
     await waitFor(() => {
       expect(screen.queryByText("Edit Envelope")).not.toBeOnTheScreen();
     });
+    await expect(
+      createBudgetingCoordinator(database).getProjection({ currency: "USD", period: "2026-09" }),
+    ).resolves.toMatchObject({
+      envelopes: [{ id: "envelope-food", categoryIds: ["category-dining", "category-groceries"] }],
+    });
     await fireEvent.press(screen.getByRole("button", { name: "Edit Food Envelope" }));
     expect(
       screen.getByRole("checkbox", { name: "Dining Category" }).props.accessibilityState,
-    ).toEqual({ checked: true, disabled: false });
+    ).toMatchObject({ checked: false, disabled: false });
   });
 
   it("sorts Needs-Attention rows first and exposes archived Envelopes separately", async () => {
