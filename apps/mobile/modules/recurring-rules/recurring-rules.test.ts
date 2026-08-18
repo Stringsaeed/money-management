@@ -165,6 +165,25 @@ describe("Recurring Rules", () => {
     });
   });
 
+  it("keeps a paused Rule blocked if it resumes after its Category is archived", async () => {
+    const { database, recurringRules } = await setup();
+    await insertCategory(database, "category-archived");
+    await insertRule(database, { categoryId: "category-archived", lifecycle: "paused" });
+    await archiveCategory(database, {
+      categoryId: "category-archived",
+      localDate: "2026-04-15",
+      now: "2026-04-15T08:00:00.000Z",
+    });
+
+    await expect(
+      recurringRules.change({ kind: "resume", ruleId: "rule-existing", expectedRevision: 2 }),
+    ).resolves.toMatchObject({ kind: "applied", revision: 3 });
+    await expect(recurringRules.settle()).resolves.toMatchObject({
+      generatedCount: 0,
+      rules: [{ ruleId: "rule-existing", kind: "needs_attention", generatedCount: 0 }],
+    });
+  });
+
   it("rejects an archived Category for a new Rule", async () => {
     const { database, recurringRules } = await setup();
     await insertCategory(database, "category-archived");

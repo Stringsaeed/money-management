@@ -75,7 +75,7 @@ async function markActiveRulesForArchivedCategory(
      SET health = 'needs_attention', attention_reasons = ?, revision = revision + 1,
          health_changed_at = CASE WHEN health = 'needs_attention' THEN health_changed_at ELSE ? END,
          updated_at = ?
-     WHERE category_id = ? AND lifecycle = 'active' AND health = 'ready'`,
+     WHERE category_id = ? AND health = 'ready'`,
     reason,
     now,
     now,
