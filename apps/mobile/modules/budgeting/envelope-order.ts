@@ -5,12 +5,7 @@ export async function prepareEnvelopeOrder(
   currency: string,
   requestedSortOrder: number | undefined,
 ): Promise<number> {
-  const countRow = await database.getFirstAsync<{ count: number }>(
-    `SELECT COUNT(*) AS count
-     FROM envelopes WHERE currency = ? AND lifecycle = 'active'`,
-    currency,
-  );
-  const envelopeCount = countRow?.count ?? 0;
+  const envelopeCount = (await normalizeActiveEnvelopeOrders(database, currency)).length;
   const sortOrder = requestedSortOrder ?? envelopeCount;
   requireSortOrder(sortOrder, envelopeCount);
   await database.runAsync(
@@ -32,16 +27,32 @@ export async function updateEnvelopeOrder(
     requestedSortOrder: number | undefined;
   },
 ): Promise<number> {
-  const countRow = await database.getFirstAsync<{ count: number }>(
-    `SELECT COUNT(*) AS count
-     FROM envelopes WHERE currency = ? AND lifecycle = 'active'`,
-    request.currency,
-  );
-  const maximumSortOrder = Math.max(0, (countRow?.count ?? 1) - 1);
-  const sortOrder = request.requestedSortOrder ?? request.currentSortOrder;
+  const activeEnvelopeIds = await normalizeActiveEnvelopeOrders(database, request.currency);
+  const currentSortOrder = activeEnvelopeIds.indexOf(request.envelopeId);
+  if (currentSortOrder === -1) throw new Error(`Envelope ${request.envelopeId} is not active.`);
+  const maximumSortOrder = Math.max(0, activeEnvelopeIds.length - 1);
+  const sortOrder = request.requestedSortOrder ?? currentSortOrder;
   requireSortOrder(sortOrder, maximumSortOrder);
-  await reorderEnvelope(database, { ...request, nextSortOrder: sortOrder });
+  await reorderEnvelope(database, { ...request, currentSortOrder, nextSortOrder: sortOrder });
   return sortOrder;
+}
+
+async function normalizeActiveEnvelopeOrders(
+  database: SQLiteDatabase,
+  currency: string,
+): Promise<string[]> {
+  const rows = await database.getAllAsync<{ id: string; sortOrder: number }>(
+    `SELECT id, sort_order AS sortOrder
+     FROM envelopes
+     WHERE currency = ? AND lifecycle = 'active'
+     ORDER BY sort_order, id`,
+    currency,
+  );
+  for (const [sortOrder, row] of rows.entries()) {
+    if (row.sortOrder === sortOrder) continue;
+    await database.runAsync("UPDATE envelopes SET sort_order = ? WHERE id = ?", sortOrder, row.id);
+  }
+  return rows.map(({ id }) => id);
 }
 
 function requireSortOrder(sortOrder: number, maximum: number): void {
