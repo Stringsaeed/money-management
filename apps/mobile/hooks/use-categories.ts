@@ -12,7 +12,7 @@ import {
   restoreCategory,
 } from "@/modules/categories/category-lifecycle";
 import { generateId } from "@/utils/id";
-import { nowIso, today } from "@/utils/date";
+import { nowIso, toDateString } from "@/utils/date";
 import type { Category } from "@/types";
 
 // ── Queries ────────────────────────────────────────────────────────────────────
@@ -127,12 +127,14 @@ export function useArchiveCategory() {
   const database = useSQLiteContext();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
-      archiveCategory(database, {
+    mutationFn: (id: string) => {
+      const archivedAt = new Date();
+      return archiveCategory(database, {
         categoryId: id,
-        localDate: today(),
-        now: nowIso(),
-      }),
+        localDate: toDateString(archivedAt),
+        now: archivedAt.toISOString(),
+      });
+    },
     onSuccess: (_, id) => cohereLedgerCache(qc, { kind: "category.archived", id }),
   });
 }

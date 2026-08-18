@@ -1,4 +1,12 @@
-import { integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
+import {
+  check,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 
 import { createBudgetingDrizzleSchema } from "./budgeting-drizzle-schema";
 
@@ -20,19 +28,23 @@ export const accounts = sqliteTable("accounts", {
 
 // ── Categories ─────────────────────────────────────────────────────────────────
 
-export const categories = sqliteTable("categories", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  type: text("type").notNull(), // "income" | "expense"
-  color: text("color").notNull().default("#FF6B6B"),
-  icon: text("icon").notNull().default("🏷️"),
-  parentId: text("parent_id"), // self-reference, no FK to avoid circular
-  sortOrder: integer("sort_order").notNull().default(0),
-  lifecycle: text("lifecycle").notNull().default("active"),
-  lifecycleChangedAt: text("lifecycle_changed_at"),
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull(),
-});
+export const categories = sqliteTable(
+  "categories",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    type: text("type").notNull(), // "income" | "expense"
+    color: text("color").notNull().default("#FF6B6B"),
+    icon: text("icon").notNull().default("🏷️"),
+    parentId: text("parent_id"), // self-reference, no FK to avoid circular
+    sortOrder: integer("sort_order").notNull().default(0),
+    lifecycle: text("lifecycle").notNull().default("active"),
+    lifecycleChangedAt: text("lifecycle_changed_at"),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [check("category_lifecycle", sql`${table.lifecycle} IN ('active', 'archived')`)],
+);
 
 // ── Recurring Rules ──────────────────────────────────────────────────────────
 

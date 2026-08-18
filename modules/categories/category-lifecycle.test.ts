@@ -176,6 +176,70 @@ describe("Category lifecycle", () => {
       ),
     ).resolves.toEqual({ lifecycle: "active", lifecycleChangedAt: null });
   });
+
+  it("uses the archive Ledger Date period at a month boundary", async () => {
+    const database = await setup();
+    await insertMappedCategoryHistory(database);
+
+    await archiveCategory(database, {
+      categoryId: "category-dining",
+      localDate: "2026-09-01",
+      now: "2026-08-31T20:00:00.000Z",
+    });
+
+    await expect(
+      database.getAllAsync(
+        `SELECT effective_from_period AS effectiveFromPeriod,
+                effective_to_period AS effectiveToPeriod
+         FROM category_mappings WHERE category_id = ?`,
+        "category-dining",
+      ),
+    ).resolves.toEqual([{ effectiveFromPeriod: "2026-07", effectiveToPeriod: "2026-09" }]);
+  });
+
+  it("rejects new activity while allowing historical references to remain unchanged", async () => {
+    const database = await setup();
+    await insertMappedCategoryHistory(database);
+    await archiveCategory(database, {
+      categoryId: "category-dining",
+      localDate: "2026-08-18",
+      now: "2026-08-18T08:00:00.000Z",
+    });
+
+    await expect(
+      database.runAsync(
+        `INSERT INTO transactions (
+          id, type, amount, currency, date, account_id, category_id,
+          is_recurring, description, created_at, updated_at
+        ) VALUES ('transaction-new', 'expense', 500, 'USD', '2026-08-18',
+          'account-main', 'category-dining', 0, '', ?, ?)`,
+        "2026-08-18T08:00:00.000Z",
+        "2026-08-18T08:00:00.000Z",
+      ),
+    ).rejects.toThrow("Archived Category is unavailable for new activity");
+    await expect(
+      database.runAsync(
+        `INSERT INTO recurring_rules (
+          id, name, type, amount_minor, currency, account_id, to_account_id,
+          category_id, description, frequency, interval_count, start_date, time_zone,
+          lifecycle, health, attention_reasons, eligibility_floor, revision, created_at, updated_at
+        ) VALUES ('rule-new', 'Dining', 'expense', 500, 'USD', 'account-main', NULL,
+          'category-dining', '', 'month', 1, '2026-09-01', 'Asia/Dubai', 'active', 'ready',
+          '[]', '2026-09-01', 1, ?, ?)`,
+        "2026-08-18T08:00:00.000Z",
+        "2026-08-18T08:00:00.000Z",
+      ),
+    ).rejects.toThrow("Archived Category is unavailable for new activity");
+
+    await expect(
+      database.runAsync(
+        "UPDATE transactions SET category_id = ?, description = ? WHERE id = ?",
+        "category-dining",
+        "Still historical",
+        "transaction-dining",
+      ),
+    ).resolves.toBeDefined();
+  });
 });
 
 async function insertMappedCategoryHistory(database: SQLiteDatabase): Promise<void> {
