@@ -462,6 +462,41 @@ describe("Account lifecycle", () => {
     );
   });
 
+  it("blocks a cross-currency Transfer from an Account without its own workspace", async () => {
+    const database = await setup();
+    await insertAccount(database, "account-eur", 100_00, "checking", "EUR");
+    await insertAccount(database, "account-usd", 0);
+    await activateWorkspace(database, "account-usd", "2026-08-01");
+    await database.runAsync(
+      `INSERT INTO transactions (
+        id, type, amount, currency, date, account_id, to_account_id, is_recurring,
+        description, created_at, updated_at
+      ) VALUES ('cross-currency-no-source-workspace', 'transfer', 10000, 'EUR', '2026-08-10',
+        'account-eur', 'account-usd', 0, '', ?, ?)`,
+      NOW,
+      NOW,
+    );
+
+    await expect(
+      previewAccountArchival(database, "account-eur", "2026-08-18"),
+    ).resolves.toMatchObject({
+      canArchive: false,
+      blockers: [
+        {
+          kind: "budget-dependencies",
+          dependencies: [
+            {
+              kind: "unsupported-cross-currency-transfer",
+              currency: "EUR",
+              destinationCurrency: "USD",
+              transactionId: "cross-currency-no-source-workspace",
+            },
+          ],
+        },
+      ],
+    });
+  });
+
   it("shares Envelope availability with cash spending and funds older card deficits first", async () => {
     const database = await setup();
     await insertAccount(database, "card-shared", 0, "credit_card");

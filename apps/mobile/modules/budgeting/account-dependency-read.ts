@@ -51,6 +51,49 @@ export interface AccountDependencyFacts {
   transactions: BudgetTransactionRow[];
 }
 
+export interface UnsupportedCrossCurrencyTransferRow {
+  accountId: string;
+  amountMinor: number;
+  destinationCurrency: string;
+  id: string;
+  sourceCurrency: string;
+  toAccountId: string;
+}
+
+export async function loadUnsupportedCrossCurrencyTransfers(
+  database: SQLiteDatabase,
+  accountId: string,
+  throughPeriod: string,
+): Promise<UnsupportedCrossCurrencyTransferRow[]> {
+  return database.getAllAsync<UnsupportedCrossCurrencyTransferRow>(
+    `SELECT
+       transactions.id,
+       transactions.amount AS amountMinor,
+       transactions.account_id AS accountId,
+       transactions.to_account_id AS toAccountId,
+       source_accounts.currency AS sourceCurrency,
+       destination_accounts.currency AS destinationCurrency
+     FROM transactions
+     INNER JOIN accounts AS source_accounts ON source_accounts.id = transactions.account_id
+     INNER JOIN accounts AS destination_accounts
+       ON destination_accounts.id = transactions.to_account_id
+     WHERE transactions.type = 'transfer'
+       AND transactions.date <= ?
+       AND (transactions.account_id = ? OR transactions.to_account_id = ?)
+       AND source_accounts.currency <> destination_accounts.currency
+       AND EXISTS (
+         SELECT 1 FROM budget_workspaces
+         WHERE currency IN (source_accounts.currency, destination_accounts.currency)
+           AND activation_period <= ?
+       )
+     ORDER BY transactions.date, transactions.created_at, transactions.id`,
+    `${throughPeriod}-31`,
+    accountId,
+    accountId,
+    throughPeriod,
+  );
+}
+
 export async function loadAccountDependencyFacts(
   database: SQLiteDatabase,
   currency: string,
