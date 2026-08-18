@@ -74,10 +74,9 @@ export async function loadAccountDependencyFacts(
          budget_period AS period,
          source_envelope_id AS sourceEnvelopeId
        FROM assignments
-       WHERE currency = ? AND budget_period <= ?
+       WHERE currency = ?
        ORDER BY budget_period, created_at, id`,
       currency,
-      throughPeriod,
     ),
     database.getAllAsync<BudgetMembershipRow>(
       `SELECT
@@ -130,15 +129,13 @@ export async function loadAccountDependencyFacts(
        INNER JOIN accounts AS source_accounts ON source_accounts.id = transactions.account_id
        LEFT JOIN accounts AS destination_accounts
          ON destination_accounts.id = transactions.to_account_id
-       WHERE transactions.date >= ?
-         AND transactions.date <= ?
+       WHERE transactions.date <= ?
          AND (
            source_accounts.currency = ?
            OR destination_accounts.currency = ?
          )
        ORDER BY transactions.date, transactions.created_at, transactions.id`,
       currency,
-      `${workspace.activationPeriod}-01`,
       `${throughPeriod}-31`,
       currency,
       currency,

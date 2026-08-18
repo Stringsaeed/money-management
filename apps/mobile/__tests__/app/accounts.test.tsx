@@ -147,11 +147,18 @@ describe("app/accounts", () => {
       screen.getByRole("button", { name: "Review blocking Recurring Rules" }),
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Review blocking card activity" })).toBeOnTheScreen();
+    expect(
+      screen.getByRole("button", { name: "Review blocking budget dependencies" }),
+    ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Archive Everyday" })).toBeDisabled();
     expect(screen.queryByRole("button", { name: "Delete Everyday" })).not.toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole("button", { name: "Review blocking Recurring Rules" }));
     expect(mockPush).toHaveBeenCalledWith("/recurring");
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Review blocking budget dependencies" }),
+    );
+    expect(mockPush).toHaveBeenCalledWith("/(tabs)/envelopes");
   });
 
   it("labels archived Accounts and restores without promising Funding Membership", async () => {
@@ -166,6 +173,8 @@ describe("app/accounts", () => {
 
     expect(screen.getByRole("button", { name: "Restore Old Wallet" })).toBeOnTheScreen();
     expect(screen.queryByRole("button", { name: "Archive Old Wallet" })).not.toBeOnTheScreen();
+    expect(screen.queryByText("Save Changes")).not.toBeOnTheScreen();
+    expect(screen.getByText(/Restore this Account before editing its details/)).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole("button", { name: "Restore Old Wallet" }));
     expect(alert.mock.calls[0]?.[1]).toContain("Funding Membership stays off");
     const restoreAction = alert.mock.calls[0]?.[2]?.find((button) => button.text === "Restore");

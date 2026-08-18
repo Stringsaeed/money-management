@@ -9,6 +9,8 @@ export interface UnfundedCardEntry {
 }
 
 export interface CardBudgetState {
+  availability: Map<string, number>;
+  balances: Map<string, number>;
   reserveByAccount: Map<string, number>;
   unfunded: UnfundedCardEntry[];
 }
@@ -27,6 +29,12 @@ export function evaluateCardBudgetState(
     end: parseISO(`${throughPeriod}-01`),
   }).map((date) => format(date, "yyyy-MM"));
 
+  for (const transaction of facts.transactions.filter(
+    (row) => row.date.slice(0, 7) < facts.activationPeriod,
+  )) {
+    applyLedgerBalance(transaction, balances);
+  }
+
   for (const [index, period] of periods.entries()) {
     if (index > 0) applyRollover(availability, facts, period);
     for (const assignment of facts.assignments.filter((row) => row.period === period)) {
@@ -34,9 +42,16 @@ export function evaluateCardBudgetState(
         addMoney(availability, assignment.sourceEnvelopeId, -assignment.amountMinor);
       }
       if (assignment.destinationEnvelopeId) {
+        const availableMinor = availability.get(assignment.destinationEnvelopeId) ?? 0;
+        const cashOverspendingMinor = Math.min(
+          Math.max(-availableMinor, 0),
+          assignment.amountMinor,
+        );
+        addMoney(availability, assignment.destinationEnvelopeId, cashOverspendingMinor);
+        const remainingAfterCashMinor = assignment.amountMinor - cashOverspendingMinor;
         const remainingMinor = fundOldestCardSpending(
           assignment.destinationEnvelopeId,
-          assignment.amountMinor,
+          remainingAfterCashMinor,
           unfunded,
           reserveByAccount,
         );
@@ -56,7 +71,22 @@ export function evaluateCardBudgetState(
       );
     }
   }
-  return { reserveByAccount, unfunded };
+  return { availability, balances, reserveByAccount, unfunded };
+}
+
+function applyLedgerBalance(
+  transaction: BudgetTransactionRow,
+  balances: Map<string, number>,
+): void {
+  if (transaction.type === "income") {
+    addMoney(balances, transaction.accountId, transaction.amountMinor);
+  } else if (transaction.type === "expense") {
+    addMoney(balances, transaction.accountId, -transaction.amountMinor);
+  } else if (transaction.type === "transfer") {
+    addMoney(balances, transaction.accountId, -transaction.amountMinor);
+    if (transaction.toAccountId)
+      addMoney(balances, transaction.toAccountId, transaction.amountMinor);
+  }
 }
 
 function applyTransaction(

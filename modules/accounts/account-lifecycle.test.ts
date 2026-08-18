@@ -117,6 +117,7 @@ describe("Account lifecycle", () => {
     await insertAccount(database, "card-unfunded", 0, "credit_card");
     await insertAccount(database, "card-resolved", 0, "credit_card");
     await insertAccount(database, "card-credit", 100_00, "credit_card");
+    await insertAccount(database, "card-preactivation-credit", 0, "credit_card");
     await insertAccount(database, "payment-source", 100_00);
     await insertAccount(database, "external-source", 200_00);
     await insertBudgetedCardExpense(database, {
@@ -142,6 +143,21 @@ describe("Account lifecycle", () => {
       amount: 100_00,
       assignmentAmount: 100_00,
       suffix: "credit",
+    });
+    await database.runAsync(
+      `INSERT INTO transactions (
+        id, type, amount, currency, date, account_id, is_recurring,
+        description, created_at, updated_at
+      ) VALUES ('preactivation-card-credit', 'income', 10000, 'USD', '2026-07-20',
+        'card-preactivation-credit', 0, '', ?, ?)`,
+      NOW,
+      NOW,
+    );
+    await insertBudgetedCardExpense(database, {
+      accountId: "card-preactivation-credit",
+      amount: 100_00,
+      assignmentAmount: 100_00,
+      suffix: "preactivation-credit",
     });
     for (const suffix of ["funded", "unfunded"] as const) {
       await database.runAsync(
@@ -220,6 +236,48 @@ describe("Account lifecycle", () => {
       canArchive: true,
       blockers: [],
     });
+    await expect(
+      previewAccountArchival(database, "card-preactivation-credit", "2026-08-18"),
+    ).resolves.toEqual({
+      accountId: "card-preactivation-credit",
+      canArchive: true,
+      blockers: [],
+    });
+  });
+
+  it("reports over-assigned Money as a Budget Shortfall", async () => {
+    const database = await setup();
+    await insertAccount(database, "account-target", 0);
+    await insertAccount(database, "account-funding", 50_00);
+    await activateWorkspace(database, ["account-target", "account-funding"], "2026-08-01");
+    await database.runAsync(
+      `INSERT INTO envelopes (
+        id, currency, name, icon, color, lifecycle, sort_order, created_at, updated_at
+      ) VALUES ('envelope-overassigned', 'USD', 'Overassigned', '✉️', '#8B9D83',
+        'active', 0, ?, ?)`,
+      NOW,
+      NOW,
+    );
+    await database.runAsync(
+      `INSERT INTO assignments (
+        id, currency, budget_period, source_envelope_id, destination_envelope_id,
+        amount_minor, reverses_assignment_id, created_at
+      ) VALUES ('assignment-overassigned', 'USD', '2026-08', NULL,
+        'envelope-overassigned', 10000, NULL, ?)`,
+      NOW,
+    );
+
+    await expect(
+      previewAccountArchival(database, "account-target", "2026-08-18"),
+    ).resolves.toMatchObject({
+      canArchive: false,
+      blockers: [
+        {
+          kind: "budget-dependencies",
+          dependencies: [{ kind: "budget-shortfall", amountMinor: 50_00 }],
+        },
+      ],
+    });
   });
 
   it("shares Envelope availability with cash spending and funds older card deficits first", async () => {
@@ -230,7 +288,7 @@ describe("Account lifecycle", () => {
     await insertBudgetedCardExpense(database, {
       accountId: "card-shared",
       amount: 100_00,
-      assignmentAmount: 100_00,
+      assignmentAmount: 0,
       suffix: "shared",
     });
     await database.runAsync(
@@ -275,7 +333,7 @@ describe("Account lifecycle", () => {
         id, currency, budget_period, source_envelope_id, destination_envelope_id,
         amount_minor, reverses_assignment_id, created_at
       ) VALUES ('assignment-shared-recovery', 'USD', '2026-09', NULL,
-        'envelope-shared', 10000, NULL, ?)`,
+        'envelope-shared', 15000, NULL, ?)`,
       NOW,
     );
     await expect(
@@ -285,7 +343,10 @@ describe("Account lifecycle", () => {
       blockers: [
         {
           kind: "budget-dependencies",
-          dependencies: [{ kind: "card-payment-reserve", amountMinor: 100_00 }],
+          dependencies: [
+            { kind: "card-payment-reserve", amountMinor: 50_00 },
+            { kind: "unfunded-card-spending", amountMinor: 50_00 },
+          ],
         },
       ],
     });
