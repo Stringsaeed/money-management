@@ -12,7 +12,9 @@ export interface BudgetAccountRow {
 export interface BudgetAssignmentRow {
   amountMinor: number;
   destinationEnvelopeId: string | null;
+  id: string;
   period: string;
+  reversesAssignmentId: string | null;
   sourceEnvelopeId: string | null;
 }
 
@@ -121,9 +123,11 @@ export async function loadAccountDependencyFacts(
     ),
     database.getAllAsync<BudgetAssignmentRow>(
       `SELECT
+         id,
          amount_minor AS amountMinor,
          destination_envelope_id AS destinationEnvelopeId,
          budget_period AS period,
+         reverses_assignment_id AS reversesAssignmentId,
          source_envelope_id AS sourceEnvelopeId
        FROM assignments
        WHERE currency = ?

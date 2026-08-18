@@ -2,6 +2,8 @@ import { endOfMonth, format, parseISO } from "date-fns";
 import type { SQLiteDatabase } from "expo-sqlite";
 
 import type { BudgetAttentionReason, BudgetProjection, ProjectionRequest } from "./types";
+import { loadAccountDependencyFacts } from "./account-dependency-read";
+import { evaluateCardBudgetState } from "./card-dependency-evaluator";
 import { getEnvelopeSummaries } from "./envelope-projection";
 import { addMoney, requireCurrency, requireMinorUnits, requirePeriod } from "./validation";
 
@@ -74,7 +76,65 @@ export async function getProjection(
     });
   }
 
+  const facts = await loadAccountDependencyFacts(database, currency, period);
+  const cardBudgetState = facts ? evaluateCardBudgetState(facts, period) : null;
+  const availableByEnvelope = cardBudgetState?.availability ?? new Map<string, number>();
+  const reserveMinor = cardBudgetState
+    ? [...cardBudgetState.reserveByAccount.values()].reduce(
+        (total, amount) => addMoney(total, amount, currency),
+        0,
+      )
+    : 0;
+  const assignedByEnvelope = new Map<string, number>();
+  const spentByEnvelope = new Map<string, number>();
+  for (const assignment of facts?.assignments ?? []) {
+    if (assignment.period !== period) continue;
+    if (assignment.sourceEnvelopeId) {
+      assignedByEnvelope.set(
+        assignment.sourceEnvelopeId,
+        addMoney(
+          assignedByEnvelope.get(assignment.sourceEnvelopeId) ?? 0,
+          -assignment.amountMinor,
+          currency,
+        ),
+      );
+    }
+    if (assignment.destinationEnvelopeId) {
+      assignedByEnvelope.set(
+        assignment.destinationEnvelopeId,
+        addMoney(
+          assignedByEnvelope.get(assignment.destinationEnvelopeId) ?? 0,
+          assignment.amountMinor,
+          currency,
+        ),
+      );
+    }
+  }
+  for (const transaction of facts?.transactions ?? []) {
+    if (
+      transaction.date.slice(0, 7) === period &&
+      transaction.type === "expense" &&
+      transaction.envelopeId
+    ) {
+      spentByEnvelope.set(
+        transaction.envelopeId,
+        addMoney(
+          spentByEnvelope.get(transaction.envelopeId) ?? 0,
+          transaction.amountMinor,
+          currency,
+        ),
+      );
+    }
+  }
+  const assignedAvailabilityMinor = [...availableByEnvelope.values()].reduce(
+    (total, amount) => addMoney(total, amount, currency),
+    0,
+  );
   const money = { currency, amountMinor: fundingPoolAmount };
+  const unassignedMoney = {
+    currency,
+    amountMinor: addMoney(fundingPoolAmount, -assignedAvailabilityMinor - reserveMinor, currency),
+  };
   const [envelopes, archivedEnvelopes] = await Promise.all([
     getEnvelopeSummaries(database, currency, period, "active"),
     getEnvelopeSummaries(database, currency, period, "archived"),
@@ -83,14 +143,41 @@ export async function getProjection(
     currency,
     period,
     fundingPool: money,
-    unassignedMoney: { ...money },
+    unassignedMoney,
     budgetHealth:
       attentionReasons.length === 0
         ? { status: "ready", reasons: [] }
         : { status: "needs_attention", reasons: attentionReasons },
-    envelopes,
-    archivedEnvelopes,
+    envelopes: applyEnvelopeValues(
+      envelopes,
+      availableByEnvelope,
+      assignedByEnvelope,
+      spentByEnvelope,
+      currency,
+    ),
+    archivedEnvelopes: applyEnvelopeValues(
+      archivedEnvelopes,
+      availableByEnvelope,
+      assignedByEnvelope,
+      spentByEnvelope,
+      currency,
+    ),
   };
+}
+
+function applyEnvelopeValues(
+  envelopes: BudgetProjection["envelopes"],
+  availableByEnvelope: ReadonlyMap<string, number>,
+  assignedByEnvelope: ReadonlyMap<string, number>,
+  spentByEnvelope: ReadonlyMap<string, number>,
+  currency: string,
+): BudgetProjection["envelopes"] {
+  return envelopes.map((envelope) => ({
+    ...envelope,
+    availableMoney: { currency, amountMinor: availableByEnvelope.get(envelope.id) ?? 0 },
+    assignedMoney: { currency, amountMinor: assignedByEnvelope.get(envelope.id) ?? 0 },
+    netSpent: { currency, amountMinor: spentByEnvelope.get(envelope.id) ?? 0 },
+  }));
 }
 
 async function fundingAccounts(

@@ -68,9 +68,18 @@ export const budgetKeys = {
   envelopeFormOptions: ["budgeting", "envelope-form-options"] as const,
   envelopeFormOptionsFor: (currency: string, period: string) =>
     ["budgeting", "envelope-form-options", currency, period] as const,
+  assignmentHistory: ["budgeting", "assignment-history"] as const,
+  assignmentHistoryFor: (currency: string, period: string) =>
+    ["budgeting", "assignment-history", currency, period] as const,
 };
 
-export type BudgetEffect = "workspaces" | "memberships" | "envelopes" | "projections" | "settings";
+export type BudgetEffect =
+  | "workspaces"
+  | "memberships"
+  | "envelopes"
+  | "projections"
+  | "assignments"
+  | "settings";
 
 export type LedgerChange =
   | { kind: "account.created"; id: string }
@@ -193,6 +202,7 @@ const budgetEffectQueryKeys: Record<BudgetEffect, readonly QueryKey[]> = {
     accountKeys.lifecyclePreviews,
   ],
   projections: [budgetKeys.projections, accountKeys.lifecyclePreviews],
+  assignments: [budgetKeys.projections, budgetKeys.assignmentHistory],
   settings: [budgetKeys.workspaces],
 };
 

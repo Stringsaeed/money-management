@@ -7,6 +7,8 @@ import { createBudgetingCoordinator } from "@/modules/budgeting/budgeting";
 import {
   activateRouteWorkspace,
   cleanupWorkspaceRouteTests,
+  createRouteEnvelope,
+  insertRouteCategory,
   renderWorkspaceRoute,
   setupRouteDatabase,
   useRouteDatabase,
@@ -77,5 +79,41 @@ describe("Envelope workspace route status and selection", () => {
         screen.getByRole("radio", { name: "AED currency workspace" }).props.accessibilityState,
       ).toEqual({ disabled: false, selected: true });
     });
+  });
+
+  it("previews, validates, cancels, and commits Move Money through the workspace route", async () => {
+    const { database } = await setupRouteDatabase();
+    await activateRouteWorkspace(database, "USD", 100_00);
+    await insertRouteCategory(database, "category-food", "Food");
+    await createRouteEnvelope(database, {
+      categoryIds: ["category-food"],
+      id: "envelope-food",
+      name: "Food",
+    });
+    await renderWorkspaceRoute();
+
+    await fireEvent.press(await screen.findByRole("button", { name: "Move Money" }));
+    expect(screen.getByLabelText("Move Money source")).toBeOnTheScreen();
+    expect(screen.getByLabelText("Move Money destination")).toBeOnTheScreen();
+    expect(screen.getByLabelText("Move Money amount")).toBeOnTheScreen();
+    expect(screen.getByLabelText("Move Money period")).toBeOnTheScreen();
+
+    await fireEvent.changeText(screen.getByLabelText("Move Money amount"), "0");
+    await fireEvent.press(screen.getByRole("button", { name: "Preview Move Money" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/positive integer/);
+
+    await fireEvent.press(screen.getByRole("button", { name: "Close" }));
+    expect(screen.queryByLabelText("Move Money source")).not.toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole("button", { name: "Move Money" }));
+    await fireEvent.changeText(screen.getByLabelText("Move Money amount"), "2500");
+    await fireEvent.press(screen.getByRole("button", { name: "Preview Move Money" }));
+    expect(await screen.findByText("Source 10000 → 7500")).toBeOnTheScreen();
+    expect(screen.getByText("Destination 0 → 2500")).toBeOnTheScreen();
+
+    const commitButton = screen.getAllByRole("button", { name: "Move Money" }).at(-1);
+    await fireEvent.press(commitButton!);
+    await waitFor(() => expect(screen.queryByLabelText("Move Money source")).not.toBeOnTheScreen());
+    await waitFor(() => expect(screen.getByText("$75.00")).toBeOnTheScreen());
   });
 });
