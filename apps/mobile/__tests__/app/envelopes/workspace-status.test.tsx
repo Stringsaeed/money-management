@@ -10,7 +10,7 @@ import {
   renderWorkspaceRoute,
   setupRouteDatabase,
   useRouteDatabase,
-} from "./workspace-test-support";
+} from "@/tests/envelopes/workspace-support";
 
 afterEach(cleanupWorkspaceRouteTests);
 
