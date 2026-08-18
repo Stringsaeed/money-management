@@ -2,22 +2,29 @@ import { isMatch, isValid, parse } from "date-fns";
 import type { SQLiteDatabase } from "expo-sqlite";
 
 import { runInTransaction } from "@/modules/recurring-rules/persistence";
+import { toDateString } from "@/utils/date";
 
 const CONFIRMATION_TTL_MS = 5 * 60 * 1000;
 
 export interface FutureCategoryMappingIntent {
   categoryId: string;
   envelopeId: string;
-  currentPeriod: string;
   effectiveFromPeriod: string;
   confirmationToken?: string;
+}
+
+interface FutureCategoryMappingPreview extends Omit<
+  FutureCategoryMappingIntent,
+  "confirmationToken"
+> {
+  currentPeriod: string;
 }
 
 export type FutureCategoryMappingResult =
   | {
       kind: "confirmation_required";
       confirmationToken: string;
-      preview: Omit<FutureCategoryMappingIntent, "confirmationToken">;
+      preview: FutureCategoryMappingPreview;
     }
   | { kind: "invalid_confirmation" }
   | { kind: "applied"; effects: readonly ["projections"] };
@@ -44,19 +51,21 @@ export function createFutureCategoryMappingCommand(
 
   return {
     async change(intent) {
-      const canonicalIntent = canonicalizeIntent(intent);
-      await validateFutureMapping(options.database, intent);
+      const commandInstant = options.now();
+      const currentPeriod = toDateString(commandInstant).slice(0, 7);
+      const canonicalIntent = canonicalizeIntent(intent, currentPeriod);
+      await validateFutureMapping(options.database, intent, currentPeriod);
 
       if (!intent.confirmationToken) {
         const confirmationToken = options.nextConfirmationToken();
         confirmations.set(confirmationToken, {
           canonicalIntent,
-          expiresAt: options.now().getTime() + CONFIRMATION_TTL_MS,
+          expiresAt: commandInstant.getTime() + CONFIRMATION_TTL_MS,
         });
         return {
           kind: "confirmation_required",
           confirmationToken,
-          preview: withoutConfirmation(intent),
+          preview: { ...withoutConfirmation(intent), currentPeriod },
         };
       }
 
@@ -64,14 +73,14 @@ export function createFutureCategoryMappingCommand(
       confirmations.delete(intent.confirmationToken);
       if (
         !confirmation ||
-        confirmation.expiresAt < options.now().getTime() ||
+        confirmation.expiresAt < commandInstant.getTime() ||
         confirmation.canonicalIntent !== canonicalIntent
       ) {
         return { kind: "invalid_confirmation" };
       }
 
       return runInTransaction(options.database, async (transaction) => {
-        await validateFutureMapping(transaction, intent);
+        await validateFutureMapping(transaction, intent, currentPeriod);
         await transaction.runAsync(
           `INSERT INTO category_mappings (
             category_id, envelope_id, effective_from_period, effective_to_period, created_at
@@ -79,7 +88,7 @@ export function createFutureCategoryMappingCommand(
           intent.categoryId,
           intent.envelopeId,
           intent.effectiveFromPeriod,
-          options.now().toISOString(),
+          commandInstant.toISOString(),
         );
         return { kind: "applied", effects: ["projections"] as const };
       });
@@ -90,10 +99,11 @@ export function createFutureCategoryMappingCommand(
 async function validateFutureMapping(
   database: SQLiteDatabase,
   intent: FutureCategoryMappingIntent,
+  currentPeriod: string,
 ): Promise<void> {
-  assertPeriod(intent.currentPeriod, "current");
+  assertPeriod(currentPeriod, "current");
   assertPeriod(intent.effectiveFromPeriod, "effective-from");
-  if (intent.effectiveFromPeriod <= intent.currentPeriod) {
+  if (intent.effectiveFromPeriod <= currentPeriod) {
     throw new Error("A restored Category Mapping must begin in a future Budget Period.");
   }
 
@@ -120,8 +130,8 @@ async function validateFutureMapping(
   if (!envelope) throw new Error("Choose an active Envelope for this Category Mapping.");
 }
 
-function canonicalizeIntent(intent: FutureCategoryMappingIntent): string {
-  return JSON.stringify(withoutConfirmation(intent));
+function canonicalizeIntent(intent: FutureCategoryMappingIntent, currentPeriod: string): string {
+  return JSON.stringify({ ...withoutConfirmation(intent), currentPeriod });
 }
 
 function withoutConfirmation(

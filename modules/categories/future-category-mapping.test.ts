@@ -27,14 +27,13 @@ describe("confirmed future Category Mapping", () => {
     const intent = {
       categoryId: "category-dining",
       envelopeId: "envelope-food",
-      currentPeriod: "2026-08",
       effectiveFromPeriod: "2026-09",
     } as const;
 
     await expect(command.change(intent)).resolves.toEqual({
       kind: "confirmation_required",
       confirmationToken: "mapping-confirmation-1",
-      preview: intent,
+      preview: { ...intent, currentPeriod: "2026-08" },
     });
     await expect(mappingCount(database, "2026-09")).resolves.toBe(0);
     await expect(
@@ -55,6 +54,29 @@ describe("confirmed future Category Mapping", () => {
     await expect(
       command.change({ ...intent, confirmationToken: preview.confirmationToken }),
     ).resolves.toEqual({ kind: "invalid_confirmation" });
+  });
+
+  it("rejects a stale confirmation when the derived current period advances", async () => {
+    const database = await setup();
+    let now = new Date("2026-08-31T08:00:00.000Z");
+    const command = createFutureCategoryMappingCommand({
+      database,
+      now: () => now,
+      nextConfirmationToken: () => "mapping-confirmation-stale",
+    });
+    const intent = {
+      categoryId: "category-dining",
+      envelopeId: "envelope-food",
+      effectiveFromPeriod: "2026-09",
+    } as const;
+    const preview = await command.change(intent);
+    if (preview.kind !== "confirmation_required") throw new Error("Expected confirmation.");
+    now = new Date("2026-09-01T08:00:00.000Z");
+
+    await expect(
+      command.change({ ...intent, confirmationToken: preview.confirmationToken }),
+    ).rejects.toThrow("must begin in a future Budget Period");
+    await expect(mappingCount(database, "2026-09")).resolves.toBe(0);
   });
 });
 
