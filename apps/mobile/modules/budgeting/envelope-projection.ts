@@ -108,10 +108,7 @@ export async function getEnvelopeSummaries(
 function normalizeEnvelopeSortOrders(summaries: readonly EnvelopeSummary[]): EnvelopeSummary[] {
   const orderByEnvelopeId = new Map(
     [...summaries]
-      .sort(
-        (left, right) =>
-          left.sortOrder - right.sortOrder || left.id.localeCompare(right.id),
-      )
+      .sort((left, right) => left.sortOrder - right.sortOrder || left.id.localeCompare(right.id))
       .map((envelope, sortOrder) => [envelope.id, sortOrder]),
   );
   return summaries.map((summary) => ({

@@ -132,8 +132,7 @@ export async function updateEnvelope(
     );
     if (
       changedCategoryIds.some(
-        (categoryId) =>
-          !selectedCategoryIds.has(categoryId) && !targetCategoryIds.has(categoryId),
+        (categoryId) => !selectedCategoryIds.has(categoryId) && !targetCategoryIds.has(categoryId),
       )
     ) {
       throw new Error("A removed Category must currently map to the edited Envelope.");
