@@ -78,6 +78,29 @@ describe("confirmed future Category Mapping", () => {
     ).rejects.toThrow("must begin in a future Budget Period");
     await expect(mappingCount(database, "2026-09")).resolves.toBe(0);
   });
+
+  it("rejects an expired confirmation token", async () => {
+    const database = await setup();
+    let now = new Date("2026-08-18T08:00:00.000Z");
+    const command = createFutureCategoryMappingCommand({
+      database,
+      now: () => now,
+      nextConfirmationToken: () => "mapping-confirmation-expired",
+    });
+    const intent = {
+      categoryId: "category-dining",
+      envelopeId: "envelope-food",
+      effectiveFromPeriod: "2026-09",
+    } as const;
+    const preview = await command.change(intent);
+    if (preview.kind !== "confirmation_required") throw new Error("Expected confirmation.");
+    now = new Date("2026-08-18T08:06:00.000Z");
+
+    await expect(
+      command.change({ ...intent, confirmationToken: preview.confirmationToken }),
+    ).resolves.toEqual({ kind: "invalid_confirmation" });
+    await expect(mappingCount(database, "2026-09")).resolves.toBe(0);
+  });
 });
 
 async function setup(): Promise<SQLiteDatabase> {

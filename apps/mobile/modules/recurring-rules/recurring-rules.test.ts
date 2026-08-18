@@ -137,7 +137,7 @@ afterEach(() => {
 });
 
 describe("Recurring Rules", () => {
-  it("continues settling an existing Rule after its Category is archived", async () => {
+  it("blocks an existing active Rule honestly after its Category is archived", async () => {
     const { database, recurringRules } = await setup();
     await insertCategory(database, "category-archived");
     await insertRule(database, { categoryId: "category-archived" });
@@ -148,8 +148,20 @@ describe("Recurring Rules", () => {
     });
 
     await expect(recurringRules.settle()).resolves.toMatchObject({
-      generatedCount: 3,
-      rules: [{ ruleId: "rule-existing", kind: "settled", generatedCount: 3 }],
+      generatedCount: 0,
+      rules: [{ ruleId: "rule-existing", kind: "needs_attention", generatedCount: 0 }],
+    });
+    await expect(
+      database.getFirstAsync(
+        `SELECT health, attention_reasons AS attentionReasons
+         FROM recurring_rules WHERE id = ?`,
+        "rule-existing",
+      ),
+    ).resolves.toEqual({
+      health: "needs_attention",
+      attentionReasons: JSON.stringify([
+        { kind: "archived-category", categoryId: "category-archived" },
+      ]),
     });
   });
 

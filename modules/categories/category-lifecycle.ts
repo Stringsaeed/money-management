@@ -60,7 +60,27 @@ export async function archiveCategory(
       request.categoryId,
       period,
     );
+    await markActiveRulesForArchivedCategory(transaction, request.categoryId, request.now);
   });
+}
+
+async function markActiveRulesForArchivedCategory(
+  database: SQLiteDatabase,
+  categoryId: string,
+  now: string,
+): Promise<void> {
+  const reason = JSON.stringify([{ kind: "archived-category", categoryId }]);
+  await database.runAsync(
+    `UPDATE recurring_rules
+     SET health = 'needs_attention', attention_reasons = ?, revision = revision + 1,
+         health_changed_at = CASE WHEN health = 'needs_attention' THEN health_changed_at ELSE ? END,
+         updated_at = ?
+     WHERE category_id = ? AND lifecycle = 'active' AND health = 'ready'`,
+    reason,
+    now,
+    now,
+    categoryId,
+  );
 }
 
 export async function restoreCategory(

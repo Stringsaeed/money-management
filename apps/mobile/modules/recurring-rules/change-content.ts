@@ -62,7 +62,7 @@ async function repairRule(
       issues: [{ field: "rule", message: "Only a Rule that Needs Attention can be repaired." }],
     };
   }
-  const issues = await validateDraft(options, intent.rule, rule.categoryId);
+  const issues = await validateDraft(options, intent.rule);
   if (issues.length > 0) return { kind: "invalid_intent", issues };
 
   const localDate = options.clock.localDate(intent.rule.timeZone);
@@ -85,7 +85,6 @@ async function repairRule(
     const transactionIssues = await validateDraft(
       { ...options, database: transaction },
       intent.rule,
-      current.categoryId,
     );
     if (transactionIssues.length > 0) return { kind: "invalid_intent", issues: transactionIssues };
 
