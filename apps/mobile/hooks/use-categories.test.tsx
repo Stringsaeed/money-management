@@ -89,8 +89,8 @@ jest.mock("@/utils/id", () => ({
 }));
 
 jest.mock("@/utils/date", () => ({
+  ...jest.requireActual("@/utils/date"),
   nowIso: jest.fn(() => "2026-03-28T12:00:00.000Z"),
-  today: jest.fn(() => "2026-03-28"),
 }));
 
 describe("use-categories hooks", () => {
@@ -242,8 +242,8 @@ describe("use-categories hooks", () => {
       change: { kind: "category.archived", id: "category-1" },
       expectedRequest: {
         categoryId: "category-1",
-        localDate: "2026-03-28",
-        now: "2026-03-28T12:00:00.000Z",
+        localDate: expect.any(String),
+        now: expect.any(String),
       },
     },
     {
@@ -272,4 +272,27 @@ describe("use-categories hooks", () => {
       await mutation.resolve();
     },
   );
+
+  it("derives the archive period and timestamp from one month-boundary instant", async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 8, 1, 0, 0, 0));
+    try {
+      const { result } = await renderHookWithProviders(() => useArchiveCategory());
+
+      await act(async () => {
+        await result.current.mutateAsync("category-1");
+      });
+
+      expect(mockArchiveCategory).toHaveBeenLastCalledWith(
+        { raw: "database" },
+        {
+          categoryId: "category-1",
+          localDate: "2026-09-01",
+          now: new Date(2026, 8, 1, 0, 0, 0).toISOString(),
+        },
+      );
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });

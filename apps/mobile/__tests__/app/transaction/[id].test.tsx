@@ -56,7 +56,7 @@ jest.mock("@/hooks/use-transactions", () => ({
 }));
 
 jest.mock("@/hooks/use-categories", () => ({
-  useCategories: () => ({ data: [] }),
+  useAllCategories: () => ({ data: [] }),
 }));
 
 jest.mock("@/hooks/use-recurring-rules", () => ({
