@@ -37,21 +37,6 @@ export function evaluateCardBudgetState(
 
   for (const [index, period] of periods.entries()) {
     if (index > 0) applyRollover(availability, facts, period);
-    for (const transaction of supportedTransactions.filter(
-      (row) => row.date.slice(0, 7) === period,
-    )) {
-      applyBudgetTransaction(
-        transaction,
-        period,
-        facts,
-        accountTypes,
-        balances,
-        availability,
-        reserveByAccount,
-        unreservedPaymentByAccount,
-        unfunded,
-      );
-    }
     for (const assignment of facts.assignments.filter((row) => row.period === period)) {
       if (assignment.sourceEnvelopeId) {
         addBudgetMoney(availability, assignment.sourceEnvelopeId, -assignment.amountMinor);
@@ -72,6 +57,21 @@ export function evaluateCardBudgetState(
         );
         addBudgetMoney(availability, assignment.destinationEnvelopeId, remainingMinor);
       }
+    }
+    for (const transaction of supportedTransactions.filter(
+      (row) => row.date.slice(0, 7) === period,
+    )) {
+      applyBudgetTransaction(
+        transaction,
+        period,
+        facts,
+        accountTypes,
+        balances,
+        availability,
+        reserveByAccount,
+        unreservedPaymentByAccount,
+        unfunded,
+      );
     }
   }
   return {
