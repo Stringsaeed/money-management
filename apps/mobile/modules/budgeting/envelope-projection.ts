@@ -110,9 +110,7 @@ function normalizeEnvelopeSortOrders(summaries: readonly EnvelopeSummary[]): Env
     [...summaries]
       .sort(
         (left, right) =>
-          left.sortOrder - right.sortOrder ||
-          left.name.localeCompare(right.name) ||
-          left.id.localeCompare(right.id),
+          left.sortOrder - right.sortOrder || left.id.localeCompare(right.id),
       )
       .map((envelope, sortOrder) => [envelope.id, sortOrder]),
   );
