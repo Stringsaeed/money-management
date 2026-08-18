@@ -5,6 +5,7 @@ import {
   insertBudgetAccount,
   setupBudgetingDatabase,
 } from "@/modules/budgeting/budgeting-test-utils";
+import { archiveCategory, restoreCategory } from "@/modules/categories/category-lifecycle";
 
 import { createBudgetingCoordinator } from "./budgeting";
 
@@ -122,15 +123,11 @@ describe("Envelope coordinator", () => {
     ]);
   });
 
-  it("requires explicit confirmation before mapping a restored Category", async () => {
-    const database = await setupWorkspace();
+  it("preserves a restored Category's current attribution and confirms its future Mapping", async () => {
+    const database = await setupWorkspace("2026-07-12");
     await insertCategory(database, { id: "category-groceries", name: "Groceries" });
     await insertCategory(database, { id: "category-dining", name: "Dining" });
-    await database.runAsync(
-      "UPDATE categories SET lifecycle_changed_at = ? WHERE id = ?",
-      "2026-08-18T08:00:00.000Z",
-      "category-dining",
-    );
+    await insertCategory(database, { id: "category-utilities", name: "Utilities" });
     const budgeting = createBudgetingCoordinator(database);
     await budgeting.createEnvelope({
       id: "envelope-food",
@@ -138,33 +135,152 @@ describe("Envelope coordinator", () => {
       name: "Food",
       icon: "🍲",
       color: "#B48A7B",
-      categoryIds: ["category-groceries"],
+      categoryIds: ["category-groceries", "category-dining"],
+      positiveRollover: true,
+      localDate: "2026-07-12",
+      now: "2026-07-12T08:00:00.000Z",
+    });
+    await budgeting.createEnvelope({
+      id: "envelope-bills",
+      currency: "USD",
+      name: "Bills",
+      icon: "🧾",
+      color: "#8B9D83",
+      categoryIds: ["category-utilities"],
+      positiveRollover: true,
+      localDate: "2026-07-12",
+      now: "2026-07-12T08:01:00.000Z",
+    });
+    await archiveCategory(database, {
+      categoryId: "category-dining",
+      localDate: "2026-08-18",
+      now: "2026-08-18T08:00:00.000Z",
+    });
+    await restoreCategory(database, {
+      categoryId: "category-dining",
+      now: "2026-08-18T08:01:00.000Z",
+    });
+    const update = {
+      envelopeId: "envelope-bills",
+      name: "Bills",
+      icon: "🧾",
+      color: "#8B9D83",
+      categoryIds: ["category-utilities", "category-dining"],
       positiveRollover: true,
       localDate: "2026-08-19",
       now: "2026-08-19T08:00:00.000Z",
-    });
-    const update = {
-      envelopeId: "envelope-food",
-      name: "Food",
-      icon: "🍲",
-      color: "#B48A7B",
-      categoryIds: ["category-groceries", "category-dining"],
-      positiveRollover: true,
-      localDate: "2026-08-19",
-      now: "2026-08-19T08:01:00.000Z",
     } as const;
 
     await expect(budgeting.updateEnvelope(update)).rejects.toThrow(
       "Confirm restored Category category-dining before creating its future Mapping.",
     );
-    await expect(
-      budgeting.updateEnvelope({
-        ...update,
-        confirmedRestoredCategoryIds: ["category-dining"],
-      }),
-    ).resolves.toMatchObject({
-      envelopes: [{ categoryIds: ["category-dining", "category-groceries"] }],
+    await budgeting.updateEnvelope({
+      ...update,
+      confirmedRestoredCategoryIds: ["category-dining"],
     });
+
+    await expect(
+      budgeting.getProjection({ currency: "USD", period: "2026-08" }),
+    ).resolves.toMatchObject({
+      envelopes: [
+        { id: "envelope-food", categoryIds: ["category-dining", "category-groceries"] },
+        { id: "envelope-bills", categoryIds: ["category-utilities"] },
+      ],
+    });
+    await expect(
+      budgeting.getProjection({ currency: "USD", period: "2026-09" }),
+    ).resolves.toMatchObject({
+      envelopes: [
+        { id: "envelope-food", categoryIds: ["category-groceries"] },
+        {
+          id: "envelope-bills",
+          categoryIds: ["category-dining", "category-utilities"],
+        },
+      ],
+    });
+  });
+
+  it("replaces a pre-existing future Mapping when creating an Envelope", async () => {
+    const database = await setupWorkspace("2026-07-12");
+    for (const [id, name] of [
+      ["category-food", "Food"],
+      ["category-dining", "Dining"],
+      ["category-bills", "Bills"],
+      ["category-travel", "Travel"],
+    ]) {
+      await insertCategory(database, { id, name });
+    }
+    const budgeting = createBudgetingCoordinator(database);
+    await budgeting.createEnvelope({
+      id: "envelope-food",
+      currency: "USD",
+      name: "Food",
+      icon: "🍲",
+      color: "#B48A7B",
+      categoryIds: ["category-food", "category-dining"],
+      positiveRollover: true,
+      localDate: "2026-07-12",
+      now: "2026-07-12T08:00:00.000Z",
+    });
+    await budgeting.createEnvelope({
+      id: "envelope-bills",
+      currency: "USD",
+      name: "Bills",
+      icon: "🧾",
+      color: "#8B9D83",
+      categoryIds: ["category-bills"],
+      positiveRollover: true,
+      localDate: "2026-07-12",
+      now: "2026-07-12T08:01:00.000Z",
+    });
+    await archiveCategory(database, {
+      categoryId: "category-dining",
+      localDate: "2026-08-18",
+      now: "2026-08-18T08:00:00.000Z",
+    });
+    await restoreCategory(database, {
+      categoryId: "category-dining",
+      now: "2026-08-18T08:01:00.000Z",
+    });
+    await database.runAsync(
+      `INSERT INTO category_mappings (
+        category_id, envelope_id, effective_from_period, effective_to_period, created_at
+      ) VALUES (?, ?, ?, NULL, ?)`,
+      "category-dining",
+      "envelope-bills",
+      "2026-09",
+      "2026-08-18T08:02:00.000Z",
+    );
+
+    await budgeting.createEnvelope({
+      id: "envelope-travel",
+      currency: "USD",
+      name: "Travel",
+      icon: "✈️",
+      color: "#8B9D83",
+      categoryIds: ["category-travel", "category-dining"],
+      confirmedRestoredCategoryIds: ["category-dining"],
+      positiveRollover: true,
+      localDate: "2026-08-19",
+      now: "2026-08-19T08:00:00.000Z",
+    });
+
+    const septemberMappings = await database.getAllAsync<{
+      categoryId: string;
+      envelopeId: string;
+    }>(
+      `SELECT category_id AS categoryId, envelope_id AS envelopeId
+       FROM category_mappings
+       WHERE category_id = ?
+         AND effective_from_period <= ?
+         AND (effective_to_period IS NULL OR effective_to_period >= ?)`,
+      "category-dining",
+      "2026-09",
+      "2026-09",
+    );
+    expect(septemberMappings).toEqual([
+      { categoryId: "category-dining", envelopeId: "envelope-travel" },
+    ]);
   });
 
   it("rolls back the complete Envelope when a mapping or setting cannot persist", async () => {
@@ -238,6 +354,64 @@ describe("Envelope coordinator", () => {
         { id: "envelope-food", categoryIds: ["category-groceries"] },
         { id: "envelope-bills", categoryIds: ["category-utilities"] },
       ],
+    });
+  });
+
+  it("rolls back a reassignment that empties an Envelope in another currency", async () => {
+    const database = await setupWorkspace();
+    await insertBudgetAccount(database, {
+      id: "account-aed",
+      currency: "AED",
+      initialBalance: 100_00,
+    });
+    await createBudgetingCoordinator(database).activateWorkspace({
+      currency: "AED",
+      fundingAccountIds: ["account-aed"],
+      localDate: "2026-08-19",
+      now: "2026-08-19T07:01:00.000Z",
+    });
+    await insertCategory(database, { id: "category-usd", name: "USD" });
+    await insertCategory(database, { id: "category-aed", name: "AED" });
+    const budgeting = createBudgetingCoordinator(database);
+    await budgeting.createEnvelope({
+      id: "envelope-usd",
+      currency: "USD",
+      name: "USD Envelope",
+      icon: "💵",
+      color: "#8B9D83",
+      categoryIds: ["category-usd"],
+      positiveRollover: true,
+      localDate: "2026-08-19",
+      now: "2026-08-19T08:00:00.000Z",
+    });
+    await budgeting.createEnvelope({
+      id: "envelope-aed",
+      currency: "AED",
+      name: "AED Envelope",
+      icon: "💴",
+      color: "#B48A7B",
+      categoryIds: ["category-aed"],
+      positiveRollover: true,
+      localDate: "2026-08-19",
+      now: "2026-08-19T08:01:00.000Z",
+    });
+
+    await expect(
+      budgeting.updateEnvelope({
+        envelopeId: "envelope-usd",
+        name: "USD Envelope",
+        icon: "💵",
+        color: "#8B9D83",
+        categoryIds: ["category-usd", "category-aed"],
+        positiveRollover: true,
+        localDate: "2026-08-19",
+        now: "2026-08-19T08:02:00.000Z",
+      }),
+    ).rejects.toThrow("Envelope envelope-aed requires at least one active expense Category.");
+    await expect(
+      budgeting.getProjection({ currency: "AED", period: "2026-08" }),
+    ).resolves.toMatchObject({
+      envelopes: [{ id: "envelope-aed", categoryIds: ["category-aed"] }],
     });
   });
 

@@ -1,4 +1,4 @@
-import { format, parseISO, subMonths } from "date-fns";
+import { addMonths, format, parseISO, subMonths } from "date-fns";
 import type { SQLiteDatabase } from "expo-sqlite";
 
 import { runInTransaction } from "@/modules/recurring-rules/persistence";
@@ -14,6 +14,11 @@ interface CategoryRow {
   type: string;
   incompatibleTransactionCount: number;
   mappedEnvelopeId: string | null;
+}
+
+interface MappingValidationPoint {
+  envelopeId: string;
+  period: string;
 }
 
 export async function createEnvelope(
@@ -33,6 +38,7 @@ export async function createEnvelope(
       categoryIds,
       currency,
       period,
+      true,
     );
     requireRestoredCategoryConfirmation(
       categoryRows,
@@ -67,17 +73,15 @@ export async function createEnvelope(
       request.now,
       request.now,
     );
-    for (const categoryId of categoryIds) {
-      await transaction.runAsync(
-        `INSERT INTO category_mappings (
-          category_id, envelope_id, effective_from_period, effective_to_period, created_at
-        ) VALUES (?, ?, ?, NULL, ?)`,
-        categoryId,
-        request.id,
-        period,
-        request.now,
-      );
-    }
+    await replaceEnvelopeMappings(
+      transaction,
+      categoryRows,
+      categoryIds,
+      categoryIds,
+      request.id,
+      period,
+      request.now,
+    );
     await transaction.runAsync(
       `INSERT INTO rollover_settings (
         envelope_id, effective_from_period, positive_rollover, created_at
@@ -129,28 +133,29 @@ export async function updateEnvelope(
       request.envelopeId,
     );
 
-    const currentCategoryRows = await transaction.getAllAsync<{ categoryId: string }>(
+    const currentAndFutureCategoryRows = await transaction.getAllAsync<{ categoryId: string }>(
       `SELECT category_id AS categoryId
        FROM category_mappings
        WHERE envelope_id = ?
-         AND effective_from_period <= ?
          AND (effective_to_period IS NULL OR effective_to_period >= ?)`,
       request.envelopeId,
       period,
-      period,
     );
     const affectedCategoryIds = [
-      ...new Set([...categoryIds, ...currentCategoryRows.map(({ categoryId }) => categoryId)]),
+      ...new Set([
+        ...categoryIds,
+        ...currentAndFutureCategoryRows.map(({ categoryId }) => categoryId),
+      ]),
     ];
-    await replaceCurrentMappings(
+    await replaceEnvelopeMappings(
       transaction,
+      categoryRows,
       affectedCategoryIds,
       categoryIds,
       request.envelopeId,
       period,
       request.now,
     );
-    await requireEveryActiveEnvelopeMapped(transaction, envelope.currency, period);
 
     const countRow = await transaction.getFirstAsync<{ count: number }>(
       `SELECT COUNT(*) AS count
@@ -309,54 +314,94 @@ function requireRestoredCategoryConfirmation(
   }
 }
 
-async function replaceCurrentMappings(
+async function replaceEnvelopeMappings(
   database: SQLiteDatabase,
+  selectedCategories: readonly CategoryRow[],
   affectedCategoryIds: readonly string[],
   selectedCategoryIds: readonly string[],
   envelopeId: string,
   period: string,
   now: string,
 ): Promise<void> {
-  const placeholders = affectedCategoryIds.map(() => "?").join(", ");
-  await database.runAsync(
-    `DELETE FROM category_mappings
-     WHERE category_id IN (${placeholders}) AND effective_from_period >= ?`,
-    ...affectedCategoryIds,
-    period,
-  );
-  await database.runAsync(
-    `UPDATE category_mappings
-     SET effective_to_period = ?
-     WHERE category_id IN (${placeholders})
-       AND effective_from_period < ?
-       AND (effective_to_period IS NULL OR effective_to_period >= ?)`,
-    previousPeriod(period),
-    ...affectedCategoryIds,
-    period,
-    period,
-  );
-  for (const categoryId of selectedCategoryIds) {
+  const selectedIds = new Set(selectedCategoryIds);
+  const selectedById = new Map(selectedCategories.map((category) => [category.id, category]));
+  const validationPoints: MappingValidationPoint[] = [{ envelopeId, period }];
+
+  for (const categoryId of affectedCategoryIds) {
+    const category = selectedById.get(categoryId);
+    const selected = selectedIds.has(categoryId);
+    const effectiveFromPeriod =
+      selected && category?.lifecycleChangedAt !== null && category?.mappedEnvelopeId !== envelopeId
+        ? nextPeriod(period)
+        : period;
+    const displaced = await database.getAllAsync<{
+      envelopeId: string;
+      effectiveFromPeriod: string;
+    }>(
+      `SELECT envelope_id AS envelopeId, effective_from_period AS effectiveFromPeriod
+       FROM category_mappings
+       WHERE category_id = ?
+         AND (effective_to_period IS NULL OR effective_to_period >= ?)`,
+      categoryId,
+      effectiveFromPeriod,
+    );
+    validationPoints.push(
+      ...displaced.map((mapping) => ({
+        envelopeId: mapping.envelopeId,
+        period:
+          mapping.effectiveFromPeriod > effectiveFromPeriod
+            ? mapping.effectiveFromPeriod
+            : effectiveFromPeriod,
+      })),
+    );
+
+    await database.runAsync(
+      `DELETE FROM category_mappings
+       WHERE category_id = ? AND effective_from_period >= ?`,
+      categoryId,
+      effectiveFromPeriod,
+    );
+    await database.runAsync(
+      `UPDATE category_mappings
+       SET effective_to_period = ?
+       WHERE category_id = ?
+         AND effective_from_period < ?
+         AND (effective_to_period IS NULL OR effective_to_period >= ?)`,
+      previousPeriod(effectiveFromPeriod),
+      categoryId,
+      effectiveFromPeriod,
+      effectiveFromPeriod,
+    );
+    if (!selected) continue;
     await database.runAsync(
       `INSERT INTO category_mappings (
         category_id, envelope_id, effective_from_period, effective_to_period, created_at
       ) VALUES (?, ?, ?, NULL, ?)`,
       categoryId,
       envelopeId,
-      period,
+      effectiveFromPeriod,
       now,
     );
+    validationPoints.push({ envelopeId, period: effectiveFromPeriod });
+  }
+
+  const uniquePoints = new Map(
+    validationPoints.map((point) => [`${point.envelopeId}:${point.period}`, point]),
+  );
+  for (const point of uniquePoints.values()) {
+    await requireActiveEnvelopeMapped(database, point.envelopeId, point.period);
   }
 }
 
-async function requireEveryActiveEnvelopeMapped(
+async function requireActiveEnvelopeMapped(
   database: SQLiteDatabase,
-  currency: string,
+  envelopeId: string,
   period: string,
 ): Promise<void> {
   const unmapped = await database.getFirstAsync<{ id: string }>(
     `SELECT envelopes.id
      FROM envelopes
-     WHERE envelopes.currency = ?
+     WHERE envelopes.id = ?
        AND envelopes.lifecycle = 'active'
        AND NOT EXISTS (
          SELECT 1
@@ -371,9 +416,8 @@ async function requireEveryActiveEnvelopeMapped(
            AND categories.lifecycle = 'active'
            AND categories.type = 'expense'
        )
-     ORDER BY envelopes.sort_order, envelopes.id
      LIMIT 1`,
-    currency,
+    envelopeId,
     period,
     period,
   );
@@ -384,6 +428,10 @@ async function requireEveryActiveEnvelopeMapped(
 
 function previousPeriod(period: string): string {
   return format(subMonths(parseISO(`${period}-01`), 1), "yyyy-MM");
+}
+
+function nextPeriod(period: string): string {
+  return format(addMonths(parseISO(`${period}-01`), 1), "yyyy-MM");
 }
 
 function requireSortOrder(sortOrder: number, maximum: number): void {
