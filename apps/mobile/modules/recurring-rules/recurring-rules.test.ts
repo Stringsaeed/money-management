@@ -4,6 +4,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { migrateBudgeting } from "@/db/budgeting-migration";
 import { migrateCategoryLifecycle } from "@/db/category-lifecycle-migration";
 import { migrateRecurringRules } from "@/db/recurring-rules-migration";
+import { archiveCategory } from "@/modules/categories/category-lifecycle";
 import { applyLegacyMigrations, createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
 
 import { createRecurringRules, RecurringSettlementError, type RecurringRuleDraft } from ".";
@@ -136,6 +137,22 @@ afterEach(() => {
 });
 
 describe("Recurring Rules", () => {
+  it("continues settling an existing Rule after its Category is archived", async () => {
+    const { database, recurringRules } = await setup();
+    await insertCategory(database, "category-archived");
+    await insertRule(database, { categoryId: "category-archived" });
+    await archiveCategory(database, {
+      categoryId: "category-archived",
+      localDate: "2026-04-15",
+      now: "2026-04-15T08:00:00.000Z",
+    });
+
+    await expect(recurringRules.settle()).resolves.toMatchObject({
+      generatedCount: 3,
+      rules: [{ ruleId: "rule-existing", kind: "settled", generatedCount: 3 }],
+    });
+  });
+
   it("rejects an archived Category for a new Rule", async () => {
     const { database, recurringRules } = await setup();
     await insertCategory(database, "category-archived");

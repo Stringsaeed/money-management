@@ -101,6 +101,30 @@ describe("Category lifecycle", () => {
     ).resolves.toEqual([{ effectiveFromPeriod: "2026-07", effectiveToPeriod: "2026-08" }]);
   });
 
+  it("requires real lifecycle transitions", async () => {
+    const database = await setup();
+    await insertMappedCategoryHistory(database);
+
+    await expect(
+      restoreCategory(database, {
+        categoryId: "category-dining",
+        now: "2026-08-18T08:00:00.000Z",
+      }),
+    ).rejects.toThrow("must be archived");
+    await archiveCategory(database, {
+      categoryId: "category-dining",
+      localDate: "2026-08-18",
+      now: "2026-08-18T08:00:00.000Z",
+    });
+    await expect(
+      archiveCategory(database, {
+        categoryId: "category-dining",
+        localDate: "2026-08-18",
+        now: "2026-08-18T08:01:00.000Z",
+      }),
+    ).rejects.toThrow("must be active");
+  });
+
   it("refuses to permanently delete a Category with ledger history", async () => {
     const database = await setup();
     await insertMappedCategoryHistory(database);

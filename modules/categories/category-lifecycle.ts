@@ -34,7 +34,7 @@ export async function archiveCategory(
   const period = periodForLedgerDate(request.localDate);
 
   await runInTransaction(database, async (transaction) => {
-    await requireCategory(transaction, request.categoryId);
+    await requireCategoryLifecycle(transaction, request.categoryId, "active");
     await transaction.runAsync(
       `UPDATE categories
        SET lifecycle = 'archived', lifecycle_changed_at = ?, updated_at = ?
@@ -68,7 +68,7 @@ export async function restoreCategory(
   request: Pick<CategoryLifecycleRequest, "categoryId" | "now">,
 ): Promise<void> {
   await runInTransaction(database, async (transaction) => {
-    await requireCategory(transaction, request.categoryId);
+    await requireCategoryLifecycle(transaction, request.categoryId, "archived");
     await transaction.runAsync(
       `UPDATE categories
        SET lifecycle = 'active', lifecycle_changed_at = ?, updated_at = ?
@@ -123,6 +123,23 @@ async function requireCategory(database: SQLiteDatabase, categoryId: string): Pr
     categoryId,
   );
   if (!category) throw new Error(`Category ${categoryId} does not exist.`);
+}
+
+async function requireCategoryLifecycle(
+  database: SQLiteDatabase,
+  categoryId: string,
+  expectedLifecycle: "active" | "archived",
+): Promise<void> {
+  const category = await database.getFirstAsync<{ lifecycle: string }>(
+    "SELECT lifecycle FROM categories WHERE id = ?",
+    categoryId,
+  );
+  if (!category) throw new Error(`Category ${categoryId} does not exist.`);
+  if (category.lifecycle !== expectedLifecycle) {
+    throw new Error(
+      `Category ${categoryId} must be ${expectedLifecycle} for this lifecycle change.`,
+    );
+  }
 }
 
 function periodForLedgerDate(localDate: string): string {

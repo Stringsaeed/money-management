@@ -13,6 +13,7 @@ const ACTIVITY_GUARD_TRIGGERS = {
   category_active_transaction_insert: `CREATE TRIGGER category_active_transaction_insert
     BEFORE INSERT ON transactions
     WHEN NEW.category_id IS NOT NULL
+      AND NEW.recurring_rule_id IS NULL
       AND EXISTS (
         SELECT 1 FROM categories
         WHERE id = NEW.category_id AND lifecycle <> 'active'
