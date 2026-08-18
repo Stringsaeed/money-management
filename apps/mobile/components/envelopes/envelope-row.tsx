@@ -1,5 +1,5 @@
 import { Pressable, View } from "react-native";
-import Animated from "react-native-reanimated";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
@@ -47,7 +47,7 @@ export function EnvelopeRow({ envelope, onEdit }: EnvelopeRowProps) {
     </>
   );
   return (
-    <Animated.View layout={layoutTransition}>
+    <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
       {onEdit ? (
         <Pressable
           accessibilityLabel={`Edit ${envelope.name} Envelope`}

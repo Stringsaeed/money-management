@@ -1,8 +1,10 @@
 import { View } from "react-native";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { EnvelopeCategoryOptionRow } from "@/components/envelopes/envelope-form/envelope-category-option";
 import { RestoredCategoryConfirmation } from "@/components/envelopes/envelope-form/restored-category-confirmation";
 import { Text } from "@/components/ui/text";
+import { layoutTransition } from "@/components/transaction/constants";
 import type { EnvelopeCategoryOption } from "@/modules/budgeting/budgeting";
 
 import type { UseEnvelopeFormReturn } from "./form";
@@ -52,9 +54,11 @@ export function EnvelopeCategoryFields({ envelopeId, form, options }: EnvelopeCa
               ))
             )}
             {field.state.meta.errors[0] ? (
-              <Text className="font-body-medium text-xs text-destructive">
-                {String(field.state.meta.errors[0])}
-              </Text>
+              <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
+                <Text className="font-body-medium text-xs text-destructive">
+                  {String(field.state.meta.errors[0])}
+                </Text>
+              </Animated.View>
             ) : null}
           </View>
         )}
@@ -77,7 +81,12 @@ export function EnvelopeCategoryFields({ envelopeId, form, options }: EnvelopeCa
           return (
             <form.Field name="confirmedRestoredCategoryIds">
               {(field) => (
-                <View className="gap-2">
+                <Animated.View
+                  entering={FadeIn}
+                  exiting={FadeOut}
+                  layout={layoutTransition}
+                  className="gap-2"
+                >
                   <Text className="font-body-medium text-sm text-ink/60">
                     Restored Category confirmation
                   </Text>
@@ -98,7 +107,7 @@ export function EnvelopeCategoryFields({ envelopeId, form, options }: EnvelopeCa
                       />
                     );
                   })}
-                </View>
+                </Animated.View>
               )}
             </form.Field>
           );
