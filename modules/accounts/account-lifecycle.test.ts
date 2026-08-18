@@ -13,6 +13,7 @@ import {
   archiveAccount,
   deleteAccount,
   previewAccountArchival,
+  previewAccountDeletion,
   restoreAccount,
 } from "./account-lifecycle";
 
@@ -42,7 +43,7 @@ describe("Account lifecycle", () => {
   it("reports every balance and active Recurring Rule prerequisite with recovery actions", async () => {
     const database = await setup();
     await insertAccount(database, "account-main", 25_00);
-    await insertAccount(database, "account-other", 0);
+    await insertAccount(database, "account-other", -50_00);
     await insertRule(database, {
       id: "rule-rent",
       name: "Rent",
@@ -50,6 +51,7 @@ describe("Account lifecycle", () => {
       toAccountId: null,
       lifecycle: "active",
     });
+    await activateWorkspace(database, ["account-main", "account-other"], "2026-08-01");
     await insertRule(database, {
       id: "rule-transfer",
       name: "Savings transfer",
@@ -58,7 +60,7 @@ describe("Account lifecycle", () => {
       lifecycle: "active",
     });
 
-    const preview = await previewAccountArchival(database, "account-main");
+    const preview = await previewAccountArchival(database, "account-main", "2026-08-18");
 
     expect(preview).toEqual({
       accountId: "account-main",
@@ -79,7 +81,12 @@ describe("Account lifecycle", () => {
               relationship: "destination",
             },
           ],
-          recoveryAction: "Pause, archive, or repair every listed Recurring Rule.",
+          recoveryAction: "Pause or archive every listed Recurring Rule.",
+        },
+        {
+          kind: "budget-dependencies",
+          dependencies: [{ kind: "budget-shortfall", currency: "USD", amountMinor: 25_00 }],
+          recoveryAction: "Resolve every listed budget dependency before archiving this Account.",
         },
       ],
     });
@@ -234,6 +241,10 @@ describe("Account lifecycle", () => {
         "account-main",
       ),
     ).resolves.toBeNull();
+    await expect(previewAccountDeletion(database, "account-main")).resolves.toMatchObject({
+      budgetHistoryCount: 1,
+      canDelete: false,
+    });
     await expect(
       database.getFirstAsync(
         "SELECT account_id AS accountId, lifecycle, health FROM recurring_rules WHERE id = ?",
@@ -362,12 +373,12 @@ async function insertRule(
 
 async function activateWorkspace(
   database: SQLiteDatabase,
-  accountId: string,
+  accountIds: string | readonly string[],
   localDate: string,
 ): Promise<unknown> {
   return createBudgetingCoordinator(database).activateWorkspace({
     currency: "USD",
-    fundingAccountIds: [accountId],
+    fundingAccountIds: typeof accountIds === "string" ? [accountIds] : accountIds,
     localDate,
     now: NOW,
   });

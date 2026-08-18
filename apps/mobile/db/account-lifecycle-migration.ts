@@ -10,6 +10,22 @@ const EXPECTED_COLUMNS = {
   lifecycle_changed_at: { type: "TEXT", notnull: 0, defaultValue: null, primaryKey: 0 },
 } as const;
 
+const ACCOUNT_BUDGET_HISTORY_SQL = `CREATE TABLE account_budget_history (
+  account_id TEXT PRIMARY KEY NOT NULL,
+  first_membership_period TEXT NOT NULL,
+  first_recorded_at TEXT NOT NULL,
+  FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT
+)`;
+
+const ACCOUNT_BUDGET_HISTORY_TRIGGER = `CREATE TRIGGER record_account_budget_history
+  AFTER INSERT ON funding_memberships
+  BEGIN
+    INSERT INTO account_budget_history (
+      account_id, first_membership_period, first_recorded_at
+    ) VALUES (NEW.account_id, NEW.effective_from_period, NEW.created_at)
+    ON CONFLICT(account_id) DO NOTHING;
+  END`;
+
 const ACTIVE_ACCOUNT_GUARDS = {
   active_account_transaction_insert: `CREATE TRIGGER active_account_transaction_insert
     BEFORE INSERT ON transactions
@@ -115,7 +131,17 @@ export async function migrateAccountLifecycle(database: SQLiteDatabase): Promise
     }
 
     await assertAccountColumns(transaction);
+    await transaction.execAsync(`${ACCOUNT_BUDGET_HISTORY_SQL};`);
+    await transaction.runAsync(
+      `INSERT INTO account_budget_history (
+        account_id, first_membership_period, first_recorded_at
+       )
+       SELECT account_id, MIN(effective_from_period), MIN(created_at)
+       FROM funding_memberships
+       GROUP BY account_id`,
+    );
     await transaction.execAsync(`${Object.values(ACTIVE_ACCOUNT_GUARDS).join(";\n")};`);
+    await transaction.execAsync(`${ACCOUNT_BUDGET_HISTORY_TRIGGER};`);
     await assertCurrentSchema(transaction);
     await transaction.runAsync(
       `INSERT INTO app_settings (key, value) VALUES (?, ?)
@@ -133,6 +159,16 @@ async function accountColumns(database: SQLiteDatabase): Promise<Map<string, Tab
 
 async function assertCurrentSchema(database: SQLiteDatabase): Promise<void> {
   await assertAccountColumns(database);
+  const historyTable = await database.getFirstAsync<{ sql: string | null }>(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'account_budget_history'",
+  );
+  if (
+    normalizeSchemaSql(historyTable?.sql ?? "") !== normalizeSchemaSql(ACCOUNT_BUDGET_HISTORY_SQL)
+  ) {
+    throw new Error(
+      "Account budget history does not match the supported structure. Restore a supported database before startup.",
+    );
+  }
   for (const [name, expectedSql] of Object.entries(ACTIVE_ACCOUNT_GUARDS)) {
     const trigger = await database.getFirstAsync<{ sql: string | null }>(
       "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ?",
@@ -143,6 +179,17 @@ async function assertCurrentSchema(database: SQLiteDatabase): Promise<void> {
         `Account lifecycle trigger ${name} does not match the supported structure. Restore a supported database before startup.`,
       );
     }
+  }
+  const historyTrigger = await database.getFirstAsync<{ sql: string | null }>(
+    "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = 'record_account_budget_history'",
+  );
+  if (
+    normalizeSchemaSql(historyTrigger?.sql ?? "") !==
+    normalizeSchemaSql(ACCOUNT_BUDGET_HISTORY_TRIGGER)
+  ) {
+    throw new Error(
+      "Account budget history tracking does not match the supported structure. Restore a supported database before startup.",
+    );
   }
 }
 

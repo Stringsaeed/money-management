@@ -45,7 +45,6 @@ describe("ledger query keys", () => {
 
     expect({
       accountAll: accountKeys.all,
-      accountManagement: accountKeys.management,
       accountBalances: accountKeys.balances,
       accountManagementBalances: accountKeys.managementBalances,
       accountDetail: accountKeys.detail("account-1"),
@@ -67,7 +66,6 @@ describe("ledger query keys", () => {
       budgetProjection: budgetKeys.projection("USD", "2026-08"),
     }).toEqual({
       accountAll: ["accounts"],
-      accountManagement: ["accounts", "management"],
       accountBalances: ["account-balances"],
       accountManagementBalances: ["account-balances", "management"],
       accountDetail: ["accounts", "account-1"],

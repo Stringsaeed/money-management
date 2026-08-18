@@ -44,6 +44,41 @@ describe("migrateAccountLifecycle", () => {
     ).resolves.toEqual({ value: "1" });
   });
 
+  it("preserves durable evidence of an existing Funding Membership", async () => {
+    const database = await setup();
+    await database.runAsync(
+      `INSERT INTO accounts (
+        id, name, type, currency, color, icon, initial_balance,
+        exclude_from_total, sort_order, created_at, updated_at
+      ) VALUES ('account-funded', 'Funded', 'checking', 'USD', '#8B9D83', '🏦',
+        0, 0, 0, ?, ?)`,
+      migrationContext.now,
+      migrationContext.now,
+    );
+    await database.runAsync(
+      `INSERT INTO budget_workspaces (currency, activation_period, created_at, updated_at)
+       VALUES ('USD', '2026-08', ?, ?)`,
+      migrationContext.now,
+      migrationContext.now,
+    );
+    await database.runAsync(
+      `INSERT INTO funding_memberships (
+        account_id, currency, effective_from_period, effective_to_period, created_at
+       ) VALUES ('account-funded', 'USD', '2026-08', NULL, ?)`,
+      migrationContext.now,
+    );
+
+    await migrateAccountLifecycle(database);
+
+    await expect(
+      database.getFirstAsync(
+        `SELECT account_id AS accountId, first_membership_period AS firstMembershipPeriod
+         FROM account_budget_history WHERE account_id = ?`,
+        "account-funded",
+      ),
+    ).resolves.toEqual({ accountId: "account-funded", firstMembershipPeriod: "2026-08" });
+  });
+
   it("refuses a current stamp when the lifecycle schema is missing", async () => {
     const database = await setup();
     await database.runAsync(

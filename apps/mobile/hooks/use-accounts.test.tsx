@@ -21,6 +21,7 @@ const mockUseDatabase = jest.fn();
 const mockUseSQLiteContext = jest.fn();
 const mockArchiveAccount = jest.fn();
 const mockDeleteAccount = jest.fn();
+const mockLoadAccountBalances = jest.fn();
 const mockPreviewAccountArchival = jest.fn();
 const mockPreviewAccountDeletion = jest.fn();
 const mockRestoreAccount = jest.fn();
@@ -88,6 +89,10 @@ jest.mock("@/modules/accounts/account-lifecycle", () => ({
   restoreAccount: (...args: unknown[]) => mockRestoreAccount(...args),
 }));
 
+jest.mock("@/modules/accounts/account-balance", () => ({
+  loadAccountBalances: (...args: unknown[]) => mockLoadAccountBalances(...args),
+}));
+
 jest.mock("@/modules/ledger-cache", () => ({
   ...jest.requireActual("@/modules/ledger-cache"),
   cohereLedgerCache: (...args: unknown[]) => mockCohereLedgerCache(...args),
@@ -107,6 +112,7 @@ describe("use-accounts hooks", () => {
     mockUseSQLiteContext.mockReturnValue({ raw: "database" });
     mockArchiveAccount.mockResolvedValue(undefined);
     mockDeleteAccount.mockResolvedValue(undefined);
+    mockLoadAccountBalances.mockResolvedValue([]);
     mockPreviewAccountArchival.mockResolvedValue({
       accountId: "account-1",
       blockers: [],
@@ -164,23 +170,10 @@ describe("use-accounts hooks", () => {
   });
 
   it("computes account balances from account and balance rows", async () => {
-    const db = createMockDb({
-      selectResults: [
-        {
-          all: [
-            createAccount({ id: "account-1", initialBalance: 100_00 }),
-            createAccount({ id: "account-2", initialBalance: 25_00 }),
-          ],
-        },
-        {
-          all: [
-            { accountId: "account-1", balance: 150_00 },
-            { accountId: "account-2", balance: 40_00 },
-          ],
-        },
-      ],
-    });
-    mockUseDatabase.mockReturnValue(db);
+    mockLoadAccountBalances.mockResolvedValue([
+      createAccountWithBalance({ id: "account-1", initialBalance: 100_00, balance: 150_00 }),
+      createAccountWithBalance({ id: "account-2", initialBalance: 25_00, balance: 40_00 }),
+    ]);
 
     const { result } = await renderHookWithProviders(() => useAccountsWithBalances());
 
@@ -192,6 +185,7 @@ describe("use-accounts hooks", () => {
       createAccountWithBalance({ id: "account-1", initialBalance: 100_00, balance: 150_00 }),
       createAccountWithBalance({ id: "account-2", initialBalance: 25_00, balance: 40_00 }),
     ]);
+    expect(mockLoadAccountBalances).toHaveBeenCalledWith({ raw: "database" }, false);
   });
 
   it("reports an Account creation and waits for cache coherence", async () => {
@@ -275,7 +269,11 @@ describe("use-accounts hooks", () => {
     await waitFor(() => expect(archival.result.current.isSuccess).toBe(true));
     await waitFor(() => expect(deletion.result.current.isSuccess).toBe(true));
 
-    expect(mockPreviewAccountArchival).toHaveBeenCalledWith({ raw: "database" }, "account-1");
+    expect(mockPreviewAccountArchival).toHaveBeenCalledWith(
+      { raw: "database" },
+      "account-1",
+      "2026-03-28",
+    );
     expect(mockPreviewAccountDeletion).toHaveBeenCalledWith({ raw: "database" }, "account-1");
   });
 
