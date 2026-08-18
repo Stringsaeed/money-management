@@ -17,7 +17,6 @@ export interface TransactionQueryFilters {
 
 export const accountKeys = {
   all: ["accounts"] as const,
-  management: ["accounts", "management"] as const,
   balances: ["account-balances"] as const,
   managementBalances: ["account-balances", "management"] as const,
   detail: (id: string) => ["accounts", id] as const,
@@ -96,14 +95,12 @@ const transactionChangeQueryKeys = [
 const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKey[]> = {
   "account.created": [
     accountKeys.all,
-    accountKeys.management,
     accountKeys.balances,
     accountKeys.managementBalances,
     budgetKeys.projections,
   ],
   "account.updated": [
     accountKeys.all,
-    accountKeys.management,
     accountKeys.balances,
     accountKeys.managementBalances,
     transactionKeys.all,
@@ -112,7 +109,6 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
   ],
   "account.archived": [
     accountKeys.all,
-    accountKeys.management,
     accountKeys.balances,
     accountKeys.managementBalances,
     transactionKeys.all,
@@ -121,7 +117,6 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
   ],
   "account.restored": [
     accountKeys.all,
-    accountKeys.management,
     accountKeys.balances,
     accountKeys.managementBalances,
     recurringRuleKeys.all,
@@ -129,7 +124,6 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
   ],
   "account.deleted": [
     accountKeys.all,
-    accountKeys.management,
     accountKeys.balances,
     accountKeys.managementBalances,
     transactionKeys.all,

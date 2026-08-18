@@ -1,8 +1,11 @@
 import { format, isMatch, isValid, parseISO, subMonths } from "date-fns";
 import type { SQLiteDatabase } from "expo-sqlite";
 
-import type { RecurringAttentionReason } from "@/modules/recurring-rules";
+import { getProjection } from "@/modules/budgeting/projection";
+import { markInactiveRulesForArchivedAccount } from "@/modules/recurring-rules/account-impact";
 import { runInTransaction } from "@/modules/recurring-rules/persistence";
+
+import { loadAccountBalance } from "./account-balance";
 
 export interface AccountLifecycleRequest {
   accountId: string;
@@ -16,6 +19,12 @@ export interface AccountRuleBlocker {
   relationship: "source" | "destination";
 }
 
+export interface AccountBudgetDependency {
+  kind: "budget-shortfall";
+  currency: string;
+  amountMinor: number;
+}
+
 export type AccountArchiveBlocker =
   | {
       kind: "non-zero-balance";
@@ -25,7 +34,12 @@ export type AccountArchiveBlocker =
   | {
       kind: "active-recurring-rules";
       rules: AccountRuleBlocker[];
-      recoveryAction: "Pause, archive, or repair every listed Recurring Rule.";
+      recoveryAction: "Pause or archive every listed Recurring Rule.";
+    }
+  | {
+      kind: "budget-dependencies";
+      dependencies: AccountBudgetDependency[];
+      recoveryAction: "Resolve every listed budget dependency before archiving this Account.";
     };
 
 export interface AccountArchivalPreview {
@@ -39,6 +53,7 @@ export interface AccountDeletionPreview {
   transactionCount: number;
   recurringRuleCount: number;
   fundingMembershipCount: number;
+  budgetHistoryCount: number;
   canDelete: boolean;
 }
 
@@ -63,10 +78,13 @@ export class AccountHasHistoryError extends Error {
 export async function previewAccountArchival(
   database: SQLiteDatabase,
   accountId: string,
+  localDate: string,
 ): Promise<AccountArchivalPreview> {
-  const account = await requireAccount(database, accountId);
+  const period = periodForLedgerDate(localDate);
+  const account = await loadAccountBalance(database, accountId);
+  if (!account) throw new Error(`Account ${accountId} does not exist.`);
   const blockers: AccountArchiveBlocker[] = [];
-  const balanceMinor = await accountBalance(database, accountId, account.initialBalance);
+  const balanceMinor = account.balance;
   if (balanceMinor !== 0) {
     blockers.push({
       kind: "non-zero-balance",
@@ -80,7 +98,16 @@ export async function previewAccountArchival(
     blockers.push({
       kind: "active-recurring-rules",
       rules,
-      recoveryAction: "Pause, archive, or repair every listed Recurring Rule.",
+      recoveryAction: "Pause or archive every listed Recurring Rule.",
+    });
+  }
+
+  const budgetDependencies = await activeBudgetDependencies(database, accountId, period);
+  if (budgetDependencies.length > 0) {
+    blockers.push({
+      kind: "budget-dependencies",
+      dependencies: budgetDependencies,
+      recoveryAction: "Resolve every listed budget dependency before archiving this Account.",
     });
   }
 
@@ -96,7 +123,7 @@ export async function archiveAccount(
 
   await runInTransaction(database, async (transaction) => {
     await requireAccountLifecycle(transaction, request.accountId, "active");
-    const preview = await previewAccountArchival(transaction, request.accountId);
+    const preview = await previewAccountArchival(transaction, request.accountId, request.localDate);
     if (!preview.canArchive) throw new AccountArchiveBlockedError(preview);
 
     await transaction.runAsync(
@@ -138,6 +165,7 @@ export async function previewAccountDeletion(
     transactionCount: number;
     recurringRuleCount: number;
     fundingMembershipCount: number;
+    budgetHistoryCount: number;
   }>(
     `SELECT
       (SELECT COUNT(*) FROM transactions
@@ -145,7 +173,10 @@ export async function previewAccountDeletion(
       (SELECT COUNT(*) FROM recurring_rules
        WHERE account_id = ? OR to_account_id = ?) AS recurringRuleCount,
       (SELECT COUNT(*) FROM funding_memberships
-       WHERE account_id = ?) AS fundingMembershipCount`,
+       WHERE account_id = ?) AS fundingMembershipCount,
+      (SELECT COUNT(*) FROM account_budget_history
+       WHERE account_id = ?) AS budgetHistoryCount`,
+    accountId,
     accountId,
     accountId,
     accountId,
@@ -160,39 +191,42 @@ export async function previewAccountDeletion(
   };
 }
 
+async function activeBudgetDependencies(
+  database: SQLiteDatabase,
+  accountId: string,
+  period: string,
+): Promise<AccountBudgetDependency[]> {
+  const memberships = await database.getAllAsync<{ currency: string }>(
+    `SELECT DISTINCT currency
+     FROM funding_memberships
+     WHERE account_id = ?
+       AND effective_from_period <= ?
+       AND (effective_to_period IS NULL OR effective_to_period >= ?)
+     ORDER BY currency`,
+    accountId,
+    period,
+    period,
+  );
+  const dependencies: AccountBudgetDependency[] = [];
+  for (const membership of memberships) {
+    const projection = await getProjection(database, { currency: membership.currency, period });
+    if (projection && projection.unassignedMoney.amountMinor < 0) {
+      dependencies.push({
+        kind: "budget-shortfall",
+        currency: membership.currency,
+        amountMinor: Math.abs(projection.unassignedMoney.amountMinor),
+      });
+    }
+  }
+  return dependencies;
+}
+
 export async function deleteAccount(database: SQLiteDatabase, accountId: string): Promise<void> {
   await runInTransaction(database, async (transaction) => {
     const preview = await previewAccountDeletion(transaction, accountId);
     if (!preview.canDelete) throw new AccountHasHistoryError(preview);
     await transaction.runAsync("DELETE FROM accounts WHERE id = ?", accountId);
   });
-}
-
-async function accountBalance(
-  database: SQLiteDatabase,
-  accountId: string,
-  initialBalance: number,
-): Promise<number> {
-  const result = await database.getFirstAsync<{ activity: number }>(
-    `SELECT COALESCE(SUM(
-       CASE
-         WHEN type = 'income' AND account_id = ? THEN amount
-         WHEN type = 'expense' AND account_id = ? THEN -amount
-         WHEN type = 'transfer' AND account_id = ? THEN -amount
-         WHEN type = 'transfer' AND to_account_id = ? THEN amount
-         ELSE 0
-       END
-     ), 0) AS activity
-     FROM transactions
-     WHERE account_id = ? OR to_account_id = ?`,
-    accountId,
-    accountId,
-    accountId,
-    accountId,
-    accountId,
-    accountId,
-  );
-  return initialBalance + (result?.activity ?? 0);
 }
 
 async function activeRuleBlockers(
@@ -249,49 +283,6 @@ async function endFundingMembership(
   );
 }
 
-async function markInactiveRulesForArchivedAccount(
-  database: SQLiteDatabase,
-  accountId: string,
-  now: string,
-): Promise<void> {
-  const rules = await database.getAllAsync<{
-    id: string;
-    accountId: string | null;
-    toAccountId: string | null;
-    health: "ready" | "needs_attention";
-    attentionReasons: string;
-  }>(
-    `SELECT id, account_id AS accountId, to_account_id AS toAccountId, health,
-            attention_reasons AS attentionReasons
-     FROM recurring_rules
-     WHERE lifecycle <> 'active' AND (account_id = ? OR to_account_id = ?)
-     ORDER BY id`,
-    accountId,
-    accountId,
-  );
-
-  for (const rule of rules) {
-    const reasons = parseReasons(rule.attentionReasons);
-    if (rule.accountId === accountId) {
-      addReason(reasons, { kind: "missing-source-account", formerAccountId: accountId });
-    }
-    if (rule.toAccountId === accountId) {
-      addReason(reasons, { kind: "missing-destination-account", formerAccountId: accountId });
-    }
-    await database.runAsync(
-      `UPDATE recurring_rules
-       SET health = 'needs_attention', attention_reasons = ?, revision = revision + 1,
-           health_changed_at = CASE WHEN health = 'needs_attention' THEN health_changed_at ELSE ? END,
-           updated_at = ?
-       WHERE id = ?`,
-      JSON.stringify(reasons),
-      now,
-      now,
-      rule.id,
-    );
-  }
-}
-
 async function requireAccount(
   database: SQLiteDatabase,
   accountId: string,
@@ -324,18 +315,4 @@ function periodForLedgerDate(localDate: string): string {
     throw new Error(`Account lifecycle requires a valid local Ledger Date, received ${localDate}.`);
   }
   return localDate.slice(0, 7);
-}
-
-function parseReasons(value: string): RecurringAttentionReason[] {
-  try {
-    return JSON.parse(value) as RecurringAttentionReason[];
-  } catch {
-    return [];
-  }
-}
-
-function addReason(reasons: RecurringAttentionReason[], reason: RecurringAttentionReason): void {
-  if (!reasons.some((existing) => JSON.stringify(existing) === JSON.stringify(reason))) {
-    reasons.push(reason);
-  }
 }

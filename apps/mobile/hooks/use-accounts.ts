@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { useSQLiteContext } from "expo-sqlite";
 
 import { useDatabase } from "@/db/client";
-import { accounts, transactions } from "@/db/schema";
+import { accounts } from "@/db/schema";
 import { updateAccountWithRecurringRules } from "@/modules/account-recurring-coordinator";
 import {
   archiveAccount,
@@ -12,10 +12,11 @@ import {
   previewAccountDeletion,
   restoreAccount,
 } from "@/modules/accounts/account-lifecycle";
+import { loadAccountBalances } from "@/modules/accounts/account-balance";
 import { accountKeys, cohereLedgerCache } from "@/modules/ledger-cache";
 import { nowIso, toDateString } from "@/utils/date";
 import { generateId } from "@/utils/id";
-import type { Account, AccountWithBalance } from "@/types";
+import type { Account } from "@/types";
 
 // ── Queries ────────────────────────────────────────────────────────────────────
 
@@ -51,51 +52,10 @@ export function useAllAccountsWithBalances() {
 }
 
 function useAccountBalances(includeArchived: boolean) {
-  const db = useDatabase();
+  const database = useSQLiteContext();
   return useQuery({
     queryKey: includeArchived ? accountKeys.managementBalances : accountKeys.balances,
-    queryFn: async (): Promise<AccountWithBalance[]> => {
-      // Fetch all accounts
-      const baseQuery = db.select().from(accounts);
-      const allAccounts = (await (includeArchived
-        ? baseQuery.orderBy(accounts.sortOrder, accounts.createdAt).all()
-        : baseQuery
-            .where(eq(accounts.lifecycle, "active"))
-            .orderBy(accounts.sortOrder, accounts.createdAt)
-            .all())) as Account[];
-
-      // Compute balance for each account via SQL
-      // balance = initialBalance + SUM(income) - SUM(expense) + SUM(transfer-in) - SUM(transfer-out)
-      const balanceRows = await db
-        .select({
-          accountId: accounts.id,
-          balance: sql<number>`
-            ${accounts.initialBalance} + COALESCE(SUM(
-              CASE
-                WHEN ${transactions.type} = 'income' THEN ${transactions.amount}
-                WHEN ${transactions.type} = 'expense' THEN -${transactions.amount}
-                WHEN ${transactions.type} = 'transfer' AND ${transactions.toAccountId} = ${accounts.id} THEN ${transactions.amount}
-                WHEN ${transactions.type} = 'transfer' AND ${transactions.accountId} = ${accounts.id} THEN -${transactions.amount}
-                ELSE 0
-              END
-            ), 0)
-          `.as("balance"),
-        })
-        .from(accounts)
-        .leftJoin(
-          transactions,
-          sql`${transactions.accountId} = ${accounts.id} OR ${transactions.toAccountId} = ${accounts.id}`,
-        )
-        .groupBy(accounts.id)
-        .all();
-
-      const balanceMap = new Map(balanceRows.map((r) => [r.accountId, r.balance]));
-
-      return allAccounts.map((acc) => ({
-        ...acc,
-        balance: balanceMap.get(acc.id) ?? acc.initialBalance,
-      }));
-    },
+    queryFn: () => loadAccountBalances(database, includeArchived),
   });
 }
 
@@ -149,9 +109,10 @@ export function useUpdateAccount() {
 
 export function useAccountArchivalPreview(id: string) {
   const database = useSQLiteContext();
+  const localDate = toDateString(new Date());
   return useQuery({
-    queryKey: [...accountKeys.detail(id), "archival-preview"],
-    queryFn: () => previewAccountArchival(database, id),
+    queryKey: [...accountKeys.detail(id), "archival-preview", localDate],
+    queryFn: () => previewAccountArchival(database, id, localDate),
   });
 }
 

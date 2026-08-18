@@ -67,7 +67,13 @@ jest.mock("@/hooks/use-accounts", () => ({
                     relationship: "destination",
                   },
                 ],
-                recoveryAction: "Pause, archive, or repair every listed Recurring Rule.",
+                recoveryAction: "Pause or archive every listed Recurring Rule.",
+              },
+              {
+                kind: "budget-dependencies",
+                dependencies: [{ kind: "budget-shortfall", currency: "USD", amountMinor: 25_00 }],
+                recoveryAction:
+                  "Resolve every listed budget dependency before archiving this Account.",
               },
             ],
           }
@@ -112,9 +118,13 @@ describe("app/accounts", () => {
     );
     expect(screen.getByText(/Current balance:/)).toBeOnTheScreen();
     expect(screen.getByText(/Active Recurring Rules: Rent, Savings sweep/)).toBeOnTheScreen();
+    expect(screen.getByText(/Budget Shortfall:/)).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Review Everyday balance" })).toBeOnTheScreen();
     expect(
       screen.getByRole("button", { name: "Review blocking Recurring Rules" }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByRole("button", { name: "Review blocking budget dependencies" }),
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Archive Everyday" })).toBeDisabled();
     expect(screen.queryByRole("button", { name: "Delete Everyday" })).not.toBeOnTheScreen();
