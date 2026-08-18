@@ -41,7 +41,34 @@ describe("migrateAccountLifecycle", () => {
         "SELECT value FROM app_settings WHERE key = ?",
         "accountLifecycleMigrationVersion",
       ),
-    ).resolves.toEqual({ value: "1" });
+    ).resolves.toEqual({ value: "2" });
+  });
+
+  it("upgrades the initial lifecycle schema without resetting existing data", async () => {
+    const database = await setup();
+    await migrateAccountLifecycle(database);
+    await database.execAsync(`
+      DROP TRIGGER record_account_budget_history;
+      DROP TABLE account_budget_history;
+      UPDATE app_settings
+      SET value = '1'
+      WHERE key = 'accountLifecycleMigrationVersion';
+    `);
+
+    await migrateAccountLifecycle(database);
+
+    await expect(
+      database.getFirstAsync(
+        "SELECT value FROM app_settings WHERE key = ?",
+        "accountLifecycleMigrationVersion",
+      ),
+    ).resolves.toEqual({ value: "2" });
+    await expect(
+      database.getFirstAsync(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        "account_budget_history",
+      ),
+    ).resolves.toEqual({ name: "account_budget_history" });
   });
 
   it("preserves durable evidence of an existing Funding Membership", async () => {
@@ -84,7 +111,7 @@ describe("migrateAccountLifecycle", () => {
     await database.runAsync(
       "INSERT INTO app_settings (key, value) VALUES (?, ?)",
       "accountLifecycleMigrationVersion",
-      "1",
+      "2",
     );
 
     await expect(migrateAccountLifecycle(database)).rejects.toThrow(

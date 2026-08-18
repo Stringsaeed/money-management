@@ -3,7 +3,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { runInTransaction } from "@/modules/recurring-rules/persistence";
 
 const MIGRATION_KEY = "accountLifecycleMigrationVersion";
-const MIGRATION_VERSION = 1;
+const MIGRATION_VERSION = 2;
 const REQUIRED_COLUMNS = ["lifecycle", "lifecycle_changed_at"] as const;
 const EXPECTED_COLUMNS = {
   lifecycle: { type: "TEXT", notnull: 1, defaultValue: "'active'", primaryKey: 0 },
@@ -101,6 +101,14 @@ export async function migrateAccountLifecycle(database: SQLiteDatabase): Promise
       MIGRATION_KEY,
     );
     if (recordedVersion) {
+      if (recordedVersion.value === "1") {
+        await assertAccountColumns(transaction);
+        await assertActiveAccountGuards(transaction);
+        await installAccountBudgetHistory(transaction);
+        await assertCurrentSchema(transaction);
+        await recordMigrationVersion(transaction);
+        return;
+      }
       if (recordedVersion.value !== String(MIGRATION_VERSION)) {
         throw new Error(
           `Account lifecycle migration found unsupported migration version ${recordedVersion.value}. Restore a supported database before startup.`,
@@ -131,25 +139,33 @@ export async function migrateAccountLifecycle(database: SQLiteDatabase): Promise
     }
 
     await assertAccountColumns(transaction);
-    await transaction.execAsync(`${ACCOUNT_BUDGET_HISTORY_SQL};`);
-    await transaction.runAsync(
-      `INSERT INTO account_budget_history (
-        account_id, first_membership_period, first_recorded_at
-       )
-       SELECT account_id, MIN(effective_from_period), MIN(created_at)
-       FROM funding_memberships
-       GROUP BY account_id`,
-    );
     await transaction.execAsync(`${Object.values(ACTIVE_ACCOUNT_GUARDS).join(";\n")};`);
-    await transaction.execAsync(`${ACCOUNT_BUDGET_HISTORY_TRIGGER};`);
+    await installAccountBudgetHistory(transaction);
     await assertCurrentSchema(transaction);
-    await transaction.runAsync(
-      `INSERT INTO app_settings (key, value) VALUES (?, ?)
-       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-      MIGRATION_KEY,
-      String(MIGRATION_VERSION),
-    );
+    await recordMigrationVersion(transaction);
   });
+}
+
+async function installAccountBudgetHistory(database: SQLiteDatabase): Promise<void> {
+  await database.execAsync(`${ACCOUNT_BUDGET_HISTORY_SQL};`);
+  await database.runAsync(
+    `INSERT INTO account_budget_history (
+      account_id, first_membership_period, first_recorded_at
+     )
+     SELECT account_id, MIN(effective_from_period), MIN(created_at)
+     FROM funding_memberships
+     GROUP BY account_id`,
+  );
+  await database.execAsync(`${ACCOUNT_BUDGET_HISTORY_TRIGGER};`);
+}
+
+async function recordMigrationVersion(database: SQLiteDatabase): Promise<void> {
+  await database.runAsync(
+    `INSERT INTO app_settings (key, value) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    MIGRATION_KEY,
+    String(MIGRATION_VERSION),
+  );
 }
 
 async function accountColumns(database: SQLiteDatabase): Promise<Map<string, TableColumn>> {
@@ -169,17 +185,7 @@ async function assertCurrentSchema(database: SQLiteDatabase): Promise<void> {
       "Account budget history does not match the supported structure. Restore a supported database before startup.",
     );
   }
-  for (const [name, expectedSql] of Object.entries(ACTIVE_ACCOUNT_GUARDS)) {
-    const trigger = await database.getFirstAsync<{ sql: string | null }>(
-      "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ?",
-      name,
-    );
-    if (normalizeSchemaSql(trigger?.sql ?? "") !== normalizeSchemaSql(expectedSql)) {
-      throw new Error(
-        `Account lifecycle trigger ${name} does not match the supported structure. Restore a supported database before startup.`,
-      );
-    }
-  }
+  await assertActiveAccountGuards(database);
   const historyTrigger = await database.getFirstAsync<{ sql: string | null }>(
     "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = 'record_account_budget_history'",
   );
@@ -190,6 +196,20 @@ async function assertCurrentSchema(database: SQLiteDatabase): Promise<void> {
     throw new Error(
       "Account budget history tracking does not match the supported structure. Restore a supported database before startup.",
     );
+  }
+}
+
+async function assertActiveAccountGuards(database: SQLiteDatabase): Promise<void> {
+  for (const [name, expectedSql] of Object.entries(ACTIVE_ACCOUNT_GUARDS)) {
+    const trigger = await database.getFirstAsync<{ sql: string | null }>(
+      "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ?",
+      name,
+    );
+    if (normalizeSchemaSql(trigger?.sql ?? "") !== normalizeSchemaSql(expectedSql)) {
+      throw new Error(
+        `Account lifecycle trigger ${name} does not match the supported structure. Restore a supported database before startup.`,
+      );
+    }
   }
 }
 
