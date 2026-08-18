@@ -71,7 +71,11 @@ jest.mock("@/hooks/use-accounts", () => ({
               },
               {
                 kind: "budget-dependencies",
-                dependencies: [{ kind: "budget-shortfall", currency: "USD", amountMinor: 25_00 }],
+                dependencies: [
+                  { kind: "budget-shortfall", currency: "USD", amountMinor: 25_00 },
+                  { kind: "card-payment-reserve", currency: "USD", amountMinor: 15_00 },
+                  { kind: "unfunded-card-spending", currency: "USD", amountMinor: 10_00 },
+                ],
                 recoveryAction:
                   "Resolve every listed budget dependency before archiving this Account.",
               },
@@ -119,6 +123,8 @@ describe("app/accounts", () => {
     expect(screen.getByText(/Current balance:/)).toBeOnTheScreen();
     expect(screen.getByText(/Active Recurring Rules: Rent, Savings sweep/)).toBeOnTheScreen();
     expect(screen.getByText(/Budget Shortfall:/)).toBeOnTheScreen();
+    expect(screen.getByText(/Card Payment Reserve:/)).toBeOnTheScreen();
+    expect(screen.getByText(/Unfunded Card Spending:/)).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Review Everyday balance" })).toBeOnTheScreen();
     expect(
       screen.getByRole("button", { name: "Review blocking Recurring Rules" }),

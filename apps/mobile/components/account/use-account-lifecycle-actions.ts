@@ -31,7 +31,8 @@ export function useAccountLifecycleActions(account: AccountWithBalance, onComple
               setError("");
               await archiveAccount.mutateAsync(account.id);
               onCompleted();
-            } catch {
+            } catch (cause) {
+              console.error("Account archival failed", { accountId: account.id, cause });
               setError("The Account was not archived. Review every prerequisite and try again.");
             }
           },
@@ -53,7 +54,8 @@ export function useAccountLifecycleActions(account: AccountWithBalance, onComple
               setError("");
               await restoreAccount.mutateAsync(account.id);
               onCompleted();
-            } catch {
+            } catch (cause) {
+              console.error("Account restoration failed", { accountId: account.id, cause });
               setError("The Account was not restored. Please try again.");
             }
           },
@@ -76,7 +78,8 @@ export function useAccountLifecycleActions(account: AccountWithBalance, onComple
               setError("");
               await deleteAccount.mutateAsync(account.id);
               onCompleted();
-            } catch {
+            } catch (cause) {
+              console.error("Account deletion failed", { accountId: account.id, cause });
               setError("The Account was not deleted. Please try again.");
             }
           },
