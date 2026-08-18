@@ -153,6 +153,7 @@ describe("Envelope resources", () => {
       icon: "📦",
       color: "#8B9D83",
       categoryIds: ["category-bills"],
+      changedCategoryIds: [],
       positiveRollover: true,
       sortOrder: 0,
       localDate: "2026-08-19",

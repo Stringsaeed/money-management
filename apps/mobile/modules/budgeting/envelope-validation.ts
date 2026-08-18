@@ -34,6 +34,30 @@ export function requireCategoryIds(categoryIds: readonly string[]): string[] {
   return uniqueIds;
 }
 
+export function requireChangedCategoryIds(categoryIds: readonly string[]): string[] {
+  const uniqueIds = [...new Set(categoryIds)];
+  if (uniqueIds.length !== categoryIds.length || uniqueIds.some((id) => !id.trim())) {
+    throw new Error("Changed Envelope Category IDs must be distinct and non-empty strings.");
+  }
+  return uniqueIds;
+}
+
+export async function requireEditableEnvelopeCategoryIds(
+  database: SQLiteDatabase,
+  categoryIds: readonly string[],
+): Promise<void> {
+  if (categoryIds.length === 0) return;
+  const placeholders = categoryIds.map(() => "?").join(", ");
+  const rows = await database.getAllAsync<{ id: string }>(
+    `SELECT id FROM categories
+     WHERE id IN (${placeholders}) AND lifecycle = 'active' AND type = 'expense'`,
+    ...categoryIds,
+  );
+  if (rows.length !== categoryIds.length) {
+    throw new Error("Only active expense Categories can change an Envelope Mapping.");
+  }
+}
+
 export async function requireEnvelopeWorkspace(
   database: SQLiteDatabase,
   currency: string,

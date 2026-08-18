@@ -37,6 +37,7 @@ describe("Envelope order", () => {
       icon: "📦",
       color: "#8B9D83",
       categoryIds: ["category-second"],
+      changedCategoryIds: [],
       positiveRollover: true,
       sortOrder: 1,
       localDate: "2026-08-19",

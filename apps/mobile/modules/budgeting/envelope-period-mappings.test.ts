@@ -39,6 +39,7 @@ describe("period-aware Envelope Mappings", () => {
       icon: "🧾",
       color: "#B48A7B",
       categoryIds: ["category-utilities", "category-groceries"],
+      changedCategoryIds: ["category-groceries"],
       positiveRollover: false,
       localDate: "2026-08-19",
       now: "2026-08-19T08:00:00.000Z",

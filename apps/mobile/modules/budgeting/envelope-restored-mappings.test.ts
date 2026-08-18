@@ -40,6 +40,7 @@ describe("restored Envelope Category Mappings", () => {
       icon: "🧾",
       color: "#8B9D83",
       categoryIds: ["category-utilities", "category-dining"],
+      changedCategoryIds: ["category-dining"],
       positiveRollover: true,
       localDate: "2026-08-19",
       now: "2026-08-19T08:00:00.000Z",
@@ -64,6 +65,7 @@ describe("restored Envelope Category Mappings", () => {
     await budgeting.updateEnvelope({
       ...update,
       name: "Household bills",
+      changedCategoryIds: [],
       now: "2026-08-19T08:01:00.000Z",
     });
     await expectEnvelopeCategories(database, "2026-09", [
@@ -92,6 +94,7 @@ describe("restored Envelope Category Mappings", () => {
       icon: "🍲",
       color: "#B48A7B",
       categoryIds: ["category-groceries", "category-dining"],
+      changedCategoryIds: ["category-dining"],
       positiveRollover: true,
       localDate: "2026-08-19",
       now: "2026-08-19T08:00:00.000Z",

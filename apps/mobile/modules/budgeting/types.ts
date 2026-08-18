@@ -58,6 +58,7 @@ export interface UpdateEnvelopeRequest {
   icon: string;
   color: string;
   categoryIds: readonly string[];
+  changedCategoryIds: readonly string[];
   positiveRollover: boolean;
   sortOrder?: number;
   localDate: string;

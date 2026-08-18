@@ -6,6 +6,8 @@ import { replaceEnvelopeMappings } from "./envelope-mappings";
 import { prepareEnvelopeOrder, updateEnvelopeOrder } from "./envelope-order";
 import {
   requireCategoryIds,
+  requireChangedCategoryIds,
+  requireEditableEnvelopeCategoryIds,
   requireEligibleEnvelopeCategories,
   requireEnvelopeFields,
   requireEnvelopeWorkspace,
@@ -82,6 +84,7 @@ export async function updateEnvelope(
 ): Promise<BudgetProjection> {
   const period = periodForLocalDate(request.localDate);
   const categoryIds = requireCategoryIds(request.categoryIds);
+  const changedCategoryIds = requireChangedCategoryIds(request.changedCategoryIds);
   requireEnvelopeFields(request);
 
   return runInTransaction(database, async (transaction) => {
@@ -105,10 +108,12 @@ export async function updateEnvelope(
       period,
     );
     requireRestoredCategoryConfirmation(
-      categoryRows,
+      categoryRows.filter((category) => changedCategoryIds.includes(category.id)),
       request.confirmedRestoredCategoryIds,
       request.envelopeId,
     );
+
+    await requireEditableEnvelopeCategoryIds(transaction, changedCategoryIds);
 
     const currentAndFutureCategoryRows = await transaction.getAllAsync<{ categoryId: string }>(
       `SELECT category_id AS categoryId
@@ -121,15 +126,21 @@ export async function updateEnvelope(
       request.envelopeId,
       period,
     );
-    const affectedCategoryIds = [
-      ...new Set([
-        ...categoryIds,
-        ...currentAndFutureCategoryRows.map(({ categoryId }) => categoryId),
-      ]),
-    ];
+    const selectedCategoryIds = new Set(categoryIds);
+    const targetCategoryIds = new Set(
+      currentAndFutureCategoryRows.map(({ categoryId }) => categoryId),
+    );
+    if (
+      changedCategoryIds.some(
+        (categoryId) =>
+          !selectedCategoryIds.has(categoryId) && !targetCategoryIds.has(categoryId),
+      )
+    ) {
+      throw new Error("A removed Category must currently map to the edited Envelope.");
+    }
     await replaceEnvelopeMappings(transaction, {
       selectedCategories: categoryRows,
-      affectedCategoryIds,
+      affectedCategoryIds: changedCategoryIds,
       selectedCategoryIds: categoryIds,
       envelopeId: request.envelopeId,
       period,

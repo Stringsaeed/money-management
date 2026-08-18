@@ -6,6 +6,8 @@ import type { EnvelopeCategoryOption, EnvelopeSummary } from "@/modules/budgetin
 import { nowIso, today } from "@/utils/date";
 import { generateId } from "@/utils/id";
 
+import { changedCategoryIds } from "./category-selection";
+
 export interface EnvelopeFormValues {
   name: string;
   icon: string;
@@ -47,6 +49,16 @@ export function useEnvelopeForm({
   const updateEnvelope = useUpdateBudgetEnvelope();
   const [error, setError] = useState("");
   const editableCategoryIds = new Set(options.map((option) => option.id));
+  const initialCategoryIds = envelope
+    ? [
+        ...new Set([
+          ...envelope.categoryIds.filter((categoryId) => editableCategoryIds.has(categoryId)),
+          ...options
+            .filter((option) => option.futureMappedEnvelopeId === envelope.id)
+            .map((option) => option.id),
+        ]),
+      ]
+    : [];
   const form = useForm({
     ...envelopeFormOptions,
     defaultValues: envelope
@@ -54,14 +66,7 @@ export function useEnvelopeForm({
           name: envelope.name,
           icon: envelope.icon,
           color: envelope.color,
-          categoryIds: [
-            ...new Set([
-              ...envelope.categoryIds.filter((categoryId) => editableCategoryIds.has(categoryId)),
-              ...options
-                .filter((option) => option.futureMappedEnvelopeId === envelope.id)
-                .map((option) => option.id),
-            ]),
-          ],
+          categoryIds: initialCategoryIds,
           confirmedRestoredCategoryIds: [],
           positiveRollover: envelope.positiveRollover,
           sortOrder: envelope.sortOrder,
@@ -83,7 +88,11 @@ export function useEnvelopeForm({
       };
       try {
         if (envelope) {
-          await updateEnvelope.mutateAsync({ ...common, envelopeId: envelope.id });
+          await updateEnvelope.mutateAsync({
+            ...common,
+            envelopeId: envelope.id,
+            changedCategoryIds: changedCategoryIds(initialCategoryIds, value.categoryIds),
+          });
         } else {
           await createEnvelope.mutateAsync({ ...common, id: generateId(), currency });
         }
