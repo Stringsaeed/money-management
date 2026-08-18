@@ -3,6 +3,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { getProjection } from "@/modules/budgeting/projection";
 
 import { loadAccountBalance } from "./account-balance";
+import { loadCardBudgetDependencies } from "./account-card-budget-dependencies";
 import { accountLifecyclePeriod } from "./account-ledger-date";
 import type {
   AccountArchivalPreview,
@@ -94,6 +95,7 @@ async function activeBudgetDependencies(
     period,
   );
   const dependencies: AccountBudgetDependency[] = [];
+  dependencies.push(...(await loadCardBudgetDependencies(database, accountId)));
   for (const membership of memberships) {
     const projection = await getProjection(database, { currency: membership.currency, period });
     if (projection && projection.unassignedMoney.amountMinor < 0) {

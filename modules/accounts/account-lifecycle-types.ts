@@ -10,11 +10,15 @@ export interface AccountRuleBlocker {
   relationship: "source" | "destination";
 }
 
-export interface AccountBudgetDependency {
-  kind: "budget-shortfall";
+interface AccountBudgetDependencyBase {
   currency: string;
   amountMinor: number;
 }
+
+export type AccountBudgetDependency =
+  | (AccountBudgetDependencyBase & { kind: "budget-shortfall" })
+  | (AccountBudgetDependencyBase & { kind: "card-payment-reserve" })
+  | (AccountBudgetDependencyBase & { kind: "unfunded-card-spending" });
 
 export type AccountArchiveBlocker =
   | {

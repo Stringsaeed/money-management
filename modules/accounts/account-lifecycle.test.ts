@@ -103,6 +103,69 @@ describe("Account lifecycle", () => {
     ).resolves.toEqual({ lifecycle: "active" });
   });
 
+  it("reports outstanding Card Payment Reserve and Unfunded Card Spending dependencies", async () => {
+    const database = await setup();
+    await insertAccount(database, "card-funded", 100_00, "credit_card");
+    await insertAccount(database, "card-unfunded", 100_00, "credit_card");
+    await insertAccount(database, "card-resolved", 0, "credit_card");
+    await insertAccount(database, "payment-source", 100_00);
+    await insertBudgetedCardExpense(database, {
+      accountId: "card-funded",
+      amount: 100_00,
+      assignmentAmount: 100_00,
+      suffix: "funded",
+    });
+    await insertBudgetedCardExpense(database, {
+      accountId: "card-unfunded",
+      amount: 100_00,
+      assignmentAmount: 0,
+      suffix: "unfunded",
+    });
+    await insertBudgetedCardExpense(database, {
+      accountId: "card-resolved",
+      amount: 100_00,
+      assignmentAmount: 100_00,
+      suffix: "resolved",
+    });
+    await database.runAsync(
+      `INSERT INTO transactions (
+        id, type, amount, currency, date, account_id, to_account_id, is_recurring,
+        description, created_at, updated_at
+      ) VALUES ('payment-resolved', 'transfer', 10000, 'USD', '2026-08-12',
+        'payment-source', 'card-resolved', 0, '', ?, ?)`,
+      NOW,
+      NOW,
+    );
+
+    await expect(previewAccountArchival(database, "card-funded", "2026-08-18")).resolves.toEqual({
+      accountId: "card-funded",
+      canArchive: false,
+      blockers: [
+        {
+          kind: "budget-dependencies",
+          dependencies: [{ kind: "card-payment-reserve", currency: "USD", amountMinor: 100_00 }],
+          recoveryAction: "Resolve every listed budget dependency before archiving this Account.",
+        },
+      ],
+    });
+    await expect(previewAccountArchival(database, "card-unfunded", "2026-08-18")).resolves.toEqual({
+      accountId: "card-unfunded",
+      canArchive: false,
+      blockers: [
+        {
+          kind: "budget-dependencies",
+          dependencies: [{ kind: "unfunded-card-spending", currency: "USD", amountMinor: 100_00 }],
+          recoveryAction: "Resolve every listed budget dependency before archiving this Account.",
+        },
+      ],
+    });
+    await expect(previewAccountArchival(database, "card-resolved", "2026-08-18")).resolves.toEqual({
+      accountId: "card-resolved",
+      canArchive: true,
+      blockers: [],
+    });
+  });
+
   it("archives at zero while preserving ledger, Rule, and historical Funding Pool references", async () => {
     const database = await setup();
     await insertAccount(database, "account-main", 100_00);
@@ -311,15 +374,82 @@ async function insertAccount(
   database: SQLiteDatabase,
   id: string,
   initialBalance: number,
+  type = "checking",
 ): Promise<void> {
   await database.runAsync(
     `INSERT INTO accounts (
       id, name, type, currency, color, icon, initial_balance,
       exclude_from_total, sort_order, created_at, updated_at
-    ) VALUES (?, ?, 'checking', 'USD', '#8B9D83', '🏦', ?, 0, 0, ?, ?)`,
+    ) VALUES (?, ?, ?, 'USD', '#8B9D83', '🏦', ?, 0, 0, ?, ?)`,
     id,
     id,
+    type,
     initialBalance,
+    NOW,
+    NOW,
+  );
+}
+
+async function insertBudgetedCardExpense(
+  database: SQLiteDatabase,
+  input: { accountId: string; amount: number; assignmentAmount: number; suffix: string },
+): Promise<void> {
+  const categoryId = `category-${input.suffix}`;
+  const envelopeId = `envelope-${input.suffix}`;
+  await database.runAsync(
+    `INSERT INTO categories (
+      id, name, type, color, icon, sort_order, created_at, updated_at
+    ) VALUES (?, ?, 'expense', '#B48A7B', '🏷️', 0, ?, ?)`,
+    categoryId,
+    categoryId,
+    NOW,
+    NOW,
+  );
+  await database.runAsync(
+    `INSERT INTO budget_workspaces (currency, activation_period, created_at, updated_at)
+     VALUES ('USD', '2026-08', ?, ?)
+     ON CONFLICT(currency) DO NOTHING`,
+    NOW,
+    NOW,
+  );
+  await database.runAsync(
+    `INSERT INTO envelopes (
+      id, currency, name, icon, color, lifecycle, sort_order, created_at, updated_at
+    ) VALUES (?, 'USD', ?, '✉️', '#8B9D83', 'active', 0, ?, ?)`,
+    envelopeId,
+    envelopeId,
+    NOW,
+    NOW,
+  );
+  await database.runAsync(
+    `INSERT INTO category_mappings (
+      category_id, envelope_id, effective_from_period, effective_to_period, created_at
+    ) VALUES (?, ?, '2026-08', NULL, ?)`,
+    categoryId,
+    envelopeId,
+    NOW,
+  );
+  if (input.assignmentAmount > 0) {
+    await database.runAsync(
+      `INSERT INTO assignments (
+        id, currency, budget_period, source_envelope_id, destination_envelope_id,
+        amount_minor, reverses_assignment_id, created_at
+      ) VALUES (?, 'USD', '2026-08', NULL, ?, ?, NULL, ?)`,
+      `assignment-${input.suffix}`,
+      envelopeId,
+      input.assignmentAmount,
+      NOW,
+    );
+  }
+  await database.runAsync(
+    `INSERT INTO transactions (
+      id, type, amount, currency, date, account_id, category_id, is_recurring,
+      description, created_at, updated_at
+    ) VALUES (?, 'expense', ?, 'USD', '2026-08-10', ?, ?, 0, '', ?, ?)`,
+    `transaction-${input.suffix}`,
+    input.amount,
+    input.accountId,
+    categoryId,
     NOW,
     NOW,
   );

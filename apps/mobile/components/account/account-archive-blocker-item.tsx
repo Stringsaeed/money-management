@@ -12,6 +12,12 @@ interface AccountArchiveBlockerItemProps {
   blocker: AccountArchiveBlocker;
 }
 
+const BUDGET_DEPENDENCY_LABELS = {
+  "budget-shortfall": "Budget Shortfall",
+  "card-payment-reserve": "Card Payment Reserve",
+  "unfunded-card-spending": "Unfunded Card Spending",
+} as const;
+
 export function AccountArchiveBlockerItem({ account, blocker }: AccountArchiveBlockerItemProps) {
   function reviewBalance() {
     router.push("/(tabs)/ledger");
@@ -70,16 +76,15 @@ export function AccountArchiveBlockerItem({ account, blocker }: AccountArchiveBl
 
   return (
     <View className="gap-2">
-      <Text className="font-body-normal text-sm text-ink/70">
-        Budget Shortfall:{" "}
-        {blocker.dependencies.map((dependency) => (
-          <MoneyText
-            cents={dependency.amountMinor}
-            currency={dependency.currency}
-            key={dependency.currency}
-          />
-        ))}
-      </Text>
+      {blocker.dependencies.map((dependency) => (
+        <Text
+          className="font-body-normal text-sm text-ink/70"
+          key={`${dependency.kind}:${dependency.currency}`}
+        >
+          {BUDGET_DEPENDENCY_LABELS[dependency.kind]}:{" "}
+          <MoneyText cents={dependency.amountMinor} currency={dependency.currency} />
+        </Text>
+      ))}
       <Text className="font-body-normal text-xs text-ink/50">{blocker.recoveryAction}</Text>
       <Button
         aria-label="Review blocking budget dependencies"
