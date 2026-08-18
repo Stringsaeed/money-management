@@ -497,6 +497,43 @@ describe("Account lifecycle", () => {
     });
   });
 
+  it("keeps the historical Money currency when an active endpoint currency drifts", async () => {
+    const database = await setup();
+    await insertAccount(database, "account-source", 100_00);
+    await insertAccount(database, "account-eur", 0, "checking", "EUR");
+    await activateWorkspace(database, "account-source", "2026-08-01");
+    await database.runAsync(
+      `INSERT INTO transactions (
+        id, type, amount, currency, date, account_id, to_account_id, is_recurring,
+        description, created_at, updated_at
+      ) VALUES ('cross-currency-history', 'transfer', 10000, 'USD', '2026-08-10',
+        'account-source', 'account-eur', 0, '', ?, ?)`,
+      NOW,
+      NOW,
+    );
+    await database.runAsync("UPDATE accounts SET currency = 'EUR' WHERE id = ?", "account-source");
+
+    await expect(
+      previewAccountArchival(database, "account-source", "2026-08-18"),
+    ).resolves.toMatchObject({
+      canArchive: false,
+      blockers: [
+        {
+          kind: "budget-dependencies",
+          dependencies: [
+            {
+              kind: "unsupported-cross-currency-transfer",
+              amountMinor: 100_00,
+              currency: "USD",
+              destinationCurrency: "EUR",
+              transactionId: "cross-currency-history",
+            },
+          ],
+        },
+      ],
+    });
+  });
+
   it("shares Envelope availability with cash spending and funds older card deficits first", async () => {
     const database = await setup();
     await insertAccount(database, "card-shared", 0, "credit_card");

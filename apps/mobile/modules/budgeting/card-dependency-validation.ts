@@ -47,7 +47,8 @@ export function isUnsupportedCrossCurrencyTransfer(
   return (
     transaction.type === "transfer" &&
     transaction.destinationCurrency !== null &&
-    transaction.sourceCurrency !== transaction.destinationCurrency
+    (transaction.currency !== transaction.sourceCurrency ||
+      transaction.currency !== transaction.destinationCurrency)
   );
 }
 

@@ -76,6 +76,12 @@ describe("card dependency evaluator validation", () => {
 
     expect(result.balances.get("account-main")).toBe(100_00);
     expect(result.balances.has("account-eur")).toBe(false);
+
+    facts.accounts[0]!.currency = "EUR";
+    facts.transactions[0]!.sourceCurrency = "EUR";
+    const driftedResult = evaluateCardBudgetState(facts, "2026-08");
+    expect(driftedResult.balances.get("account-main")).toBe(100_00);
+    expect(driftedResult.balances.has("account-eur")).toBe(false);
   });
 
   it("refuses an unsafe aggregate of individually safe card deficits", () => {

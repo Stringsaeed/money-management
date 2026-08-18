@@ -71,7 +71,7 @@ export async function loadUnsupportedCrossCurrencyTransfers(
        transactions.amount AS amountMinor,
        transactions.account_id AS accountId,
        transactions.to_account_id AS toAccountId,
-       source_accounts.currency AS sourceCurrency,
+       transactions.currency AS sourceCurrency,
        destination_accounts.currency AS destinationCurrency
      FROM transactions
      INNER JOIN accounts AS source_accounts ON source_accounts.id = transactions.account_id
@@ -80,10 +80,17 @@ export async function loadUnsupportedCrossCurrencyTransfers(
      WHERE transactions.type = 'transfer'
        AND transactions.date <= ?
        AND (transactions.account_id = ? OR transactions.to_account_id = ?)
-       AND source_accounts.currency <> destination_accounts.currency
+       AND (
+         transactions.currency <> source_accounts.currency
+         OR transactions.currency <> destination_accounts.currency
+       )
        AND EXISTS (
          SELECT 1 FROM budget_workspaces
-         WHERE currency IN (source_accounts.currency, destination_accounts.currency)
+         WHERE currency IN (
+           transactions.currency,
+           source_accounts.currency,
+           destination_accounts.currency
+         )
            AND activation_period <= ?
        )
      ORDER BY transactions.date, transactions.created_at, transactions.id`,
