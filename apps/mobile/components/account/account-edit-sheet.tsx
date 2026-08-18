@@ -1,13 +1,10 @@
 import { useState } from "react";
-import { Alert } from "react-native";
 
 import { AccountFormContent } from "@/components/account/account-form-content";
-import { accountDeletionMessage } from "@/components/account/account-deletion-message";
+import { AccountLifecycleActions } from "@/components/account/account-lifecycle-actions";
 import { ACCOUNT_TYPE_META } from "@/components/account/account-form-options";
 import { CreateResourceBottomSheet } from "@/components/resource/create-resource-bottom-sheet";
 import { CreateResourceSheetFooter } from "@/components/resource/create-resource-sheet-footer";
-import { ResourceSheetDeleteButton } from "@/components/resource/resource-sheet-delete-button";
-import { useDeleteAccount, usePreviewAccountDeletion } from "@/hooks/use-accounts";
 import type { AccountType, AccountWithBalance } from "@/types";
 
 import { useEditAccountForm } from "./form";
@@ -23,8 +20,6 @@ export function AccountEditSheet({ account, onDismiss, onUpdated }: AccountEditS
   const [error, setError] = useState("");
   const [hasCustomColor, setHasCustomColor] = useState(false);
   const [hasCustomIcon, setHasCustomIcon] = useState(isCustomAccountIcon(account.icon));
-  const deleteAccount = useDeleteAccount();
-  const previewAccountDeletion = usePreviewAccountDeletion();
   const form = useEditAccountForm({
     account,
     onError: setError,
@@ -47,50 +42,24 @@ export function AccountEditSheet({ account, onDismiss, onUpdated }: AccountEditS
     form.setFieldValue("icon", nextIcon);
   }
 
-  async function handleDelete() {
-    try {
-      const preview = await previewAccountDeletion.mutateAsync(account.id);
-      Alert.alert(`Delete ${account.name}?`, accountDeletionMessage(account.name, preview), [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteAccount.mutateAsync(account.id);
-              onDismiss();
-            } catch {
-              Alert.alert(
-                "Couldn't Delete Account",
-                "The account was not deleted. Please try again.",
-              );
-            }
-          },
-        },
-      ]);
-    } catch {
-      Alert.alert(
-        "Couldn't Check Recurring Rules",
-        "The account was not deleted. Please try again.",
-      );
-    }
-  }
-
   return (
     <CreateResourceBottomSheet
       autoPresent
       content={
-        <AccountFormContent
-          amountEditable={false}
-          currencyExpanded={false}
-          form={form}
-          lockedBalanceCents={account.balance}
-          onColorChange={handleColorChange}
-          onCurrencyCollapse={() => undefined}
-          onCurrencyExpandToggle={() => undefined}
-          onIconChange={handleIconChange}
-          onTypeChange={handleTypeChange}
-        />
+        <>
+          <AccountFormContent
+            amountEditable={false}
+            currencyExpanded={false}
+            form={form}
+            lockedBalanceCents={account.balance}
+            onColorChange={handleColorChange}
+            onCurrencyCollapse={() => undefined}
+            onCurrencyExpandToggle={() => undefined}
+            onIconChange={handleIconChange}
+            onTypeChange={handleTypeChange}
+          />
+          <AccountLifecycleActions account={account} onCompleted={onUpdated} />
+        </>
       }
       footer={
         <form.Subscribe selector={(state) => state.isSubmitting}>
@@ -107,12 +76,6 @@ export function AccountEditSheet({ account, onDismiss, onUpdated }: AccountEditS
             />
           )}
         </form.Subscribe>
-      }
-      headerRight={
-        <ResourceSheetDeleteButton
-          label={`Delete ${account.name}`}
-          onPress={() => void handleDelete()}
-        />
       }
       onDismiss={onDismiss}
       title="Edit Account"

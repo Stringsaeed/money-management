@@ -181,4 +181,29 @@ describe("ledger cache coherence behavior", () => {
     unsubscribe();
     queryClient.clear();
   });
+
+  it("keeps a failed budget refresh visible after a committed Account archive", async () => {
+    const queryClient = createQueryClient();
+    const refetchError = new Error("projection refresh failed");
+    const queryFn = jest.fn().mockResolvedValueOnce("before").mockRejectedValueOnce(refetchError);
+    const queryKey = budgetKeys.projection("USD", "2026-08");
+    const options = { queryKey, queryFn, staleTime: Infinity };
+    await queryClient.fetchQuery(options);
+    const observer = new QueryObserver(queryClient, options);
+    const unsubscribe = observer.subscribe(() => undefined);
+
+    await expect(
+      cohereLedgerCache(queryClient, {
+        kind: "account.archived",
+        id: "account-1",
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(queryClient.getQueryState(queryKey)).toMatchObject({
+      error: refetchError,
+      status: "error",
+    });
+    unsubscribe();
+    queryClient.clear();
+  });
 });

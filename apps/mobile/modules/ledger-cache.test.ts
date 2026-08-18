@@ -45,7 +45,9 @@ describe("ledger query keys", () => {
 
     expect({
       accountAll: accountKeys.all,
+      accountManagement: accountKeys.management,
       accountBalances: accountKeys.balances,
+      accountManagementBalances: accountKeys.managementBalances,
       accountDetail: accountKeys.detail("account-1"),
       categoryAll: categoryKeys.all,
       categoryManagement: categoryKeys.management,
@@ -65,7 +67,9 @@ describe("ledger query keys", () => {
       budgetProjection: budgetKeys.projection("USD", "2026-08"),
     }).toEqual({
       accountAll: ["accounts"],
+      accountManagement: ["accounts", "management"],
       accountBalances: ["account-balances"],
+      accountManagementBalances: ["account-balances", "management"],
       accountDetail: ["accounts", "account-1"],
       categoryAll: ["categories"],
       categoryManagement: ["categories", "management"],
@@ -121,6 +125,25 @@ describe("cohereLedgerCache", () => {
         ["accounts"],
         ["account-balances"],
         ["transactions"],
+        ["recurring-rules"],
+        ["budgeting", "projections"],
+      ],
+    },
+    {
+      change: { kind: "account.archived", id: "account-1" },
+      expectedKeys: [
+        ["accounts"],
+        ["account-balances"],
+        ["transactions"],
+        ["recurring-rules"],
+        ["budgeting", "projections"],
+      ],
+    },
+    {
+      change: { kind: "account.restored", id: "account-1" },
+      expectedKeys: [
+        ["accounts"],
+        ["account-balances"],
         ["recurring-rules"],
         ["budgeting", "projections"],
       ],

@@ -145,14 +145,6 @@ export default function RootLayout() {
                             />
                             <Stack.Screen name="account/[id]" options={{ headerShown: false }} />
                             <Stack.Screen
-                              name="account/[id]/edit"
-                              options={{
-                                presentation: "modal",
-                                title: "Edit Account",
-                                headerTransparent: false,
-                              }}
-                            />
-                            <Stack.Screen
                               name="category/new"
                               options={{
                                 presentation: "modal",

@@ -12,19 +12,25 @@ import { createBudgetingDrizzleSchema } from "./budgeting-drizzle-schema";
 
 // ── Accounts ──────────────────────────────────────────────────────────────────
 
-export const accounts = sqliteTable("accounts", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  type: text("type").notNull(), // AccountType
-  currency: text("currency").notNull().default("USD"),
-  color: text("color").notNull().default("#4A90D9"),
-  icon: text("icon").notNull().default("banknote.fill"),
-  initialBalance: integer("initial_balance").notNull().default(0), // cents
-  excludeFromTotal: integer("exclude_from_total", { mode: "boolean" }).notNull().default(false),
-  sortOrder: integer("sort_order").notNull().default(0),
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull(),
-});
+export const accounts = sqliteTable(
+  "accounts",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    type: text("type").notNull(), // AccountType
+    currency: text("currency").notNull().default("USD"),
+    color: text("color").notNull().default("#4A90D9"),
+    icon: text("icon").notNull().default("banknote.fill"),
+    initialBalance: integer("initial_balance").notNull().default(0), // cents
+    excludeFromTotal: integer("exclude_from_total", { mode: "boolean" }).notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    lifecycle: text("lifecycle").notNull().default("active"),
+    lifecycleChangedAt: text("lifecycle_changed_at"),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [check("account_lifecycle", sql`${table.lifecycle} IN ('active', 'archived')`)],
+);
 
 // ── Categories ─────────────────────────────────────────────────────────────────
 

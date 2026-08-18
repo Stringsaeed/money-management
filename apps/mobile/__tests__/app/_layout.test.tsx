@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react-native";
 import RootLayout from "@/app/_layout";
 
 const mockMarkDatabaseReset = jest.fn();
+const mockMigrateAccountLifecycle = jest.fn();
 const mockMigrateBudgeting = jest.fn();
 const mockMigrateCategoryLifecycle = jest.fn();
 const mockMigrateRecurringRules = jest.fn();
@@ -88,6 +89,10 @@ jest.mock("@/db/budgeting-migration", () => ({
   migrateBudgeting: (...args: unknown[]) => mockMigrateBudgeting(...args),
 }));
 
+jest.mock("@/db/account-lifecycle-migration", () => ({
+  migrateAccountLifecycle: (...args: unknown[]) => mockMigrateAccountLifecycle(...args),
+}));
+
 jest.mock("@/db/category-lifecycle-migration", () => ({
   migrateCategoryLifecycle: (...args: unknown[]) => mockMigrateCategoryLifecycle(...args),
 }));
@@ -125,6 +130,7 @@ jest.mock("@/components/recurring/recurring-settlement-banner", () => ({
 describe("app/_layout", () => {
   beforeEach(() => {
     mockMarkDatabaseReset.mockReset();
+    mockMigrateAccountLifecycle.mockReset().mockResolvedValue(undefined);
     mockMigrateBudgeting.mockReset().mockResolvedValue(undefined);
     mockMigrateCategoryLifecycle.mockReset().mockResolvedValue(undefined);
     mockMigrateRecurringRules.mockReset();
@@ -170,6 +176,7 @@ describe("app/_layout", () => {
     );
     expect(mockMigrateBudgeting).toHaveBeenCalledWith(database);
     expect(mockMigrateCategoryLifecycle).toHaveBeenCalledWith(database);
+    expect(mockMigrateAccountLifecycle).toHaveBeenCalledWith(database);
     expect(mockSeedDatabase).toHaveBeenCalledWith("drizzle-database");
     expect(mockRunMigrations.mock.invocationCallOrder[0]).toBeLessThan(
       mockMigrateRecurringRules.mock.invocationCallOrder[0]!,
@@ -181,6 +188,9 @@ describe("app/_layout", () => {
       mockMigrateCategoryLifecycle.mock.invocationCallOrder[0]!,
     );
     expect(mockMigrateCategoryLifecycle.mock.invocationCallOrder[0]).toBeLessThan(
+      mockMigrateAccountLifecycle.mock.invocationCallOrder[0]!,
+    );
+    expect(mockMigrateAccountLifecycle.mock.invocationCallOrder[0]).toBeLessThan(
       mockSeedDatabase.mock.invocationCallOrder[0]!,
     );
   });

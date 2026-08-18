@@ -4,13 +4,16 @@ import { useSQLiteContext } from "expo-sqlite";
 
 import { useDatabase } from "@/db/client";
 import { accounts, transactions } from "@/db/schema";
+import { updateAccountWithRecurringRules } from "@/modules/account-recurring-coordinator";
 import {
-  deleteAccountWithRecurringRules,
+  archiveAccount,
+  deleteAccount,
+  previewAccountArchival,
   previewAccountDeletion,
-  updateAccountWithRecurringRules,
-} from "@/modules/account-recurring-coordinator";
+  restoreAccount,
+} from "@/modules/accounts/account-lifecycle";
 import { accountKeys, cohereLedgerCache } from "@/modules/ledger-cache";
-import { nowIso } from "@/utils/date";
+import { nowIso, toDateString } from "@/utils/date";
 import { generateId } from "@/utils/id";
 import type { Account, AccountWithBalance } from "@/types";
 
@@ -20,8 +23,13 @@ export function useAccounts() {
   const db = useDatabase();
   return useQuery({
     queryKey: accountKeys.all,
-    queryFn: () =>
-      db.select().from(accounts).orderBy(accounts.sortOrder, accounts.createdAt).all() as Account[],
+    queryFn: async () =>
+      (await db
+        .select()
+        .from(accounts)
+        .where(eq(accounts.lifecycle, "active"))
+        .orderBy(accounts.sortOrder, accounts.createdAt)
+        .all()) as Account[],
   });
 }
 
@@ -35,16 +43,26 @@ export function useAccount(id: string) {
 }
 
 export function useAccountsWithBalances() {
+  return useAccountBalances(false);
+}
+
+export function useAllAccountsWithBalances() {
+  return useAccountBalances(true);
+}
+
+function useAccountBalances(includeArchived: boolean) {
   const db = useDatabase();
   return useQuery({
-    queryKey: accountKeys.balances,
+    queryKey: includeArchived ? accountKeys.managementBalances : accountKeys.balances,
     queryFn: async (): Promise<AccountWithBalance[]> => {
       // Fetch all accounts
-      const allAccounts = (await db
-        .select()
-        .from(accounts)
-        .orderBy(accounts.sortOrder, accounts.createdAt)
-        .all()) as Account[];
+      const baseQuery = db.select().from(accounts);
+      const allAccounts = (await (includeArchived
+        ? baseQuery.orderBy(accounts.sortOrder, accounts.createdAt).all()
+        : baseQuery
+            .where(eq(accounts.lifecycle, "active"))
+            .orderBy(accounts.sortOrder, accounts.createdAt)
+            .all())) as Account[];
 
       // Compute balance for each account via SQL
       // balance = initialBalance + SUM(income) - SUM(expense) + SUM(transfer-in) - SUM(transfer-out)
@@ -88,10 +106,19 @@ export function useCreateAccount() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: Omit<Account, "id" | "createdAt" | "updatedAt">) => {
+    mutationFn: async (
+      data: Omit<Account, "id" | "createdAt" | "updatedAt" | "lifecycle" | "lifecycleChangedAt">,
+    ) => {
       const now = nowIso();
       const id = generateId();
-      await db.insert(accounts).values({ ...data, id, createdAt: now, updatedAt: now });
+      await db.insert(accounts).values({
+        ...data,
+        id,
+        lifecycle: "active",
+        lifecycleChangedAt: null,
+        createdAt: now,
+        updatedAt: now,
+      });
       return id;
     },
     onSuccess: (id) => cohereLedgerCache(qc, { kind: "account.created", id }),
@@ -108,7 +135,7 @@ export function useUpdateAccount() {
       data,
     }: {
       id: string;
-      data: Partial<Omit<Account, "id" | "createdAt">>;
+      data: Partial<Omit<Account, "id" | "createdAt" | "lifecycle" | "lifecycleChangedAt">>;
     }) => {
       return updateAccountWithRecurringRules(database, {
         accountId: id,
@@ -120,10 +147,44 @@ export function useUpdateAccount() {
   });
 }
 
-export function usePreviewAccountDeletion() {
+export function useAccountArchivalPreview(id: string) {
   const database = useSQLiteContext();
+  return useQuery({
+    queryKey: [...accountKeys.detail(id), "archival-preview"],
+    queryFn: () => previewAccountArchival(database, id),
+  });
+}
+
+export function useAccountDeletionPreview(id: string) {
+  const database = useSQLiteContext();
+  return useQuery({
+    queryKey: [...accountKeys.detail(id), "deletion-preview"],
+    queryFn: () => previewAccountDeletion(database, id),
+  });
+}
+
+export function useArchiveAccount() {
+  const database = useSQLiteContext();
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => previewAccountDeletion(database, id),
+    mutationFn: (id: string) => {
+      const archivedAt = new Date(nowIso());
+      return archiveAccount(database, {
+        accountId: id,
+        localDate: toDateString(archivedAt),
+        now: archivedAt.toISOString(),
+      });
+    },
+    onSuccess: (_, id) => cohereLedgerCache(qc, { kind: "account.archived", id }),
+  });
+}
+
+export function useRestoreAccount() {
+  const database = useSQLiteContext();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => restoreAccount(database, { accountId: id, now: nowIso() }),
+    onSuccess: (_, id) => cohereLedgerCache(qc, { kind: "account.restored", id }),
   });
 }
 
@@ -132,8 +193,7 @@ export function useDeleteAccount() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) =>
-      deleteAccountWithRecurringRules(database, { accountId: id, now: nowIso() }),
+    mutationFn: (id: string) => deleteAccount(database, id),
     onSuccess: (_, id) => cohereLedgerCache(qc, { kind: "account.deleted", id }),
   });
 }

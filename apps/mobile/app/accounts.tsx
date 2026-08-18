@@ -9,26 +9,20 @@ import { AccountFormBottomSheet } from "@/components/account/account-form-sheet"
 import { CoinPlantGraphic } from "@/components/graphics/coin-plant";
 import { Card } from "@/components/settings/card";
 import { Divider } from "@/components/settings/divider";
-import { SwipeableAccountRow } from "@/components/settings/swipeable-account-row";
+import { AccountRow } from "@/components/settings/account-row";
 import { layoutTransition } from "@/components/transaction/constants";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import {
-  useAccountsWithBalances,
-  useDeleteAccount,
-  usePreviewAccountDeletion,
-} from "@/hooks/use-accounts";
+import { useAllAccountsWithBalances } from "@/hooks/use-accounts";
 import type { AccountWithBalance } from "@/types";
 
 export default function AccountsScreen() {
   const [editingAccount, setEditingAccount] = useState<AccountWithBalance | null>(null);
-  const { data: accounts = [] } = useAccountsWithBalances();
-  const deleteAccount = useDeleteAccount();
-  const previewAccountDeletion = usePreviewAccountDeletion();
+  const { data: accounts = [] } = useAllAccountsWithBalances();
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-surface safe-bottom">
       <ScrollView
         className="flex-1"
         contentInsetAdjustmentBehavior="automatic"
@@ -52,12 +46,7 @@ export default function AccountsScreen() {
                 layout={layoutTransition}
               >
                 {i > 0 && <Divider />}
-                <SwipeableAccountRow
-                  account={account}
-                  onDelete={deleteAccount.mutateAsync}
-                  onPreviewDelete={previewAccountDeletion.mutateAsync}
-                  onPress={() => setEditingAccount(account)}
-                />
+                <AccountRow account={account} onPress={() => setEditingAccount(account)} />
               </Animated.View>
             ))}
           </Card>
