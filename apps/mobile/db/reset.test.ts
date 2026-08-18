@@ -74,6 +74,16 @@ describe("db/reset", () => {
     ]);
   });
 
+  it("preserves existing tables when startup is migrating a supported ledger", async () => {
+    const { db, execAsync } = createDb({
+      storedVersion: 0,
+      tables: ["accounts", "transactions", "__drizzle_migrations"],
+    });
+
+    await expect(resetDatabaseIfNeeded(db, { preserveExistingTables: true })).resolves.toBe(true);
+    expect(execAsync).not.toHaveBeenCalled();
+  });
+
   it("excludes sqlite internal tables from the wipe", async () => {
     const { db, getAllAsync } = createDb({ storedVersion: 0 });
 

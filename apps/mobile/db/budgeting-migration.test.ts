@@ -4,6 +4,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { applyLegacyMigrations, createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
 
 import { migrateBudgeting } from "./budgeting-migration";
+import { CREATE_BUDGETING_SCHEMA_SQL } from "./budgeting-schema";
 import { migrateRecurringRules } from "./recurring-rules-migration";
 
 const databases: { database: SQLiteDatabase; close: VoidFunction }[] = [];
@@ -72,6 +73,35 @@ describe("migrateBudgeting", () => {
     await expect(migrateBudgeting(database)).rejects.toThrow(
       "stamped as current but its schema is incomplete",
     );
+  });
+
+  it("refuses a complete-looking schema whose constraints do not match", async () => {
+    const database = await setup();
+    await database.execAsync(
+      CREATE_BUDGETING_SCHEMA_SQL.replace("amount_minor INTEGER NOT NULL", "amount_minor INTEGER"),
+    );
+
+    await expect(migrateBudgeting(database)).rejects.toThrow(
+      "does not match the supported structure",
+    );
+    await expect(
+      database.getFirstAsync(
+        "SELECT value FROM app_settings WHERE key = ?",
+        "budgetingMigrationVersion",
+      ),
+    ).resolves.toBeNull();
+  });
+
+  it("refuses an unsupported migration version instead of treating it as current", async () => {
+    const database = await setup();
+    await migrateBudgeting(database);
+    await database.runAsync(
+      "UPDATE app_settings SET value = ? WHERE key = ?",
+      "2",
+      "budgetingMigrationVersion",
+    );
+
+    await expect(migrateBudgeting(database)).rejects.toThrow("unsupported migration version 2");
   });
 
   it("is idempotent and preserves supported current budgeting data", async () => {

@@ -83,15 +83,17 @@ const transactionChangeQueryKeys = [
   accountKeys.balances,
   monthSummaryKeys.all,
   transactionDateRangeKeys.all,
+  budgetKeys.projections,
 ] as const;
 
 const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKey[]> = {
-  "account.created": [accountKeys.all, accountKeys.balances],
+  "account.created": [accountKeys.all, accountKeys.balances, budgetKeys.projections],
   "account.updated": [
     accountKeys.all,
     accountKeys.balances,
     transactionKeys.all,
     recurringRuleKeys.all,
+    budgetKeys.projections,
   ],
   "account.deleted": [
     accountKeys.all,
@@ -100,6 +102,7 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
     monthSummaryKeys.all,
     transactionDateRangeKeys.all,
     recurringRuleKeys.all,
+    budgetKeys.projections,
   ],
   "category.created": [categoryKeys.all],
   "category.batch": [categoryKeys.all, transactionKeys.all],
@@ -113,7 +116,7 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
 const recurringEffectQueryKeys: Record<RecurringEffect, readonly QueryKey[]> = {
   rules: [recurringRuleKeys.all],
   upcoming: [recurringRuleKeys.upcomingAll],
-  ledger: [transactionKeys.all],
+  ledger: [transactionKeys.all, budgetKeys.projections],
   balances: [accountKeys.balances],
   summaries: [monthSummaryKeys.all, transactionDateRangeKeys.all],
 };

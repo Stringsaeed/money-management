@@ -8,6 +8,7 @@ import {
 
 const MIGRATION_KEY = "budgetingMigrationVersion";
 const MIGRATION_VERSION = 1;
+const EXPECTED_TABLE_SQL = expectedTableSql();
 
 export async function migrateBudgeting(database: SQLiteDatabase): Promise<void> {
   await database.execAsync("PRAGMA foreign_keys = ON");
@@ -21,7 +22,12 @@ export async function migrateBudgeting(database: SQLiteDatabase): Promise<void> 
     );
     const existingTables = await existingBudgetingTables(transaction);
 
-    if (Number(recordedVersion?.value) >= MIGRATION_VERSION) {
+    if (recordedVersion !== null) {
+      if (recordedVersion.value !== String(MIGRATION_VERSION)) {
+        throw new Error(
+          `Budgeting migration found unsupported migration version ${recordedVersion.value}. Restore a supported database before startup.`,
+        );
+      }
       await assertCurrentSchema(transaction, existingTables);
       return;
     }
@@ -65,7 +71,39 @@ async function assertCompleteBudgetingSchema(database: SQLiteDatabase): Promise<
     if (REQUIRED_BUDGETING_COLUMNS[table].some((column) => !columnNames.has(column))) {
       throw incompleteCurrentSchemaError();
     }
+
+    const schema = await database.getFirstAsync<{ sql: string | null }>(
+      "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?",
+      table,
+    );
+    if (normalizeSchemaSql(schema?.sql ?? "") !== EXPECTED_TABLE_SQL.get(table)) {
+      throw new Error(
+        `Budgeting table ${table} does not match the supported structure. Restore a supported database before startup.`,
+      );
+    }
   }
+}
+
+function expectedTableSql(): ReadonlyMap<string, string> {
+  const definitions = CREATE_BUDGETING_SCHEMA_SQL.split(";")
+    .map((statement) => statement.trim())
+    .filter(Boolean);
+
+  return new Map(
+    definitions.map((definition) => {
+      const match = /^CREATE TABLE\s+(\w+)/i.exec(definition);
+      if (!match?.[1])
+        throw new Error("Budgeting schema contains an unrecognized table definition.");
+      return [match[1], normalizeSchemaSql(definition)] as const;
+    }),
+  );
+}
+
+function normalizeSchemaSql(source: string): string {
+  return source
+    .toLowerCase()
+    .replaceAll(/["`\[\]]/g, "")
+    .replaceAll(/\s+/g, "");
 }
 
 async function assertValidForeignKeys(database: SQLiteDatabase): Promise<void> {

@@ -19,7 +19,9 @@ export async function initializeDatabase(
   options: InitializeDatabaseOptions = {},
 ): Promise<void> {
   const drizzleDatabase = drizzle(database);
-  const didReset = await resetDatabaseIfNeeded(database);
+  const shouldMarkReset = await resetDatabaseIfNeeded(database, {
+    preserveExistingTables: true,
+  });
 
   await runMigrations(drizzleDatabase);
 
@@ -32,6 +34,6 @@ export async function initializeDatabase(
   });
   await migrateBudgeting(database);
 
-  if (didReset) await markDatabaseReset(drizzleDatabase);
+  if (shouldMarkReset) await markDatabaseReset(drizzleDatabase);
   await seedDatabase(drizzleDatabase);
 }

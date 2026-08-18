@@ -97,3 +97,18 @@ export async function applyLegacyMigrations(database: SQLiteDatabase): Promise<v
     await database.execAsync(source.replaceAll("--> statement-breakpoint", ""));
   }
 }
+
+export async function markLegacyMigrationsApplied(database: SQLiteDatabase): Promise<void> {
+  await database.execAsync(`
+    CREATE TABLE __drizzle_migrations (
+      id SERIAL PRIMARY KEY,
+      hash TEXT NOT NULL,
+      created_at NUMERIC
+    );
+  `);
+  await database.runAsync(
+    "INSERT INTO __drizzle_migrations (hash, created_at) VALUES (?, ?)",
+    "",
+    1_787_000_000_000,
+  );
+}
