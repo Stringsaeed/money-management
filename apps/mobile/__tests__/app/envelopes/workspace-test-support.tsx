@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render } from "@testing-library/react-native";
 import type { SQLiteDatabase } from "expo-sqlite";
