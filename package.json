@@ -86,6 +86,7 @@
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@rnx-kit/oxlint-config": "^1.0.3",
+    "@swmansion/argent": "^0.20.0",
     "@tailwindcss/postcss": "^4.2.2",
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "29.5.14",

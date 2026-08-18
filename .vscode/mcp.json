@@ -2,8 +2,9 @@
   "servers": {
     "argent": {
       "type": "stdio",
-      "command": "argent",
+      "command": "node",
       "args": [
+        "node_modules/@swmansion/argent/dist/cli.js",
         "mcp"
       ]
     }
