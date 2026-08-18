@@ -1,4 +1,4 @@
-import type { AccountDependencyFacts } from "./account-dependency-read";
+import type { AccountDependencyFacts, BudgetTransactionRow } from "./account-dependency-read";
 import { requireCurrency, requireMinorUnits } from "./validation";
 
 export function addBudgetMoney(
@@ -39,6 +39,16 @@ export function validateAccountDependencyFacts(facts: AccountDependencyFacts): v
       throw unsupportedTransactionType(transaction.type);
     }
   }
+}
+
+export function isUnsupportedCrossCurrencyTransfer(
+  transaction: BudgetTransactionRow,
+): transaction is BudgetTransactionRow & { destinationCurrency: string; type: "transfer" } {
+  return (
+    transaction.type === "transfer" &&
+    transaction.destinationCurrency !== null &&
+    transaction.sourceCurrency !== transaction.destinationCurrency
+  );
 }
 
 export function unsupportedTransactionType(type: unknown): Error {

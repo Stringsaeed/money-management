@@ -35,6 +35,7 @@ export async function previewAccountArchival(
   const budgetDependencies = await createBudgetingCoordinator(database).getAccountDependencies(
     accountId,
     period,
+    { endingMembership: true },
   );
   if (budgetDependencies.length > 0) {
     blockers.push({

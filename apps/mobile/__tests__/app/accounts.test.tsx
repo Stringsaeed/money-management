@@ -96,6 +96,14 @@ jest.mock("@/hooks/use-accounts", () => ({
                     amountMinor: 10_00,
                     recoveryAction: "Assign Money to cover this card spending.",
                   },
+                  {
+                    kind: "unsupported-cross-currency-transfer",
+                    currency: "USD",
+                    destinationCurrency: "EUR",
+                    amountMinor: 20_00,
+                    recoveryAction: "Correct or remove this Transfer.",
+                    transactionId: "transfer-cross-currency",
+                  },
                 ],
                 recoveryAction:
                   "Resolve every listed budget dependency before archiving this Account.",
@@ -147,6 +155,7 @@ describe("app/accounts", () => {
     expect(screen.getByText(/Cash Envelope Overspending:/)).toBeOnTheScreen();
     expect(screen.getByText(/Card Payment Reserve:/)).toBeOnTheScreen();
     expect(screen.getByText(/Unfunded Card Spending:/)).toBeOnTheScreen();
+    expect(screen.getByText(/Unsupported Cross-currency Transfer:/)).toBeOnTheScreen();
     expect(screen.getByText("Make an eligible Card Payment.")).toBeOnTheScreen();
     expect(screen.getByText("Assign Money to cover this card spending.")).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Review Everyday balance" })).toBeOnTheScreen();
@@ -154,6 +163,9 @@ describe("app/accounts", () => {
       screen.getByRole("button", { name: "Review blocking Recurring Rules" }),
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Review blocking card activity" })).toBeOnTheScreen();
+    expect(
+      screen.getByRole("button", { name: "Review unsupported cross-currency Transfers" }),
+    ).toBeOnTheScreen();
     expect(
       screen.getByRole("button", { name: "Review blocking budget dependencies" }),
     ).toBeOnTheScreen();

@@ -89,7 +89,7 @@ describe("Account lifecycle", () => {
             {
               kind: "budget-shortfall",
               currency: "USD",
-              amountMinor: 25_00,
+              amountMinor: 50_00,
               recoveryAction:
                 "Increase the same-currency Funding Pool or move Money back to Unassigned until the shortfall is zero.",
             },
@@ -380,6 +380,88 @@ describe("Account lifecycle", () => {
     });
   });
 
+  it("evaluates the budget after current-period Funding Membership ends", async () => {
+    const database = await setup();
+    await insertAccount(database, "account-target", 100_00);
+    await activateWorkspace(database, "account-target", "2026-08-01");
+    await insertEnvelope(database, {
+      assignmentAmount: 100_00,
+      categoryId: "category-membership-end",
+      suffix: "membership-end",
+    });
+    await database.runAsync(
+      `INSERT INTO transactions (
+        id, type, amount, currency, date, account_id, category_id, is_recurring,
+        description, created_at, updated_at
+      ) VALUES ('membership-end-spend', 'expense', 10000, 'USD', '2026-08-10',
+        'account-target', 'category-membership-end', 0, '', ?, ?)`,
+      NOW,
+      NOW,
+    );
+
+    await expect(
+      previewAccountArchival(database, "account-target", "2026-08-18"),
+    ).resolves.toMatchObject({
+      canArchive: false,
+      blockers: [
+        {
+          kind: "budget-dependencies",
+          dependencies: [{ kind: "budget-shortfall", amountMinor: 100_00 }],
+        },
+      ],
+    });
+    await expect(
+      archiveAccount(database, {
+        accountId: "account-target",
+        localDate: "2026-08-18",
+        now: NOW,
+      }),
+    ).rejects.toBeInstanceOf(AccountArchiveBlockedError);
+    await expect(
+      database.getFirstAsync("SELECT lifecycle FROM accounts WHERE id = ?", "account-target"),
+    ).resolves.toEqual({ lifecycle: "active" });
+  });
+
+  it("blocks unsupported cross-currency Transfers without replaying their amount", async () => {
+    const database = await setup();
+    await insertAccount(database, "account-target", 100_00);
+    await insertAccount(database, "account-eur", 0, "checking", "EUR");
+    await activateWorkspace(database, "account-target", "2026-08-01");
+    await database.runAsync(
+      `INSERT INTO transactions (
+        id, type, amount, currency, date, account_id, to_account_id, is_recurring,
+        description, created_at, updated_at
+      ) VALUES ('cross-currency-transfer', 'transfer', 10000, 'USD', '2026-08-10',
+        'account-target', 'account-eur', 0, '', ?, ?)`,
+      NOW,
+      NOW,
+    );
+
+    await expect(previewAccountArchival(database, "account-target", "2026-08-18")).resolves.toEqual(
+      {
+        accountId: "account-target",
+        canArchive: false,
+        blockers: [
+          {
+            kind: "budget-dependencies",
+            dependencies: [
+              {
+                kind: "unsupported-cross-currency-transfer",
+                amountMinor: 100_00,
+                currency: "USD",
+                destinationCurrency: "EUR",
+                recoveryAction:
+                  "Correct this Transfer to use same-currency Accounts, or remove it before archiving.",
+                transactionId: "cross-currency-transfer",
+              },
+            ],
+            recoveryAction: "Resolve every listed budget dependency before archiving this Account.",
+          },
+        ],
+      },
+    );
+  });
+
   it("shares Envelope availability with cash spending and funds older card deficits first", async () => {
     const database = await setup();
     await insertAccount(database, "card-shared", 0, "credit_card");
@@ -633,6 +715,13 @@ describe("Account lifecycle", () => {
   it("rejects new activity and Funding Membership for an archived Account", async () => {
     const database = await setup();
     await insertAccount(database, "account-main", 0);
+    await insertTransaction(database, {
+      id: "transaction-existing",
+      accountId: "account-main",
+      amount: 0,
+      date: "2026-07-03",
+    });
+    await activateWorkspace(database, "account-main", "2026-07-01");
     await archiveAccount(database, {
       accountId: "account-main",
       localDate: "2026-08-18",
@@ -653,6 +742,30 @@ describe("Account lifecycle", () => {
     await expect(activateWorkspace(database, "account-main", "2026-08-18")).rejects.toThrow(
       "not eligible for Funding Membership",
     );
+    await expect(
+      database.runAsync(
+        "UPDATE transactions SET amount = 100 WHERE id = ?",
+        "transaction-existing",
+      ),
+    ).rejects.toThrow("Restore the Archived Account before correcting its activity");
+    await expect(
+      database.runAsync("DELETE FROM transactions WHERE id = ?", "transaction-existing"),
+    ).rejects.toThrow("Restore the Archived Account before correcting its activity");
+    await expect(
+      database.runAsync("UPDATE accounts SET initial_balance = 100 WHERE id = ?", "account-main"),
+    ).rejects.toThrow("Restore the Archived Account before correcting historical details");
+    await expect(
+      database.runAsync("UPDATE accounts SET currency = 'EUR' WHERE id = ?", "account-main"),
+    ).rejects.toThrow("Restore the Archived Account before correcting historical details");
+    await expect(
+      database.runAsync(
+        "UPDATE funding_memberships SET effective_to_period = NULL WHERE account_id = ?",
+        "account-main",
+      ),
+    ).rejects.toThrow("Archived Account cannot join a Funding Pool");
+    await expect(
+      database.runAsync("DELETE FROM funding_memberships WHERE account_id = ?", "account-main"),
+    ).rejects.toThrow("Restore the Archived Account before correcting Funding Membership");
   });
 });
 
@@ -661,15 +774,17 @@ async function insertAccount(
   id: string,
   initialBalance: number,
   type = "checking",
+  currency = "USD",
 ): Promise<void> {
   await database.runAsync(
     `INSERT INTO accounts (
       id, name, type, currency, color, icon, initial_balance,
       exclude_from_total, sort_order, created_at, updated_at
-    ) VALUES (?, ?, ?, 'USD', '#8B9D83', '🏦', ?, 0, 0, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, '#8B9D83', '🏦', ?, 0, 0, ?, ?)`,
     id,
     id,
     type,
+    currency,
     initialBalance,
     NOW,
     NOW,

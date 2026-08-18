@@ -3,7 +3,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { runInTransaction } from "@/modules/recurring-rules/persistence";
 
 const MIGRATION_KEY = "accountLifecycleMigrationVersion";
-const MIGRATION_VERSION = 2;
+const MIGRATION_VERSION = 3;
 const REQUIRED_COLUMNS = ["lifecycle", "lifecycle_changed_at"] as const;
 const EXPECTED_COLUMNS = {
   lifecycle: { type: "TEXT", notnull: 1, defaultValue: "'active'", primaryKey: 0 },
@@ -27,6 +27,17 @@ const ACCOUNT_BUDGET_HISTORY_TRIGGER = `CREATE TRIGGER record_account_budget_his
   END`;
 
 const ACTIVE_ACCOUNT_GUARDS = {
+  archived_account_history_fields_update: `CREATE TRIGGER archived_account_history_fields_update
+    BEFORE UPDATE OF initial_balance, currency, type ON accounts
+    WHEN OLD.lifecycle <> 'active'
+      AND (
+        NEW.initial_balance IS NOT OLD.initial_balance
+        OR NEW.currency IS NOT OLD.currency
+        OR NEW.type IS NOT OLD.type
+      )
+    BEGIN
+      SELECT RAISE(ABORT, 'Restore the Archived Account before correcting historical details.');
+    END`,
   active_account_transaction_insert: `CREATE TRIGGER active_account_transaction_insert
     BEFORE INSERT ON transactions
     WHEN EXISTS (
@@ -37,14 +48,23 @@ const ACTIVE_ACCOUNT_GUARDS = {
       SELECT RAISE(ABORT, 'Archived Account is unavailable for new activity.');
     END`,
   active_account_transaction_update: `CREATE TRIGGER active_account_transaction_update
-    BEFORE UPDATE OF account_id, to_account_id ON transactions
-    WHEN (NEW.account_id IS NOT OLD.account_id OR NEW.to_account_id IS NOT OLD.to_account_id)
-      AND EXISTS (
-        SELECT 1 FROM accounts
-        WHERE id IN (NEW.account_id, NEW.to_account_id) AND lifecycle <> 'active'
-      )
+    BEFORE UPDATE ON transactions
+    WHEN EXISTS (
+      SELECT 1 FROM accounts
+      WHERE id IN (OLD.account_id, OLD.to_account_id, NEW.account_id, NEW.to_account_id)
+        AND lifecycle <> 'active'
+    )
     BEGIN
-      SELECT RAISE(ABORT, 'Archived Account is unavailable for new activity.');
+      SELECT RAISE(ABORT, 'Restore the Archived Account before correcting its activity.');
+    END`,
+  active_account_transaction_delete: `CREATE TRIGGER active_account_transaction_delete
+    BEFORE DELETE ON transactions
+    WHEN EXISTS (
+      SELECT 1 FROM accounts
+      WHERE id IN (OLD.account_id, OLD.to_account_id) AND lifecycle <> 'active'
+    )
+    BEGIN
+      SELECT RAISE(ABORT, 'Restore the Archived Account before correcting its activity.');
     END`,
   active_account_recurring_rule_insert: `CREATE TRIGGER active_account_recurring_rule_insert
     BEFORE INSERT ON recurring_rules
@@ -56,12 +76,12 @@ const ACTIVE_ACCOUNT_GUARDS = {
       SELECT RAISE(ABORT, 'Archived Account is unavailable for new activity.');
     END`,
   active_account_recurring_rule_update: `CREATE TRIGGER active_account_recurring_rule_update
-    BEFORE UPDATE OF account_id, to_account_id ON recurring_rules
-    WHEN (NEW.account_id IS NOT OLD.account_id OR NEW.to_account_id IS NOT OLD.to_account_id)
-      AND EXISTS (
-        SELECT 1 FROM accounts
-        WHERE id IN (NEW.account_id, NEW.to_account_id) AND lifecycle <> 'active'
-      )
+    BEFORE UPDATE ON recurring_rules
+    WHEN EXISTS (
+      SELECT 1 FROM accounts
+      WHERE id IN (OLD.account_id, OLD.to_account_id, NEW.account_id, NEW.to_account_id)
+        AND lifecycle <> 'active'
+    )
     BEGIN
       SELECT RAISE(ABORT, 'Archived Account is unavailable for new activity.');
     END`,
@@ -74,13 +94,21 @@ const ACTIVE_ACCOUNT_GUARDS = {
       SELECT RAISE(ABORT, 'Archived Account cannot join a Funding Pool.');
     END`,
   active_account_funding_membership_update: `CREATE TRIGGER active_account_funding_membership_update
-    BEFORE UPDATE OF account_id ON funding_memberships
-    WHEN NEW.account_id IS NOT OLD.account_id
-      AND EXISTS (
-        SELECT 1 FROM accounts WHERE id = NEW.account_id AND lifecycle <> 'active'
-      )
+    BEFORE UPDATE ON funding_memberships
+    WHEN EXISTS (
+      SELECT 1 FROM accounts
+      WHERE id IN (OLD.account_id, NEW.account_id) AND lifecycle <> 'active'
+    )
     BEGIN
       SELECT RAISE(ABORT, 'Archived Account cannot join a Funding Pool.');
+    END`,
+  active_account_funding_membership_delete: `CREATE TRIGGER active_account_funding_membership_delete
+    BEFORE DELETE ON funding_memberships
+    WHEN EXISTS (
+      SELECT 1 FROM accounts WHERE id = OLD.account_id AND lifecycle <> 'active'
+    )
+    BEGIN
+      SELECT RAISE(ABORT, 'Restore the Archived Account before correcting Funding Membership.');
     END`,
 } as const;
 
@@ -101,10 +129,14 @@ export async function migrateAccountLifecycle(database: SQLiteDatabase): Promise
       MIGRATION_KEY,
     );
     if (recordedVersion) {
-      if (recordedVersion.value === "1") {
+      if (recordedVersion.value === "1" || recordedVersion.value === "2") {
         await assertAccountColumns(transaction);
-        await assertActiveAccountGuards(transaction);
-        await installAccountBudgetHistory(transaction);
+        if (recordedVersion.value === "1") {
+          await installAccountBudgetHistory(transaction);
+        } else {
+          await assertAccountBudgetHistory(transaction);
+        }
+        await replaceActiveAccountGuards(transaction);
         await assertCurrentSchema(transaction);
         await recordMigrationVersion(transaction);
         return;
@@ -139,7 +171,7 @@ export async function migrateAccountLifecycle(database: SQLiteDatabase): Promise
     }
 
     await assertAccountColumns(transaction);
-    await transaction.execAsync(`${Object.values(ACTIVE_ACCOUNT_GUARDS).join(";\n")};`);
+    await replaceActiveAccountGuards(transaction);
     await installAccountBudgetHistory(transaction);
     await assertCurrentSchema(transaction);
     await recordMigrationVersion(transaction);
@@ -159,6 +191,13 @@ async function installAccountBudgetHistory(database: SQLiteDatabase): Promise<vo
   await database.execAsync(`${ACCOUNT_BUDGET_HISTORY_TRIGGER};`);
 }
 
+async function replaceActiveAccountGuards(database: SQLiteDatabase): Promise<void> {
+  for (const name of Object.keys(ACTIVE_ACCOUNT_GUARDS)) {
+    await database.execAsync(`DROP TRIGGER IF EXISTS ${name}`);
+  }
+  await database.execAsync(`${Object.values(ACTIVE_ACCOUNT_GUARDS).join(";\n")};`);
+}
+
 async function recordMigrationVersion(database: SQLiteDatabase): Promise<void> {
   await database.runAsync(
     `INSERT INTO app_settings (key, value) VALUES (?, ?)
@@ -175,6 +214,11 @@ async function accountColumns(database: SQLiteDatabase): Promise<Map<string, Tab
 
 async function assertCurrentSchema(database: SQLiteDatabase): Promise<void> {
   await assertAccountColumns(database);
+  await assertAccountBudgetHistory(database);
+  await assertActiveAccountGuards(database);
+}
+
+async function assertAccountBudgetHistory(database: SQLiteDatabase): Promise<void> {
   const historyTable = await database.getFirstAsync<{ sql: string | null }>(
     "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'account_budget_history'",
   );
@@ -185,7 +229,6 @@ async function assertCurrentSchema(database: SQLiteDatabase): Promise<void> {
       "Account budget history does not match the supported structure. Restore a supported database before startup.",
     );
   }
-  await assertActiveAccountGuards(database);
   const historyTrigger = await database.getFirstAsync<{ sql: string | null }>(
     "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = 'record_account_budget_history'",
   );

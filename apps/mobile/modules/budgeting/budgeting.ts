@@ -34,7 +34,7 @@ export function createBudgetingCoordinator(
       return projection;
     },
     getProjection: (request: ProjectionRequest) => getProjection(database, request),
-    getAccountDependencies: (accountId: string, period: string) =>
-      getAccountBudgetDependencies(database, accountId, period),
+    getAccountDependencies: (accountId: string, period: string, dependencyOptions) =>
+      getAccountBudgetDependencies(database, accountId, period, dependencyOptions),
   };
 }
