@@ -94,10 +94,32 @@ export async function getEnvelopeSummaries(
     }),
   );
 
-  return summaries.sort((left, right) => {
+  const normalizedSummaries =
+    lifecycle === "active"
+      ? normalizeEnvelopeSortOrders(summaries)
+      : summaries;
+
+  return normalizedSummaries.sort((left, right) => {
     if (left.health.status !== right.health.status) {
       return left.health.status === "needs_attention" ? -1 : 1;
     }
     return left.sortOrder - right.sortOrder || left.name.localeCompare(right.name);
   });
+}
+
+function normalizeEnvelopeSortOrders(summaries: readonly EnvelopeSummary[]): EnvelopeSummary[] {
+  const orderByEnvelopeId = new Map(
+    [...summaries]
+      .sort(
+        (left, right) =>
+          left.sortOrder - right.sortOrder ||
+          left.name.localeCompare(right.name) ||
+          left.id.localeCompare(right.id),
+      )
+      .map((envelope, sortOrder) => [envelope.id, sortOrder]),
+  );
+  return summaries.map((summary) => ({
+    ...summary,
+    sortOrder: orderByEnvelopeId.get(summary.id) ?? summary.sortOrder,
+  }));
 }

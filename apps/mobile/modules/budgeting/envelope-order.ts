@@ -31,7 +31,11 @@ export async function updateEnvelopeOrder(
   const currentSortOrder = activeEnvelopeIds.indexOf(request.envelopeId);
   if (currentSortOrder === -1) throw new Error(`Envelope ${request.envelopeId} is not active.`);
   const maximumSortOrder = Math.max(0, activeEnvelopeIds.length - 1);
-  const sortOrder = request.requestedSortOrder ?? currentSortOrder;
+  const requestedSortOrder = request.requestedSortOrder;
+  const sortOrder =
+    requestedSortOrder === undefined || requestedSortOrder === request.currentSortOrder
+      ? currentSortOrder
+      : requestedSortOrder;
   requireSortOrder(sortOrder, maximumSortOrder);
   await reorderEnvelope(database, { ...request, currentSortOrder, nextSortOrder: sortOrder });
   return sortOrder;

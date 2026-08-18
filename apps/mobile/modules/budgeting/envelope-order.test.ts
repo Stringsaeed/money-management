@@ -38,6 +38,7 @@ describe("Envelope order", () => {
       color: "#8B9D83",
       categoryIds: ["category-second"],
       positiveRollover: true,
+      sortOrder: 1,
       localDate: "2026-08-19",
       now: "2026-08-19T09:00:00.000Z",
     });

@@ -79,6 +79,40 @@ describe("Envelope workspace list", () => {
       expect(editRowLabels()).toEqual(["Edit Bills Envelope", "Edit Food Envelope"]);
     });
   });
+
+  it("saves an active Envelope after archiving an earlier row", async () => {
+    const { database } = await setupRouteDatabase();
+    await activateRouteWorkspace(database, "USD", 100_00);
+    await insertRouteCategory(database, "category-first", "First");
+    await insertRouteCategory(database, "category-second", "Second");
+    await createRouteEnvelope(database, {
+      id: "envelope-first",
+      name: "First",
+      categoryIds: ["category-first"],
+    });
+    await createRouteEnvelope(database, {
+      id: "envelope-second",
+      name: "Second",
+      categoryIds: ["category-second"],
+    });
+    await database.runAsync(
+      "UPDATE envelopes SET lifecycle = 'archived' WHERE id = 'envelope-first'",
+    );
+    await renderWorkspaceRoute();
+
+    await fireEvent.press(await screen.findByRole("button", { name: "Edit Second Envelope" }));
+    await fireEvent.changeText(screen.getByPlaceholderText("e.g. Groceries"), "Second updated");
+    await fireEvent.press(screen.getByRole("button", { name: "Save Envelope" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Edit Second updated Envelope" })).toBeOnTheScreen();
+    });
+    await expect(
+      database.getFirstAsync<{ sortOrder: number }>(
+        "SELECT sort_order AS sortOrder FROM envelopes WHERE id = 'envelope-second'",
+      ),
+    ).resolves.toEqual({ sortOrder: 0 });
+  });
 });
 
 function editRowLabels(): (string | undefined)[] {
