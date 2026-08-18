@@ -2,6 +2,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 import { migrateAccountLifecycle } from "@/db/account-lifecycle-migration";
 import { migrateBudgeting } from "@/db/budgeting-migration";
+import { migrateCategoryLifecycle } from "@/db/category-lifecycle-migration";
 import { migrateRecurringRules } from "@/db/recurring-rules-migration";
 import { applyLegacyMigrations, createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
 import type { AccountType, TransactionType } from "@/types";
@@ -15,6 +16,7 @@ export async function setupBudgetingDatabase() {
     now: "2026-08-18T08:00:00.000Z",
   });
   await migrateBudgeting(testDatabase.database);
+  await migrateCategoryLifecycle(testDatabase.database);
   await migrateAccountLifecycle(testDatabase.database);
   return testDatabase;
 }

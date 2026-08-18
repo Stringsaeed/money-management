@@ -113,6 +113,8 @@ describe("Budgeting coordinator", () => {
       fundingPool: { currency: "USD", amountMinor: 205_00 },
       unassignedMoney: { currency: "USD", amountMinor: 205_00 },
       budgetHealth: { status: "ready", reasons: [] },
+      envelopes: [],
+      archivedEnvelopes: [],
     });
     await expect(budgeting.getProjection({ currency: "USD", period: "2026-08" })).resolves.toEqual(
       projection,

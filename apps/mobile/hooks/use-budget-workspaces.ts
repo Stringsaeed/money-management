@@ -3,6 +3,7 @@ import { useSQLiteContext } from "expo-sqlite";
 
 import { createBudgetingCoordinator } from "@/modules/budgeting/budgeting";
 import { budgetKeys } from "@/modules/ledger-cache";
+import type { CreateEnvelopeRequest, UpdateEnvelopeRequest } from "@/modules/budgeting/budgeting";
 
 export function useBudgetWorkspaceSelection() {
   const database = useSQLiteContext();
@@ -18,5 +19,40 @@ export function useSelectBudgetWorkspace() {
   return useMutation({
     mutationFn: ({ currency }: { currency: string }) =>
       createBudgetingCoordinator(database, { queryClient }).selectWorkspace({ currency }),
+  });
+}
+
+export function useBudgetProjection(currency: string, period: string) {
+  const database = useSQLiteContext();
+  return useQuery({
+    queryKey: budgetKeys.projection(currency, period),
+    queryFn: () => createBudgetingCoordinator(database).getProjection({ currency, period }),
+  });
+}
+
+export function useEnvelopeFormOptions(currency: string, period: string) {
+  const database = useSQLiteContext();
+  return useQuery({
+    queryKey: budgetKeys.envelopeFormOptionsFor(currency, period),
+    queryFn: () =>
+      createBudgetingCoordinator(database).getEnvelopeFormOptions({ currency, period }),
+  });
+}
+
+export function useCreateBudgetEnvelope() {
+  const database = useSQLiteContext();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: CreateEnvelopeRequest) =>
+      createBudgetingCoordinator(database, { queryClient }).createEnvelope(request),
+  });
+}
+
+export function useUpdateBudgetEnvelope() {
+  const database = useSQLiteContext();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: UpdateEnvelopeRequest) =>
+      createBudgetingCoordinator(database, { queryClient }).updateEnvelope(request),
   });
 }
