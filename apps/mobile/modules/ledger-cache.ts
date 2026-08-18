@@ -23,6 +23,7 @@ export const accountKeys = {
 
 export const categoryKeys = {
   all: ["categories"] as const,
+  management: ["categories", "management"] as const,
   byType: (type: "income" | "expense") => ["categories", type] as const,
   detail: (id: string) => ["categories", id] as const,
 };
@@ -70,6 +71,8 @@ export type LedgerChange =
   | { kind: "category.created"; id: string }
   | { kind: "category.batch" }
   | { kind: "category.updated"; id: string }
+  | { kind: "category.archived"; id: string }
+  | { kind: "category.restored"; id: string }
   | { kind: "category.deleted"; id: string }
   | { kind: "transaction.created"; id: string }
   | { kind: "transaction.updated"; id: string }
@@ -107,7 +110,19 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
   "category.created": [categoryKeys.all],
   "category.batch": [categoryKeys.all, transactionKeys.all],
   "category.updated": [categoryKeys.all, transactionKeys.all],
-  "category.deleted": [categoryKeys.all, transactionKeys.all, recurringRuleKeys.all],
+  "category.archived": [
+    categoryKeys.all,
+    transactionKeys.all,
+    recurringRuleKeys.all,
+    budgetKeys.projections,
+  ],
+  "category.restored": [categoryKeys.all, recurringRuleKeys.all, budgetKeys.projections],
+  "category.deleted": [
+    categoryKeys.all,
+    transactionKeys.all,
+    recurringRuleKeys.all,
+    budgetKeys.projections,
+  ],
   "transaction.created": transactionChangeQueryKeys,
   "transaction.updated": transactionChangeQueryKeys,
   "transaction.deleted": transactionChangeQueryKeys,

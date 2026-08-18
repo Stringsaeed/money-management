@@ -29,6 +29,8 @@ export interface Category {
   icon: string; // emoji
   parentId: string | null; // optional sub-category
   sortOrder: number;
+  lifecycle: "active" | "archived";
+  lifecycleChangedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

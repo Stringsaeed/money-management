@@ -22,8 +22,7 @@ import {
 } from "@/db/schema";
 import { clearSeedVersion } from "@/db/seed";
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
-import { useActiveHousehold } from "@/hooks/use-households";
-import { useCategories } from "@/hooks/use-categories";
+import { useAllCategories } from "@/hooks/use-categories";
 import { useRecurringRulesList } from "@/hooks/use-recurring-rules";
 import { useTransactions } from "@/hooks/use-transactions";
 import { cohereLedgerCache } from "@/modules/ledger-cache";
@@ -33,14 +32,12 @@ export default function SettingsScreen() {
   const qc = useQueryClient();
   const [erasing, setErasing] = useState(false);
   const { data: accounts = [] } = useAccountsWithBalances();
-  const { data: allCategories = [] } = useCategories();
+  const { data: allCategories = [] } = useAllCategories();
   const { data: recurring = [] } = useRecurringRulesList("current");
   const { data: allTransactions = [] } = useTransactions({});
-  const { activeHousehold } = useActiveHousehold();
 
   const totalCategories = allCategories.length;
   const activeRecurring = recurring.filter((rule) => rule.lifecycle === "active").length;
-  const activeHouseholdName = activeHousehold?.name ?? null;
 
   function handleEraseAll() {
     Alert.alert(
@@ -104,13 +101,6 @@ export default function SettingsScreen() {
           label="Recurring Rules"
           subtitle={`${activeRecurring} active`}
           onPress={() => router.push("/recurring")}
-        />
-        <Divider />
-        <SettingsRow
-          emoji="🏠"
-          label="Household"
-          subtitle={activeHouseholdName ? `${activeHouseholdName} · shared` : "Sign in to share"}
-          onPress={() => router.push("/settings/household")}
         />
       </Card>
 

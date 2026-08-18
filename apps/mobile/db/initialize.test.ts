@@ -38,11 +38,17 @@ describe("initializeDatabase", () => {
     await expect(
       testDatabase.database.getAllAsync(
         `SELECT key, value FROM app_settings
-         WHERE key IN ('resetVersion', 'recurringRulesMigrationVersion', 'budgetingMigrationVersion')
+         WHERE key IN (
+           'resetVersion',
+           'recurringRulesMigrationVersion',
+           'budgetingMigrationVersion',
+           'categoryLifecycleMigrationVersion'
+         )
          ORDER BY key`,
       ),
     ).resolves.toEqual([
       { key: "budgetingMigrationVersion", value: "1" },
+      { key: "categoryLifecycleMigrationVersion", value: "1" },
       { key: "recurringRulesMigrationVersion", value: "1" },
       { key: "resetVersion", value: "1" },
     ]);

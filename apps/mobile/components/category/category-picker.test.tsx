@@ -15,6 +15,7 @@ describe("CategoryPicker", () => {
       data: [
         createCategory({ id: "category-1", name: "Groceries" }),
         createCategory({ id: "category-2", name: "Dining", color: "#F59E0B" }),
+        createCategory({ id: "category-3", name: "Archived", lifecycle: "archived" }),
       ],
     });
   });
@@ -39,5 +40,11 @@ describe("CategoryPicker", () => {
     await fireEvent.press(screen.getByText("Dining"));
 
     expect(onChange).toHaveBeenCalledWith("category-2");
+  });
+
+  it("excludes archived Categories from new selection", async () => {
+    await render(<CategoryPicker value={null} onChange={jest.fn()} type="expense" />);
+
+    expect(screen.queryByRole("button", { name: "Archived" })).not.toBeOnTheScreen();
   });
 });
