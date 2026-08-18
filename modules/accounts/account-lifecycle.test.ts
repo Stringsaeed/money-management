@@ -85,7 +85,15 @@ describe("Account lifecycle", () => {
         },
         {
           kind: "budget-dependencies",
-          dependencies: [{ kind: "budget-shortfall", currency: "USD", amountMinor: 25_00 }],
+          dependencies: [
+            {
+              kind: "budget-shortfall",
+              currency: "USD",
+              amountMinor: 25_00,
+              recoveryAction:
+                "Increase the same-currency Funding Pool or move Money back to Unassigned until the shortfall is zero.",
+            },
+          ],
           recoveryAction: "Resolve every listed budget dependency before archiving this Account.",
         },
       ],
@@ -105,10 +113,12 @@ describe("Account lifecycle", () => {
 
   it("reports outstanding Card Payment Reserve and Unfunded Card Spending dependencies", async () => {
     const database = await setup();
-    await insertAccount(database, "card-funded", 100_00, "credit_card");
-    await insertAccount(database, "card-unfunded", 100_00, "credit_card");
+    await insertAccount(database, "card-funded", 0, "credit_card");
+    await insertAccount(database, "card-unfunded", 0, "credit_card");
     await insertAccount(database, "card-resolved", 0, "credit_card");
+    await insertAccount(database, "card-credit", 100_00, "credit_card");
     await insertAccount(database, "payment-source", 100_00);
+    await insertAccount(database, "external-source", 200_00);
     await insertBudgetedCardExpense(database, {
       accountId: "card-funded",
       amount: 100_00,
@@ -127,6 +137,31 @@ describe("Account lifecycle", () => {
       assignmentAmount: 100_00,
       suffix: "resolved",
     });
+    await insertBudgetedCardExpense(database, {
+      accountId: "card-credit",
+      amount: 100_00,
+      assignmentAmount: 100_00,
+      suffix: "credit",
+    });
+    for (const suffix of ["funded", "unfunded"] as const) {
+      await database.runAsync(
+        `INSERT INTO transactions (
+          id, type, amount, currency, date, account_id, to_account_id, is_recurring,
+          description, created_at, updated_at
+        ) VALUES (?, 'transfer', 10000, 'USD', '2026-08-12',
+          'external-source', ?, 0, '', ?, ?)`,
+        `external-transfer-${suffix}`,
+        `card-${suffix}`,
+        NOW,
+        NOW,
+      );
+    }
+    await database.runAsync(
+      `INSERT INTO funding_memberships (
+        account_id, currency, effective_from_period, effective_to_period, created_at
+      ) VALUES ('payment-source', 'USD', '2026-08', NULL, ?)`,
+      NOW,
+    );
     await database.runAsync(
       `INSERT INTO transactions (
         id, type, amount, currency, date, account_id, to_account_id, is_recurring,
@@ -143,7 +178,15 @@ describe("Account lifecycle", () => {
       blockers: [
         {
           kind: "budget-dependencies",
-          dependencies: [{ kind: "card-payment-reserve", currency: "USD", amountMinor: 100_00 }],
+          dependencies: [
+            {
+              kind: "card-payment-reserve",
+              currency: "USD",
+              amountMinor: 100_00,
+              recoveryAction:
+                "Make a same-currency Card Payment from a Funding Account until this reserve is zero.",
+            },
+          ],
           recoveryAction: "Resolve every listed budget dependency before archiving this Account.",
         },
       ],
@@ -154,7 +197,15 @@ describe("Account lifecycle", () => {
       blockers: [
         {
           kind: "budget-dependencies",
-          dependencies: [{ kind: "unfunded-card-spending", currency: "USD", amountMinor: 100_00 }],
+          dependencies: [
+            {
+              kind: "unfunded-card-spending",
+              currency: "USD",
+              amountMinor: 100_00,
+              recoveryAction:
+                "Assign Money to cover this card spending, or pay it from a same-currency Funding Account.",
+            },
+          ],
           recoveryAction: "Resolve every listed budget dependency before archiving this Account.",
         },
       ],
@@ -163,6 +214,80 @@ describe("Account lifecycle", () => {
       accountId: "card-resolved",
       canArchive: true,
       blockers: [],
+    });
+    await expect(previewAccountArchival(database, "card-credit", "2026-08-18")).resolves.toEqual({
+      accountId: "card-credit",
+      canArchive: true,
+      blockers: [],
+    });
+  });
+
+  it("shares Envelope availability with cash spending and funds older card deficits first", async () => {
+    const database = await setup();
+    await insertAccount(database, "card-shared", 0, "credit_card");
+    await insertAccount(database, "cash-funding", 100_00);
+    await insertAccount(database, "external-source", 100_00);
+    await insertBudgetedCardExpense(database, {
+      accountId: "card-shared",
+      amount: 100_00,
+      assignmentAmount: 100_00,
+      suffix: "shared",
+    });
+    await database.runAsync(
+      `INSERT INTO funding_memberships (
+        account_id, currency, effective_from_period, effective_to_period, created_at
+      ) VALUES ('cash-funding', 'USD', '2026-08', NULL, ?)`,
+      NOW,
+    );
+    await database.runAsync(
+      `INSERT INTO transactions (
+        id, type, amount, currency, date, account_id, category_id, is_recurring,
+        description, created_at, updated_at
+      ) VALUES ('cash-spending-shared', 'expense', 10000, 'USD', '2026-08-05',
+        'cash-funding', 'category-shared', 0, '', ?, ?)`,
+      NOW,
+      NOW,
+    );
+    await database.runAsync(
+      `INSERT INTO transactions (
+        id, type, amount, currency, date, account_id, to_account_id, is_recurring,
+        description, created_at, updated_at
+      ) VALUES ('external-transfer-shared', 'transfer', 10000, 'USD', '2026-08-12',
+        'external-source', 'card-shared', 0, '', ?, ?)`,
+      NOW,
+      NOW,
+    );
+
+    await expect(
+      previewAccountArchival(database, "card-shared", "2026-08-18"),
+    ).resolves.toMatchObject({
+      canArchive: false,
+      blockers: [
+        {
+          kind: "budget-dependencies",
+          dependencies: [{ kind: "unfunded-card-spending", amountMinor: 100_00 }],
+        },
+      ],
+    });
+
+    await database.runAsync(
+      `INSERT INTO assignments (
+        id, currency, budget_period, source_envelope_id, destination_envelope_id,
+        amount_minor, reverses_assignment_id, created_at
+      ) VALUES ('assignment-shared-recovery', 'USD', '2026-09', NULL,
+        'envelope-shared', 10000, NULL, ?)`,
+      NOW,
+    );
+    await expect(
+      previewAccountArchival(database, "card-shared", "2026-09-18"),
+    ).resolves.toMatchObject({
+      canArchive: false,
+      blockers: [
+        {
+          kind: "budget-dependencies",
+          dependencies: [{ kind: "card-payment-reserve", amountMinor: 100_00 }],
+        },
+      ],
     });
   });
 

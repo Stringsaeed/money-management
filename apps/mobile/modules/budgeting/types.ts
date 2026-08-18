@@ -22,7 +22,17 @@ export interface ProjectionRequest {
   period: string;
 }
 
+interface AccountBudgetDependencyBase extends Money {
+  recoveryAction: string;
+}
+
+export type AccountBudgetDependency =
+  | (AccountBudgetDependencyBase & { kind: "budget-shortfall" })
+  | (AccountBudgetDependencyBase & { kind: "card-payment-reserve" })
+  | (AccountBudgetDependencyBase & { kind: "unfunded-card-spending" });
+
 export interface BudgetingCoordinator {
   activateWorkspace(request: ActivateWorkspaceRequest): Promise<BudgetProjection>;
   getProjection(request: ProjectionRequest): Promise<BudgetProjection | null>;
+  getAccountDependencies(accountId: string, period: string): Promise<AccountBudgetDependency[]>;
 }

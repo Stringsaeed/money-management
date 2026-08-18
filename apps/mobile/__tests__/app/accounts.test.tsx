@@ -72,9 +72,24 @@ jest.mock("@/hooks/use-accounts", () => ({
               {
                 kind: "budget-dependencies",
                 dependencies: [
-                  { kind: "budget-shortfall", currency: "USD", amountMinor: 25_00 },
-                  { kind: "card-payment-reserve", currency: "USD", amountMinor: 15_00 },
-                  { kind: "unfunded-card-spending", currency: "USD", amountMinor: 10_00 },
+                  {
+                    kind: "budget-shortfall",
+                    currency: "USD",
+                    amountMinor: 25_00,
+                    recoveryAction: "Increase the Funding Pool.",
+                  },
+                  {
+                    kind: "card-payment-reserve",
+                    currency: "USD",
+                    amountMinor: 15_00,
+                    recoveryAction: "Make an eligible Card Payment.",
+                  },
+                  {
+                    kind: "unfunded-card-spending",
+                    currency: "USD",
+                    amountMinor: 10_00,
+                    recoveryAction: "Assign Money to cover this card spending.",
+                  },
                 ],
                 recoveryAction:
                   "Resolve every listed budget dependency before archiving this Account.",
@@ -125,13 +140,13 @@ describe("app/accounts", () => {
     expect(screen.getByText(/Budget Shortfall:/)).toBeOnTheScreen();
     expect(screen.getByText(/Card Payment Reserve:/)).toBeOnTheScreen();
     expect(screen.getByText(/Unfunded Card Spending:/)).toBeOnTheScreen();
+    expect(screen.getByText("Make an eligible Card Payment.")).toBeOnTheScreen();
+    expect(screen.getByText("Assign Money to cover this card spending.")).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Review Everyday balance" })).toBeOnTheScreen();
     expect(
       screen.getByRole("button", { name: "Review blocking Recurring Rules" }),
     ).toBeOnTheScreen();
-    expect(
-      screen.getByRole("button", { name: "Review blocking budget dependencies" }),
-    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Review blocking card activity" })).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Archive Everyday" })).toBeDisabled();
     expect(screen.queryByRole("button", { name: "Delete Everyday" })).not.toBeOnTheScreen();
 
