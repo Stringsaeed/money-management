@@ -28,6 +28,7 @@ interface AccountBudgetDependencyBase extends Money {
 
 export type AccountBudgetDependency =
   | (AccountBudgetDependencyBase & { kind: "budget-shortfall" })
+  | (AccountBudgetDependencyBase & { kind: "cash-envelope-overspending" })
   | (AccountBudgetDependencyBase & { kind: "card-payment-reserve" })
   | (AccountBudgetDependencyBase & { kind: "unfunded-card-spending" });
 

@@ -14,6 +14,7 @@ interface AccountArchiveBlockerItemProps {
 
 const BUDGET_DEPENDENCY_LABELS = {
   "budget-shortfall": "Budget Shortfall",
+  "cash-envelope-overspending": "Cash Envelope Overspending",
   "card-payment-reserve": "Card Payment Reserve",
   "unfunded-card-spending": "Unfunded Card Spending",
 } as const;
@@ -75,10 +76,12 @@ export function AccountArchiveBlockerItem({ account, blocker }: AccountArchiveBl
   }
 
   const hasCardDependency = blocker.dependencies.some(
-    (dependency) => dependency.kind !== "budget-shortfall",
+    (dependency) =>
+      dependency.kind === "card-payment-reserve" || dependency.kind === "unfunded-card-spending",
   );
-  const hasBudgetShortfall = blocker.dependencies.some(
-    (dependency) => dependency.kind === "budget-shortfall",
+  const hasBudgetDependency = blocker.dependencies.some(
+    (dependency) =>
+      dependency.kind === "budget-shortfall" || dependency.kind === "cash-envelope-overspending",
   );
 
   return (
@@ -93,7 +96,7 @@ export function AccountArchiveBlockerItem({ account, blocker }: AccountArchiveBl
         </View>
       ))}
       <Text className="font-body-normal text-xs text-ink/50">{blocker.recoveryAction}</Text>
-      {hasBudgetShortfall ? (
+      {hasBudgetDependency ? (
         <Button
           aria-label="Review blocking budget dependencies"
           onPress={reviewBudget}

@@ -79,6 +79,12 @@ jest.mock("@/hooks/use-accounts", () => ({
                     recoveryAction: "Increase the Funding Pool.",
                   },
                   {
+                    kind: "cash-envelope-overspending",
+                    currency: "USD",
+                    amountMinor: 5_00,
+                    recoveryAction: "Cover cash Envelope Overspending.",
+                  },
+                  {
                     kind: "card-payment-reserve",
                     currency: "USD",
                     amountMinor: 15_00,
@@ -138,6 +144,7 @@ describe("app/accounts", () => {
     expect(screen.getByText(/Current balance:/)).toBeOnTheScreen();
     expect(screen.getByText(/Active Recurring Rules: Rent, Savings sweep/)).toBeOnTheScreen();
     expect(screen.getByText(/Budget Shortfall:/)).toBeOnTheScreen();
+    expect(screen.getByText(/Cash Envelope Overspending:/)).toBeOnTheScreen();
     expect(screen.getByText(/Card Payment Reserve:/)).toBeOnTheScreen();
     expect(screen.getByText(/Unfunded Card Spending:/)).toBeOnTheScreen();
     expect(screen.getByText("Make an eligible Card Payment.")).toBeOnTheScreen();

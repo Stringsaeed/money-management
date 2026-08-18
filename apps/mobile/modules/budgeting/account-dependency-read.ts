@@ -1,10 +1,12 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 
+import type { Account, Transaction } from "@/types";
+
 export interface BudgetAccountRow {
   currency: string;
   id: string;
   initialBalance: number;
-  type: string;
+  type: Account["type"];
 }
 
 export interface BudgetAssignmentRow {
@@ -37,7 +39,7 @@ export interface BudgetTransactionRow {
   id: string;
   sourceCurrency: string;
   toAccountId: string | null;
-  type: string;
+  type: Transaction["type"];
 }
 
 export interface AccountDependencyFacts {

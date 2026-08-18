@@ -3,9 +3,12 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { loadAccountDependencyFacts } from "./account-dependency-read";
 import { evaluateCardBudgetState } from "./card-dependency-evaluator";
 import type { AccountBudgetDependency } from "./types";
+import { addMoney } from "./validation";
 
 const SHORTFALL_RECOVERY =
   "Increase the same-currency Funding Pool or move Money back to Unassigned until the shortfall is zero.";
+const CASH_OVERSPENDING_RECOVERY =
+  "Assign or move Money to cover every cash Envelope with negative availability.";
 const RESERVE_RECOVERY =
   "Make a same-currency Card Payment from a Funding Account until this reserve is zero.";
 const UNFUNDED_RECOVERY =
@@ -36,14 +39,30 @@ export async function getAccountBudgetDependencies(
   const facts = await loadAccountDependencyFacts(database, account.currency, period);
   if (!facts) return dependencies;
   const budgetState = evaluateCardBudgetState(facts, period);
-  if (membership) {
-    const unassignedMinor = calculateUnassignedMoney(facts, budgetState, period);
+  const unreservedCardPaymentMinor = budgetState.unreservedPaymentByAccount.get(accountId) ?? 0;
+  if (membership || unreservedCardPaymentMinor > 0) {
+    const { cashOverspendingMinor, unassignedMinor } = calculateBudgetHealth(
+      facts,
+      budgetState,
+      period,
+      account.currency,
+    );
     if (unassignedMinor < 0) {
       dependencies.push({
         kind: "budget-shortfall",
-        currency: membership.currency,
-        amountMinor: Math.abs(unassignedMinor),
+        currency: account.currency,
+        amountMinor: membership
+          ? Math.abs(unassignedMinor)
+          : Math.min(Math.abs(unassignedMinor), unreservedCardPaymentMinor),
         recoveryAction: SHORTFALL_RECOVERY,
+      });
+    }
+    if (cashOverspendingMinor > 0) {
+      dependencies.push({
+        kind: "cash-envelope-overspending",
+        currency: account.currency,
+        amountMinor: cashOverspendingMinor,
+        recoveryAction: CASH_OVERSPENDING_RECOVERY,
       });
     }
   }
@@ -71,11 +90,12 @@ export async function getAccountBudgetDependencies(
   return dependencies;
 }
 
-function calculateUnassignedMoney(
+function calculateBudgetHealth(
   facts: NonNullable<Awaited<ReturnType<typeof loadAccountDependencyFacts>>>,
   state: ReturnType<typeof evaluateCardBudgetState>,
   period: string,
-): number {
+  currency: string,
+): { cashOverspendingMinor: number; unassignedMinor: number } {
   const fundingAccountIds = new Set(
     facts.memberships
       .filter(
@@ -87,31 +107,45 @@ function calculateUnassignedMoney(
   );
   let fundingPoolMinor = 0;
   for (const accountId of fundingAccountIds) {
-    fundingPoolMinor += state.balances.get(accountId) ?? 0;
+    fundingPoolMinor = addMoney(fundingPoolMinor, state.balances.get(accountId) ?? 0, currency);
   }
   for (const account of facts.accounts) {
     if (account.type === "credit_card") {
-      fundingPoolMinor += Math.max(state.balances.get(account.id) ?? 0, 0);
+      fundingPoolMinor = addMoney(
+        fundingPoolMinor,
+        Math.max(state.balances.get(account.id) ?? 0, 0),
+        currency,
+      );
     }
   }
-  const availableMinor = [...state.availability.values()].reduce(
-    (total, amountMinor) => total + Math.max(amountMinor, 0),
+  const signedAvailabilityMinor = [...state.availability.values()].reduce(
+    (total, amountMinor) => addMoney(total, amountMinor, currency),
+    0,
+  );
+  const cashOverspendingMinor = [...state.availability.values()].reduce(
+    (total, amountMinor) => addMoney(total, Math.max(-amountMinor, 0), currency),
     0,
   );
   const reserveMinor = [...state.reserveByAccount.values()].reduce(
-    (total, amountMinor) => total + Math.max(amountMinor, 0),
+    (total, amountMinor) => addMoney(total, Math.max(amountMinor, 0), currency),
     0,
   );
   const futureReservationMinor = facts.assignments
     .filter((assignment) => assignment.period > period)
     .reduce((total, assignment) => {
       if (assignment.destinationEnvelopeId && !assignment.sourceEnvelopeId) {
-        return total + assignment.amountMinor;
+        return addMoney(total, assignment.amountMinor, currency);
       }
       if (assignment.sourceEnvelopeId && !assignment.destinationEnvelopeId) {
-        return total - assignment.amountMinor;
+        return addMoney(total, -assignment.amountMinor, currency);
       }
       return total;
     }, 0);
-  return fundingPoolMinor - availableMinor - reserveMinor - futureReservationMinor;
+  return {
+    cashOverspendingMinor,
+    unassignedMinor: [signedAvailabilityMinor, reserveMinor, futureReservationMinor].reduce(
+      (total, amountMinor) => addMoney(total, -amountMinor, currency),
+      fundingPoolMinor,
+    ),
+  };
 }
