@@ -1,12 +1,15 @@
 import { format, parseISO, subMonths } from "date-fns";
 import type { SQLiteDatabase } from "expo-sqlite";
 
-import { type AccountDependencyFacts, loadAccountDependencyFacts } from "./account-dependency-read";
+import {
+  type AccountDependencyFacts,
+  loadAccountDependencyFacts,
+  loadUnsupportedCrossCurrencyTransfers,
+} from "./account-dependency-read";
 import { evaluateCardBudgetState } from "./card-dependency-evaluator";
 import type { UnfundedCardEntry } from "./card-dependency-types";
-import { isUnsupportedCrossCurrencyTransfer } from "./card-dependency-validation";
 import type { AccountBudgetDependency, AccountDependencyOptions } from "./types";
-import { addMoney } from "./validation";
+import { addMoney, requireCurrency, requireMinorUnits } from "./validation";
 
 const SHORTFALL_RECOVERY =
   "Increase the same-currency Funding Pool or move Money back to Unassigned until the shortfall is zero.";
@@ -42,26 +45,29 @@ export async function getAccountBudgetDependencies(
     period,
   );
   const dependencies: AccountBudgetDependency[] = [];
+  const unsupportedTransfers = await loadUnsupportedCrossCurrencyTransfers(
+    database,
+    accountId,
+    period,
+  );
+  for (const transaction of unsupportedTransfers) {
+    requireCurrency(transaction.sourceCurrency);
+    requireCurrency(transaction.destinationCurrency);
+    requireMinorUnits(transaction.amountMinor, transaction.sourceCurrency);
+    dependencies.push({
+      kind: "unsupported-cross-currency-transfer",
+      amountMinor: transaction.amountMinor,
+      currency: transaction.sourceCurrency,
+      destinationCurrency: transaction.destinationCurrency,
+      recoveryAction: CROSS_CURRENCY_RECOVERY,
+      transactionId: transaction.id,
+    });
+  }
   const facts = await loadAccountDependencyFacts(database, account.currency, period);
   if (!facts) return dependencies;
   const evaluationFacts = options.endingMembership
     ? endMembershipForEvaluation(facts, accountId, period)
     : facts;
-  for (const transaction of facts.transactions) {
-    if (
-      isUnsupportedCrossCurrencyTransfer(transaction) &&
-      (transaction.accountId === accountId || transaction.toAccountId === accountId)
-    ) {
-      dependencies.push({
-        kind: "unsupported-cross-currency-transfer",
-        amountMinor: transaction.amountMinor,
-        currency: transaction.sourceCurrency,
-        destinationCurrency: transaction.destinationCurrency,
-        recoveryAction: CROSS_CURRENCY_RECOVERY,
-        transactionId: transaction.id,
-      });
-    }
-  }
   const budgetState = evaluateCardBudgetState(evaluationFacts, period);
   const unreservedCardPaymentMinor = budgetState.unreservedPaymentByAccount.get(accountId) ?? 0;
   if (membership || unreservedCardPaymentMinor > 0) {
