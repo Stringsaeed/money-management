@@ -19,6 +19,9 @@ export async function validateSetupDraft(
 
   for (const workspace of draft.workspaces) {
     const currency = requireCurrency(workspace.currency);
+    if (new Set(workspace.fundingAccountIds).size !== workspace.fundingAccountIds.length) {
+      throw new Error(`${currency} Setup Draft Funding Accounts must be distinct.`);
+    }
     let assignableMinor = 0;
     for (const accountId of workspace.fundingAccountIds) {
       const account = accountById.get(accountId);

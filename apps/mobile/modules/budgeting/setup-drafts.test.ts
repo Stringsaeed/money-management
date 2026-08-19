@@ -186,6 +186,14 @@ describe("Setup Drafts", () => {
     await expect(saveSetupDraft(database, unfunded, draft.updatedAt)).rejects.toThrow(
       "cannot exceed",
     );
+
+    const duplicateFunding = {
+      ...draft,
+      workspaces: [{ ...draft.workspaces[0]!, fundingAccountIds: ["checking", "checking"] }],
+    };
+    await expect(saveSetupDraft(database, duplicateFunding, draft.updatedAt)).rejects.toThrow(
+      "Funding Accounts must be distinct",
+    );
   });
 });
 

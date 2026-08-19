@@ -22,7 +22,7 @@ export const SetupDraftScreen = () => {
   }
 
   return (
-    <View className="flex-1 bg-surface safe-bottom">
+    <View className="flex-1 bg-surface safe-top safe-bottom">
       <ScrollView
         className="flex-1"
         contentInsetAdjustmentBehavior="automatic"

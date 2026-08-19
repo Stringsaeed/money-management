@@ -24,7 +24,7 @@ export const SetupIntroduction = ({
     <View className="gap-5">
       <View className="gap-2 rounded-3xl bg-surface-container p-5">
         <Text className="font-heading-normal text-2xl italic text-ink">
-          Give every dirham a job 🌱
+          Give your Money a job 🌱
         </Text>
         <Text selectable className="font-body-normal leading-6 text-ink/60">
           Envelopes reserve Money you already hold in Funding Accounts. They never move Account

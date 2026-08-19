@@ -40,7 +40,7 @@ describe("Setup Draft route", () => {
 
     await renderRoute();
 
-    expect(await screen.findByText("Give every dirham a job 🌱")).toBeOnTheScreen();
+    expect(await screen.findByText("Give your Money a job 🌱")).toBeOnTheScreen();
     expect(screen.getByText(/reserve Money you already hold/)).toBeOnTheScreen();
     expect(screen.getByLabelText("Add an Account")).toBeOnTheScreen();
     expect(screen.getByLabelText("Add a Category")).toBeOnTheScreen();
@@ -67,6 +67,11 @@ describe("Setup Draft route", () => {
     expect(screen.getByText("🥕 Groceries")).toBeOnTheScreen();
     expect(screen.getByText("🍽️ Dining")).toBeOnTheScreen();
     expect(screen.getAllByDisplayValue("0.00")).toHaveLength(2);
+
+    await fireEvent.press(screen.getByLabelText("Remove Everyday checking Funding Account"));
+    await screen.findByLabelText("Add Everyday checking Funding Account");
+    await fireEvent.press(screen.getByLabelText("Add Everyday checking Funding Account"));
+    await screen.findByLabelText("Remove Everyday checking Funding Account");
 
     await fireEvent.press(screen.getByLabelText("Map Groceries to Dining"));
     await waitFor(() =>
@@ -114,7 +119,7 @@ describe("Setup Draft route", () => {
 
     await fireEvent.press(screen.getByLabelText("Discard Setup Draft"));
 
-    expect(await screen.findByText("Give every dirham a job 🌱")).toBeOnTheScreen();
+    expect(await screen.findByText("Give your Money a job 🌱")).toBeOnTheScreen();
     await expect(createBudgetingCoordinator(database).loadSetupDraft()).resolves.toBeNull();
     expect(await activeFactCounts(database)).toEqual(before);
   });
