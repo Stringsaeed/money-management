@@ -3,6 +3,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
 
 import {
+  addSetupDraftEnvelope,
   createBudgetingCoordinator,
   mergeSetupDraftEnvelopes,
   moveSetupDraftCategory,
@@ -11,8 +12,15 @@ import {
 } from "@/modules/budgeting/budgeting";
 import type { SetupDraft, SetupDraftEnvelope } from "@/modules/budgeting/budgeting";
 import { nowIso } from "@/utils/date";
+import { generateId } from "@/utils/id";
 
 const setupDraftKey = ["setup-draft", "guided-envelope-setup"] as const;
+
+type DraftTransform = (draft: SetupDraft) => SetupDraft;
+type SetupDraftCommand =
+  | { kind: "start"; mode: SetupDraft["mode"]; currencies: readonly string[] }
+  | { kind: "discard" }
+  | { kind: "update"; transform: DraftTransform };
 
 export function useSetupDraft() {
   const database = useSQLiteContext();
@@ -30,11 +38,29 @@ export function useSetupDraft() {
     },
   });
   const mutation = useMutation({
-    mutationFn: (task: () => Promise<SetupDraft | null>) => task(),
+    mutationFn: async (command: SetupDraftCommand): Promise<SetupDraft | null> => {
+      if (command.kind === "discard") {
+        await coordinator.discardSetupDraft();
+        return null;
+      }
+      if (command.kind === "start") {
+        return coordinator.createSetupDraft({
+          mode: command.mode,
+          currencies: command.currencies,
+          now: nowIso(),
+        });
+      }
+      const current = await coordinator.loadSetupDraft();
+      if (!current) throw new Error("The Setup Draft is missing. Start a new plan and try again.");
+      return coordinator.saveSetupDraft(command.transform(current), nowIso());
+    },
     onSuccess: (draft) => {
-      queryClient.setQueryData(setupDraftKey, (current: typeof query.data) =>
-        current ? { ...current, draft } : current,
-      );
+      const current = queryClient.getQueryData<typeof query.data>(setupDraftKey);
+      if (current?.prerequisites) {
+        queryClient.setQueryData(setupDraftKey, { ...current, draft });
+      } else {
+        void queryClient.invalidateQueries({ queryKey: setupDraftKey });
+      }
     },
     onError: (error) => {
       setActionError(
@@ -43,77 +69,71 @@ export function useSetupDraft() {
           : "Setup Draft could not be saved. Review the plan and try again.",
       );
     },
+    scope: { id: "guided-envelope-setup" },
   });
 
-  const start = (mode: SetupDraft["mode"]) => {
+  const update = (transform: DraftTransform) => {
     setActionError(null);
-    mutation.mutate(() =>
-      coordinator.createSetupDraft({
-        mode,
-        currencies: query.data?.prerequisites.currencies ?? [],
-        now: nowIso(),
-      }),
-    );
-  };
-  const save = (draft: SetupDraft) => {
-    setActionError(null);
-    mutation.mutate(() => coordinator.saveSetupDraft(draft, nowIso()));
+    mutation.mutate({ kind: "update", transform });
   };
 
   return {
     ...query,
     actionError,
     isSaving: mutation.isPending,
-    start,
-    discard: () => {
+    start: (mode: SetupDraft["mode"]) => {
       setActionError(null);
-      mutation.mutate(async () => {
-        await coordinator.discardSetupDraft();
-        return null;
+      mutation.mutate({
+        kind: "start",
+        mode,
+        currencies: query.data?.prerequisites.currencies ?? [],
       });
     },
-    mergeFirstSuggestions: (currency: string) => {
-      const draft = query.data?.draft;
-      const workspace = draft?.workspaces.find((candidate) => candidate.currency === currency);
-      if (!draft || !workspace || workspace.envelopes.length < 2) return;
-      save(
-        mergeSetupDraftEnvelopes(
-          draft,
-          currency,
-          workspace.envelopes.slice(0, 2).map(({ id }) => id),
-        ),
+    discard: () => {
+      setActionError(null);
+      mutation.mutate({ kind: "discard" });
+    },
+    addEnvelope: (currency: string) => {
+      update((draft) =>
+        addSetupDraftEnvelope(draft, currency, {
+          id: generateId(),
+          name: "New Envelope",
+          icon: "📦",
+          color: "#8B9D83",
+        }),
       );
     },
+    mergeSuggestions: (currency: string, envelopeIds: readonly string[]) => {
+      update((draft) => mergeSetupDraftEnvelopes(draft, currency, envelopeIds));
+    },
     moveCategory: (currency: string, categoryId: string, envelopeId: string) => {
-      const draft = query.data?.draft;
-      if (!draft) return;
-      save(moveSetupDraftCategory(draft, currency, categoryId, envelopeId));
+      update((draft) => moveSetupDraftCategory(draft, currency, categoryId, envelopeId));
     },
     toggleFundingAccount: (currency: string, accountId: string) => {
-      const draft = query.data?.draft;
-      const workspace = draft?.workspaces.find((candidate) => candidate.currency === currency);
-      if (!draft || !workspace) return;
-      const included = workspace.fundingAccountIds.includes(accountId);
-      save(
-        updateSetupDraftFundingAccounts(
+      update((draft) => {
+        const workspace = draft.workspaces.find((candidate) => candidate.currency === currency);
+        if (!workspace) return draft;
+        const included = workspace.fundingAccountIds.includes(accountId);
+        return updateSetupDraftFundingAccounts(
           draft,
           currency,
           included
             ? workspace.fundingAccountIds.filter((id) => id !== accountId)
             : [...workspace.fundingAccountIds, accountId],
-        ),
-      );
+        );
+      });
     },
     updateEnvelope: (
       currency: string,
       envelopeId: string,
       changes: Partial<
-        Pick<SetupDraftEnvelope, "categoryIds" | "positiveRollover" | "initialAssignmentMinor">
+        Pick<
+          SetupDraftEnvelope,
+          "name" | "icon" | "color" | "categoryIds" | "positiveRollover" | "initialAssignmentMinor"
+        >
       >,
     ) => {
-      const draft = query.data?.draft;
-      if (!draft) return;
-      save(updateSetupDraftEnvelope(draft, currency, envelopeId, changes));
+      update((draft) => updateSetupDraftEnvelope(draft, currency, envelopeId, changes));
     },
   };
 }

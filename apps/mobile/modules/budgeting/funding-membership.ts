@@ -4,6 +4,7 @@ import { endAccountFundingMembership } from "@/modules/accounts/account-funding-
 import { runInTransaction } from "@/modules/recurring-rules/persistence";
 
 import { getProjection } from "./projection";
+import { isEligibleFundingAccountType } from "./funding-account-eligibility";
 import type { BudgetProjection, UpdateFundingMembershipRequest } from "./types";
 import { periodForLocalDate } from "./validation";
 
@@ -12,8 +13,6 @@ interface AccountRow {
   lifecycle: "active" | "archived";
   type: string;
 }
-
-const ELIGIBLE_FUNDING_ACCOUNT_TYPES = new Set(["checking", "savings", "cash", "other"]);
 
 export async function updateFundingMembership(
   database: SQLiteDatabase,
@@ -28,7 +27,7 @@ export async function updateFundingMembership(
   if (request.included && account.lifecycle !== "active") {
     throw new Error(`Archived Account ${request.accountId} cannot join a Funding Pool.`);
   }
-  if (request.included && !ELIGIBLE_FUNDING_ACCOUNT_TYPES.has(account.type)) {
+  if (request.included && !isEligibleFundingAccountType(account.type)) {
     throw new Error(`Account ${request.accountId} is not eligible for Funding Membership.`);
   }
 

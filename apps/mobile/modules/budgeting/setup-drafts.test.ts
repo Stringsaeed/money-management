@@ -1,15 +1,18 @@
 import { afterEach, describe, expect, it } from "@jest/globals";
 import type { SQLiteDatabase } from "expo-sqlite";
 
-import { insertBudgetAccount, setupBudgetingDatabase } from "./budgeting-test-utils";
 import {
-  createSetupDraft,
-  discardSetupDraft,
-  loadSetupDraft,
+  countActiveBudgetFacts,
+  insertBudgetAccount,
+  setupBudgetingDatabase,
+} from "./budgeting-test-utils";
+import {
+  addSetupDraftEnvelope,
   mergeSetupDraftEnvelopes,
-  saveSetupDraft,
   updateSetupDraftEnvelope,
-} from "./setup-drafts";
+} from "./setup-draft-editing";
+import { discardSetupDraft, loadSetupDraft, saveSetupDraft } from "./setup-draft-persistence";
+import { createSetupDraft } from "./setup-drafts";
 import { getSetupDraftPrerequisites } from "./setup-draft-suggestions";
 
 const databases: { database: SQLiteDatabase; close: VoidFunction }[] = [];
@@ -58,7 +61,7 @@ describe("Setup Drafts", () => {
     await insertBudgetAccount(database, { id: "checking", initialBalance: 100_00 });
     await insertCategory(database, { id: "groceries", name: "Groceries", icon: "🥕" });
     await insertCategory(database, { id: "dining", name: "Dining", icon: "🍽️" });
-    const factsBefore = await activeFactCounts(database);
+    const factsBefore = await countActiveBudgetFacts(database);
     const created = await createSetupDraft(database, {
       mode: "suggested",
       currencies: ["USD"],
@@ -86,12 +89,12 @@ describe("Setup Drafts", () => {
     expect(saved.workspaces[0]?.envelopes).toEqual([
       expect.objectContaining({ categoryIds: ["dining", "groceries"] }),
     ]);
-    expect(await activeFactCounts(database)).toEqual(factsBefore);
+    expect(await countActiveBudgetFacts(database)).toEqual(factsBefore);
 
     await discardSetupDraft(database);
 
     await expect(loadSetupDraft(database)).resolves.toBeNull();
-    expect(await activeFactCounts(database)).toEqual(factsBefore);
+    expect(await countActiveBudgetFacts(database)).toEqual(factsBefore);
   });
 
   it("persists a blank multi-currency plan with zero initial Assignments", async () => {
@@ -117,6 +120,141 @@ describe("Setup Drafts", () => {
     ]);
     expect(JSON.stringify(draft)).not.toContain("assignment");
     await expect(loadSetupDraft(database)).resolves.toEqual(draft);
+  });
+
+  it("adds and persists a customizable Envelope in a secondary currency blank workspace", async () => {
+    const database = await setup();
+    await insertBudgetAccount(database, { id: "usd", initialBalance: 100_00 });
+    await insertBudgetAccount(database, { id: "aed", currency: "AED", initialBalance: 300_00 });
+    await insertCategory(database, { id: "groceries", name: "Groceries" });
+    const blank = await createSetupDraft(database, {
+      mode: "blank",
+      currencies: ["USD", "AED"],
+      now: "2026-08-19T08:00:00.000Z",
+    });
+
+    const added = addSetupDraftEnvelope(blank, "AED", {
+      id: "aed-rent",
+      name: "Rent",
+      icon: "🏠",
+      color: "#B48A7B",
+    });
+    const edited = updateSetupDraftEnvelope(added, "AED", "aed-rent", {
+      categoryIds: ["groceries"],
+      positiveRollover: false,
+      initialAssignmentMinor: 25_00,
+    });
+
+    await saveSetupDraft(database, edited, "2026-08-19T09:00:00.000Z");
+    await expect(loadSetupDraft(database)).resolves.toMatchObject({
+      workspaces: [
+        expect.anything(),
+        {
+          currency: "AED",
+          envelopes: [
+            expect.objectContaining({
+              id: "aed-rent",
+              name: "Rent",
+              categoryIds: ["groceries"],
+              positiveRollover: false,
+              initialAssignmentMinor: 25_00,
+            }),
+          ],
+        },
+      ],
+    });
+  });
+
+  it("keeps a Category draftable when old activity used another currency", async () => {
+    const database = await setup();
+    await insertBudgetAccount(database, { id: "usd", initialBalance: 100_00 });
+    await insertBudgetAccount(database, { id: "aed", currency: "AED", initialBalance: 100_00 });
+    await insertCategory(database, { id: "travel", name: "Travel" });
+    await database.runAsync(
+      `INSERT INTO transactions (
+        id, type, amount, currency, date, account_id, category_id,
+        is_recurring, description, created_at, updated_at
+      ) VALUES ('old-aed', 'expense', 100, 'AED', '2025-01-01', 'aed', 'travel', 0, '', ?, ?)`,
+      "2025-01-01T08:00:00.000Z",
+      "2025-01-01T08:00:00.000Z",
+    );
+
+    await expect(
+      createSetupDraft(database, {
+        mode: "suggested",
+        currencies: ["USD"],
+        now: "2026-08-19T08:00:00.000Z",
+      }),
+    ).resolves.toMatchObject({
+      workspaces: [{ envelopes: [expect.objectContaining({ categoryIds: ["travel"] })] }],
+    });
+  });
+
+  it("merges a user-selected non-adjacent set of three suggestions into the first selection", async () => {
+    const database = await setup();
+    await insertBudgetAccount(database, { id: "checking", initialBalance: 100_00 });
+    for (const [id, name] of [
+      ["a", "Alpha"],
+      ["b", "Bravo"],
+      ["c", "Charlie"],
+      ["d", "Delta"],
+    ] as const) {
+      await insertCategory(database, { id, name });
+    }
+    const draft = await createSetupDraft(database, {
+      mode: "suggested",
+      currencies: ["USD"],
+      now: "2026-08-19T08:00:00.000Z",
+    });
+    const envelopes = draft.workspaces[0]!.envelopes;
+
+    const merged = mergeSetupDraftEnvelopes(draft, "USD", [
+      envelopes[3]!.id,
+      envelopes[0]!.id,
+      envelopes[2]!.id,
+    ]);
+
+    expect(merged.workspaces[0]!.envelopes).toHaveLength(2);
+    expect(merged.workspaces[0]!.envelopes.find(({ id }) => id === envelopes[3]!.id)).toMatchObject(
+      {
+        name: "Delta",
+        categoryIds: ["d", "a", "c"],
+      },
+    );
+  });
+
+  it("accepts active other Accounts as optional Funding choices without selecting them", async () => {
+    const database = await setup();
+    await insertBudgetAccount(database, { id: "checking", initialBalance: 100_00 });
+    await insertBudgetAccount(database, { id: "other", initialBalance: 20_00, type: "other" });
+    await insertCategory(database, { id: "groceries", name: "Groceries" });
+
+    const prerequisites = await getSetupDraftPrerequisites(database);
+    const draft = await createSetupDraft(database, {
+      mode: "blank",
+      currencies: ["USD"],
+      now: "2026-08-19T08:00:00.000Z",
+    });
+
+    expect(prerequisites.fundingAccounts).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: "other", suggested: false })]),
+    );
+    expect(draft.workspaces[0]!.fundingAccountIds).toEqual(["checking"]);
+  });
+
+  it("rejects valid JSON with the wrong saved payload shape and explains recovery", async () => {
+    const database = await setup();
+    await database.runAsync(
+      "INSERT INTO setup_drafts (id, payload, created_at, updated_at) VALUES (?, ?, ?, ?)",
+      "guided-envelope-setup",
+      JSON.stringify({ version: 1, workspaces: "wrong" }),
+      "2026-08-19T08:00:00.000Z",
+      "2026-08-19T08:00:00.000Z",
+    );
+
+    await expect(loadSetupDraft(database)).rejects.toThrow(
+      "saved Setup Draft is unreadable. Discard it and start again",
+    );
   });
 
   it("rejects cross-currency Envelopes and Funding Accounts", async () => {
@@ -231,23 +369,4 @@ async function insertCategory(
       input.id,
     );
   }
-}
-
-async function activeFactCounts(database: SQLiteDatabase) {
-  const tables = [
-    "budget_workspaces",
-    "funding_memberships",
-    "envelopes",
-    "category_mappings",
-    "assignments",
-    "rollover_settings",
-  ];
-  return Promise.all(
-    tables.map(async (table) => ({
-      table,
-      count: (
-        await database.getFirstAsync<{ count: number }>(`SELECT COUNT(*) AS count FROM ${table}`)
-      )?.count,
-    })),
-  );
 }

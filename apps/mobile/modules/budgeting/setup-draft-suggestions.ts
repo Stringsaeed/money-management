@@ -2,13 +2,11 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 import { loadAccountBalances } from "@/modules/accounts/account-balance";
 
-import type {
-  SetupDraftCategorySuggestion,
-  SetupDraftFundingAccount,
-  SetupDraftPrerequisites,
-} from "./setup-draft-types";
-
-const SUGGESTED_FUNDING_TYPES = new Set(["checking", "savings", "cash"]);
+import {
+  isDefaultFundingAccountType,
+  isEligibleFundingAccountType,
+} from "./funding-account-eligibility";
+import type { SetupDraftFundingAccount, SetupDraftPrerequisites } from "./setup-draft-types";
 
 interface CategorySuggestionRow {
   id: string;
@@ -30,16 +28,17 @@ export async function getSetupDraftPrerequisites(
     ),
   ]);
   const fundingAccounts = accounts.flatMap<SetupDraftFundingAccount>((account) => {
-    if (!SUGGESTED_FUNDING_TYPES.has(account.type)) return [];
+    if (!isEligibleFundingAccountType(account.type)) return [];
     return [
       {
         id: account.id,
         name: account.name,
         currency: account.currency,
-        type: account.type as SetupDraftFundingAccount["type"],
+        type: account.type,
         icon: account.icon,
         color: account.color,
         balanceMinor: account.balance,
+        suggested: isDefaultFundingAccountType(account.type),
       },
     ];
   });
@@ -47,11 +46,7 @@ export async function getSetupDraftPrerequisites(
 
   return {
     fundingAccounts,
-    categories: categories.map(toCategorySuggestion),
+    categories,
     currencies,
   };
-}
-
-function toCategorySuggestion(row: CategorySuggestionRow): SetupDraftCategorySuggestion {
-  return row;
 }

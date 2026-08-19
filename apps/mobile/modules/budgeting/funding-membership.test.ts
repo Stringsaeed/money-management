@@ -112,6 +112,11 @@ describe("Funding Membership", () => {
       type: "investment",
     });
     await insertBudgetAccount(database, {
+      id: "account-other",
+      initialBalance: 25_00,
+      type: "other",
+    });
+    await insertBudgetAccount(database, {
       id: "account-archived",
       initialBalance: 0,
       lifecycle: "archived",
@@ -131,9 +136,10 @@ describe("Funding Membership", () => {
       suggested: true,
     });
     expect(suggestions.filter(({ suggested }) => !suggested).map(({ id }) => id)).toEqual([
-      "account-card",
-      "account-investment",
+      "account-other",
     ]);
+    expect(suggestions.some(({ id }) => id === "account-card")).toBe(false);
+    expect(suggestions.some(({ id }) => id === "account-investment")).toBe(false);
     expect(suggestions.some(({ id }) => id === "account-archived")).toBe(false);
   });
 });

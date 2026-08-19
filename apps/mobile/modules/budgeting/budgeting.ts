@@ -18,12 +18,8 @@ import { createEnvelope, updateEnvelope } from "./envelope-resources";
 import { getEnvelopeFormOptions } from "./envelope-form-options";
 import { getProjection } from "./projection";
 import { getSetupDraftPrerequisites } from "./setup-draft-suggestions";
-import {
-  createSetupDraft,
-  discardSetupDraft,
-  loadSetupDraft,
-  saveSetupDraft,
-} from "./setup-drafts";
+import { discardSetupDraft, loadSetupDraft, saveSetupDraft } from "./setup-draft-persistence";
+import { createSetupDraft } from "./setup-drafts";
 import type {
   ActivateWorkspaceRequest,
   BudgetingCoordinator,
@@ -84,11 +80,12 @@ export type {
   SetupDraftWorkspace,
 } from "./setup-draft-types";
 export {
+  addSetupDraftEnvelope,
   mergeSetupDraftEnvelopes,
   moveSetupDraftCategory,
   updateSetupDraftEnvelope,
   updateSetupDraftFundingAccounts,
-} from "./setup-drafts";
+} from "./setup-draft-editing";
 
 export function createBudgetingCoordinator(
   database: SQLiteDatabase,

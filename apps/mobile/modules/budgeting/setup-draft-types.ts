@@ -1,13 +1,16 @@
+import type { EligibleFundingAccountType } from "./funding-account-eligibility";
+
 export const GUIDED_SETUP_DRAFT_ID = "guided-envelope-setup";
 
 export interface SetupDraftFundingAccount {
   id: string;
   name: string;
   currency: string;
-  type: "checking" | "savings" | "cash";
+  type: EligibleFundingAccountType;
   icon: string;
   color: string;
   balanceMinor: number;
+  suggested: boolean;
 }
 
 export interface SetupDraftCategorySuggestion {
@@ -51,7 +54,6 @@ export interface SetupDraft {
 }
 
 export interface CreateSetupDraftRequest {
-  id?: string;
   mode: SetupDraft["mode"];
   currencies: readonly string[];
   now: string;

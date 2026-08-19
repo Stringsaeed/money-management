@@ -2,10 +2,10 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 import { loadAccountBalances } from "@/modules/accounts/account-balance";
 
+import { isEligibleFundingAccountType } from "./funding-account-eligibility";
 import type { SetupDraft, SetupDraftEnvelope } from "./setup-draft-types";
+import { GUIDED_SETUP_DRAFT_ID } from "./setup-draft-types";
 import { addMoney, requireCurrency, requireMinorUnits } from "./validation";
-
-const ELIGIBLE_FUNDING_TYPES = new Set(["checking", "savings", "cash"]);
 
 export async function validateSetupDraft(
   database: SQLiteDatabase,
@@ -16,17 +16,29 @@ export async function validateSetupDraft(
   const accountById = new Map(accounts.map((account) => [account.id, account]));
   const mappedCategoryIds = new Set<string>();
   const envelopeIds = new Set<string>();
+  const requestedCategoryIds = draft.workspaces.flatMap(({ envelopes }) =>
+    envelopes.flatMap(({ categoryIds }) => categoryIds),
+  );
+  const eligibleCategoryIds = await getEligibleCategoryIds(database, requestedCategoryIds);
 
   for (const workspace of draft.workspaces) {
     const currency = requireCurrency(workspace.currency);
     if (new Set(workspace.fundingAccountIds).size !== workspace.fundingAccountIds.length) {
-      throw new Error(`${currency} Setup Draft Funding Accounts must be distinct.`);
+      throw new Error(
+        `${currency} Setup Draft Funding Accounts must be distinct. Remove the duplicate Account.`,
+      );
     }
     let assignableMinor = 0;
     for (const accountId of workspace.fundingAccountIds) {
       const account = accountById.get(accountId);
-      if (!account || account.lifecycle !== "active" || !ELIGIBLE_FUNDING_TYPES.has(account.type)) {
-        throw new Error(`Account ${accountId} is not eligible for a Setup Draft Funding plan.`);
+      if (
+        !account ||
+        account.lifecycle !== "active" ||
+        !isEligibleFundingAccountType(account.type)
+      ) {
+        throw new Error(
+          `Account ${accountId} cannot fund this Setup Draft. Choose an active eligible Account.`,
+        );
       }
       if (account.currency !== currency) {
         throw new Error(
@@ -42,27 +54,33 @@ export async function validateSetupDraft(
       assignedMinor = addMoney(assignedMinor, envelope.initialAssignmentMinor, currency);
       for (const categoryId of envelope.categoryIds) {
         if (!categoryId.trim() || mappedCategoryIds.has(categoryId)) {
-          throw new Error(`Category ${categoryId || "Mapping"} may appear in only one Envelope.`);
+          throw new Error(
+            `Category ${categoryId || "Mapping"} may appear in only one Envelope. Choose the single Envelope that should own it.`,
+          );
         }
         mappedCategoryIds.add(categoryId);
-        await requireCategoryMapping(database, categoryId, currency);
+        if (!eligibleCategoryIds.has(categoryId)) {
+          throw new Error(
+            `Category ${categoryId} cannot be mapped. Choose an active expense Category.`,
+          );
+        }
       }
     }
     if (assignedMinor > Math.max(assignableMinor, 0)) {
       throw new Error(
-        `${currency} initial Assignments cannot exceed the selected Funding Account balance.`,
+        `${currency} initial Assignments cannot exceed the selected Funding Account balance. Reduce Assignments or add an eligible Funding Account.`,
       );
     }
   }
 }
 
 function requireDraftShape(draft: SetupDraft): void {
-  if (draft.version !== 1 || !draft.id.trim()) {
-    throw new Error("Setup Draft has an unsupported or missing identity.");
+  if (draft.version !== 1 || draft.id !== GUIDED_SETUP_DRAFT_ID) {
+    throw new Error("This Setup Draft is unsupported. Discard it and start again.");
   }
   const currencies = draft.workspaces.map(({ currency }) => requireCurrency(currency));
   if (new Set(currencies).size !== currencies.length) {
-    throw new Error("A Setup Draft may contain only one workspace per currency.");
+    throw new Error("A Setup Draft repeats a currency workspace. Remove the duplicate workspace.");
   }
 }
 
@@ -72,43 +90,34 @@ function requireEnvelopeFields(
   envelopeIds: Set<string>,
 ): void {
   if (!envelope.id.trim() || envelopeIds.has(envelope.id)) {
-    throw new Error("Setup Draft Envelope IDs must be distinct and non-empty.");
+    throw new Error("Setup Draft Envelope IDs must be distinct. Reload and try adding it again.");
   }
   envelopeIds.add(envelope.id);
   if (envelope.currency !== currency) {
     throw new Error(
-      `Envelope ${envelope.id} uses ${envelope.currency}, not workspace currency ${currency}.`,
+      `Envelope ${envelope.id} uses ${envelope.currency}, not workspace currency ${currency}. Move it to the matching workspace before saving.`,
     );
   }
   if (!envelope.name.trim() || !envelope.icon.trim() || !envelope.color.trim()) {
-    throw new Error(`Envelope ${envelope.id} requires a name, emoji, and color.`);
+    throw new Error(`Envelope ${envelope.id} needs a name, emoji, and color before it can save.`);
   }
   requireMinorUnits(envelope.initialAssignmentMinor, currency);
   if (envelope.initialAssignmentMinor < 0) {
-    throw new Error("Initial Assignments cannot be negative.");
+    throw new Error("Initial Assignments cannot be negative. Enter zero or a positive amount.");
   }
 }
 
-async function requireCategoryMapping(
+async function getEligibleCategoryIds(
   database: SQLiteDatabase,
-  categoryId: string,
-  currency: string,
-): Promise<void> {
-  const category = await database.getFirstAsync<{ id: string }>(
+  categoryIds: readonly string[],
+): Promise<Set<string>> {
+  const uniqueIds = [...new Set(categoryIds)];
+  if (uniqueIds.length === 0) return new Set();
+  const placeholders = uniqueIds.map(() => "?").join(", ");
+  const rows = await database.getAllAsync<{ id: string }>(
     `SELECT id FROM categories
-     WHERE id = ? AND lifecycle = 'active' AND type = 'expense'`,
-    categoryId,
+     WHERE id IN (${placeholders}) AND lifecycle = 'active' AND type = 'expense'`,
+    ...uniqueIds,
   );
-  if (!category) {
-    throw new Error(`Only active expense Categories can appear in a Setup Draft.`);
-  }
-  const incompatible = await database.getFirstAsync<{ count: number }>(
-    `SELECT COUNT(*) AS count FROM transactions
-     WHERE category_id = ? AND currency <> ?`,
-    categoryId,
-    currency,
-  );
-  if ((incompatible?.count ?? 0) > 0) {
-    throw new Error(`Category ${categoryId} cannot map to a cross-currency Envelope.`);
-  }
+  return new Set(rows.map(({ id }) => id));
 }
