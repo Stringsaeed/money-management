@@ -92,6 +92,10 @@ describe("Move Money", () => {
     await expect(
       budgeting.previewMoveMoney(moveMoneyRequest({ amountMinor: 70_00 })),
     ).resolves.toMatchObject({
+      destination: {
+        after: { amountMinor: 20_00, currency: "USD" },
+        before: { amountMinor: 0, currency: "USD" },
+      },
       deficitRouting: {
         cashOverspendingMinor: 0,
         newAvailabilityMinor: 20_00,

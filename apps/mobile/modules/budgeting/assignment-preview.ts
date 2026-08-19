@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 
+import type { AccountDependencyFacts } from "./account-dependency-read";
 import { evaluateCardBudgetState } from "./card-dependency-evaluator";
 import { loadAccountDependencyFacts } from "./account-dependency-read";
 import type {
@@ -14,6 +15,7 @@ import { addMoney } from "./validation";
 export function applyMoveToProjection(
   projection: BudgetProjection,
   request: MoveMoneyRequest,
+  destinationAvailableMinor: number | null = null,
 ): BudgetProjection {
   const result = structuredClone(projection);
   if (request.sourceEnvelopeId) {
@@ -24,7 +26,10 @@ export function applyMoveToProjection(
   }
   if (request.destinationEnvelopeId) {
     const destination = result.envelopes.find(({ id }) => id === request.destinationEnvelopeId);
-    if (destination) destination.availableMoney.amountMinor += request.amountMinor;
+    if (destination) {
+      destination.availableMoney.amountMinor =
+        destinationAvailableMinor ?? destination.availableMoney.amountMinor + request.amountMinor;
+    }
   } else {
     result.unassignedMoney.amountMinor += request.amountMinor;
   }
@@ -35,13 +40,22 @@ export async function buildMoveMoneyPreview(
   database: SQLiteDatabase,
   request: MoveMoneyRequest,
   projection: BudgetProjection,
+  facts: AccountDependencyFacts | null | undefined = undefined,
 ): Promise<MoveMoneyPreview> {
-  const after = applyMoveToProjection(projection, request);
   const beforeSource = endpointBalance(projection, request.sourceEnvelopeId);
-  const afterSource = endpointBalance(after, request.sourceEnvelopeId);
   const beforeDestination = endpointBalance(projection, request.destinationEnvelopeId);
+  const deficitRouting = await getDeficitRouting(
+    database,
+    request,
+    beforeDestination.amountMinor,
+    facts,
+  );
+  const destinationAvailableMinor = request.destinationEnvelopeId
+    ? Math.max(beforeDestination.amountMinor, 0) + deficitRouting.newAvailabilityMinor
+    : null;
+  const after = applyMoveToProjection(projection, request, destinationAvailableMinor);
+  const afterSource = endpointBalance(after, request.sourceEnvelopeId);
   const afterDestination = endpointBalance(after, request.destinationEnvelopeId);
-  const deficitRouting = await getDeficitRouting(database, request, beforeDestination.amountMinor);
   return {
     currency: request.currency,
     period: request.period,
@@ -60,6 +74,7 @@ async function getDeficitRouting(
   database: SQLiteDatabase,
   request: MoveMoneyRequest,
   destinationBeforeMinor: number,
+  facts: AccountDependencyFacts | null | undefined,
 ): Promise<MoveMoneyPreview["deficitRouting"]> {
   if (!request.destinationEnvelopeId) {
     return {
@@ -69,9 +84,12 @@ async function getDeficitRouting(
     };
   }
   const cashOverspendingMinor = Math.min(Math.max(-destinationBeforeMinor, 0), request.amountMinor);
-  const facts = await loadAccountDependencyFacts(database, request.currency, request.period);
-  const existingUnfunded = facts
-    ? evaluateCardBudgetState(facts, request.period)
+  const dependencyFacts =
+    facts === undefined
+      ? await loadAccountDependencyFacts(database, request.currency, request.period)
+      : facts;
+  const existingUnfunded = dependencyFacts
+    ? evaluateCardBudgetState(dependencyFacts, request.period)
         .unfunded.filter(({ envelopeId }) => envelopeId === request.destinationEnvelopeId)
         .reduce((total, entry) => addMoney(total, entry.remainingMinor, request.currency), 0)
     : 0;

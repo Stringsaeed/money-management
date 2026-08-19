@@ -25,7 +25,7 @@ export function MoveMoneyEndpointPicker({
   ];
   const optionClassName = (selected: boolean) =>
     cn("rounded-xl px-3 py-2", selected ? "bg-ink" : "bg-surface-container");
-  const optionTextClassName = (selected: boolean) => (selected ? "text-surface" : "text-ink");
+  const optionTextClassName = (selected: boolean) => cn(selected ? "text-surface" : "text-ink");
   const handlePress = (id: MoveMoneyEndpoint) => () => onChange(id);
 
   return (

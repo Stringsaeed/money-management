@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "@jest/globals";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react-native";
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteBindValue, SQLiteDatabase } from "expo-sqlite";
 
 import { createBudgetingCoordinator } from "@/modules/budgeting/budgeting";
 
@@ -160,5 +160,37 @@ describe("Envelope workspace route status and selection", () => {
     expect(await screen.findByText("Destination 0 → 500")).toBeOnTheScreen();
     await fireEvent.press(screen.getAllByRole("button", { name: "Move Money" }).at(-1)!);
     await waitFor(() => expect(screen.queryByLabelText("Move Money source")).not.toBeOnTheScreen());
+  });
+
+  it("shows the visible projection refresh error after a committed Move Money mutation", async () => {
+    const { database } = await setupRouteDatabase();
+    await activateRouteWorkspace(database, "USD", 100_00);
+    await insertRouteCategory(database, "category-food", "Food");
+    await createRouteEnvelope(database, {
+      categoryIds: ["category-food"],
+      id: "envelope-food",
+      name: "Food",
+    });
+    await renderWorkspaceRoute();
+
+    await fireEvent.press(await screen.findByRole("button", { name: "Move Money" }));
+    await fireEvent.changeText(screen.getByLabelText("Move Money amount"), "2500");
+    await fireEvent.press(screen.getByRole("button", { name: "Preview Move Money" }));
+    expect(await screen.findByText("Source 10000 → 7500")).toBeOnTheScreen();
+
+    const getFirstAsync = database.getFirstAsync.bind(database);
+    let projectionReads = 0;
+    database.getFirstAsync = (async (source: string, ...params: SQLiteBindValue[]) => {
+      if (source.includes("FROM budget_workspaces")) {
+        projectionReads += 1;
+        if (projectionReads > 4) throw new Error("forced refresh failure");
+      }
+      return getFirstAsync(source, ...params);
+    }) as typeof database.getFirstAsync;
+
+    await fireEvent.press(screen.getAllByRole("button", { name: "Move Money" }).at(-1)!);
+
+    expect(await screen.findByText("Monthly budget is unavailable")).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Retry monthly budget" })).toBeOnTheScreen();
   });
 });

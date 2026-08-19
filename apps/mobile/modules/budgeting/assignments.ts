@@ -2,7 +2,9 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 import { runInTransaction } from "@/modules/recurring-rules/persistence";
 
+import { type AccountDependencyFacts, loadAccountDependencyFacts } from "./account-dependency-read";
 import { applyMoveToProjection, buildMoveMoneyPreview } from "./assignment-preview";
+import { evaluateCardBudgetState } from "./card-dependency-evaluator";
 import {
   createReversalRequest,
   insertAssignment,
@@ -24,6 +26,13 @@ import type {
 } from "./types";
 
 export { getAssignmentHistory } from "./assignment-persistence";
+
+interface CorrectionPlan {
+  afterReversal: BudgetProjection;
+  factsAfterReversal: AccountDependencyFacts | null;
+  originalId: string;
+  reversal: MoveMoneyRequest;
+}
 
 export async function previewMoveMoney(
   database: SQLiteDatabase,
@@ -56,35 +65,78 @@ export async function previewCorrectMoveMoney(
   database: SQLiteDatabase,
   request: CorrectMoveMoneyRequest,
 ): Promise<MoveMoneyPreview> {
-  validateMoveRequest(request, { allowPastPeriod: true });
-  const original = await requireCorrectableAssignment(database, request);
-  const projection = await requireProjection(database, request.currency, request.period);
-  const reversal = createReversalRequest(original, request);
-  await validateEndpoints(database, reversal);
-  assertSourceHasMoney(reversal, projection);
-  const afterReversal = applyMoveToProjection(projection, reversal);
-  await validateEndpoints(database, request);
-  assertSourceHasMoney(request, afterReversal);
-  return buildMoveMoneyPreview(database, request, afterReversal);
+  const correction = await prepareCorrection(database, request);
+  return buildMoveMoneyPreview(
+    database,
+    request,
+    correction.afterReversal,
+    correction.factsAfterReversal,
+  );
 }
 
 export async function correctMoveMoney(
   database: SQLiteDatabase,
   request: CorrectMoveMoneyRequest,
 ): Promise<BudgetProjection> {
-  validateMoveRequest(request, { allowPastPeriod: true });
   await runInTransaction(database, async (transaction) => {
-    const original = await requireCorrectableAssignment(transaction, request);
-    const projection = await requireProjection(transaction, request.currency, request.period);
-    const reversal = createReversalRequest(original, request);
-    await validateEndpoints(transaction, reversal);
-    assertSourceHasMoney(reversal, projection);
-    await insertAssignment(transaction, reversal, original.id);
-
-    const afterReversal = applyMoveToProjection(projection, reversal);
-    assertSourceHasMoney(request, afterReversal);
-    await validateEndpoints(transaction, request);
-    await insertAssignment(transaction, request, reversal.id);
+    const correction = await prepareCorrection(transaction, request);
+    await insertAssignment(transaction, correction.reversal, correction.originalId);
+    await insertAssignment(transaction, request, correction.reversal.id);
   });
   return requireProjection(database, request.currency, request.period);
+}
+
+async function prepareCorrection(
+  database: SQLiteDatabase,
+  request: CorrectMoveMoneyRequest,
+): Promise<CorrectionPlan> {
+  const currentPeriod = validateMoveRequest(request, { allowPastPeriod: true });
+  await assertFutureMoveIsAllowed(database, request, currentPeriod);
+  const original = await requireCorrectableAssignment(database, request);
+  const projection = await requireProjection(database, request.currency, request.period);
+  const reversal = createReversalRequest(original, request);
+  const facts = await loadAccountDependencyFacts(database, request.currency, request.period);
+  await validateEndpoints(database, reversal);
+  // This linked fact cancels the loaded original; only the replacement is a new source claim.
+  const factsAfterReversal = facts
+    ? {
+        ...facts,
+        assignments: [
+          ...facts.assignments,
+          {
+            id: reversal.id,
+            currency: reversal.currency,
+            period: reversal.period,
+            sourceEnvelopeId: reversal.sourceEnvelopeId,
+            destinationEnvelopeId: reversal.destinationEnvelopeId,
+            amountMinor: reversal.amountMinor,
+            reversesAssignmentId: original.id,
+          },
+        ],
+      }
+    : null;
+  const afterReversal = applyReversalToProjection(projection, reversal, factsAfterReversal);
+  await validateEndpoints(database, request);
+  assertSourceHasMoney(request, afterReversal);
+  return { afterReversal, factsAfterReversal, originalId: original.id, reversal };
+}
+
+function applyReversalToProjection(
+  projection: BudgetProjection,
+  reversal: MoveMoneyRequest,
+  facts: AccountDependencyFacts | null,
+): BudgetProjection {
+  const afterReversal = applyMoveToProjection(projection, reversal);
+  if (!facts) return afterReversal;
+  const availability = evaluateCardBudgetState(facts, reversal.period).availability;
+  return {
+    ...afterReversal,
+    envelopes: afterReversal.envelopes.map((envelope) => ({
+      ...envelope,
+      availableMoney: {
+        ...envelope.availableMoney,
+        amountMinor: availability.get(envelope.id) ?? 0,
+      },
+    })),
+  };
 }
