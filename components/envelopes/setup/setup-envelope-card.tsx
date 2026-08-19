@@ -18,6 +18,8 @@ interface SetupEnvelopeCardProps {
   mergeSelected: boolean;
   onChange: (changes: Partial<SetupDraftEnvelope>) => void;
   onMapCategory: (categoryId: string) => void;
+  onRemoveCategory: (categoryId: string) => void;
+  onToggleRollover: VoidFunction;
   onToggleMergeSelection: VoidFunction;
 }
 
@@ -27,10 +29,10 @@ export const SetupEnvelopeCard = ({
   mergeSelected,
   onChange,
   onMapCategory,
+  onRemoveCategory,
+  onToggleRollover,
   onToggleMergeSelection,
 }: SetupEnvelopeCardProps) => {
-  const handleCategoryIdsChange = (categoryIds: string[]) => onChange({ categoryIds });
-  const handleRollover = () => onChange({ positiveRollover: !envelope.positiveRollover });
   const handleAssignment = (initialAssignmentMinor: number) => onChange({ initialAssignmentMinor });
   return (
     <Animated.View
@@ -57,10 +59,9 @@ export const SetupEnvelopeCard = ({
             <SetupCategoryMappingRow
               key={categoryId}
               categoryId={categoryId}
-              categoryIds={envelope.categoryIds}
               icon={category?.icon ?? "🏷️"}
               name={category?.name ?? categoryId}
-              onChange={handleCategoryIdsChange}
+              onRemove={onRemoveCategory}
             />
           );
         })}
@@ -77,7 +78,7 @@ export const SetupEnvelopeCard = ({
       </View>
       <Button
         accessibilityLabel={`Toggle ${envelope.name} Rollover`}
-        onPress={handleRollover}
+        onPress={onToggleRollover}
         variant="outline"
       >
         <Text>

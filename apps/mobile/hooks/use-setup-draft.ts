@@ -7,14 +7,16 @@ import {
   createBudgetingCoordinator,
   mergeSetupDraftEnvelopes,
   moveSetupDraftCategory,
+  removeSetupDraftCategory,
+  toggleSetupDraftRollover,
   updateSetupDraftEnvelope,
   updateSetupDraftFundingAccounts,
 } from "@/modules/budgeting/budgeting";
 import type { SetupDraft, SetupDraftEnvelope } from "@/modules/budgeting/budgeting";
+import { UnreadableSetupDraftError } from "@/modules/budgeting/setup-draft-codec";
+import { budgetKeys } from "@/modules/ledger-cache";
 import { nowIso } from "@/utils/date";
 import { generateId } from "@/utils/id";
-
-const setupDraftKey = ["setup-draft", "guided-envelope-setup"] as const;
 
 type DraftTransform = (draft: SetupDraft) => SetupDraft;
 type SetupDraftCommand =
@@ -28,7 +30,7 @@ export function useSetupDraft() {
   const [actionError, setActionError] = useState<string | null>(null);
   const coordinator = createBudgetingCoordinator(database);
   const query = useQuery({
-    queryKey: setupDraftKey,
+    queryKey: budgetKeys.setupDraft,
     queryFn: async () => {
       const [draft, prerequisites] = await Promise.all([
         coordinator.loadSetupDraft(),
@@ -40,7 +42,13 @@ export function useSetupDraft() {
   const mutation = useMutation({
     mutationFn: async (command: SetupDraftCommand): Promise<SetupDraft | null> => {
       if (command.kind === "discard") {
-        await coordinator.discardSetupDraft();
+        try {
+          await coordinator.discardSetupDraft();
+        } catch {
+          throw new Error(
+            "Setup Draft could not be discarded and remains saved. Retry when storage is available.",
+          );
+        }
         return null;
       }
       if (command.kind === "start") {
@@ -55,11 +63,11 @@ export function useSetupDraft() {
       return coordinator.saveSetupDraft(command.transform(current), nowIso());
     },
     onSuccess: (draft) => {
-      const current = queryClient.getQueryData<typeof query.data>(setupDraftKey);
+      const current = queryClient.getQueryData<typeof query.data>(budgetKeys.setupDraft);
       if (current?.prerequisites) {
-        queryClient.setQueryData(setupDraftKey, { ...current, draft });
+        queryClient.setQueryData(budgetKeys.setupDraft, { ...current, draft });
       } else {
-        void queryClient.invalidateQueries({ queryKey: setupDraftKey });
+        void queryClient.invalidateQueries({ queryKey: budgetKeys.setupDraft });
       }
     },
     onError: (error) => {
@@ -80,7 +88,12 @@ export function useSetupDraft() {
   return {
     ...query,
     actionError,
+    errorIsUnreadable: query.error instanceof UnreadableSetupDraftError,
     isSaving: mutation.isPending,
+    retry: () => {
+      setActionError(null);
+      void query.refetch();
+    },
     start: (mode: SetupDraft["mode"]) => {
       setActionError(null);
       mutation.mutate({
@@ -108,6 +121,12 @@ export function useSetupDraft() {
     },
     moveCategory: (currency: string, categoryId: string, envelopeId: string) => {
       update((draft) => moveSetupDraftCategory(draft, currency, categoryId, envelopeId));
+    },
+    removeCategory: (currency: string, envelopeId: string, categoryId: string) => {
+      update((draft) => removeSetupDraftCategory(draft, currency, envelopeId, categoryId));
+    },
+    toggleRollover: (currency: string, envelopeId: string) => {
+      update((draft) => toggleSetupDraftRollover(draft, currency, envelopeId));
     },
     toggleFundingAccount: (currency: string, accountId: string) => {
       update((draft) => {

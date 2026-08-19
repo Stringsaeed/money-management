@@ -10,6 +10,8 @@ interface SetupDraftEnvelopeItemProps {
   envelope: SetupDraftEnvelope;
   mergeSelected: boolean;
   onMoveCategory: (currency: string, categoryId: string, envelopeId: string) => void;
+  onRemoveCategory: (currency: string, envelopeId: string, categoryId: string) => void;
+  onToggleRollover: (currency: string, envelopeId: string) => void;
   onToggleMergeSelection: (envelopeId: string) => void;
   onUpdateEnvelope: (
     currency: string,
@@ -24,6 +26,8 @@ export const SetupDraftEnvelopeItem = ({
   envelope,
   mergeSelected,
   onMoveCategory,
+  onRemoveCategory,
+  onToggleRollover,
   onToggleMergeSelection,
   onUpdateEnvelope,
 }: SetupDraftEnvelopeItemProps) => {
@@ -31,6 +35,9 @@ export const SetupDraftEnvelopeItem = ({
     onUpdateEnvelope(currency, envelope.id, changes);
   const handleMapCategory = (categoryId: string) =>
     onMoveCategory(currency, categoryId, envelope.id);
+  const handleRemoveCategory = (categoryId: string) =>
+    onRemoveCategory(currency, envelope.id, categoryId);
+  const handleToggleRollover = () => onToggleRollover(currency, envelope.id);
   const handleToggleSelection = () => onToggleMergeSelection(envelope.id);
   return (
     <SetupEnvelopeCard
@@ -39,6 +46,8 @@ export const SetupDraftEnvelopeItem = ({
       mergeSelected={mergeSelected}
       onChange={handleChange}
       onMapCategory={handleMapCategory}
+      onRemoveCategory={handleRemoveCategory}
+      onToggleRollover={handleToggleRollover}
       onToggleMergeSelection={handleToggleSelection}
     />
   );

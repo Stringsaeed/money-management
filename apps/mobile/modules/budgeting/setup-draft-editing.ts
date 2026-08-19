@@ -99,6 +99,37 @@ export function updateSetupDraftFundingAccounts(
   });
 }
 
+export function removeSetupDraftCategory(
+  draft: SetupDraft,
+  currency: string,
+  envelopeId: string,
+  categoryId: string,
+): SetupDraft {
+  const workspace = requireWorkspace(draft, currency);
+  const envelope = workspace.envelopes.find(({ id }) => id === envelopeId);
+  if (!envelope) {
+    throw new Error(`Envelope ${envelopeId} is no longer in ${currency}. Reload the Setup Draft.`);
+  }
+  return updateSetupDraftEnvelope(draft, currency, envelopeId, {
+    categoryIds: envelope.categoryIds.filter((id) => id !== categoryId),
+  });
+}
+
+export function toggleSetupDraftRollover(
+  draft: SetupDraft,
+  currency: string,
+  envelopeId: string,
+): SetupDraft {
+  const workspace = requireWorkspace(draft, currency);
+  const envelope = workspace.envelopes.find(({ id }) => id === envelopeId);
+  if (!envelope) {
+    throw new Error(`Envelope ${envelopeId} is no longer in ${currency}. Reload the Setup Draft.`);
+  }
+  return updateSetupDraftEnvelope(draft, currency, envelopeId, {
+    positiveRollover: !envelope.positiveRollover,
+  });
+}
+
 export function moveSetupDraftCategory(
   draft: SetupDraft,
   currency: string,

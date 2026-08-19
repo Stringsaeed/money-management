@@ -11,12 +11,20 @@ export const SetupDraftScreen = () => {
   const setup = useSetupDraft();
   const handleStartBlank = () => setup.start("blank");
   const handleStartSuggested = () => setup.start("suggested");
+  const handleRetry = () => setup.retry();
 
   if (setup.isLoading) {
     return <SetupDraftRouteStatus />;
   }
   if (setup.error || !setup.data?.prerequisites) {
-    return <SetupDraftRouteStatus error onDiscard={setup.discard} />;
+    return (
+      <SetupDraftRouteStatus
+        actionError={setup.actionError}
+        onDiscard={setup.errorIsUnreadable ? setup.discard : undefined}
+        onRetry={setup.errorIsUnreadable ? undefined : handleRetry}
+        status={setup.errorIsUnreadable ? "unreadable" : "unavailable"}
+      />
+    );
   }
 
   return (
@@ -37,7 +45,9 @@ export const SetupDraftScreen = () => {
               onDiscard={setup.discard}
               onMerge={setup.mergeSuggestions}
               onMoveCategory={setup.moveCategory}
+              onRemoveCategory={setup.removeCategory}
               onToggleFundingAccount={setup.toggleFundingAccount}
+              onToggleRollover={setup.toggleRollover}
               onUpdateEnvelope={setup.updateEnvelope}
             />
           </Animated.View>

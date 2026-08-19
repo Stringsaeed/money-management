@@ -1,6 +1,13 @@
 import type { SetupDraft, SetupDraftEnvelope, SetupDraftWorkspace } from "./setup-draft-types";
 import { GUIDED_SETUP_DRAFT_ID } from "./setup-draft-types";
 
+export class UnreadableSetupDraftError extends Error {
+  constructor() {
+    super("The saved Setup Draft is unreadable. Discard it and start again.");
+    this.name = "UnreadableSetupDraftError";
+  }
+}
+
 export function decodeSetupDraft(value: unknown): SetupDraft {
   if (!isRecord(value)) return unreadable();
   if (
@@ -81,5 +88,5 @@ function isStringArray(value: unknown): value is string[] {
 }
 
 function unreadable(): never {
-  throw new Error("The saved Setup Draft is unreadable. Discard it and start again.");
+  throw new UnreadableSetupDraftError();
 }

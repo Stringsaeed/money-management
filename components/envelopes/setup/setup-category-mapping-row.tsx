@@ -5,20 +5,18 @@ import { Text } from "@/components/ui/text";
 
 interface SetupCategoryMappingRowProps {
   categoryId: string;
-  categoryIds: readonly string[];
   icon: string;
   name: string;
-  onChange: (categoryIds: string[]) => void;
+  onRemove: (categoryId: string) => void;
 }
 
 export const SetupCategoryMappingRow = ({
   categoryId,
-  categoryIds,
   icon,
   name,
-  onChange,
+  onRemove,
 }: SetupCategoryMappingRowProps) => {
-  const handleRemove = () => onChange(categoryIds.filter((id) => id !== categoryId));
+  const handleRemove = () => onRemove(categoryId);
   return (
     <Animated.View
       entering={FadeIn}

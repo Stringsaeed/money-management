@@ -1,10 +1,7 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 
 import type { FundingAccountSuggestion, FundingAccountSuggestionsRequest } from "./types";
-import {
-  isDefaultFundingAccountType,
-  isEligibleFundingAccountType,
-} from "./funding-account-eligibility";
+import { isDefaultFundingAccountType } from "./funding-account-eligibility";
 import { requireCurrency } from "./validation";
 
 interface FundingAccountSuggestionRow {
@@ -31,7 +28,6 @@ export async function getFundingAccountSuggestions(
     currency,
   );
   return rows
-    .filter((row) => isEligibleFundingAccountType(row.type))
     .map((row) => ({
       id: row.id,
       currency: row.currency,

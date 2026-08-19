@@ -19,7 +19,9 @@ interface SetupDraftPlanProps {
   onDiscard: VoidFunction;
   onMerge: (currency: string, envelopeIds: readonly string[]) => void;
   onMoveCategory: (currency: string, categoryId: string, envelopeId: string) => void;
+  onRemoveCategory: (currency: string, envelopeId: string, categoryId: string) => void;
   onToggleFundingAccount: (currency: string, accountId: string) => void;
+  onToggleRollover: (currency: string, envelopeId: string) => void;
   onUpdateEnvelope: (
     currency: string,
     envelopeId: string,
@@ -36,7 +38,9 @@ export const SetupDraftPlan = ({
   onDiscard,
   onMerge,
   onMoveCategory,
+  onRemoveCategory,
   onToggleFundingAccount,
+  onToggleRollover,
   onUpdateEnvelope,
 }: SetupDraftPlanProps) => (
   <Animated.View entering={FadeIn} layout={LinearTransition} className="gap-5">
@@ -56,7 +60,9 @@ export const SetupDraftPlan = ({
         onAddEnvelope={onAddEnvelope}
         onMerge={onMerge}
         onMoveCategory={onMoveCategory}
+        onRemoveCategory={onRemoveCategory}
         onToggleFundingAccount={onToggleFundingAccount}
+        onToggleRollover={onToggleRollover}
         onUpdateEnvelope={onUpdateEnvelope}
         workspace={workspace}
       />

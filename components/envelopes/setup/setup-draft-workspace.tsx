@@ -20,7 +20,9 @@ interface SetupDraftWorkspaceSectionProps {
   onAddEnvelope: (currency: string) => void;
   onMerge: (currency: string, envelopeIds: readonly string[]) => void;
   onMoveCategory: (currency: string, categoryId: string, envelopeId: string) => void;
+  onRemoveCategory: (currency: string, envelopeId: string, categoryId: string) => void;
   onToggleFundingAccount: (currency: string, accountId: string) => void;
+  onToggleRollover: (currency: string, envelopeId: string) => void;
   onUpdateEnvelope: (
     currency: string,
     envelopeId: string,
@@ -36,7 +38,9 @@ export const SetupDraftWorkspaceSection = ({
   onAddEnvelope,
   onMerge,
   onMoveCategory,
+  onRemoveCategory,
   onToggleFundingAccount,
+  onToggleRollover,
   onUpdateEnvelope,
   workspace,
 }: SetupDraftWorkspaceSectionProps) => {
@@ -107,6 +111,8 @@ export const SetupDraftWorkspaceSection = ({
           envelope={envelope}
           mergeSelected={selectedEnvelopeIds.includes(envelope.id)}
           onMoveCategory={onMoveCategory}
+          onRemoveCategory={onRemoveCategory}
+          onToggleRollover={onToggleRollover}
           onToggleMergeSelection={handleToggleMergeSelection}
           onUpdateEnvelope={onUpdateEnvelope}
         />

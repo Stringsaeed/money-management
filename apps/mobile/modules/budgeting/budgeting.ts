@@ -83,9 +83,12 @@ export {
   addSetupDraftEnvelope,
   mergeSetupDraftEnvelopes,
   moveSetupDraftCategory,
+  removeSetupDraftCategory,
+  toggleSetupDraftRollover,
   updateSetupDraftEnvelope,
   updateSetupDraftFundingAccounts,
 } from "./setup-draft-editing";
+export { UnreadableSetupDraftError } from "./setup-draft-codec";
 
 export function createBudgetingCoordinator(
   database: SQLiteDatabase,

@@ -71,6 +71,7 @@ export const budgetKeys = {
   assignmentHistory: ["budgeting", "assignment-history"] as const,
   assignmentHistoryFor: (currency: string, period: string) =>
     ["budgeting", "assignment-history", currency, period] as const,
+  setupDraft: ["budgeting", "setup-draft", "guided-envelope-setup"] as const,
 };
 
 export type BudgetEffect =
@@ -108,6 +109,7 @@ const transactionChangeQueryKeys = [
   budgetKeys.projections,
   budgetKeys.envelopeFormOptions,
   accountKeys.lifecyclePreviews,
+  budgetKeys.setupDraft,
 ] as const;
 
 const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKey[]> = {
@@ -116,6 +118,7 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
     accountKeys.balances,
     accountKeys.managementBalances,
     budgetKeys.projections,
+    budgetKeys.setupDraft,
   ],
   "account.updated": [
     accountKeys.all,
@@ -125,6 +128,7 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
     recurringRuleKeys.all,
     budgetKeys.projections,
     accountKeys.lifecyclePreviews,
+    budgetKeys.setupDraft,
   ],
   "account.archived": [
     accountKeys.all,
@@ -134,6 +138,7 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
     recurringRuleKeys.all,
     budgetKeys.projections,
     accountKeys.lifecyclePreviews,
+    budgetKeys.setupDraft,
   ],
   "account.restored": [
     accountKeys.all,
@@ -142,6 +147,7 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
     recurringRuleKeys.all,
     budgetKeys.projections,
     accountKeys.lifecyclePreviews,
+    budgetKeys.setupDraft,
   ],
   "account.deleted": [
     accountKeys.all,
@@ -153,10 +159,21 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
     recurringRuleKeys.all,
     budgetKeys.projections,
     accountKeys.lifecyclePreviews,
+    budgetKeys.setupDraft,
   ],
-  "category.created": [categoryKeys.all, budgetKeys.envelopeFormOptions],
-  "category.batch": [categoryKeys.all, transactionKeys.all, budgetKeys.envelopeFormOptions],
-  "category.updated": [categoryKeys.all, transactionKeys.all, budgetKeys.envelopeFormOptions],
+  "category.created": [categoryKeys.all, budgetKeys.envelopeFormOptions, budgetKeys.setupDraft],
+  "category.batch": [
+    categoryKeys.all,
+    transactionKeys.all,
+    budgetKeys.envelopeFormOptions,
+    budgetKeys.setupDraft,
+  ],
+  "category.updated": [
+    categoryKeys.all,
+    transactionKeys.all,
+    budgetKeys.envelopeFormOptions,
+    budgetKeys.setupDraft,
+  ],
   "category.archived": [
     categoryKeys.all,
     transactionKeys.all,
@@ -164,6 +181,7 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
     budgetKeys.projections,
     accountKeys.lifecyclePreviews,
     budgetKeys.envelopeFormOptions,
+    budgetKeys.setupDraft,
   ],
   "category.restored": [
     categoryKeys.all,
@@ -171,6 +189,7 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
     budgetKeys.projections,
     accountKeys.lifecyclePreviews,
     budgetKeys.envelopeFormOptions,
+    budgetKeys.setupDraft,
   ],
   "category.deleted": [
     categoryKeys.all,
@@ -179,6 +198,7 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
     budgetKeys.projections,
     accountKeys.lifecyclePreviews,
     budgetKeys.envelopeFormOptions,
+    budgetKeys.setupDraft,
   ],
   "transaction.created": transactionChangeQueryKeys,
   "transaction.updated": transactionChangeQueryKeys,
@@ -188,8 +208,13 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
 const recurringEffectQueryKeys: Record<RecurringEffect, readonly QueryKey[]> = {
   rules: [recurringRuleKeys.all, accountKeys.lifecyclePreviews],
   upcoming: [recurringRuleKeys.upcomingAll],
-  ledger: [transactionKeys.all, budgetKeys.projections, accountKeys.lifecyclePreviews],
-  balances: [accountKeys.balances],
+  ledger: [
+    transactionKeys.all,
+    budgetKeys.projections,
+    accountKeys.lifecyclePreviews,
+    budgetKeys.setupDraft,
+  ],
+  balances: [accountKeys.balances, budgetKeys.setupDraft],
   summaries: [monthSummaryKeys.all, transactionDateRangeKeys.all],
 };
 

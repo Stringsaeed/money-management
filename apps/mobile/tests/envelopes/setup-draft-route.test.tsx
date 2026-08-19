@@ -204,6 +204,86 @@ describe("Setup Draft route", () => {
     });
   });
 
+  it("applies rapid same-field Mapping removals and double Rollover toggles semantically", async () => {
+    const database = await setup();
+    await insertAccount(database, "checking", "Everyday checking", "USD", "checking");
+    await insertCategory(database, "alpha", "Alpha", "🅰️");
+    await insertCategory(database, "bravo", "Bravo", "🅱️");
+    await insertCategory(database, "charlie", "Charlie", "🇨");
+    await renderRoute();
+    await fireEvent.press(await screen.findByLabelText("Use Category suggestions"));
+    await fireEvent.press(await screen.findByLabelText("Map Bravo to Alpha"));
+    await waitFor(() => expect(screen.getByLabelText("Remove Bravo Mapping")).toBeOnTheScreen());
+    await fireEvent.press(screen.getByLabelText("Map Charlie to Alpha"));
+    await waitFor(() => expect(screen.getByLabelText("Remove Charlie Mapping")).toBeOnTheScreen());
+
+    const removeBravo = screen.getByLabelText("Remove Bravo Mapping");
+    const removeCharlie = screen.getByLabelText("Remove Charlie Mapping");
+    const rollover = screen.getByLabelText("Toggle Alpha Rollover");
+    await act(async () => {
+      pressImmediately(removeBravo);
+      pressImmediately(removeCharlie);
+      pressImmediately(rollover);
+      pressImmediately(rollover);
+    });
+
+    await waitFor(async () => {
+      await expect(createBudgetingCoordinator(database).loadSetupDraft()).resolves.toMatchObject({
+        workspaces: [
+          {
+            envelopes: expect.arrayContaining([
+              expect.objectContaining({
+                name: "Alpha",
+                categoryIds: ["alpha"],
+                positiveRollover: true,
+              }),
+            ]),
+          },
+        ],
+      });
+    });
+  });
+
+  it("shows and retains the persisted Assignment total after merging Envelopes", async () => {
+    const database = await setup();
+    await insertAccount(database, "checking", "Everyday checking", "USD", "checking");
+    await insertCategory(database, "alpha", "Alpha", "🅰️");
+    await insertCategory(database, "bravo", "Bravo", "🅱️");
+    await renderRoute();
+    await fireEvent.press(await screen.findByLabelText("Use Category suggestions"));
+    await setAssignment("Alpha", "10.00");
+    await setAssignment("Bravo", "20.00");
+    await waitFor(async () => {
+      await expect(createBudgetingCoordinator(database).loadSetupDraft()).resolves.toMatchObject({
+        workspaces: [
+          {
+            envelopes: expect.arrayContaining([
+              expect.objectContaining({ name: "Alpha", initialAssignmentMinor: 10_00 }),
+              expect.objectContaining({ name: "Bravo", initialAssignmentMinor: 20_00 }),
+            ]),
+          },
+        ],
+      });
+    });
+
+    await fireEvent.press(screen.getByLabelText("Select Alpha for merge"));
+    await fireEvent.press(screen.getByLabelText("Select Bravo for merge"));
+    await fireEvent.press(screen.getByLabelText("Merge 2 selected USD Envelopes"));
+
+    const mergedInput = await screen.findByLabelText("Alpha initial Assignment");
+    await waitFor(() => expect(mergedInput).toHaveDisplayValue("30.00"));
+    await fireEvent(mergedInput, "endEditing", { nativeEvent: { text: "30.00" } });
+    await waitFor(async () => {
+      await expect(createBudgetingCoordinator(database).loadSetupDraft()).resolves.toMatchObject({
+        workspaces: [
+          {
+            envelopes: [expect.objectContaining({ name: "Alpha", initialAssignmentMinor: 30_00 })],
+          },
+        ],
+      });
+    });
+  });
+
   it("keeps invalid Assignment text visible and reports an actionable error", async () => {
     const database = await setup();
     await insertAccount(database, "checking", "Everyday checking", "USD", "checking");
@@ -249,6 +329,39 @@ describe("Setup Draft route", () => {
 
     expect(await screen.findByText("Setup Draft is unreadable")).toBeOnTheScreen();
     await fireEvent.press(screen.getByLabelText("Discard unreadable Setup Draft"));
+    expect(await screen.findByText("Give your Money a job 🌱")).toBeOnTheScreen();
+  });
+
+  it("keeps unreadable recovery visible when draft-only discard fails", async () => {
+    const database = await setup();
+    await database.runAsync(
+      "INSERT INTO setup_drafts (id, payload, created_at, updated_at) VALUES (?, ?, ?, ?)",
+      "guided-envelope-setup",
+      JSON.stringify({ version: 1, workspaces: "wrong" }),
+      "2026-08-19T08:00:00.000Z",
+      "2026-08-19T08:00:00.000Z",
+    );
+    await renderRoute();
+    await screen.findByText("Setup Draft is unreadable");
+    jest.spyOn(database, "runAsync").mockRejectedValueOnce(new Error("storage unavailable"));
+
+    await fireEvent.press(screen.getByLabelText("Discard unreadable Setup Draft"));
+
+    expect(
+      await screen.findByText(/Setup Draft could not be discarded.*remains saved.*Retry/),
+    ).toBeOnTheScreen();
+    expect(screen.getByLabelText("Discard unreadable Setup Draft")).toBeOnTheScreen();
+  });
+
+  it("offers Retry for general prerequisite load failures", async () => {
+    const database = await setup();
+    jest.spyOn(database, "getAllAsync").mockRejectedValueOnce(new Error("SQLite unavailable"));
+    await renderRoute();
+
+    expect(await screen.findByText("Setup data is unavailable")).toBeOnTheScreen();
+    expect(screen.queryByLabelText("Discard unreadable Setup Draft")).not.toBeOnTheScreen();
+    await fireEvent.press(screen.getByLabelText("Retry loading Setup Draft"));
+
     expect(await screen.findByText("Give your Money a job 🌱")).toBeOnTheScreen();
   });
 
@@ -326,6 +439,12 @@ function pressImmediately(element: TestInstance): void {
     candidate = candidate.parent;
   }
   throw new Error("Expected the accessible control to expose a press handler.");
+}
+
+async function setAssignment(envelopeName: string, value: string): Promise<void> {
+  const input = screen.getByLabelText(`${envelopeName} initial Assignment`);
+  await fireEvent.changeText(input, value);
+  await fireEvent(input, "endEditing", { nativeEvent: { text: value } });
 }
 
 async function insertAccount(

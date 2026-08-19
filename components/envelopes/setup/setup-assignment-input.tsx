@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TextInput } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 
 import { Text } from "@/components/ui/text";
+import { parseSetupAssignment } from "@/modules/budgeting/setup-assignment";
 import { centsToDecimalString } from "@/utils/currency";
 
 interface SetupAssignmentInputProps {
@@ -18,6 +19,19 @@ export const SetupAssignmentInput = ({
 }: SetupAssignmentInputProps) => {
   const [value, setValue] = useState(() => centsToDecimalString(amountMinor));
   const [error, setError] = useState<string | null>(null);
+  const [hasUncommittedInput, setHasUncommittedInput] = useState(false);
+  const previousAmountMinor = useRef(amountMinor);
+
+  useEffect(() => {
+    if (previousAmountMinor.current === amountMinor) return;
+    previousAmountMinor.current = amountMinor;
+    if (!hasUncommittedInput) setValue(centsToDecimalString(amountMinor));
+  }, [amountMinor, hasUncommittedInput]);
+
+  const handleChangeText = (nextValue: string) => {
+    setValue(nextValue);
+    setHasUncommittedInput(true);
+  };
 
   const handleEndEditing = () => {
     const parsed = parseSetupAssignment(value);
@@ -27,6 +41,7 @@ export const SetupAssignmentInput = ({
     }
     setError(null);
     setValue(centsToDecimalString(parsed.amountMinor));
+    setHasUncommittedInput(false);
     onChange(parsed.amountMinor);
   };
 
@@ -39,7 +54,7 @@ export const SetupAssignmentInput = ({
         accessibilityLabel={`${envelopeName} initial Assignment`}
         className="h-11 rounded-xl bg-surface-container px-3 font-body-normal text-ink"
         inputMode="decimal"
-        onChangeText={setValue}
+        onChangeText={handleChangeText}
         onEndEditing={handleEndEditing}
         value={value}
       />
@@ -53,26 +68,3 @@ export const SetupAssignmentInput = ({
     </Animated.View>
   );
 };
-
-export function parseSetupAssignment(
-  value: string,
-): { valid: true; amountMinor: number } | { valid: false; message: string } {
-  const trimmed = value.trim();
-  if (trimmed === "") return { valid: true, amountMinor: 0 };
-  if (!/^\d+(?:\.\d{1,2})?$/.test(trimmed)) {
-    return {
-      valid: false,
-      message:
-        "Enter a positive amount with no more than two decimal places, or clear it for zero.",
-    };
-  }
-  const [whole, fraction = ""] = trimmed.split(".");
-  const amountMinor = Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
-  if (!Number.isSafeInteger(amountMinor)) {
-    return {
-      valid: false,
-      message: "This Assignment is too large. Enter a smaller positive amount.",
-    };
-  }
-  return { valid: true, amountMinor };
-}

@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 
-import { decodeSetupDraft } from "./setup-draft-codec";
+import { decodeSetupDraft, UnreadableSetupDraftError } from "./setup-draft-codec";
 import { GUIDED_SETUP_DRAFT_ID, type SetupDraft } from "./setup-draft-types";
 import { validateSetupDraft } from "./setup-draft-validation";
 
@@ -14,11 +14,13 @@ export async function loadSetupDraft(database: SQLiteDatabase): Promise<SetupDra
     GUIDED_SETUP_DRAFT_ID,
   );
   if (!row) return null;
+  let parsed: unknown;
   try {
-    return decodeSetupDraft(JSON.parse(row.payload) as unknown);
+    parsed = JSON.parse(row.payload) as unknown;
   } catch {
-    throw new Error("The saved Setup Draft is unreadable. Discard it and start again.");
+    throw new UnreadableSetupDraftError();
   }
+  return decodeSetupDraft(parsed);
 }
 
 export async function saveSetupDraft(
