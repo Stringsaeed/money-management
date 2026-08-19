@@ -1,3 +1,9 @@
+import type {
+  CreateSetupDraftRequest,
+  SetupDraft,
+  SetupDraftPrerequisites,
+} from "./setup-draft-types";
+
 export interface Money {
   currency: string;
   amountMinor: number;
@@ -233,6 +239,11 @@ export interface AccountDependencyOptions {
 }
 
 export interface BudgetingCoordinator {
+  getSetupDraftPrerequisites(): Promise<SetupDraftPrerequisites>;
+  createSetupDraft(request: CreateSetupDraftRequest): Promise<SetupDraft>;
+  loadSetupDraft(): Promise<SetupDraft | null>;
+  saveSetupDraft(draft: SetupDraft, now: string): Promise<SetupDraft>;
+  discardSetupDraft(): Promise<void>;
   activateWorkspace(request: ActivateWorkspaceRequest): Promise<BudgetProjection>;
   updateFundingMembership(request: UpdateFundingMembershipRequest): Promise<BudgetProjection>;
   getFundingAccountSuggestions(

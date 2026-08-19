@@ -17,6 +17,13 @@ import { updateFundingMembership } from "./funding-membership";
 import { createEnvelope, updateEnvelope } from "./envelope-resources";
 import { getEnvelopeFormOptions } from "./envelope-form-options";
 import { getProjection } from "./projection";
+import { getSetupDraftPrerequisites } from "./setup-draft-suggestions";
+import {
+  createSetupDraft,
+  discardSetupDraft,
+  loadSetupDraft,
+  saveSetupDraft,
+} from "./setup-drafts";
 import type {
   ActivateWorkspaceRequest,
   BudgetingCoordinator,
@@ -67,12 +74,32 @@ export type {
   MoveMoneyPreview,
   MoveMoneyRequest,
 } from "./types";
+export type {
+  CreateSetupDraftRequest,
+  SetupDraft,
+  SetupDraftCategorySuggestion,
+  SetupDraftEnvelope,
+  SetupDraftFundingAccount,
+  SetupDraftPrerequisites,
+  SetupDraftWorkspace,
+} from "./setup-draft-types";
+export {
+  mergeSetupDraftEnvelopes,
+  moveSetupDraftCategory,
+  updateSetupDraftEnvelope,
+  updateSetupDraftFundingAccounts,
+} from "./setup-drafts";
 
 export function createBudgetingCoordinator(
   database: SQLiteDatabase,
   options: BudgetingCoordinatorOptions = {},
 ): BudgetingCoordinator {
   return {
+    getSetupDraftPrerequisites: () => getSetupDraftPrerequisites(database),
+    createSetupDraft: (request) => createSetupDraft(database, request),
+    loadSetupDraft: () => loadSetupDraft(database),
+    saveSetupDraft: (draft, now) => saveSetupDraft(database, draft, now),
+    discardSetupDraft: () => discardSetupDraft(database),
     activateWorkspace: async (request: ActivateWorkspaceRequest) => {
       const projection = await activateWorkspace(database, request);
       if (options.queryClient) {
