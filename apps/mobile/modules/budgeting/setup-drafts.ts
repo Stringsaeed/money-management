@@ -44,7 +44,11 @@ export async function createSetupDraft(
     createdAt: request.now,
     updatedAt: request.now,
   };
-  await saveSetupDraft(database, draft, request.now);
+  await saveSetupDraft(database, {
+    draft,
+    localDate: request.localDate,
+    now: request.now,
+  });
   return draft;
 }
 

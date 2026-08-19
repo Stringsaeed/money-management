@@ -3,15 +3,25 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { loadAccountBalances } from "@/modules/accounts/account-balance";
 
 import { isEligibleFundingAccountType } from "./funding-account-eligibility";
-import type { SetupDraft, SetupDraftEnvelope } from "./setup-draft-types";
+import {
+  calculateFundingPoolThroughPeriod,
+  type FundingPoolAccount,
+} from "./funding-pool-calculation";
+import type {
+  SetupDraft,
+  SetupDraftEnvelope,
+  SetupDraftValidationContext,
+} from "./setup-draft-types";
 import { GUIDED_SETUP_DRAFT_ID } from "./setup-draft-types";
-import { addMoney, requireCurrency, requireMinorUnits } from "./validation";
+import { addMoney, periodForLocalDate, requireCurrency, requireMinorUnits } from "./validation";
 
 export async function validateSetupDraft(
   database: SQLiteDatabase,
   draft: SetupDraft,
+  context: SetupDraftValidationContext,
 ): Promise<void> {
   requireDraftShape(draft);
+  const period = periodForLocalDate(context.localDate);
   const accounts = await loadAccountBalances(database, true);
   const accountById = new Map(accounts.map((account) => [account.id, account]));
   const mappedCategoryIds = new Set<string>();
@@ -28,7 +38,7 @@ export async function validateSetupDraft(
         `${currency} Setup Draft Funding Accounts must be distinct. Remove the duplicate Account.`,
       );
     }
-    let assignableMinor = 0;
+    const fundingAccounts: FundingPoolAccount[] = [];
     for (const accountId of workspace.fundingAccountIds) {
       const account = accountById.get(accountId);
       if (
@@ -45,7 +55,11 @@ export async function validateSetupDraft(
           `Cannot plan ${currency} Funding with Account ${accountId} in ${account.currency}.`,
         );
       }
-      assignableMinor = addMoney(assignableMinor, account.balance, currency);
+      fundingAccounts.push({
+        id: account.id,
+        currency: account.currency,
+        initialBalance: account.initialBalance,
+      });
     }
 
     let assignedMinor = 0;
@@ -66,6 +80,12 @@ export async function validateSetupDraft(
         }
       }
     }
+    const { amountMinor: assignableMinor } = await calculateFundingPoolThroughPeriod(
+      database,
+      fundingAccounts,
+      currency,
+      period,
+    );
     if (assignedMinor > Math.max(assignableMinor, 0)) {
       throw new Error(
         `${currency} initial Assignments cannot exceed the selected Funding Account balance. Reduce Assignments or add an eligible Funding Account.`,

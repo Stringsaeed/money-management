@@ -1,7 +1,11 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 
 import { decodeSetupDraft, UnreadableSetupDraftError } from "./setup-draft-codec";
-import { GUIDED_SETUP_DRAFT_ID, type SetupDraft } from "./setup-draft-types";
+import {
+  GUIDED_SETUP_DRAFT_ID,
+  type SaveSetupDraftRequest,
+  type SetupDraft,
+} from "./setup-draft-types";
 import { validateSetupDraft } from "./setup-draft-validation";
 
 interface SetupDraftRow {
@@ -25,11 +29,10 @@ export async function loadSetupDraft(database: SQLiteDatabase): Promise<SetupDra
 
 export async function saveSetupDraft(
   database: SQLiteDatabase,
-  draft: SetupDraft,
-  now: string,
+  request: SaveSetupDraftRequest,
 ): Promise<SetupDraft> {
-  const next = { ...draft, updatedAt: now };
-  await validateSetupDraft(database, next);
+  const next = { ...request.draft, updatedAt: request.now };
+  await validateSetupDraft(database, next, { localDate: request.localDate });
   await database.runAsync(
     `INSERT INTO setup_drafts (id, payload, created_at, updated_at)
      VALUES (?, ?, ?, ?)

@@ -56,5 +56,16 @@ export interface SetupDraft {
 export interface CreateSetupDraftRequest {
   mode: SetupDraft["mode"];
   currencies: readonly string[];
+  localDate: string;
   now: string;
+}
+
+export interface SaveSetupDraftRequest {
+  draft: SetupDraft;
+  localDate: string;
+  now: string;
+}
+
+export interface SetupDraftValidationContext {
+  localDate: string;
 }

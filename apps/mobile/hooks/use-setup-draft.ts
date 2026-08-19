@@ -15,14 +15,20 @@ import {
 import type { SetupDraft, SetupDraftEnvelope } from "@/modules/budgeting/budgeting";
 import { UnreadableSetupDraftError } from "@/modules/budgeting/setup-draft-codec";
 import { budgetKeys } from "@/modules/ledger-cache";
-import { nowIso } from "@/utils/date";
+import { nowIso, today } from "@/utils/date";
 import { generateId } from "@/utils/id";
 
 type DraftTransform = (draft: SetupDraft) => SetupDraft;
 type SetupDraftCommand =
-  | { kind: "start"; mode: SetupDraft["mode"]; currencies: readonly string[] }
+  | {
+      kind: "start";
+      mode: SetupDraft["mode"];
+      currencies: readonly string[];
+      localDate: string;
+      now: string;
+    }
   | { kind: "discard" }
-  | { kind: "update"; transform: DraftTransform };
+  | { kind: "update"; transform: DraftTransform; localDate: string; now: string };
 
 export function useSetupDraft() {
   const database = useSQLiteContext();
@@ -55,12 +61,17 @@ export function useSetupDraft() {
         return coordinator.createSetupDraft({
           mode: command.mode,
           currencies: command.currencies,
-          now: nowIso(),
+          localDate: command.localDate,
+          now: command.now,
         });
       }
       const current = await coordinator.loadSetupDraft();
       if (!current) throw new Error("The Setup Draft is missing. Start a new plan and try again.");
-      return coordinator.saveSetupDraft(command.transform(current), nowIso());
+      return coordinator.saveSetupDraft({
+        draft: command.transform(current),
+        localDate: command.localDate,
+        now: command.now,
+      });
     },
     onSuccess: (draft) => {
       const current = queryClient.getQueryData<typeof query.data>(budgetKeys.setupDraft);
@@ -82,7 +93,7 @@ export function useSetupDraft() {
 
   const update = (transform: DraftTransform) => {
     setActionError(null);
-    mutation.mutate({ kind: "update", transform });
+    mutation.mutate({ kind: "update", transform, localDate: today(), now: nowIso() });
   };
 
   return {
@@ -100,6 +111,8 @@ export function useSetupDraft() {
         kind: "start",
         mode,
         currencies: query.data?.prerequisites.currencies ?? [],
+        localDate: today(),
+        now: nowIso(),
       });
     },
     discard: () => {

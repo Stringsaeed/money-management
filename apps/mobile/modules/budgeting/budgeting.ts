@@ -72,6 +72,7 @@ export type {
 } from "./types";
 export type {
   CreateSetupDraftRequest,
+  SaveSetupDraftRequest,
   SetupDraft,
   SetupDraftCategorySuggestion,
   SetupDraftEnvelope,
@@ -98,7 +99,7 @@ export function createBudgetingCoordinator(
     getSetupDraftPrerequisites: () => getSetupDraftPrerequisites(database),
     createSetupDraft: (request) => createSetupDraft(database, request),
     loadSetupDraft: () => loadSetupDraft(database),
-    saveSetupDraft: (draft, now) => saveSetupDraft(database, draft, now),
+    saveSetupDraft: (request) => saveSetupDraft(database, request),
     discardSetupDraft: () => discardSetupDraft(database),
     activateWorkspace: async (request: ActivateWorkspaceRequest) => {
       const projection = await activateWorkspace(database, request);

@@ -1,5 +1,6 @@
 import type {
   CreateSetupDraftRequest,
+  SaveSetupDraftRequest,
   SetupDraft,
   SetupDraftPrerequisites,
 } from "./setup-draft-types";
@@ -242,7 +243,7 @@ export interface BudgetingCoordinator {
   getSetupDraftPrerequisites(): Promise<SetupDraftPrerequisites>;
   createSetupDraft(request: CreateSetupDraftRequest): Promise<SetupDraft>;
   loadSetupDraft(): Promise<SetupDraft | null>;
-  saveSetupDraft(draft: SetupDraft, now: string): Promise<SetupDraft>;
+  saveSetupDraft(request: SaveSetupDraftRequest): Promise<SetupDraft>;
   discardSetupDraft(): Promise<void>;
   activateWorkspace(request: ActivateWorkspaceRequest): Promise<BudgetProjection>;
   updateFundingMembership(request: UpdateFundingMembershipRequest): Promise<BudgetProjection>;

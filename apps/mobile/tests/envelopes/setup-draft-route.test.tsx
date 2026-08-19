@@ -372,6 +372,7 @@ describe("Setup Draft route", () => {
     await createBudgetingCoordinator(database).createSetupDraft({
       mode: "suggested",
       currencies: ["USD"],
+      localDate: "2026-08-19",
       now: "2026-08-19T08:00:00.000Z",
     });
     const before = await countActiveBudgetFacts(database);

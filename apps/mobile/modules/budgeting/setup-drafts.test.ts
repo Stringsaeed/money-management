@@ -4,6 +4,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import {
   countActiveBudgetFacts,
   insertBudgetAccount,
+  insertBudgetTransaction,
   setupBudgetingDatabase,
 } from "./budgeting-test-utils";
 import {
@@ -14,6 +15,7 @@ import {
 import { discardSetupDraft, loadSetupDraft, saveSetupDraft } from "./setup-draft-persistence";
 import { createSetupDraft } from "./setup-drafts";
 import { getSetupDraftPrerequisites } from "./setup-draft-suggestions";
+import { validateSetupDraft } from "./setup-draft-validation";
 
 const databases: { database: SQLiteDatabase; close: VoidFunction }[] = [];
 
@@ -65,6 +67,7 @@ describe("Setup Drafts", () => {
     const created = await createSetupDraft(database, {
       mode: "suggested",
       currencies: ["USD"],
+      localDate: "2026-08-19",
       now: "2026-08-19T08:00:00.000Z",
     });
 
@@ -83,7 +86,11 @@ describe("Setup Drafts", () => {
       "USD",
       created.workspaces[0]!.envelopes.map(({ id }) => id),
     );
-    const saved = await saveSetupDraft(database, merged, "2026-08-19T09:00:00.000Z");
+    const saved = await saveSetupDraft(database, {
+      draft: merged,
+      localDate: "2026-08-19",
+      now: "2026-08-19T09:00:00.000Z",
+    });
 
     await expect(loadSetupDraft(database)).resolves.toEqual(saved);
     expect(saved.workspaces[0]?.envelopes).toEqual([
@@ -111,6 +118,7 @@ describe("Setup Drafts", () => {
     const draft = await createSetupDraft(database, {
       mode: "blank",
       currencies: ["USD", "AED"],
+      localDate: "2026-08-19",
       now: "2026-08-19T08:00:00.000Z",
     });
 
@@ -130,6 +138,7 @@ describe("Setup Drafts", () => {
     const blank = await createSetupDraft(database, {
       mode: "blank",
       currencies: ["USD", "AED"],
+      localDate: "2026-08-19",
       now: "2026-08-19T08:00:00.000Z",
     });
 
@@ -145,7 +154,11 @@ describe("Setup Drafts", () => {
       initialAssignmentMinor: 25_00,
     });
 
-    await saveSetupDraft(database, edited, "2026-08-19T09:00:00.000Z");
+    await saveSetupDraft(database, {
+      draft: edited,
+      localDate: "2026-08-19",
+      now: "2026-08-19T09:00:00.000Z",
+    });
     await expect(loadSetupDraft(database)).resolves.toMatchObject({
       workspaces: [
         expect.anything(),
@@ -183,6 +196,7 @@ describe("Setup Drafts", () => {
       createSetupDraft(database, {
         mode: "suggested",
         currencies: ["USD"],
+        localDate: "2026-08-19",
         now: "2026-08-19T08:00:00.000Z",
       }),
     ).resolves.toMatchObject({
@@ -204,6 +218,7 @@ describe("Setup Drafts", () => {
     const draft = await createSetupDraft(database, {
       mode: "suggested",
       currencies: ["USD"],
+      localDate: "2026-08-19",
       now: "2026-08-19T08:00:00.000Z",
     });
     const envelopes = draft.workspaces[0]!.envelopes;
@@ -233,6 +248,7 @@ describe("Setup Drafts", () => {
     const draft = await createSetupDraft(database, {
       mode: "blank",
       currencies: ["USD"],
+      localDate: "2026-08-19",
       now: "2026-08-19T08:00:00.000Z",
     });
 
@@ -265,6 +281,7 @@ describe("Setup Drafts", () => {
     const draft = await createSetupDraft(database, {
       mode: "suggested",
       currencies: ["USD"],
+      localDate: "2026-08-19",
       now: "2026-08-19T08:00:00.000Z",
     });
 
@@ -277,16 +294,24 @@ describe("Setup Drafts", () => {
         },
       ],
     };
-    await expect(saveSetupDraft(database, wrongEnvelope, draft.updatedAt)).rejects.toThrow(
-      "not workspace currency USD",
-    );
+    await expect(
+      saveSetupDraft(database, {
+        draft: wrongEnvelope,
+        localDate: "2026-08-19",
+        now: draft.updatedAt,
+      }),
+    ).rejects.toThrow("not workspace currency USD");
     const wrongAccount = {
       ...draft,
       workspaces: [{ ...draft.workspaces[0]!, fundingAccountIds: ["aed"] }],
     };
-    await expect(saveSetupDraft(database, wrongAccount, draft.updatedAt)).rejects.toThrow(
-      "Account aed in AED",
-    );
+    await expect(
+      saveSetupDraft(database, {
+        draft: wrongAccount,
+        localDate: "2026-08-19",
+        now: draft.updatedAt,
+      }),
+    ).rejects.toThrow("Account aed in AED");
   });
 
   it("rejects duplicate Category Mappings and invalid initial Assignment plans", async () => {
@@ -296,6 +321,7 @@ describe("Setup Drafts", () => {
     const draft = await createSetupDraft(database, {
       mode: "suggested",
       currencies: ["USD"],
+      localDate: "2026-08-19",
       now: "2026-08-19T08:00:00.000Z",
     });
     const envelope = draft.workspaces[0]!.envelopes[0]!;
@@ -308,30 +334,146 @@ describe("Setup Drafts", () => {
         },
       ],
     };
-    await expect(saveSetupDraft(database, duplicate, draft.updatedAt)).rejects.toThrow(
-      "may appear in only one Envelope",
-    );
+    await expect(
+      saveSetupDraft(database, {
+        draft: duplicate,
+        localDate: "2026-08-19",
+        now: draft.updatedAt,
+      }),
+    ).rejects.toThrow("may appear in only one Envelope");
 
     const negative = updateSetupDraftEnvelope(draft, "USD", envelope.id, {
       initialAssignmentMinor: -1,
     });
-    await expect(saveSetupDraft(database, negative, draft.updatedAt)).rejects.toThrow(
-      "cannot be negative",
-    );
+    await expect(
+      saveSetupDraft(database, {
+        draft: negative,
+        localDate: "2026-08-19",
+        now: draft.updatedAt,
+      }),
+    ).rejects.toThrow("cannot be negative");
     const unfunded = updateSetupDraftEnvelope(draft, "USD", envelope.id, {
       initialAssignmentMinor: 50_01,
     });
-    await expect(saveSetupDraft(database, unfunded, draft.updatedAt)).rejects.toThrow(
-      "cannot exceed",
-    );
+    await expect(
+      saveSetupDraft(database, {
+        draft: unfunded,
+        localDate: "2026-08-19",
+        now: draft.updatedAt,
+      }),
+    ).rejects.toThrow("cannot exceed");
 
     const duplicateFunding = {
       ...draft,
       workspaces: [{ ...draft.workspaces[0]!, fundingAccountIds: ["checking", "checking"] }],
     };
-    await expect(saveSetupDraft(database, duplicateFunding, draft.updatedAt)).rejects.toThrow(
-      "Funding Accounts must be distinct",
-    );
+    await expect(
+      saveSetupDraft(database, {
+        draft: duplicateFunding,
+        localDate: "2026-08-19",
+        now: draft.updatedAt,
+      }),
+    ).rejects.toThrow("Funding Accounts must be distinct");
+  });
+
+  it("does not let next-period income authorize a current-period Assignment", async () => {
+    const database = await setup();
+    await insertBudgetAccount(database, { id: "checking", initialBalance: 100_00 });
+    await insertBudgetTransaction(database, {
+      id: "september-income",
+      type: "income",
+      amount: 100_00,
+      date: "2026-09-01",
+      accountId: "checking",
+    });
+    await insertCategory(database, { id: "groceries", name: "Groceries" });
+    const draft = await createSetupDraft(database, {
+      mode: "suggested",
+      currencies: ["USD"],
+      localDate: "2026-08-31",
+      now: "2026-09-01T02:00:00.000Z",
+    });
+    const assigned = updateSetupDraftEnvelope(draft, "USD", draft.workspaces[0]!.envelopes[0]!.id, {
+      initialAssignmentMinor: 150_00,
+    });
+
+    await expect(
+      saveSetupDraft(database, {
+        draft: assigned,
+        localDate: "2026-08-31",
+        now: "2026-09-01T02:01:00.000Z",
+      }),
+    ).rejects.toThrow("cannot exceed");
+  });
+
+  it("does not let next-period expense reject a valid current-period Assignment", async () => {
+    const database = await setup();
+    await insertBudgetAccount(database, { id: "checking", initialBalance: 100_00 });
+    await insertBudgetTransaction(database, {
+      id: "september-expense",
+      type: "expense",
+      amount: 80_00,
+      date: "2026-09-01",
+      accountId: "checking",
+    });
+    await insertCategory(database, { id: "groceries", name: "Groceries" });
+    const draft = await createSetupDraft(database, {
+      mode: "suggested",
+      currencies: ["USD"],
+      localDate: "2026-08-31",
+      now: "2026-09-01T02:00:00.000Z",
+    });
+    const assigned = updateSetupDraftEnvelope(draft, "USD", draft.workspaces[0]!.envelopes[0]!.id, {
+      initialAssignmentMinor: 80_00,
+    });
+
+    await expect(
+      saveSetupDraft(database, {
+        draft: assigned,
+        localDate: "2026-08-31",
+        now: "2026-09-01T02:01:00.000Z",
+      }),
+    ).resolves.toMatchObject({ workspaces: [{ envelopes: [{ initialAssignmentMinor: 80_00 }] }] });
+  });
+
+  it("uses current-period ledger activity for Setup Assignment capacity", async () => {
+    const database = await setup();
+    await insertBudgetAccount(database, { id: "checking", initialBalance: 100_00 });
+    await insertBudgetTransaction(database, {
+      id: "august-income",
+      type: "income",
+      amount: 25_00,
+      date: "2026-08-01",
+      accountId: "checking",
+    });
+    await insertBudgetTransaction(database, {
+      id: "august-expense",
+      type: "expense",
+      amount: 10_00,
+      date: "2026-08-02",
+      accountId: "checking",
+    });
+    await insertCategory(database, { id: "groceries", name: "Groceries" });
+    const draft = await createSetupDraft(database, {
+      mode: "suggested",
+      currencies: ["USD"],
+      localDate: "2026-08-19",
+      now: "2026-08-19T08:00:00.000Z",
+    });
+    const envelopeId = draft.workspaces[0]!.envelopes[0]!.id;
+    const fullyAssigned = updateSetupDraftEnvelope(draft, "USD", envelopeId, {
+      initialAssignmentMinor: 115_00,
+    });
+    const overAssigned = updateSetupDraftEnvelope(draft, "USD", envelopeId, {
+      initialAssignmentMinor: 115_01,
+    });
+
+    await expect(
+      validateSetupDraft(database, fullyAssigned, { localDate: "2026-08-19" }),
+    ).resolves.toBeUndefined();
+    await expect(
+      validateSetupDraft(database, overAssigned, { localDate: "2026-08-19" }),
+    ).rejects.toThrow("cannot exceed");
   });
 });
 
