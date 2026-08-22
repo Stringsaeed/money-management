@@ -1,0 +1,25 @@
+{
+  "name": "@trove/env",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./server": "./src/server.ts",
+    "./native": "./src/native.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@t3-oss/env-core": "^0.13.11",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "@trove/infra": "workspace:*",
+    "@trove/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "~7.0.2"
+  }
+}

@@ -1,8 +1,0 @@
-{
-  "extends": "@trove/typescript-config/node-service.json",
-  "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "."
-  },
-  "include": ["src/**/*.ts", "test/**/*.ts"]
-}
