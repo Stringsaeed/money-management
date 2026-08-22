@@ -1,4 +1,4 @@
-import { dateAfter } from "./calendar";
+import { dateAfter } from "@trove/domain/calendar";
 import { applied, changeEffects, invalidLifecycle, staleResult } from "./change-results";
 import type { ConfirmationStore } from "./confirmation";
 import { loadRule, runInTransaction, updateRuleLifecycle } from "./persistence";

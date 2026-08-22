@@ -6,11 +6,14 @@ import {
   differenceInCalendarDays,
   differenceInCalendarMonths,
   differenceInCalendarYears,
+  format,
   isAfter,
   isBefore,
+  parse,
+  startOfDay,
 } from "date-fns";
 
-import { parseDate, toDateString } from "@/utils/date";
+const DATE_ONLY_PATTERN = "yyyy-MM-dd";
 
 export type RecurringRuleFrequency = "day" | "week" | "month" | "year";
 
@@ -66,6 +69,14 @@ export function nextScheduledDateOnOrAfter(
   const occurrence = occurrenceAt(calendar, index);
   if (calendar.endDate && isAfter(occurrence, parseDate(calendar.endDate))) return null;
   return toDateString(occurrence);
+}
+
+function parseDate(date: string): Date {
+  return parse(date, DATE_ONLY_PATTERN, startOfDay(new Date()));
+}
+
+function toDateString(date: Date): string {
+  return format(date, DATE_ONLY_PATTERN);
 }
 
 function occurrenceAt(calendar: RecurringRuleCalendar, index: number): Date {

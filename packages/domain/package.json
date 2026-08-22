@@ -1,0 +1,26 @@
+{
+  "name": "@trove/domain",
+  "version": "0.0.0",
+  "private": true,
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "exports": {
+    "./calendar": {
+      "types": "./dist/calendar.d.ts",
+      "default": "./dist/calendar.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "check-types": "tsc --project tsconfig.json --noEmit",
+    "postinstall": "pnpm build"
+  },
+  "dependencies": {
+    "date-fns": "^4.1.0"
+  },
+  "devDependencies": {
+    "typescript": "~7.0.2"
+  }
+}

@@ -4,7 +4,7 @@ import {
   dateAfter,
   scheduledDatesThrough,
   type RecurringRuleFrequency,
-} from "@/modules/recurring-rules/calendar";
+} from "@trove/domain/calendar";
 
 const MIGRATION_KEY = "recurringRulesMigrationVersion";
 const MIGRATION_VERSION = 1;

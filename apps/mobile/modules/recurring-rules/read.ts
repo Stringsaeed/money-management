@@ -1,8 +1,8 @@
 import { max } from "date-fns";
 
-import { parseDate, toDateString } from "@/utils/date";
+import { dateAfter, nextScheduledDateOnOrAfter } from "@trove/domain/calendar";
 
-import { dateAfter, nextScheduledDateOnOrAfter } from "./calendar";
+import { parseDate, toDateString } from "@/utils/date";
 import { listRules, loadRule } from "./persistence";
 import type {
   CreateRecurringRulesOptions,

@@ -1,4 +1,4 @@
-import { dateAfter } from "./calendar";
+import { dateAfter } from "@trove/domain/calendar";
 import {
   applied,
   candidateFromExisting,

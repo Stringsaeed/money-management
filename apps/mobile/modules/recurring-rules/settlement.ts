@@ -1,6 +1,10 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 
-import { dateAfter, nextScheduledDateOnOrAfter, scheduledDatesThrough } from "./calendar";
+import {
+  dateAfter,
+  nextScheduledDateOnOrAfter,
+  scheduledDatesThrough,
+} from "@trove/domain/calendar";
 import { loadAccount, settledDates } from "./persistence";
 import type {
   RecurringAttentionReason,

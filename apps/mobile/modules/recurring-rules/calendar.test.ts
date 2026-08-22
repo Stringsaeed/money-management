@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { nextScheduledDateOnOrAfter, scheduledDatesThrough } from "./calendar";
+import { nextScheduledDateOnOrAfter, scheduledDatesThrough } from "@trove/domain/calendar";
 
 describe("Recurring Rule calendar", () => {
   it("keeps the explicit month-end anchor instead of drifting after a clamp", () => {

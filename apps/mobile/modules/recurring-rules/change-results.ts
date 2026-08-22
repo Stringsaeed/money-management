@@ -1,4 +1,4 @@
-import { dateAfter, nextScheduledDateOnOrAfter } from "./calendar";
+import { dateAfter, nextScheduledDateOnOrAfter } from "@trove/domain/calendar";
 import { settlementEffects } from "./settlement";
 import type {
   RecurringChangeResult,
