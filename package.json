@@ -20,7 +20,11 @@
     "test:coverage": "pnpm domain:build && pnpm -C apps/mobile test:coverage",
     "test:ci": "pnpm domain:build && pnpm -C apps/mobile test:ci",
     "ts:check": "pnpm domain:build && pnpm -C apps/mobile ts:check",
-    "push:storage": "node apps/mobile/scripts/push-code-storage.mjs"
+    "push:storage": "node apps/mobile/scripts/push-code-storage.mjs",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:test": "supabase test db",
+    "supabase:db:reset": "supabase db reset"
   },
   "devDependencies": {
     "@rnx-kit/oxlint-config": "^1.0.3",
