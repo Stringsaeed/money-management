@@ -22,6 +22,7 @@
     "@trove/auth": "workspace:*",
     "@trove/db": "workspace:*",
     "@trove/env": "workspace:*",
+    "@trove/protocol": "workspace:*",
     "dotenv": "catalog:",
     "zod": "catalog:"
   },

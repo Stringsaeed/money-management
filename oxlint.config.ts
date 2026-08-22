@@ -96,7 +96,7 @@ export default defineConfig({
     setImmediate: "readonly",
     "shared-node-browser": "writable",
   },
-  ignorePatterns: ["android/app/build", "**/dist/**"],
+  ignorePatterns: ["android/app/build", "**/dist/**", "**/.alchemy/**"],
   jsPlugins: ["eslint-plugin-expo"],
   overrides: [
     {

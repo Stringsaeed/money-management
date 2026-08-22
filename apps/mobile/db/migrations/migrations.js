@@ -4,6 +4,7 @@ import journal from "./meta/_journal.json";
 import m0000 from "./0000_true_leper_queen.sql";
 import m0001 from "./0001_add_recurring_transaction_flag.sql";
 import m0002 from "./0002_recurring_frequency_model.sql";
+import m0003 from "./0003_add_owner_user_id.sql";
 
 export default {
   journal,
@@ -11,5 +12,6 @@ export default {
     m0000,
     m0001,
     m0002,
+    m0003,
   },
 };
