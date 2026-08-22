@@ -2,7 +2,7 @@ developer_instructions = "# --- argent rules (managed by argent init — do not 
 
 [mcp_servers.argent]
 command = "node"
-args = [ "node_modules/@swmansion/argent/dist/cli.js", "mcp" ]
+args = ["node_modules/@swmansion/argent/dist/cli.js", "mcp"]
 
 [mcp_servers.argent.tools.list-devices]
 approval_mode = "approve"
