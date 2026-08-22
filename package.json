@@ -19,6 +19,7 @@
     "test:coverage": "jest --coverage",
     "test:ci": "jest --runInBand --coverage --ci --watchman=false --forceExit",
     "ts:check": "npx tsc --noEmit",
+    "push:storage": "node scripts/push-code-storage.mjs",
     "prebuild": "expo prebuild"
   },
   "dependencies": {
