@@ -1,27 +1,32 @@
 {
-  "name": "@trove/domain",
+  "name": "@trove/db",
   "version": "0.0.0",
   "private": true,
   "files": [
     "dist"
   ],
+  "type": "module",
   "sideEffects": false,
   "exports": {
-    "./calendar": {
-      "types": "./dist/calendar.d.ts",
-      "default": "./dist/calendar.js"
+    "./schema": {
+      "types": "./dist/schema/index.d.ts",
+      "default": "./dist/schema/index.js"
     }
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "check-types": "tsc --project tsconfig.json --noEmit",
+    "generate": "drizzle-kit generate",
     "postinstall": "pnpm build"
   },
   "dependencies": {
-    "date-fns": "^4.1.0"
+    "drizzle-orm": "^0.44.2",
+    "postgres": "^3.4.7"
   },
   "devDependencies": {
     "@trove/typescript-config": "workspace:*",
+    "@types/node": "^24.10.9",
+    "drizzle-kit": "^0.31.4",
     "typescript": "~7.0.2"
   }
 }
