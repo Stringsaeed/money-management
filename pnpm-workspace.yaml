@@ -2,6 +2,10 @@ packages:
   - "apps/*"
   - "packages/*"
 
+# Keep explicit script names from auto-chaining: `pnpm build` must not
+# trigger the Expo `prebuild` hook (turbo owns the build task graph).
+enablePrePostScripts: false
+
 overrides:
   "lightningcss": "1.30.1"
 

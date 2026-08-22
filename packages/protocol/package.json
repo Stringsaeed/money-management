@@ -1,24 +1,22 @@
 {
-  "name": "@trove/domain",
+  "name": "@trove/protocol",
   "version": "0.0.0",
   "private": true,
   "files": [
     "dist"
   ],
+  "type": "module",
   "sideEffects": false,
   "exports": {
-    "./calendar": {
-      "types": "./dist/calendar.d.ts",
-      "default": "./dist/calendar.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "check-types": "tsc --project tsconfig.json --noEmit",
     "postinstall": "pnpm build"
-  },
-  "dependencies": {
-    "date-fns": "^4.1.0"
   },
   "devDependencies": {
     "@trove/typescript-config": "workspace:*",

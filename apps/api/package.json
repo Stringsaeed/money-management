@@ -12,10 +12,13 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.6",
+    "@trove/db": "workspace:*",
+    "@trove/protocol": "workspace:*",
     "hono": "^4.10.7",
     "jose": "^6.1.4"
   },
   "devDependencies": {
+    "@trove/typescript-config": "workspace:*",
     "@types/node": "^24.10.9",
     "tsx": "^4.21.0",
     "typescript": "~7.0.2",

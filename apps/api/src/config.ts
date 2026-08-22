@@ -1,3 +1,5 @@
+import { HOUSEHOLD_ROLES, type HouseholdRole } from "@trove/protocol";
+
 /**
  * Environment parsing for apps/api.
  *
@@ -14,12 +16,12 @@ export interface AppConfig {
   jwksUrl?: string;
 }
 
-export type HouseholdRole = "owner" | "admin" | "member" | "viewer";
+export type { HouseholdRole };
 
-const HOUSEHOLD_ROLES = new Set<string>(["owner", "admin", "member", "viewer"]);
+const ROLE_SET = new Set<string>(HOUSEHOLD_ROLES);
 
 function isHouseholdRole(value: string): value is HouseholdRole {
-  return HOUSEHOLD_ROLES.has(value);
+  return ROLE_SET.has(value);
 }
 
 function trimTrailingSlash(url: string): string {
