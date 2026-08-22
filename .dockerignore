@@ -1,0 +1,17 @@
+# Keep docker build contexts small. The API image (apps/api/Dockerfile) is built
+# from the repository root so pnpm can link workspace packages; everything below
+# is unnecessary for that build.
+.git
+.github
+coverage
+dist
+**/dist
+**/node_modules
+apps/mobile
+docs
+graphify-out
+ios
+android
+supabase
+*.md
+!packages/*/README.md

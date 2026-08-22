@@ -21,6 +21,7 @@
     "test:ci": "pnpm domain:build && pnpm -C apps/mobile test:ci",
     "ts:check": "pnpm domain:build && pnpm -C apps/mobile ts:check",
     "push:storage": "node apps/mobile/scripts/push-code-storage.mjs",
+    "api:dev": "pnpm --filter @trove/api dev",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:test": "supabase test db",
