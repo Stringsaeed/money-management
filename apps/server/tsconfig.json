@@ -1,0 +1,9 @@
+{
+  "extends": "@trove/typescript-config/bundler.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "tsdown.config.ts"]
+}

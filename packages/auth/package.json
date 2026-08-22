@@ -1,5 +1,5 @@
 {
-  "name": "@trove/db",
+  "name": "@trove/auth",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,23 +12,20 @@
     }
   },
   "scripts": {
-    "check-types": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate:deploy": "drizzle-kit migrate"
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@libsql/client": "0.17.4",
+    "@better-auth/expo": "catalog:",
+    "@trove/db": "workspace:*",
     "@trove/env": "workspace:*",
+    "better-auth": "catalog:",
     "dotenv": "catalog:",
-    "drizzle-orm": "^0.45.2",
-    "libsql": "0.5.29",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:",
     "@trove/typescript-config": "workspace:*",
     "@types/node": "catalog:",
-    "drizzle-kit": "^0.31.10",
     "typescript": "~7.0.2"
   }
 }
