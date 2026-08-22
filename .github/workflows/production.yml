@@ -56,6 +56,7 @@ jobs:
           profile: production
           platform: ios
           environment: production
+          working-directory: apps/mobile
 
       - name: 🧭 Decide release type
         id: decide
@@ -103,6 +104,7 @@ jobs:
             --environment production \
             --message "${MESSAGE:-Manual update from ${GITHUB_SHA::7}}" \
             --non-interactive
+        working-directory: apps/mobile
 
   # Native change: OTA can't carry it, so hand off to the EAS Workflow that
   # builds iOS and distributes to TestFlight (.eas/workflows/build-and-submit-ios.yml).
@@ -129,3 +131,4 @@ jobs:
         run: |
           eas workflow:run .eas/workflows/build-and-submit-ios.yml \
             --non-interactive
+        working-directory: apps/mobile

@@ -100,7 +100,7 @@ export default defineConfig({
   jsPlugins: ["eslint-plugin-expo"],
   overrides: [
     {
-      files: ["**/metro.config.js"],
+      files: ["**/metro.config.js", "apps/mobile/scripts/**/*.js", "apps/mobile/scripts/**/*.mjs"],
       env: {
         node: true,
       },
@@ -143,9 +143,9 @@ export default defineConfig({
       files: [
         "**/*.test.ts",
         "**/*.test.tsx",
-        "jest/setup-env.ts",
-        "tests/**/*.ts",
-        "tests/**/*.{ts,tsx}",
+        "apps/mobile/jest/setup-env.ts",
+        "apps/mobile/tests/**/*.ts",
+        "apps/mobile/tests/**/*.{ts,tsx}",
       ],
       plugins: ["jest"],
       env: {

@@ -1,4 +1,4 @@
-.env
-.expo
-ios
-android
+apps/mobile/.env
+apps/mobile/.expo
+apps/mobile/ios
+apps/mobile/android

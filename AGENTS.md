@@ -54,6 +54,8 @@ This is a single-context repository using root `CONTEXT.md` and repo-wide ADRs u
 
 ## Repository Map
 
+- This is a pnpm monorepo: `apps/*` holds applications and `packages/*` shared packages (see `pnpm-workspace.yaml`).
+- `apps/mobile/` is the Expo app; all paths below are relative to it. Root `package.json` scripts (`pnpm start`, `pnpm ios`, `pnpm test:ci`, ...) delegate into `apps/mobile`.
 - `app/` holds Expo Router screens; `_layout.tsx` defines the root stack, `(tabs)/_layout.tsx` configures bottom tabs, `modal.tsx` exposes modal routes.
 - Tab routes: `(tabs)/index.tsx` is the Home tab; mimic their patterns for new tabs.
 - `components/` hosts shared UI; `components/ui/` for base primitives (`text.tsx`, `badge.tsx`, `button.tsx`, `icon.tsx`).

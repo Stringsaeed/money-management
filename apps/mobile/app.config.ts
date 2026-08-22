@@ -2,6 +2,12 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 
 const isOtaUpdateMandatory = process.env.EXPO_PUBLIC_OTA_UPDATE_MANDATORY === "true";
 
+// Dependencies are hoisted to the workspace root node_modules by pnpm
+// (nodeLinker: hoisted), so font assets resolve relative to apps/mobile.
+const workspaceFont = (relativePath: string) => `../../node_modules/${relativePath}`;
+const nunitoFont = (weightDir: string, file: string) =>
+  workspaceFont(`@expo-google-fonts/nunito/${weightDir}/${file}`);
+
 const getAppName = () => {
   switch (process.env.APP_ENV) {
     case "production":
@@ -81,42 +87,42 @@ export default ({ config }: ConfigContext): ExpoConfig => {
                 fontFamily: "Nunito",
                 fontDefinitions: [
                   {
-                    path: "./node_modules/@expo-google-fonts/nunito/200ExtraLight/Nunito_200ExtraLight.ttf",
+                    path: nunitoFont("200ExtraLight", "Nunito_200ExtraLight.ttf"),
                     weight: 200,
                     style: "normal",
                   },
                   {
-                    path: "./node_modules/@expo-google-fonts/nunito/700Bold/Nunito_700Bold.ttf",
+                    path: nunitoFont("700Bold", "Nunito_700Bold.ttf"),
                     weight: 700,
                     style: "normal",
                   },
                   {
-                    path: "./node_modules/@expo-google-fonts/nunito/300Light/Nunito_300Light.ttf",
+                    path: nunitoFont("300Light", "Nunito_300Light.ttf"),
                     weight: 300,
                     style: "normal",
                   },
                   {
-                    path: "./node_modules/@expo-google-fonts/nunito/400Regular/Nunito_400Regular.ttf",
+                    path: nunitoFont("400Regular", "Nunito_400Regular.ttf"),
                     weight: 400,
                     style: "normal",
                   },
                   {
-                    path: "./node_modules/@expo-google-fonts/nunito/500Medium/Nunito_500Medium.ttf",
+                    path: nunitoFont("500Medium", "Nunito_500Medium.ttf"),
                     weight: 500,
                     style: "normal",
                   },
                   {
-                    path: "./node_modules/@expo-google-fonts/nunito/600SemiBold/Nunito_600SemiBold.ttf",
+                    path: nunitoFont("600SemiBold", "Nunito_600SemiBold.ttf"),
                     weight: 600,
                     style: "normal",
                   },
                   {
-                    path: "./node_modules/@expo-google-fonts/nunito/800ExtraBold/Nunito_800ExtraBold.ttf",
+                    path: nunitoFont("800ExtraBold", "Nunito_800ExtraBold.ttf"),
                     weight: 800,
                     style: "normal",
                   },
                   {
-                    path: "./node_modules/@expo-google-fonts/nunito/900Black/Nunito_900Black.ttf",
+                    path: nunitoFont("900Black", "Nunito_900Black.ttf"),
                     weight: 900,
                     style: "normal",
                   },
@@ -126,14 +132,14 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           },
           ios: {
             fonts: [
-              "./node_modules/@expo-google-fonts/nunito/200ExtraLight/Nunito_200ExtraLight.ttf",
-              "./node_modules/@expo-google-fonts/nunito/300Light/Nunito_300Light.ttf",
-              "./node_modules/@expo-google-fonts/nunito/400Regular/Nunito_400Regular.ttf",
-              "./node_modules/@expo-google-fonts/nunito/500Medium/Nunito_500Medium.ttf",
-              "./node_modules/@expo-google-fonts/nunito/600SemiBold/Nunito_600SemiBold.ttf",
-              "./node_modules/@expo-google-fonts/nunito/700Bold/Nunito_700Bold.ttf",
-              "./node_modules/@expo-google-fonts/nunito/800ExtraBold/Nunito_800ExtraBold.ttf",
-              "./node_modules/@expo-google-fonts/nunito/900Black/Nunito_900Black.ttf",
+              nunitoFont("200ExtraLight", "Nunito_200ExtraLight.ttf"),
+              nunitoFont("300Light", "Nunito_300Light.ttf"),
+              nunitoFont("400Regular", "Nunito_400Regular.ttf"),
+              nunitoFont("500Medium", "Nunito_500Medium.ttf"),
+              nunitoFont("600SemiBold", "Nunito_600SemiBold.ttf"),
+              nunitoFont("700Bold", "Nunito_700Bold.ttf"),
+              nunitoFont("800ExtraBold", "Nunito_800ExtraBold.ttf"),
+              nunitoFont("900Black", "Nunito_900Black.ttf"),
             ],
           },
         },
