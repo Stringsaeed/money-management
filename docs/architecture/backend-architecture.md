@@ -131,7 +131,7 @@ The client pulls the actual delta via `GET /sync?since=<seq>`; Realtime's `{seq,
 
 ## Monorepo structure & migration
 
-The repository already has a `pnpm-workspace.yaml` at root with `nodeLinker: hoisted` set, but no `packages:` field — it is not yet a multi-package workspace. Expo SDK 57's Metro resolves monorepos automatically (no manual `watchFolders`/`nodeModulesPaths` needed since SDK 52+), and the current `metro.config.js` already carries none of that legacy configuration.
+The repository is a pnpm workspace (`apps/*`, `packages/*`) with `nodeLinker: hoisted` set. Expo SDK 57's Metro resolves monorepos automatically (no manual `watchFolders`/`nodeModulesPaths` needed since SDK 52+), and `apps/mobile/metro.config.js` carries none of that legacy configuration.
 
 ### Target layout
 
