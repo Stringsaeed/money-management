@@ -12,6 +12,5 @@ docs
 graphify-out
 ios
 android
-supabase
 *.md
 !packages/*/README.md

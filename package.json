@@ -24,11 +24,7 @@
     "dev:server": "pnpm --filter @trove/infra dev",
     "db:generate": "turbo run db:generate -F @trove/db --",
     "deploy": "turbo run deploy -F @trove/infra --",
-    "destroy": "turbo run destroy -F @trove/infra --",
-    "supabase:start": "supabase start",
-    "supabase:stop": "supabase stop",
-    "supabase:test": "supabase test db",
-    "supabase:db:reset": "supabase db reset"
+    "destroy": "turbo run destroy -F @trove/infra --"
   },
   "devDependencies": {
     "@rnx-kit/oxlint-config": "^1.0.3",
