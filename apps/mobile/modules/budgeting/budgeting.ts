@@ -3,6 +3,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 import { cohereBudgetingEffects } from "@/modules/ledger-cache";
 
+import { getAccountBudgetDependencies } from "./account-dependencies";
 import { activateWorkspace } from "./activation";
 import { getProjection } from "./projection";
 import type { ActivateWorkspaceRequest, BudgetingCoordinator, ProjectionRequest } from "./types";
@@ -13,6 +14,7 @@ interface BudgetingCoordinatorOptions {
 
 export type {
   ActivateWorkspaceRequest,
+  AccountBudgetDependency,
   BudgetProjection,
   BudgetingCoordinator,
   Money,
@@ -32,5 +34,7 @@ export function createBudgetingCoordinator(
       return projection;
     },
     getProjection: (request: ProjectionRequest) => getProjection(database, request),
+    getAccountDependencies: (accountId: string, period: string, dependencyOptions) =>
+      getAccountBudgetDependencies(database, accountId, period, dependencyOptions),
   };
 }

@@ -3,6 +3,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 import { getSystemTimeZone, localDateInTimeZone } from "@/modules/recurring-rules/clock";
 
+import { migrateAccountLifecycle } from "./account-lifecycle-migration";
 import { migrateBudgeting } from "./budgeting-migration";
 import { migrateCategoryLifecycle } from "./category-lifecycle-migration";
 import { runMigrations } from "./migrate";
@@ -37,6 +38,7 @@ export async function initializeDatabase(
   });
   await migrateBudgeting(database);
   await migrateCategoryLifecycle(database);
+  await migrateAccountLifecycle(database);
 
   if (shouldMarkReset) await markDatabaseReset(drizzleDatabase);
   await seedDatabase(drizzleDatabase);

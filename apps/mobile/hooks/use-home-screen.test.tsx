@@ -7,10 +7,12 @@ import {
 } from "@/tests/test-utils/factories";
 
 const mockUseAccountsWithBalances = jest.fn();
+const mockUseAllAccountsWithBalances = jest.fn();
 const mockUseTransactions = jest.fn();
 
 jest.mock("@/hooks/use-accounts", () => ({
   useAccountsWithBalances: () => mockUseAccountsWithBalances(),
+  useAllAccountsWithBalances: () => mockUseAllAccountsWithBalances(),
 }));
 
 jest.mock("@/hooks/use-transactions", () => ({
@@ -18,6 +20,13 @@ jest.mock("@/hooks/use-transactions", () => ({
 }));
 
 describe("useHomeScreen", () => {
+  beforeEach(() => {
+    mockUseAllAccountsWithBalances.mockReturnValue({
+      data: [{ id: "account-1" }],
+      isLoading: false,
+    });
+  });
+
   it("wires query data, store filters, and grouped transactions", async () => {
     mockUseAccountsWithBalances.mockReturnValue({
       data: [
@@ -43,6 +52,8 @@ describe("useHomeScreen", () => {
     expect(result.current.groups).toHaveLength(1);
     expect(result.current.currency).toBe("EUR");
     expect(result.current.loadingAccounts).toBe(false);
+    expect(result.current.hasAnyAccounts).toBe(true);
+    expect(result.current.loadingAllAccounts).toBe(false);
     expect(result.current.loadingTx).toBe(false);
   });
 

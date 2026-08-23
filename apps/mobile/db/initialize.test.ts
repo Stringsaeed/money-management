@@ -42,11 +42,13 @@ describe("initializeDatabase", () => {
            'resetVersion',
            'recurringRulesMigrationVersion',
            'budgetingMigrationVersion',
-           'categoryLifecycleMigrationVersion'
+           'categoryLifecycleMigrationVersion',
+           'accountLifecycleMigrationVersion'
          )
          ORDER BY key`,
       ),
     ).resolves.toEqual([
+      { key: "accountLifecycleMigrationVersion", value: "3" },
       { key: "budgetingMigrationVersion", value: "1" },
       { key: "categoryLifecycleMigrationVersion", value: "1" },
       { key: "recurringRulesMigrationVersion", value: "1" },

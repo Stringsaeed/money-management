@@ -15,6 +15,8 @@ export interface Account {
   initialBalance: number; // integer cents in account's currency
   excludeFromTotal: boolean;
   sortOrder: number;
+  lifecycle: "active" | "archived";
+  lifecycleChangedAt: string | null;
   createdAt: string; // ISO 8601
   updatedAt: string;
 }

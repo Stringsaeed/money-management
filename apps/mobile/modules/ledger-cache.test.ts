@@ -46,7 +46,10 @@ describe("ledger query keys", () => {
     expect({
       accountAll: accountKeys.all,
       accountBalances: accountKeys.balances,
+      accountManagementBalances: accountKeys.managementBalances,
       accountDetail: accountKeys.detail("account-1"),
+      accountArchivalPreview: accountKeys.archivalPreview("account-1", "2026-08-18"),
+      accountDeletionPreview: accountKeys.deletionPreview("account-1"),
       categoryAll: categoryKeys.all,
       categoryManagement: categoryKeys.management,
       categoryByType: categoryKeys.byType("income"),
@@ -66,7 +69,10 @@ describe("ledger query keys", () => {
     }).toEqual({
       accountAll: ["accounts"],
       accountBalances: ["account-balances"],
+      accountManagementBalances: ["account-balances", "management"],
       accountDetail: ["accounts", "account-1"],
+      accountArchivalPreview: ["account-lifecycle-previews", "archival", "account-1", "2026-08-18"],
+      accountDeletionPreview: ["account-lifecycle-previews", "deletion", "account-1"],
       categoryAll: ["categories"],
       categoryManagement: ["categories", "management"],
       categoryByType: ["categories", "income"],
@@ -94,9 +100,13 @@ describe("cohereBudgetingEffects", () => {
       expectedKeys: [
         ["budgeting", "workspaces"],
         ["budgeting", "projections"],
+        ["account-lifecycle-previews"],
       ],
     },
-    { effect: "projections", expectedKeys: [["budgeting", "projections"]] },
+    {
+      effect: "projections",
+      expectedKeys: [["budgeting", "projections"], ["account-lifecycle-previews"]],
+    },
   ])("maps $effect through the centralized coherence owner", async ({ effect, expectedKeys }) => {
     const { invalidateQueries, queryClient } = createControlledQueryClient();
 
@@ -123,6 +133,28 @@ describe("cohereLedgerCache", () => {
         ["transactions"],
         ["recurring-rules"],
         ["budgeting", "projections"],
+        ["account-lifecycle-previews"],
+      ],
+    },
+    {
+      change: { kind: "account.archived", id: "account-1" },
+      expectedKeys: [
+        ["accounts"],
+        ["account-balances"],
+        ["transactions"],
+        ["recurring-rules"],
+        ["budgeting", "projections"],
+        ["account-lifecycle-previews"],
+      ],
+    },
+    {
+      change: { kind: "account.restored", id: "account-1" },
+      expectedKeys: [
+        ["accounts"],
+        ["account-balances"],
+        ["recurring-rules"],
+        ["budgeting", "projections"],
+        ["account-lifecycle-previews"],
       ],
     },
     {
@@ -135,6 +167,7 @@ describe("cohereLedgerCache", () => {
         ["transaction-date-range"],
         ["recurring-rules"],
         ["budgeting", "projections"],
+        ["account-lifecycle-previews"],
       ],
     },
     {
@@ -156,11 +189,17 @@ describe("cohereLedgerCache", () => {
         ["transactions"],
         ["recurring-rules"],
         ["budgeting", "projections"],
+        ["account-lifecycle-previews"],
       ],
     },
     {
       change: { kind: "category.restored", id: "category-1" },
-      expectedKeys: [["categories"], ["recurring-rules"], ["budgeting", "projections"]],
+      expectedKeys: [
+        ["categories"],
+        ["recurring-rules"],
+        ["budgeting", "projections"],
+        ["account-lifecycle-previews"],
+      ],
     },
     {
       change: { kind: "category.deleted", id: "category-1" },
@@ -169,6 +208,7 @@ describe("cohereLedgerCache", () => {
         ["transactions"],
         ["recurring-rules"],
         ["budgeting", "projections"],
+        ["account-lifecycle-previews"],
       ],
     },
     {
@@ -179,6 +219,7 @@ describe("cohereLedgerCache", () => {
         ["month-summary"],
         ["transaction-date-range"],
         ["budgeting", "projections"],
+        ["account-lifecycle-previews"],
       ],
     },
     {
@@ -189,6 +230,7 @@ describe("cohereLedgerCache", () => {
         ["month-summary"],
         ["transaction-date-range"],
         ["budgeting", "projections"],
+        ["account-lifecycle-previews"],
       ],
     },
     {
@@ -199,6 +241,7 @@ describe("cohereLedgerCache", () => {
         ["month-summary"],
         ["transaction-date-range"],
         ["budgeting", "projections"],
+        ["account-lifecycle-previews"],
       ],
     },
   ])("maps $change.kind to every affected projection", async ({ change, expectedKeys }) => {
@@ -221,11 +264,18 @@ describe("cohereLedgerCache", () => {
 
 describe("cohereRecurringEffects", () => {
   it.each<{ effect: RecurringEffect; expectedKeys: QueryKey[] }>([
-    { effect: "rules", expectedKeys: [["recurring-rules"]] },
+    {
+      effect: "rules",
+      expectedKeys: [["recurring-rules"], ["account-lifecycle-previews"]],
+    },
     { effect: "upcoming", expectedKeys: [["recurring-rules", "upcoming"]] },
     {
       effect: "ledger",
-      expectedKeys: [["transactions"], ["budgeting", "projections"]],
+      expectedKeys: [
+        ["transactions"],
+        ["budgeting", "projections"],
+        ["account-lifecycle-previews"],
+      ],
     },
     { effect: "balances", expectedKeys: [["account-balances"]] },
     {

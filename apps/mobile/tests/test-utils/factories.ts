@@ -21,6 +21,8 @@ export const createAccount = (overrides: Partial<Account> = {}): Account => ({
   initialBalance: 100_00,
   excludeFromTotal: false,
   sortOrder: 0,
+  lifecycle: "active",
+  lifecycleChangedAt: null,
   createdAt: DEFAULT_TIMESTAMP,
   updatedAt: DEFAULT_TIMESTAMP,
   ...overrides,

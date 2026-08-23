@@ -3,39 +3,15 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import type { Account } from "@/types";
 
 import {
-  archiveAndDetachAccountRules,
-  findAccountRuleImpacts,
   markAccountCurrencyChange,
   type AccountRuleImpact,
 } from "./recurring-rules/account-impact";
 import { runInTransaction } from "./recurring-rules/persistence";
 
-export interface AccountDeletionPreview {
-  accountId: string;
-  rules: AccountRuleImpact[];
-}
-
-type AccountChanges = Partial<Omit<Account, "id" | "createdAt" | "updatedAt">>;
+type AccountChanges = Partial<
+  Omit<Account, "id" | "createdAt" | "updatedAt" | "lifecycle" | "lifecycleChangedAt">
+>;
 type BindValue = string | number | boolean | null;
-
-export function previewAccountDeletion(
-  database: SQLiteDatabase,
-  accountId: string,
-): Promise<AccountDeletionPreview> {
-  return findAccountRuleImpacts(database, accountId).then((rules) => ({ accountId, rules }));
-}
-
-export function deleteAccountWithRecurringRules(
-  database: SQLiteDatabase,
-  request: { accountId: string; now: string },
-): Promise<AccountDeletionPreview> {
-  return runInTransaction(database, async (transaction) => {
-    await requireAccount(transaction, request.accountId);
-    const rules = await archiveAndDetachAccountRules(transaction, request.accountId, request.now);
-    await transaction.runAsync("DELETE FROM accounts WHERE id = ?", request.accountId);
-    return { accountId: request.accountId, rules };
-  });
-}
 
 export function updateAccountWithRecurringRules(
   database: SQLiteDatabase,
@@ -60,12 +36,16 @@ export function updateAccountWithRecurringRules(
 async function requireAccount(
   database: SQLiteDatabase,
   accountId: string,
-): Promise<{ id: string; currency: string }> {
-  const account = await database.getFirstAsync<{ id: string; currency: string }>(
-    "SELECT id, currency FROM accounts WHERE id = ?",
-    accountId,
-  );
+): Promise<{ id: string; currency: string; lifecycle: string }> {
+  const account = await database.getFirstAsync<{
+    id: string;
+    currency: string;
+    lifecycle: string;
+  }>("SELECT id, currency, lifecycle FROM accounts WHERE id = ?", accountId);
   if (!account) throw new Error(`Account ${accountId} does not exist.`);
+  if (account.lifecycle === "archived") {
+    throw new Error("Restore this Account before editing its details.");
+  }
   return account;
 }
 

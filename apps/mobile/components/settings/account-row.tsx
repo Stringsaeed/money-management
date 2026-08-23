@@ -15,6 +15,8 @@ export function AccountRow({ account, onPress }: AccountRowProps) {
 
   return (
     <Pressable
+      aria-label={account.lifecycle === "archived" ? `${account.name}, Archived` : account.name}
+      role="button"
       onPress={onPress}
       className="flex-row items-center px-4 py-3.5 gap-3 bg-surface-container active:bg-surface-dim"
     >
@@ -30,6 +32,9 @@ export function AccountRow({ account, onPress }: AccountRowProps) {
           {typeMeta?.label ?? account.type} · {account.currency}
         </Text>
       </View>
+      {account.lifecycle === "archived" ? (
+        <Text className="font-body-medium text-xs text-ink/40">Archived</Text>
+      ) : null}
       <MoneyText
         cents={Math.abs(account.balance)}
         currency={account.currency}

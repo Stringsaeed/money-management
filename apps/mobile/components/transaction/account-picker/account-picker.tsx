@@ -17,6 +17,7 @@ export default function AccountPicker({
   children,
 }: AccountPickerProps) {
   const [sheetIndex, setSheetIndex] = useState(0);
+  const selectableAccounts = accounts.filter((account) => account.lifecycle !== "archived");
 
   const onOpen = () => {
     setSheetIndex(1);
@@ -45,7 +46,7 @@ export default function AccountPicker({
           <Text className="font-heading-normal text-xl italic text-ink">Account</Text>
 
           <View className="gap-2">
-            {accounts.map((acc) => {
+            {selectableAccounts.map((acc) => {
               const isSelected = acc.id === selectedId;
               return (
                 <Pressable

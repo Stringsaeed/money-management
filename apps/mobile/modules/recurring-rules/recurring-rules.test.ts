@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "@jest/globals";
 import type { SQLiteDatabase } from "expo-sqlite";
 
+import { migrateAccountLifecycle } from "@/db/account-lifecycle-migration";
 import { migrateBudgeting } from "@/db/budgeting-migration";
 import { migrateCategoryLifecycle } from "@/db/category-lifecycle-migration";
 import { migrateRecurringRules } from "@/db/recurring-rules-migration";
@@ -41,6 +42,7 @@ async function setup() {
   });
   await migrateBudgeting(testDatabase.database);
   await migrateCategoryLifecycle(testDatabase.database);
+  await migrateAccountLifecycle(testDatabase.database);
   await testDatabase.database.runAsync(
     `INSERT INTO accounts (
       id, name, type, currency, color, icon, initial_balance,
