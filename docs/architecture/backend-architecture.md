@@ -90,19 +90,19 @@ Every point below is a hard constraint on the D1 schema and the command pipeline
 
 Phase 0 shipped on the **Better-T Stack**, replacing the original Supabase + standalone-API plan. The original rationale is preserved below where it still holds; the substitutions:
 
-| Original | Shipped / planned |
-|---|---|
-| Supabase Postgres + RLS as durable store | **Cloudflare D1 (SQLite)** via drizzle in `packages/db`. Tenancy enforced in oRPC middleware — there is **no DB-level backstop**; this loss is accepted and documented |
-| `apps/api` standalone containerized Hono service | **`apps/server`** — Hono entry on Cloudflare Workers; business logic in oRPC routers in `packages/api` |
-| `POST /commands` / `GET /sync` REST routes | Protected oRPC procedures (`commands.apply`, `sync.getDelta`) exposed via RPC + OpenAPI handlers |
-| Supabase Auth + JWT verification | **better-auth** (`packages/auth`) with the Expo plugin; session-based, household/role resolved from membership tables |
+| Original                                            | Shipped / planned                                                                                                                                                         |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Supabase Postgres + RLS as durable store            | **Cloudflare D1 (SQLite)** via drizzle in `packages/db`. Tenancy enforced in oRPC middleware — there is **no DB-level backstop**; this loss is accepted and documented    |
+| `apps/api` standalone containerized Hono service    | **`apps/server`** — Hono entry on Cloudflare Workers; business logic in oRPC routers in `packages/api`                                                                    |
+| `POST /commands` / `GET /sync` REST routes          | Protected oRPC procedures (`commands.apply`, `sync.getDelta`) exposed via RPC + OpenAPI handlers                                                                          |
+| Supabase Auth + JWT verification                    | **better-auth** (`packages/auth`) with the Expo plugin; session-based, household/role resolved from membership tables                                                     |
 | `pg_advisory_xact_lock` per `(household, currency)` | D1's single-writer serialization + one atomic drizzle `batch()` per command containing precondition reads and writes; optimistic version preconditions are the safety net |
-| Supabase Realtime (logical replication) | Polling-first delta pull (#84/#85); optional Durable Object WebSocket push as a later enhancement (#93) — no drop-in equivalent exists |
-| pgTAP RLS negative tests | oRPC authorization audit — integration tests over shipped procedures (#97) |
-| `supabase/` infra-as-code | alchemy config in `packages/infra`; drizzle migrations in `packages/db`; orphaned `supabase/` retired (#106) |
-| Horizontal scaling via stateless replicas | Workers' automatic horizontal scaling; new constraints: CPU/wall-clock limits per invocation, no held connections or pools |
+| Supabase Realtime (logical replication)             | Polling-first delta pull (#84/#85); optional Durable Object WebSocket push as a later enhancement (#93) — no drop-in equivalent exists                                    |
+| pgTAP RLS negative tests                            | oRPC authorization audit — integration tests over shipped procedures (#97)                                                                                                |
+| `supabase/` infra-as-code                           | alchemy config in `packages/infra`; drizzle migrations in `packages/db`; orphaned `supabase/` retired (#106)                                                              |
+| Horizontal scaling via stateless replicas           | Workers' automatic horizontal scaling; new constraints: CPU/wall-clock limits per invocation, no held connections or pools                                                |
 
-The original "don't run business logic in Edge Functions" concern now applies *to us* differently: Workers invocations have CPU limits, so ADR-0005 historical-adjustment cascades must be designed bounded/resumable, with queue/Durable-Object fan-out for whole-household sweeps (#88).
+The original "don't run business logic in Edge Functions" concern now applies _to us_ differently: Workers invocations have CPU limits, so ADR-0005 historical-adjustment cascades must be designed bounded/resumable, with queue/Durable-Object fan-out for whole-household sweeps (#88).
 
 ### Managed state: Cloudflare D1
 
