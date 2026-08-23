@@ -174,18 +174,48 @@ describe("commands.apply — idempotency", () => {
     expect(targetRows[0]?.version).toBe(1);
   });
 
-  it("scopes idempotency per household — same commandId elsewhere does not replay", async () => {
+  it("scopes idempotency per household — the same commandId in another household executes fresh", async () => {
     const env = makeEnvelope();
-    await applyAs(OWNER, env);
+    const first = expectApplied(await applyAs(OWNER, env));
+
+    // The owner is also an owner of a second household; MEMBER belongs there too.
     await db.insert(household).values({
       id: "household-2",
       name: "Other Household",
       createdByUserId: OWNER,
     });
-    // The owner is not a member of household-2, so authorization still fails
-    // before any idempotency lookup could leak across households.
-    const other = await applyAs(OWNER, makeEnvelope({ householdId: "household-2" }));
-    expect(other.kind).toBe("forbidden");
+    await db.insert(membership).values({
+      id: "membership-h2-owner",
+      userId: OWNER,
+      householdId: "household-2",
+      role: "owner",
+      version: 0,
+    });
+    await db.insert(membership).values({
+      id: `h2-membership-${MEMBER}`,
+      userId: MEMBER,
+      householdId: "household-2",
+      role: "member",
+      version: 0,
+    });
+
+    // Same commandId, different household → not a replay: fresh execution.
+    const other = expectApplied(
+      await applyCommand({
+        db,
+        userId: OWNER,
+        envelope: makeEnvelope({
+          commandId: env.commandId,
+          householdId: "household-2",
+          payload: { userId: MEMBER, role: "viewer" },
+        }),
+      }),
+    );
+
+    expect(other.replayed).toBe(false);
+    expect(other.seq).toBe(1); // independent per-household watermark
+    expect(other.applied).toMatchObject({ role: "viewer" });
+    expect(first.seq).toBe(1);
   });
 });
 
@@ -249,6 +279,20 @@ describe("commands.apply — intent validation", () => {
       entityType: "membership",
       entityId: OUTSIDER,
     });
+  });
+
+  it("rejects unsupported predicate preconditions instead of silently ignoring them", async () => {
+    const result = await applyAs(
+      OWNER,
+      makeEnvelope({
+        preconditions: [{ predicate: "unassigned_money_gte", args: { minor: 5000 } }],
+      }),
+    );
+    expect(result.kind).toBe("invalid_intent");
+    if (result.kind === "invalid_intent") {
+      expect(result.issues[0]?.field).toBe("preconditions");
+    }
+    expect(await db.select().from(householdChange)).toHaveLength(0);
   });
 
   it("rejects unregistered command kinds as not implemented", async () => {

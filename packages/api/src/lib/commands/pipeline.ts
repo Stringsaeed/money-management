@@ -135,6 +135,21 @@ export async function applyCommand({
     return { kind: "invalid_intent", issues: parsed.issues };
   }
 
+  // Predicate preconditions (expectedAsOf-style) are not evaluated yet —
+  // reject them loudly rather than silently granting no guard.
+  const unsupportedPreconditions = (envelope.preconditions ?? []).filter(
+    (p) => p.predicate !== undefined,
+  );
+  if (unsupportedPreconditions.length > 0) {
+    return {
+      kind: "invalid_intent",
+      issues: unsupportedPreconditions.map((p) => ({
+        field: "preconditions",
+        message: `Predicate precondition "${p.predicate ?? ""}" is not supported yet; only expectedVersion is validated.`,
+      })),
+    };
+  }
+
   // 4. Plan via pure domain rules over current state.
   const planContext: PlanContext = {
     db,
@@ -171,6 +186,33 @@ export async function applyCommand({
   try {
     await executeBatch(db, statements);
   } catch (error) {
+    // Concurrent duplicate: another writer committed this exact commandId
+    // between our idempotency read and this batch — replay their result.
+    const racedRows = await db
+      .select()
+      .from(commandResult)
+      .where(
+        and(
+          eq(commandResult.householdId, envelope.householdId),
+          eq(commandResult.commandId, envelope.commandId),
+        ),
+      )
+      .limit(1)
+      .catch(() => []);
+    const raced = racedRows[0];
+    if (raced) {
+      const replay = await loadAppliedResult(
+        db,
+        envelope.householdId,
+        envelope.commandId,
+        raced.result,
+        true,
+      );
+      if (replay) {
+        return replay;
+      }
+    }
+
     // A guard fired between planning and commit — re-plan once against the
     // now-current state to surface the precise typed rejection.
     const rePlan = await handler.plan(planContext, request).catch(() => null);
