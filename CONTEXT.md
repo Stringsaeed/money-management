@@ -32,6 +32,10 @@ _Avoid_: Invite Link, Password
 The unit of a client write to the backend: a domain intent (e.g. `member.role.change`, `transaction.create`) — not a row diff — carrying a client-generated `commandId` that doubles as its idempotency key. Applied optimistically on the device, queued in the outbox, and processed exactly once server-side regardless of retry count. Wire shape lives in `packages/protocol`.
 _Avoid_: Mutation Payload, CRUD Request
 
+**Rejected Changes Inbox**:
+The client-side list of Commands the server refused with a typed rejection reason (for example `stale_version` or `invalid_intent`). A rejected Command is never silently dropped or silently merged; the user re-edits or discards it from here. Backed by the local outbox, never synced.
+_Avoid_: Failed Syncs, Dead Letter Queue
+
 **Household Change**:
 One row appended per committed Command in `household_changes`, carrying a per-household monotonic sequence number (`seq`), the acting user, the command's `commandId`, and the `effects[]` tags it invalidated. It is simultaneously the sync feed, the change-notification watermark unit, and the household's activity history — not a compliance-only audit log.
 _Avoid_: Audit Log Entry

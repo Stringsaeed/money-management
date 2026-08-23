@@ -17,7 +17,10 @@ const SYNC_POLL_INTERVAL_MS = 30_000;
  * triggers, never what it returns.
  *
  * Entries carry no row data; consumers invalidate local caches by effect tag.
- * Cache writeback wiring lands with the outbox worker (#85).
+ *
+ * @deprecated Superseded by `useSyncWorker` (#85), which persists the
+ * watermark in `sync_state`, drains the outbox, and invalidates caches.
+ * Do not adopt in new screens; remove once no callers remain.
  */
 export function useSyncDeltas(householdId: string | null) {
   const { data: session, isPending } = authClient.useSession();
