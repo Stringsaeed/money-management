@@ -1,6 +1,7 @@
 import type { RouterClient } from "@orpc/server";
 
 import { protectedProcedure, publicProcedure } from "../index";
+import { activityRouter } from "./activity";
 import { budgetRouter } from "./budget";
 import { commandsRouter } from "./commands";
 import { householdsRouter } from "./households";
@@ -22,6 +23,7 @@ export const appRouter = {
   households: householdsRouter,
   commands: commandsRouter,
   sync: syncRouter,
+  activity: activityRouter,
   budget: budgetRouter,
   ledger: ledgerRouter,
   settlement: settlementRouter,
