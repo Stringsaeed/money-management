@@ -6,13 +6,8 @@ import { householdChange } from "@trove/db/schema/commands";
 import type { CommandDatabase } from "../commands/types";
 import type { HouseholdCaller } from "../require-member";
 import { requireHouseholdMember } from "../require-member";
-import {
-  assignedThroughPeriodSql,
-  fundingPoolSql,
-  periodCeiling,
-  unassignedMoneySql,
-} from "./funding-pool";
-import { cardPaymentReserveSql } from "./reserve";
+import { getBudgetPoolFacts, periodCeiling, type BudgetPoolFacts } from "./funding-pool";
+import { getReserveFacts } from "./reserve";
 
 /**
  * Period projections (#92): Available Money, Envelope Health, and Rollover
@@ -114,32 +109,26 @@ async function currentHouseholdSeq(db: CommandDatabase, householdId: string): Pr
   return Number(rows[0]?.seq ?? 0);
 }
 
-interface WorkspaceFacts {
-  readonly fundingPoolMinor: number;
-  readonly assignedMinor: number;
-  readonly reservesMinor: number;
-  readonly unassignedMinor: number;
-}
+type WorkspaceFacts = BudgetPoolFacts;
 
-/** One period's workspace facts via the shipped #90/#91 guard fragments. */
+/**
+ * One period's workspace facts via the SHIPPED #90/#91 fact readers — no
+ * projection-specific reimplementation of pool arithmetic, so a read can
+ * never disagree with what the command guards assert. #90 hardcodes
+ * reserves to zero (the carve-out is inside assigned); #91 computes the
+ * real reserve, so it wins here.
+ */
 async function getWorkspaceFacts(
   db: CommandDatabase,
   householdId: string,
   currency: string,
   period: string,
 ): Promise<WorkspaceFacts> {
-  const rows = await db.all<Record<string, number>>(sql`SELECT
-      ${fundingPoolSql(householdId, currency, period)} AS funding_pool,
-      ${assignedThroughPeriodSql(householdId, currency, period)} AS assigned,
-      ${cardPaymentReserveSql(householdId, currency, period)} AS reserves,
-      ${unassignedMoneySql(householdId, currency, period)} AS unassigned`);
-  const row = rows[0] ?? {};
-  return {
-    fundingPoolMinor: Number(row.funding_pool ?? 0),
-    assignedMinor: Number(row.assigned ?? 0),
-    reservesMinor: Number(row.reserves ?? 0),
-    unassignedMinor: Number(row.unassigned ?? 0),
-  };
+  const [pool, reserve] = await Promise.all([
+    getBudgetPoolFacts(db, householdId, currency, period),
+    getReserveFacts(db, householdId, currency, period),
+  ]);
+  return { ...pool, reservesMinor: Math.max(reserve.reserveMinor, pool.reservesMinor) };
 }
 
 /** Per-envelope, per-month deltas driving the sequential waterfall walk. */
@@ -481,75 +470,59 @@ export async function getProjections(
 
   const stalePeriods = requestedPeriods.filter((period) => !freshByKey.has(period));
 
-  if (stalePeriods.length > 0) {
-    const built = await buildProjections({
-      db,
-      householdId: caller.householdId,
-      currency: input.currency,
-      activationPeriod,
-      startPeriod: stalePeriods[0],
-      endPeriod: stalePeriods[stalePeriods.length - 1],
-    });
+  /** One stamped UPSERT; concurrent writers may interleave but every row ends
+   * stamped with a seq it was actually computed at, so a later read
+   * self-heals anything computed against a lagging stamp. */
+  const cachePut = async (projection: PeriodProjection): Promise<void> => {
+    await db
+      .insert(periodProjectionCache)
+      .values({
+        householdId: caller.householdId,
+        currency: input.currency,
+        budgetPeriod: projection.budgetPeriod,
+        projectionJson: projection,
+        seqStamped: seq,
+      })
+      .onConflictDoUpdate({
+        target: [
+          periodProjectionCache.householdId,
+          periodProjectionCache.currency,
+          periodProjectionCache.budgetPeriod,
+        ],
+        set: { projectionJson: projection, seqStamped: seq },
+      });
+    freshByKey.set(projection.budgetPeriod, projection);
+  };
 
-    if (built.length > 0) {
-      // One UPSERT per stale period; concurrent writers may interleave but
-      // every row ends stamped with a seq it was actually computed at, so a
-      // later read self-heals anything computed against a lagging stamp.
+  if (stalePeriods.length > 0) {
+    // Periods before the workspace's activation have no facts to project;
+    // record explicit empty projections so such reads stop re-walking.
+    const preActivation = stalePeriods.filter((period) => period < activationPeriod);
+    for (const period of preActivation) {
+      await cachePut({
+        currency: input.currency,
+        budgetPeriod: period,
+        fundingPoolMinor: 0,
+        assignedMinor: 0,
+        reservesMinor: 0,
+        unassignedMinor: 0,
+        budgetHealth: { status: "ready", reasons: [] },
+        envelopes: [],
+      });
+    }
+
+    const buildable = stalePeriods.filter((period) => period >= activationPeriod);
+    if (buildable.length > 0) {
+      const built = await buildProjections({
+        db,
+        householdId: caller.householdId,
+        currency: input.currency,
+        activationPeriod,
+        startPeriod: buildable[0],
+        endPeriod: buildable[buildable.length - 1],
+      });
       for (const projection of built) {
-        await db
-          .insert(periodProjectionCache)
-          .values({
-            householdId: caller.householdId,
-            currency: input.currency,
-            budgetPeriod: projection.budgetPeriod,
-            projectionJson: projection,
-            seqStamped: seq,
-          })
-          .onConflictDoUpdate({
-            target: [
-              periodProjectionCache.householdId,
-              periodProjectionCache.currency,
-              periodProjectionCache.budgetPeriod,
-            ],
-            set: {
-              projectionJson: projection,
-              seqStamped: seq,
-            },
-          });
-        freshByKey.set(projection.budgetPeriod, projection);
-      }
-    } else {
-      // Nothing to build (window entirely before activation): still record
-      // empty stamps so such reads stop re-walking every time.
-      for (const period of stalePeriods) {
-        const empty: PeriodProjection = {
-          currency: input.currency,
-          budgetPeriod: period,
-          fundingPoolMinor: 0,
-          assignedMinor: 0,
-          reservesMinor: 0,
-          unassignedMinor: 0,
-          budgetHealth: { status: "ready", reasons: [] },
-          envelopes: [],
-        };
-        await db
-          .insert(periodProjectionCache)
-          .values({
-            householdId: caller.householdId,
-            currency: input.currency,
-            budgetPeriod: period,
-            projectionJson: empty,
-            seqStamped: seq,
-          })
-          .onConflictDoUpdate({
-            target: [
-              periodProjectionCache.householdId,
-              periodProjectionCache.currency,
-              periodProjectionCache.budgetPeriod,
-            ],
-            set: { projectionJson: empty, seqStamped: seq },
-          });
-        freshByKey.set(period, empty);
+        await cachePut(projection);
       }
     }
   }

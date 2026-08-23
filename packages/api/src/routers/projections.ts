@@ -1,4 +1,5 @@
 import { createDb } from "@trove/db";
+import { ORPCError } from "@orpc/server";
 import { z } from "zod";
 
 import { protectedProcedure } from "../index";
@@ -28,7 +29,9 @@ export const projectionsRouter = {
     .handler(async ({ context, input }) => {
       const userId = requireUserId(context);
       if (input.endPeriod < input.startPeriod) {
-        throw new Error("endPeriod must not precede startPeriod.");
+        throw new ORPCError("BAD_REQUEST", {
+          message: "endPeriod must not precede startPeriod.",
+        });
       }
       return getProjections(
         createDb(),
