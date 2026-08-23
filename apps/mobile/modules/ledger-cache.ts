@@ -67,7 +67,7 @@ export const budgetKeys = {
     ["budgeting", "projections", currency, period] as const,
 };
 
-export type BudgetEffect = "workspaces" | "projections";
+export type BudgetEffect = "workspaces" | "memberships" | "projections" | "settings";
 
 export type LedgerChange =
   | { kind: "account.created"; id: string }
@@ -179,7 +179,9 @@ const recurringEffectQueryKeys: Record<RecurringEffect, readonly QueryKey[]> = {
 
 const budgetEffectQueryKeys: Record<BudgetEffect, readonly QueryKey[]> = {
   workspaces: [budgetKeys.workspaces, budgetKeys.projections, accountKeys.lifecyclePreviews],
+  memberships: [budgetKeys.projections, accountKeys.lifecyclePreviews],
   projections: [budgetKeys.projections, accountKeys.lifecyclePreviews],
+  settings: [budgetKeys.workspaces],
 };
 
 export async function cohereLedgerCache(

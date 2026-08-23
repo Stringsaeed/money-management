@@ -1,6 +1,6 @@
-import type { RecurringRuleFrequency } from "@trove/domain/calendar";
-
 import type { TransactionType } from "@/types";
+
+import type { RecurringRuleFrequency } from "@trove/domain/calendar";
 
 export type RecurringRuleLifecycle = "active" | "paused" | "archived" | "completed";
 export type RecurringRuleHealth = "ready" | "needs_attention";

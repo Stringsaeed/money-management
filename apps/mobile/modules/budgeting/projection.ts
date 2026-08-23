@@ -1,7 +1,7 @@
 import { endOfMonth, format, parseISO } from "date-fns";
 import type { SQLiteDatabase } from "expo-sqlite";
 
-import type { BudgetProjection, ProjectionRequest } from "./types";
+import type { BudgetAttentionReason, BudgetProjection, ProjectionRequest } from "./types";
 import { addMoney, requireCurrency, requireMinorUnits, requirePeriod } from "./validation";
 
 interface AccountRow {
@@ -11,6 +11,7 @@ interface AccountRow {
 }
 
 interface TransactionRow {
+  id: string;
   type: string;
   amount: number;
   currency: string;
@@ -37,10 +38,21 @@ export async function getProjection(
   const accounts = await fundingAccounts(database, currency, period);
   const accountIds = accounts.map(({ id }) => id);
   let fundingPoolAmount = initialFundingPool(accounts, currency);
+  const attentionReasons: BudgetAttentionReason[] = [];
   if (accountIds.length > 0) {
-    const activity = await currentPeriodActivity(database, accountIds, period);
+    const activity = await activityThroughPeriod(database, accountIds, period);
     const fundingAccountIds = new Set(accountIds);
     for (const transaction of activity) {
+      if (isUnsupportedCurrencyTransfer(transaction)) {
+        attentionReasons.push({
+          kind: "unsupported-cross-currency-transfer",
+          transactionId: transaction.id,
+          sourceCurrency: transaction.sourceCurrency,
+          destinationCurrency: transaction.destinationCurrency,
+          recoveryAction: "Replace this transfer with exact same-currency ledger records.",
+        });
+        continue;
+      }
       assertTransactionCurrency(transaction, currency);
       fundingPoolAmount = applyTransaction(
         fundingPoolAmount,
@@ -51,12 +63,26 @@ export async function getProjection(
     }
   }
 
+  if (fundingPoolAmount < 0) {
+    attentionReasons.unshift({
+      kind: "budget-shortfall",
+      currency,
+      amountMinor: Math.abs(fundingPoolAmount),
+      recoveryAction:
+        "Increase the same-currency Funding Pool or move Money back to Unassigned until the shortfall is zero.",
+    });
+  }
+
   const money = { currency, amountMinor: fundingPoolAmount };
   return {
     currency,
     period,
     fundingPool: money,
     unassignedMoney: { ...money },
+    budgetHealth:
+      attentionReasons.length === 0
+        ? { status: "ready", reasons: [] }
+        : { status: "needs_attention", reasons: attentionReasons },
   };
 }
 
@@ -98,16 +124,16 @@ function initialFundingPool(accounts: readonly AccountRow[], currency: string): 
   return amount;
 }
 
-async function currentPeriodActivity(
+async function activityThroughPeriod(
   database: SQLiteDatabase,
   accountIds: readonly string[],
   period: string,
 ): Promise<TransactionRow[]> {
   const placeholders = accountIds.map(() => "?").join(", ");
-  const startDate = `${period}-01`;
-  const endDate = format(endOfMonth(parseISO(startDate)), "yyyy-MM-dd");
+  const endDate = format(endOfMonth(parseISO(`${period}-01`)), "yyyy-MM-dd");
   return database.getAllAsync<TransactionRow>(
     `SELECT
+       transactions.id,
        transactions.type,
        transactions.amount,
        transactions.currency,
@@ -119,17 +145,25 @@ async function currentPeriodActivity(
      INNER JOIN accounts AS source_accounts ON source_accounts.id = transactions.account_id
      LEFT JOIN accounts AS destination_accounts
        ON destination_accounts.id = transactions.to_account_id
-     WHERE transactions.date >= ?
-       AND transactions.date <= ?
+     WHERE transactions.date <= ?
        AND (
          transactions.account_id IN (${placeholders})
          OR transactions.to_account_id IN (${placeholders})
        )
      ORDER BY transactions.date, transactions.created_at, transactions.id`,
-    startDate,
     endDate,
     ...accountIds,
     ...accountIds,
+  );
+}
+
+function isUnsupportedCurrencyTransfer(
+  transaction: TransactionRow,
+): transaction is TransactionRow & { destinationCurrency: string } {
+  return (
+    transaction.type === "transfer" &&
+    transaction.destinationCurrency !== null &&
+    transaction.destinationCurrency !== transaction.sourceCurrency
   );
 }
 
@@ -163,15 +197,6 @@ function assertTransactionCurrency(transaction: TransactionRow, currency: string
   if (transaction.currency !== currency || transaction.sourceCurrency !== currency) {
     throw new Error(
       `Cannot calculate ${currency} Funding Pool with ${transaction.currency} ledger Money.`,
-    );
-  }
-  if (
-    transaction.type === "transfer" &&
-    transaction.destinationCurrency !== null &&
-    transaction.destinationCurrency !== currency
-  ) {
-    throw new Error(
-      `Cannot calculate ${currency} Funding Pool from a transfer to ${transaction.destinationCurrency}.`,
     );
   }
 }
