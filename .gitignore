@@ -55,3 +55,6 @@ app-example
 coverage
 .env*
 graphify-out
+
+# Alchemy generated bundles + local runtime state
+.alchemy/

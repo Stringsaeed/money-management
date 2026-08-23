@@ -12,6 +12,7 @@ export const accounts = sqliteTable("accounts", {
   initialBalance: integer("initial_balance").notNull().default(0), // cents
   excludeFromTotal: integer("exclude_from_total", { mode: "boolean" }).notNull().default(false),
   sortOrder: integer("sort_order").notNull().default(0),
+  ownerUserId: text("owner_user_id"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -26,6 +27,7 @@ export const categories = sqliteTable("categories", {
   icon: text("icon").notNull().default("🏷️"),
   parentId: text("parent_id"), // self-reference, no FK to avoid circular
   sortOrder: integer("sort_order").notNull().default(0),
+  ownerUserId: text("owner_user_id"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -62,6 +64,7 @@ export const recurringRules = sqliteTable("recurring_rules", {
   healthChangedAt: text("health_changed_at"),
   lastSettlementAttemptAt: text("last_settlement_attempt_at"),
   lastSettlementError: text("last_settlement_error"),
+  ownerUserId: text("owner_user_id"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -91,6 +94,7 @@ export const transactions = sqliteTable("transactions", {
     onDelete: "set null",
   }),
   description: text("description").notNull().default(""),
+  ownerUserId: text("owner_user_id"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });

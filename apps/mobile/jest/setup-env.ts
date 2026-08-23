@@ -9,6 +9,37 @@ jest.mock("expo-font", () => ({
   useFonts: jest.fn(() => [true, null]),
 }));
 
+// better-auth's Expo client ships untranspiled ESM and talks to the network —
+// tests get an inert signed-out client instead.
+jest.mock("@/lib/auth-client", () => ({
+  authClient: {
+    useSession: jest.fn(() => ({ data: null, isPending: true })),
+    getCookie: jest.fn(() => ""),
+  },
+}));
+
+// The oRPC link ships untranspiled ESM and would hit the dev server — tests
+// stub the household procedures instead.
+jest.mock("@/lib/server/orpc", () => ({
+  orpc: {
+    households: {
+      listMine: jest.fn(async () => []),
+      get: jest.fn(),
+      create: jest.fn(),
+      rename: jest.fn(),
+      setActive: jest.fn(),
+      generateInvite: jest.fn(),
+      listInvites: jest.fn(),
+      revokeInvite: jest.fn(),
+      acceptInvite: jest.fn(),
+      leave: jest.fn(),
+      removeMember: jest.fn(),
+      transferOwnership: jest.fn(),
+      delete: jest.fn(),
+    },
+  },
+}));
+
 jest.mock("expo-splash-screen", () => ({
   preventAutoHideAsync: jest.fn(),
   hideAsync: jest.fn(),

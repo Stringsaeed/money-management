@@ -22,6 +22,7 @@ import {
 } from "@/db/schema";
 import { clearSeedVersion } from "@/db/seed";
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
+import { useActiveHousehold } from "@/hooks/use-households";
 import { useCategories } from "@/hooks/use-categories";
 import { useRecurringRulesList } from "@/hooks/use-recurring-rules";
 import { useTransactions } from "@/hooks/use-transactions";
@@ -35,9 +36,11 @@ export default function SettingsScreen() {
   const { data: allCategories = [] } = useCategories();
   const { data: recurring = [] } = useRecurringRulesList("current");
   const { data: allTransactions = [] } = useTransactions({});
+  const { activeHousehold } = useActiveHousehold();
 
   const totalCategories = allCategories.length;
   const activeRecurring = recurring.filter((rule) => rule.lifecycle === "active").length;
+  const activeHouseholdName = activeHousehold?.name ?? null;
 
   function handleEraseAll() {
     Alert.alert(
@@ -101,6 +104,13 @@ export default function SettingsScreen() {
           label="Recurring Rules"
           subtitle={`${activeRecurring} active`}
           onPress={() => router.push("/recurring")}
+        />
+        <Divider />
+        <SettingsRow
+          emoji="🏠"
+          label="Household"
+          subtitle={activeHouseholdName ? `${activeHouseholdName} · shared` : "Sign in to share"}
+          onPress={() => router.push("/settings/household")}
         />
       </Card>
 

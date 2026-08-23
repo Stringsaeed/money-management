@@ -28,9 +28,11 @@ export function createAuth() {
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
     advanced: {
+      // Secure/SameSite=None cookies are rejected over plain HTTP, so relax
+      // them whenever the server runs on an http:// base URL (local dev).
       defaultCookieAttributes: {
-        sameSite: "none",
-        secure: true,
+        sameSite: env.BETTER_AUTH_URL.startsWith("https") ? "none" : "lax",
+        secure: env.BETTER_AUTH_URL.startsWith("https"),
         httpOnly: true,
       },
       // Uncomment crossSubDomainCookies when deploying and replace <your-workers-subdomain>
