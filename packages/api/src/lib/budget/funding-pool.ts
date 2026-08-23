@@ -16,7 +16,7 @@ import { sql, type SQL } from "drizzle-orm";
  * plus posted activity up to (excluding) the next period — because an
  * Assignment lands on the period's plan, not on today's balance.
  * Transfers between two Funding Accounts of the same workspace are
- * budget-neutral (CONTEXT.md: Pool Transfer); transfers crossing the pool
+ * budget-neutral (CONTEXT.md: Funding Boundary Transfer); transfers crossing the pool
  * boundary move it.
  *
  * All amounts are minor units. Every fragment takes householdId as a bound

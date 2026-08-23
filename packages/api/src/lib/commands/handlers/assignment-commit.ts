@@ -197,6 +197,19 @@ export const assignmentCommitHandler = {
     const consumesUnassigned = !input.reversesAssignmentId && sourceEnvelopeId === null;
 
     const predicate = preconditions.find((p) => p.predicate === "unassigned_money_gte");
+    if (predicate !== undefined && typeof predicate.args?.minor !== "number") {
+      // A malformed precondition must not silently degrade into the default;
+      // the caller asked for a specific threshold and it cannot be honored.
+      return {
+        kind: "invalid_intent",
+        issues: [
+          {
+            field: "preconditions",
+            message: "unassigned_money_gte requires a numeric args.minor.",
+          },
+        ],
+      };
+    }
     const requiredMinor =
       typeof predicate?.args?.minor === "number" ? predicate.args.minor : input.amountMinor;
 
@@ -229,6 +242,7 @@ export const assignmentCommitHandler = {
     }
 
     let availabilityAfter: number | null = null;
+    let routing: ReturnType<typeof routeAssignment> | null = null;
     if (!input.reversesAssignmentId && destinationEnvelopeId) {
       const availableBefore = await getEnvelopeAssignedBalance(
         ctx.db,
@@ -236,7 +250,7 @@ export const assignmentCommitHandler = {
         destinationEnvelopeId,
         input.budgetPeriod,
       );
-      const routing = routeAssignment({
+      routing = routeAssignment({
         amountMinor: input.amountMinor,
         destinationAvailableMinor: availableBefore,
         // Unfunded Card Spending arrives with #91; stage two consumes nothing yet.
@@ -255,16 +269,12 @@ export const assignmentCommitHandler = {
             }
           : {
               envelopeId: destinationEnvelopeId,
-              routing: routeAssignment({
-                amountMinor,
-                destinationAvailableMinor: 0,
-                unfundedCardSpendingMinor: 0,
-              }),
               unassignedAfter: facts.unassignedMinor - (consumesUnassigned ? amountMinor : 0),
             }),
         currency: input.currency,
         budgetPeriod: input.budgetPeriod,
         amountMinor,
+        ...(routing && { routing }),
         ...(availabilityAfter !== null && { availabilityAfter }),
       },
       guards,

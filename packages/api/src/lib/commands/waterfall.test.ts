@@ -388,7 +388,7 @@ describe("assignment.commit", () => {
         householdId: HOUSEHOLD_ID,
         kind: "assignment.commit",
         payload: {
-          envelopeId: "env-a",
+          destinationEnvelopeId: "env-a",
           currency: "USD",
           amountMinor: original.amountMinor,
           budgetPeriod: PERIOD,
