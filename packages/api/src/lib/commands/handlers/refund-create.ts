@@ -116,9 +116,11 @@ export const refundCreateHandler = {
       };
     }
 
-    // ADR-0008 period attribution: the refund owns the ORIGINAL's Budget
-    // Period regardless of when it lands.
-    const budgetPeriod = original.date.slice(0, 7);
+    // ADR-0008 / CONTEXT.md: a Refund affects its OWN Budget Period (when
+    // the Money returned), not the current one and not retroactively the
+    // original's. Envelope restoration follows from its ledger date via the
+    // category-mapping timeline; reserve adjustment is automatic netting.
+    const budgetPeriod = input.date.slice(0, 7);
 
     // Cumulative cap at plan time: existing linked refunds plus this one may
     // not exceed the original expense. The same sum is re-read inside the

@@ -7,7 +7,12 @@ import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pi
 import type { BatchStatement } from "../statements";
 
 import { getBudgetPoolFacts } from "../../budget/funding-pool";
-import { cardPaymentReserveSql, getReserveFacts, periodLastDate } from "../../budget/reserve";
+import {
+  cardPaymentReserveSql,
+  getReserveFacts,
+  periodLastDate,
+  unfundedCardSpendingSql,
+} from "../../budget/reserve";
 import { ledgerAccount, transaction } from "@trove/db/schema/ledger";
 
 import { issuesFromZod } from "./shared";
@@ -100,12 +105,19 @@ export const paymentCreateHandler = {
     // until such rows exist the waterfall's second stage consumes nothing.
     const fundedOpeningDebtMinor = 0;
 
+    const unfundedRows = await ctx.db.all(
+      sql`SELECT ${unfundedCardSpendingSql(ctx.householdId, input.currency, input.budgetPeriod)} AS unfunded`,
+    );
+    const unfundedCardSpendingMinor = Number(
+      (unfundedRows[0] as Record<string, number> | undefined)?.unfunded ?? 0,
+    );
+
     const routing = routeCardPayment({
       amountMinor: input.amountMinor,
       reserveMinor: reserve.reserveMinor,
       fundedOpeningDebtMinor,
       unassignedMinor: facts.unassignedMinor,
-      unfundedCardSpendingMinor: Math.max(-facts.unassignedMinor, 0),
+      unfundedCardSpendingMinor,
     });
 
     return {

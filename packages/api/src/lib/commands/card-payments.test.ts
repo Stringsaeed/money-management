@@ -366,6 +366,34 @@ describe("card_payment.record", () => {
     expect(payment?.accountId).toBe("acc-1");
   });
 
+  it("drains the reserve so a second payment sees the reduced amount", async () => {
+    await applyCommand({
+      db,
+      userId: OWNER,
+      envelope: {
+        commandId: crypto.randomUUID(),
+        householdId: HOUSEHOLD_ID,
+        kind: "assignment.commit",
+        payload: {
+          destinationEnvelopeId: "env-a",
+          sourceEnvelopeId: null,
+          reversesAssignmentId: null,
+          currency: "USD",
+          amountMinor: 4_000,
+          budgetPeriod: PERIOD,
+        },
+      },
+    });
+    await seedExpense("tx-reserved", "card-1", 4_000, "cat-groceries");
+
+    let facts = await getReserveFacts(db, HOUSEHOLD_ID, "USD", PERIOD);
+    expect(facts.reserveMinor).toBe(4_000);
+
+    expectApplied(await payCard({ amountMinor: 3_000 }));
+    facts = await getReserveFacts(db, HOUSEHOLD_ID, "USD", PERIOD);
+    expect(facts.reserveMinor).toBe(1_000);
+  });
+
   it("returns excess over liability as Card Credit back to Unassigned Money", async () => {
     const result = expectApplied(await payCard({ amountMinor: 1_000 }));
     // No card spending at all: nothing is consumed; everything is credit.
@@ -462,14 +490,6 @@ async function planViaHandler(amountMinor: number): Promise<CommandPlan> {
   return outcome;
 }
 
-interface CommandPlanShape {
-  guards: unknown[];
-  statements: unknown[];
-  effects: unknown[];
-  applied: unknown;
-}
-void (0 as unknown as CommandPlanShape | null);
-
 async function applyPlanned(plan: CommandPlan): Promise<CommandResult> {
   const { assertionStatement, changeLogStatement, executeBatch, resultStatement } =
     await import("./statements");
@@ -485,18 +505,14 @@ async function applyPlanned(plan: CommandPlan): Promise<CommandResult> {
     }),
     resultStatement(db as never, { householdId: HOUSEHOLD_ID, commandId, result: plan.applied }),
   ];
-  try {
-    await executeBatch(db, statements);
-    return {
-      kind: "applied",
-      seq: 999,
-      effects: plan.effects,
-      applied: plan.applied,
-      replayed: false,
-    };
-  } catch (error) {
-    throw error;
-  }
+  await executeBatch(db, statements);
+  return {
+    kind: "applied",
+    seq: 999,
+    effects: plan.effects,
+    applied: plan.applied,
+    replayed: false,
+  };
 }
 
 describe("refund.link", () => {
@@ -509,7 +525,7 @@ describe("refund.link", () => {
     await seedExpense("tx-original", "card-1", 5_000, "cat-groceries", "2026-02-10");
   });
 
-  it("links a partial refund and attributes it to the ORIGINAL's period", async () => {
+  it("attributes a refund to its own Budget Period (ADR-0008)", async () => {
     const result = expectApplied(
       await linkRefund({
         originalTransactionId: "tx-original",
@@ -517,8 +533,9 @@ describe("refund.link", () => {
         date: "2026-04-20",
       }),
     );
-    // Landed in April but attributed to February (the original's period).
-    expect(result.applied.budgetPeriod).toBe(PERIOD);
+    // The refund landed in April and affects April's plan — its own period —
+    // while the linkage keeps the original expense visible in February.
+    expect(result.applied.budgetPeriod).toBe("2026-04");
 
     const links = await db.select().from(refundLink);
     expect(links).toHaveLength(1);

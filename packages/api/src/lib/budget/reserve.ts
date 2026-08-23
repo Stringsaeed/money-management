@@ -1,39 +1,37 @@
 import { sql, type SQL } from "drizzle-orm";
 
 /**
- * Card Payment Reserve arithmetic (#91), per ADR-0004 and ADR-0010:
- * categorized card purchases move supported Money from their Envelope into a
- * system-managed reserve; whatever the Envelope could not support remains
- * Unfunded Card Spending.
+ * Card Payment Reserve arithmetic (#91), per ADR-0004/0010/0011.
  *
- * Per envelope, for one workspace/period:
- *   MIN(card spend net of linked Refunds, envelope assigned balance) — only
- *   assigned Money can be reserved; the unsupported remainder stays visible
- *   as unfunded debt. Refunds adjust the reserve automatically by netting
- *   out here (ADR-0008's "adjusts its Card Payment Reserve") with no
- *   separate write path.
+ * Per envelope: categorized card spending (mapped via the #89 category
+ * timeline at each transaction's own date) net of linked Refunds, capped by
+ * the envelope's assigned balance — only assigned Money can be reserved;
+ * the unsupported remainder stays visible as Unfunded Card Spending.
+ *
+ * Payments (transfers INTO card accounts) release reserved Money
+ * dollar-for-dollar — they settle liability regardless of which envelope
+ * reserved it (ADR-0011) — so they are subtracted from the TOTAL reserve,
+ * floored at zero. Refunds adjust the reserve automatically by netting out
+ * here (ADR-0008) with no separate write path.
  *
  * Pure, embeddable SQL (no CTEs) because the payment/refund commands
  * re-validate preconditions inside the atomic batch: the plan-time read and
- * the in-batch guard are the same expression evaluated twice.
+ * the in-batch guard are the same expression evaluated twice (#90 pattern).
  */
 
-/** "YYYY-MM" Budget Period → exclusive upper bound for ledger dates. */
-export function periodCeiling(period: string): string {
-  const [year, month] = period.split("-").map(Number);
-  const nextYear = month === 12 ? year + 1 : year;
-  const nextMonth = month === 12 ? 1 : month + 1;
-  return `${String(nextYear).padStart(4, "0")}-${String(nextMonth).padStart(2, "0")}-01`;
-}
+import { periodCeiling } from "./funding-pool";
 
 /** Last calendar day of the Budget Period ("YYYY-MM-DD"), for payment dates. */
 export function periodLastDate(period: string): string {
   const ceiling = periodCeiling(period);
   const [y, m, d] = ceiling.split("-").map(Number);
-  const previousDay = new Date(Date.UTC(y, m - 1, d - 1));
-  return previousDay.toISOString().slice(0, 10);
+  return new Date(Date.UTC(y, m - 1, d - 1)).toISOString().slice(0, 10);
 }
 
+/**
+ * Per-envelope card spending net of linked Refunds, alongside that
+ * envelope's assigned balance through `period`.
+ */
 function spendingPerEnvelopeSql(
   householdId: string,
   currency: string,
@@ -57,6 +55,7 @@ function spendingPerEnvelopeSql(
         )
         FROM assignments g
         WHERE g.household_id = ${householdId}
+          AND g.currency = ${currency}
           AND g.budget_period <= ${period}
           AND (g.destination_envelope_id = cm.envelope_id OR g.source_envelope_id = cm.envelope_id)
       ), 0) AS available_minor
@@ -82,9 +81,23 @@ function spendingPerEnvelopeSql(
     GROUP BY cm.envelope_id`;
 }
 
+/** All payments (transfers INTO card accounts) made through the period. */
+function paymentsIntoCardsSql(householdId: string, currency: string, ceiling: string): SQL {
+  return sql`COALESCE((
+    SELECT SUM(p.amount_minor)
+    FROM transactions p
+    JOIN accounts dest
+      ON dest.household_id = p.household_id AND dest.id = p.to_account_id AND dest.type = 'card'
+    WHERE p.household_id = ${householdId}
+      AND p.type = 'transfer'
+      AND p.currency = ${currency}
+      AND p.date < ${ceiling}
+  ), 0)`;
+}
+
 /**
- * Card Payment Reserve for one currency workspace/period: per-envelope card
- * spending net of refunds, capped by what the envelope actually had.
+ * Card Payment Reserve for one currency workspace/period: total per-envelope
+ * reserved shares minus payments already settled, floored at zero.
  */
 export function cardPaymentReserveSql(
   householdId: string,
@@ -92,7 +105,27 @@ export function cardPaymentReserveSql(
   period: string,
 ): SQL<number> {
   return sql<number>`(
-    SELECT COALESCE(SUM(MIN(s.spent_minor, s.available_minor)), 0)
+    SELECT MAX(
+      (SELECT COALESCE(SUM(MIN(s.spent_minor, s.available_minor)), 0)
+       FROM (${spendingPerEnvelopeSql(householdId, currency, periodCeiling(period), period)}) s)
+      - ${paymentsIntoCardsSql(householdId, currency, periodCeiling(period))}
+    , 0)
+  )`;
+}
+
+/**
+ * Unfunded Card Spending: per-envelope card spending beyond what the
+ * envelope could support — the part ADR-0004 refuses to pretend is reserved.
+ * Settled payments reduce the debt but do not fund the shortfall, so they
+ * do not subtract here.
+ */
+export function unfundedCardSpendingSql(
+  householdId: string,
+  currency: string,
+  period: string,
+): SQL<number> {
+  return sql<number>`(
+    SELECT COALESCE(SUM(MAX(s.spent_minor - s.available_minor, 0)), 0)
     FROM (${spendingPerEnvelopeSql(householdId, currency, periodCeiling(period), period)}) s
   )`;
 }

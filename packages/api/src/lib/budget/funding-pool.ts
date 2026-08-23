@@ -24,7 +24,7 @@ import { sql, type SQL } from "drizzle-orm";
  */
 
 /** "YYYY-MM" Budget Period → exclusive upper bound for ledger dates. */
-export function periodEndExclusive(period: string): string {
+export function periodCeiling(period: string): string {
   const [year, month] = period.split("-").map(Number);
   const nextYear = month === 12 ? year + 1 : year;
   const nextMonth = month === 12 ? 1 : month + 1;
@@ -55,7 +55,7 @@ function activeMemberIdsSql(householdId: string, currency: string, period: strin
 
 /** Funding Pool: initial balances plus signed activity of member accounts through `period`. */
 export function fundingPoolSql(householdId: string, currency: string, period: string): SQL<number> {
-  const ceiling = periodEndExclusive(period);
+  const ceiling = periodCeiling(period);
   const members = activeMemberIdsSql(householdId, currency, period);
   return sql<number>`(
     SELECT COALESCE(SUM(account_balance), 0)
@@ -140,7 +140,11 @@ export async function getBudgetPoolFacts(
   const row = (rows[0] ?? {}) as Record<string, number>;
   const fundingPoolMinor = Number(row.funding_pool ?? 0);
   const assignedMinor = Number(row.assigned ?? 0);
-  const reservesMinor = 0; // Card Payment Reserves arrive with #91.
+  // The reserve is carved out of envelope-assigned Money (ADR-0004), which
+  // `assignedMinor` already counts — subtracting it again would double-count.
+  // Only future direct-to-reserve assignments (opening debt, ADR-0010) would
+  // add to this term.
+  const reservesMinor = 0;
   return {
     fundingPoolMinor,
     assignedMinor,
