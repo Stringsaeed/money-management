@@ -12,6 +12,7 @@ import type {
 export async function validateDraft(
   options: CreateRecurringRulesOptions,
   draft: RecurringRuleDraft,
+  preservedCategoryId: string | null = null,
 ): Promise<RecurringValidationIssue[]> {
   const issues: RecurringValidationIssue[] = [];
   if (!draft.name.trim()) issues.push({ field: "name", message: "Enter a Rule name." });
@@ -60,11 +61,11 @@ export async function validateDraft(
     });
   }
   if (draft.categoryId) {
-    const category = await options.database.getFirstAsync<{ id: string }>(
-      "SELECT id FROM categories WHERE id = ?",
+    const category = await options.database.getFirstAsync<{ id: string; lifecycle: string }>(
+      "SELECT id, lifecycle FROM categories WHERE id = ?",
       draft.categoryId,
     );
-    if (!category) {
+    if (!category || (category.lifecycle !== "active" && category.id !== preservedCategoryId)) {
       issues.push({ field: "categoryId", message: "Choose an available Category." });
     }
   }

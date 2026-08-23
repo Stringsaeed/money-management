@@ -10,7 +10,7 @@ jest.mock("@/hooks/use-accounts", () => ({
 }));
 
 jest.mock("@/hooks/use-categories", () => ({
-  useCategories: () => ({
+  useAllCategories: () => ({
     data: [{ id: "category-1", name: "Food" }],
   }),
 }));

@@ -20,7 +20,7 @@ import {
   type TransactionFormData,
 } from "@/components/transaction/transaction-form";
 import type { TransactionFormHandle } from "@/components/transaction/types";
-import { useCategories } from "@/hooks/use-categories";
+import { useAllCategories } from "@/hooks/use-categories";
 import {
   useArchiveRecurringRule,
   useCreateRecurringRule,
@@ -54,7 +54,7 @@ export default function TransactionScreen() {
   const formRef = useRef<TransactionFormHandle | null>(null);
   const [isRecurring, setIsRecurring] = useState(recurring === "true");
 
-  const { data: categories = [] } = useCategories();
+  const { data: categories = [] } = useAllCategories();
   const { data: transaction, isLoading: isTransactionLoading } = useTransaction(
     isNew || isRuleEditor ? undefined : id,
   );

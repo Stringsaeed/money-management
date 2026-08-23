@@ -4,6 +4,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { getSystemTimeZone, localDateInTimeZone } from "@/modules/recurring-rules/clock";
 
 import { migrateBudgeting } from "./budgeting-migration";
+import { migrateCategoryLifecycle } from "./category-lifecycle-migration";
 import { runMigrations } from "./migrate";
 import { migrateRecurringRules } from "./recurring-rules-migration";
 import { markDatabaseReset, resetDatabaseIfNeeded } from "./reset";
@@ -35,6 +36,7 @@ export async function initializeDatabase(
     now: migrationInstant.toISOString(),
   });
   await migrateBudgeting(database);
+  await migrateCategoryLifecycle(database);
 
   if (shouldMarkReset) await markDatabaseReset(drizzleDatabase);
   await seedDatabase(drizzleDatabase);
