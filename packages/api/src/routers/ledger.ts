@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { ledgerAccount, category, transaction } from "@trove/db/schema/ledger";
 
+import type { CommandDatabase } from "../lib/commands/types";
 import type { HouseholdCaller } from "../lib/require-member";
 import { requireHouseholdMember } from "../lib/require-member";
 import { requireUserId } from "../lib/require-user";
@@ -26,18 +27,18 @@ const transactionsInput = householdInput.extend({
     .optional(),
 });
 
-async function listAccounts(caller: HouseholdCaller) {
-  await requireHouseholdMember(createDb(), caller.userId, caller.householdId);
-  return createDb()
+async function listAccounts(db: CommandDatabase, caller: HouseholdCaller) {
+  await requireHouseholdMember(db, caller.userId, caller.householdId);
+  return db
     .select()
     .from(ledgerAccount)
     .where(eq(ledgerAccount.householdId, caller.householdId))
     .orderBy(asc(ledgerAccount.sortOrder), asc(ledgerAccount.name));
 }
 
-async function listCategories(caller: HouseholdCaller) {
-  await requireHouseholdMember(createDb(), caller.userId, caller.householdId);
-  return createDb()
+async function listCategories(db: CommandDatabase, caller: HouseholdCaller) {
+  await requireHouseholdMember(db, caller.userId, caller.householdId);
+  return db
     .select()
     .from(category)
     .where(eq(category.householdId, caller.householdId))
@@ -50,12 +51,13 @@ interface TransactionPage {
 }
 
 async function listTransactions(
+  db: CommandDatabase,
   caller: HouseholdCaller,
   limit: number,
   beforeDate?: string,
 ): Promise<TransactionPage> {
-  await requireHouseholdMember(createDb(), caller.userId, caller.householdId);
-  const rows = await createDb()
+  await requireHouseholdMember(db, caller.userId, caller.householdId);
+  const rows = await db
     .select()
     .from(transaction)
     .where(
@@ -80,14 +82,14 @@ export const ledgerRouter = {
   accounts: {
     list: protectedProcedure.input(householdInput).handler(({ context, input }) => {
       const userId = requireUserId(context);
-      return listAccounts({ userId, householdId: input.householdId });
+      return listAccounts(createDb(), { userId, householdId: input.householdId });
     }),
   },
 
   categories: {
     list: protectedProcedure.input(householdInput).handler(({ context, input }) => {
       const userId = requireUserId(context);
-      return listCategories({ userId, householdId: input.householdId });
+      return listCategories(createDb(), { userId, householdId: input.householdId });
     }),
   },
 
@@ -96,6 +98,7 @@ export const ledgerRouter = {
     list: protectedProcedure.input(transactionsInput).handler(({ context, input }) => {
       const userId = requireUserId(context);
       return listTransactions(
+        createDb(),
         { userId, householdId: input.householdId },
         input.limit,
         input.beforeDate,

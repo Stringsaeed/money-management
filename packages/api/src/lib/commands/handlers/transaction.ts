@@ -8,7 +8,7 @@ import type { BatchStatement } from "../statements";
 import { ledgerAccount, category, transaction } from "@trove/db/schema/ledger";
 import { periodProjectionCache } from "@trove/db/schema/budget";
 
-import { issuesFromZod } from "./shared";
+import { checkExpectedVersion, issuesFromZod } from "./shared";
 
 /** Every ledger fact moves the ledger itself, balances, summaries, and projections. */
 const TRANSACTION_EFFECTS: readonly EffectTag[] = [
@@ -205,21 +205,6 @@ async function validateShape(
   return { ok: true, currency: account.currency };
 }
 
-function checkVersion(existing: TransactionRow, preconditions: PlanRequest["preconditions"]) {
-  const expectedVersion = preconditions.find(
-    (p) => p.expectedVersion !== undefined,
-  )?.expectedVersion;
-  if (expectedVersion !== undefined && expectedVersion !== existing.version) {
-    return {
-      kind: "stale_version" as const,
-      entityId: existing.id,
-      expectedVersion,
-      actualVersion: existing.version,
-    };
-  }
-  return null;
-}
-
 function versionGuard(ctx: PlanContext, id: string, expectedVersion: number) {
   return and(
     eq(transaction.householdId, ctx.householdId),
@@ -319,9 +304,9 @@ export const transactionHandlers = {
           entityId: input.transactionId,
         };
       }
-      const versionIssue = checkVersion(existing, preconditions);
-      if (versionIssue) {
-        return versionIssue;
+      const stale = checkExpectedVersion(existing, preconditions);
+      if (stale) {
+        return stale;
       }
 
       // Merge onto the current row, then re-validate the whole shape.
@@ -391,9 +376,9 @@ export const transactionHandlers = {
           entityId: input.transactionId,
         };
       }
-      const versionIssue = checkVersion(existing, preconditions);
-      if (versionIssue) {
-        return versionIssue;
+      const stale = checkExpectedVersion(existing, preconditions);
+      if (stale) {
+        return stale;
       }
 
       const rowGuard = versionGuard(ctx, existing.id, existing.version);

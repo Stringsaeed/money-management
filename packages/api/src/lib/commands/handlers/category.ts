@@ -5,7 +5,7 @@ import type { PlanContext, PlanRejection, PlanRequest, CommandPlan } from "../pi
 import type { BatchStatement } from "../statements";
 import { category } from "@trove/db/schema/ledger";
 
-import { issuesFromZod } from "./shared";
+import { checkExpectedVersion, issuesFromZod } from "./shared";
 
 /**
  * Effect tags for structural Category writes. Summaries re-aggregate;
@@ -86,24 +86,6 @@ function versionGuard(ctx: PlanContext, categoryId: string, expectedVersion: num
   );
 }
 
-function checkVersion(
-  existing: typeof category.$inferSelect,
-  preconditions: PlanRequest["preconditions"],
-): PlanRejection | null {
-  const expectedVersion = preconditions.find(
-    (p) => p.expectedVersion !== undefined,
-  )?.expectedVersion;
-  if (expectedVersion !== undefined && expectedVersion !== existing.version) {
-    return {
-      kind: "stale_version",
-      entityId: existing.id,
-      expectedVersion,
-      actualVersion: existing.version,
-    };
-  }
-  return null;
-}
-
 export const categoryHandlers = {
   "category.create": {
     parsePayload(payload: unknown) {
@@ -176,9 +158,9 @@ export const categoryHandlers = {
           ],
         };
       }
-      const versionIssue = checkVersion(existing, preconditions);
-      if (versionIssue) {
-        return versionIssue;
+      const stale = checkExpectedVersion(existing, preconditions);
+      if (stale) {
+        return stale;
       }
       if (input.parentId !== undefined) {
         const parentIssue = await validateParent(ctx, input.parentId, existing.id);
@@ -235,9 +217,9 @@ export const categoryHandlers = {
           issues: [{ field: "categoryId", message: "Category is already archived." }],
         };
       }
-      const versionIssue = checkVersion(existing, preconditions);
-      if (versionIssue) {
-        return versionIssue;
+      const stale = checkExpectedVersion(existing, preconditions);
+      if (stale) {
+        return stale;
       }
 
       const rowGuard = versionGuard(ctx, existing.id, existing.version);

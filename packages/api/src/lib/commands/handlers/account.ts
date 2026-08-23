@@ -6,7 +6,7 @@ import { ledgerAccount } from "@trove/db/schema/ledger";
 
 import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
-import { issuesFromZod } from "./shared";
+import { checkExpectedVersion, issuesFromZod } from "./shared";
 
 /** Effect tags for structural Account writes: balances + summaries move. */
 const ACCOUNT_EFFECTS = ["balances", "summaries"] as const;
@@ -63,10 +63,6 @@ function versionGuard(
     eq(ledgerAccount.id, accountId),
     eq(ledgerAccount.version, expectedVersion),
   );
-}
-
-function resolveExpectedVersion(preconditions: PlanRequest["preconditions"]): number | undefined {
-  return preconditions.find((p) => p.expectedVersion !== undefined)?.expectedVersion;
 }
 
 export const accountHandlers = {
@@ -146,16 +142,11 @@ export const accountHandlers = {
         };
       }
 
-      const expectedVersion = resolveExpectedVersion(preconditions);
-      if (expectedVersion !== undefined && expectedVersion !== existing.version) {
-        return {
-          kind: "stale_version",
-          entityId: existing.id,
-          expectedVersion,
-          actualVersion: existing.version,
-        };
+      const stale = checkExpectedVersion(existing, preconditions);
+      if (stale) {
+        return stale;
       }
-      const guardVersion = expectedVersion ?? existing.version;
+      const guardVersion = existing.version;
       const rowGuard = versionGuard(ctx, existing.id, guardVersion);
 
       return {
@@ -211,16 +202,11 @@ export const accountHandlers = {
         };
       }
 
-      const expectedVersion = resolveExpectedVersion(preconditions);
-      if (expectedVersion !== undefined && expectedVersion !== existing.version) {
-        return {
-          kind: "stale_version",
-          entityId: existing.id,
-          expectedVersion,
-          actualVersion: existing.version,
-        };
+      const stale = checkExpectedVersion(existing, preconditions);
+      if (stale) {
+        return stale;
       }
-      const rowGuard = versionGuard(ctx, existing.id, expectedVersion ?? existing.version);
+      const rowGuard = versionGuard(ctx, existing.id, existing.version);
 
       return {
         effects: [...ACCOUNT_EFFECTS],
