@@ -30,6 +30,7 @@ import { PressablesConfig } from "pressto";
 import * as Haptics from "expo-haptics";
 
 import { SyncWorker } from "@/components/sync/sync-worker";
+import { SyncModeBanner } from "@/components/sync/sync-mode-banner";
 import { AppUpdateProvider } from "@/components/updates/app-update-provider";
 import { MandatoryUpdateGate } from "@/components/updates/mandatory-update-gate";
 import { RecurringSettlementBanner } from "@/components/recurring/recurring-settlement-banner";
@@ -158,6 +159,7 @@ export default function RootLayout() {
                           <StatusBar style="auto" />
                           <MandatoryUpdateGate />
                           <RecurringSettlementBanner />
+                          <SyncModeBanner />
                           <PortalHost />
                         </AppUpdateProvider>
                       </ThemeProvider>

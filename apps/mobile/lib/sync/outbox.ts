@@ -76,6 +76,11 @@ export interface DrainSummary {
    * ordering; absent when the outbox emptied.
    */
   stoppedOnNetworkError?: boolean;
+  /**
+   * The server refused writes via the remote kill switch (#99): commands
+   * stay queued (never rejected) until sync is re-enabled.
+   */
+  stoppedOnLocalOnly?: boolean;
 }
 
 /**
@@ -128,6 +133,19 @@ export async function drainOutbox(db: LocalDb, send: SendCommand): Promise<Drain
       // Acked — the idempotency store owns the history now.
       await db.delete(outboxCommands).where(eq(outboxCommands.commandId, row.commandId));
       applied += 1;
+    } else if (result.kind === "local_only") {
+      // Remote kill switch (#99): not a rejection. Put the row back to
+      // pending and stop — the server refuses everything until it is off.
+      await db
+        .update(outboxCommands)
+        .set({ status: "pending" })
+        .where(eq(outboxCommands.commandId, row.commandId));
+      return {
+        applied,
+        rejected,
+        pending: await countQueued(db),
+        stoppedOnLocalOnly: true,
+      };
     } else {
       await db
         .update(outboxCommands)

@@ -9,6 +9,7 @@ export {
   type ForbiddenResult,
   type HouseholdRole,
   type InvalidIntentResult,
+  type LocalOnlyResult,
   type MissingEntityResult,
   type Precondition,
   type PreviewRequiredResult,

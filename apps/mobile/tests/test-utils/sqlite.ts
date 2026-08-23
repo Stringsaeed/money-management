@@ -9,7 +9,7 @@ const LEGACY_MIGRATIONS = [
   "0002_recurring_frequency_model.sql",
 ] as const;
 
-interface TestSQLiteDatabase {
+export interface TestSQLiteDatabase {
   database: SQLiteDatabase;
   close: VoidFunction;
 }

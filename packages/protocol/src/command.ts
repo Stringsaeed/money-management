@@ -96,7 +96,8 @@ export type CommandResult<TApplied = unknown> =
   | PreviewRequiredResult
   | MissingEntityResult
   | ForbiddenResult
-  | ConflictResult;
+  | ConflictResult
+  | LocalOnlyResult;
 
 export interface AppliedResult<TApplied = unknown> {
   readonly kind: "applied";
@@ -151,4 +152,15 @@ export interface ConflictResult {
   readonly reason: string;
   /** Current values relevant to the failed precondition, for rebasing UI. */
   readonly current?: Readonly<Record<string, unknown>>;
+}
+
+/**
+ * The server is deliberately refusing writes (remote `kill_switch_local_only`
+ * flag engaged). Nothing was applied and the command stays valid — the client
+ * should keep it queued locally and continue in local-only mode until the
+ * switch is turned off again.
+ */
+export interface LocalOnlyResult {
+  readonly kind: "local_only";
+  readonly reason: "kill_switch_local_only";
 }
