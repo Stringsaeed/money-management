@@ -135,10 +135,12 @@ export async function applyCommand({
     return { kind: "invalid_intent", issues: parsed.issues };
   }
 
-  // Predicate preconditions (expectedAsOf-style) are not evaluated yet —
-  // reject them loudly rather than silently granting no guard.
+  // Predicate preconditions (expectedAsOf-style) are evaluated by their
+  // handler inside the batch guard; anything the handler does not declare is
+  // rejected loudly rather than silently granting no guard.
+  const supportedPredicates = handler.supportedPredicates ?? [];
   const unsupportedPreconditions = (envelope.preconditions ?? []).filter(
-    (p) => p.predicate !== undefined,
+    (p) => p.predicate !== undefined && !supportedPredicates.includes(p.predicate),
   );
   if (unsupportedPreconditions.length > 0) {
     return {

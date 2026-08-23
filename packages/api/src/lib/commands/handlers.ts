@@ -2,6 +2,7 @@ import { HOUSEHOLD_ROLES, type CommandKind, type ValidationIssue } from "@trove/
 
 import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "./pipeline";
 
+import { assignmentCommitHandler } from "./handlers/assignment-commit";
 import { accountHandlers } from "./handlers/account";
 import { categoryHandlers } from "./handlers/category";
 import { memberRoleChangeHandler } from "./handlers/member-role";
@@ -12,6 +13,12 @@ export interface CommandHandler<TPayload = unknown> {
     payload: unknown,
   ): { ok: true; value: TPayload } | { ok: false; issues: readonly ValidationIssue[] };
   plan(ctx: PlanContext, request: PlanRequest): Promise<CommandPlan | PlanRejection>;
+  /**
+   * Predicate precondition names this handler validates itself (e.g.
+   * "unassigned_money_gte" for assignments). Predicates outside this list
+   * are still rejected loudly by the pipeline instead of silently ignored.
+   */
+  readonly supportedPredicates?: readonly string[];
 }
 
 /**
@@ -27,6 +34,9 @@ export const COMMAND_HANDLERS: Partial<Record<CommandKind, CommandHandler>> = {
 
   // ── Ledger facts (#86): every contributing role may write ────────────────
   ...transactionHandlers,
+
+  // ── Budget planning (#90) ────────────────────────────────────────────────
+  "assignment.commit": assignmentCommitHandler,
 };
 
 // HOUSEHOLD_ROLES is re-exported for consumers building payload schemas.
