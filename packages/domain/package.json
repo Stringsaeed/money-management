@@ -18,6 +18,10 @@
     "./assignment-waterfall": {
       "types": "./dist/assignment-waterfall.d.ts",
       "default": "./dist/assignment-waterfall.js"
+    },
+    "./card-waterfall": {
+      "types": "./dist/card-waterfall.d.ts",
+      "default": "./dist/card-waterfall.js"
     }
   },
   "scripts": {

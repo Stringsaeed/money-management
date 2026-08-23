@@ -6,6 +6,8 @@ import { assignmentCommitHandler } from "./handlers/assignment-commit";
 import { accountHandlers } from "./handlers/account";
 import { categoryHandlers } from "./handlers/category";
 import { memberRoleChangeHandler } from "./handlers/member-role";
+import { paymentCreateHandler } from "./handlers/payment-create";
+import { refundCreateHandler } from "./handlers/refund-create";
 import { transactionHandlers } from "./handlers/transaction";
 
 export interface CommandHandler<TPayload = unknown> {
@@ -37,6 +39,10 @@ export const COMMAND_HANDLERS: Partial<Record<CommandKind, CommandHandler>> = {
 
   // ── Budget planning (#90) ────────────────────────────────────────────────
   "assignment.commit": assignmentCommitHandler,
+
+  // ── Card payments & refunds (#91) ────────────────────────────────────────
+  "card_payment.record": paymentCreateHandler,
+  "refund.link": refundCreateHandler,
 };
 
 // HOUSEHOLD_ROLES is re-exported for consumers building payload schemas.
