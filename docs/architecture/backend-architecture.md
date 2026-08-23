@@ -1,7 +1,7 @@
 # Backend Architecture
 
-- **Status:** Proposed — no code written yet
-- **Recorded:** 2026-08-20
+- **Status:** Revised — Phase 0 shipped on the Better-T Stack; sync substrate not yet built
+- **Recorded:** 2026-08-20 · **Revised:** 2026-08-23 (post #104 stack pivot)
 - **Decision history:** this document
 - **Domain language:** [Money Management Context](../../CONTEXT.md)
 - **Related:** all 22 files in [`docs/adr/`](../adr/), [Recurring Rules Architecture](./recurring-rules-design.md), [Ledger Cache Coherence Plan](./ledger-cache-coherence-plan.md)
@@ -17,10 +17,10 @@ The backend must be **scalable and agnostic**: the compute layer must not be loc
 This document specifies:
 
 - the household/multi-user data model and its resolution of ownership questions the ADRs leave implicit (single-owner budgeting facts, versus multiple household members);
-- the Postgres schema strategy for both the already-shipped domain (accounts, categories, transactions, recurring rules) and the not-yet-shipped envelope/budget domain, built directly from the 22 ADRs;
+- the D1 schema strategy for both the already-shipped domain (accounts, categories, transactions, recurring rules) and the not-yet-shipped envelope/budget domain, built directly from the 22 ADRs;
 - the sync protocol between client and server (offline outbox, command idempotency, conflict resolution);
-- the compute and hosting architecture (Supabase for managed state, a standalone service for business logic);
-- the Turborepo monorepo restructuring this repository needs to host `apps/api` and its supporting packages alongside the existing Expo app;
+- the compute and hosting architecture (Cloudflare D1 for managed state, `apps/server` on Workers for business logic);
+- the Turborepo monorepo restructuring hosting `apps/server` and its supporting packages alongside the existing Expo app;
 - a phased delivery sequence and the migration path for existing local-only installs.
 
 Out of scope for this document (see [Explicit non-goals](#explicit-non-goals)): bank aggregation, CRDTs/operational-transform collaborative editing, end-to-end encryption, a web client, cross-household transfers, server-side currency conversion.
@@ -35,7 +35,7 @@ The tenancy root. Every fact table carries `household_id`. New tables: `househol
 
 ### Role
 
-Four roles — `owner`, `admin`, `member`, `viewer` — resolved through one capability map, `can(role, commandKind)`, enforced both in the command authorizer and mirrored as RLS policies. `viewer` exists from the start for the accountant/advisor read-only case; adding it later means retrofitting every policy, so it is included even though nothing in the initial delivery requires it.
+Four roles — `owner`, `admin`, `member`, `viewer` — resolved through one capability map, `can(role, commandKind)`, enforced in oRPC middleware on every procedure. `viewer` exists from the start for the accountant/advisor read-only case; adding it later means retrofitting every check, so it is included even though nothing in the initial delivery requires it.
 
 _Avoid_: a boolean permission matrix scattered across endpoints instead of one owned capability map.
 
@@ -47,7 +47,7 @@ _Avoid_: Per-Member Envelope, Personal Budget Workspace.
 
 ### Private Account
 
-An Account with `visibility='private'` and an `owner_user_id`. Visible only to its owner (an RLS predicate applied transitively to its transactions). **Cannot hold Funding Membership** — this is the privacy mechanism, and it invents no new budget invariant: a private account's spending is exactly the ADR's existing **Outside-Budget Spending** concept, applied at the account-selection level rather than a new concept.
+An Account with `visibility='private'` and an `owner_user_id`. Visible only to its owner (enforced at the API boundary, applied transitively to its transactions). **Cannot hold Funding Membership** — this is the privacy mechanism, and it invents no new budget invariant: a private account's spending is exactly the ADR's existing **Outside-Budget Spending** concept, applied at the account-selection level rather than a new concept.
 
 _Avoid_: Personal Envelope, Hidden Budget.
 
@@ -59,13 +59,13 @@ _Avoid_: Mutation Payload, CRUD Request.
 
 ### Household Change
 
-One row appended to `household_changes` per committed command (or per entity it touched), carrying a per-household sequence number, the acting user, and an `effects[]` tag vocabulary (extending the client's existing `ledger-cache.ts` matrix: `rules|upcoming|ledger|balances|summaries` plus new `envelopes|assignments|projections|members`). Simultaneously the sync feed, the Realtime invalidation signal, and the household's activity history.
+One row appended to `household_changes` per committed command (or per entity it touched), carrying a per-household sequence number, the acting user, and an `effects[]` tag vocabulary (extending the client's existing `ledger-cache.ts` matrix: `rules|upcoming|ledger|balances|summaries` plus new `envelopes|assignments|projections|members`). Simultaneously the sync feed, the change-notification signal (polling-first; optional push later), and the household's activity history.
 
 _Avoid_: Audit Log Entry (implies compliance-only; this is load-bearing for sync).
 
 ## Invariants
 
-Every point below is a hard constraint on the Postgres schema and the standalone service's transactional business logic, carried forward from the 22 ADRs (cited inline) plus two invariants specific to the multi-user extension itself.
+Every point below is a hard constraint on the D1 schema and the command pipeline's transactional business logic, carried forward from the 22 ADRs (cited inline) plus two invariants specific to the multi-user extension itself.
 
 1. Store only durable facts; derive everything else on read or via a provably-reconstructible cache — never a second mutable financial authority (ADR-0017).
 2. Cross-ledger/budget writes (refunds, card payments, resource archival) commit as one atomic transaction — no eventually-consistent window between ledger and budget state (ADR-0019).
@@ -80,26 +80,42 @@ Every point below is a hard constraint on the Postgres schema and the standalone
 11. Future Assignments draw only from currently owned Unassigned Money, and are blocked while their currency workspace has any cash Envelope Overspending or Unfunded Card Spending (ADR-0015).
 12. Refunds are linked, cumulative-capped, own-period-attributed, reserve-adjusting, and block unsafe edits/deletes of the transaction they link to (ADR-0008).
 13. Recurring Rule Occurrence identity `(rule_id, scheduled_date)` is a unique constraint; Rule Revision is the optimistic-concurrency version column; Eligibility Floor is the only progress cursor; settlement applies a rule's pre-change state before a same-day pause/archive/edit takes effect.
-14. Every command runs in one server transaction: idempotency check → authorization → precondition/version check → apply → recompute → append to `household_changes` — partial application is never observable.
+14. Every command runs in one atomic D1 `batch()`: idempotency check → authorization → precondition/version check → apply → recompute → append to `household_changes` — partial application is never observable.
 15. **(Multi-user extension)** No fact table's household-scoping is implicit. Every composite key includes `household_id`, and every foreign key is itself composite `(household_id, other_id)` — a cross-household reference is structurally impossible, not merely policy-blocked.
 16. **(Multi-user extension)** A rejected command never partially applies and never silently merges with another member's concurrent change — it either commits whole or is returned to the client as a typed rejection for the user to re-edit or discard.
 
 ## Architecture
 
-### Managed state: Supabase
+### Stack revision (2026-08-23, post #104)
 
-- **Postgres** — the durable store. Plain Postgres underneath, so it can be pointed at any Postgres provider (Neon, RDS, self-hosted) later without a rewrite.
-- **Row-Level Security** — a database-level backstop for household tenancy, enforced in addition to, not instead of, application-layer authorization. A leaked cross-household query is the worst possible bug in a finance app; RLS is the guarantee that survives an application bug.
-- **Auth** — email/OTP/social sign-in; a custom access-token hook (a Postgres function, not an Edge Function) stamps household/role claims into the issued JWT. The compute service verifies these JWTs itself against Supabase's JWKS endpoint — no Supabase SDK dependency server-side, so the auth provider boundary is swappable later without touching request-handling code.
-- **Realtime** — Postgres logical replication to a per-household channel, pushing only `{seq, effects[]}`, never row data. This is the network-aware replacement for the client's in-process `ledger-cache.ts` coherence layer.
+Phase 0 shipped on the **Better-T Stack**, replacing the original Supabase + standalone-API plan. The original rationale is preserved below where it still holds; the substitutions:
 
-### Compute: a standalone containerized service (`apps/api`)
+| Original                                            | Shipped / planned                                                                                                                                                         |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Supabase Postgres + RLS as durable store            | **Cloudflare D1 (SQLite)** via drizzle in `packages/db`. Tenancy enforced in oRPC middleware — there is **no DB-level backstop**; this loss is accepted and documented    |
+| `apps/api` standalone containerized Hono service    | **`apps/server`** — Hono entry on Cloudflare Workers; business logic in oRPC routers in `packages/api`                                                                    |
+| `POST /commands` / `GET /sync` REST routes          | Protected oRPC procedures (`commands.apply`, `sync.getDelta`) exposed via RPC + OpenAPI handlers                                                                          |
+| Supabase Auth + JWT verification                    | **better-auth** (`packages/auth`) with the Expo plugin; session-based, household/role resolved from membership tables                                                     |
+| `pg_advisory_xact_lock` per `(household, currency)` | D1's single-writer serialization + one atomic drizzle `batch()` per command containing precondition reads and writes; optimistic version preconditions are the safety net |
+| Supabase Realtime (logical replication)             | Polling-first delta pull (#84/#85); optional Durable Object WebSocket push as a later enhancement (#93) — no drop-in equivalent exists                                    |
+| pgTAP RLS negative tests                            | oRPC authorization audit — integration tests over shipped procedures (#97)                                                                                                |
+| `supabase/` infra-as-code                           | alchemy config in `packages/infra`; drizzle migrations in `packages/db`; orphaned `supabase/` retired (#106)                                                              |
+| Horizontal scaling via stateless replicas           | Workers' automatic horizontal scaling; new constraints: CPU/wall-clock limits per invocation, no held connections or pools                                                |
 
-Business logic — the assignment and card-payment waterfalls, period projections, the settlement engine — does **not** run in Supabase Edge Functions. Verified against current Supabase documentation, Edge Functions cap CPU time at 2 seconds per request (separate from and much tighter than the 150–400s wall-clock limit) — too tight a ceiling to design a scalable system around, particularly for an ADR-0005 historical-adjustment cascade touching many periods.
+The original "don't run business logic in Edge Functions" concern now applies _to us_ differently: Workers invocations have CPU limits, so ADR-0005 historical-adjustment cascades must be designed bounded/resumable, with queue/Durable-Object fan-out for whole-household sweeps (#88).
 
-Instead, `apps/api` is a normal, long-running Node service (recommended framework: **Hono** — minimal, fast, and itself portable across runtimes) deployed as a container to any host — Fly.io, Railway, AWS ECS/Fargate, Cloud Run, or self-hosted — with zero code changes required to move between them. It holds a normal connection pool to Postgres (no per-invocation cold start, no forced transaction-pooler workaround), and scales horizontally by adding stateless replicas behind a load balancer.
+### Managed state: Cloudflare D1
 
-Business logic lives in a shared TypeScript package, `packages/domain`, imported by `apps/api` through standard pnpm-workspace resolution and **also imported client-side** for optimistic local preview — one implementation, not two that can drift. The cross-runtime constraint this creates is **Hermes compatibility** (React Native's JS engine), not Deno compatibility: `packages/domain` must avoid Node-only built-ins and anything Hermes doesn't support, a bar the existing client code (plain TypeScript, `date-fns`) already clears.
+- **D1 (SQLite)** — the durable store. Accessed via drizzle ORM from `packages/db`; migrations via `drizzle-kit` against d1-http. SQLite gives up RLS, advisory locks, and logical replication; it gains serverless operation co-located with the compute layer.
+- **Authorization at the API boundary** — household tenancy and role capability checks live in oRPC middleware plus household-scoped query filters. Unlike RLS, this protects only through the API surface; direct DB access bypasses it. Accepted trade-off for this product.
+- **Auth** — better-auth on the same D1 database (`packages/auth`), with the Expo client plugin. Households/memberships/invite codes already modeled in `packages/db/src/schema/household.ts`.
+- **Change notification** — polling-first: clients pull deltas by seq watermark. Push, if built later, is a Durable Object holding one WebSocket per household, published to by the command procedure after commit.
+
+### Compute: `apps/server` on Cloudflare Workers
+
+Business logic runs in oRPC routers in `packages/api`, mounted by the Hono entry in `apps/server` (RPC handler at `/rpc`, OpenAPI reference alongside). Workers scale horizontally automatically; the constraints that replace the old container-hosting discussion are per-invocation **CPU/wall-clock limits** and **no held connections** — D1 access goes through d1-http bindings, so long transactions are bounded by batch semantics rather than connection-pool sizing.
+
+Business logic lives in a shared TypeScript package, `packages/domain`, imported by `packages/api` through standard pnpm-workspace resolution and **also imported client-side** for optimistic local preview — one implementation, not two that can drift. The cross-runtime constraint this creates is **Hermes compatibility** (React Native's JS engine), not Deno compatibility: `packages/domain` must avoid Node-only built-ins and anything Hermes doesn't support, a bar the existing client code (plain TypeScript, `date-fns`) already clears.
 
 ### Schema strategy
 
@@ -107,25 +123,25 @@ Universal conventions on every fact table: `household_id`; composite primary/for
 
 The six existing SQLite tables (`accounts`, `categories`, `transactions`, `recurring_rules`, `recurring_occurrences`, `exchange_rates`) map over with household scoping added; `recurring_occurrences`' composite PK `(rule_id, scheduled_date)` becomes the multi-writer double-settlement guard as-is. The envelope/budget domain is modeled in groups: workspace, envelope, **period-effective** (`category_mappings`, `funding_memberships`, `rollover_settings`), append-only **assignments** (a correction is a reversing row plus replacement, never an edit), refund linkage, and a `historical_adjustments` audit table.
 
-For the period-effective group, this specification makes one deliberate choice against the in-flight client branch's schema: **do not store `effective_to_period`.** The branch stores it, with a `CHECK` constraint that only application discipline enforces as insert-only. This specification instead derives it — `LEAD(effective_from_period) OVER (...)` — and represents "ended" as a tombstone row with a null target, making the table genuinely `INSERT`-only (`REVOKE UPDATE, DELETE` plus a trigger backstop). This removes an entire class of drift between a stored end and the next row's start.
+For the period-effective group, this specification makes one deliberate choice against the in-flight client branch's schema: **do not store `effective_to_period`.** The branch stores it, with a `CHECK` constraint that only application discipline enforces as insert-only. This specification instead derives it — `LEAD(effective_from_period) OVER (...)` — and represents "ended" as a tombstone row with a null target, making the table genuinely `INSERT`-only (SQLite triggers rejecting UPDATE/DELETE, plus repository-layer discipline). This removes an entire class of drift between a stored end and the next row's start.
 
 Derived values (Available Money, Funding Pool, Rollover, Card Payment Reserve) stay non-authoritative per Invariant 1, but a `period_projection_cache` table (household, currency, period, JSON payload, stamped with the household's change sequence number) avoids recomputing a household's entire period stack on every read. It is a cache, not an authority: derived exclusively from facts, truncable with zero data loss, never written directly by a command.
 
 ## Sync protocol
 
-The client gains two local, never-synced tables: `outbox_commands` (queued commands, keyed by their idempotency-doubling `command_id`) and `sync_state` (per-household watermark). A write is applied optimistically to the local cache immediately on creation, queued in the outbox in the same local transaction, and drained to `POST /commands` in order.
+The client gains two local, never-synced tables: `outbox_commands` (queued commands, keyed by their idempotency-doubling `command_id`) and `sync_state` (per-household watermark). A write is applied optimistically to the local cache immediately on creation, queued in the outbox in the same local transaction, and drained to the `commands.apply` oRPC mutation in order.
 
-`apps/api` processes each command in one transaction on its own held connection:
+The commands pipeline runs in one atomic D1 `batch()` per command:
 
-1. **Idempotency** — `INSERT ... ON CONFLICT DO NOTHING` on `command_id`; a retry after a timeout replays the stored result rather than re-executing.
-2. **Authorization** — `can(role, commandKind)` against live membership.
-3. **Lock** — a transaction-scoped advisory lock (`pg_advisory_xact_lock`, auto-released on commit or rollback) per `(household, currency)` for budget-mutating commands, serializing the waterfall-critical section without locking the whole household. Transaction-scoped is chosen here for its automatic-release safety; it is not a workaround for a connection-pooler constraint, since `apps/api` is a long-lived process holding its own connections.
-4. **Precondition check** — generalizes the client's existing Rule-Revision pattern: `expectedVersion` for mutable entities, `expectedAsOf` predicates for append-only ones (e.g. "Unassigned Money ≥ X," re-validated at commit time so a queued-while-offline assignment that's no longer fundable is rejected, not silently overdrawn).
-5. **Apply and recompute** via `packages/domain`.
-6. **Append** to `household_changes`.
+1. **Idempotency** — unique constraint on `command_id`; a retry after a timeout replays the stored result rather than re-executing.
+2. **Authorization** — `can(role, commandKind)` against live membership, checked in oRPC middleware.
+3. **Precondition check** — generalizes the client's existing Rule-Revision pattern: `expectedVersion` for mutable entities, `expectedAsOf` predicates for append-only ones (e.g. "Unassigned Money ≥ X," re-validated inside the same batch so a queued-while-offline assignment that's no longer fundable is rejected, not silently overdrawn).
+4. **Apply and recompute** via `packages/domain`.
+5. **Append** to `household_changes` (seq allocated from the per-household counter row in the same batch).
+6. **Commit** — everything above is one drizzle `batch()`; D1's single-writer model serializes concurrent writers, and optimistic version preconditions — not locks — are the correctness mechanism for interleaved waterfall sections.
 7. **Return** a discriminated result — `applied | stale_version | invalid_intent | preview_required | missing_entity | forbidden | conflict` — mirroring the client's existing `RecurringChangeResult` shape, plus the recomputed rows/projections so the client can write back without a second round trip.
 
-The client pulls the actual delta via `GET /sync?since=<seq>`; Realtime's `{seq, effects[]}` push is purely a latency optimization telling the client when to pull — never a correctness dependency, and switchable to polling per household with identical results.
+The client pulls the actual delta via `sync.getDelta({ since: <seq> })`; push notification (`{seq, effects[]}`), if built later (#93), is purely a latency optimization telling the client when to pull — never a correctness dependency; polling produces identical results and is the shipped path.
 
 **Conflict policy is server-authoritative rebase-or-discard.** No CRDTs, no automatic merge. A rejected command is never silently dropped or silently merged — it surfaces in a client-side "Rejected Changes" inbox for the user to re-edit or discard.
 
@@ -136,18 +152,25 @@ The repository is a pnpm workspace (`apps/*`, `packages/*`) with `nodeLinker: ho
 ### Target layout
 
 - `apps/mobile` — the existing Expo app, moved as-is (`app/`, `components/`, `hooks/`, `modules/`, `stores/`, `utils/`, `types/`, `db/` [the on-device SQLite layer stays app-local — it's Expo-SQLite-specific], `lib/`, `constants/`, `assets/`, `ios/`, `android/`).
-- `apps/api` — the standalone Hono service: `/commands`, `/sync`, JWT verification, connects to Postgres via `packages/db`.
+- `apps/server` — Hono entry on Cloudflare Workers: better-auth handler, oRPC RPC + OpenAPI routes; deployed via `packages/infra` (alchemy).
 - `packages/domain` — pure business logic (waterfalls, projections, settlement engine, calendar math), no I/O, Hermes- and Node-compatible. Built as a **compiled package**: its own `tsc` build to `dist/`, cacheable by Turborepo, `exports` field with subpath exports rather than one barrel. (Turborepo's own documentation recommends this pattern for anything needing build caching, over "just-in-time" raw-source packages, and explicitly advises against TypeScript project references — "another point of configuration as well as another caching layer" — in favor of per-package `tsconfig.json` extending a shared base.)
-- `packages/protocol` — command/result/effect type contracts shared by `apps/mobile` and `apps/api`.
-- `packages/db` — Drizzle **Postgres** schema/migrations, distinct from `apps/mobile`'s existing SQLite `drizzle.config.ts`, which is untouched — two dialects, two configs, never merged.
+- `packages/protocol` — command/result/effect type contracts shared by `apps/mobile` and the server packages.
+- `packages/db` — Drizzle **D1 (SQLite)** schema/migrations (d1-http), distinct from `apps/mobile`'s existing local SQLite `drizzle.config.ts`, which is untouched — two stores, two configs, never merged.
 - `packages/typescript-config` — shared `tsconfig` bases.
-- `supabase/` — infra-as-code only: RLS policy migrations, the auth-hook Postgres function, Realtime publication config. No Edge Functions.
+- `packages/auth` — better-auth on D1 with the Expo client plugin.
+- `packages/infra` — alchemy stack deploying `apps/server` + D1.
+
+_(The original layout's `apps/api` and `supabase/` entries are superseded; see [Stack revision](#stack-revision-2026-08-23-post-104).)_
 
 ### Task graph
 
-`turbo.json` uses the current `"tasks"` key (not the pre-2.x `"pipeline"` key). Tasks: `build` (`dependsOn: ["^build"]`, cached — only `packages/domain`/`protocol`/`db`/`apps/api` build via Turborepo; `apps/mobile` is built by Expo/EAS separately), `check-types` (per-package `tsc --noEmit`, replacing the root `ts:check` script), `lint`/`format` (oxlint/oxfmt — wired into CI as part of this move; today they're defined as scripts but not enforced), `test` (jest, per-package). Root `package.json` scripts become thin `turbo run <task>` wrappers.
+`turbo.json` uses the current `"tasks"` key (not the pre-2.x `"pipeline"` key). Tasks: `build` (`dependsOn: ["^build"]`, cached), `check-types` (per-package `tsc --noEmit`), `lint`/`format` (oxlint/oxfmt), `test` (jest, per-package). Root `package.json` scripts are thin `turbo run <task>` wrappers.
 
 ### Migration sequence
+
+Shipped as PRs #103–#105 (Phase 0 Steps A + B, on the Better-T Stack rather than the originally proposed shape): workspace restructuring, `packages/domain` (`calendar.ts` proof extraction), `packages/protocol`, `packages/db` (drizzle + D1), `packages/auth`, `packages/api`, `packages/env`, `packages/infra`, and the `apps/server` entry with household/auth shell. The item-by-item migration checklist below is retained for history; items 1–12 are complete in their Better-T form.
+
+**This migration was the concrete shape of Delivery Sequence Phase 0.**
 
 1. `pnpm-workspace.yaml` gains `packages: ["apps/*", "packages/*"]`.
 2. Move all current root app code into `apps/mobile/`; create its own `package.json`. Root `package.json` becomes the thin workspace root.
@@ -160,11 +183,9 @@ The repository is a pnpm workspace (`apps/*`, `packages/*`) with `nodeLinker: ho
 9. `oxlint.config.ts`'s `ignorePatterns` (`android/app/build`, `dist/*`) need updating once `android/`/`dist/` live under `apps/mobile`.
 10. `.gitignore`'s root-anchored `/ios`, `/android` patterns need to become `apps/mobile/ios`, `apps/mobile/android`.
 11. `knip.json` adopts knip's monorepo `workspaces` config format.
-12. `drizzle.config.ts` (SQLite, `driver: "expo"`) stays in `apps/mobile` unchanged; a new, separate `packages/db/drizzle.config.ts` targets Postgres — never conflated into one config.
+12. `drizzle.config.ts` (SQLite, `driver: "expo"`) stays in `apps/mobile` unchanged; a new, separate `packages/db/drizzle.config.ts` targets D1 — never conflated into one config.
 
-`apps/api` consuming `packages/domain` is trivial by design: standard pnpm-workspace `node_modules` symlinking (`"@trove/domain": "workspace:*"`), materially simpler than the Deno import-map path an Edge-Function-hosted design would have needed.
-
-**This migration is the concrete shape of Delivery Sequence Phase 0.** Recommended as two mergeable steps: **Step A** — pure repo restructuring (items 1–12), zero behavior change, verified by `turbo run check-types test` staying green and a real EAS build succeeding from the new location. **Step B** — introduce `apps/api`, `packages/domain` (starting with the `calendar.ts` extraction as a no-behavior-change proof), `packages/protocol`, `packages/db`, and a skeleton Supabase project, as a separate, separately reviewable PR.
+**This migration is the concrete shape of Delivery Sequence Phase 0.** Recommended as two mergeable steps: **Step A** — pure repo restructuring (items 1–12), zero behavior change, verified by `turbo run check-types test` staying green and a real EAS build succeeding from the new location. **Step B** — introduce the server packages and skeleton, as a separate, separately reviewable PR. _(Both shipped as #103–#105.)_
 
 ## Porting strategy
 
@@ -174,16 +195,16 @@ Moves server-side largely as-is: the settlement engine (`modules/recurring-rules
 
 ## Delivery sequence
 
-1. **Phase 0 — Foundations.** The monorepo migration above (Steps A + B); extract `calendar.ts` into `packages/domain` as a no-behavior-change proof; a Supabase project with Postgres, Auth, and RLS only (no Edge Functions), with households/members/invites; an `apps/api` skeleton with JWT verification and a health check; the invite-flow UI. CI gains `supabase start` plus a pgTAP RLS negative-test suite, per-package `lint`/`format`/`check-loose-end`, and a container build for `apps/api`. No app data syncs yet.
-2. **Phase 1 — Sync substrate and ledger.** Accounts, categories, and transactions become server-authoritative: `household_changes`, `/commands`, `/sync`, the client outbox and sync worker, optimistic apply/writeback. Neutralize `DATABASE_RESET_VERSION` (today it wipes every table on a version bump; it would now destroy an unsynced outbox).
-3. **Phase 2 — Recurring Rules server-side** _(parallelizable with Phase 3)_. Port the settlement engine behind a Postgres persistence adapter; a scheduled per-rule-timezone settlement job.
+1. **Phase 0 — Foundations.** ✅ Shipped (#78–#82, #101–#105): the monorepo migration; `calendar.ts` extracted to `packages/domain` as a no-behavior-change proof; Better-T Stack foundations (D1 + better-auth + oRPC + alchemy); households/members/invites schema and the household/auth server shell with opt-in mobile sign-in. _(The original Supabase/pgTAP/`apps/api` shape of this phase was superseded by #104.)_ No app data syncs yet.
+2. **Phase 1 — Sync substrate and ledger.** Accounts, categories, and transactions become server-authoritative: `household_changes` + per-household seq, `commands.apply`, `sync.getDelta`, the client outbox and sync worker, optimistic apply/writeback. Neutralize `DATABASE_RESET_VERSION` (today it wipes every table on a version bump; it would now destroy an unsynced outbox).
+3. **Phase 2 — Recurring Rules server-side** _(parallelizable with Phase 3)_. Port the settlement engine behind a D1 persistence adapter; a Workers Cron Trigger per-rule-timezone settlement job.
 4. **Phase 3 — Envelope/budget domain server-side** _(parallelizable with Phase 2)_. The full schema, waterfalls, and projections from this document; commands for mapping changes, funding membership changes, assignments, card payments, refunds, and budget reset.
-5. **Phase 4 — Realtime and collaboration UX.** The live channel and delta pull; activity history from `household_changes`; the Rejected Changes inbox; the private-account visibility toggle.
-6. **Phase 5 — Hardening and rollout.** RLS audit; a migration runbook with staging dry-runs; the local-to-cloud import below; backups/PITR; observability; a kill switch back to local-only; staged rollout via `expo-updates`.
+5. **Phase 4 — Collaboration UX.** Delta pull + optional Durable Object push; activity history from `household_changes`; the Rejected Changes inbox; the private-account visibility toggle.
+6. **Phase 5 — Hardening and rollout.** Authorization audit over shipped oRPC procedures (#97); a migration runbook with staging dry-runs; the local-to-cloud import below; backup/restore strategy for D1 (time travel / export); observability via Workers Logs/Analytics Engine; a kill switch back to local-only; staged rollout via `expo-updates`.
 
 ## Migration path for existing local-only installs
 
-Opt-in, never forced — solo/local-only mode remains fully supported. On "Enable Sync": create a household → the client uploads existing local data as chunked, idempotent `import_bundle` commands, dependency-ordered (accounts → categories → recurring rules/occurrences → transactions → budgeting facts). The server recomputes a manifest (row counts, per-account transaction sums, assignment sums per currency) from the imported rows and compares it against a client-computed manifest; only on a match does the client flip to synced mode and re-seed its cache from `/sync?since=0`, rather than trusting the upload was lossless. The pre-import SQLite file is retained as a backup until the user confirms, mirroring Invariant 5's archive-not-delete discipline applied to the migration itself. Joining an _existing_ household with local data is never auto-merged — the user explicitly chooses to import into that household or keep their local data as a solo archive.
+Opt-in, never forced — solo/local-only mode remains fully supported. On "Enable Sync": create a household → the client uploads existing local data as chunked, idempotent `import_bundle` commands, dependency-ordered (accounts → categories → recurring rules/occurrences → transactions → budgeting facts). The server recomputes a manifest (row counts, per-account transaction sums, assignment sums per currency) from the imported rows and compares it against a client-computed manifest; only on a match does the client flip to synced mode and re-seed its cache from `sync.getDelta({ since: 0 })`, rather than trusting the upload was lossless. The pre-import SQLite file is retained as a backup until the user confirms, mirroring Invariant 5's archive-not-delete discipline applied to the migration itself. Joining an _existing_ household with local data is never auto-merged — the user explicitly chooses to import into that household or keep their local data as a solo archive.
 
 ## Explicit non-goals
 
@@ -198,18 +219,18 @@ Opt-in, never forced — solo/local-only mode remains fully supported. On "Enabl
 ## Open risks
 
 - **Multi-currency households** need a product decision before the Phase 3 schema is cut: ADR-0002 forbids conversion and assumes one Home Currency, ambiguous once two household members are in different countries. The one decision most likely to reshape the schema if deferred too long.
-- **Concurrent assignments to the same envelope/workspace** are handled correctly by the per-currency advisory lock plus re-validated preconditions; the remaining work is UX — explaining a rejection well ("Sara assigned $200 to Groceries while you were offline; only $50 remains").
+- **Concurrent assignments to the same envelope/workspace** are handled correctly by atomic D1 `batch()` + re-validated optimistic preconditions (no advisory locks exist on D1); the remaining work is UX — explaining a rejection well ("Sara assigned $200 to Groceries while you were offline; only $50 remains").
 - **The in-flight envelope branches are a moving target** — the two shape conflicts in [Porting strategy](#porting-strategy) should be raised with that stream now.
 - **Privacy positioning changes**: `db/reset.ts` currently documents "everything stays on-device, no sync or backup." Shipping a server is a real change to that promise, needing deliberate messaging and decisions on data residency, retention, export/deletion (App Store requires in-app account deletion once accounts exist).
-- **`apps/api` hosting target and autoscaling policy** are undecided — portable by design, but a concrete first host is still needed for Phase 0, along with connection-pool sizing against Supabase's Postgres connection limits as `apps/api` scales to multiple replicas.
-- **Large historical recalculations** (ADR-0005 cascades) deserve bounded, resumable design even without a hard CPU cap — a single request shouldn't hold a transaction open indefinitely against a shared connection pool.
+- **Hosting** is decided (Cloudflare Workers via alchemy), but the new constraints are real: per-invocation CPU/wall-clock limits bound ADR-0005 historical-adjustment cascades and whole-household settlement sweeps (#88) — these need bounded, resumable, queue/DO-fanned-out designs.
+- **Large historical recalculations** (ADR-0005 cascades) must be bounded/resumable under Workers CPU limits — a single invocation can't hold an unbounded cascade; chunk work across invocations or a queue.
 
 ## Acceptance criteria
 
 - `pnpm ts:check` (`turbo run check-types`) and `pnpm test:ci` (`turbo run test`) stay green throughout every phase — no phase regresses the existing client test suite, since `packages/domain` extraction is a no-behavior-change refactor at each step.
-- The existing 492-line `recurring-rules.test.ts` suite passes unmodified against the new Postgres persistence adapter in Phase 2 — same scenarios, two backends.
+- The existing 492-line `recurring-rules.test.ts` suite passes unmodified against the new D1 persistence adapter in Phase 2 — same scenarios, two stores.
 - An ADR-indexed golden-scenario suite (one fixture per relevant ADR) passes for the envelope/budget domain in Phase 3, plus invariant tests (Assigned + Unassigned + reserves reconciles to Funding Pool).
-- A pgTAP RLS negative-test suite proves cross-household reads/writes are rejected, for every table, from Phase 0 onward.
+- An authorization audit (#97, retargeted from pgTAP RLS) proves cross-household reads/writes are rejected at the oRPC boundary, for every procedure.
 - An airplane-mode end-to-end test and a fuzz test replaying randomized two-client command interleavings both converge to the same server state, from Phase 1 onward.
-- Two-simulator manual QA (this repo already has argent-based device automation available) verifies Realtime propagation and a poll-only fallback in Phase 4.
+- Two-simulator manual QA (this repo already has argent-based device automation available) verifies delta propagation and poll-only operation in Phase 4.
 - A staging-environment import dry-run against a snapshot of a real-shaped local database completes with a manifest match, before Phase 5 rollout.
