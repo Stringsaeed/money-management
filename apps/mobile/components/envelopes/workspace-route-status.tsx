@@ -1,15 +1,18 @@
 import { ActivityIndicator } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import type { ReactNode } from "react";
 
 import { Text } from "@/components/ui/text";
 
 interface WorkspaceRouteStatusProps {
+  action?: ReactNode;
   title?: string;
   message?: string;
   loadingLabel?: string;
 }
 
 export const WorkspaceRouteStatus = ({
+  action,
   title,
   message,
   loadingLabel,
@@ -26,5 +29,6 @@ export const WorkspaceRouteStatus = ({
         {message}
       </Text>
     ) : null}
+    {action}
   </Animated.View>
 );

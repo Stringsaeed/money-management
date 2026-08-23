@@ -2,6 +2,7 @@ import { endOfMonth, format, parseISO } from "date-fns";
 import type { SQLiteDatabase } from "expo-sqlite";
 
 import type { BudgetAttentionReason, BudgetProjection, ProjectionRequest } from "./types";
+import { getEnvelopeSummaries } from "./envelope-projection";
 import { addMoney, requireCurrency, requireMinorUnits, requirePeriod } from "./validation";
 
 interface AccountRow {
@@ -74,6 +75,10 @@ export async function getProjection(
   }
 
   const money = { currency, amountMinor: fundingPoolAmount };
+  const [envelopes, archivedEnvelopes] = await Promise.all([
+    getEnvelopeSummaries(database, currency, period, "active"),
+    getEnvelopeSummaries(database, currency, period, "archived"),
+  ]);
   return {
     currency,
     period,
@@ -83,6 +88,8 @@ export async function getProjection(
       attentionReasons.length === 0
         ? { status: "ready", reasons: [] }
         : { status: "needs_attention", reasons: attentionReasons },
+    envelopes,
+    archivedEnvelopes,
   };
 }
 

@@ -7,6 +7,8 @@ import { getAccountBudgetDependencies } from "./account-dependencies";
 import { activateWorkspace } from "./activation";
 import { getFundingAccountSuggestions } from "./funding-account-suggestions";
 import { updateFundingMembership } from "./funding-membership";
+import { createEnvelope, updateEnvelope } from "./envelope-resources";
+import { getEnvelopeFormOptions } from "./envelope-form-options";
 import { getProjection } from "./projection";
 import type {
   ActivateWorkspaceRequest,
@@ -15,6 +17,9 @@ import type {
   FundingAccountSuggestionsRequest,
   ProjectionRequest,
   UpdateFundingMembershipRequest,
+  CreateEnvelopeRequest,
+  UpdateEnvelopeRequest,
+  EnvelopeFormOptionsRequest,
 } from "./types";
 import { getWorkspaceSelection, selectWorkspace, setHomeCurrency } from "./workspace-settings";
 
@@ -39,6 +44,11 @@ export type {
   Workspace,
   WorkspaceSelection,
   UpdateFundingMembershipRequest,
+  CreateEnvelopeRequest,
+  UpdateEnvelopeRequest,
+  EnvelopeCategoryOption,
+  EnvelopeFormOptionsRequest,
+  EnvelopeSummary,
 } from "./types";
 
 export function createBudgetingCoordinator(
@@ -76,6 +86,22 @@ export function createBudgetingCoordinator(
       }
     },
     getProjection: (request: ProjectionRequest) => getProjection(database, request),
+    getEnvelopeFormOptions: (request: EnvelopeFormOptionsRequest) =>
+      getEnvelopeFormOptions(database, request),
+    createEnvelope: async (request: CreateEnvelopeRequest) => {
+      const projection = await createEnvelope(database, request);
+      if (options.queryClient) {
+        await cohereBudgetingEffects(options.queryClient, ["envelopes"]);
+      }
+      return projection;
+    },
+    updateEnvelope: async (request: UpdateEnvelopeRequest) => {
+      const projection = await updateEnvelope(database, request);
+      if (options.queryClient) {
+        await cohereBudgetingEffects(options.queryClient, ["envelopes"]);
+      }
+      return projection;
+    },
     getAccountDependencies: (accountId: string, period: string, dependencyOptions) =>
       getAccountBudgetDependencies(database, accountId, period, dependencyOptions),
   };

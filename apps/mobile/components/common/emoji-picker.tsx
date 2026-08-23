@@ -1,5 +1,6 @@
 import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
+import { cn } from "@/lib/utils";
 
 const EMOJI_OPTIONS = [
   // Money & finance
@@ -68,12 +69,14 @@ export function EmojiPicker({ value, onChange, options = EMOJI_OPTIONS }: EmojiP
       {options.map((emoji) => (
         <Pressable
           key={emoji}
+          accessibilityLabel={`Emoji ${emoji}`}
+          accessibilityRole="button"
+          accessibilityState={{ selected: value === emoji }}
           onPress={() => onChange(emoji)}
-          className={
-            value === emoji
-              ? "w-10 h-10 rounded-xl items-center justify-center bg-primary"
-              : "w-10 h-10 rounded-xl items-center justify-center bg-muted active:bg-accent"
-          }
+          className={cn(
+            "h-10 w-10 items-center justify-center rounded-xl bg-muted active:bg-accent",
+            value === emoji && "bg-primary",
+          )}
           style={{ borderCurve: "continuous" }}
         >
           <Text className="text-[22px] leading-none">{emoji}</Text>

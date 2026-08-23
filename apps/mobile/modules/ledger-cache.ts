@@ -65,9 +65,12 @@ export const budgetKeys = {
   projections: ["budgeting", "projections"] as const,
   projection: (currency: string, period: string) =>
     ["budgeting", "projections", currency, period] as const,
+  envelopeFormOptions: ["budgeting", "envelope-form-options"] as const,
+  envelopeFormOptionsFor: (currency: string, period: string) =>
+    ["budgeting", "envelope-form-options", currency, period] as const,
 };
 
-export type BudgetEffect = "workspaces" | "memberships" | "projections" | "settings";
+export type BudgetEffect = "workspaces" | "memberships" | "envelopes" | "projections" | "settings";
 
 export type LedgerChange =
   | { kind: "account.created"; id: string }
@@ -94,6 +97,7 @@ const transactionChangeQueryKeys = [
   monthSummaryKeys.all,
   transactionDateRangeKeys.all,
   budgetKeys.projections,
+  budgetKeys.envelopeFormOptions,
   accountKeys.lifecyclePreviews,
 ] as const;
 
@@ -141,21 +145,23 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
     budgetKeys.projections,
     accountKeys.lifecyclePreviews,
   ],
-  "category.created": [categoryKeys.all],
-  "category.batch": [categoryKeys.all, transactionKeys.all],
-  "category.updated": [categoryKeys.all, transactionKeys.all],
+  "category.created": [categoryKeys.all, budgetKeys.envelopeFormOptions],
+  "category.batch": [categoryKeys.all, transactionKeys.all, budgetKeys.envelopeFormOptions],
+  "category.updated": [categoryKeys.all, transactionKeys.all, budgetKeys.envelopeFormOptions],
   "category.archived": [
     categoryKeys.all,
     transactionKeys.all,
     recurringRuleKeys.all,
     budgetKeys.projections,
     accountKeys.lifecyclePreviews,
+    budgetKeys.envelopeFormOptions,
   ],
   "category.restored": [
     categoryKeys.all,
     recurringRuleKeys.all,
     budgetKeys.projections,
     accountKeys.lifecyclePreviews,
+    budgetKeys.envelopeFormOptions,
   ],
   "category.deleted": [
     categoryKeys.all,
@@ -163,6 +169,7 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
     recurringRuleKeys.all,
     budgetKeys.projections,
     accountKeys.lifecyclePreviews,
+    budgetKeys.envelopeFormOptions,
   ],
   "transaction.created": transactionChangeQueryKeys,
   "transaction.updated": transactionChangeQueryKeys,
@@ -180,6 +187,11 @@ const recurringEffectQueryKeys: Record<RecurringEffect, readonly QueryKey[]> = {
 const budgetEffectQueryKeys: Record<BudgetEffect, readonly QueryKey[]> = {
   workspaces: [budgetKeys.workspaces, budgetKeys.projections, accountKeys.lifecyclePreviews],
   memberships: [budgetKeys.projections, accountKeys.lifecyclePreviews],
+  envelopes: [
+    budgetKeys.projections,
+    budgetKeys.envelopeFormOptions,
+    accountKeys.lifecyclePreviews,
+  ],
   projections: [budgetKeys.projections, accountKeys.lifecyclePreviews],
   settings: [budgetKeys.workspaces],
 };
