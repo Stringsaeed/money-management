@@ -9,6 +9,80 @@ export interface BudgetProjection {
   fundingPool: Money;
   unassignedMoney: Money;
   budgetHealth: BudgetHealth;
+  envelopes: EnvelopeSummary[];
+  archivedEnvelopes: EnvelopeSummary[];
+}
+
+export interface EnvelopeAttentionReason {
+  kind: "missing-active-expense-category";
+  recoveryAction: "Map at least one active expense Category to this Envelope.";
+}
+
+export type EnvelopeHealth =
+  | { status: "ready"; reasons: readonly [] }
+  | { status: "needs_attention"; reasons: readonly EnvelopeAttentionReason[] };
+
+export interface EnvelopeSummary {
+  id: string;
+  currency: string;
+  name: string;
+  icon: string;
+  color: string;
+  lifecycle: "active" | "archived";
+  sortOrder: number;
+  categoryIds: string[];
+  positiveRollover: boolean;
+  health: EnvelopeHealth;
+  availableMoney: Money;
+  assignedMoney: Money;
+  netSpent: Money;
+}
+
+export interface CreateEnvelopeRequest {
+  id: string;
+  currency: string;
+  name: string;
+  icon: string;
+  color: string;
+  categoryIds: readonly string[];
+  positiveRollover: boolean;
+  sortOrder?: number;
+  localDate: string;
+  now: string;
+  confirmedRestoredCategoryIds?: readonly string[];
+}
+
+export interface UpdateEnvelopeRequest {
+  envelopeId: string;
+  name: string;
+  icon: string;
+  color: string;
+  categoryIds: readonly string[];
+  changedCategoryIds: readonly string[];
+  positiveRollover: boolean;
+  sortOrder?: number;
+  localDate: string;
+  now: string;
+  confirmedRestoredCategoryIds?: readonly string[];
+}
+
+export interface EnvelopeFormOptionsRequest {
+  currency: string;
+  period: string;
+}
+
+export interface EnvelopeCategoryOption {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  mappedEnvelopeId: string | null;
+  mappedThroughPeriod: string | null;
+  futureMappedEnvelopeId: string | null;
+  futureMappingPeriod: string | null;
+  requiresConfirmation: boolean;
+  eligible: boolean;
+  ineligibilityReason: "incompatible-currency" | null;
 }
 
 export interface UnsupportedCurrencyTransferReason {
@@ -106,6 +180,9 @@ export interface BudgetingCoordinator {
   setHomeCurrency(request: CurrencySettingRequest): Promise<void>;
   selectWorkspace(request: CurrencySettingRequest): Promise<void>;
   getProjection(request: ProjectionRequest): Promise<BudgetProjection | null>;
+  createEnvelope(request: CreateEnvelopeRequest): Promise<BudgetProjection>;
+  updateEnvelope(request: UpdateEnvelopeRequest): Promise<BudgetProjection>;
+  getEnvelopeFormOptions(request: EnvelopeFormOptionsRequest): Promise<EnvelopeCategoryOption[]>;
   getAccountDependencies(
     accountId: string,
     period: string,
