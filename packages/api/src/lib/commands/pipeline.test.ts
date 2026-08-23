@@ -296,7 +296,7 @@ describe("commands.apply — intent validation", () => {
   });
 
   it("rejects unregistered command kinds as not implemented", async () => {
-    const env = makeEnvelope({ kind: "transaction.create", payload: {} });
+    const env = makeEnvelope({ kind: "card_payment.record", payload: {} });
     await expect(applyAs(OWNER, env)).rejects.toThrow();
   });
 });
