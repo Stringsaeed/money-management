@@ -53,6 +53,16 @@ export const recurringRuleKeys = {
   upcoming: (limit: number) => ["recurring-rules", "upcoming", limit] as const,
 };
 
+export const budgetKeys = {
+  all: ["budgeting"] as const,
+  workspaces: ["budgeting", "workspaces"] as const,
+  projections: ["budgeting", "projections"] as const,
+  projection: (currency: string, period: string) =>
+    ["budgeting", "projections", currency, period] as const,
+};
+
+export type BudgetEffect = "workspaces" | "projections";
+
 export type LedgerChange =
   | { kind: "account.created"; id: string }
   | { kind: "account.updated"; id: string }
@@ -73,15 +83,17 @@ const transactionChangeQueryKeys = [
   accountKeys.balances,
   monthSummaryKeys.all,
   transactionDateRangeKeys.all,
+  budgetKeys.projections,
 ] as const;
 
 const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKey[]> = {
-  "account.created": [accountKeys.all, accountKeys.balances],
+  "account.created": [accountKeys.all, accountKeys.balances, budgetKeys.projections],
   "account.updated": [
     accountKeys.all,
     accountKeys.balances,
     transactionKeys.all,
     recurringRuleKeys.all,
+    budgetKeys.projections,
   ],
   "account.deleted": [
     accountKeys.all,
@@ -90,6 +102,7 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
     monthSummaryKeys.all,
     transactionDateRangeKeys.all,
     recurringRuleKeys.all,
+    budgetKeys.projections,
   ],
   "category.created": [categoryKeys.all],
   "category.batch": [categoryKeys.all, transactionKeys.all],
@@ -103,9 +116,14 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
 const recurringEffectQueryKeys: Record<RecurringEffect, readonly QueryKey[]> = {
   rules: [recurringRuleKeys.all],
   upcoming: [recurringRuleKeys.upcomingAll],
-  ledger: [transactionKeys.all],
+  ledger: [transactionKeys.all, budgetKeys.projections],
   balances: [accountKeys.balances],
   summaries: [monthSummaryKeys.all, transactionDateRangeKeys.all],
+};
+
+const budgetEffectQueryKeys: Record<BudgetEffect, readonly QueryKey[]> = {
+  workspaces: [budgetKeys.workspaces, budgetKeys.projections],
+  projections: [budgetKeys.projections],
 };
 
 export async function cohereLedgerCache(
@@ -127,6 +145,16 @@ export async function cohereRecurringEffects(
   await invalidateQueryKeys(
     queryClient,
     effects.flatMap((effect) => recurringEffectQueryKeys[effect]),
+  );
+}
+
+export async function cohereBudgetingEffects(
+  queryClient: QueryClient,
+  effects: readonly BudgetEffect[],
+): Promise<void> {
+  await invalidateQueryKeys(
+    queryClient,
+    effects.flatMap((effect) => budgetEffectQueryKeys[effect]),
   );
 }
 

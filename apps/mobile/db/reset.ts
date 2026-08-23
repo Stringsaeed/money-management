@@ -20,15 +20,28 @@ export const DATABASE_RESET_VERSION = 1;
 
 const RESET_VERSION_KEY = "resetVersion";
 
+interface ResetDatabaseOptions {
+  preserveExistingTablesThroughVersion?: number;
+}
+
 /**
- * Wipes every table when the install has not yet seen the current reset
- * version. Returns whether a wipe happened, so the caller can record the new
- * version *after* migrations have recreated `app_settings`.
+ * Prepares an install that has not yet seen the current reset version. Existing
+ * tables can be preserved while compatibility migrations run; the return value
+ * then means the caller must stamp the version after successful migration.
  */
-export async function resetDatabaseIfNeeded(db: SQLiteDatabase): Promise<boolean> {
+export async function resetDatabaseIfNeeded(
+  db: SQLiteDatabase,
+  options: ResetDatabaseOptions = {},
+): Promise<boolean> {
   if ((await readResetVersion(db)) >= DATABASE_RESET_VERSION) return false;
 
-  await dropAllTables(db);
+  const tables = await userTables(db);
+  const preservesThisVersion =
+    options.preserveExistingTablesThroughVersion !== undefined &&
+    DATABASE_RESET_VERSION <= options.preserveExistingTablesThroughVersion;
+  if (!preservesThisVersion || tables.length === 0) {
+    await dropAllTables(db, tables);
+  }
   return true;
 }
 
@@ -66,11 +79,16 @@ async function readResetVersion(db: SQLiteDatabase): Promise<number> {
   }
 }
 
-async function dropAllTables(db: SQLiteDatabase): Promise<void> {
-  const tables = await db.getAllAsync<{ name: string }>(
+async function userTables(db: SQLiteDatabase): Promise<{ name: string }[]> {
+  return db.getAllAsync<{ name: string }>(
     "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
   );
+}
 
+async function dropAllTables(
+  db: SQLiteDatabase,
+  tables: readonly { name: string }[],
+): Promise<void> {
   // Foreign keys would block dropping parents before children, and the pragma
   // is a no-op inside a transaction — so toggle it around the plain loop.
   await db.execAsync("PRAGMA foreign_keys = OFF");

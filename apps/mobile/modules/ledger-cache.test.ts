@@ -4,7 +4,9 @@ import type { RecurringEffect } from "@/modules/recurring-rules";
 
 import {
   accountKeys,
+  budgetKeys,
   categoryKeys,
+  cohereBudgetingEffects,
   cohereLedgerCache,
   cohereRecurringEffects,
   monthSummaryKeys,
@@ -12,6 +14,7 @@ import {
   transactionDateRangeKeys,
   transactionKeys,
   type LedgerChange,
+  type BudgetEffect,
   type TransactionQueryFilters,
 } from "./ledger-cache";
 
@@ -57,6 +60,8 @@ describe("ledger query keys", () => {
       recurringRuleList: recurringRuleKeys.list("needs_attention"),
       recurringRuleDetail: recurringRuleKeys.detail("rule-1"),
       recurringRuleUpcoming: recurringRuleKeys.upcoming(3),
+      budgetWorkspaces: budgetKeys.workspaces,
+      budgetProjection: budgetKeys.projection("USD", "2026-08"),
     }).toEqual({
       accountAll: ["accounts"],
       accountBalances: ["account-balances"],
@@ -74,7 +79,28 @@ describe("ledger query keys", () => {
       recurringRuleList: ["recurring-rules", "list", "needs_attention"],
       recurringRuleDetail: ["recurring-rules", "detail", "rule-1"],
       recurringRuleUpcoming: ["recurring-rules", "upcoming", 3],
+      budgetWorkspaces: ["budgeting", "workspaces"],
+      budgetProjection: ["budgeting", "projections", "USD", "2026-08"],
     });
+  });
+});
+
+describe("cohereBudgetingEffects", () => {
+  it.each<{ effect: BudgetEffect; expectedKeys: QueryKey[] }>([
+    {
+      effect: "workspaces",
+      expectedKeys: [
+        ["budgeting", "workspaces"],
+        ["budgeting", "projections"],
+      ],
+    },
+    { effect: "projections", expectedKeys: [["budgeting", "projections"]] },
+  ])("maps $effect through the centralized coherence owner", async ({ effect, expectedKeys }) => {
+    const { invalidateQueries, queryClient } = createControlledQueryClient();
+
+    await cohereBudgetingEffects(queryClient, [effect]);
+
+    expect(invalidatedKeys(invalidateQueries)).toEqual(expectedKeys);
   });
 });
 
@@ -85,11 +111,17 @@ describe("cohereLedgerCache", () => {
   }>([
     {
       change: { kind: "account.created", id: "account-1" },
-      expectedKeys: [["accounts"], ["account-balances"]],
+      expectedKeys: [["accounts"], ["account-balances"], ["budgeting", "projections"]],
     },
     {
       change: { kind: "account.updated", id: "account-1" },
-      expectedKeys: [["accounts"], ["account-balances"], ["transactions"], ["recurring-rules"]],
+      expectedKeys: [
+        ["accounts"],
+        ["account-balances"],
+        ["transactions"],
+        ["recurring-rules"],
+        ["budgeting", "projections"],
+      ],
     },
     {
       change: { kind: "account.deleted", id: "account-1" },
@@ -100,6 +132,7 @@ describe("cohereLedgerCache", () => {
         ["month-summary"],
         ["transaction-date-range"],
         ["recurring-rules"],
+        ["budgeting", "projections"],
       ],
     },
     {
@@ -125,6 +158,7 @@ describe("cohereLedgerCache", () => {
         ["account-balances"],
         ["month-summary"],
         ["transaction-date-range"],
+        ["budgeting", "projections"],
       ],
     },
     {
@@ -134,6 +168,7 @@ describe("cohereLedgerCache", () => {
         ["account-balances"],
         ["month-summary"],
         ["transaction-date-range"],
+        ["budgeting", "projections"],
       ],
     },
     {
@@ -143,6 +178,7 @@ describe("cohereLedgerCache", () => {
         ["account-balances"],
         ["month-summary"],
         ["transaction-date-range"],
+        ["budgeting", "projections"],
       ],
     },
   ])("maps $change.kind to every affected projection", async ({ change, expectedKeys }) => {
@@ -167,7 +203,10 @@ describe("cohereRecurringEffects", () => {
   it.each<{ effect: RecurringEffect; expectedKeys: QueryKey[] }>([
     { effect: "rules", expectedKeys: [["recurring-rules"]] },
     { effect: "upcoming", expectedKeys: [["recurring-rules", "upcoming"]] },
-    { effect: "ledger", expectedKeys: [["transactions"]] },
+    {
+      effect: "ledger",
+      expectedKeys: [["transactions"], ["budgeting", "projections"]],
+    },
     { effect: "balances", expectedKeys: [["account-balances"]] },
     {
       effect: "summaries",

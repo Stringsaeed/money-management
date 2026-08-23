@@ -1,5 +1,7 @@
 import { integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
+import { createBudgetingDrizzleSchema } from "./budgeting-drizzle-schema";
+
 // ── Accounts ──────────────────────────────────────────────────────────────────
 
 export const accounts = sqliteTable("accounts", {
@@ -137,4 +139,17 @@ export const exchangeRates = sqliteTable(
 export const appSettings = sqliteTable("app_settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
+});
+
+export const {
+  assignments,
+  budgetWorkspaces,
+  categoryMappings,
+  envelopes,
+  fundingMemberships,
+  rolloverSettings,
+  setupDrafts,
+} = createBudgetingDrizzleSchema({
+  accountId: accounts.id,
+  categoryId: categories.id,
 });
