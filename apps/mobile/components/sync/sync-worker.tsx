@@ -8,6 +8,6 @@ import { useActiveHousehold } from "@/hooks/use-households";
  */
 export function SyncWorker() {
   const { activeHousehold } = useActiveHousehold();
-  useSyncWorker(activeHousehold?.id ?? null);
+  useSyncWorker(activeHousehold?.householdId ?? null);
   return null;
 }
