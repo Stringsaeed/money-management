@@ -6,7 +6,7 @@ import { batch } from "@tanstack/react-store";
 import NumberPad from "@/components/transaction/num-pad";
 import { Text } from "@/components/ui/text";
 import { useAccounts } from "@/hooks/use-accounts";
-import { useCategories } from "@/hooks/use-categories";
+import { useAllCategories } from "@/hooks/use-categories";
 import useNumPadNumber from "@/hooks/use-num-pad-number";
 import { cn } from "@/lib/utils";
 import type { TransactionType } from "@/types";
@@ -41,7 +41,7 @@ export function TransactionForm({
   surfaceClassName,
 }: TransactionFormProps) {
   const { data: accounts = [] } = useAccounts();
-  const { data: categories = [] } = useCategories();
+  const { data: categories = [] } = useAllCategories();
 
   const firstAccountId = accounts[0]?.id ?? "";
   const firstAccountCurrency = accounts[0]?.currency ?? "USD";

@@ -3,6 +3,7 @@ import { Text } from "@/components/ui/text";
 import Animated, { Easing, LinearTransition } from "react-native-reanimated";
 
 import { useCategories } from "@/hooks/use-categories";
+import { cn } from "@/lib/utils";
 
 interface CategoryChipProps {
   name: string;
@@ -14,17 +15,23 @@ interface CategoryChipProps {
 function CategoryChip({ name, color, isSelected, onPress }: CategoryChipProps) {
   return (
     <Pressable
+      aria-label={name}
+      aria-selected={isSelected}
       onPress={onPress}
       style={{
         borderColor: isSelected ? color : undefined,
         backgroundColor: isSelected ? `${color}20` : undefined,
       }}
-      className={`flex-row items-center gap-1.5 px-3 py-2 rounded-full border-2 ${isSelected ? "" : "border-input bg-card"}`}
+      className={cn(
+        "flex-row items-center gap-1.5 rounded-full border-2 px-3 py-2",
+        !isSelected && "border-input bg-card",
+      )}
+      role="button"
     >
       <View style={{ backgroundColor: color }} className="w-2 h-2 rounded-full" />
       <Text
         style={{ color: isSelected ? color : undefined }}
-        className={`text-[13px] ${isSelected ? "font-semibold" : "font-normal text-foreground"}`}
+        className={cn("text-sm", isSelected ? "font-semibold" : "font-normal text-foreground")}
       >
         {name}
       </Text>
@@ -47,7 +54,8 @@ export function CategoryPicker({
   label,
   horizontal = false,
 }: CategoryPickerProps) {
-  const { data: cats = [] } = useCategories(type);
+  const { data: categories = [] } = useCategories(type);
+  const cats = categories.filter((category) => category.lifecycle === "active");
 
   if (horizontal) {
     return (

@@ -42,6 +42,8 @@ export const createCategory = (overrides: Partial<Category> = {}): Category => (
   icon: "🛒",
   parentId: null,
   sortOrder: 0,
+  lifecycle: "active",
+  lifecycleChangedAt: null,
   createdAt: DEFAULT_TIMESTAMP,
   updatedAt: DEFAULT_TIMESTAMP,
   ...overrides,

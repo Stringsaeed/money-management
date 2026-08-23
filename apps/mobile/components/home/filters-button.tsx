@@ -6,7 +6,7 @@ import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
-import { useCategories } from "@/hooks/use-categories";
+import { useAllCategories } from "@/hooks/use-categories";
 import { useTransactionDateRange } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
 import { formatMonth, monthsBetween } from "@/utils/date";
@@ -55,7 +55,7 @@ export function FiltersButton() {
     resetFilters,
   } = useUIStore();
   const { data: accounts = [] } = useAccountsWithBalances();
-  const { data: allCategories = [] } = useCategories();
+  const { data: allCategories = [] } = useAllCategories();
   const { data: dateRange } = useTransactionDateRange();
 
   const activeFilterCount = [activeAccountId, selectedMonth, selectedCategoryId].filter(
