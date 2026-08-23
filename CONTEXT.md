@@ -28,6 +28,18 @@ _Avoid_: Invite Link, Password
 
 > **Naming note**: "Account" in this context always means a _financial_ Account (see Cash Account, Archived Account). The server's internal authentication table named `account` (better-auth credential storage) is plumbing and carries no domain meaning.
 
+**Command**:
+The unit of a client write to the backend: a domain intent (e.g. `member.role.change`, `transaction.create`) — not a row diff — carrying a client-generated `commandId` that doubles as its idempotency key. Applied optimistically on the device, queued in the outbox, and processed exactly once server-side regardless of retry count. Wire shape lives in `packages/protocol`.
+_Avoid_: Mutation Payload, CRUD Request
+
+**Household Change**:
+One row appended per committed Command in `household_changes`, carrying a per-household monotonic sequence number (`seq`), the acting user, the command's `commandId`, and the `effects[]` tags it invalidated. It is simultaneously the sync feed, the change-notification watermark unit, and the household's activity history — not a compliance-only audit log.
+_Avoid_: Audit Log Entry
+
+**Effect Tag**:
+A token from a fixed vocabulary (`rules | upcoming | ledger | balances | summaries | envelopes | assignments | projections | members`) naming what a committed Command invalidated. Clients map tags onto their local cache-invalidation matrix; the API maps them onto projection recomputation. Defined in `packages/protocol`.
+_Avoid_: Change Type, Event Type
+
 ### Recurring Rules
 
 **Recurring Rule**:

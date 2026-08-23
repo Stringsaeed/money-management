@@ -28,7 +28,9 @@ export const membership = sqliteTable(
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
-    role: text("role").notNull().default("member"), // "owner" | "member"
+    role: text("role").notNull().default("member"), // "owner" | "admin" | "member" | "viewer"
+    /** Optimistic-concurrency version, generalized from Rule Revision. */
+    version: integer("version").notNull().default(0),
     isActive: integer("is_active", { mode: "boolean" }).default(true).notNull(),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
