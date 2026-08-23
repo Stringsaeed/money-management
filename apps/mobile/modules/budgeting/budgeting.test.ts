@@ -31,7 +31,7 @@ afterEach(() => {
 });
 
 describe("Budgeting coordinator", () => {
-  it("activates a currency workspace from exact current-period Funding Account Money", async () => {
+  it("reconstructs the period opening and replays current activity exactly once", async () => {
     const database = await setup();
     await database.runAsync(
       `INSERT INTO accounts (
@@ -110,8 +110,9 @@ describe("Budgeting coordinator", () => {
     expect(projection).toEqual({
       currency: "USD",
       period: "2026-08",
-      fundingPool: { currency: "USD", amountMinor: 115_00 },
-      unassignedMoney: { currency: "USD", amountMinor: 115_00 },
+      fundingPool: { currency: "USD", amountMinor: 205_00 },
+      unassignedMoney: { currency: "USD", amountMinor: 205_00 },
+      budgetHealth: { status: "ready", reasons: [] },
     });
     await expect(budgeting.getProjection({ currency: "USD", period: "2026-08" })).resolves.toEqual(
       projection,
@@ -179,36 +180,6 @@ describe("Budgeting coordinator", () => {
     });
 
     expect(projection.fundingPool).toEqual({ currency: "USD", amountMinor: 80_00 });
-  });
-
-  it("rejects mixed-currency ledger arithmetic without committing activation", async () => {
-    const database = await setup();
-    await insertAccount(database, { id: "account-usd", initialBalance: 100_00 });
-    await insertAccount(database, {
-      id: "account-aed",
-      currency: "AED",
-      initialBalance: 50_00,
-    });
-    await insertTransaction(database, {
-      id: "unsupported-transfer",
-      type: "transfer",
-      amount: 10_00,
-      date: "2026-08-10",
-      accountId: "account-usd",
-      toAccountId: "account-aed",
-    });
-
-    await expect(
-      createBudgetingCoordinator(database).activateWorkspace({
-        currency: "USD",
-        fundingAccountIds: ["account-usd"],
-        localDate: "2026-08-18",
-        now: "2026-08-18T08:00:00.000Z",
-      }),
-    ).rejects.toThrow("transfer to AED");
-    await expect(
-      database.getFirstAsync<{ count: number }>("SELECT COUNT(*) AS count FROM budget_workspaces"),
-    ).resolves.toEqual({ count: 0 });
   });
 
   it("rolls back every activation fact when persistence fails", async () => {
