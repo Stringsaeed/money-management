@@ -40,6 +40,14 @@ _Avoid_: Audit Log Entry
 A token from a fixed vocabulary (`rules | upcoming | ledger | balances | summaries | envelopes | assignments | projections | members`) naming what a committed Command invalidated. Clients map tags onto their local cache-invalidation matrix; the API maps them onto projection recomputation. Defined in `packages/protocol`.
 _Avoid_: Change Type, Event Type
 
+**Delta**:
+The notification-shaped list of Household Changes after a given watermark, returned by `sync.getDelta`. Entries carry `{seq, effects[]}` only — never raw row data; clients invalidate local caches by Effect Tag, and authoritative row payloads arrive through command results and dedicated read procedures.
+_Avoid_: Diff (implies row-level patches), Feed
+
+**Watermark**:
+The last `seq` a client has processed for a Household — its position in the household's change log. Polling sends the Watermark as `since` and receives everything newer plus the current head to store next.
+_Avoid_: Cursor, Offset, Version
+
 ### Recurring Rules
 
 **Recurring Rule**:
