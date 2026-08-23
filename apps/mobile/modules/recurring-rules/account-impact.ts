@@ -41,52 +41,6 @@ export async function findAccountRuleImpacts(
     );
 }
 
-export async function archiveAndDetachAccountRules(
-  database: SQLiteDatabase,
-  accountId: string,
-  now: string,
-): Promise<AccountRuleImpact[]> {
-  const rules = await affectedRules(database, accountId);
-  const impacts = await findAccountRuleImpacts(database, accountId);
-
-  for (const rule of rules) {
-    const reasons = parseReasons(rule.attentionReasons).filter(
-      (reason) =>
-        !(
-          reason.kind === "account-currency-changed" &&
-          "accountId" in reason &&
-          reason.accountId === accountId
-        ),
-    );
-    if (rule.accountId === accountId) {
-      addReason(reasons, { kind: "missing-source-account", formerAccountId: accountId });
-    }
-    if (rule.toAccountId === accountId) {
-      addReason(reasons, { kind: "missing-destination-account", formerAccountId: accountId });
-    }
-
-    await database.runAsync(
-      `UPDATE recurring_rules
-       SET account_id = CASE WHEN account_id = ? THEN NULL ELSE account_id END,
-           to_account_id = CASE WHEN to_account_id = ? THEN NULL ELSE to_account_id END,
-           lifecycle = 'archived', health = 'needs_attention', attention_reasons = ?,
-           revision = revision + 1,
-           lifecycle_changed_at = CASE WHEN lifecycle = 'archived' THEN lifecycle_changed_at ELSE ? END,
-           health_changed_at = CASE WHEN health = 'needs_attention' THEN health_changed_at ELSE ? END,
-           updated_at = ?
-       WHERE id = ?`,
-      accountId,
-      accountId,
-      JSON.stringify(reasons),
-      now,
-      now,
-      now,
-      rule.id,
-    );
-  }
-  return impacts;
-}
-
 export async function markAccountCurrencyChange(
   database: SQLiteDatabase,
   accountId: string,
@@ -124,6 +78,36 @@ export async function markAccountCurrencyChange(
     );
   }
   return impacts;
+}
+
+export async function markInactiveRulesForArchivedAccount(
+  database: SQLiteDatabase,
+  accountId: string,
+  now: string,
+): Promise<void> {
+  const rules = (await affectedRules(database, accountId)).filter(
+    (rule) => rule.lifecycle !== "active",
+  );
+  for (const rule of rules) {
+    const reasons = parseReasons(rule.attentionReasons);
+    if (rule.accountId === accountId) {
+      addReason(reasons, { kind: "missing-source-account", formerAccountId: accountId });
+    }
+    if (rule.toAccountId === accountId) {
+      addReason(reasons, { kind: "missing-destination-account", formerAccountId: accountId });
+    }
+    await database.runAsync(
+      `UPDATE recurring_rules
+       SET health = 'needs_attention', attention_reasons = ?, revision = revision + 1,
+           health_changed_at = CASE WHEN health = 'needs_attention' THEN health_changed_at ELSE ? END,
+           updated_at = ?
+       WHERE id = ?`,
+      JSON.stringify(reasons),
+      now,
+      now,
+      rule.id,
+    );
+  }
 }
 
 async function affectedRules(

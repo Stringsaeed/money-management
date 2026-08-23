@@ -3,11 +3,14 @@ import { act, waitFor } from "@testing-library/react-native";
 import { accounts } from "@/db/schema";
 import {
   useAccount,
+  useAccountArchivalPreview,
+  useAccountDeletionPreview,
   useAccounts,
   useAccountsWithBalances,
+  useArchiveAccount,
   useCreateAccount,
   useDeleteAccount,
-  usePreviewAccountDeletion,
+  useRestoreAccount,
   useUpdateAccount,
 } from "@/hooks/use-accounts";
 import { createAccount, createAccountWithBalance } from "@/tests/test-utils/factories";
@@ -16,8 +19,12 @@ import { renderHookWithProviders } from "@/tests/test-utils/render";
 
 const mockUseDatabase = jest.fn();
 const mockUseSQLiteContext = jest.fn();
-const mockDeleteAccountWithRecurringRules = jest.fn();
+const mockArchiveAccount = jest.fn();
+const mockDeleteAccount = jest.fn();
+const mockLoadAccountBalances = jest.fn();
+const mockPreviewAccountArchival = jest.fn();
 const mockPreviewAccountDeletion = jest.fn();
+const mockRestoreAccount = jest.fn();
 const mockUpdateAccountWithRecurringRules = jest.fn();
 const mockCohereLedgerCache = jest.fn();
 
@@ -70,11 +77,20 @@ jest.mock("expo-sqlite", () => ({
 }));
 
 jest.mock("@/modules/account-recurring-coordinator", () => ({
-  deleteAccountWithRecurringRules: (...args: unknown[]) =>
-    mockDeleteAccountWithRecurringRules(...args),
-  previewAccountDeletion: (...args: unknown[]) => mockPreviewAccountDeletion(...args),
   updateAccountWithRecurringRules: (...args: unknown[]) =>
     mockUpdateAccountWithRecurringRules(...args),
+}));
+
+jest.mock("@/modules/accounts/account-lifecycle", () => ({
+  archiveAccount: (...args: unknown[]) => mockArchiveAccount(...args),
+  deleteAccount: (...args: unknown[]) => mockDeleteAccount(...args),
+  previewAccountArchival: (...args: unknown[]) => mockPreviewAccountArchival(...args),
+  previewAccountDeletion: (...args: unknown[]) => mockPreviewAccountDeletion(...args),
+  restoreAccount: (...args: unknown[]) => mockRestoreAccount(...args),
+}));
+
+jest.mock("@/modules/accounts/account-balance", () => ({
+  loadAccountBalances: (...args: unknown[]) => mockLoadAccountBalances(...args),
 }));
 
 jest.mock("@/modules/ledger-cache", () => ({
@@ -88,13 +104,28 @@ jest.mock("@/utils/id", () => ({
 
 jest.mock("@/utils/date", () => ({
   nowIso: jest.fn(() => "2026-03-28T12:00:00.000Z"),
+  toDateString: jest.fn(() => "2026-03-28"),
 }));
 
 describe("use-accounts hooks", () => {
   beforeEach(() => {
     mockUseSQLiteContext.mockReturnValue({ raw: "database" });
-    mockDeleteAccountWithRecurringRules.mockResolvedValue({ accountId: "account-1", rules: [] });
-    mockPreviewAccountDeletion.mockResolvedValue({ accountId: "account-1", rules: [] });
+    mockArchiveAccount.mockResolvedValue(undefined);
+    mockDeleteAccount.mockResolvedValue(undefined);
+    mockLoadAccountBalances.mockResolvedValue([]);
+    mockPreviewAccountArchival.mockResolvedValue({
+      accountId: "account-1",
+      blockers: [],
+      canArchive: true,
+    });
+    mockPreviewAccountDeletion.mockResolvedValue({
+      accountId: "account-1",
+      transactionCount: 0,
+      recurringRuleCount: 0,
+      fundingMembershipCount: 0,
+      canDelete: true,
+    });
+    mockRestoreAccount.mockResolvedValue(undefined);
     mockUpdateAccountWithRecurringRules.mockResolvedValue({
       accountId: "account-1",
       rulesNeedingAttention: [],
@@ -139,23 +170,10 @@ describe("use-accounts hooks", () => {
   });
 
   it("computes account balances from account and balance rows", async () => {
-    const db = createMockDb({
-      selectResults: [
-        {
-          all: [
-            createAccount({ id: "account-1", initialBalance: 100_00 }),
-            createAccount({ id: "account-2", initialBalance: 25_00 }),
-          ],
-        },
-        {
-          all: [
-            { accountId: "account-1", balance: 150_00 },
-            { accountId: "account-2", balance: 40_00 },
-          ],
-        },
-      ],
-    });
-    mockUseDatabase.mockReturnValue(db);
+    mockLoadAccountBalances.mockResolvedValue([
+      createAccountWithBalance({ id: "account-1", initialBalance: 100_00, balance: 150_00 }),
+      createAccountWithBalance({ id: "account-2", initialBalance: 25_00, balance: 40_00 }),
+    ]);
 
     const { result } = await renderHookWithProviders(() => useAccountsWithBalances());
 
@@ -167,6 +185,7 @@ describe("use-accounts hooks", () => {
       createAccountWithBalance({ id: "account-1", initialBalance: 100_00, balance: 150_00 }),
       createAccountWithBalance({ id: "account-2", initialBalance: 25_00, balance: 40_00 }),
     ]);
+    expect(mockLoadAccountBalances).toHaveBeenCalledWith({ raw: "database" }, false);
   });
 
   it("reports an Account creation and waits for cache coherence", async () => {
@@ -198,6 +217,8 @@ describe("use-accounts hooks", () => {
       initialBalance: 0,
       excludeFromTotal: false,
       sortOrder: 0,
+      lifecycle: "active",
+      lifecycleChangedAt: null,
       createdAt: "2026-03-28T12:00:00.000Z",
       updatedAt: "2026-03-28T12:00:00.000Z",
     });
@@ -241,26 +262,72 @@ describe("use-accounts hooks", () => {
     await mutation.resolve();
   });
 
-  it("previews affected Recurring Rules before Account deletion", async () => {
-    const { result } = await renderHookWithProviders(() => usePreviewAccountDeletion());
+  it("loads complete archival and deletion prerequisites", async () => {
+    const archival = await renderHookWithProviders(() => useAccountArchivalPreview("account-1"));
+    const deletion = await renderHookWithProviders(() => useAccountDeletionPreview("account-1"));
 
-    await act(async () => {
-      await result.current.mutateAsync("account-1");
-    });
+    await waitFor(() => expect(archival.result.current.isSuccess).toBe(true));
+    await waitFor(() => expect(deletion.result.current.isSuccess).toBe(true));
 
+    expect(mockPreviewAccountArchival).toHaveBeenCalledWith(
+      { raw: "database" },
+      "account-1",
+      "2026-03-28",
+    );
     expect(mockPreviewAccountDeletion).toHaveBeenCalledWith({ raw: "database" }, "account-1");
   });
 
-  it("reports coordinated Account deletion after Recurring Rules have been updated", async () => {
+  it("reports Account archival after its atomic lifecycle write commits", async () => {
+    const { result, client } = await renderHookWithProviders(() => useArchiveAccount());
+    const mutation = await startMutationAwaitingCoherence(() =>
+      result.current.mutateAsync("account-1"),
+    );
+
+    expect(mockArchiveAccount).toHaveBeenCalledWith(
+      { raw: "database" },
+      {
+        accountId: "account-1",
+        localDate: "2026-03-28",
+        now: "2026-03-28T12:00:00.000Z",
+      },
+    );
+    await waitFor(() => {
+      expect(mockCohereLedgerCache).toHaveBeenCalledWith(client, {
+        kind: "account.archived",
+        id: "account-1",
+      });
+    });
+    mutation.expectPending();
+    await mutation.resolve();
+  });
+
+  it("reports Account restoration without restoring Funding Membership", async () => {
+    const { result, client } = await renderHookWithProviders(() => useRestoreAccount());
+    const mutation = await startMutationAwaitingCoherence(() =>
+      result.current.mutateAsync("account-1"),
+    );
+
+    expect(mockRestoreAccount).toHaveBeenCalledWith(
+      { raw: "database" },
+      { accountId: "account-1", now: "2026-03-28T12:00:00.000Z" },
+    );
+    await waitFor(() => {
+      expect(mockCohereLedgerCache).toHaveBeenCalledWith(client, {
+        kind: "account.restored",
+        id: "account-1",
+      });
+    });
+    mutation.expectPending();
+    await mutation.resolve();
+  });
+
+  it("reports permanent deletion only after the guarded domain write commits", async () => {
     const { result, client } = await renderHookWithProviders(() => useDeleteAccount());
     const mutation = await startMutationAwaitingCoherence(() =>
       result.current.mutateAsync("account-1"),
     );
 
-    expect(mockDeleteAccountWithRecurringRules).toHaveBeenCalledWith(
-      { raw: "database" },
-      { accountId: "account-1", now: "2026-03-28T12:00:00.000Z" },
-    );
+    expect(mockDeleteAccount).toHaveBeenCalledWith({ raw: "database" }, "account-1");
     await waitFor(() => {
       expect(mockCohereLedgerCache).toHaveBeenCalledWith(client, {
         kind: "account.deleted",

@@ -16,6 +16,7 @@ interface AccountRow {
   type: string;
   currency: string;
   initialBalance: number;
+  lifecycle: "active" | "archived";
 }
 
 const ELIGIBLE_FUNDING_ACCOUNT_TYPES = new Set(["checking", "savings", "cash", "other"]);
@@ -122,7 +123,7 @@ async function requireEligibleAccounts(
 ): Promise<void> {
   const placeholders = accountIds.map(() => "?").join(", ");
   const accounts = await database.getAllAsync<AccountRow>(
-    `SELECT id, type, currency, initial_balance AS initialBalance
+    `SELECT id, type, currency, initial_balance AS initialBalance, lifecycle
      FROM accounts
      WHERE id IN (${placeholders})
      ORDER BY id`,
@@ -132,6 +133,9 @@ async function requireEligibleAccounts(
     throw new Error("Budget activation requires every selected Funding Account to exist.");
   }
   for (const account of accounts) {
+    if (account.lifecycle !== "active") {
+      throw new Error(`Account ${account.id} is not eligible for Funding Membership.`);
+    }
     if (!ELIGIBLE_FUNDING_ACCOUNT_TYPES.has(account.type)) {
       throw new Error(`Account ${account.id} is not eligible for Funding Membership.`);
     }

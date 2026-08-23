@@ -18,7 +18,12 @@ export interface TransactionQueryFilters {
 export const accountKeys = {
   all: ["accounts"] as const,
   balances: ["account-balances"] as const,
+  managementBalances: ["account-balances", "management"] as const,
   detail: (id: string) => ["accounts", id] as const,
+  lifecyclePreviews: ["account-lifecycle-previews"] as const,
+  archivalPreview: (id: string, localDate: string) =>
+    ["account-lifecycle-previews", "archival", id, localDate] as const,
+  deletionPreview: (id: string) => ["account-lifecycle-previews", "deletion", id] as const,
 };
 
 export const categoryKeys = {
@@ -67,6 +72,8 @@ export type BudgetEffect = "workspaces" | "projections";
 export type LedgerChange =
   | { kind: "account.created"; id: string }
   | { kind: "account.updated"; id: string }
+  | { kind: "account.archived"; id: string }
+  | { kind: "account.restored"; id: string }
   | { kind: "account.deleted"; id: string }
   | { kind: "category.created"; id: string }
   | { kind: "category.batch" }
@@ -87,25 +94,52 @@ const transactionChangeQueryKeys = [
   monthSummaryKeys.all,
   transactionDateRangeKeys.all,
   budgetKeys.projections,
+  accountKeys.lifecyclePreviews,
 ] as const;
 
 const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKey[]> = {
-  "account.created": [accountKeys.all, accountKeys.balances, budgetKeys.projections],
+  "account.created": [
+    accountKeys.all,
+    accountKeys.balances,
+    accountKeys.managementBalances,
+    budgetKeys.projections,
+  ],
   "account.updated": [
     accountKeys.all,
     accountKeys.balances,
+    accountKeys.managementBalances,
     transactionKeys.all,
     recurringRuleKeys.all,
     budgetKeys.projections,
+    accountKeys.lifecyclePreviews,
+  ],
+  "account.archived": [
+    accountKeys.all,
+    accountKeys.balances,
+    accountKeys.managementBalances,
+    transactionKeys.all,
+    recurringRuleKeys.all,
+    budgetKeys.projections,
+    accountKeys.lifecyclePreviews,
+  ],
+  "account.restored": [
+    accountKeys.all,
+    accountKeys.balances,
+    accountKeys.managementBalances,
+    recurringRuleKeys.all,
+    budgetKeys.projections,
+    accountKeys.lifecyclePreviews,
   ],
   "account.deleted": [
     accountKeys.all,
     accountKeys.balances,
+    accountKeys.managementBalances,
     transactionKeys.all,
     monthSummaryKeys.all,
     transactionDateRangeKeys.all,
     recurringRuleKeys.all,
     budgetKeys.projections,
+    accountKeys.lifecyclePreviews,
   ],
   "category.created": [categoryKeys.all],
   "category.batch": [categoryKeys.all, transactionKeys.all],
@@ -115,13 +149,20 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
     transactionKeys.all,
     recurringRuleKeys.all,
     budgetKeys.projections,
+    accountKeys.lifecyclePreviews,
   ],
-  "category.restored": [categoryKeys.all, recurringRuleKeys.all, budgetKeys.projections],
+  "category.restored": [
+    categoryKeys.all,
+    recurringRuleKeys.all,
+    budgetKeys.projections,
+    accountKeys.lifecyclePreviews,
+  ],
   "category.deleted": [
     categoryKeys.all,
     transactionKeys.all,
     recurringRuleKeys.all,
     budgetKeys.projections,
+    accountKeys.lifecyclePreviews,
   ],
   "transaction.created": transactionChangeQueryKeys,
   "transaction.updated": transactionChangeQueryKeys,
@@ -129,16 +170,16 @@ const ledgerChangeQueryKeys: Record<EntityLedgerChange["kind"], readonly QueryKe
 };
 
 const recurringEffectQueryKeys: Record<RecurringEffect, readonly QueryKey[]> = {
-  rules: [recurringRuleKeys.all],
+  rules: [recurringRuleKeys.all, accountKeys.lifecyclePreviews],
   upcoming: [recurringRuleKeys.upcomingAll],
-  ledger: [transactionKeys.all, budgetKeys.projections],
+  ledger: [transactionKeys.all, budgetKeys.projections, accountKeys.lifecyclePreviews],
   balances: [accountKeys.balances],
   summaries: [monthSummaryKeys.all, transactionDateRangeKeys.all],
 };
 
 const budgetEffectQueryKeys: Record<BudgetEffect, readonly QueryKey[]> = {
-  workspaces: [budgetKeys.workspaces, budgetKeys.projections],
-  projections: [budgetKeys.projections],
+  workspaces: [budgetKeys.workspaces, budgetKeys.projections, accountKeys.lifecyclePreviews],
+  projections: [budgetKeys.projections, accountKeys.lifecyclePreviews],
 };
 
 export async function cohereLedgerCache(

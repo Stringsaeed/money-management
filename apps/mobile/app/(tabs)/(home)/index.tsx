@@ -13,13 +13,14 @@ export default function HomeScreen() {
     currency,
     activeFilterCount,
     activeAccountId,
-    accounts,
+    hasAnyAccounts,
+    loadingAllAccounts,
     resetFilters,
   } = useHomeScreen({ limit: 10 });
 
   const showAccount = activeAccountId === null;
 
-  if (!loadingAccounts && accounts.length === 0) {
+  if (!loadingAccounts && !loadingAllAccounts && !hasAnyAccounts) {
     return <Redirect href="/onboarding" />;
   }
 

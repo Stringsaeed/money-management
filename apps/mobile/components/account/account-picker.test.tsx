@@ -15,6 +15,11 @@ describe("AccountPicker", () => {
       data: [
         createAccount({ id: "account-1", name: "Checking", currency: "USD" }),
         createAccount({ id: "account-2", name: "Savings", currency: "EUR" }),
+        createAccount({
+          id: "account-archived",
+          name: "Old Wallet",
+          lifecycle: "archived",
+        }),
       ],
     });
   });
@@ -28,6 +33,7 @@ describe("AccountPicker", () => {
 
     expect(screen.getByText("Account")).toBeOnTheScreen();
     expect(screen.queryByText("Checking")).not.toBeOnTheScreen();
+    expect(screen.queryByText("Old Wallet")).not.toBeOnTheScreen();
 
     await fireEvent.press(screen.getByText("Savings"));
 
