@@ -468,6 +468,7 @@ const CREATE_RECURRING_RULES_SQL = `
     end_date TEXT,
     end_count INTEGER CHECK (end_count IS NULL OR end_count > 0),
     time_zone TEXT NOT NULL,
+    owner_user_id TEXT,
     lifecycle TEXT NOT NULL DEFAULT 'active'
       CHECK (lifecycle IN ('active', 'paused', 'archived', 'completed')),
     health TEXT NOT NULL DEFAULT 'ready'
