@@ -137,3 +137,17 @@ export const CREATE_BUDGETING_SCHEMA_SQL = `
     updated_at TEXT NOT NULL
   );
 `;
+
+export const CREATE_ASSIGNMENT_APPEND_ONLY_TRIGGERS_SQL = `
+  CREATE TRIGGER IF NOT EXISTS assignments_append_only_update
+  BEFORE UPDATE ON assignments
+  BEGIN
+    SELECT RAISE(ABORT, 'Assignments are append-only.');
+  END;
+
+  CREATE TRIGGER IF NOT EXISTS assignments_append_only_delete
+  BEFORE DELETE ON assignments
+  BEGIN
+    SELECT RAISE(ABORT, 'Assignments are append-only.');
+  END;
+`;

@@ -1,12 +1,14 @@
 import { afterEach, describe, expect, it } from "@jest/globals";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import type { SQLiteDatabase } from "expo-sqlite";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react-native";
+import type { SQLiteBindValue, SQLiteDatabase } from "expo-sqlite";
 
 import { createBudgetingCoordinator } from "@/modules/budgeting/budgeting";
 
 import {
   activateRouteWorkspace,
   cleanupWorkspaceRouteTests,
+  createRouteEnvelope,
+  insertRouteCategory,
   renderWorkspaceRoute,
   setupRouteDatabase,
   useRouteDatabase,
@@ -77,5 +79,118 @@ describe("Envelope workspace route status and selection", () => {
         screen.getByRole("radio", { name: "AED currency workspace" }).props.accessibilityState,
       ).toEqual({ disabled: false, selected: true });
     });
+  });
+
+  it("previews, validates, cancels, and commits Move Money through the workspace route", async () => {
+    const { database } = await setupRouteDatabase();
+    await activateRouteWorkspace(database, "USD", 100_00);
+    await insertRouteCategory(database, "category-food", "Food");
+    await insertRouteCategory(database, "category-fun", "Fun");
+    await createRouteEnvelope(database, {
+      categoryIds: ["category-food"],
+      id: "envelope-food",
+      name: "Food",
+    });
+    await createRouteEnvelope(database, {
+      categoryIds: ["category-fun"],
+      id: "envelope-fun",
+      name: "Fun",
+    });
+    await renderWorkspaceRoute();
+
+    await fireEvent.press(await screen.findByRole("button", { name: "Move Money" }));
+    expect(screen.getByLabelText("Move Money source")).toBeOnTheScreen();
+    expect(screen.getByLabelText("Move Money destination")).toBeOnTheScreen();
+    expect(screen.getByLabelText("Move Money amount")).toBeOnTheScreen();
+    expect(screen.getByLabelText("Move Money period")).toBeOnTheScreen();
+
+    await fireEvent.changeText(screen.getByLabelText("Move Money amount"), "0");
+    await fireEvent.press(screen.getByRole("button", { name: "Preview Move Money" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/positive integer/);
+
+    await fireEvent.press(screen.getByRole("button", { name: "Close" }));
+    expect(screen.queryByLabelText("Move Money source")).not.toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole("button", { name: "Move Money" }));
+    await fireEvent.changeText(screen.getByLabelText("Move Money amount"), "2500");
+    await fireEvent.press(screen.getByRole("button", { name: "Preview Move Money" }));
+    expect(await screen.findByText("Source 10000 → 7500")).toBeOnTheScreen();
+    expect(screen.getByText("Destination 0 → 2500")).toBeOnTheScreen();
+
+    const commitButton = screen.getAllByRole("button", { name: "Move Money" }).at(-1);
+    await fireEvent.press(commitButton!);
+    await waitFor(() => expect(screen.queryByLabelText("Move Money source")).not.toBeOnTheScreen());
+    await waitFor(() => expect(screen.getByText("$75.00")).toBeOnTheScreen());
+
+    await fireEvent.press(screen.getByRole("button", { name: "Move Money" }));
+    const originalAssignment = await screen.findByRole("button", {
+      name: /Assignment assignment-.*original/,
+    });
+    await fireEvent.press(originalAssignment);
+    expect(screen.getByText(/Correcting Assignment/)).toBeOnTheScreen();
+    expect(screen.getByLabelText("Move Money amount").props.value).toBe("2500");
+    await fireEvent.changeText(screen.getByLabelText("Move Money amount"), "2000");
+    await fireEvent.press(screen.getByRole("button", { name: "Preview Move Money" }));
+    expect(await screen.findByText("Source 10000 → 8000")).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole("button", { name: "Correct Move Money" }));
+    await waitFor(() => expect(screen.queryByLabelText("Move Money source")).not.toBeOnTheScreen());
+
+    await fireEvent.press(screen.getByRole("button", { name: "Move Money" }));
+    expect(await screen.findByText(/reversal · 2500 minor units/)).toBeOnTheScreen();
+    expect(screen.getByText(/replacement · 2000 minor units/)).toBeOnTheScreen();
+    const sourcePicker = screen.getByLabelText("Move Money source");
+    const destinationPicker = screen.getByLabelText("Move Money destination");
+    await fireEvent.press(within(sourcePicker).getByRole("button", { name: "Food" }));
+    await fireEvent.press(
+      within(destinationPicker).getByRole("button", { name: "Unassigned Money" }),
+    );
+    await fireEvent.changeText(screen.getByLabelText("Move Money amount"), "1000");
+    await fireEvent.press(screen.getByRole("button", { name: "Preview Move Money" }));
+    expect(await screen.findByText("Source 2000 → 1000")).toBeOnTheScreen();
+    await fireEvent.press(screen.getAllByRole("button", { name: "Move Money" }).at(-1)!);
+    await waitFor(() => expect(screen.queryByLabelText("Move Money source")).not.toBeOnTheScreen());
+
+    await fireEvent.press(screen.getByRole("button", { name: "Move Money" }));
+    const envelopeSourcePicker = screen.getByLabelText("Move Money source");
+    const envelopeDestinationPicker = screen.getByLabelText("Move Money destination");
+    await fireEvent.press(within(envelopeSourcePicker).getByRole("button", { name: "Food" }));
+    await fireEvent.press(within(envelopeDestinationPicker).getByRole("button", { name: "Fun" }));
+    await fireEvent.changeText(screen.getByLabelText("Move Money amount"), "500");
+    await fireEvent.press(screen.getByRole("button", { name: "Preview Move Money" }));
+    expect(await screen.findByText("Destination 0 → 500")).toBeOnTheScreen();
+    await fireEvent.press(screen.getAllByRole("button", { name: "Move Money" }).at(-1)!);
+    await waitFor(() => expect(screen.queryByLabelText("Move Money source")).not.toBeOnTheScreen());
+  });
+
+  it("shows the visible projection refresh error after a committed Move Money mutation", async () => {
+    const { database } = await setupRouteDatabase();
+    await activateRouteWorkspace(database, "USD", 100_00);
+    await insertRouteCategory(database, "category-food", "Food");
+    await createRouteEnvelope(database, {
+      categoryIds: ["category-food"],
+      id: "envelope-food",
+      name: "Food",
+    });
+    await renderWorkspaceRoute();
+
+    await fireEvent.press(await screen.findByRole("button", { name: "Move Money" }));
+    await fireEvent.changeText(screen.getByLabelText("Move Money amount"), "2500");
+    await fireEvent.press(screen.getByRole("button", { name: "Preview Move Money" }));
+    expect(await screen.findByText("Source 10000 → 7500")).toBeOnTheScreen();
+
+    const getFirstAsync = database.getFirstAsync.bind(database);
+    let projectionReads = 0;
+    database.getFirstAsync = (async (source: string, ...params: SQLiteBindValue[]) => {
+      if (source.includes("FROM budget_workspaces")) {
+        projectionReads += 1;
+        if (projectionReads > 4) throw new Error("forced refresh failure");
+      }
+      return getFirstAsync(source, ...params);
+    }) as typeof database.getFirstAsync;
+
+    await fireEvent.press(screen.getAllByRole("button", { name: "Move Money" }).at(-1)!);
+
+    expect(await screen.findByText("Monthly budget is unavailable")).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Retry monthly budget" })).toBeOnTheScreen();
   });
 });

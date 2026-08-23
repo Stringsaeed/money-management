@@ -116,6 +116,68 @@ export interface ProjectionRequest {
   period: string;
 }
 
+export type MoveMoneyEndpoint = string | null;
+
+export interface MoveMoneyRequest {
+  id: string;
+  currency: string;
+  period: string;
+  sourceEnvelopeId: MoveMoneyEndpoint;
+  destinationEnvelopeId: MoveMoneyEndpoint;
+  amountMinor: number;
+  now: string;
+}
+
+export interface MoveMoneyBalance {
+  currency: string;
+  amountMinor: number;
+}
+
+export interface MoveMoneyPreview {
+  currency: string;
+  period: string;
+  amountMinor: number;
+  source: {
+    envelopeId: MoveMoneyEndpoint;
+    before: MoveMoneyBalance;
+    after: MoveMoneyBalance;
+  };
+  destination: {
+    envelopeId: MoveMoneyEndpoint;
+    before: MoveMoneyBalance;
+    after: MoveMoneyBalance;
+  };
+  deficitRouting: {
+    cashOverspendingMinor: number;
+    unfundedCardSpendingMinor: number;
+    newAvailabilityMinor: number;
+  };
+}
+
+export type AssignmentHistoryKind = "original" | "reversal" | "replacement";
+
+export interface AssignmentHistoryEntry {
+  id: string;
+  currency: string;
+  budgetPeriod: string;
+  sourceEnvelopeId: MoveMoneyEndpoint;
+  destinationEnvelopeId: MoveMoneyEndpoint;
+  amountMinor: number;
+  reversesAssignmentId: string | null;
+  kind: AssignmentHistoryKind;
+  createdAt: string;
+}
+
+export interface AssignmentHistoryRequest {
+  currency: string;
+  period: string;
+}
+
+export interface CorrectMoveMoneyRequest extends MoveMoneyRequest {
+  originalAssignmentId: string;
+  reversalId: string;
+}
+
 export interface UpdateFundingMembershipRequest {
   accountId: string;
   included: boolean;
@@ -180,6 +242,11 @@ export interface BudgetingCoordinator {
   setHomeCurrency(request: CurrencySettingRequest): Promise<void>;
   selectWorkspace(request: CurrencySettingRequest): Promise<void>;
   getProjection(request: ProjectionRequest): Promise<BudgetProjection | null>;
+  previewMoveMoney(request: MoveMoneyRequest): Promise<MoveMoneyPreview>;
+  previewCorrectMoveMoney(request: CorrectMoveMoneyRequest): Promise<MoveMoneyPreview>;
+  moveMoney(request: MoveMoneyRequest): Promise<BudgetProjection>;
+  correctMoveMoney(request: CorrectMoveMoneyRequest): Promise<BudgetProjection>;
+  getAssignmentHistory(request: AssignmentHistoryRequest): Promise<AssignmentHistoryEntry[]>;
   createEnvelope(request: CreateEnvelopeRequest): Promise<BudgetProjection>;
   updateEnvelope(request: UpdateEnvelopeRequest): Promise<BudgetProjection>;
   getEnvelopeFormOptions(request: EnvelopeFormOptionsRequest): Promise<EnvelopeCategoryOption[]>;
