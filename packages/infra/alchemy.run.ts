@@ -16,11 +16,15 @@ export const server = Cloudflare.Worker("server", {
   compatibility: {
     flags: ["nodejs_compat"],
   },
+  // Hourly settlement sweep (#88): the entry module's exported `scheduled`
+  // handler runs settleDueRules; safe under retries (occurrence-PK guard).
+  crons: ["0 * * * *"],
   env: {
     DB: db,
     CORS_ORIGIN: Config.string("CORS_ORIGIN"),
     BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
     BETTER_AUTH_URL: Cloudflare.Worker.URL,
+    SETTLEMENT_ADMIN_SECRET: Config.redacted("SETTLEMENT_ADMIN_SECRET"),
   },
   dev: {
     port: 3000,

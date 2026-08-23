@@ -36,6 +36,13 @@
       "when": 1787484597914,
       "tag": "0004_thick_scrambler",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1787484598914,
+      "tag": "0005_system_settlement_actor",
+      "breakpoints": true
     }
   ]
 }

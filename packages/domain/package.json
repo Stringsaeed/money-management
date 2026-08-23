@@ -23,6 +23,10 @@
       "types": "./dist/card-waterfall.d.ts",
       "default": "./dist/card-waterfall.js"
     },
+    "./clock": {
+      "types": "./dist/clock.d.ts",
+      "default": "./dist/clock.js"
+    },
     "./settlement": {
       "types": "./dist/settlement.d.ts",
       "default": "./dist/settlement.js"
