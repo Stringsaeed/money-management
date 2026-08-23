@@ -67,6 +67,7 @@ describe("ledger query keys", () => {
       budgetWorkspaces: budgetKeys.workspaces,
       budgetProjection: budgetKeys.projection("USD", "2026-08"),
       envelopeFormOptions: budgetKeys.envelopeFormOptionsFor("USD", "2026-08"),
+      setupDraft: budgetKeys.setupDraft,
     }).toEqual({
       accountAll: ["accounts"],
       accountBalances: ["account-balances"],
@@ -91,6 +92,7 @@ describe("ledger query keys", () => {
       budgetWorkspaces: ["budgeting", "workspaces"],
       budgetProjection: ["budgeting", "projections", "USD", "2026-08"],
       envelopeFormOptions: ["budgeting", "envelope-form-options", "USD", "2026-08"],
+      setupDraft: ["budgeting", "setup-draft", "guided-envelope-setup"],
     });
   });
 });
@@ -153,7 +155,12 @@ describe("cohereLedgerCache", () => {
   }>([
     {
       change: { kind: "account.created", id: "account-1" },
-      expectedKeys: [["accounts"], ["account-balances"], ["budgeting", "projections"]],
+      expectedKeys: [
+        ["accounts"],
+        ["account-balances"],
+        ["budgeting", "projections"],
+        ["budgeting", "setup-draft", "guided-envelope-setup"],
+      ],
     },
     {
       change: { kind: "account.updated", id: "account-1" },
@@ -164,6 +171,7 @@ describe("cohereLedgerCache", () => {
         ["recurring-rules"],
         ["budgeting", "projections"],
         ["account-lifecycle-previews"],
+        ["budgeting", "setup-draft", "guided-envelope-setup"],
       ],
     },
     {
@@ -175,6 +183,7 @@ describe("cohereLedgerCache", () => {
         ["recurring-rules"],
         ["budgeting", "projections"],
         ["account-lifecycle-previews"],
+        ["budgeting", "setup-draft", "guided-envelope-setup"],
       ],
     },
     {
@@ -185,6 +194,7 @@ describe("cohereLedgerCache", () => {
         ["recurring-rules"],
         ["budgeting", "projections"],
         ["account-lifecycle-previews"],
+        ["budgeting", "setup-draft", "guided-envelope-setup"],
       ],
     },
     {
@@ -198,19 +208,34 @@ describe("cohereLedgerCache", () => {
         ["recurring-rules"],
         ["budgeting", "projections"],
         ["account-lifecycle-previews"],
+        ["budgeting", "setup-draft", "guided-envelope-setup"],
       ],
     },
     {
       change: { kind: "category.created", id: "category-1" },
-      expectedKeys: [["categories"], ["budgeting", "envelope-form-options"]],
+      expectedKeys: [
+        ["categories"],
+        ["budgeting", "envelope-form-options"],
+        ["budgeting", "setup-draft", "guided-envelope-setup"],
+      ],
     },
     {
       change: { kind: "category.batch" },
-      expectedKeys: [["categories"], ["transactions"], ["budgeting", "envelope-form-options"]],
+      expectedKeys: [
+        ["categories"],
+        ["transactions"],
+        ["budgeting", "envelope-form-options"],
+        ["budgeting", "setup-draft", "guided-envelope-setup"],
+      ],
     },
     {
       change: { kind: "category.updated", id: "category-1" },
-      expectedKeys: [["categories"], ["transactions"], ["budgeting", "envelope-form-options"]],
+      expectedKeys: [
+        ["categories"],
+        ["transactions"],
+        ["budgeting", "envelope-form-options"],
+        ["budgeting", "setup-draft", "guided-envelope-setup"],
+      ],
     },
     {
       change: { kind: "category.archived", id: "category-1" },
@@ -221,6 +246,7 @@ describe("cohereLedgerCache", () => {
         ["budgeting", "projections"],
         ["account-lifecycle-previews"],
         ["budgeting", "envelope-form-options"],
+        ["budgeting", "setup-draft", "guided-envelope-setup"],
       ],
     },
     {
@@ -231,6 +257,7 @@ describe("cohereLedgerCache", () => {
         ["budgeting", "projections"],
         ["account-lifecycle-previews"],
         ["budgeting", "envelope-form-options"],
+        ["budgeting", "setup-draft", "guided-envelope-setup"],
       ],
     },
     {
@@ -242,6 +269,7 @@ describe("cohereLedgerCache", () => {
         ["budgeting", "projections"],
         ["account-lifecycle-previews"],
         ["budgeting", "envelope-form-options"],
+        ["budgeting", "setup-draft", "guided-envelope-setup"],
       ],
     },
     {
@@ -254,6 +282,7 @@ describe("cohereLedgerCache", () => {
         ["budgeting", "projections"],
         ["budgeting", "envelope-form-options"],
         ["account-lifecycle-previews"],
+        ["budgeting", "setup-draft", "guided-envelope-setup"],
       ],
     },
     {
@@ -266,6 +295,7 @@ describe("cohereLedgerCache", () => {
         ["budgeting", "projections"],
         ["budgeting", "envelope-form-options"],
         ["account-lifecycle-previews"],
+        ["budgeting", "setup-draft", "guided-envelope-setup"],
       ],
     },
     {
@@ -278,6 +308,7 @@ describe("cohereLedgerCache", () => {
         ["budgeting", "projections"],
         ["budgeting", "envelope-form-options"],
         ["account-lifecycle-previews"],
+        ["budgeting", "setup-draft", "guided-envelope-setup"],
       ],
     },
   ])("maps $change.kind to every affected projection", async ({ change, expectedKeys }) => {
@@ -311,9 +342,13 @@ describe("cohereRecurringEffects", () => {
         ["transactions"],
         ["budgeting", "projections"],
         ["account-lifecycle-previews"],
+        ["budgeting", "setup-draft", "guided-envelope-setup"],
       ],
     },
-    { effect: "balances", expectedKeys: [["account-balances"]] },
+    {
+      effect: "balances",
+      expectedKeys: [["account-balances"], ["budgeting", "setup-draft", "guided-envelope-setup"]],
+    },
     {
       effect: "summaries",
       expectedKeys: [["month-summary"], ["transaction-date-range"]],

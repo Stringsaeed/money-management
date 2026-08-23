@@ -3,6 +3,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { runInTransaction } from "@/modules/recurring-rules/persistence";
 
 import { getProjection } from "./projection";
+import { isEligibleFundingAccountType } from "./funding-account-eligibility";
 import type { ActivateWorkspaceRequest, BudgetProjection } from "./types";
 import {
   periodForLocalDate,
@@ -18,8 +19,6 @@ interface AccountRow {
   initialBalance: number;
   lifecycle: "active" | "archived";
 }
-
-const ELIGIBLE_FUNDING_ACCOUNT_TYPES = new Set(["checking", "savings", "cash", "other"]);
 
 export async function activateWorkspace(
   database: SQLiteDatabase,
@@ -136,7 +135,7 @@ async function requireEligibleAccounts(
     if (account.lifecycle !== "active") {
       throw new Error(`Account ${account.id} is not eligible for Funding Membership.`);
     }
-    if (!ELIGIBLE_FUNDING_ACCOUNT_TYPES.has(account.type)) {
+    if (!isEligibleFundingAccountType(account.type)) {
       throw new Error(`Account ${account.id} is not eligible for Funding Membership.`);
     }
     if (account.currency !== currency) {

@@ -83,3 +83,22 @@ export async function insertBudgetTransaction(
     `${input.date}T08:00:00.000Z`,
   );
 }
+
+export async function countActiveBudgetFacts(database: SQLiteDatabase) {
+  const tables = [
+    "budget_workspaces",
+    "funding_memberships",
+    "envelopes",
+    "category_mappings",
+    "assignments",
+    "rollover_settings",
+  ] as const;
+  return Promise.all(
+    tables.map(async (table) => ({
+      table,
+      count: (
+        await database.getFirstAsync<{ count: number }>(`SELECT COUNT(*) AS count FROM ${table}`)
+      )?.count,
+    })),
+  );
+}
