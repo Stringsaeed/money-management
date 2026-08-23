@@ -4,6 +4,7 @@ import { protectedProcedure, publicProcedure } from "../index";
 import { budgetRouter } from "./budget";
 import { commandsRouter } from "./commands";
 import { householdsRouter } from "./households";
+import { ledgerRouter } from "./ledger";
 import { syncRouter } from "./sync";
 
 export const appRouter = {
@@ -20,6 +21,7 @@ export const appRouter = {
   commands: commandsRouter,
   sync: syncRouter,
   budget: budgetRouter,
+  ledger: ledgerRouter,
 };
 export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;
