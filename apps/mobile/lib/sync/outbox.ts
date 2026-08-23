@@ -116,7 +116,12 @@ export async function drainOutbox(db: LocalDb, send: SendCommand): Promise<Drain
         .update(outboxCommands)
         .set({ status: "pending", attempts: row.attempts + 1, lastAttemptAt: new Date() })
         .where(eq(outboxCommands.commandId, row.commandId));
-      return { applied, rejected, pending: 1, stoppedOnNetworkError: true };
+      return {
+        applied,
+        rejected,
+        pending: await countQueued(db),
+        stoppedOnNetworkError: true,
+      };
     }
 
     if (result.kind === "applied") {
@@ -139,17 +144,29 @@ export async function drainOutbox(db: LocalDb, send: SendCommand): Promise<Drain
   return { applied, rejected, pending: 0 };
 }
 
+/** Number of commands awaiting their first ack. */
+async function countQueued(db: LocalDb): Promise<number> {
+  const rows = await db
+    .select({ commandId: outboxCommands.commandId })
+    .from(outboxCommands)
+    .where(inArray(outboxCommands.status, [...QUEUED_STATUSES]));
+  return rows.length;
+}
+
 export interface SyncPullArgs {
   householdId: string;
   since: number;
 }
 
+/** Notification-shaped delta, matching the protocol's sync contract. */
+export interface DeltaPull {
+  readonly seq: number;
+  readonly hasMore: boolean;
+  readonly changes: readonly { seq: number; effects: readonly string[] }[];
+}
+
 /** Transport seam mirroring `orpc.sync.getDelta`. */
-export type FetchDelta = (args: SyncPullArgs) => Promise<{
-  seq: number;
-  hasMore: boolean;
-  changes: readonly { seq: number; effects: readonly string[] }[];
-}>;
+export type FetchDelta = (args: SyncPullArgs) => Promise<DeltaPull>;
 
 /**
  * Pulls deltas since the persisted per-household watermark and advances it to

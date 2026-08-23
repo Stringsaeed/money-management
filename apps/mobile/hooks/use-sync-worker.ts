@@ -74,7 +74,8 @@ export function useSyncWorker(householdId: string | null) {
         }
       }
 
-      if (summary.applied > 0 || summary.rejected > 0) {
+      // Transport-stopped drains report an accurate pending count too.
+      if (summary.applied > 0 || summary.rejected > 0 || summary.stoppedOnNetworkError) {
         await refreshCounters();
       } else {
         setPendingCount(summary.pending);

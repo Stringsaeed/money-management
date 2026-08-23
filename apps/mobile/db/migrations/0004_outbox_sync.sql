@@ -9,7 +9,7 @@ CREATE TABLE `outbox_commands` (
 	`rejection_payload` text,
 	`attempts` integer DEFAULT 0 NOT NULL,
 	`last_attempt_at` integer,
-	`created_at` integer NOT NULL
+	`created_at` integer DEFAULT (cast(unixepoch('subsecond') * 1000 as integer)) NOT NULL
 );
 --> statement-breakpoint
 CREATE INDEX `outbox_commands_status_created_idx` ON `outbox_commands` (`status`,`created_at`);
@@ -17,5 +17,5 @@ CREATE INDEX `outbox_commands_status_created_idx` ON `outbox_commands` (`status`
 CREATE TABLE `sync_state` (
 	`household_id` text PRIMARY KEY NOT NULL,
 	`watermark` integer DEFAULT 0 NOT NULL,
-	`updated_at` integer NOT NULL
+	`updated_at` integer DEFAULT (cast(unixepoch('subsecond') * 1000 as integer)) NOT NULL
 );

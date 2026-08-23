@@ -1,8 +1,8 @@
 import { AppState } from "react-native";
-import { waitFor } from "@testing-library/react-native";
+import { act, waitFor } from "@testing-library/react-native";
 
 import { useSyncWorker } from "@/hooks/use-sync-worker";
-import { renderHookWithProviders } from "@/tests/test-utils/render";
+import { createTestQueryClient, renderHookWithProviders } from "@/tests/test-utils/render";
 
 const mockDrainOutbox = jest.fn();
 const mockPullDeltas = jest.fn();
@@ -150,6 +150,28 @@ describe("useSyncWorker", () => {
     });
   });
 
+  it("invalidates the covered ledger queries for delta effect tags (cache coherence)", async () => {
+    mockPullDeltas.mockResolvedValue({
+      seq: 4,
+      hasMore: false,
+      changes: [{ seq: 3, effects: ["ledger", "summaries"] }],
+    });
+    const client = createTestQueryClient();
+    const invalidateSpy = jest.spyOn(client, "invalidateQueries");
+
+    await renderHookWithProviders(() => useSyncWorker(HOUSEHOLD_ID), { client });
+    await flushTurn();
+
+    // accounts + transactions (from "ledger") and categories (from "summaries").
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["ledger", "accounts", HOUSEHOLD_ID] });
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: ["ledger", "transactions", HOUSEHOLD_ID],
+    });
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: ["ledger", "categories", HOUSEHOLD_ID],
+    });
+  });
+
   it("discard/retry delegate to the outbox core and retry re-drains immediately", async () => {
     const { result } = await await renderHookWithProviders(() => useSyncWorker(HOUSEHOLD_ID));
     await waitFor(() => {
@@ -170,6 +192,3 @@ describe("useSyncWorker", () => {
     expect(mockDrainOutbox.mock.calls.length).toBeGreaterThan(turnsAfterMount);
   });
 });
-
-// Re-exported under a name that reads clearly in these tests.
-import { act } from "@testing-library/react-native";
