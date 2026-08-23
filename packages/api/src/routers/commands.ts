@@ -1,19 +1,9 @@
-import { ORPCError } from "@orpc/server";
-
 import { createDb } from "@trove/db";
 
-import type { Context } from "../context";
 import { protectedProcedure } from "../index";
 import { applyCommand } from "../lib/commands/pipeline";
 import { commandEnvelopeSchema } from "../lib/commands/schema";
-
-function requireUserId(context: Context): string {
-  const userId = context.session?.user?.id;
-  if (!userId) {
-    throw new ORPCError("UNAUTHORIZED", { message: "Sign in to apply commands." });
-  }
-  return userId;
-}
+import { requireUserId } from "../lib/require-user";
 
 export const commandsRouter = {
   /**

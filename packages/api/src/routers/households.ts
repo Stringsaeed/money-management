@@ -14,16 +14,8 @@ import {
   canTransferOwnership,
   isValidInviteExpiryDays,
 } from "../lib/household-rules";
-import type { Context } from "../context";
 import { protectedProcedure } from "../index";
-
-function requireUserId(context: Context): string {
-  const userId = context.session?.user?.id;
-  if (!userId) {
-    throw new ORPCError("UNAUTHORIZED", { message: "Sign in to manage households." });
-  }
-  return userId;
-}
+import { requireUserId } from "../lib/require-user";
 
 async function requireMembership(
   db: ReturnType<typeof createDb>,
