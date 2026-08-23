@@ -5,6 +5,7 @@ import { budgetRouter } from "./budget";
 import { commandsRouter } from "./commands";
 import { householdsRouter } from "./households";
 import { ledgerRouter } from "./ledger";
+import { projectionsRouter } from "./projections";
 import { settlementRouter } from "./settlement";
 import { syncRouter } from "./sync";
 
@@ -24,6 +25,7 @@ export const appRouter = {
   budget: budgetRouter,
   ledger: ledgerRouter,
   settlement: settlementRouter,
+  projections: projectionsRouter,
 };
 export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;
