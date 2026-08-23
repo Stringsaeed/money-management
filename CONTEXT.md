@@ -268,6 +268,14 @@ _Avoid_: Full Data Reset, Archive All
 An incomplete, locally retained envelope-setup proposal with no effect on Funding Pools, Category Mappings, or Assignments until the user confirms it. The user may resume or discard it.
 _Avoid_: Active Budget, Partial Activation
 
+**Budget Workspace**:
+The per-currency budgeting context of one Household: the container whose Envelopes, Funding Pool, Assignments, and projections all share a single currency. Cross-currency transfers between Workspaces are unsupported rather than converted. Server-side it is the `budget_workspaces` root every budget fact references.
+_Avoid_: Currency Group, Budget Book
+
+**Period-Effective Row**:
+An INSERT-only row (`category_mappings`, `funding_memberships`, `rollover_settings`) that takes effect from its Budget Period onward and ends when a later row for the same entity appears — `effective_to_period` is always derived via LEAD, never stored. Ending a row early is done by appending a tombstone (an unmapped mapping or an inactive membership), not by editing.
+_Avoid_: Dated Record, Effective-Dated Entry
+
 **Outside-Budget Spending**:
 Expense Transactions from Accounts outside the Funding Pool and outside the credit-card reserve model. They remain visible in reports but do not affect Envelopes or Unassigned Money.
 _Avoid_: Unassigned Spending, Envelope Spending
