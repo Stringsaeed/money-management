@@ -24,6 +24,8 @@ function CategoryGrid({
         const isSelected = cat.id === selectedId;
         return (
           <Pressable
+            aria-label={cat.name}
+            aria-selected={isSelected}
             key={cat.id}
             onPress={() => onSelect(cat.id)}
             className={cn(
@@ -31,6 +33,7 @@ function CategoryGrid({
               !isSelected && "bg-kumo-fill",
             )}
             style={isSelected ? { backgroundColor: `${cat.color}20` } : undefined}
+            role="button"
           >
             <Text className="text-2xl">{cat.icon}</Text>
             <Text
@@ -53,8 +56,9 @@ export default function CategoryPicker({
 }: CategoryPickerProps) {
   const [sheetIndex, setSheetIndex] = useState(0);
 
-  const incomeCategories = categories.filter((c) => c.type === "income");
-  const expenseCategories = categories.filter((c) => c.type === "expense");
+  const selectableCategories = categories.filter((category) => category.lifecycle !== "archived");
+  const incomeCategories = selectableCategories.filter((category) => category.type === "income");
+  const expenseCategories = selectableCategories.filter((category) => category.type === "expense");
 
   const onOpen = () => {
     setSheetIndex(1);

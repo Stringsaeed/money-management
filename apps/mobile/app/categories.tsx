@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import {
   ListIcon,
   PlusIcon,
   TrendDownIcon,
   TrendUpIcon,
+  ArchiveIcon,
   type Icon as PhosphorIcon,
 } from "phosphor-react-native";
 
@@ -18,11 +19,11 @@ import { Divider } from "@/components/settings/divider";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { useCategories } from "@/hooks/use-categories";
+import { useAllCategories } from "@/hooks/use-categories";
 import type { Category } from "@/types";
 import { cn } from "@/lib/utils";
 
-type CategoryFilter = "all" | "income" | "expense";
+type CategoryFilter = "all" | "income" | "expense" | "archived";
 
 interface FilterOption {
   value: CategoryFilter;
@@ -34,13 +35,14 @@ const FILTERS: FilterOption[] = [
   { value: "all", label: "All", icon: ListIcon },
   { value: "income", label: "Income", icon: TrendUpIcon },
   { value: "expense", label: "Expenses", icon: TrendDownIcon },
+  { value: "archived", label: "Archived", icon: ArchiveIcon },
 ];
 
 export default function CategoriesScreen() {
   const [filter, setFilter] = useState<CategoryFilter>("all");
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
-  const { data: categories = [] } = useCategories();
+  const { data: categories = [] } = useAllCategories();
 
   const filtered = useMemo(() => {
     switch (filter) {
@@ -48,6 +50,8 @@ export default function CategoriesScreen() {
         return categories.filter((c) => c.type === "income");
       case "expense":
         return categories.filter((c) => c.type === "expense");
+      case "archived":
+        return categories.filter((c) => c.lifecycle === "archived");
       case "all":
       default:
         return categories;
@@ -57,7 +61,7 @@ export default function CategoriesScreen() {
   const fabInitialType = filter === "income" ? "income" : "expense";
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-surface safe-bottom">
       <ScrollView
         className="flex-1"
         contentInsetAdjustmentBehavior="automatic"
@@ -72,8 +76,10 @@ export default function CategoriesScreen() {
             const active = filter === option.value;
             return (
               <Pressable
+                aria-pressed={active}
                 key={option.value}
                 onPress={() => setFilter(option.value)}
+                role="button"
                 className={cn(
                   "flex-row items-center gap-1.5 px-3 py-1.5 rounded-full border",
                   active ? "bg-ink border-ink" : "bg-surface-container border-ledger-outline",
@@ -105,7 +111,12 @@ export default function CategoriesScreen() {
         ) : (
           <Card animated>
             {filtered.map((cat, i) => (
-              <Animated.View key={cat.id} entering={FadeIn} exiting={FadeOut}>
+              <Animated.View
+                key={cat.id}
+                entering={FadeIn}
+                exiting={FadeOut}
+                layout={LinearTransition}
+              >
                 {i > 0 && <Divider />}
                 <CategoryRow category={cat} onPress={() => setEditingCategory(cat)} />
               </Animated.View>

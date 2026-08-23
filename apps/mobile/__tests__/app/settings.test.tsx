@@ -157,6 +157,7 @@ jest.mock("@/hooks/use-accounts", () => ({
 }));
 
 jest.mock("@/hooks/use-categories", () => ({
+  useAllCategories: () => ({ data: [...mockIncomeCategories, ...mockExpenseCategories] }),
   useCategories: (type?: "income" | "expense") => ({
     data: type === "income" ? mockIncomeCategories : mockExpenseCategories,
   }),

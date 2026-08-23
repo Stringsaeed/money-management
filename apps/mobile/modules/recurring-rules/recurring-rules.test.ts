@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it } from "@jest/globals";
 import type { SQLiteDatabase } from "expo-sqlite";
 
+import { migrateBudgeting } from "@/db/budgeting-migration";
+import { migrateCategoryLifecycle } from "@/db/category-lifecycle-migration";
 import { migrateRecurringRules } from "@/db/recurring-rules-migration";
+import { archiveCategory } from "@/modules/categories/category-lifecycle";
 import { applyLegacyMigrations, createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
 
 import { createRecurringRules, RecurringSettlementError, type RecurringRuleDraft } from ".";
@@ -36,6 +39,8 @@ async function setup() {
     localDate: "2026-04-15",
     now: "2026-04-15T08:00:00.000Z",
   });
+  await migrateBudgeting(testDatabase.database);
+  await migrateCategoryLifecycle(testDatabase.database);
   await testDatabase.database.runAsync(
     `INSERT INTO accounts (
       id, name, type, currency, color, icon, initial_balance,
@@ -132,6 +137,72 @@ afterEach(() => {
 });
 
 describe("Recurring Rules", () => {
+  it("blocks an existing active Rule honestly after its Category is archived", async () => {
+    const { database, recurringRules } = await setup();
+    await insertCategory(database, "category-archived");
+    await insertRule(database, { categoryId: "category-archived" });
+    await archiveCategory(database, {
+      categoryId: "category-archived",
+      localDate: "2026-04-15",
+      now: "2026-04-15T08:00:00.000Z",
+    });
+
+    await expect(recurringRules.settle()).resolves.toMatchObject({
+      generatedCount: 0,
+      rules: [{ ruleId: "rule-existing", kind: "needs_attention", generatedCount: 0 }],
+    });
+    await expect(
+      database.getFirstAsync(
+        `SELECT health, attention_reasons AS attentionReasons
+         FROM recurring_rules WHERE id = ?`,
+        "rule-existing",
+      ),
+    ).resolves.toEqual({
+      health: "needs_attention",
+      attentionReasons: JSON.stringify([
+        { kind: "archived-category", categoryId: "category-archived" },
+      ]),
+    });
+  });
+
+  it("keeps a paused Rule blocked if it resumes after its Category is archived", async () => {
+    const { database, recurringRules } = await setup();
+    await insertCategory(database, "category-archived");
+    await insertRule(database, { categoryId: "category-archived", lifecycle: "paused" });
+    await archiveCategory(database, {
+      categoryId: "category-archived",
+      localDate: "2026-04-15",
+      now: "2026-04-15T08:00:00.000Z",
+    });
+
+    await expect(
+      recurringRules.change({ kind: "resume", ruleId: "rule-existing", expectedRevision: 2 }),
+    ).resolves.toMatchObject({ kind: "applied", revision: 3 });
+    await expect(recurringRules.settle()).resolves.toMatchObject({
+      generatedCount: 0,
+      rules: [{ ruleId: "rule-existing", kind: "needs_attention", generatedCount: 0 }],
+    });
+  });
+
+  it("rejects an archived Category for a new Rule", async () => {
+    const { database, recurringRules } = await setup();
+    await insertCategory(database, "category-archived");
+    await database.runAsync(
+      "UPDATE categories SET lifecycle = 'archived' WHERE id = ?",
+      "category-archived",
+    );
+
+    await expect(
+      recurringRules.change({
+        kind: "create",
+        rule: { ...draft, categoryId: "category-archived" },
+      }),
+    ).resolves.toEqual({
+      kind: "invalid_intent",
+      issues: [{ field: "categoryId", message: "Choose an available Category." }],
+    });
+  });
+
   it("previews and atomically confirms a past-dated Rule", async () => {
     const { database, recurringRules } = await setup();
     const intent = { kind: "create", rule: draft } as const;
@@ -490,3 +561,14 @@ describe("Recurring Rules", () => {
     ).resolves.toEqual({ error: "forced occurrence failure" });
   });
 });
+
+async function insertCategory(database: SQLiteDatabase, categoryId: string): Promise<void> {
+  await database.runAsync(
+    `INSERT INTO categories (
+      id, name, type, color, icon, parent_id, sort_order, created_at, updated_at
+    ) VALUES (?, 'Dining', 'expense', '#B48A7B', '🍽️', NULL, 0, ?, ?)`,
+    categoryId,
+    "2026-01-01T00:00:00.000Z",
+    "2026-01-01T00:00:00.000Z",
+  );
+}

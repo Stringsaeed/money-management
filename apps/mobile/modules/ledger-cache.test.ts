@@ -48,6 +48,7 @@ describe("ledger query keys", () => {
       accountBalances: accountKeys.balances,
       accountDetail: accountKeys.detail("account-1"),
       categoryAll: categoryKeys.all,
+      categoryManagement: categoryKeys.management,
       categoryByType: categoryKeys.byType("income"),
       categoryDetail: categoryKeys.detail("category-1"),
       transactionAll: transactionKeys.all,
@@ -67,6 +68,7 @@ describe("ledger query keys", () => {
       accountBalances: ["account-balances"],
       accountDetail: ["accounts", "account-1"],
       categoryAll: ["categories"],
+      categoryManagement: ["categories", "management"],
       categoryByType: ["categories", "income"],
       categoryDetail: ["categories", "category-1"],
       transactionAll: ["transactions"],
@@ -148,8 +150,26 @@ describe("cohereLedgerCache", () => {
       expectedKeys: [["categories"], ["transactions"]],
     },
     {
+      change: { kind: "category.archived", id: "category-1" },
+      expectedKeys: [
+        ["categories"],
+        ["transactions"],
+        ["recurring-rules"],
+        ["budgeting", "projections"],
+      ],
+    },
+    {
+      change: { kind: "category.restored", id: "category-1" },
+      expectedKeys: [["categories"], ["recurring-rules"], ["budgeting", "projections"]],
+    },
+    {
       change: { kind: "category.deleted", id: "category-1" },
-      expectedKeys: [["categories"], ["transactions"], ["recurring-rules"]],
+      expectedKeys: [
+        ["categories"],
+        ["transactions"],
+        ["recurring-rules"],
+        ["budgeting", "projections"],
+      ],
     },
     {
       change: { kind: "transaction.created", id: "transaction-1" },

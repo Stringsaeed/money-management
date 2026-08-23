@@ -39,7 +39,7 @@ export async function changeRuleContent(
 
   const nextDraft =
     intent.kind === "edit" ? intent.rule : { ...draftFromRule(rule), timeZone: intent.timeZone };
-  const issues = await validateDraft(options, nextDraft);
+  const issues = await validateDraft(options, nextDraft, rule.categoryId);
   if (issues.length > 0) return { kind: "invalid_intent", issues };
 
   const localDate = options.clock.localDate(rule.timeZone);
@@ -142,7 +142,11 @@ async function applyProspectiveEdit(
     const stale = staleResult(current, intent.expectedRevision, rule.id);
     if (stale) return stale;
     if (!current) return { kind: "missing_rule", ruleId: rule.id };
-    const transactionIssues = await validateDraft({ ...options, database: transaction }, nextDraft);
+    const transactionIssues = await validateDraft(
+      { ...options, database: transaction },
+      nextDraft,
+      current.categoryId,
+    );
     if (transactionIssues.length > 0) return { kind: "invalid_intent", issues: transactionIssues };
 
     const now = options.clock.now().toISOString();

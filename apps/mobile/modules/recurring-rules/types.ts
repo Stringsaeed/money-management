@@ -12,6 +12,7 @@ export type RecurringAttentionReason =
   | { kind: "account-currency-changed"; accountId: string; expected: string; actual: string }
   | { kind: "invalid-legacy-amount" }
   | { kind: "invalid-legacy-cadence" }
+  | { kind: "archived-category"; categoryId: string }
   | { kind: "settlement-failed"; message: string };
 
 export interface RecurringRuleDraft {
