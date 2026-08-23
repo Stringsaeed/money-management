@@ -160,6 +160,33 @@ describe("sync.getDelta", () => {
     expect(rest.changes.map((c) => c.seq)).toEqual([3, 4]);
   });
 
+  it("never advances the watermark past undelivered changes on a truncated page", async () => {
+    await commitCommands(4);
+
+    // Truncated page: watermark must stop at the last delivered row (2),
+    // not the household head (4) — otherwise the next poll skips 3 and 4.
+    const page = await getDelta({
+      db,
+      userId: MEMBER,
+      householdId: HOUSEHOLD_ID,
+      since: 0,
+      limit: 2,
+    });
+    expect(page.seq).toBe(2);
+    expect(page.hasMore).toBe(true);
+
+    // Resuming from that watermark yields exactly the skipped changes.
+    const resumed = await getDelta({
+      db,
+      userId: MEMBER,
+      householdId: HOUSEHOLD_ID,
+      since: page.seq,
+    });
+    expect(resumed.hasMore).toBe(false);
+    expect(resumed.seq).toBe(4);
+    expect(resumed.changes.map((c) => c.seq)).toEqual([3, 4]);
+  });
+
   it("returns an empty delta with seq 0 for a household with no changes", async () => {
     const delta = await getDelta({ db, userId: MEMBER, householdId: HOUSEHOLD_ID, since: 0 });
     expect(delta).toEqual({ seq: 0, hasMore: false, changes: [] });

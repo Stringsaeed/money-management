@@ -62,23 +62,35 @@ export async function getDelta({
   }
 
   const boundedLimit = Math.min(limit, MAX_DELTA_LIMIT);
-  const changeRows = await db
-    .select({ seq: householdChange.seq, effects: householdChange.effects })
-    .from(householdChange)
-    .where(and(eq(householdChange.householdId, householdId), gt(householdChange.seq, since)))
-    .orderBy(asc(householdChange.seq))
-    .limit(boundedLimit);
 
-  // Head watermark reads MAX(seq) for the household — 0 for an empty log.
-  const headRows = await db
-    .select({ seq: sql<number>`COALESCE(MAX(${householdChange.seq}), 0)` })
-    .from(householdChange)
-    .where(eq(householdChange.householdId, householdId));
-  const head = headRows[0]?.seq ?? 0;
+  // Page + head run in one batch so both reads see the same snapshot — a
+  // commit landing mid-poll can never make the watermark outrun the page.
+  const [pageResult, headResult] = await db.batch([
+    db
+      .select({ seq: householdChange.seq, effects: householdChange.effects })
+      .from(householdChange)
+      .where(and(eq(householdChange.householdId, householdId), gt(householdChange.seq, since)))
+      .orderBy(asc(householdChange.seq))
+      .limit(boundedLimit),
+    // Head watermark: MAX(seq) for the household — 0 for an empty log.
+    db
+      .select({ seq: sql<number>`COALESCE(MAX(${householdChange.seq}), 0)` })
+      .from(householdChange)
+      .where(eq(householdChange.householdId, householdId)),
+  ]);
+
+  const changeRows = pageResult;
+  const hasMore = changeRows.length === boundedLimit;
+  const head = headResult[0]?.seq ?? 0;
+
+  // The returned `seq` must never exceed what this response actually
+  // delivered: a truncated page (hasMore) reports its last row so the next
+  // poll re-fetches from there instead of skipping undelivered changes.
+  const lastDelivered = changeRows[changeRows.length - 1]?.seq ?? since;
 
   return {
-    seq: head,
-    hasMore: changeRows.length === boundedLimit,
+    seq: hasMore ? lastDelivered : head,
+    hasMore,
     changes: changeRows.map((row) => ({ seq: row.seq, effects: row.effects })),
   };
 }

@@ -1,17 +1,9 @@
 import { createDb } from "@trove/db";
-import { ORPCError } from "@orpc/server";
 import { z } from "zod";
 
 import { protectedProcedure } from "../index";
+import { requireUserId } from "../lib/require-user";
 import { DEFAULT_DELTA_LIMIT, MAX_DELTA_LIMIT, getDelta } from "../lib/sync/delta";
-
-function requireUserId(context: { session?: { user?: { id?: string } | null } | null }): string {
-  const userId = context.session?.user?.id;
-  if (!userId) {
-    throw new ORPCError("UNAUTHORIZED", { message: "Sign in to sync household changes." });
-  }
-  return userId;
-}
 
 export const syncRouter = {
   /**
