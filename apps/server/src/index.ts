@@ -91,7 +91,7 @@ export async function scheduled(controller: ScheduledController) {
   );
   console.log(
     `Settlement sweep: ${summary.generatedCount} transaction(s), ` +
-      `${summary.totalMinor} minor across ${summary.groups} group(s).`,
+      `${summary.totalMinor} minor across ${summary.households} household(s).`,
   );
 }
 

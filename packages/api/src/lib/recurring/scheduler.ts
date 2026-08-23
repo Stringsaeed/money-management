@@ -9,10 +9,10 @@ import type { CommandDatabase } from "../commands/types";
 import { settleHouseholdRules, type HouseholdSettlementSummary } from "./settle-household";
 
 /**
- * Synthetic change-log actor for system-driven sweeps (#88). The
- * `household_changes.user_id` column is plain text with no user FK, so
- * settlement-generated transactions are attributable to the scheduler
- * without inventing a real user row.
+ * Synthetic change-log actor for system-driven sweeps (#88): a real user row
+ * seeded by migration 0005 (household_changes.user_id carries a user FK).
+ * Cron-driven Generated Transactions are therefore attributable to the
+ * scheduler and distinguishable from any human member's commands.
  */
 export const SYSTEM_SETTLEMENT_ACTOR_ID = "user-system-settlement";
 
@@ -73,7 +73,9 @@ export async function settleDueRules(
         db,
         { householdId, userId: SYSTEM_SETTLEMENT_ACTOR_ID },
         identity,
-        // Nominal label only; each Rule resolves its own local date below.
+        // Nominal label only (UTC calendar date of `now`) — with per-rule
+        // time zones a sweep-wide date would be misleading; every Rule
+        // resolves its true local date via resolveLocalDate below.
         localDateInTimeZone(now, "UTC"),
         now.toISOString(),
         { resolveLocalDate: (rule) => localDateInTimeZone(now, rule.timeZone) },
