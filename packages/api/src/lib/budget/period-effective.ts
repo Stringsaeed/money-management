@@ -3,7 +3,9 @@ import { and, asc, eq, sql, type AnyColumn } from "drizzle-orm";
 import { categoryMapping, fundingMembership, rolloverSetting } from "@trove/db/schema/budget";
 
 import type { CommandDatabase } from "../commands/types";
-import { requireHouseholdMember } from "../require-member";
+import { requireHouseholdMember, type HouseholdCaller } from "../require-member";
+
+export type { HouseholdCaller };
 
 /**
  * Period-effective timelines (ADR-0006/0012/0016). `effective_to_period` is
@@ -13,8 +15,14 @@ import { requireHouseholdMember } from "../require-member";
  * forward until superseded.
  */
 
-const leadPeriod = (column: AnyColumn, partition: AnyColumn) =>
-  sql<string | null>`LEAD(${column}) OVER (PARTITION BY ${partition} ORDER BY ${column})`;
+/**
+ * The partition always includes `household_id` so the derivation stays
+ * tenant-safe even if a caller forgets the household WHERE filter.
+ */
+const leadPeriod = (householdId: AnyColumn, entity: AnyColumn, column: AnyColumn) =>
+  sql<
+    string | null
+  >`LEAD(${column}) OVER (PARTITION BY ${householdId}, ${entity} ORDER BY ${column})`;
 
 export interface PeriodEffectiveRow {
   readonly effectiveFromPeriod: string;
@@ -30,7 +38,7 @@ export interface CategoryMappingTimelineRow extends PeriodEffectiveRow {
 
 export async function getCategoryMappingTimeline(
   db: CommandDatabase,
-  caller: { userId: string; householdId: string },
+  caller: HouseholdCaller,
 ): Promise<CategoryMappingTimelineRow[]> {
   await requireHouseholdMember(db, caller.userId, caller.householdId);
   return db
@@ -39,8 +47,9 @@ export async function getCategoryMappingTimeline(
       envelopeId: categoryMapping.envelopeId,
       effectiveFromPeriod: categoryMapping.effectiveFromPeriod,
       effectiveToPeriod: leadPeriod(
-        categoryMapping.effectiveFromPeriod,
+        categoryMapping.householdId,
         categoryMapping.categoryId,
+        categoryMapping.effectiveFromPeriod,
       ),
     })
     .from(categoryMapping)
@@ -57,7 +66,7 @@ export interface FundingMembershipTimelineRow extends PeriodEffectiveRow {
 
 export async function getFundingMembershipTimeline(
   db: CommandDatabase,
-  caller: { userId: string; householdId: string },
+  caller: HouseholdCaller,
   currency?: string,
 ): Promise<FundingMembershipTimelineRow[]> {
   await requireHouseholdMember(db, caller.userId, caller.householdId);
@@ -68,8 +77,9 @@ export async function getFundingMembershipTimeline(
       active: fundingMembership.active,
       effectiveFromPeriod: fundingMembership.effectiveFromPeriod,
       effectiveToPeriod: leadPeriod(
-        fundingMembership.effectiveFromPeriod,
+        fundingMembership.householdId,
         fundingMembership.accountId,
+        fundingMembership.effectiveFromPeriod,
       ),
     })
     .from(fundingMembership)
@@ -91,7 +101,7 @@ export interface RolloverSettingTimelineRow extends PeriodEffectiveRow {
 
 export async function getRolloverSettingTimeline(
   db: CommandDatabase,
-  caller: { userId: string; householdId: string },
+  caller: HouseholdCaller,
 ): Promise<RolloverSettingTimelineRow[]> {
   await requireHouseholdMember(db, caller.userId, caller.householdId);
   return db
@@ -100,8 +110,9 @@ export async function getRolloverSettingTimeline(
       positiveRollover: rolloverSetting.positiveRollover,
       effectiveFromPeriod: rolloverSetting.effectiveFromPeriod,
       effectiveToPeriod: leadPeriod(
-        rolloverSetting.effectiveFromPeriod,
+        rolloverSetting.householdId,
         rolloverSetting.envelopeId,
+        rolloverSetting.effectiveFromPeriod,
       ),
     })
     .from(rolloverSetting)

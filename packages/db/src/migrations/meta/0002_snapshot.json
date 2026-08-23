@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "65a41331-9e49-4cbb-944a-0eeeee8b7892",
+  "id": "d99e05e8-b687-4b9c-98c2-c40ce1cda949",
   "prevId": "a056ea02-5ee1-4e4c-a071-cb917e5c3c47",
   "tables": {
     "account": {
@@ -491,6 +491,10 @@
         "assignments_distinct_endpoints": {
           "name": "assignments_distinct_endpoints",
           "value": "\"assignments\".\"source_envelope_id\" IS NULL OR \"assignments\".\"destination_envelope_id\" IS NULL OR \"assignments\".\"source_envelope_id\" <> \"assignments\".\"destination_envelope_id\""
+        },
+        "assignments_budget_period_period_format": {
+          "name": "assignments_budget_period_period_format",
+          "value": "\"assignments\".\"budget_period\" GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]'"
         }
       }
     },
@@ -594,7 +598,12 @@
         }
       },
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "budget_workspaces_activation_period_format": {
+          "name": "budget_workspaces_activation_period_format",
+          "value": "\"budget_workspaces\".\"activation_period\" GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]'"
+        }
+      }
     },
     "category_mappings": {
       "name": "category_mappings",
@@ -709,7 +718,12 @@
         }
       },
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "period_effective_from_period_format": {
+          "name": "period_effective_from_period_format",
+          "value": "\"category_mappings\".\"effective_from_period\" GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]'"
+        }
+      }
     },
     "envelopes": {
       "name": "envelopes",
@@ -982,7 +996,12 @@
         }
       },
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "period_effective_from_period_format": {
+          "name": "period_effective_from_period_format",
+          "value": "\"funding_memberships\".\"effective_from_period\" GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]'"
+        }
+      }
     },
     "period_projection_cache": {
       "name": "period_projection_cache",
@@ -1305,7 +1324,12 @@
         }
       },
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "period_effective_from_period_format": {
+          "name": "period_effective_from_period_format",
+          "value": "\"rollover_settings\".\"effective_from_period\" GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]'"
+        }
+      }
     },
     "command_results": {
       "name": "command_results",

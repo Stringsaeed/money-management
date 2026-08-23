@@ -1,9 +1,9 @@
-import { and, asc, eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 
 import { envelope } from "@trove/db/schema/budget";
 
 import type { CommandDatabase } from "../commands/types";
-import { requireHouseholdMember } from "../require-member";
+import { requireHouseholdMember, type HouseholdCaller } from "../require-member";
 
 export interface EnvelopeSummary {
   readonly id: string;
@@ -19,7 +19,7 @@ export interface EnvelopeSummary {
 /** Lists the household's envelopes; any member role may read (viewer included). */
 export async function listEnvelopes(
   db: CommandDatabase,
-  caller: { userId: string; householdId: string },
+  caller: HouseholdCaller,
 ): Promise<EnvelopeSummary[]> {
   await requireHouseholdMember(db, caller.userId, caller.householdId);
   return db
@@ -34,6 +34,6 @@ export async function listEnvelopes(
       version: envelope.version,
     })
     .from(envelope)
-    .where(and(eq(envelope.householdId, caller.householdId)))
+    .where(eq(envelope.householdId, caller.householdId))
     .orderBy(asc(envelope.sortOrder), asc(envelope.name));
 }

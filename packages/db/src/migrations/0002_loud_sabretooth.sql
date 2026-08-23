@@ -18,7 +18,8 @@ CREATE TABLE `assignments` (
 	FOREIGN KEY (`updated_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
 	CONSTRAINT "assignments_amount_positive" CHECK("assignments"."amount_minor" > 0),
 	CONSTRAINT "assignments_has_endpoint" CHECK("assignments"."source_envelope_id" IS NOT NULL OR "assignments"."destination_envelope_id" IS NOT NULL),
-	CONSTRAINT "assignments_distinct_endpoints" CHECK("assignments"."source_envelope_id" IS NULL OR "assignments"."destination_envelope_id" IS NULL OR "assignments"."source_envelope_id" <> "assignments"."destination_envelope_id")
+	CONSTRAINT "assignments_distinct_endpoints" CHECK("assignments"."source_envelope_id" IS NULL OR "assignments"."destination_envelope_id" IS NULL OR "assignments"."source_envelope_id" <> "assignments"."destination_envelope_id"),
+	CONSTRAINT "assignments_budget_period_period_format" CHECK("assignments"."budget_period" GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]')
 );
 --> statement-breakpoint
 CREATE INDEX `assignments_household_period_idx` ON `assignments` (`household_id`,`budget_period`);--> statement-breakpoint
@@ -34,7 +35,8 @@ CREATE TABLE `budget_workspaces` (
 	PRIMARY KEY(`household_id`, `currency`),
 	FOREIGN KEY (`household_id`) REFERENCES `household`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`created_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`updated_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`updated_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
+	CONSTRAINT "budget_workspaces_activation_period_format" CHECK("budget_workspaces"."activation_period" GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]')
 );
 --> statement-breakpoint
 CREATE TABLE `category_mappings` (
@@ -50,7 +52,8 @@ CREATE TABLE `category_mappings` (
 	PRIMARY KEY(`household_id`, `category_id`, `effective_from_period`),
 	FOREIGN KEY (`household_id`) REFERENCES `household`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`created_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`updated_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`updated_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
+	CONSTRAINT "period_effective_from_period_format" CHECK("category_mappings"."effective_from_period" GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]')
 );
 --> statement-breakpoint
 CREATE INDEX `category_mappings_household_category_idx` ON `category_mappings` (`household_id`,`category_id`);--> statement-breakpoint
@@ -90,7 +93,8 @@ CREATE TABLE `funding_memberships` (
 	PRIMARY KEY(`household_id`, `account_id`, `effective_from_period`),
 	FOREIGN KEY (`household_id`) REFERENCES `household`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`created_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`updated_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`updated_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
+	CONSTRAINT "period_effective_from_period_format" CHECK("funding_memberships"."effective_from_period" GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]')
 );
 --> statement-breakpoint
 CREATE INDEX `funding_memberships_household_currency_idx` ON `funding_memberships` (`household_id`,`currency`);--> statement-breakpoint
@@ -139,13 +143,16 @@ CREATE TABLE `rollover_settings` (
 	PRIMARY KEY(`household_id`, `envelope_id`, `effective_from_period`),
 	FOREIGN KEY (`household_id`) REFERENCES `household`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`created_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`updated_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`updated_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
+	CONSTRAINT "period_effective_from_period_format" CHECK("rollover_settings"."effective_from_period" GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]')
 );
 --> statement-breakpoint
 CREATE INDEX `rollover_settings_household_envelope_idx` ON `rollover_settings` (`household_id`,`envelope_id`);--> statement-breakpoint
 -- Append-only discipline (ADR-0006/0007/0012/0016): period-effective and
 -- assignment rows are never updated or deleted — a change appends a new row
 -- (or tombstone). SQLite triggers enforce what drizzle cannot express.
+-- NOTE: drizzle-kit does not model triggers; if this migration is ever
+-- regenerated, these statements must be re-appended by hand.
 CREATE TRIGGER IF NOT EXISTS category_mappings_append_only_update
 BEFORE UPDATE ON `category_mappings`
 BEGIN

@@ -181,6 +181,24 @@ describe("budget schema — append-only enforcement", () => {
     await expectAppendOnlyRejection(db.delete(assignment).where(eq(assignment.id, "asg-1")));
   });
 
+  it("rejects malformed Budget Periods at the schema level", async () => {
+    await expect(
+      db.insert(categoryMapping).values({
+        householdId: HOUSEHOLD_ID,
+        categoryId: "cat-bad",
+        envelopeId: null,
+        effectiveFromPeriod: "2026-1",
+        version: 0,
+        createdBy: OWNER,
+        updatedBy: OWNER,
+      }),
+    ).rejects.toSatisfy((err: unknown) =>
+      /period_format|GLOB/i.test(
+        `${String((err as Error)?.message)} ${String((err as Error & { cause?: Error })?.cause)}`,
+      ),
+    );
+  });
+
   it("enforces assignment data integrity checks", async () => {
     const base = {
       householdId: HOUSEHOLD_ID,

@@ -1,4 +1,4 @@
-import { relations, sql } from "drizzle-orm";
+import { relations, sql, type AnyColumn } from "drizzle-orm";
 import {
   check,
   index,
@@ -12,7 +12,16 @@ import {
 import * as auth from "./auth";
 import { household } from "./household";
 
+/** CHECK fragment enforcing the "YYYY-MM" Budget Period shape (ADR-0021). */
+const validPeriod = (name: string, column: AnyColumn) =>
+  check(`${name}_period_format`, sql`${column} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]'`);
+
 /**
+ * Budget Periods are "YYYY-MM" strings; CHECK constraints (GLOB) keep a
+ * malformed period out of LEAD() ordering. Append-only enforcement lives in
+ * SQLite triggers defined in the migration SQL — drizzle-kit does not model
+ * triggers, so regeneration must preserve them by hand.
+ *
  * Envelope budgeting domain, ported from the client's local budgeting schema
  * (apps/mobile/db/budgeting-schema.ts) with household scoping per the
  * multi-user extension:
@@ -53,7 +62,10 @@ export const budgetWorkspace = sqliteTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [primaryKey({ columns: [table.householdId, table.currency] })],
+  (table) => [
+    primaryKey({ columns: [table.householdId, table.currency] }),
+    validPeriod("budget_workspaces_activation", table.activationPeriod),
+  ],
 );
 
 export const envelope = sqliteTable(
@@ -134,6 +146,7 @@ export const categoryMapping = sqliteTable(
       columns: [table.householdId, table.categoryId, table.effectiveFromPeriod],
     }),
     index("category_mappings_household_category_idx").on(table.householdId, table.categoryId),
+    validPeriod("period_effective_from", table.effectiveFromPeriod),
   ],
 );
 
@@ -174,6 +187,7 @@ export const fundingMembership = sqliteTable(
       columns: [table.householdId, table.accountId, table.effectiveFromPeriod],
     }),
     index("funding_memberships_household_currency_idx").on(table.householdId, table.currency),
+    validPeriod("period_effective_from", table.effectiveFromPeriod),
   ],
 );
 
@@ -207,6 +221,7 @@ export const rolloverSetting = sqliteTable(
       columns: [table.householdId, table.envelopeId, table.effectiveFromPeriod],
     }),
     index("rollover_settings_household_envelope_idx").on(table.householdId, table.envelopeId),
+    validPeriod("period_effective_from", table.effectiveFromPeriod),
   ],
 );
 
@@ -256,6 +271,7 @@ export const assignment = sqliteTable(
       sql`${table.sourceEnvelopeId} IS NULL OR ${table.destinationEnvelopeId} IS NULL OR ${table.sourceEnvelopeId} <> ${table.destinationEnvelopeId}`,
     ),
     index("assignments_household_period_idx").on(table.householdId, table.budgetPeriod),
+    validPeriod("assignments_budget_period", table.budgetPeriod),
   ],
 );
 

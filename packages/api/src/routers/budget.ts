@@ -10,12 +10,14 @@ import {
 } from "../lib/budget/period-effective";
 import { requireUserId } from "../lib/require-user";
 
-function householdInput() {
-  return z.object({
-    householdId: z.string().min(1),
-    currency: z.string().min(1).optional(),
-  });
-}
+const householdInput = z.object({
+  householdId: z.string().min(1),
+});
+
+const fundingMembershipInput = householdInput.extend({
+  /** Optional filter to one workspace's currency. */
+  currency: z.string().min(1).optional(),
+});
 
 /**
  * Read surface for the budget domain. Any member role — including viewer —
@@ -24,7 +26,7 @@ function householdInput() {
  */
 export const budgetRouter = {
   envelopes: {
-    list: protectedProcedure.input(householdInput()).handler(({ context, input }) => {
+    list: protectedProcedure.input(householdInput).handler(({ context, input }) => {
       const userId = requireUserId(context);
       return listEnvelopes(createDb(), { userId, householdId: input.householdId });
     }),
@@ -32,7 +34,7 @@ export const budgetRouter = {
 
   mappings: {
     /** Category→Envelope attribution with derived effective spans. */
-    list: protectedProcedure.input(householdInput()).handler(({ context, input }) => {
+    list: protectedProcedure.input(householdInput).handler(({ context, input }) => {
       const userId = requireUserId(context);
       return getCategoryMappingTimeline(createDb(), {
         userId,
@@ -43,7 +45,7 @@ export const budgetRouter = {
 
   fundingMemberships: {
     /** Funding-pool membership with derived effective spans. */
-    list: protectedProcedure.input(householdInput()).handler(({ context, input }) => {
+    list: protectedProcedure.input(fundingMembershipInput).handler(({ context, input }) => {
       const userId = requireUserId(context);
       return getFundingMembershipTimeline(
         createDb(),
@@ -55,7 +57,7 @@ export const budgetRouter = {
 
   rolloverSettings: {
     /** Per-envelope rollover settings with derived effective spans. */
-    list: protectedProcedure.input(householdInput()).handler(({ context, input }) => {
+    list: protectedProcedure.input(householdInput).handler(({ context, input }) => {
       const userId = requireUserId(context);
       return getRolloverSettingTimeline(createDb(), {
         userId,

@@ -5,6 +5,12 @@ import { membership } from "@trove/db/schema/household";
 
 import type { CommandDatabase } from "./commands/types";
 
+/** A caller already narrowed to one household context. */
+export interface HouseholdCaller {
+  readonly userId: string;
+  readonly householdId: string;
+}
+
 /**
  * Household tenancy gate shared by budget-domain reads. D1 has no RLS and no
  * DB-level backstop — this check is what keeps one household out of another's
