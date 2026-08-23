@@ -1,4 +1,6 @@
 import { createContext } from "@trove/api/context";
+import { createSettlementIdentity, settleDueRules } from "@trove/api/lib/recurring/scheduler";
+import { createDb } from "@trove/db";
 import { appRouter } from "@trove/api/routers/index";
 import { createAuth } from "@trove/auth";
 import { env } from "@trove/env/server";
@@ -75,4 +77,25 @@ app.get("/", (c) => {
   return c.text("OK");
 });
 
-export default app;
+/**
+ * Hourly Cron Trigger entry (#88): settles every active Recurring Rule on
+ * its own time zone's local date. Idempotent under Cron retries — the
+ * occurrence identity PK absorbs double-settlement and the rule revision
+ * assertion aborts commits racing a concurrent edit.
+ */
+export async function scheduled(controller: ScheduledController) {
+  const summary = await settleDueRules(
+    createDb(),
+    createSettlementIdentity(),
+    new Date(controller.scheduledTime),
+  );
+  console.log(
+    `Settlement sweep: ${summary.generatedCount} transaction(s), ` +
+      `${summary.totalMinor} minor across ${summary.groups} group(s).`,
+  );
+}
+
+export default {
+  fetch: app.fetch,
+  scheduled,
+};

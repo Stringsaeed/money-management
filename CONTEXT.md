@@ -94,6 +94,10 @@ _Avoid_: Recurring Payment
 The act of materializing every due Occurrence of a Recurring Rule into Generated Transactions and recording those Occurrences as handled.
 _Avoid_: Processing, Generation
 
+**Settlement Sweep**:
+The hourly server-side pass that settles every active Recurring Rule of every household, evaluating each Rule on its own time zone's local date. Idempotent under Cron Trigger retries; manual runs go through an admin-guarded procedure.
+_Avoid_: Cron Job, Sync Job
+
 **Money**:
 An exact amount represented as integer minor units paired with an ISO currency code.
 _Avoid_: Float Amount, Formatted Amount
