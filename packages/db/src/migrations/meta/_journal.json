@@ -15,6 +15,13 @@
       "when": 1787462269202,
       "tag": "0001_lonely_microbe",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787470694395,
+      "tag": "0002_loud_sabretooth",
+      "breakpoints": true
     }
   ]
 }
