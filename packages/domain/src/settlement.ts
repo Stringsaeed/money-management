@@ -45,6 +45,11 @@ export interface SettleableRule {
   readonly health: RecurringHealth;
   readonly eligibilityFloor: string;
   readonly revision: number;
+  /**
+   * IANA time zone the Rule's cadence is evaluated in (#88). The scheduler
+   * resolves each Rule's local date from this — never from the host clock.
+   */
+  readonly timeZone: string;
 }
 
 export interface SettlementAttentionReason {
