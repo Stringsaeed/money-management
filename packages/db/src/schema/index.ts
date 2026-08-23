@@ -2,6 +2,7 @@
 export * from "./auth";
 export * from "./budget";
 export * from "./ledger";
+export * from "./recurring";
 export * from "./commands";
 export * from "./household";
 export {};

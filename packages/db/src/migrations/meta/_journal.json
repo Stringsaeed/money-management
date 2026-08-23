@@ -29,6 +29,13 @@
       "when": 1787472813494,
       "tag": "0003_woozy_scream",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1787484597914,
+      "tag": "0004_thick_scrambler",
+      "breakpoints": true
     }
   ]
 }

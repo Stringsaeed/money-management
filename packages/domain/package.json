@@ -22,6 +22,10 @@
     "./card-waterfall": {
       "types": "./dist/card-waterfall.d.ts",
       "default": "./dist/card-waterfall.js"
+    },
+    "./settlement": {
+      "types": "./dist/settlement.d.ts",
+      "default": "./dist/settlement.js"
     }
   },
   "scripts": {
