@@ -19,6 +19,7 @@
   "dependencies": {
     "@libsql/client": "0.17.4",
     "@trove/env": "workspace:*",
+    "@trove/protocol": "workspace:*",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.2",
     "libsql": "0.5.29",

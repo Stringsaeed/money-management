@@ -2,7 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { createDb } from "@trove/db";
 import { user } from "@trove/db/schema/auth";
 import { household, inviteCode, membership } from "@trove/db/schema/household";
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import {
@@ -374,8 +374,14 @@ export const householdsRouter = {
           message: "Ownership can only be transferred to another member.",
         });
       }
-      await db.update(membership).set({ role: "member" }).where(eq(membership.id, actor.id));
-      await db.update(membership).set({ role: "owner" }).where(eq(membership.id, target!.id));
+      await db
+        .update(membership)
+        .set({ role: "member", version: sql`${membership.version} + 1` })
+        .where(eq(membership.id, actor.id));
+      await db
+        .update(membership)
+        .set({ role: "owner", version: sql`${membership.version} + 1` })
+        .where(eq(membership.id, target!.id));
       return { ok: true };
     }),
 

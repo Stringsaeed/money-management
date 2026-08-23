@@ -10,6 +10,10 @@
     "./calendar": {
       "types": "./dist/calendar.d.ts",
       "default": "./dist/calendar.js"
+    },
+    "./member-role-change": {
+      "types": "./dist/member-role-change.d.ts",
+      "default": "./dist/member-role-change.js"
     }
   },
   "scripts": {
@@ -18,6 +22,7 @@
     "postinstall": "pnpm build"
   },
   "dependencies": {
+    "@trove/protocol": "workspace:*",
     "date-fns": "^4.1.0"
   },
   "devDependencies": {

@@ -12,15 +12,18 @@
     }
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@libsql/client": "0.17.4",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
     "@trove/auth": "workspace:*",
     "@trove/db": "workspace:*",
+    "@trove/domain": "workspace:*",
     "@trove/env": "workspace:*",
     "@trove/protocol": "workspace:*",
     "dotenv": "catalog:",
@@ -31,6 +34,7 @@
     "@trove/typescript-config": "workspace:*",
     "@types/node": "catalog:",
     "hono": "catalog:",
-    "typescript": "~7.0.2"
+    "typescript": "~7.0.2",
+    "vitest": "^3.2.4"
   }
 }
