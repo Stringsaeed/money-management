@@ -52,6 +52,8 @@ export interface SettlementAttentionReason {
     | "missing-source-account"
     | "missing-destination-account"
     | "account-currency-changed";
+  /** Client-contract field name for missing accounts (parity with the app). */
+  readonly formerAccountId?: string | null;
   readonly accountId?: string | null;
   readonly expected?: string;
   readonly actual?: string;
@@ -90,7 +92,6 @@ export interface RuleSettlementCommit {
 export interface SettlementStore {
   getAccountCurrency(accountId: string): Promise<string | null>;
   getSettledDates(ruleId: string): Promise<string[]>;
-  getEndCountSettledCount(ruleId: string): Promise<number>;
   commitRuleSettlement(commit: RuleSettlementCommit): Promise<void>;
 }
 
@@ -98,7 +99,13 @@ export interface SettlementIdentity {
   next(kind: "transaction"): string;
 }
 
-export type SettlementKind = "settled" | "not_due" | "needs_attention" | "ineligible";
+export type SettlementKind =
+  | "settled"
+  | "not_due"
+  | "needs_attention"
+  | "ineligible"
+  /** The rule's atomic commit failed mid-sweep; other rules continue. */
+  | "failed";
 
 export interface RuleSettlementResult {
   readonly ruleId: string;
@@ -108,6 +115,8 @@ export interface RuleSettlementResult {
   readonly lifecycle: RecurringLifecycle;
   readonly revision: number;
   readonly attentionReasons?: readonly SettlementAttentionReason[];
+  /** Present only when kind === "failed". */
+  readonly error?: string;
 }
 
 /** Occurrences this rule still owes on or before `localDate`. */
@@ -165,7 +174,7 @@ export async function dependencyAttentionReasons(
   const reasons: SettlementAttentionReason[] = [];
   const sourceCurrency = rule.accountId ? await store.getAccountCurrency(rule.accountId) : null;
   if (!sourceCurrency) {
-    reasons.push({ kind: "missing-source-account", accountId: rule.accountId });
+    reasons.push({ kind: "missing-source-account", formerAccountId: rule.accountId });
   } else if (sourceCurrency !== rule.currency) {
     reasons.push({
       kind: "account-currency-changed",
@@ -180,7 +189,7 @@ export async function dependencyAttentionReasons(
       ? await store.getAccountCurrency(rule.toAccountId)
       : null;
     if (!destinationCurrency) {
-      reasons.push({ kind: "missing-destination-account", accountId: rule.toAccountId });
+      reasons.push({ kind: "missing-destination-account", formerAccountId: rule.toAccountId });
     } else if (destinationCurrency !== rule.currency) {
       reasons.push({
         kind: "account-currency-changed",

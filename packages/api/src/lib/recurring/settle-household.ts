@@ -54,7 +54,7 @@ export async function settleHouseholdRules(
         lifecycle: rule.lifecycle,
         revision: rule.revision,
         error: error instanceof Error ? error.message : String(error),
-      } as unknown as RuleSettlementResult);
+      });
     }
   }
 

@@ -65,19 +65,6 @@ export class D1RecurringStore implements SettlementStore {
     return rows.map((r) => r.scheduledDate).sort();
   }
 
-  async getEndCountSettledCount(ruleId: string): Promise<number> {
-    const rows = await this.db
-      .select({ count: sql<number>`COUNT(*)` })
-      .from(recurringOccurrence)
-      .where(
-        and(
-          eq(recurringOccurrence.householdId, this.scope.householdId),
-          eq(recurringOccurrence.ruleId, ruleId),
-        ),
-      );
-    return Number(rows[0]?.count ?? 0);
-  }
-
   async commitRuleSettlement(commit: RuleSettlementCommit): Promise<void> {
     const now = new Date(commit.now);
     const statements: BatchStatement[] = [
