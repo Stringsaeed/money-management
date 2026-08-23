@@ -38,6 +38,7 @@ jest.mock("expo-router", () => ({
 }));
 
 jest.mock("expo-sqlite", () => ({
+  useSQLiteContext: () => "sqlite-context",
   SQLiteProvider: ({
     children,
     onInit,

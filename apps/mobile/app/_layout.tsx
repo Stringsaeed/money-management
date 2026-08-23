@@ -29,6 +29,7 @@ import { PortalHost } from "@rn-primitives/portal";
 import { PressablesConfig } from "pressto";
 import * as Haptics from "expo-haptics";
 
+import { SyncWorker } from "@/components/sync/sync-worker";
 import { AppUpdateProvider } from "@/components/updates/app-update-provider";
 import { MandatoryUpdateGate } from "@/components/updates/mandatory-update-gate";
 import { RecurringSettlementBanner } from "@/components/recurring/recurring-settlement-banner";
@@ -120,6 +121,7 @@ export default function RootLayout() {
                     <BottomSheetProvider>
                       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
                         <AppUpdateProvider>
+                          <SyncWorker />
                           <Stack
                             screenOptions={{
                               headerTransparent: true,
