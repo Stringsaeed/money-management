@@ -5,6 +5,7 @@ import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { BudgetSummaryCard } from "@/components/envelopes/budget-summary-card";
 import { EnvelopeFormSheet } from "@/components/envelopes/envelope-form/envelope-form-sheet";
 import { EnvelopeRow } from "@/components/envelopes/envelope-row";
+import { MoveMoneySheet } from "@/components/envelopes/move-money-sheet";
 import { WorkspaceOption } from "@/components/envelopes/workspace-option";
 import { WorkspaceRouteStatus } from "@/components/envelopes/workspace-route-status";
 import { layoutTransition } from "@/components/transaction/constants";
@@ -22,7 +23,11 @@ interface BudgetOverviewScreenProps {
   selection: WorkspaceSelection;
 }
 
-type SheetState = { kind: "create" } | { kind: "edit"; envelope: EnvelopeSummary } | null;
+type SheetState =
+  | { kind: "create" }
+  | { kind: "edit"; envelope: EnvelopeSummary }
+  | { kind: "move" }
+  | null;
 
 export function BudgetOverviewScreen({ selection }: BudgetOverviewScreenProps) {
   const selectedCurrency = selection.selectedCurrency ?? selection.workspaces[0].currency;
@@ -164,6 +169,13 @@ export function BudgetOverviewScreen({ selection }: BudgetOverviewScreenProps) {
         </Animated.View>
 
         <Button
+          accessibilityLabel="Move Money"
+          onPress={() => setSheet({ kind: "move" })}
+          variant="outline"
+        >
+          <Text>Move Money</Text>
+        </Button>
+        <Button
           accessibilityLabel={showArchived ? "View active Envelopes" : "View archived Envelopes"}
           onPress={() => setShowArchived((current) => !current)}
           variant="ghost"
@@ -176,7 +188,16 @@ export function BudgetOverviewScreen({ selection }: BudgetOverviewScreenProps) {
         </Button>
       </ScrollView>
 
-      {sheet && formOptions.data ? (
+      {sheet?.kind === "move" ? (
+        <MoveMoneySheet
+          currency={selectedCurrency}
+          onDismiss={() => setSheet(null)}
+          onSaved={() => setSheet(null)}
+          period={period}
+          projection={projection.data}
+        />
+      ) : null}
+      {sheet && sheet.kind !== "move" && formOptions.data ? (
         <EnvelopeFormSheet
           currency={selectedCurrency}
           envelope={sheet.kind === "edit" ? sheet.envelope : undefined}

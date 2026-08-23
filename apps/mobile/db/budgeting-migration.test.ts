@@ -64,6 +64,35 @@ describe("migrateBudgeting", () => {
     ).resolves.toEqual({ workspaces: 0, envelopes: 0, mappings: 0, assignments: 0 });
   });
 
+  it("makes committed Assignments immutable durable facts", async () => {
+    const database = await setup();
+    await migrateBudgeting(database);
+    await database.execAsync(`
+      INSERT INTO budget_workspaces (currency, activation_period, created_at, updated_at)
+      VALUES ('USD', '2026-08', '2026-08-18T08:00:00.000Z', '2026-08-18T08:00:00.000Z');
+      INSERT INTO envelopes (
+        id, currency, name, icon, color, lifecycle, sort_order, created_at, updated_at
+      ) VALUES (
+        'envelope-one', 'USD', 'One', '📦', '#8B9D83', 'active', 0,
+        '2026-08-18T08:00:00.000Z', '2026-08-18T08:00:00.000Z'
+      );
+      INSERT INTO assignments (
+        id, currency, budget_period, source_envelope_id, destination_envelope_id,
+        amount_minor, reverses_assignment_id, created_at
+      ) VALUES (
+        'assignment-one', 'USD', '2026-08', NULL, 'envelope-one', 2500, NULL,
+        '2026-08-18T08:00:00.000Z'
+      );
+    `);
+
+    await expect(
+      database.runAsync("UPDATE assignments SET amount_minor = 2000 WHERE id = 'assignment-one'"),
+    ).rejects.toThrow("append-only");
+    await expect(
+      database.runAsync("DELETE FROM assignments WHERE id = 'assignment-one'"),
+    ).rejects.toThrow("append-only");
+  });
+
   it("refuses a stamped schema whose durable facts are incomplete", async () => {
     const database = await setup();
     await migrateBudgeting(database);
@@ -97,11 +126,11 @@ describe("migrateBudgeting", () => {
     await migrateBudgeting(database);
     await database.runAsync(
       "UPDATE app_settings SET value = ? WHERE key = ?",
-      "2",
+      "3",
       "budgetingMigrationVersion",
     );
 
-    await expect(migrateBudgeting(database)).rejects.toThrow("unsupported migration version 2");
+    await expect(migrateBudgeting(database)).rejects.toThrow("unsupported migration version 3");
   });
 
   it("is idempotent and preserves supported current budgeting data", async () => {
@@ -129,7 +158,36 @@ describe("migrateBudgeting", () => {
         "SELECT value FROM app_settings WHERE key = ?",
         "budgetingMigrationVersion",
       ),
-    ).resolves.toEqual({ value: "1" });
+    ).resolves.toEqual({ value: "2" });
+  });
+
+  it("upgrades version-one budgeting data with Assignment immutability guards", async () => {
+    const database = await setup();
+    await migrateBudgeting(database);
+    await database.execAsync(`
+      DROP TRIGGER assignments_append_only_update;
+      DROP TRIGGER assignments_append_only_delete;
+      UPDATE app_settings SET value = '1' WHERE key = 'budgetingMigrationVersion';
+    `);
+
+    await migrateBudgeting(database);
+
+    await expect(
+      database.getAllAsync<{ name: string }>(
+        `SELECT name FROM sqlite_master
+         WHERE type = 'trigger' AND name LIKE 'assignments_append_only_%'
+         ORDER BY name`,
+      ),
+    ).resolves.toEqual([
+      { name: "assignments_append_only_delete" },
+      { name: "assignments_append_only_update" },
+    ]);
+    await expect(
+      database.getFirstAsync(
+        "SELECT value FROM app_settings WHERE key = ?",
+        "budgetingMigrationVersion",
+      ),
+    ).resolves.toEqual({ value: "2" });
   });
 
   it("rolls back every schema and stamp change when final validation fails", async () => {

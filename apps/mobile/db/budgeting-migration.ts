@@ -2,12 +2,13 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 import {
   BUDGETING_TABLES,
+  CREATE_ASSIGNMENT_APPEND_ONLY_TRIGGERS_SQL,
   CREATE_BUDGETING_SCHEMA_SQL,
   REQUIRED_BUDGETING_COLUMNS,
 } from "./budgeting-schema";
 
 const MIGRATION_KEY = "budgetingMigrationVersion";
-const MIGRATION_VERSION = 1;
+const MIGRATION_VERSION = 2;
 const EXPECTED_TABLE_SQL = expectedTableSql();
 
 export async function migrateBudgeting(database: SQLiteDatabase): Promise<void> {
@@ -23,6 +24,13 @@ export async function migrateBudgeting(database: SQLiteDatabase): Promise<void> 
     const existingTables = await existingBudgetingTables(transaction);
 
     if (recordedVersion !== null) {
+      if (recordedVersion.value === "1") {
+        await assertCompleteBudgetingSchema(transaction);
+        await transaction.execAsync(CREATE_ASSIGNMENT_APPEND_ONLY_TRIGGERS_SQL);
+        await stampMigrationVersion(transaction);
+        await assertCurrentSchema(transaction, existingTables);
+        return;
+      }
       if (recordedVersion.value !== String(MIGRATION_VERSION)) {
         throw new Error(
           `Budgeting migration found unsupported migration version ${recordedVersion.value}. Restore a supported database before startup.`,
@@ -43,12 +51,8 @@ export async function migrateBudgeting(database: SQLiteDatabase): Promise<void> 
     }
 
     await assertCompleteBudgetingSchema(transaction);
-    await transaction.runAsync(
-      `INSERT INTO app_settings (key, value) VALUES (?, ?)
-       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-      MIGRATION_KEY,
-      String(MIGRATION_VERSION),
-    );
+    await transaction.execAsync(CREATE_ASSIGNMENT_APPEND_ONLY_TRIGGERS_SQL);
+    await stampMigrationVersion(transaction);
     await assertValidForeignKeys(transaction);
   });
 }
@@ -61,7 +65,26 @@ async function assertCurrentSchema(
     throw incompleteCurrentSchemaError();
   }
   await assertCompleteBudgetingSchema(database);
+  await assertAssignmentAppendOnlyTriggers(database);
   await assertValidForeignKeys(database);
+}
+
+async function stampMigrationVersion(database: SQLiteDatabase): Promise<void> {
+  await database.runAsync(
+    `INSERT INTO app_settings (key, value) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    MIGRATION_KEY,
+    String(MIGRATION_VERSION),
+  );
+}
+
+async function assertAssignmentAppendOnlyTriggers(database: SQLiteDatabase): Promise<void> {
+  const triggers = await database.getAllAsync<{ name: string }>(
+    `SELECT name FROM sqlite_master
+     WHERE type = 'trigger'
+       AND name IN ('assignments_append_only_update', 'assignments_append_only_delete')`,
+  );
+  if (triggers.length !== 2) throw incompleteCurrentSchemaError();
 }
 
 async function assertCompleteBudgetingSchema(database: SQLiteDatabase): Promise<void> {

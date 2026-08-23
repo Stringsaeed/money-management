@@ -49,7 +49,7 @@ describe("initializeDatabase", () => {
       ),
     ).resolves.toEqual([
       { key: "accountLifecycleMigrationVersion", value: "3" },
-      { key: "budgetingMigrationVersion", value: "1" },
+      { key: "budgetingMigrationVersion", value: "2" },
       { key: "categoryLifecycleMigrationVersion", value: "1" },
       { key: "recurringRulesMigrationVersion", value: "1" },
       { key: "resetVersion", value: "1" },
