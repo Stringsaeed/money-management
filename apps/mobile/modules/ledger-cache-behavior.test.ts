@@ -47,6 +47,7 @@ describe("ledger cache coherence behavior", () => {
       ["transactions"],
       ["budgeting", "projections"],
       ["account-lifecycle-previews"],
+      ["budgeting", "setup-draft", "guided-envelope-setup"],
       ["month-summary"],
       ["transaction-date-range"],
     ]);
@@ -66,6 +67,10 @@ describe("ledger cache coherence behavior", () => {
     expect(coherenceResolved).toBe(false);
 
     resolvers[4]();
+    await Promise.resolve();
+    expect(coherenceResolved).toBe(false);
+
+    resolvers[5]();
     await coherence;
     expect(coherenceResolved).toBe(true);
   });
@@ -86,6 +91,25 @@ describe("ledger cache coherence behavior", () => {
     unsubscribe();
     queryClient.clear();
   });
+
+  it.each(["account.updated", "category.updated"] as const)(
+    "refetches active Setup prerequisites once after %s",
+    async (kind) => {
+      const queryClient = createQueryClient();
+      const queryFn = jest.fn().mockResolvedValue({ prerequisites: "fresh" });
+      const options = { queryKey: budgetKeys.setupDraft, queryFn, staleTime: Infinity };
+      await queryClient.fetchQuery(options);
+      const observer = new QueryObserver(queryClient, options);
+      const unsubscribe = observer.subscribe(() => undefined);
+      queryFn.mockClear();
+
+      await cohereLedgerCache(queryClient, { kind, id: "changed-resource" });
+
+      expect(queryFn).toHaveBeenCalledTimes(1);
+      unsubscribe();
+      queryClient.clear();
+    },
+  );
 
   it("waits for an active affected query to finish refetching", async () => {
     const queryClient = createQueryClient();

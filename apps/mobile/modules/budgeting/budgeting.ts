@@ -17,6 +17,9 @@ import { updateFundingMembership } from "./funding-membership";
 import { createEnvelope, updateEnvelope } from "./envelope-resources";
 import { getEnvelopeFormOptions } from "./envelope-form-options";
 import { getProjection } from "./projection";
+import { getSetupDraftPrerequisites } from "./setup-draft-suggestions";
+import { discardSetupDraft, loadSetupDraft, saveSetupDraft } from "./setup-draft-persistence";
+import { createSetupDraft } from "./setup-drafts";
 import type {
   ActivateWorkspaceRequest,
   BudgetingCoordinator,
@@ -67,12 +70,37 @@ export type {
   MoveMoneyPreview,
   MoveMoneyRequest,
 } from "./types";
+export type {
+  CreateSetupDraftRequest,
+  SaveSetupDraftRequest,
+  SetupDraft,
+  SetupDraftCategorySuggestion,
+  SetupDraftEnvelope,
+  SetupDraftFundingAccount,
+  SetupDraftPrerequisites,
+  SetupDraftWorkspace,
+} from "./setup-draft-types";
+export {
+  addSetupDraftEnvelope,
+  mergeSetupDraftEnvelopes,
+  moveSetupDraftCategory,
+  removeSetupDraftCategory,
+  toggleSetupDraftRollover,
+  updateSetupDraftEnvelope,
+  updateSetupDraftFundingAccounts,
+} from "./setup-draft-editing";
+export { UnreadableSetupDraftError } from "./setup-draft-codec";
 
 export function createBudgetingCoordinator(
   database: SQLiteDatabase,
   options: BudgetingCoordinatorOptions = {},
 ): BudgetingCoordinator {
   return {
+    getSetupDraftPrerequisites: () => getSetupDraftPrerequisites(database),
+    createSetupDraft: (request) => createSetupDraft(database, request),
+    loadSetupDraft: () => loadSetupDraft(database),
+    saveSetupDraft: (request) => saveSetupDraft(database, request),
+    discardSetupDraft: () => discardSetupDraft(database),
     activateWorkspace: async (request: ActivateWorkspaceRequest) => {
       const projection = await activateWorkspace(database, request);
       if (options.queryClient) {
