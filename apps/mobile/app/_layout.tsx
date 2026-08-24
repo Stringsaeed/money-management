@@ -137,6 +137,10 @@ export default function RootLayout() {
                             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                             <Stack.Screen name="categories" options={{ title: "Categories" }} />
                             <Stack.Screen name="accounts" options={{ title: "Accounts" }} />
+                            <Stack.Screen
+                              name="activity"
+                              options={{ title: "Activity Timeline" }}
+                            />
                             <Stack.Screen name="onboarding" options={{ headerShown: false }} />
                             <Stack.Screen
                               name="transaction/[id]"
