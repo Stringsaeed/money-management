@@ -64,7 +64,12 @@ export function useSyncWorker(householdId: string | null) {
     try {
       // Drain first: local intent leaves before remote changes arrive, so a
       // rejected command is visible in the inbox as soon as possible.
-      const summary = await drainOutbox(db, (envelope) => orpc.commands.apply(envelope));
+      const summary = await drainOutbox(db, (envelope) =>
+        orpc.commands.apply({
+          ...envelope,
+          preconditions: envelope.preconditions ? [...envelope.preconditions] : undefined,
+        }),
+      );
 
       const delta = await pullDeltas(db, (args) => orpc.sync.getDelta(args), householdId);
 

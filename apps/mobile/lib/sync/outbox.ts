@@ -1,9 +1,11 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
+import type { SQLiteDatabase } from "expo-sqlite";
 
 import type { CommandEnvelope, CommandKind, CommandResult, Precondition } from "@trove/protocol";
 
 import { outboxCommands, syncState } from "@/db/schema";
+import { parseRejection, type RejectionResult } from "@/lib/sync/rejection";
 
 /**
  * Client outbox & sync core (#85). Pure data layer over the local SQLite
@@ -16,7 +18,7 @@ import { outboxCommands, syncState } from "@/db/schema";
  * — a "sending" row left behind by a killed app is simply retried.
  */
 
-type LocalDb = ExpoSQLiteDatabase<typeof import("@/db/schema")>;
+type LocalDb = ExpoSQLiteDatabase<typeof import("@/db/schema")> & { $client: SQLiteDatabase };
 
 /** Transport seam so the core stays testable without oRPC. */
 export type SendCommand = (envelope: CommandEnvelope) => Promise<CommandResult>;
@@ -207,9 +209,29 @@ export interface RejectedChange {
   householdId: string;
   kind: CommandKind;
   rejectionKind: string;
-  rejectionPayload: CommandResult;
+  /** Typed rejection mirrored from the commands mutation (#94). */
+  rejection: RejectionResult;
+  /** Original intent payload, used to pre-populate the re-edit form. */
+  payload: unknown;
+  preconditions?: readonly Precondition[];
   attempts: number;
   createdAt: Date;
+}
+
+function rejectedChangeFrom(row: typeof outboxCommands.$inferSelect): RejectedChange {
+  return {
+    commandId: row.commandId,
+    householdId: row.householdId,
+    kind: row.kind as CommandKind,
+    rejectionKind: row.rejectionKind ?? "unknown",
+    rejection: parseRejection(JSON.parse(row.rejectionPayload ?? "{}")),
+    payload: JSON.parse(row.payload) as unknown,
+    ...(row.preconditions && {
+      preconditions: JSON.parse(row.preconditions) as Precondition[],
+    }),
+    attempts: row.attempts,
+    createdAt: row.createdAt,
+  };
 }
 
 /** The Rejected Changes inbox: every command the server refused, with why. */
@@ -222,15 +244,69 @@ export async function listRejectedChanges(
     .from(outboxCommands)
     .where(and(eq(outboxCommands.householdId, householdId), eq(outboxCommands.status, "rejected")))
     .orderBy(asc(outboxCommands.createdAt));
-  return rows.map((row) => ({
-    commandId: row.commandId,
-    householdId: row.householdId,
-    kind: row.kind as CommandKind,
-    rejectionKind: row.rejectionKind ?? "unknown",
-    rejectionPayload: JSON.parse(row.rejectionPayload ?? "{}") as CommandResult,
-    attempts: row.attempts,
-    createdAt: row.createdAt,
-  }));
+  return rows.map(rejectedChangeFrom);
+}
+
+/** Loads one rejected change for the re-edit screen; null when gone. */
+export async function getRejectedChange(
+  db: LocalDb,
+  commandId: string,
+): Promise<RejectedChange | null> {
+  const rows = await db
+    .select()
+    .from(outboxCommands)
+    .where(and(eq(outboxCommands.commandId, commandId), eq(outboxCommands.status, "rejected")))
+    .limit(1);
+  const row = rows[0];
+  return row ? rejectedChangeFrom(row) : null;
+}
+
+/**
+ * Re-queues an edited rejected command under a NEW commandId (#94). The fresh
+ * id is a new idempotency key, so the resubmission applies exactly once even
+ * if the original somehow landed server-side. Original row and replacement
+ * swap in one transaction so the inbox never shows both.
+ */
+export async function resubmitRejectedCommand(
+  db: LocalDb,
+  input: {
+    originalCommandId: string;
+    newCommandId: string;
+    /** Edited payload; defaults to the original intent unchanged. */
+    payload?: unknown;
+  },
+): Promise<void> {
+  await db.$client.withTransactionAsync(async () => {
+    const rows = await db
+      .select()
+      .from(outboxCommands)
+      .where(
+        and(
+          eq(outboxCommands.commandId, input.originalCommandId),
+          eq(outboxCommands.status, "rejected"),
+        ),
+      )
+      .limit(1);
+    const original = rows[0];
+    if (!original) {
+      throw new Error(
+        "Nothing to resubmit — this rejected change was already discarded or resubmitted.",
+      );
+    }
+
+    await db
+      .insert(outboxCommands)
+      .values({
+        commandId: input.newCommandId,
+        householdId: original.householdId,
+        kind: original.kind,
+        payload: input.payload === undefined ? original.payload : JSON.stringify(input.payload),
+        ...(original.preconditions && { preconditions: original.preconditions }),
+      })
+      .onConflictDoNothing();
+
+    await db.delete(outboxCommands).where(eq(outboxCommands.commandId, original.commandId));
+  });
 }
 
 /**
