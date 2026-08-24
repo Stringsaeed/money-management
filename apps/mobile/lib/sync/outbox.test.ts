@@ -68,7 +68,7 @@ function makeSend(results: CommandResult[]) {
   return { send, sent };
 }
 
-const applied = (): CommandResult => ({
+const applied = (): Extract<CommandResult, { kind: "applied" }> => ({
   kind: "applied",
   seq: 1,
   effects: ["ledger"],
@@ -175,6 +175,35 @@ describe("drainOutbox", () => {
     // Next pass with healthy transport drains both, FIFO preserved.
     const second = await drainOutbox(db, async () => applied());
     expect(second.applied).toBe(2);
+  });
+
+  it("keeps commands queued and stops draining when the server returns local_only", async () => {
+    const db = await setupDb();
+    await enqueueCommand(db, makeInput({ commandId: "cmd-a" }));
+    await enqueueCommand(db, makeInput({ commandId: "cmd-b" }));
+    let attempts = 0;
+    const send = async (): Promise<CommandResult> => {
+      attempts += 1;
+      return { kind: "local_only", reason: "kill_switch_local_only" };
+    };
+
+    const summary = await drainOutbox(db, send);
+
+    // The kill switch is not a rejection — nothing lands in the inbox and
+    // every command stays queued for when sync resumes.
+    expect(summary).toEqual({
+      applied: 0,
+      rejected: 0,
+      pending: 2,
+      stoppedOnLocalOnly: true,
+    });
+    expect(attempts).toBe(1);
+
+    const rows = await db.select().from(schema.outboxCommands);
+    expect(rows.map((r) => [r.commandId, r.status, r.rejectionKind])).toEqual([
+      ["cmd-a", "pending", null],
+      ["cmd-b", "pending", null],
+    ]);
   });
 
   it("retries a 'sending' row left behind by a crash without double-applying server-side", async () => {

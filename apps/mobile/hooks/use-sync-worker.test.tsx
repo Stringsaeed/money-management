@@ -2,6 +2,8 @@ import { AppState } from "react-native";
 import { act, waitFor } from "@testing-library/react-native";
 
 import { useSyncWorker } from "@/hooks/use-sync-worker";
+import { useSyncModeStore } from "@/stores/sync-mode-store";
+import { DELTA_DEGRADATION_THRESHOLD_MS } from "@/lib/sync/degradation";
 import { createTestQueryClient, renderHookWithProviders } from "@/tests/test-utils/render";
 
 const mockDrainOutbox = jest.fn();
@@ -12,6 +14,7 @@ const mockDiscard = jest.fn();
 const mockRetry = jest.fn();
 const mockApply = jest.fn();
 const mockGetDelta = jest.fn();
+const mockStatus = jest.fn();
 
 const FAKE_DB = { __fakeDb: true };
 jest.mock("@/db/client", () => ({
@@ -30,7 +33,10 @@ jest.mock("@/lib/sync/outbox", () => ({
 jest.mock("@/lib/server/orpc", () => ({
   orpc: {
     commands: { apply: (...args: unknown[]) => mockApply(...args) },
-    sync: { getDelta: (...args: unknown[]) => mockGetDelta(...args) },
+    sync: {
+      getDelta: (...args: unknown[]) => mockGetDelta(...args),
+      status: (...args: unknown[]) => mockStatus(...args),
+    },
   },
 }));
 
@@ -41,6 +47,7 @@ let appStateListener: ((state: string) => void) | undefined;
 function defaultMocks() {
   mockDrainOutbox.mockResolvedValue({ applied: 0, rejected: 0, pending: 0 });
   mockPullDeltas.mockResolvedValue({ seq: 0, hasMore: false, changes: [] });
+  mockStatus.mockResolvedValue({ killSwitchLocalOnly: false });
   mockCountPending.mockResolvedValue(2);
   mockListRejected.mockResolvedValue([
     {
@@ -63,6 +70,7 @@ describe("useSyncWorker", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     defaultMocks();
+    useSyncModeStore.setState({ mode: "synced", reason: null });
     // Stable no-op AppState listener registry for every test.
     jest.spyOn(AppState, "addEventListener").mockImplementation((_event, listener) => {
       appStateListener = listener as (state: string) => void;
@@ -190,5 +198,113 @@ describe("useSyncWorker", () => {
     expect(mockRetry).toHaveBeenCalledWith(FAKE_DB, "cmd-rej");
     // Retry triggers an immediate extra drain turn.
     expect(mockDrainOutbox.mock.calls.length).toBeGreaterThan(turnsAfterMount);
+  });
+
+  it("checks the remote kill switch on startup", async () => {
+    await renderHookWithProviders(() => useSyncWorker(HOUSEHOLD_ID));
+
+    await waitFor(() => {
+      expect(mockStatus).toHaveBeenCalled();
+      expect(useSyncModeStore.getState().mode).toBe("synced");
+    });
+  });
+
+  it("skips sync turns while the kill switch is engaged and marks the app local-only", async () => {
+    mockStatus.mockResolvedValue({ killSwitchLocalOnly: true });
+
+    await renderHookWithProviders(() => useSyncWorker(HOUSEHOLD_ID));
+
+    await waitFor(() => {
+      expect(useSyncModeStore.getState().mode).toBe("local_only");
+      expect(useSyncModeStore.getState().reason).toBe("kill_switch");
+    });
+
+    // A foreground refocus must not drain or pull while the switch is on.
+    await act(async () => {
+      appStateListener!("active");
+      await Promise.resolve();
+    });
+    await flushTurn();
+    expect(mockDrainOutbox).not.toHaveBeenCalled();
+    expect(mockPullDeltas).not.toHaveBeenCalled();
+  });
+
+  it("restores synced mode once the kill switch is turned off again", async () => {
+    mockStatus.mockResolvedValue({ killSwitchLocalOnly: true });
+    await renderHookWithProviders(() => useSyncWorker(HOUSEHOLD_ID));
+    await waitFor(() => {
+      expect(useSyncModeStore.getState().reason).toBe("kill_switch");
+    });
+
+    mockStatus.mockResolvedValue({ killSwitchLocalOnly: false });
+    await act(async () => {
+      appStateListener!("active");
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(useSyncModeStore.getState().mode).toBe("synced");
+      expect(useSyncModeStore.getState().reason).toBeNull();
+    });
+  });
+
+  it("marks local_only as soon as a drain hits the server's local_only result", async () => {
+    // Status probe unreachable (fail-open) while the server itself refuses
+    // writes with the typed local_only result.
+    mockStatus.mockRejectedValue(new Error("status probe failed"));
+    mockDrainOutbox.mockResolvedValue({
+      applied: 0,
+      rejected: 0,
+      pending: 1,
+      stoppedOnLocalOnly: true,
+    });
+
+    await renderHookWithProviders(() => useSyncWorker(HOUSEHOLD_ID));
+
+    await waitFor(() => {
+      expect(useSyncModeStore.getState().mode).toBe("local_only");
+      expect(useSyncModeStore.getState().reason).toBe("kill_switch");
+    });
+  });
+
+  it("degrades to local-only after delta pulls stay unavailable for 10+ minutes", async () => {
+    mockPullDeltas.mockRejectedValue(new Error("network unreachable"));
+    const nowSpy = jest.spyOn(Date, "now");
+    const T0 = 1_700_000_000_000;
+
+    nowSpy.mockReturnValue(T0);
+    await renderHookWithProviders(() => useSyncWorker(HOUSEHOLD_ID));
+    await flushTurn();
+
+    // Still healthy at first-failure + 5min.
+    nowSpy.mockReturnValue(T0 + 5 * 60_000);
+    await act(async () => {
+      appStateListener!("active");
+      await Promise.resolve();
+    });
+    await flushTurn();
+    expect(useSyncModeStore.getState().mode).toBe("synced");
+
+    // Degraded at first-failure + threshold (the FIRST failure anchors it).
+    nowSpy.mockReturnValue(T0 + DELTA_DEGRADATION_THRESHOLD_MS + 1);
+    await act(async () => {
+      appStateListener!("active");
+      await Promise.resolve();
+    });
+    await flushTurn();
+
+    expect(useSyncModeStore.getState().mode).toBe("local_only");
+    expect(useSyncModeStore.getState().reason).toBe("delta_unavailable");
+
+    // Recovery: one successful pull returns to synced mode.
+    mockPullDeltas.mockResolvedValue({ seq: 9, hasMore: false, changes: [] });
+    await act(async () => {
+      appStateListener!("active");
+      await Promise.resolve();
+    });
+    await flushTurn();
+
+    expect(useSyncModeStore.getState().mode).toBe("synced");
+    nowSpy.mockRestore();
   });
 });
