@@ -24,6 +24,7 @@ import { createTestDb } from "./test-db";
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 
 const OWNER = "user-owner";
+const MEMBER = "user-member";
 const HOUSEHOLD_ID = "household-1";
 const PERIOD = "2026-02";
 
@@ -35,19 +36,31 @@ beforeEach(async () => {
 
 async function setupHousehold(): Promise<TestDb> {
   const database = await createTestDb();
-  await database.insert(user).values({ id: OWNER, name: "Owner", email: `${OWNER}@example.com` });
+  await database.insert(user).values([
+    { id: OWNER, name: "Owner", email: `${OWNER}@example.com` },
+    { id: MEMBER, name: "Member", email: `${MEMBER}@example.com` },
+  ]);
   await database.insert(household).values({
     id: HOUSEHOLD_ID,
     name: "Card Household",
     createdByUserId: OWNER,
   });
-  await database.insert(membership).values({
-    id: `membership-${OWNER}`,
-    userId: OWNER,
-    householdId: HOUSEHOLD_ID,
-    role: "owner",
-    version: 0,
-  });
+  await database.insert(membership).values([
+    {
+      id: `membership-${OWNER}`,
+      userId: OWNER,
+      householdId: HOUSEHOLD_ID,
+      role: "owner",
+      version: 0,
+    },
+    {
+      id: `membership-${MEMBER}`,
+      userId: MEMBER,
+      householdId: HOUSEHOLD_ID,
+      role: "member",
+      version: 0,
+    },
+  ]);
   return database;
 }
 
@@ -156,10 +169,10 @@ interface CardPaymentOverrides {
   budgetPeriod?: string;
 }
 
-function payCard(overrides: CardPaymentOverrides = {}): Promise<CommandResult> {
+function payCard(overrides: CardPaymentOverrides = {}, userId = OWNER): Promise<CommandResult> {
   return applyCommand({
     db,
-    userId: OWNER,
+    userId,
     envelope: {
       commandId: crypto.randomUUID(),
       householdId: HOUSEHOLD_ID,
@@ -182,10 +195,10 @@ interface RefundOverrides {
   date?: string;
 }
 
-function linkRefund(overrides: RefundOverrides): Promise<CommandResult> {
+function linkRefund(overrides: RefundOverrides, userId = OWNER): Promise<CommandResult> {
   return applyCommand({
     db,
-    userId: OWNER,
+    userId,
     envelope: {
       commandId: crypto.randomUUID(),
       householdId: HOUSEHOLD_ID,
@@ -255,6 +268,39 @@ describe("routeCardPayment (pure waterfall)", () => {
       openingDebtConsumedMinor: 300,
       unassignedConsumedMinor: 0,
       cardCreditMinor: 1_200,
+    });
+  });
+});
+
+describe("private account command authorization", () => {
+  it("rejects a member card payment involving a private account", async () => {
+    await seedFundingAccount("acc-1", 10000);
+    await seedAccount("card-1", "card");
+    await db
+      .update(ledgerAccount)
+      .set({ ownerUserId: OWNER, visibility: "private" })
+      .where(eq(ledgerAccount.id, "card-1"));
+
+    await expect(payCard({}, MEMBER)).resolves.toMatchObject({
+      kind: "forbidden",
+      requiredCapability: "accounts:private.owner",
+    });
+  });
+
+  it("rejects a member refund linked to a private account transaction", async () => {
+    await seedFundingAccount("acc-1", 10000);
+    await seedCategory("cat-groceries");
+    await seedExpense("private-expense", "acc-1", 1000);
+    await db
+      .update(ledgerAccount)
+      .set({ ownerUserId: OWNER, visibility: "private" })
+      .where(eq(ledgerAccount.id, "acc-1"));
+
+    await expect(
+      linkRefund({ originalTransactionId: "private-expense" }, MEMBER),
+    ).resolves.toMatchObject({
+      kind: "forbidden",
+      requiredCapability: "accounts:private.owner",
     });
   });
 });

@@ -246,7 +246,14 @@ describe("use-transactions hooks", () => {
 
   it("returns the transaction date range", async () => {
     const db = createMockDb({
-      selectResults: [{ get: { minDate: "2026-01-01", maxDate: "2026-03-28" } }],
+      selectResults: [
+        {
+          all: [
+            { accountId: "account-1", date: "2026-01-01", toAccountId: null },
+            { accountId: "account-1", date: "2026-03-28", toAccountId: null },
+          ],
+        },
+      ],
     });
     mockUseDatabase.mockReturnValue(db);
 
@@ -257,6 +264,32 @@ describe("use-transactions hooks", () => {
     });
 
     expect(result.current.data).toEqual({ minDate: "2026-01-01", maxDate: "2026-03-28" });
+  });
+
+  it("hides private transaction dates from local filter metadata", async () => {
+    mockUseAccountVisibility.mockReturnValue({
+      cacheKey: "household-1:shared-account",
+      isFiltering: true,
+      visibleAccountIds: new Set(["shared-account"]),
+    });
+    const db = createMockDb({
+      selectResults: [
+        {
+          all: [
+            { accountId: "private-account", date: "2026-01-01", toAccountId: null },
+            { accountId: "shared-account", date: "2026-02-01", toAccountId: null },
+          ],
+        },
+      ],
+    });
+    mockUseDatabase.mockReturnValue(db);
+
+    const { result } = await renderHookWithProviders(() => useTransactionDateRange());
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+    expect(result.current.data).toEqual({ minDate: "2026-02-01", maxDate: "2026-02-01" });
   });
 
   it("computes a month summary", async () => {

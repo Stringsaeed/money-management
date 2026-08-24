@@ -204,17 +204,27 @@ export function useTransaction(id: string | undefined) {
 
 export function useTransactionDateRange() {
   const db = useDatabase();
+  const visibility = useAccountVisibility();
   return useQuery({
-    queryKey: transactionDateRangeKeys.all,
+    queryKey: [...transactionDateRangeKeys.all, visibility.cacheKey],
     queryFn: async () => {
-      const result = (await db
+      const rows = (await db
         .select({
-          minDate: sql<string>`MIN(${transactions.date})`,
-          maxDate: sql<string>`MAX(${transactions.date})`,
+          accountId: transactions.accountId,
+          date: transactions.date,
+          toAccountId: transactions.toAccountId,
         })
         .from(transactions)
-        .get()) as { minDate: string | null; maxDate: string | null } | undefined;
-      return result ?? { minDate: null, maxDate: null };
+        .all()) as { accountId: string; date: string; toAccountId: string | null }[];
+      const dates = rows
+        .filter(
+          (row) =>
+            hasVisibleAccount(visibility, row.accountId) &&
+            (row.toAccountId === null || hasVisibleAccount(visibility, row.toAccountId)),
+        )
+        .map((row) => row.date)
+        .sort();
+      return { minDate: dates[0] ?? null, maxDate: dates.at(-1) ?? null };
     },
   });
 }

@@ -7,6 +7,7 @@ import type { BatchStatement } from "../statements";
 import { ledgerAccount, transaction } from "@trove/db/schema/ledger";
 import { getBudgetPoolFacts } from "../../budget/funding-pool";
 
+import { privateAccountAccessRejection } from "./private-account";
 import { issuesFromZod } from "./shared";
 
 /**
@@ -82,6 +83,29 @@ export const refundCreateHandler = {
       };
     }
 
+    const originalAccountRows = await ctx.db
+      .select()
+      .from(ledgerAccount)
+      .where(
+        and(
+          eq(ledgerAccount.householdId, ctx.householdId),
+          eq(ledgerAccount.id, original.accountId),
+        ),
+      )
+      .limit(1);
+    const originalAccount = originalAccountRows[0];
+    if (!originalAccount) {
+      return {
+        kind: "missing_entity",
+        entityType: "account",
+        entityId: original.accountId,
+      };
+    }
+    const originalAccountAccessRejection = privateAccountAccessRejection(ctx, originalAccount);
+    if (originalAccountAccessRejection) {
+      return originalAccountAccessRejection;
+    }
+
     // Deposit account must exist here; card refunds must return to the
     // original card (ADR-0008), cash refunds may use any Funding Account.
     const depositRows = await ctx.db
@@ -101,6 +125,10 @@ export const refundCreateHandler = {
         entityType: "account",
         entityId: input.depositAccountId,
       };
+    }
+    const depositAccessRejection = privateAccountAccessRejection(ctx, deposit);
+    if (depositAccessRejection) {
+      return depositAccessRejection;
     }
     // Card Refunds return to the original card; other accounts act as
     // same-currency Funding destinations.

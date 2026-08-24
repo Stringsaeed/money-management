@@ -15,6 +15,7 @@ import {
 } from "../../budget/reserve";
 import { ledgerAccount, transaction } from "@trove/db/schema/ledger";
 
+import { privateAccountAccessRejection } from "./private-account";
 import { issuesFromZod } from "./shared";
 
 /**
@@ -78,6 +79,14 @@ export const paymentCreateHandler = {
     }
     if (!funding) {
       return { kind: "missing_entity", entityType: "account", entityId: input.fundingAccountId };
+    }
+    const cardAccessRejection = privateAccountAccessRejection(ctx, card);
+    if (cardAccessRejection) {
+      return cardAccessRejection;
+    }
+    const fundingAccessRejection = privateAccountAccessRejection(ctx, funding);
+    if (fundingAccessRejection) {
+      return fundingAccessRejection;
     }
     if (card.currency !== input.currency || funding.currency !== input.currency) {
       return {
