@@ -54,7 +54,7 @@ export interface CommandPlan {
 /** Rejections decidable from state before the batch runs. */
 export type PlanRejection = Extract<
   CommandResult,
-  { kind: "invalid_intent" | "missing_entity" | "stale_version" | "conflict" }
+  { kind: "forbidden" | "invalid_intent" | "missing_entity" | "stale_version" | "conflict" }
 >;
 
 export function isPlanRejection(value: CommandPlan | PlanRejection): value is PlanRejection {

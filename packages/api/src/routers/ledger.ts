@@ -1,11 +1,12 @@
-import { and, asc, desc, eq, lt } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { createDb } from "@trove/db";
 import { z } from "zod";
 
-import { ledgerAccount, category, transaction } from "@trove/db/schema/ledger";
+import { category } from "@trove/db/schema/ledger";
 
 import type { CommandDatabase } from "../lib/commands/types";
 import type { HouseholdCaller } from "../lib/require-member";
+import { listAccounts, listTransactions } from "../lib/ledger/read";
 import { requireHouseholdMember } from "../lib/require-member";
 import { requireUserId } from "../lib/require-user";
 import { protectedProcedure } from "../index";
@@ -27,15 +28,6 @@ const transactionsInput = householdInput.extend({
     .optional(),
 });
 
-async function listAccounts(db: CommandDatabase, caller: HouseholdCaller) {
-  await requireHouseholdMember(db, caller.userId, caller.householdId);
-  return db
-    .select()
-    .from(ledgerAccount)
-    .where(eq(ledgerAccount.householdId, caller.householdId))
-    .orderBy(asc(ledgerAccount.sortOrder), asc(ledgerAccount.name));
-}
-
 async function listCategories(db: CommandDatabase, caller: HouseholdCaller) {
   await requireHouseholdMember(db, caller.userId, caller.householdId);
   return db
@@ -43,33 +35,6 @@ async function listCategories(db: CommandDatabase, caller: HouseholdCaller) {
     .from(category)
     .where(eq(category.householdId, caller.householdId))
     .orderBy(asc(category.sortOrder), asc(category.name));
-}
-
-interface TransactionPage {
-  readonly transactions: readonly (typeof transaction.$inferSelect)[];
-  readonly hasMore: boolean;
-}
-
-async function listTransactions(
-  db: CommandDatabase,
-  caller: HouseholdCaller,
-  limit: number,
-  beforeDate?: string,
-): Promise<TransactionPage> {
-  await requireHouseholdMember(db, caller.userId, caller.householdId);
-  const rows = await db
-    .select()
-    .from(transaction)
-    .where(
-      and(
-        eq(transaction.householdId, caller.householdId),
-        ...(beforeDate ? [lt(transaction.date, beforeDate)] : []),
-      ),
-    )
-    .orderBy(desc(transaction.date), desc(transaction.id))
-    .limit(limit + 1);
-  const hasMore = rows.length > limit;
-  return { transactions: rows.slice(0, limit), hasMore };
 }
 
 /**

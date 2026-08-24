@@ -77,6 +77,7 @@ function spendingPerEnvelopeSql(
     WHERE t.household_id = ${householdId}
       AND t.type = 'expense'
       AND t.currency = ${currency}
+      AND ca.visibility = 'public'
       AND t.date < ${ceiling}
     GROUP BY cm.envelope_id`;
 }
@@ -91,6 +92,7 @@ function paymentsIntoCardsSql(householdId: string, currency: string, ceiling: st
     WHERE p.household_id = ${householdId}
       AND p.type = 'transfer'
       AND p.currency = ${currency}
+      AND dest.visibility = 'public'
       AND p.date < ${ceiling}
   ), 0)`;
 }

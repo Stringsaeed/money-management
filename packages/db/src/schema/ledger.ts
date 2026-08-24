@@ -25,6 +25,7 @@ import { household } from "./household";
  */
 
 const ACCOUNT_TYPES = ["cash", "bank", "card"] as const;
+const ACCOUNT_VISIBILITIES = ["public", "private"] as const;
 const CATEGORY_TYPES = ["income", "expense"] as const;
 const TRANSACTION_TYPES = ["expense", "income", "transfer"] as const;
 
@@ -50,6 +51,10 @@ export const ledgerAccount = sqliteTable(
       .notNull()
       .default("active"),
     lifecycleChangedAt: integer("lifecycle_changed_at", { mode: "timestamp_ms" }),
+    /** Private Accounts stay visible only to their owning User through the API surface. */
+    visibility: text("visibility", { enum: ACCOUNT_VISIBILITIES }).notNull().default("public"),
+    /** The User entitled to read and manage a private Account. */
+    ownerUserId: text("owner_user_id").references(() => auth.user.id),
     version: integer("version").notNull().default(0),
     createdBy: text("created_by")
       .notNull()
@@ -69,7 +74,16 @@ export const ledgerAccount = sqliteTable(
     primaryKey({ columns: [table.householdId, table.id] }),
     check("accounts_lifecycle_valid", sql`${table.lifecycle} IN ('active', 'archived')`),
     check("accounts_type_valid", sql`${table.type} IN ('cash', 'bank', 'card')`),
+    check(
+      "accounts_private_owner_required",
+      sql`${table.visibility} = 'public' OR ${table.ownerUserId} IS NOT NULL`,
+    ),
     index("accounts_household_lifecycle_idx").on(table.householdId, table.lifecycle),
+    index("accounts_household_visibility_owner_idx").on(
+      table.householdId,
+      table.visibility,
+      table.ownerUserId,
+    ),
   ],
 );
 

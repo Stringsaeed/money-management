@@ -7,6 +7,7 @@ import { ledgerAccount } from "@trove/db/schema/ledger";
 import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
 import { checkExpectedVersion, issuesFromZod } from "./shared";
+import { privateAccountAccessRejection } from "./private-account";
 
 /** Effect tags for structural Account writes: balances + summaries move. */
 const ACCOUNT_EFFECTS = ["balances", "summaries"] as const;
@@ -22,6 +23,7 @@ export const createAccountPayloadSchema = z.object({
   initialBalanceMinor: z.number().int().default(0),
   excludeFromTotal: z.boolean().default(false),
   sortOrder: z.number().int().default(0),
+  visibility: z.enum(["public", "private"]).default("public"),
 });
 
 export const updateAccountPayloadSchema = z.object({
@@ -31,6 +33,7 @@ export const updateAccountPayloadSchema = z.object({
   icon: z.string().min(1).max(64).optional(),
   excludeFromTotal: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
+  visibility: z.enum(["public", "private"]).optional(),
 });
 
 export const archiveAccountPayloadSchema = z.object({
@@ -100,6 +103,8 @@ export const accountHandlers = {
               initialBalanceMinor: input.initialBalanceMinor,
               excludeFromTotal: input.excludeFromTotal,
               sortOrder: input.sortOrder,
+              visibility: input.visibility,
+              ownerUserId: ctx.actorUserId,
               createdBy: ctx.actorUserId,
               updatedBy: ctx.actorUserId,
             })
@@ -130,6 +135,17 @@ export const accountHandlers = {
           entityType: "account",
           entityId: input.accountId,
         } satisfies PlanRejection;
+      }
+      const privateAccessRejection = privateAccountAccessRejection(ctx, existing);
+      if (privateAccessRejection) {
+        return privateAccessRejection;
+      }
+      if (input.visibility !== undefined && existing.ownerUserId !== ctx.actorUserId) {
+        return {
+          kind: "forbidden",
+          role: ctx.actorRole,
+          requiredCapability: "accounts:private.owner",
+        };
       }
       // Archived accounts stay editable? No — re-open is a deliberate act the
       // client performs via a dedicated flow; reject silent edits.
@@ -164,6 +180,7 @@ export const accountHandlers = {
                 excludeFromTotal: input.excludeFromTotal,
               }),
               ...(input.sortOrder !== undefined && { sortOrder: input.sortOrder }),
+              ...(input.visibility !== undefined && { visibility: input.visibility }),
               updatedBy: ctx.actorUserId,
               version: sql`${ledgerAccount.version} + 1`,
             })
@@ -194,6 +211,10 @@ export const accountHandlers = {
           entityType: "account",
           entityId: input.accountId,
         } satisfies PlanRejection;
+      }
+      const privateAccessRejection = privateAccountAccessRejection(ctx, existing);
+      if (privateAccessRejection) {
+        return privateAccessRejection;
       }
       if (existing.lifecycle === "archived") {
         return {

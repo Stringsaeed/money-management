@@ -82,6 +82,7 @@ export function fundingPoolSql(householdId: string, currency: string, period: st
       FROM accounts a
       WHERE a.household_id = ${householdId}
         AND a.currency = ${currency}
+        AND a.visibility = 'public'
         AND a.id IN (SELECT value FROM json_each(${members}))
     )
   )`;
