@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach } from "@jest/globals";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
+import type { SQLiteDatabase } from "expo-sqlite";
 import type { CommandEnvelope, CommandResult } from "@trove/protocol";
 
 import {
@@ -11,14 +12,18 @@ import {
   discardRejectedCommand,
   drainOutbox,
   enqueueCommand,
+  getRejectedChange,
   listRejectedChanges,
   pullDeltas,
+  resubmitRejectedCommand,
   retryRejectedCommand,
 } from "@/lib/sync/outbox";
 import * as schema from "@/db/schema";
-import { createTestSQLiteDatabase, type TestSQLiteDatabase } from "@/tests/test-utils/sqlite";
+import { createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
 
-type LocalDb = ExpoSQLiteDatabase<typeof schema>;
+type LocalDb = ExpoSQLiteDatabase<typeof schema> & { $client: SQLiteDatabase };
+
+type TestSQLiteDatabase = ReturnType<typeof createTestSQLiteDatabase>;
 
 const HOUSEHOLD_ID = "household-1";
 const OUTBOX_MIGRATION = "0004_outbox_sync.sql";
@@ -68,7 +73,7 @@ function makeSend(results: CommandResult[]) {
   return { send, sent };
 }
 
-const applied = (): CommandResult => ({
+const applied = (): Extract<CommandResult, { kind: "applied" }> => ({
   kind: "applied",
   seq: 1,
   effects: ["ledger"],
@@ -177,6 +182,35 @@ describe("drainOutbox", () => {
     expect(second.applied).toBe(2);
   });
 
+  it("keeps commands queued and stops draining when the server returns local_only", async () => {
+    const db = await setupDb();
+    await enqueueCommand(db, makeInput({ commandId: "cmd-a" }));
+    await enqueueCommand(db, makeInput({ commandId: "cmd-b" }));
+    let attempts = 0;
+    const send = async (): Promise<CommandResult> => {
+      attempts += 1;
+      return { kind: "local_only", reason: "kill_switch_local_only" };
+    };
+
+    const summary = await drainOutbox(db, send);
+
+    // The kill switch is not a rejection — nothing lands in the inbox and
+    // every command stays queued for when sync resumes.
+    expect(summary).toEqual({
+      applied: 0,
+      rejected: 0,
+      pending: 2,
+      stoppedOnLocalOnly: true,
+    });
+    expect(attempts).toBe(1);
+
+    const rows = await db.select().from(schema.outboxCommands);
+    expect(rows.map((r) => [r.commandId, r.status, r.rejectionKind])).toEqual([
+      ["cmd-a", "pending", null],
+      ["cmd-b", "pending", null],
+    ]);
+  });
+
   it("retries a 'sending' row left behind by a crash without double-applying server-side", async () => {
     const db = await setupDb();
     await enqueueCommand(db, makeInput({ commandId: "cmd-crash" }));
@@ -260,5 +294,96 @@ describe("rejected changes inbox", () => {
     await discardRejectedCommand(db, inbox[1].commandId);
     expect(await listRejectedChanges(db, HOUSEHOLD_ID)).toHaveLength(0);
     expect(await db.select().from(schema.outboxCommands)).toHaveLength(1);
+  });
+
+  it("surfaces the typed rejection union and original payload on each entry", async () => {
+    const db = await setupDb();
+    await enqueueCommand(db, makeInput({ commandId: "cmd-typed" }));
+    await drainOutbox(db, async () => ({
+      kind: "invalid_intent",
+      issues: [{ field: "amountMinor", message: "must be positive" }],
+    }));
+
+    const entry = await getRejectedChange(db, "cmd-typed");
+    expect(entry).toMatchObject({
+      commandId: "cmd-typed",
+      kind: "transaction.create",
+      rejectionKind: "invalid_intent",
+      rejection: {
+        kind: "invalid_intent",
+        issues: [{ field: "amountMinor", message: "must be positive" }],
+      },
+      payload: { amountMinor: expect.any(Number) },
+    });
+  });
+
+  it("resubmits an edited rejected command under a NEW commandId", async () => {
+    const db = await setupDb();
+    await enqueueCommand(
+      db,
+      makeInput({
+        commandId: "cmd-edit-me",
+        kind: "transaction.edit",
+        payload: { transactionId: "tx-1", amountMinor: -50 },
+        preconditions: [{ entityId: "tx-1", expectedVersion: 3 }],
+      }),
+    );
+    await drainOutbox(db, async () => ({
+      kind: "invalid_intent",
+      issues: [{ field: "amountMinor", message: "must be positive" }],
+    }));
+
+    await resubmitRejectedCommand(db, {
+      originalCommandId: "cmd-edit-me",
+      newCommandId: "cmd-brand-new",
+      payload: { transactionId: "tx-1", amountMinor: 5000 },
+    });
+
+    const rows = await db.select().from(schema.outboxCommands);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      commandId: "cmd-brand-new",
+      status: "pending",
+      attempts: 0,
+    });
+    expect(rows[0].rejectionKind).toBeNull();
+    expect(JSON.parse(rows[0].payload)).toEqual({ transactionId: "tx-1", amountMinor: 5000 });
+    expect(JSON.parse(rows[0].preconditions!)).toEqual([{ entityId: "tx-1", expectedVersion: 3 }]);
+
+    // And it drains like any fresh command.
+    const summary = await drainOutbox(db, async () => applied());
+    expect(summary.applied).toBe(1);
+  });
+
+  it("keeps the original payload when resubmitting without edits", async () => {
+    const db = await setupDb();
+    await enqueueCommand(db, makeInput({ commandId: "cmd-keep", payload: { note: "unchanged" } }));
+    await drainOutbox(db, async () => ({ kind: "conflict", reason: "unassigned_money_changed" }));
+
+    await resubmitRejectedCommand(db, {
+      originalCommandId: "cmd-keep",
+      newCommandId: "cmd-keep-2",
+    });
+
+    const rows = await db.select().from(schema.outboxCommands);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].commandId).toBe("cmd-keep-2");
+    expect(JSON.parse(rows[0].payload)).toEqual({ note: "unchanged" });
+  });
+
+  it("refuses to resubmit a rejected command that is no longer in the inbox", async () => {
+    const db = await setupDb();
+    await enqueueCommand(db, makeInput({ commandId: "cmd-gone" }));
+    await drainOutbox(db, async () => ({
+      kind: "missing_entity",
+      entityType: "account",
+      entityId: "acc-1",
+    }));
+    await discardRejectedCommand(db, "cmd-gone");
+
+    await expect(
+      resubmitRejectedCommand(db, { originalCommandId: "cmd-gone", newCommandId: "cmd-next" }),
+    ).rejects.toThrow("Nothing to resubmit");
+    expect(await db.select().from(schema.outboxCommands)).toHaveLength(0);
   });
 });

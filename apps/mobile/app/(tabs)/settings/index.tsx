@@ -102,6 +102,13 @@ export default function SettingsScreen() {
           subtitle={`${activeRecurring} active`}
           onPress={() => router.push("/recurring")}
         />
+        <Divider />
+        <SettingsRow
+          emoji="📜"
+          label="Activity Timeline"
+          subtitle="Who changed what, and when"
+          onPress={() => router.push("/activity")}
+        />
       </Card>
 
       {/* Stats */}
