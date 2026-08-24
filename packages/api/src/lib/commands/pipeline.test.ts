@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { user } from "@trove/db/schema/auth";
 import { commandResult, householdChange } from "@trove/db/schema/commands";
@@ -141,21 +141,23 @@ describe("commands.apply — happy path", () => {
   it("publishes the committed notification once, never again for an idempotent replay", async () => {
     const env = makeEnvelope();
     const publications: unknown[] = [];
+    const waitUntil = vi.fn();
     const publishChange = async (change: unknown) => {
       publications.push(change);
     };
 
     const first = expectApplied(
-      await applyCommand({ db, userId: OWNER, envelope: env, publishChange }),
+      await applyCommand({ db, userId: OWNER, envelope: env, publishChange, waitUntil }),
     );
     const replay = expectApplied(
-      await applyCommand({ db, userId: OWNER, envelope: env, publishChange }),
+      await applyCommand({ db, userId: OWNER, envelope: env, publishChange, waitUntil }),
     );
 
     expect(replay.replayed).toBe(true);
     expect(publications).toEqual([
       { householdId: HOUSEHOLD_ID, seq: first.seq, effects: first.effects },
     ]);
+    expect(waitUntil).toHaveBeenCalledTimes(1);
   });
   it("allocates monotonically increasing per-household seq numbers", async () => {
     const first = expectApplied(await applyAs(OWNER, makeEnvelope()));

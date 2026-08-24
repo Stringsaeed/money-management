@@ -4,7 +4,7 @@ import { createHouseholdChangePublisher, type PushNamespace } from "./publisher"
 
 describe("createHouseholdChangePublisher", () => {
   it("is absent without the optional Durable Object binding", () => {
-    expect(createHouseholdChangePublisher({})).toBeUndefined();
+    expect(createHouseholdChangePublisher(undefined)).toBeUndefined();
   });
 
   it("routes a committed household notification to its named Durable Object", async () => {
@@ -14,7 +14,7 @@ describe("createHouseholdChangePublisher", () => {
       idFromName: vi.fn().mockReturnValue(id),
       get: vi.fn().mockReturnValue({ fetch }),
     };
-    const publishChange = createHouseholdChangePublisher({ PUSH_HOUSEHOLD_DO: namespace });
+    const publishChange = createHouseholdChangePublisher(namespace);
 
     await publishChange?.({ householdId: "household-1", seq: 7, effects: ["ledger"] });
 

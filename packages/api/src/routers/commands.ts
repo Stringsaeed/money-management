@@ -4,12 +4,14 @@ import { env } from "@trove/env/server";
 import { protectedProcedure } from "../index";
 import { applyCommand } from "../lib/commands/pipeline";
 import { commandEnvelopeSchema } from "../lib/commands/schema";
-import { createHouseholdChangePublisher, type PushCapableEnv } from "../lib/push/publisher";
+import { createHouseholdChangePublisher, isPushNamespace } from "../lib/push/publisher";
 import { requireUserId } from "../lib/require-user";
 
-// `env` carries every Worker binding, while this publisher needs only its DO.
-// Narrowing here avoids expanding the generated binding type through oRPC.
-const householdChangePublisher = createHouseholdChangePublisher(env as unknown as PushCapableEnv);
+const workerBindings: object = env;
+const pushHouseholdBinding = Reflect.get(workerBindings, "PUSH_HOUSEHOLD_DO");
+const householdChangePublisher = createHouseholdChangePublisher(
+  isPushNamespace(pushHouseholdBinding) ? pushHouseholdBinding : undefined,
+);
 
 export const commandsRouter = {
   /**
@@ -26,6 +28,7 @@ export const commandsRouter = {
       userId,
       envelope: input,
       publishChange: householdChangePublisher,
+      waitUntil: context.waitUntil,
     });
   }),
 };

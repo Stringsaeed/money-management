@@ -57,5 +57,10 @@ export async function handleHouseholdPushUpgrade(
   }
 
   const stub = deps.namespace.get(deps.namespace.idFromName(householdId));
-  return stub.fetch(request);
+  return stub.fetch(
+    new Request("https://push.internal/connect", {
+      method: request.method,
+      headers: request.headers,
+    }),
+  );
 }

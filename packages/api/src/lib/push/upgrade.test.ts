@@ -84,7 +84,11 @@ describe("handleHouseholdPushUpgrade", () => {
 
     expect(namespace.idFromName).toHaveBeenCalledWith("household-1");
     expect(namespace.get).toHaveBeenCalledWith(id);
-    expect(fetch).toHaveBeenCalledWith(request);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    const forwardedRequest = fetch.mock.calls[0][0] as Request;
+    expect(forwardedRequest.url).toBe("https://push.internal/connect");
+    expect(forwardedRequest.method).toBe("GET");
+    expect(forwardedRequest.headers.get("cookie")).toBe("session=fake");
     expect(response).toBe(forwarded);
   });
 });

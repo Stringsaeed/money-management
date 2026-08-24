@@ -9,9 +9,13 @@ export interface PushNamespace {
   get(id: DurableObjectId): { fetch(request: Request): Promise<Response> };
 }
 
-export interface PushCapableEnv {
-  PUSH_HOUSEHOLD_DO?: PushNamespace;
-}
+export const isPushNamespace = (value: unknown): value is PushNamespace => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const candidate = value as Record<string, unknown>;
+  return typeof candidate.idFromName === "function" && typeof candidate.get === "function";
+};
 
 /**
  * Fire-and-forget publication of one committed change. Receives the household
@@ -24,12 +28,12 @@ export type ChangePublisher = (
 ) => Promise<void>;
 
 /**
- * Builds the pipeline's post-commit publisher from the Workers env. Returns
- * undefined when the DO binding is absent (local node tooling, tests) so
- * callers skip publishing entirely.
+ * Builds the pipeline's post-commit publisher from the optional DO binding.
+ * Local node tooling and tests have no binding, so callers skip publishing.
  */
-export function createHouseholdChangePublisher(env: PushCapableEnv): ChangePublisher | undefined {
-  const namespace = env.PUSH_HOUSEHOLD_DO;
+export function createHouseholdChangePublisher(
+  namespace: PushNamespace | undefined,
+): ChangePublisher | undefined {
   if (!namespace) {
     return undefined;
   }

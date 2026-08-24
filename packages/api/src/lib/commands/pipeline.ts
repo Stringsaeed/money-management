@@ -71,6 +71,8 @@ export interface ApplyCommandArgs {
    * latency, so it must never fail (or retry) the mutation itself.
    */
   publishChange?: ChangePublisher;
+  /** Keeps a best-effort publish alive after the Worker returns its response. */
+  waitUntil?: (promise: Promise<unknown>) => void;
 }
 
 /**
@@ -83,6 +85,7 @@ export async function applyCommand({
   userId,
   envelope,
   publishChange,
+  waitUntil,
 }: ApplyCommandArgs): Promise<CommandResult> {
   const kind = envelope.kind;
 
@@ -253,7 +256,7 @@ export async function applyCommand({
       message: "Command committed but no change row was appended. Verify the batch statements.",
     });
   }
-  return finishApplied(publishChange, envelope.householdId, applied);
+  return finishApplied(publishChange, waitUntil, envelope.householdId, applied);
 }
 
 /**
@@ -263,19 +266,25 @@ export async function applyCommand({
  */
 function finishApplied(
   publishChange: ChangePublisher | undefined,
+  waitUntil: ((promise: Promise<unknown>) => void) | undefined,
   householdId: string,
   applied: Extract<CommandResult, { kind: "applied" }>,
 ): Extract<CommandResult, { kind: "applied" }> {
   if (publishChange) {
-    void publishChange({ householdId, seq: applied.seq, effects: applied.effects }).catch(
-      (error) => {
-        console.error("commands.apply: change notification failed", {
-          householdId,
-          seq: applied.seq,
-          error,
-        });
-      },
-    );
+    const publishing = publishChange({
+      householdId,
+      seq: applied.seq,
+      effects: applied.effects,
+    }).catch((error) => {
+      console.error("commands.apply: change notification failed", {
+        householdId,
+        seq: applied.seq,
+        error,
+      });
+    });
+    if (waitUntil) {
+      waitUntil(publishing);
+    }
   }
   return applied;
 }
