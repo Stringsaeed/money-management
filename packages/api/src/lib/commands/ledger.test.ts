@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { user } from "@trove/db/schema/auth";
 import { commandResult } from "@trove/db/schema/commands";
 import { household, membership } from "@trove/db/schema/household";
-import { periodProjectionCache } from "@trove/db/schema/budget";
+import { fundingMembership, periodProjectionCache } from "@trove/db/schema/budget";
 import { ledgerAccount, category, transaction } from "@trove/db/schema/ledger";
 import type { AppliedResult, CommandEnvelope, CommandResult } from "@trove/protocol";
 
@@ -200,6 +200,27 @@ describe("ledger commands — accounts", () => {
         payload: { accountId: "acc-1" },
       }),
     ).resolves.toMatchObject({ kind: "forbidden", requiredCapability: "accounts:private.owner" });
+  });
+
+  it("refuses to privatize an account with active Funding Membership", async () => {
+    await seedAccount();
+    await db.insert(fundingMembership).values({
+      householdId: HOUSEHOLD_ID,
+      accountId: "acc-1",
+      currency: "USD",
+      active: true,
+      effectiveFromPeriod: "2026-01",
+      version: 0,
+      createdBy: OWNER,
+      updatedBy: OWNER,
+    });
+
+    await expect(
+      applyAs(OWNER, {
+        ...makeEnvelope("account.update"),
+        payload: { accountId: "acc-1", visibility: "private" },
+      }),
+    ).resolves.toMatchObject({ kind: "invalid_intent" });
   });
 
   it("archives instead of deleting (ADR-0009) and stamps lifecycleChangedAt", async () => {

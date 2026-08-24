@@ -9,11 +9,11 @@ interface AccountPrivacyToggleProps {
 }
 
 /** Owner-only control for a server-authoritative account's shared visibility. */
-export function AccountPrivacyToggle({
+export const AccountPrivacyToggle = ({
   isPrivate,
   isPending,
   onChange,
-}: AccountPrivacyToggleProps) {
+}: AccountPrivacyToggleProps) => {
   return (
     <View className="flex-row items-center justify-between gap-4 rounded-xl border border-ledger-outline bg-surface-container px-4 py-3">
       <View className="flex-1 gap-0.5">
@@ -30,4 +30,4 @@ export function AccountPrivacyToggle({
       />
     </View>
   );
-}
+};

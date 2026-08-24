@@ -18,6 +18,7 @@ import { renderHookWithProviders } from "@/tests/test-utils/render";
 
 const mockUseDatabase = jest.fn();
 const mockCohereLedgerCache = jest.fn();
+const mockUseAccountVisibility = jest.fn();
 
 interface CoherenceAwareMutation<T> {
   expectMutationPendingUntilCoherence: () => void;
@@ -75,6 +76,14 @@ jest.mock("@/db/client", () => ({
   useDatabase: () => mockUseDatabase(),
 }));
 
+jest.mock("@/hooks/use-account-visibility", () => ({
+  hasVisibleAccount: (
+    visibility: { isFiltering: boolean; visibleAccountIds: Set<string> },
+    id: string,
+  ) => !visibility.isFiltering || visibility.visibleAccountIds.has(id),
+  useAccountVisibility: () => mockUseAccountVisibility(),
+}));
+
 jest.mock("@/utils/id", () => ({
   generateId: jest.fn(() => "generated-transaction-id"),
 }));
@@ -95,6 +104,11 @@ jest.mock("@/modules/ledger-cache", () => ({
 
 describe("use-transactions hooks", () => {
   beforeEach(() => {
+    mockUseAccountVisibility.mockReturnValue({
+      cacheKey: "local-only",
+      isFiltering: false,
+      visibleAccountIds: new Set(),
+    });
     mockCohereLedgerCache.mockResolvedValue(undefined);
   });
   it("loads and enriches transaction lists via JOIN", async () => {

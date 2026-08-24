@@ -262,6 +262,19 @@ describe("period projections", () => {
     await mapCategory("cat-groceries", "env-groceries");
     await assign("2026-01", "env-groceries", 2000);
     await spendExpense("2026-01-15", 500, "acc-private", "cat-groceries");
+    await db.insert(transaction).values({
+      householdId: HOUSEHOLD_ID,
+      id: "private-transfer",
+      type: "transfer",
+      amountMinor: 2000,
+      currency: "USD",
+      date: "2026-01-16",
+      accountId: "acc-private",
+      toAccountId: "acc-shared",
+      version: 0,
+      createdBy: OWNER,
+      updatedBy: OWNER,
+    });
     await appendChange();
 
     const { projections } = await read();

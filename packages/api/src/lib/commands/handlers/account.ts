@@ -2,6 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import type { ValidationIssue } from "@trove/protocol";
+import { fundingMembership } from "@trove/db/schema/budget";
 import { ledgerAccount } from "@trove/db/schema/ledger";
 
 import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
@@ -53,6 +54,30 @@ async function loadAccount(
     .where(and(eq(ledgerAccount.householdId, ctx.householdId), eq(ledgerAccount.id, accountId)))
     .limit(1);
   return rows[0] ?? null;
+}
+
+/** A private Account may not contribute to any current or planned Funding Pool. */
+async function hasActiveFundingMembership(ctx: PlanContext, accountId: string): Promise<boolean> {
+  const rows = await ctx.db
+    .select({ active: fundingMembership.active })
+    .from(fundingMembership)
+    .where(
+      and(
+        eq(fundingMembership.householdId, ctx.householdId),
+        eq(fundingMembership.accountId, accountId),
+        eq(
+          fundingMembership.effectiveFromPeriod,
+          sql`(
+            SELECT MAX(latest.effective_from_period)
+            FROM funding_memberships latest
+            WHERE latest.household_id = ${ctx.householdId}
+              AND latest.account_id = ${accountId}
+          )`,
+        ),
+      ),
+    )
+    .limit(1);
+  return rows[0]?.active ?? false;
 }
 
 /** Optimistic-concurrency guard shared by update/archive. */
@@ -145,6 +170,17 @@ export const accountHandlers = {
           kind: "forbidden",
           role: ctx.actorRole,
           requiredCapability: "accounts:private.owner",
+        };
+      }
+      if (input.visibility === "private" && (await hasActiveFundingMembership(ctx, existing.id))) {
+        return {
+          kind: "invalid_intent",
+          issues: [
+            {
+              field: "visibility",
+              message: "Remove this account from the Funding Pool before making it private.",
+            },
+          ],
         };
       }
       // Archived accounts stay editable? No — re-open is a deliberate act the

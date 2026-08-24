@@ -146,7 +146,7 @@ export default function AccountDetailScreen() {
           <AccountPrivacyToggle
             isPending={accountPrivacy.isPending}
             isPrivate={serverAccount.visibility === "private"}
-            onChange={(isPrivate) => accountPrivacy.mutate(isPrivate)}
+            onChange={accountPrivacy.mutate}
           />
           {accountPrivacy.error ? (
             <Text className="mt-2 font-body-normal text-xs text-destructive">

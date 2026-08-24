@@ -3,6 +3,7 @@ import { aliasedTable, and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
 
 import { useDatabase } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
+import { hasVisibleAccount, useAccountVisibility } from "@/hooks/use-account-visibility";
 import {
   cohereLedgerCache,
   monthSummaryKeys,
@@ -116,8 +117,9 @@ function mapRowToTransaction(row: EnrichedRow): TransactionWithDetails {
 
 export function useTransactions(filters: TransactionFilters) {
   const db = useDatabase();
+  const visibility = useAccountVisibility();
   return useQuery({
-    queryKey: transactionKeys.list(filters),
+    queryKey: [...transactionKeys.list(filters), visibility.cacheKey],
     queryFn: async (): Promise<TransactionWithDetails[]> => {
       const conditions = [];
 
@@ -161,15 +163,22 @@ export function useTransactions(filters: TransactionFilters) {
       }
 
       const rows = await query.all();
-      return (rows as unknown as EnrichedRow[]).map(mapRowToTransaction);
+      return (rows as unknown as EnrichedRow[])
+        .map(mapRowToTransaction)
+        .filter(
+          (item) =>
+            hasVisibleAccount(visibility, item.accountId) &&
+            (item.toAccountId === null || hasVisibleAccount(visibility, item.toAccountId)),
+        );
     },
   });
 }
 
 export function useTransaction(id: string | undefined) {
   const db = useDatabase();
+  const visibility = useAccountVisibility();
   return useQuery({
-    queryKey: transactionKeys.detail(id ?? ""),
+    queryKey: [...transactionKeys.detail(id ?? ""), visibility.cacheKey],
     queryFn: async (): Promise<TransactionWithDetails | undefined> => {
       const row = await db
         .select(enrichedSelect)
@@ -181,7 +190,11 @@ export function useTransaction(id: string | undefined) {
         .get();
 
       if (!row) return undefined;
-      return mapRowToTransaction(row as unknown as EnrichedRow);
+      const mapped = mapRowToTransaction(row as unknown as EnrichedRow);
+      return hasVisibleAccount(visibility, mapped.accountId) &&
+        (mapped.toAccountId === null || hasVisibleAccount(visibility, mapped.toAccountId))
+        ? mapped
+        : undefined;
     },
     enabled: !!id,
   });
@@ -215,8 +228,9 @@ export function useMonthSummary(
   enabled = true,
 ) {
   const db = useDatabase();
+  const visibility = useAccountVisibility();
   return useQuery({
-    queryKey: monthSummaryKeys.detail(year, month, accountId),
+    queryKey: [...monthSummaryKeys.detail(year, month, accountId), visibility.cacheKey],
     enabled,
     queryFn: async () => {
       const { start, end } = monthBounds(year, month);
@@ -233,9 +247,14 @@ export function useMonthSummary(
         .where(and(...conditions))
         .all()) as Transaction[];
 
+      const visibleRows = rows.filter(
+        (row) =>
+          hasVisibleAccount(visibility, row.accountId) &&
+          (row.toAccountId === null || hasVisibleAccount(visibility, row.toAccountId)),
+      );
       let totalIncome = 0;
       let totalExpense = 0;
-      for (const t of rows) {
+      for (const t of visibleRows) {
         if (t.type === "income") totalIncome += t.amount;
         else if (t.type === "expense") totalExpense += t.amount;
       }

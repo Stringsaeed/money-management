@@ -87,6 +87,8 @@ function paymentsIntoCardsSql(householdId: string, currency: string, ceiling: st
   return sql`COALESCE((
     SELECT SUM(p.amount_minor)
     FROM transactions p
+    JOIN accounts source
+      ON source.household_id = p.household_id AND source.id = p.account_id AND source.visibility = 'public'
     JOIN accounts dest
       ON dest.household_id = p.household_id AND dest.id = p.to_account_id AND dest.type = 'card'
     WHERE p.household_id = ${householdId}
