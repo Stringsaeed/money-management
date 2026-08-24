@@ -17,9 +17,12 @@ export {
 } from "./command.js";
 export {
   EFFECT_TAGS,
+  HOUSEHOLD_CHANNEL_PREFIX,
   coversEffects,
+  householdChannel,
   type ChangeNotification,
   type EffectTag,
   type Effects,
   type HouseholdChange,
+  type HouseholdChangeNotice,
 } from "./effects.js";

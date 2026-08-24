@@ -27,6 +27,11 @@ jest.mock("@/lib/sync/outbox", () => ({
   retryRejectedCommand: (...args: unknown[]) => mockRetry(...args),
 }));
 
+const mockUseHouseholdPush = jest.fn();
+jest.mock("@/hooks/use-household-push", () => ({
+  useHouseholdPush: (...args: unknown[]) => mockUseHouseholdPush(...args),
+}));
+
 jest.mock("@/lib/server/orpc", () => ({
   orpc: {
     commands: { apply: (...args: unknown[]) => mockApply(...args) },
@@ -147,6 +152,27 @@ describe("useSyncWorker", () => {
 
     await waitFor(() => {
       expect(mockDrainOutbox).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it("a realtime push notice triggers the same drain+pull turn as polling", async () => {
+    await renderHookWithProviders(() => useSyncWorker(HOUSEHOLD_ID));
+    await waitFor(() => {
+      expect(mockDrainOutbox).toHaveBeenCalledTimes(1);
+    });
+
+    // The worker subscribes per household, handing its sync turn to the hook.
+    expect(mockUseHouseholdPush).toHaveBeenCalledWith(HOUSEHOLD_ID, expect.any(Function));
+    const onNotice = mockUseHouseholdPush.mock.calls[0][1] as () => void;
+
+    await act(async () => {
+      onNotice();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(mockDrainOutbox).toHaveBeenCalledTimes(2);
+      expect(mockPullDeltas).toHaveBeenCalledTimes(2);
     });
   });
 
