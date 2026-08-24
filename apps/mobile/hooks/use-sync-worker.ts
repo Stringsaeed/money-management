@@ -3,6 +3,7 @@ import { AppState } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useDatabase } from "@/db/client";
+import { useHouseholdPush } from "@/hooks/use-household-push";
 import {
   countPendingCommands,
   discardRejectedCommand,
@@ -121,10 +122,11 @@ export function useSyncWorker(householdId: string | null) {
     try {
       // Drain first: local intent leaves before remote changes arrive, so a
       // rejected command is visible in the inbox as soon as possible.
+      // The generated oRPC input is mutable; keep the stored outbox envelope immutable.
       const summary = await drainOutbox(db, (envelope) =>
         orpc.commands.apply({
           ...envelope,
-          preconditions: envelope.preconditions ? [...envelope.preconditions] : undefined,
+          preconditions: envelope.preconditions?.map((precondition) => ({ ...precondition })),
         }),
       );
 
@@ -171,6 +173,10 @@ export function useSyncWorker(householdId: string | null) {
       setIsSyncing(false);
     }
   }, [db, householdId, queryClient, refreshCounters, statusPending]);
+
+  // Realtime push (#93): a household notice triggers the same drain+pull turn
+  // as polling — push only changes when it runs, never what it computes.
+  useHouseholdPush(householdId, runSyncTurn);
 
   // Initial + per-household kick-off.
   useEffect(() => {

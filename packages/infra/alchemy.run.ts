@@ -39,6 +39,11 @@ export const server = Cloudflare.Worker("server", {
   crons: ["0 * * * *"],
   env: {
     DB: db,
+    // Per-household realtime push (#93): one WebSocket-holding DO instance
+    // per household, addressed with idFromName(householdId).
+    PUSH_HOUSEHOLD_DO: Cloudflare.DurableObject("PUSH_HOUSEHOLD_DO", {
+      className: "HouseholdPushDO",
+    }),
     METRICS: metrics,
     CORS_ORIGIN: Config.string("CORS_ORIGIN"),
     BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),

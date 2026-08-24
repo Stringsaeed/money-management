@@ -50,3 +50,15 @@ export interface ChangeNotification {
   readonly seq: number;
   readonly effects: Effects;
 }
+
+/** Push channels are scoped per household so tenants never share a stream. */
+export const HOUSEHOLD_CHANNEL_PREFIX = "household:";
+
+/** The push channel name for one household's change feed. */
+export const householdChannel = (householdId: string): string =>
+  `${HOUSEHOLD_CHANNEL_PREFIX}${householdId}`;
+
+/** One message delivered on a household channel. Notification only — no rows. */
+export interface HouseholdChangeNotice extends ChangeNotification {
+  readonly channel: string;
+}
