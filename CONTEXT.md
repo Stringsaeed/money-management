@@ -7,8 +7,16 @@ The money-management context records financial activity and the rules that creat
 ### Identity & Households
 
 **User**:
-An authenticated person identified by an email address. A User may use the app anonymously with purely local data; signing in unlocks household features but never moves the ledger off the device by itself. It is distinct from a Member, which is a User's participation in one Household.
+An authenticated person identified by an email address. A User may use the app anonymously with purely local data; signing in unlocks household features but never moves the ledger off the device by itself, and signing out ends only the remote session unless the User separately confirms local-data erasure. It is distinct from a Member, which is a User's participation in one Household.
 _Avoid_: Account (see Account below), Profile
+
+**Authentication Session**:
+The revocable remote session that proves a User's identity for Household features. It persists until explicit sign-out or server revocation and is independent of the device-local ledger, so ending it never erases local financial data by itself.
+_Avoid_: Local Account, Ledger Session
+
+**Email Link**:
+A single-use, time-limited link delivered to an email address that proves control of that address for sign-in or password reset. It is an authentication credential, not a Household invite, and opens through a verified HTTPS domain with native-app handoff where available.
+_Avoid_: Invite Code, Password Reset Session
 
 **Household**:
 A shared money-management workspace that multiple Users join to see household-owned data together. The Household is the unit of membership and invitation — not a container for device-local ledger data. Financial records remain local-first until a future sharing milestone claims them.
