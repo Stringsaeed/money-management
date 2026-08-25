@@ -27,6 +27,7 @@ const mockPreviewAccountDeletion = jest.fn();
 const mockRestoreAccount = jest.fn();
 const mockUpdateAccountWithRecurringRules = jest.fn();
 const mockCohereLedgerCache = jest.fn();
+const mockUseAccountVisibility = jest.fn();
 
 interface CoherenceAwareMutation<T> {
   expectPending: () => void;
@@ -72,6 +73,14 @@ jest.mock("@/db/client", () => ({
   useDatabase: () => mockUseDatabase(),
 }));
 
+jest.mock("@/hooks/use-account-visibility", () => ({
+  hasVisibleAccount: (
+    visibility: { isFiltering: boolean; visibleAccountIds: Set<string> },
+    id: string,
+  ) => !visibility.isFiltering || visibility.visibleAccountIds.has(id),
+  useAccountVisibility: () => mockUseAccountVisibility(),
+}));
+
 jest.mock("expo-sqlite", () => ({
   useSQLiteContext: () => mockUseSQLiteContext(),
 }));
@@ -109,6 +118,11 @@ jest.mock("@/utils/date", () => ({
 
 describe("use-accounts hooks", () => {
   beforeEach(() => {
+    mockUseAccountVisibility.mockReturnValue({
+      cacheKey: "local-only",
+      isFiltering: false,
+      visibleAccountIds: new Set(),
+    });
     mockUseSQLiteContext.mockReturnValue({ raw: "database" });
     mockArchiveAccount.mockResolvedValue(undefined);
     mockDeleteAccount.mockResolvedValue(undefined);
@@ -152,6 +166,29 @@ describe("use-accounts hooks", () => {
       createAccount({ id: "account-1" }),
       createAccount({ id: "account-2" }),
     ]);
+  });
+
+  it("hides locally retained accounts that the server no longer authorizes", async () => {
+    mockUseAccountVisibility.mockReturnValue({
+      cacheKey: "household-1:shared-account",
+      isFiltering: true,
+      visibleAccountIds: new Set(["shared-account"]),
+    });
+    const db = createMockDb({
+      selectResults: [
+        {
+          all: [createAccount({ id: "shared-account" }), createAccount({ id: "private-account" })],
+        },
+      ],
+    });
+    mockUseDatabase.mockReturnValue(db);
+
+    const { result } = await renderHookWithProviders(() => useAccounts());
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+    expect(result.current.data).toEqual([createAccount({ id: "shared-account" })]);
   });
 
   it("loads a single account by id", async () => {

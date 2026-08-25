@@ -187,6 +187,7 @@ async function getEnvelopeMonthDeltas(
       WHERE t.household_id = ${householdId}
         AND t.type = 'expense'
         AND t.currency = ${currency}
+        AND ca.visibility = 'public'
         AND t.date >= ${floor}
         AND t.date < ${ceiling}
       GROUP BY cm.envelope_id, month, is_card`);

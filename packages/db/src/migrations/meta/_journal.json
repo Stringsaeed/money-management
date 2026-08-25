@@ -43,6 +43,13 @@
       "when": 1787484598914,
       "tag": "0005_system_settlement_actor",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1787569569635,
+      "tag": "0006_lame_hulk",
+      "breakpoints": true
     }
   ]
 }

@@ -9,6 +9,7 @@ import { ledgerAccount, category, transaction } from "@trove/db/schema/ledger";
 import { periodProjectionCache } from "@trove/db/schema/budget";
 
 import { checkExpectedVersion, issuesFromZod } from "./shared";
+import { privateAccountAccessRejection } from "./private-account";
 
 /** Every ledger fact moves the ledger itself, balances, summaries, and projections. */
 const TRANSACTION_EFFECTS: readonly EffectTag[] = [
@@ -122,6 +123,10 @@ async function validateShape(
   if (!account) {
     return { kind: "missing_entity", entityType: "account", entityId: shape.accountId };
   }
+  const accountAccessRejection = privateAccountAccessRejection(ctx, account);
+  if (accountAccessRejection) {
+    return accountAccessRejection;
+  }
 
   if (shape.type === "transfer") {
     if (!shape.toAccountId) {
@@ -141,6 +146,10 @@ async function validateShape(
     const destination = await loadAccount(ctx, shape.toAccountId);
     if (!destination) {
       return { kind: "missing_entity", entityType: "account", entityId: shape.toAccountId };
+    }
+    const destinationAccessRejection = privateAccountAccessRejection(ctx, destination);
+    if (destinationAccessRejection) {
+      return destinationAccessRejection;
     }
     if (destination.currency !== account.currency) {
       return {
@@ -375,6 +384,32 @@ export const transactionHandlers = {
           entityType: "transaction",
           entityId: input.transactionId,
         };
+      }
+      const sourceAccount = await loadAccount(ctx, existing.accountId);
+      if (!sourceAccount) {
+        return {
+          kind: "missing_entity",
+          entityType: "account",
+          entityId: existing.accountId,
+        };
+      }
+      const sourceAccessRejection = privateAccountAccessRejection(ctx, sourceAccount);
+      if (sourceAccessRejection) {
+        return sourceAccessRejection;
+      }
+      if (existing.toAccountId) {
+        const destinationAccount = await loadAccount(ctx, existing.toAccountId);
+        if (!destinationAccount) {
+          return {
+            kind: "missing_entity",
+            entityType: "account",
+            entityId: existing.toAccountId,
+          };
+        }
+        const destinationAccessRejection = privateAccountAccessRejection(ctx, destinationAccount);
+        if (destinationAccessRejection) {
+          return destinationAccessRejection;
+        }
       }
       const stale = checkExpectedVersion(existing, preconditions);
       if (stale) {

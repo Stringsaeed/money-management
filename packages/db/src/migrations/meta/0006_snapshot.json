@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "e0e7578b-9931-43b8-a6f2-85674d3ebb04",
-  "prevId": "750daa89-76b7-47f3-beee-51b9deb2e117",
+  "id": "ed52b75e-6a27-45a1-8d11-063baa54e354",
+  "prevId": "e0e7578b-9931-43b8-a6f2-85674d3ebb04",
   "tables": {
     "account": {
       "name": "account",
@@ -2038,6 +2038,21 @@
           "notNull": false,
           "autoincrement": false
         },
+        "visibility": {
+          "name": "visibility",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'public'"
+        },
+        "owner_user_id": {
+          "name": "owner_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "version": {
           "name": "version",
           "type": "integer",
@@ -2082,6 +2097,11 @@
           "name": "accounts_household_lifecycle_idx",
           "columns": ["household_id", "lifecycle"],
           "isUnique": false
+        },
+        "accounts_household_visibility_owner_idx": {
+          "name": "accounts_household_visibility_owner_idx",
+          "columns": ["household_id", "visibility", "owner_user_id"],
+          "isUnique": false
         }
       },
       "foreignKeys": {
@@ -2092,6 +2112,15 @@
           "columnsFrom": ["household_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "accounts_owner_user_id_user_id_fk": {
+          "name": "accounts_owner_user_id_user_id_fk",
+          "tableFrom": "accounts",
+          "tableTo": "user",
+          "columnsFrom": ["owner_user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
           "onUpdate": "no action"
         },
         "accounts_created_by_user_id_fk": {
@@ -2128,6 +2157,10 @@
         "accounts_type_valid": {
           "name": "accounts_type_valid",
           "value": "\"accounts\".\"type\" IN ('cash', 'bank', 'card')"
+        },
+        "accounts_private_owner_required": {
+          "name": "accounts_private_owner_required",
+          "value": "\"accounts\".\"visibility\" = 'public' OR \"accounts\".\"owner_user_id\" IS NOT NULL"
         }
       }
     },

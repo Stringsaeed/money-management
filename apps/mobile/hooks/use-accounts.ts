@@ -4,6 +4,7 @@ import { useSQLiteContext } from "expo-sqlite";
 
 import { useDatabase } from "@/db/client";
 import { accounts } from "@/db/schema";
+import { hasVisibleAccount, useAccountVisibility } from "@/hooks/use-account-visibility";
 import { updateAccountWithRecurringRules } from "@/modules/account-recurring-coordinator";
 import {
   archiveAccount,
@@ -22,24 +23,32 @@ import type { Account } from "@/types";
 
 export function useAccounts() {
   const db = useDatabase();
+  const visibility = useAccountVisibility();
   return useQuery({
-    queryKey: accountKeys.all,
-    queryFn: async () =>
-      (await db
+    queryKey: [...accountKeys.all, visibility.cacheKey],
+    queryFn: async () => {
+      const rows = (await db
         .select()
         .from(accounts)
         .where(eq(accounts.lifecycle, "active"))
         .orderBy(accounts.sortOrder, accounts.createdAt)
-        .all()) as Account[],
+        .all()) as Account[];
+      return rows.filter((account) => hasVisibleAccount(visibility, account.id));
+    },
   });
 }
 
 export function useAccount(id: string) {
   const db = useDatabase();
+  const visibility = useAccountVisibility();
   return useQuery({
-    queryKey: accountKeys.detail(id),
-    queryFn: () =>
-      db.select().from(accounts).where(eq(accounts.id, id)).get() as Account | undefined,
+    queryKey: [...accountKeys.detail(id), visibility.cacheKey],
+    queryFn: () => {
+      if (!hasVisibleAccount(visibility, id)) {
+        return undefined;
+      }
+      return db.select().from(accounts).where(eq(accounts.id, id)).get() as Account | undefined;
+    },
   });
 }
 
@@ -53,9 +62,16 @@ export function useAllAccountsWithBalances() {
 
 function useAccountBalances(includeArchived: boolean) {
   const database = useSQLiteContext();
+  const visibility = useAccountVisibility();
   return useQuery({
-    queryKey: includeArchived ? accountKeys.managementBalances : accountKeys.balances,
-    queryFn: () => loadAccountBalances(database, includeArchived),
+    queryKey: [
+      ...(includeArchived ? accountKeys.managementBalances : accountKeys.balances),
+      visibility.cacheKey,
+    ],
+    queryFn: async () => {
+      const rows = await loadAccountBalances(database, includeArchived);
+      return rows.filter((account) => hasVisibleAccount(visibility, account.id));
+    },
   });
 }
 

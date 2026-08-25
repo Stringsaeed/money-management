@@ -78,10 +78,28 @@ export function fundingPoolSql(householdId: string, currency: string, period: st
             AND t.currency = ${currency}
             AND t.date < ${ceiling}
             AND (t.account_id = a.id OR t.to_account_id = a.id)
+            AND (
+              t.type <> 'transfer'
+              OR (
+                EXISTS (
+                  SELECT 1 FROM accounts source
+                  WHERE source.household_id = t.household_id
+                    AND source.id = t.account_id
+                    AND source.visibility = 'public'
+                )
+                AND EXISTS (
+                  SELECT 1 FROM accounts destination
+                  WHERE destination.household_id = t.household_id
+                    AND destination.id = t.to_account_id
+                    AND destination.visibility = 'public'
+                )
+              )
+            )
         ), 0) AS account_balance
       FROM accounts a
       WHERE a.household_id = ${householdId}
         AND a.currency = ${currency}
+        AND a.visibility = 'public'
         AND a.id IN (SELECT value FROM json_each(${members}))
     )
   )`;
