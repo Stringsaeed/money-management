@@ -27,12 +27,13 @@
     "destroy": "turbo run destroy -F @trove/infra --"
   },
   "devDependencies": {
+    "@oxlint/plugins": "1.80.0",
     "@rnx-kit/oxlint-config": "^1.0.3",
     "@swmansion/argent": "^0.20.0",
     "eslint": "^10.8.1",
     "eslint-plugin-expo": "^1.1.0",
     "oxfmt": "^0.63.0",
-    "oxlint": "^1.78.0",
+    "oxlint": "1.80.0",
     "turbo": "^2.10.11"
   },
   "packageManager": "pnpm@11.24.0"
