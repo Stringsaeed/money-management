@@ -3,7 +3,7 @@ version = 1
 name = "money-management"
 
 [setup]
-script = "pnpm install && pnpm expo prebuild --clean"
+script = "pnpm install"
 
 [cleanup]
 script = "rm -rf node_modules"
