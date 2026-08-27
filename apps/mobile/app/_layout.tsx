@@ -25,6 +25,7 @@ import { PostHogProvider } from "posthog-react-native";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { initializeDatabase } from "@/db/initialize";
+import { DB_NAME } from "@/db/constants";
 import { PortalHost } from "@rn-primitives/portal";
 import { PressablesConfig } from "pressto";
 import * as Haptics from "expo-haptics";
@@ -52,8 +53,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-const DB_NAME = "money.db";
 
 async function onDatabaseInit(db: SQLiteDatabase) {
   try {

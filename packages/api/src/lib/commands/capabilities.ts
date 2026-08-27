@@ -27,6 +27,9 @@ const CAPABILITY_MATRIX: Readonly<Record<CommandKind, readonly HouseholdRole[]>>
   "assignment.commit": ["owner", "admin", "member"],
   "card_payment.record": ["owner", "admin", "member"],
   "refund.link": ["owner", "admin", "member"],
+  // One-time local-to-cloud migration (#98): only the household's creator
+  // may bulk-import — never a joined member, whose local data is separate.
+  import_bundle: ["owner"],
 };
 
 /** True when `role` may issue commands of kind `kind`. Viewers can issue nothing. */

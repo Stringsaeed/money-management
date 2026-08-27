@@ -17,6 +17,7 @@ import {
   pullDeltas,
   resubmitRejectedCommand,
   retryRejectedCommand,
+  truncateOutbox,
 } from "@/lib/sync/outbox";
 import * as schema from "@/db/schema";
 import { createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
@@ -385,5 +386,28 @@ describe("rejected changes inbox", () => {
       resubmitRejectedCommand(db, { originalCommandId: "cmd-gone", newCommandId: "cmd-next" }),
     ).rejects.toThrow("Nothing to resubmit");
     expect(await db.select().from(schema.outboxCommands)).toHaveLength(0);
+  });
+});
+
+describe("truncateOutbox", () => {
+  it("drops every queued and rejected command for the household, leaving other households untouched", async () => {
+    const db = await setupDb();
+    await enqueueCommand(db, makeInput({ commandId: "cmd-pending" }));
+    await enqueueCommand(db, makeInput({ commandId: "cmd-rejected" }));
+    await drainOutbox(db, async (envelope) =>
+      envelope.commandId === "cmd-rejected"
+        ? { kind: "missing_entity", entityType: "account", entityId: "acc-1" }
+        : applied(),
+    );
+    await enqueueCommand(
+      db,
+      makeInput({ commandId: "cmd-other-household", householdId: "household-2" }),
+    );
+
+    await truncateOutbox(db, HOUSEHOLD_ID);
+
+    const remaining = await db.select().from(schema.outboxCommands);
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].commandId).toBe("cmd-other-household");
   });
 });

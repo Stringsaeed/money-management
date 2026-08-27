@@ -94,6 +94,15 @@ export function addMonths(
 }
 
 /**
+ * Returns the Budget Period ("YYYY-MM") immediately following `period`.
+ */
+export function nextBudgetPeriod(period: string): string {
+  const [yearStr, monthStr] = period.split("-");
+  const { year, month } = addMonths(Number(yearStr), Number(monthStr), 1);
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
+/**
  * Returns the number of days in a month (accounts for leap years).
  */
 function daysInMonth(year: number, month: number): number {

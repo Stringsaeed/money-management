@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { Alert, ScrollView, View } from "react-native";
 
 import { CreateHouseholdForm } from "@/components/household/create-household-form";
+import { EnableSyncCard } from "@/components/household/enable-sync-card";
 import { HouseholdMembers } from "@/components/household/household-members";
 import { JoinHouseholdForm } from "@/components/household/join-household-form";
 import { Card } from "@/components/settings/card";
@@ -15,6 +16,7 @@ import {
   useHouseholdDetail,
   useLeaveHousehold,
 } from "@/hooks/use-households";
+import { useMigratedHouseholdId } from "@/hooks/use-enable-sync";
 import { authClient } from "@/lib/auth-client";
 import { formatInviteExpiry } from "@/utils/invite-code";
 
@@ -42,12 +44,14 @@ export default function HouseholdScreen() {
   const { data: detail, isLoading: detailLoading } = useHouseholdDetail(
     activeHousehold?.householdId ?? null,
   );
+  const { data: migratedHouseholdId } = useMigratedHouseholdId();
   const generateInvite = useGenerateInvite();
   const leaveHousehold = useLeaveHousehold();
   const deleteHousehold = useDeleteHousehold();
 
   const user = session?.user ?? null;
   const isOwner = detail?.members.some((m) => m.userId === user?.id && m.role === "owner") ?? false;
+  const needsSync = migratedHouseholdId !== (activeHousehold?.householdId ?? null);
 
   function handleInvite() {
     if (!activeHousehold) return;
@@ -116,6 +120,12 @@ export default function HouseholdScreen() {
   return (
     <ScrollView contentContainerClassName="gap-2 px-4 pb-safe pt-safe">
       <SectionHeader title="Household 🏠" />
+
+      {needsSync ? (
+        <Card>
+          <EnableSyncCard activeHouseholdId={activeHousehold?.householdId ?? null} />
+        </Card>
+      ) : null}
 
       {activeHousehold && detail ? (
         <>

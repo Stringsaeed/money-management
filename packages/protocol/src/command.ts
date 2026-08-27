@@ -31,6 +31,7 @@ export const COMMAND_KINDS = [
   "assignment.commit",
   "card_payment.record",
   "refund.link",
+  "import_bundle",
 ] as const;
 
 export type CommandKind = (typeof COMMAND_KINDS)[number];

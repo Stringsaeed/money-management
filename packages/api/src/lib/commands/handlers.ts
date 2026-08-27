@@ -5,6 +5,7 @@ import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "./pip
 import { assignmentCommitHandler } from "./handlers/assignment-commit";
 import { accountHandlers } from "./handlers/account";
 import { categoryHandlers } from "./handlers/category";
+import { importBundleHandler } from "./handlers/import-bundle";
 import { memberRoleChangeHandler } from "./handlers/member-role";
 import { paymentCreateHandler } from "./handlers/payment-create";
 import { refundCreateHandler } from "./handlers/refund-create";
@@ -43,6 +44,9 @@ export const COMMAND_HANDLERS: Partial<Record<CommandKind, CommandHandler>> = {
   // ── Card payments & refunds (#91) ────────────────────────────────────────
   "card_payment.record": paymentCreateHandler,
   "refund.link": refundCreateHandler,
+
+  // ── Local-to-cloud migration (#98) ────────────────────────────────────────
+  import_bundle: importBundleHandler,
 };
 
 // HOUSEHOLD_ROLES is re-exported for consumers building payload schemas.

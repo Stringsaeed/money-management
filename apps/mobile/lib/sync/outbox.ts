@@ -359,3 +359,13 @@ export async function countPendingCommands(db: LocalDb, householdId: string): Pr
     );
   return rows.length;
 }
+
+/**
+ * Drops every queued/rejected command for a household (#98): once the
+ * local-to-cloud migration's manifest matches, nothing predating sync mode
+ * is worth replaying — the household's entire pre-sync history just landed
+ * as `import_bundle` commands instead.
+ */
+export async function truncateOutbox(db: LocalDb, householdId: string): Promise<void> {
+  await db.delete(outboxCommands).where(eq(outboxCommands.householdId, householdId));
+}
