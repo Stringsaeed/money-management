@@ -30,6 +30,7 @@ export default defineConfig({
     "anti-slop/no-widen-then-assert": "error",
     "anti-slop/require-safety-comment-for-type-assertion": "error",
     "anti-slop-effect/no-service-constructor-imports": "error",
+    complexity: ["error", { max: 10 }],
     "import/namespace": "error",
     "import/export": "error",
     "import/no-named-as-default": "warn",
