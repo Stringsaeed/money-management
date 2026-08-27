@@ -23,19 +23,27 @@ import {
 import { clearSeedVersion } from "@/db/seed";
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useAllCategories } from "@/hooks/use-categories";
+import { useActiveHousehold } from "@/hooks/use-households";
 import { useRecurringRulesList } from "@/hooks/use-recurring-rules";
 import { useTransactions } from "@/hooks/use-transactions";
+import { authClient } from "@/lib/auth-client";
 import { cohereLedgerCache } from "@/modules/ledger-cache";
 
 export default function SettingsScreen() {
   const db = useDatabase();
   const qc = useQueryClient();
   const [erasing, setErasing] = useState(false);
+  const { data: session } = authClient.useSession();
+  const { activeHousehold } = useActiveHousehold();
   const { data: accounts = [] } = useAccountsWithBalances();
   const { data: allCategories = [] } = useAllCategories();
   const { data: recurring = [] } = useRecurringRulesList("current");
   const { data: allTransactions = [] } = useTransactions({});
 
+  const user = session?.user ?? null;
+  const profileSubtitle = user
+    ? (activeHousehold?.name ?? "No active household")
+    : "Sign in or create profile";
   const totalCategories = allCategories.length;
   const activeRecurring = recurring.filter((rule) => rule.lifecycle === "active").length;
 
@@ -79,6 +87,17 @@ export default function SettingsScreen() {
       contentInsetAdjustmentBehavior="automatic"
       contentContainerClassName="pb-safe-offset-12"
     >
+      {/* Profile & Household */}
+      <SectionHeader title="Profile & household 👤" />
+      <Card>
+        <SettingsRow
+          emoji="🏠"
+          label="Profile & household"
+          subtitle={profileSubtitle}
+          onPress={() => router.push("/settings/household")}
+        />
+      </Card>
+
       {/* Manage */}
       <SectionHeader title="Manage 🛠️" />
       <Card>

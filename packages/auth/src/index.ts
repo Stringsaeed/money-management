@@ -1,4 +1,5 @@
 import { expo } from "@better-auth/expo";
+import { magicLink } from "better-auth/plugins";
 import { createDb } from "@trove/db";
 import * as schema from "@trove/db/schema/auth";
 import { env } from "@trove/env/server";
@@ -17,6 +18,9 @@ export function createAuth() {
     trustedOrigins: [env.CORS_ORIGIN, "trove://", "exp://", "http://localhost:8081"],
     emailAndPassword: {
       enabled: true,
+      sendResetPassword: async ({ user, url, token }) => {
+        console.log(`[Auth] Reset password link for ${user.email}: ${url} (token: ${token})`);
+      },
     },
     // Uncomment cookieCache when ready to deploy to Cloudflare using *.workers.dev domains
     // session: {
@@ -42,6 +46,14 @@ export function createAuth() {
       //   domain: "<your-workers-subdomain>",
       // },
     },
-    plugins: [expo()],
+    plugins: [
+      expo(),
+      magicLink({
+        sendMagicLink: async ({ email, url, token }) => {
+          console.log(`[Auth] Magic link for ${email}: ${url} (token: ${token})`);
+        },
+        expiresIn: 15 * 60,
+      }),
+    ],
   });
 }

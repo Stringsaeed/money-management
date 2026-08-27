@@ -1,4 +1,4 @@
-import { format, isSameDay, isYesterday, parseISO, subDays } from "date-fns";
+import { format, isSameDay, parseISO, subDays } from "date-fns";
 
 /** Emoji shown next to an activity entry — keyed by its lead effect tag. */
 export const EFFECT_EMOJIS: Readonly<Record<string, string>> = {
@@ -26,7 +26,7 @@ export function formatActivityTimestamp(iso: string, now: Date = new Date()): st
   if (isSameDay(date, now)) {
     return time;
   }
-  if (isYesterday(date)) {
+  if (isSameDay(date, subDays(now, 1))) {
     return `Yesterday, ${time}`;
   }
   const day = format(date, isSameYear(date, now) ? "MMM d" : "MMM d, yyyy");

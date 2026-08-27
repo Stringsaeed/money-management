@@ -1,6 +1,6 @@
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
+import { router } from "expo-router";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
-
 import { AccountFormPreview } from "@/components/account/account-form-preview";
 import type { AccountFormValues } from "@/components/account/form";
 import { GARDEN_STAGES, GrowingGarden } from "@/components/graphics/growing-garden";
@@ -54,7 +54,7 @@ export function OnboardingCompleteStep({ onFinish, values }: OnboardingCompleteS
       </View>
 
       <Animated.View
-        className="pb-safe-offset-2"
+        className="pb-safe-offset-2 gap-2"
         entering={FadeInDown.springify().damping(22).stiffness(140).delay(CTA_DELAY)}
       >
         <OnboardingCta
@@ -63,6 +63,15 @@ export function OnboardingCompleteStep({ onFinish, values }: OnboardingCompleteS
           showArrow={false}
           testID="onboarding-finish"
         />
+        <Pressable
+          onPress={() => router.push("/(tabs)/settings/household")}
+          className="py-2 items-center"
+          testID="onboarding-share-prompt"
+        >
+          <Text className="font-body-medium text-sm text-ink/60">
+            Back up & share with a household 🏠
+          </Text>
+        </Pressable>
       </Animated.View>
     </View>
   );

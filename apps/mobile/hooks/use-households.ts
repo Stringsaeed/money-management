@@ -89,3 +89,10 @@ export function useTransferOwnership() {
     onSuccess: invalidate,
   });
 }
+export function useSetActiveHousehold() {
+  const invalidate = useInvalidateHouseholds();
+  return useMutation({
+    mutationFn: (householdId: string) => orpc.households.setActive({ householdId }),
+    onSuccess: invalidate,
+  });
+}

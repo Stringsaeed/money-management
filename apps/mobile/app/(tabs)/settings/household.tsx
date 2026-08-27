@@ -15,6 +15,7 @@ import {
   useGenerateInvite,
   useHouseholdDetail,
   useLeaveHousehold,
+  useSetActiveHousehold,
 } from "@/hooks/use-households";
 import { useMigratedHouseholdId } from "@/hooks/use-enable-sync";
 import { authClient } from "@/lib/auth-client";
@@ -25,13 +26,13 @@ function SignedOutCard() {
     <Card>
       <View className="gap-3 px-4 py-6">
         <Text className="text-4xl">🏠</Text>
-        <Text className="font-heading-normal text-xl italic text-ink">Share with family</Text>
+        <Text className="font-heading-normal text-xl italic text-ink">Profile & household</Text>
         <Text className="font-body-normal text-sm text-ink/40">
           Sign in to create a household, invite family members, and plan money together. Your ledger
           always stays on this device.
         </Text>
         <Button size="lg" onPress={() => router.push("/(auth)/sign-in")}>
-          <Text className="font-body-semibold text-white">Sign in</Text>
+          <Text className="font-body-semibold text-white">Sign in or create profile</Text>
         </Button>
       </View>
     </Card>
@@ -39,11 +40,10 @@ function SignedOutCard() {
 }
 
 export default function HouseholdScreen() {
-  const { data: session, isPending } = authClient.useSession();
-  const { activeHousehold } = useActiveHousehold();
-  const { data: detail, isLoading: detailLoading } = useHouseholdDetail(
-    activeHousehold?.householdId ?? null,
-  );
+  const { data: session, isPending, error: sessionError } = authClient.useSession();
+  const { activeHousehold, households = [] } = useActiveHousehold();
+  const setActiveHousehold = useSetActiveHousehold();
+  const { data: detail } = useHouseholdDetail(activeHousehold?.householdId ?? null);
   const { data: migratedHouseholdId } = useMigratedHouseholdId();
   const generateInvite = useGenerateInvite();
   const leaveHousehold = useLeaveHousehold();
@@ -52,6 +52,15 @@ export default function HouseholdScreen() {
   const user = session?.user ?? null;
   const isOwner = detail?.members.some((m) => m.userId === user?.id && m.role === "owner") ?? false;
   const needsSync = migratedHouseholdId !== (activeHousehold?.householdId ?? null);
+
+  async function handleSignOut() {
+    try {
+      await authClient.signOut();
+      router.replace("/");
+    } catch {
+      Alert.alert("Sign out failed", "Please check your connection and try again.");
+    }
+  }
 
   function handleInvite() {
     if (!activeHousehold) return;
@@ -102,16 +111,27 @@ export default function HouseholdScreen() {
   if (isPending) {
     return (
       <ScrollView contentContainerClassName="px-4 pb-safe pt-safe">
-        <SectionHeader title="Household 🏠" />
+        <SectionHeader title="Profile & household 👤" />
         <Text className="text-muted-foreground px-1 py-6 text-sm">Loading…</Text>
       </ScrollView>
     );
   }
 
-  if (!user) {
+  if (!user || sessionError) {
     return (
       <ScrollView contentContainerClassName="px-4 pb-safe pt-safe">
-        <SectionHeader title="Household 🏠" />
+        <SectionHeader title="Profile & household 👤" />
+        {sessionError ? (
+          <View className="mb-3 bg-destructive/10 rounded-lg p-4 gap-2">
+            <Text className="font-body-semibold text-destructive">Session expired or revoked</Text>
+            <Text className="text-xs text-ink/70">
+              Your local ledger is fully usable, but remote household features are paused.
+            </Text>
+            <Button size="sm" onPress={() => router.push("/(auth)/sign-in")}>
+              <Text className="font-body-semibold text-white">Sign in again</Text>
+            </Button>
+          </View>
+        ) : null}
         <SignedOutCard />
       </ScrollView>
     );
@@ -119,102 +139,122 @@ export default function HouseholdScreen() {
 
   return (
     <ScrollView contentContainerClassName="gap-2 px-4 pb-safe pt-safe">
-      <SectionHeader title="Household 🏠" />
+      <SectionHeader title="Profile & household 👤" />
 
-      {needsSync ? (
+      {/* Profile Card */}
+      <Card>
+        <View className="gap-3 p-4">
+          <View className="flex-row items-center justify-between">
+            <View className="gap-1">
+              <Text className="font-heading-normal text-lg italic text-ink">{user.name}</Text>
+              <Text className="text-xs text-ink/50">{user.email}</Text>
+            </View>
+            <Button variant="outline" size="sm" onPress={handleSignOut}>
+              <Text className="font-body-semibold text-destructive">Sign out</Text>
+            </Button>
+          </View>
+        </View>
+      </Card>
+
+      {/* Household Switcher if multiple memberships */}
+      {households.length > 1 ? (
         <Card>
-          <EnableSyncCard activeHouseholdId={activeHousehold?.householdId ?? null} />
+          <View className="gap-3 p-4">
+            <Text className="font-body-semibold text-xs uppercase text-ink/40">
+              Active Household
+            </Text>
+            <View className="gap-2">
+              {households.map((h) => {
+                const isSelected = h.householdId === activeHousehold?.householdId;
+                return (
+                  <Button
+                    key={h.householdId}
+                    variant={isSelected ? "default" : "outline"}
+                    size="sm"
+                    onPress={() => setActiveHousehold.mutate(h.householdId)}
+                  >
+                    <Text
+                      className={
+                        isSelected ? "font-body-semibold text-white" : "font-body-medium text-ink"
+                      }
+                    >
+                      {h.name} {isSelected ? "✓" : ""}
+                    </Text>
+                  </Button>
+                );
+              })}
+            </View>
+          </View>
         </Card>
       ) : null}
 
-      {activeHousehold && detail ? (
+      {!activeHousehold ? (
         <>
           <Card>
-            <View className="gap-1 px-4 pt-4 pb-2">
-              <Text className="font-heading-medium italic text-2xl text-ink">{detail.name}</Text>
-              <Text className="font-body-normal text-xs text-ink/40">
-                {detail.members.length} {detail.members.length === 1 ? "member" : "members"} ·
-                you’re {isOwner ? "the owner 👑" : "a member"}
-              </Text>
+            <View className="p-4">
+              <Text className="font-body-semibold text-sm mb-3">Create a Household</Text>
+              <CreateHouseholdForm />
             </View>
-            <HouseholdMembers
-              members={detail.members}
-              currentUserId={user.id}
-              isOwner={isOwner}
-              householdId={detail.householdId}
-            />
           </Card>
-
-          {isOwner ? (
-            <>
-              <SectionHeader title="Invites 🎟️" />
-              <Card>
-                <View className="gap-2 px-4 py-4">
-                  <Button
-                    variant="secondary"
-                    onPress={handleInvite}
-                    disabled={generateInvite.isPending}
-                  >
-                    <Text className="font-body-semibold text-white">
-                      {generateInvite.isPending ? "Creating…" : "Create invite code"}
-                    </Text>
-                  </Button>
-                  <Text className="font-body-normal text-xs text-ink/40">
-                    Codes expire after 7 days and work once.
-                  </Text>
-                </View>
-              </Card>
-
-              <SectionHeader title="Danger Zone ⚠️" />
-              <Card>
-                <View className="flex-row gap-2 px-4 py-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onPress={confirmLeave}
-                    disabled={isOwner}
-                  >
-                    <Text className="text-ink/60 font-body-semibold">Leave</Text>
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="flex-1"
-                    onPress={confirmDelete}
-                  >
-                    <Text className="font-body-semibold text-white">Delete household</Text>
-                  </Button>
-                </View>
-                <Text className="font-body-normal text-xs text-ink/40 px-4 pb-4">
-                  Owners can’t leave — transfer ownership to a member first.
-                </Text>
-              </Card>
-            </>
-          ) : (
-            <Card>
-              <Button variant="destructive" size="sm" className="m-4" onPress={confirmLeave}>
-                <Text className="font-body-semibold text-white">Leave household</Text>
-              </Button>
-            </Card>
-          )}
+          <Card>
+            <View className="p-4">
+              <Text className="font-body-semibold text-sm mb-3">Join with Invite Code</Text>
+              <JoinHouseholdForm />
+            </View>
+          </Card>
         </>
       ) : (
         <>
-          <SectionHeader title="Get started ✨" />
+          {needsSync ? (
+            <Card>
+              <EnableSyncCard activeHouseholdId={activeHousehold?.householdId ?? null} />
+            </Card>
+          ) : null}
+
           <Card>
-            <CreateHouseholdForm />
+            <View className="flex-row items-center justify-between p-4">
+              <View className="gap-1">
+                <Text className="font-body-semibold text-xs uppercase text-ink/40">
+                  Active Household
+                </Text>
+                <Text className="font-heading-normal text-xl italic text-ink">
+                  {activeHousehold.name}
+                </Text>
+              </View>
+              <Button size="sm" onPress={handleInvite}>
+                <Text className="font-body-semibold text-white">Invite 🎟️</Text>
+              </Button>
+            </View>
           </Card>
-          <SectionHeader title="Have a code? 🎟️" />
+
           <Card>
-            <JoinHouseholdForm />
+            <SectionHeader title="Members 👥" />
+            <HouseholdMembers
+              householdId={activeHousehold.householdId}
+              isOwner={isOwner}
+              currentUserId={user.id}
+              members={detail?.members ?? []}
+            />
+          </Card>
+
+          <Card>
+            <View className="p-4 gap-2">
+              <Text className="font-body-semibold text-xs uppercase text-destructive">
+                Danger Zone
+              </Text>
+              {isOwner ? (
+                <Button variant="destructive" size="sm" onPress={confirmDelete}>
+                  <Text className="font-body-semibold text-white">Delete household</Text>
+                </Button>
+              ) : (
+                <Button variant="destructive" size="sm" onPress={confirmLeave}>
+                  <Text className="font-body-semibold text-white">Leave household</Text>
+                </Button>
+              )}
+            </View>
           </Card>
         </>
       )}
-
-      {detailLoading ? (
-        <Text className="text-muted-foreground px-1 py-2 text-xs">Refreshing…</Text>
-      ) : null}
     </ScrollView>
   );
 }
