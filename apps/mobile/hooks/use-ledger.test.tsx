@@ -152,7 +152,7 @@ describe("useLedger", () => {
 
     expect(mockListAccounts).toHaveBeenCalledWith({ householdId: HOUSEHOLD_ID });
     expect(mockListCategories).toHaveBeenCalledWith({ householdId: HOUSEHOLD_ID });
-    expect(mockListTransactions).toHaveBeenCalledWith({ householdId: HOUSEHOLD_ID, limit: 100 });
+    expect(mockListTransactions).toHaveBeenCalledWith({ householdId: HOUSEHOLD_ID, limit: 200 });
     expect(result.current.accounts).toHaveLength(1);
     expect(result.current.categories).toHaveLength(1);
     expect(result.current.transactions).toHaveLength(1);
@@ -312,7 +312,7 @@ describe("useLedger", () => {
           updatedAt: new Date("2026-01-20T00:00:00.000Z"),
         },
       ],
-      hasMore: true,
+      hasMore: false,
     });
     const { result } = await renderHookWithProviders(() =>
       useLedgerTransactions(HOUSEHOLD_ID, { limit: 2, beforeDate: "2026-02-01" }),
@@ -322,10 +322,9 @@ describe("useLedger", () => {
     });
     expect(mockListTransactions).toHaveBeenCalledWith({
       householdId: HOUSEHOLD_ID,
-      limit: 2,
-      beforeDate: "2026-02-01",
+      limit: 200,
     });
-    expect(result.current.data?.hasMore).toBe(true);
+    expect(result.current.data?.hasMore).toBe(false);
     expect(result.current.data?.transactions).toMatchObject([{ id: "older-1" }]);
   });
 });

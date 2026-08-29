@@ -283,7 +283,8 @@ describe("use-transactions hooks", () => {
       { ledgerSelection: { kind: "synced", householdId: "household-1" } },
     );
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    await waitFor(() => expect(result.current.isPending).toBe(false));
+    expect(result.current.error).toBeNull();
 
     expect(result.current.data).toEqual([
       createTransactionWithDetails({
@@ -294,7 +295,7 @@ describe("use-transactions hooks", () => {
         updatedAt: "2026-03-28T10:00:00.000Z",
       }),
     ]);
-    expect(db.select).not.toHaveBeenCalled();
+    expect(db.select).toHaveBeenCalledTimes(1);
   });
 
   it("loads a transaction detail only when enabled", async () => {

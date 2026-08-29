@@ -25,6 +25,7 @@ import { issuesFromZod } from "./shared";
  */
 
 const refundPayloadSchema = z.object({
+  transactionId: z.string().min(1).optional(),
   /** Original expense transaction being returned. */
   originalTransactionId: z.string().min(1),
   /** Account receiving the refunded Money (the original card, or any same-currency Funding Account). */
@@ -175,7 +176,7 @@ export const refundCreateHandler = {
 
     const facts = await getBudgetPoolFacts(ctx.db, ctx.householdId, input.currency, budgetPeriod);
 
-    const refundTransactionId = crypto.randomUUID();
+    const refundTransactionId = input.transactionId ?? crypto.randomUUID();
     const { refundLink } = await import("@trove/db/schema/budget");
 
     // Cumulative cap, re-read inside the batch: existing linked refunds plus
@@ -226,6 +227,7 @@ export const refundCreateHandler = {
     return {
       effects: ["ledger", "balances", "projections", "summaries"],
       applied: {
+        transactionId: refundTransactionId,
         originalTransactionId: input.originalTransactionId,
         depositAccountId: input.depositAccountId,
         amountMinor: input.amountMinor,

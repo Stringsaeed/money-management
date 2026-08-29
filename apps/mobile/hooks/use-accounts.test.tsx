@@ -253,7 +253,7 @@ describe("use-accounts hooks", () => {
     expect(result.current.error?.message).toContain("last cached ledger data is unchanged");
     expect(result.current.error?.message).toContain("Check your connection and try again");
     expect(mockListServerAccounts).not.toHaveBeenCalled();
-    expect(db.select).not.toHaveBeenCalled();
+    expect(db.select).toHaveBeenCalledTimes(1);
   });
 
   it("hides locally retained accounts that the server no longer authorizes", async () => {

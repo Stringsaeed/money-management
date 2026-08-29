@@ -87,6 +87,12 @@ export const useLocalTransactionDataSource = () => {
       create: port.mutations.createTransaction,
       update: port.mutations.updateTransaction,
       delete: port.mutations.deleteTransaction,
+      recordCardPayment: async () => {
+        throw new Error("Card Payments require a synced household.");
+      },
+      linkRefund: async () => {
+        throw new Error("Refund links require a synced household.");
+      },
     },
     observeErrors: runner.observeErrors,
   } satisfies LedgerTransactionDataSource;

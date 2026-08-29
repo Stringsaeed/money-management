@@ -1,5 +1,5 @@
 import { useSyncWorker } from "@/hooks/use-sync-worker";
-import { useActiveHousehold } from "@/hooks/use-households";
+import { useLedgerSourceSelection } from "@/modules/ledger-data-source/provider";
 
 /**
  * Mounts the background sync worker (#85) inside the provider tree: drains
@@ -7,7 +7,10 @@ import { useActiveHousehold } from "@/hooks/use-households";
  * the active household. Renders nothing.
  */
 export function SyncWorker() {
-  const { activeHousehold } = useActiveHousehold();
-  useSyncWorker(activeHousehold?.householdId ?? null);
+  const selection = useLedgerSourceSelection();
+  useSyncWorker(
+    selection.kind === "synced" ? selection.householdId : null,
+    selection.kind === "synced" ? selection.userId : undefined,
+  );
   return null;
 }

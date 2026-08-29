@@ -3,6 +3,7 @@ import type { CommandEnvelope } from "@trove/protocol";
 import { orpc } from "@/lib/server/orpc";
 import { generateId } from "@/utils/id";
 import type { Account } from "@/types";
+import { enqueueCommand, listProjectableCommands, type LocalDb } from "@/lib/sync/outbox";
 
 import {
   createLedgerOperationRunner,
@@ -23,6 +24,12 @@ import {
   toSyncedAccountType,
   type SyncedTransaction,
 } from "./synced-mappers";
+import { projectPendingTransactions } from "./pending-transaction-projector";
+import {
+  readSyncedTransactionSnapshot,
+  writeSyncedTransactionSnapshot,
+  type SyncedTransactionSnapshot,
+} from "./synced-transaction-snapshot";
 import { createSyncedTransactionResource } from "./synced-transactions";
 
 type SyncedHydration = Awaited<ReturnType<typeof orpc.sync.getDelta>>;
@@ -37,11 +44,15 @@ export type SyncedLedgerDataSource = LedgerAccountDataSource &
 
 interface CreateSyncedLedgerDataSourceOptions {
   householdId: string;
+  userId: string;
+  db: LocalDb;
   offlineState?: Exclude<LedgerOfflineState, { kind: "offline_ready" }>;
 }
 
 export const createSyncedLedgerDataSource = ({
   householdId,
+  userId,
+  db,
   offlineState = { kind: "online" },
 }: CreateSyncedLedgerDataSourceOptions): SyncedLedgerDataSource => {
   const runner = createLedgerOperationRunner("synced");
@@ -71,39 +82,63 @@ export const createSyncedLedgerDataSource = ({
   };
   const listRawAccounts = () =>
     runNetwork("read.accounts", () => orpc.ledger.accounts.list({ householdId }));
-  const listRawTransactions = (options: { limit?: number; beforeDate?: string } = {}) =>
+  const listRawTransactions = (
+    options: { limit?: number; beforeDate?: string; beforeId?: string } = {},
+  ) =>
     runNetwork("read.transactions", () =>
       orpc.ledger.transactions.list({
         householdId,
         ...(options.limit !== undefined && { limit: options.limit }),
         ...(options.beforeDate !== undefined && { beforeDate: options.beforeDate }),
+        ...(options.beforeId !== undefined && { beforeId: options.beforeId }),
       }),
     );
   const listAllRawTransactions = async () => {
     const transactions: SyncedTransaction[] = [];
-    let beforeDate: string | undefined;
+    let cursor: { date: string; id: string } | undefined;
     for (;;) {
-      const page = await listRawTransactions({ limit: 200, beforeDate });
+      const page = await listRawTransactions({
+        limit: 200,
+        beforeDate: cursor?.date,
+        beforeId: cursor?.id,
+      });
       transactions.push(...page.transactions);
       if (!page.hasMore) {
-        return { transactions, hasMore: false };
+        return transactions;
       }
-      const nextBeforeDate = page.transactions.at(-1)?.date;
-      if (!nextBeforeDate || nextBeforeDate === beforeDate) {
+      if (
+        !page.nextCursor ||
+        (page.nextCursor.date === cursor?.date && page.nextCursor.id === cursor?.id)
+      ) {
         throw new Error("The synced Transaction cursor did not advance. Retry the ledger refresh.");
       }
-      beforeDate = nextBeforeDate;
+      cursor = page.nextCursor;
     }
   };
   const listRawCategories = () =>
     runNetwork("read.categories", () => orpc.ledger.categories.list({ householdId }));
+  const readOfflineSnapshot = async (
+    operation: LedgerDataSourceOperation,
+  ): Promise<SyncedTransactionSnapshot> => {
+    try {
+      return await readSyncedTransactionSnapshot(db, householdId, userId);
+    } catch (cause) {
+      throw new LedgerDataSourceError("synced", operation, cause, "offline");
+    }
+  };
   const listAccounts = async (includeArchived: boolean): Promise<Account[]> => {
-    const rows = await listRawAccounts();
+    const rows =
+      offlineState.kind === "offline_cached"
+        ? (await readOfflineSnapshot("read.accounts")).accounts
+        : await listRawAccounts();
     return rows
       .filter((row) => includeArchived || row.lifecycle === "active")
       .map(mapSyncedAccount);
   };
-  const executeCommand = async (operation: LedgerDataSourceOperation, command: CommandEnvelope) =>
+  const executeServerCommand = async (
+    operation: LedgerDataSourceOperation,
+    command: CommandEnvelope,
+  ) =>
     runNetwork(operation, async () => {
       const result = await apply(command);
       if (result.kind !== "applied") {
@@ -111,35 +146,80 @@ export const createSyncedLedgerDataSource = ({
       }
       return result;
     });
+  const refreshSnapshot = async (): Promise<SyncedTransactionSnapshot> => {
+    const [accounts, categories, transactions] = await Promise.all([
+      listRawAccounts(),
+      listRawCategories(),
+      listAllRawTransactions(),
+    ]);
+    const snapshot = { householdId, userId, accounts, categories, transactions };
+    await writeSyncedTransactionSnapshot(db, snapshot);
+    return snapshot;
+  };
+  const readCachedProjectedSnapshot = async (
+    operation: LedgerDataSourceOperation = "read.transactions",
+  ): Promise<SyncedTransactionSnapshot> => {
+    const [snapshot, commands] = await Promise.all([
+      readOfflineSnapshot(operation),
+      listProjectableCommands(db, householdId, userId),
+    ]);
+    return projectPendingTransactions(snapshot, commands);
+  };
+  const readProjectedSnapshot = () =>
+    runner.run("read.transactions", async () => {
+      if (offlineState.kind === "offline_cached") {
+        return readCachedProjectedSnapshot();
+      }
+      let snapshot: SyncedTransactionSnapshot;
+      try {
+        snapshot = await refreshSnapshot();
+      } catch (cause) {
+        try {
+          snapshot = await readSyncedTransactionSnapshot(db, householdId, userId);
+        } catch {
+          throw cause;
+        }
+      }
+      const commands = await listProjectableCommands(db, householdId, userId);
+      return projectPendingTransactions(snapshot, commands);
+    });
+  const enqueueTransactionIntent = (
+    operation: LedgerDataSourceOperation,
+    command: CommandEnvelope,
+  ) =>
+    runner.run(operation, async () => {
+      if (command.householdId !== householdId) {
+        throw new Error("The command belongs to a different household.");
+      }
+      await enqueueCommand(db, { ...command, userId });
+    });
   const transactions = createSyncedTransactionResource({
     householdId,
-    listAccounts: listRawAccounts,
-    listCategories: listRawCategories,
-    listAllTransactions: listAllRawTransactions,
-    listTransactionPage: listRawTransactions,
-    executeCommand,
+    readSnapshot: readProjectedSnapshot,
+    readCachedSnapshot: readCachedProjectedSnapshot,
+    executeCommand: enqueueTransactionIntent,
   });
 
   return {
     source: "synced",
-    cacheKey: `synced:${householdId}`,
+    cacheKey: `synced:${householdId}:${userId}`,
     offlineState,
     accounts: {
       list: () => listAccounts(false),
       get: async (id) => (await listAccounts(true)).find((account) => account.id === id),
       listWithBalances: async (includeArchived) => {
-        const [accounts, page] = await Promise.all([
-          listAccounts(includeArchived),
-          listAllRawTransactions(),
-        ]);
-        return accounts.map((account) => ({
-          ...account,
-          balance: calculateSyncedBalance(account, page.transactions),
-        }));
+        const snapshot = await readProjectedSnapshot();
+        return snapshot.accounts
+          .map(mapSyncedAccount)
+          .filter((account) => includeArchived || account.lifecycle === "active")
+          .map((account) => ({
+            ...account,
+            balance: calculateSyncedBalance(account, snapshot.transactions),
+          }));
       },
       create: async (data) => {
         const id = generateId();
-        await executeCommand("mutation.account-create", {
+        await executeServerCommand("mutation.account-create", {
           commandId: generateId(),
           householdId,
           kind: "account.create",
@@ -159,7 +239,7 @@ export const createSyncedLedgerDataSource = ({
       },
       update: async (id, data) => {
         assertSupportedAccountUpdate(data);
-        return executeCommand("mutation.account-update", {
+        return executeServerCommand("mutation.account-update", {
           commandId: generateId(),
           householdId,
           kind: "account.update",
@@ -176,7 +256,7 @@ export const createSyncedLedgerDataSource = ({
         });
       },
       archive: (id) =>
-        executeCommand("mutation.account-archive", {
+        executeServerCommand("mutation.account-archive", {
           commandId: generateId(),
           householdId,
           kind: "account.archive",
@@ -186,7 +266,10 @@ export const createSyncedLedgerDataSource = ({
     accountLifecycle: { kind: "synced" },
     categories: {
       list: async (type, includeArchived = false) => {
-        const rows = await listRawCategories();
+        const rows =
+          offlineState.kind === "offline_cached"
+            ? (await readOfflineSnapshot("read.categories")).categories
+            : await listRawCategories();
         return rows
           .filter(
             (row) =>
@@ -195,11 +278,16 @@ export const createSyncedLedgerDataSource = ({
           )
           .map(mapSyncedCategory);
       },
-      get: async (id) =>
-        (await listRawCategories()).map(mapSyncedCategory).find((category) => category.id === id),
+      get: async (id) => {
+        const rows =
+          offlineState.kind === "offline_cached"
+            ? (await readOfflineSnapshot("read.categories")).categories
+            : await listRawCategories();
+        return rows.map(mapSyncedCategory).find((category) => category.id === id);
+      },
       create: async (data) => {
         const id = generateId();
-        await executeCommand("mutation.category-create", {
+        await executeServerCommand("mutation.category-create", {
           commandId: generateId(),
           householdId,
           kind: "category.create",
@@ -208,14 +296,14 @@ export const createSyncedLedgerDataSource = ({
         return id;
       },
       update: (id, data) =>
-        executeCommand("mutation.category-update", {
+        executeServerCommand("mutation.category-update", {
           commandId: generateId(),
           householdId,
           kind: "category.update",
           payload: { categoryId: id, ...data },
         }),
       archive: (id) =>
-        executeCommand("mutation.category-archive", {
+        executeServerCommand("mutation.category-archive", {
           commandId: generateId(),
           householdId,
           kind: "category.archive",

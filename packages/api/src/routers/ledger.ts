@@ -6,7 +6,7 @@ import { category } from "@trove/db/schema/ledger";
 
 import type { CommandDatabase } from "../lib/commands/types";
 import type { HouseholdCaller } from "../lib/require-member";
-import { listAccounts, listTransactions } from "../lib/ledger/read";
+import { getTransaction, listAccounts, listTransactions } from "../lib/ledger/read";
 import { requireHouseholdMember } from "../lib/require-member";
 import { requireUserId } from "../lib/require-user";
 import { protectedProcedure } from "../index";
@@ -19,13 +19,18 @@ const transactionsInput = householdInput.extend({
   /** Page size; the response reports `hasMore` when truncated. */
   limit: z.number().int().min(1).max(200).default(100),
   /**
-   * Cursor: continue strictly after this ("YYYY-MM-DD") ledger date.
-   * Keyset pagination on (date DESC) — stable under inserts between pages.
+   * Composite keyset cursor for the server's (date DESC, id DESC) ordering.
+   * `beforeDate` without `beforeId` retains the legacy strict-date boundary.
    */
   beforeDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional(),
+  beforeId: z.string().min(1).optional(),
+});
+
+const transactionDetailInput = householdInput.extend({
+  transactionId: z.string().min(1),
 });
 
 async function listCategories(db: CommandDatabase, caller: HouseholdCaller) {
@@ -66,7 +71,15 @@ export const ledgerRouter = {
         createDb(),
         { userId, householdId: input.householdId },
         input.limit,
-        input.beforeDate,
+        input.beforeDate ? { date: input.beforeDate, id: input.beforeId ?? "" } : undefined,
+      );
+    }),
+    get: protectedProcedure.input(transactionDetailInput).handler(({ context, input }) => {
+      const userId = requireUserId(context);
+      return getTransaction(
+        createDb(),
+        { userId, householdId: input.householdId },
+        input.transactionId,
       );
     }),
   },

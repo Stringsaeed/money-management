@@ -8,10 +8,29 @@ import {
   type TransactionUpdate,
 } from "./contract";
 
-export type SyncedAccount = Awaited<ReturnType<typeof orpc.ledger.accounts.list>>[number];
-export type SyncedCategory = Awaited<ReturnType<typeof orpc.ledger.categories.list>>[number];
-export type SyncedTransactionPage = Awaited<ReturnType<typeof orpc.ledger.transactions.list>>;
-export type SyncedTransaction = SyncedTransactionPage["transactions"][number];
+type WireTimestamp = Date | string;
+type AccountRow = Awaited<ReturnType<typeof orpc.ledger.accounts.list>>[number];
+type CategoryRow = Awaited<ReturnType<typeof orpc.ledger.categories.list>>[number];
+type TransactionResponse = Awaited<ReturnType<typeof orpc.ledger.transactions.list>>;
+type TransactionRow = TransactionResponse["transactions"][number];
+
+export type SyncedAccount = Omit<AccountRow, "createdAt" | "updatedAt" | "lifecycleChangedAt"> & {
+  createdAt: WireTimestamp;
+  updatedAt: WireTimestamp;
+  lifecycleChangedAt: WireTimestamp | null;
+};
+export type SyncedCategory = Omit<CategoryRow, "createdAt" | "updatedAt" | "lifecycleChangedAt"> & {
+  createdAt: WireTimestamp;
+  updatedAt: WireTimestamp;
+  lifecycleChangedAt: WireTimestamp | null;
+};
+export type SyncedTransaction = Omit<TransactionRow, "createdAt" | "updatedAt"> & {
+  createdAt: WireTimestamp;
+  updatedAt: WireTimestamp;
+};
+export type SyncedTransactionPage = Omit<TransactionResponse, "transactions"> & {
+  transactions: readonly SyncedTransaction[];
+};
 
 const toIso = (value: Date | string): string =>
   value instanceof Date ? value.toISOString() : value;

@@ -31,7 +31,7 @@ export function useLedgerCategories(_householdId: string | null) {
 
 export function useLedgerTransactions(
   _householdId: string | null,
-  options: { limit?: number; beforeDate?: string } = {},
+  options: { limit?: number; beforeDate?: string; beforeId?: string } = {},
 ) {
   return useTransactionPage(options);
 }

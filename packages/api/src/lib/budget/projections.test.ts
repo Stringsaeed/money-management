@@ -16,6 +16,7 @@ import { household, membership } from "@trove/db/schema/household";
 import { category, ledgerAccount, transaction } from "@trove/db/schema/ledger";
 
 import { createTestDb } from "../commands/test-db";
+import { applyCommand } from "../commands/pipeline";
 import { enumeratePeriods, getProjections } from "./projections";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
@@ -248,6 +249,58 @@ describe("period projections", () => {
     expect(marchAfter.envelopes.find((e) => e.envelopeId === "env-groceries")?.availableMinor).toBe(
       40000,
     );
+  });
+
+  it("replays a historical server correction through every later projection", async () => {
+    await seedFundingAccount("acc-cash", 100000);
+    await seedEnvelope("env-groceries");
+    await seedCategory("cat-groceries");
+    await mapCategory("cat-groceries", "env-groceries");
+    await assign("2026-01", "env-groceries", 30000);
+    await db.insert(transaction).values({
+      householdId: HOUSEHOLD_ID,
+      id: "expense-correction",
+      type: "expense",
+      amountMinor: 10000,
+      currency: "USD",
+      date: "2026-01-15",
+      accountId: "acc-cash",
+      categoryId: "cat-groceries",
+      version: 0,
+      createdBy: OWNER,
+      updatedBy: OWNER,
+    });
+
+    const before = await read();
+    expect(
+      before.projections.map(
+        (projection) =>
+          projection.envelopes.find(({ envelopeId }) => envelopeId === "env-groceries")
+            ?.availableMinor,
+      ),
+    ).toEqual([20000, 20000, 20000]);
+
+    const correction = await applyCommand({
+      db,
+      userId: OWNER,
+      envelope: {
+        commandId: "correct-historical-expense",
+        householdId: HOUSEHOLD_ID,
+        kind: "transaction.edit",
+        payload: { transactionId: "expense-correction", amountMinor: 20000 },
+        preconditions: [{ entityId: "expense-correction", expectedVersion: 0 }],
+      },
+    });
+    expect(correction.kind).toBe("applied");
+
+    const after = await read();
+    expect(
+      after.projections.map(
+        (projection) =>
+          projection.envelopes.find(({ envelopeId }) => envelopeId === "env-groceries")
+            ?.availableMinor,
+      ),
+    ).toEqual([10000, 10000, 10000]);
   });
 
   it("excludes private accounts and their spending from shared projections", async () => {

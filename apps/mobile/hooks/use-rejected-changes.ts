@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { useDatabase } from "@/db/client";
 import { useActiveHousehold } from "@/hooks/use-households";
+import { authClient } from "@/lib/auth-client";
 import {
   discardRejectedCommand,
   listRejectedChanges,
   resubmitRejectedCommand,
   type RejectedChange,
 } from "@/lib/sync/outbox";
+import { cohereTransactionSurfaces } from "@/modules/ledger-cache";
 import { generateId } from "@/utils/id";
 
 /**
@@ -18,28 +21,31 @@ import { generateId } from "@/utils/id";
  */
 export function useRejectedChanges() {
   const db = useDatabase();
+  const queryClient = useQueryClient();
   const { activeHousehold } = useActiveHousehold();
+  const { data: session } = authClient.useSession();
   const householdId = activeHousehold?.householdId ?? null;
+  const userId = session?.user.id ?? null;
 
   const [changes, setChanges] = useState<readonly RejectedChange[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!householdId) {
+    if (!householdId || !userId) {
       setChanges([]);
       setIsLoading(false);
       return;
     }
     try {
-      setChanges(await listRejectedChanges(db, householdId));
+      setChanges(await listRejectedChanges(db, householdId, userId));
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Could not load rejected changes."));
     } finally {
       setIsLoading(false);
     }
-  }, [db, householdId]);
+  }, [db, householdId, userId]);
 
   useEffect(() => {
     void refresh();
@@ -48,9 +54,10 @@ export function useRejectedChanges() {
   const discard = useCallback(
     async (commandId: string) => {
       await discardRejectedCommand(db, commandId);
+      await cohereTransactionSurfaces(queryClient);
       await refresh();
     },
-    [db, refresh],
+    [db, queryClient, refresh],
   );
 
   const resubmit = useCallback(
@@ -63,10 +70,11 @@ export function useRejectedChanges() {
         newCommandId,
         ...(editedPayload !== undefined && { payload: editedPayload }),
       });
+      await cohereTransactionSurfaces(queryClient);
       await refresh();
       return newCommandId;
     },
-    [db, refresh],
+    [db, queryClient, refresh],
   );
 
   return { changes, isLoading, error, refresh, discard, resubmit };

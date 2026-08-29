@@ -15,7 +15,9 @@ const createBuilder = (result: QueryResult) => ({
   groupBy: jest.fn().mockReturnThis(),
   limit: jest.fn().mockReturnThis(),
   set: jest.fn().mockReturnThis(),
-  values: jest.fn().mockResolvedValue(result.all ?? result.get),
+  values: jest.fn().mockReturnThis(),
+  onConflictDoNothing: jest.fn().mockReturnThis(),
+  onConflictDoUpdate: jest.fn().mockReturnThis(),
   all: jest.fn().mockResolvedValue(result.all ?? []),
   get: jest.fn().mockResolvedValue(result.get),
 });

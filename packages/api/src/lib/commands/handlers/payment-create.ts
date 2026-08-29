@@ -30,6 +30,7 @@ import { issuesFromZod } from "./shared";
  * pattern. An interleaved writer draining the reserve aborts this batch.
  */
 const paymentPayloadSchema = z.object({
+  transactionId: z.string().min(1).optional(),
   /** Credit-card account receiving the payment. */
   cardAccountId: z.string().min(1),
   /** Funding account the cash leaves. */
@@ -65,6 +66,7 @@ export const paymentCreateHandler = {
 
   async plan(ctx: PlanContext, { payload }: PlanRequest): Promise<CommandPlan | PlanRejection> {
     const input = payload as PaymentPayload;
+    const transactionId = input.transactionId ?? crypto.randomUUID();
 
     const [card, funding] = [
       await loadAccount(ctx, input.cardAccountId),
@@ -132,6 +134,7 @@ export const paymentCreateHandler = {
     return {
       effects: ["ledger", "balances", "projections", "summaries"],
       applied: {
+        transactionId,
         cardAccountId: input.cardAccountId,
         fundingAccountId: input.fundingAccountId,
         amountMinor: input.amountMinor,
@@ -150,7 +153,7 @@ export const paymentCreateHandler = {
           .insert(transaction)
           .values({
             householdId: ctx.householdId,
-            id: crypto.randomUUID(),
+            id: transactionId,
             type: "transfer",
             amountMinor: input.amountMinor,
             currency: input.currency,

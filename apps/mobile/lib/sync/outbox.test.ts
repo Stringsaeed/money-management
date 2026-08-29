@@ -14,6 +14,7 @@ import {
   enqueueCommand,
   getRejectedChange,
   listRejectedChanges,
+  listProjectableCommands,
   pullDeltas,
   resubmitRejectedCommand,
   retryRejectedCommand,
@@ -122,7 +123,7 @@ describe("drainOutbox", () => {
     }
     const { send, sent } = makeSend([applied(), applied(), applied()]);
 
-    const summary = await drainOutbox(db, send);
+    const summary = await drainOutbox(db, HOUSEHOLD_ID, send);
 
     expect(summary).toEqual({ applied: 3, rejected: 0, pending: 0 });
     expect(sent.map((e) => e.commandId)).toEqual(["cmd-1", "cmd-2", "cmd-3"]);
@@ -140,7 +141,7 @@ describe("drainOutbox", () => {
       applied(),
     ]);
 
-    const summary = await drainOutbox(db, send);
+    const summary = await drainOutbox(db, HOUSEHOLD_ID, send);
 
     expect(summary.applied).toBe(1);
     expect(summary.rejected).toBe(1);
@@ -167,7 +168,7 @@ describe("drainOutbox", () => {
       return applied();
     };
 
-    const summary = await drainOutbox(db, send);
+    const summary = await drainOutbox(db, HOUSEHOLD_ID, send);
     expect(summary.stoppedOnNetworkError).toBe(true);
     expect(attempts).toBe(1);
 
@@ -179,7 +180,7 @@ describe("drainOutbox", () => {
     ]);
 
     // Next pass with healthy transport drains both, FIFO preserved.
-    const second = await drainOutbox(db, async () => applied());
+    const second = await drainOutbox(db, HOUSEHOLD_ID, async () => applied());
     expect(second.applied).toBe(2);
   });
 
@@ -193,7 +194,7 @@ describe("drainOutbox", () => {
       return { kind: "local_only", reason: "kill_switch_local_only" };
     };
 
-    const summary = await drainOutbox(db, send);
+    const summary = await drainOutbox(db, HOUSEHOLD_ID, send);
 
     // The kill switch is not a rejection — nothing lands in the inbox and
     // every command stays queued for when sync resumes.
@@ -222,7 +223,7 @@ describe("drainOutbox", () => {
       .where(eq(schema.outboxCommands.commandId, "cmd-crash"));
 
     const replayedApplied: CommandResult = { ...applied(), replayed: true };
-    const summary = await drainOutbox(db, async () => replayedApplied);
+    const summary = await drainOutbox(db, HOUSEHOLD_ID, async () => replayedApplied);
 
     expect(summary.applied).toBe(1);
     expect(await db.select().from(schema.outboxCommands)).toHaveLength(0);
@@ -274,6 +275,7 @@ describe("rejected changes inbox", () => {
     await enqueueCommand(db, makeInput({ commandId: "cmd-r2", kind: "account.create" }));
     await drainOutbox(
       db,
+      HOUSEHOLD_ID,
       async () =>
         ({
           kind: "forbidden",
@@ -300,7 +302,7 @@ describe("rejected changes inbox", () => {
   it("surfaces the typed rejection union and original payload on each entry", async () => {
     const db = await setupDb();
     await enqueueCommand(db, makeInput({ commandId: "cmd-typed" }));
-    await drainOutbox(db, async () => ({
+    await drainOutbox(db, HOUSEHOLD_ID, async () => ({
       kind: "invalid_intent",
       issues: [{ field: "amountMinor", message: "must be positive" }],
     }));
@@ -329,7 +331,7 @@ describe("rejected changes inbox", () => {
         preconditions: [{ entityId: "tx-1", expectedVersion: 3 }],
       }),
     );
-    await drainOutbox(db, async () => ({
+    await drainOutbox(db, HOUSEHOLD_ID, async () => ({
       kind: "invalid_intent",
       issues: [{ field: "amountMinor", message: "must be positive" }],
     }));
@@ -352,14 +354,17 @@ describe("rejected changes inbox", () => {
     expect(JSON.parse(rows[0].preconditions!)).toEqual([{ entityId: "tx-1", expectedVersion: 3 }]);
 
     // And it drains like any fresh command.
-    const summary = await drainOutbox(db, async () => applied());
+    const summary = await drainOutbox(db, HOUSEHOLD_ID, async () => applied());
     expect(summary.applied).toBe(1);
   });
 
   it("keeps the original payload when resubmitting without edits", async () => {
     const db = await setupDb();
     await enqueueCommand(db, makeInput({ commandId: "cmd-keep", payload: { note: "unchanged" } }));
-    await drainOutbox(db, async () => ({ kind: "conflict", reason: "unassigned_money_changed" }));
+    await drainOutbox(db, HOUSEHOLD_ID, async () => ({
+      kind: "conflict",
+      reason: "unassigned_money_changed",
+    }));
 
     await resubmitRejectedCommand(db, {
       originalCommandId: "cmd-keep",
@@ -375,7 +380,7 @@ describe("rejected changes inbox", () => {
   it("refuses to resubmit a rejected command that is no longer in the inbox", async () => {
     const db = await setupDb();
     await enqueueCommand(db, makeInput({ commandId: "cmd-gone" }));
-    await drainOutbox(db, async () => ({
+    await drainOutbox(db, HOUSEHOLD_ID, async () => ({
       kind: "missing_entity",
       entityType: "account",
       entityId: "acc-1",
@@ -389,12 +394,102 @@ describe("rejected changes inbox", () => {
   });
 });
 
+describe("household-scoped projection and drain", () => {
+  it("keeps another household's durable intent out of projection and drain", async () => {
+    const db = await setupDb();
+    await enqueueCommand(db, makeInput({ commandId: "cmd-selected" }));
+    await enqueueCommand(db, makeInput({ commandId: "cmd-other", householdId: "household-2" }));
+
+    await expect(listProjectableCommands(db, HOUSEHOLD_ID)).resolves.toMatchObject([
+      { commandId: "cmd-selected", status: "pending" },
+    ]);
+    const sent: string[] = [];
+    await drainOutbox(db, HOUSEHOLD_ID, async (envelope) => {
+      sent.push(envelope.commandId);
+      return applied();
+    });
+
+    expect(sent).toEqual(["cmd-selected"]);
+    await expect(listProjectableCommands(db, "household-2")).resolves.toMatchObject([
+      { commandId: "cmd-other", status: "pending" },
+    ]);
+  });
+
+  it("keeps another user's durable intent out of projection, drain, and resubmit", async () => {
+    const db = await setupDb();
+    await enqueueCommand(db, makeInput({ commandId: "cmd-user-1", userId: "user-1" }));
+    await enqueueCommand(db, makeInput({ commandId: "cmd-user-2", userId: "user-2" }));
+
+    await drainOutbox(
+      db,
+      HOUSEHOLD_ID,
+      async () => ({ kind: "invalid_intent", issues: [] }),
+      "user-1",
+    );
+    await resubmitRejectedCommand(db, {
+      originalCommandId: "cmd-user-1",
+      newCommandId: "cmd-user-1-edited",
+      payload: { amountMinor: 2500 },
+    });
+
+    await expect(listProjectableCommands(db, HOUSEHOLD_ID, "user-1")).resolves.toMatchObject([
+      {
+        commandId: "cmd-user-1-edited",
+        payload: { amountMinor: 2500 },
+      },
+    ]);
+    await expect(listProjectableCommands(db, HOUSEHOLD_ID, "user-2")).resolves.toMatchObject([
+      { commandId: "cmd-user-2" },
+    ]);
+  });
+
+  it("rebases a later edit after an invalid dependent edit is rejected", async () => {
+    const db = await setupDb();
+    await enqueueCommand(
+      db,
+      makeInput({
+        commandId: "cmd-edit-invalid",
+        userId: "user-1",
+        kind: "transaction.edit",
+        payload: { transactionId: "transaction-1", amountMinor: -1 },
+        preconditions: [{ entityId: "transaction-1", expectedVersion: 4 }],
+      }),
+    );
+    await enqueueCommand(
+      db,
+      makeInput({
+        commandId: "cmd-edit-valid",
+        userId: "user-1",
+        kind: "transaction.edit",
+        payload: { transactionId: "transaction-1", amountMinor: 2500 },
+        preconditions: [{ entityId: "transaction-1", expectedVersion: 5 }],
+      }),
+    );
+    const sent: CommandEnvelope[] = [];
+
+    const summary = await drainOutbox(
+      db,
+      HOUSEHOLD_ID,
+      async (envelope) => {
+        sent.push(envelope);
+        return sent.length === 1
+          ? { kind: "invalid_intent", issues: [{ field: "amountMinor", message: "positive" }] }
+          : applied();
+      },
+      "user-1",
+    );
+
+    expect(summary).toMatchObject({ applied: 1, rejected: 1, pending: 0 });
+    expect(sent[1].preconditions).toEqual([{ entityId: "transaction-1", expectedVersion: 4 }]);
+  });
+});
+
 describe("truncateOutbox", () => {
   it("drops every queued and rejected command for the household, leaving other households untouched", async () => {
     const db = await setupDb();
     await enqueueCommand(db, makeInput({ commandId: "cmd-pending" }));
     await enqueueCommand(db, makeInput({ commandId: "cmd-rejected" }));
-    await drainOutbox(db, async (envelope) =>
+    await drainOutbox(db, HOUSEHOLD_ID, async (envelope) =>
       envelope.commandId === "cmd-rejected"
         ? { kind: "missing_entity", entityType: "account", entityId: "acc-1" }
         : applied(),

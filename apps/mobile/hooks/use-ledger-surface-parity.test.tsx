@@ -156,13 +156,19 @@ const SYNCED_TRANSACTION = {
 };
 
 const LOCAL_SELECTION = { kind: "local" } as const;
-const SYNCED_SELECTION = { kind: "synced", householdId: "household-1" } as const;
+const SYNCED_SELECTION = {
+  kind: "synced",
+  householdId: "household-1",
+  userId: "user-1",
+} as const;
 
 const setExternalFixtures = (
   selection: LedgerSourceSelection,
   localSelectRows: readonly unknown[][] = [],
 ) => {
-  const db = createMockDb({ selectResults: localSelectRows.map((all) => ({ all })) });
+  const db = createMockDb({
+    selectResults: (selection.kind === "local" ? localSelectRows : []).map((all) => ({ all })),
+  });
   mockUseDatabase.mockReturnValue(db);
   mockUseSQLiteContext.mockReturnValue({
     getAllAsync: jest.fn().mockResolvedValue([{ ...ACCOUNT, balance: 60_00, excludeFromTotal: 0 }]),
@@ -197,6 +203,7 @@ describe.each([
     const hookFixture = setExternalFixtures(selection, [[ENRICHED_TRANSACTION_ROW]]);
     const { result } = await renderHookWithProviders(() => useHomeScreen(), hookFixture.options);
 
+    await waitFor(() => expect(result.current.accounts).toHaveLength(1));
     await waitFor(() => expect(result.current.loadingTx).toBe(false));
     expect(result.current.accounts).toMatchObject([{ id: "account-1", balance: 60_00 }]);
     expect(result.current.groups[0]?.transactions).toMatchObject([
