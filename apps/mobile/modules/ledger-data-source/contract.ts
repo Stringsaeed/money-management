@@ -193,6 +193,22 @@ export type NewTransaction = Omit<Transaction, "id" | "createdAt" | "updatedAt" 
 export type TransactionUpdate = Partial<
   Omit<Transaction, "id" | "createdAt" | "date"> & { date?: Date | string }
 >;
+export interface NewCardPayment {
+  readonly cardAccountId: string;
+  readonly fundingAccountId: string;
+  readonly currency: string;
+  readonly amountMinor: number;
+  readonly budgetPeriod: string;
+  readonly date?: string;
+}
+
+export interface NewRefund {
+  readonly originalTransactionId: string;
+  readonly depositAccountId: string;
+  readonly currency: string;
+  readonly amountMinor: number;
+  readonly date: string;
+}
 
 export interface LedgerTransactionResource {
   list: (filters: TransactionQueryFilters) => Promise<TransactionWithDetails[]>;
@@ -203,13 +219,16 @@ export interface LedgerTransactionResource {
     month: number,
     accountId?: string | null,
   ) => Promise<{ totalIncome: number; totalExpense: number; netAmount: number }>;
-  page: (options: {
-    limit: number;
-    beforeDate?: string;
-  }) => Promise<{ transactions: TransactionWithDetails[]; hasMore: boolean }>;
+  page: (options: { limit: number; beforeDate?: string; beforeId?: string }) => Promise<{
+    transactions: TransactionWithDetails[];
+    hasMore: boolean;
+    nextCursor?: { date: string; id: string } | null;
+  }>;
   create: (data: NewTransaction) => Promise<string>;
   update: (id: string, data: TransactionUpdate) => Promise<unknown>;
   delete: (id: string) => Promise<unknown>;
+  recordCardPayment: (data: NewCardPayment) => Promise<string>;
+  linkRefund: (data: NewRefund) => Promise<string>;
 }
 
 export interface LedgerTransactionDataSource {

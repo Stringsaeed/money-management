@@ -8,6 +8,7 @@ import {
 } from "@/components/rejected-changes/payload-fields";
 import { useDatabase } from "@/db/client";
 import { useRejectedChanges } from "@/hooks/use-rejected-changes";
+import { authClient } from "@/lib/auth-client";
 import type { RejectedChange } from "@/lib/sync/outbox";
 import { getRejectedChange } from "@/lib/sync/outbox";
 
@@ -19,6 +20,8 @@ import { getRejectedChange } from "@/lib/sync/outbox";
 export function useRejectedEditForm(commandId: string | null) {
   const db = useDatabase();
   const { resubmit } = useRejectedChanges();
+  const { data: session } = authClient.useSession();
+  const userId = session?.user.id ?? null;
 
   const [change, setChange] = useState<RejectedChange | null>(null);
   const [fields, setFields] = useState<readonly EditableField[]>([]);
@@ -28,13 +31,13 @@ export function useRejectedEditForm(commandId: string | null) {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!commandId) {
+    if (!commandId || !userId) {
       setNotFound(true);
       setIsLoading(false);
       return;
     }
     let cancelled = false;
-    void getRejectedChange(db, commandId)
+    void getRejectedChange(db, commandId, userId)
       .then((loaded) => {
         if (cancelled) {
           return;
@@ -56,7 +59,7 @@ export function useRejectedEditForm(commandId: string | null) {
     return () => {
       cancelled = true;
     };
-  }, [commandId, db]);
+  }, [commandId, db, userId]);
 
   const setFieldValue = useCallback((key: string, value: string) => {
     setFields((current) =>

@@ -6,6 +6,7 @@ import type { CommandEnvelope, CommandKind, CommandResult, Precondition } from "
 
 import { outboxCommands, syncState } from "@/db/schema";
 import { parseRejection, type RejectionResult } from "@/lib/sync/rejection";
+import type * as schema from "@/db/schema";
 
 /**
  * Client outbox & sync core (#85). Pure data layer over the local SQLite
@@ -18,7 +19,7 @@ import { parseRejection, type RejectionResult } from "@/lib/sync/rejection";
  * — a "sending" row left behind by a killed app is simply retried.
  */
 
-type LocalDb = ExpoSQLiteDatabase<typeof import("@/db/schema")> & { $client: SQLiteDatabase };
+export type LocalDb = ExpoSQLiteDatabase<typeof schema> & { $client: SQLiteDatabase };
 
 /** Transport seam so the core stays testable without oRPC. */
 export type SendCommand = (envelope: CommandEnvelope) => Promise<CommandResult>;
@@ -28,15 +29,37 @@ export interface EnqueueInput {
   commandId: string;
   householdId: string;
   kind: CommandKind;
-  payload: unknown;
+  payload: CommandEnvelope["payload"];
   preconditions?: readonly Precondition[];
+  userId?: string;
 }
 
-/**
- * Appends one command to the outbox. Callers apply their optimistic local
- * writes and enqueue inside ONE local transaction (`db.withTransactionAsync`)
- * so a crash can never leave cache and queue disagreeing.
- */
+interface StoredCommandPayload {
+  readonly storageVersion: 1;
+  readonly userId: string;
+  readonly payload: CommandEnvelope["payload"];
+}
+
+interface DecodedCommandPayload {
+  readonly userId: string | null;
+  readonly payload: CommandEnvelope["payload"];
+}
+
+const encodeStoredPayload = (payload: CommandEnvelope["payload"], userId?: string): string =>
+  JSON.stringify(userId ? { storageVersion: 1, userId, payload } : payload);
+
+function decodeStoredPayload(serialized: string): DecodedCommandPayload {
+  // SAFETY: tagged values are written only by encodeStoredPayload; untagged values are legacy rows.
+  const candidate = JSON.parse(serialized) as Partial<StoredCommandPayload>;
+  if (candidate?.storageVersion === 1 && candidate.userId) {
+    return { userId: candidate.userId, payload: candidate.payload };
+  }
+  return { userId: null, payload: candidate };
+}
+
+const rowBelongsToUser = (row: typeof outboxCommands.$inferSelect, userId?: string): boolean =>
+  !userId || decodeStoredPayload(row.payload).userId === userId;
+/** Appends one durable command to the selected household's FIFO outbox. */
 export async function enqueueCommand(db: LocalDb, input: EnqueueInput): Promise<void> {
   await db
     .insert(outboxCommands)
@@ -44,7 +67,7 @@ export async function enqueueCommand(db: LocalDb, input: EnqueueInput): Promise<
       commandId: input.commandId,
       householdId: input.householdId,
       kind: input.kind,
-      payload: JSON.stringify(input.payload),
+      payload: encodeStoredPayload(input.payload, input.userId),
       ...(input.preconditions && {
         preconditions: JSON.stringify([...input.preconditions]),
       }),
@@ -53,18 +76,48 @@ export async function enqueueCommand(db: LocalDb, input: EnqueueInput): Promise<
 }
 
 function envelopeFrom(row: typeof outboxCommands.$inferSelect): CommandEnvelope {
+  // SAFETY: rows come from the typed outbox schema and were serialized by enqueueCommand.
   return {
     commandId: row.commandId,
     householdId: row.householdId,
     kind: row.kind as CommandEnvelope["kind"],
-    payload: JSON.parse(row.payload) as unknown,
+    payload: decodeStoredPayload(row.payload).payload,
     preconditions: row.preconditions
       ? (JSON.parse(row.preconditions) as Precondition[])
       : undefined,
+    issuedAt: row.createdAt.toISOString(),
   };
 }
 
 const QUEUED_STATUSES = ["pending", "sending"] as const;
+export interface ProjectableCommand extends CommandEnvelope {
+  readonly status: (typeof QUEUED_STATUSES)[number];
+}
+
+/** Pending optimistic intents for one selected household, in projector order. */
+export async function listProjectableCommands(
+  db: LocalDb,
+  householdId: string,
+  userId?: string,
+): Promise<readonly ProjectableCommand[]> {
+  const rows = await db
+    .select()
+    .from(outboxCommands)
+    .where(
+      and(
+        eq(outboxCommands.householdId, householdId),
+        inArray(outboxCommands.status, [...QUEUED_STATUSES]),
+      ),
+    )
+    .orderBy(asc(outboxCommands.createdAt), asc(outboxCommands.commandId))
+    .all();
+  return rows
+    .filter((row) => rowBelongsToUser(row, userId))
+    .map((row) => ({
+      ...envelopeFrom(row),
+      status: row.status === "sending" ? "sending" : "pending",
+    }));
+}
 
 export interface DrainSummary {
   /** Commands acknowledged as applied and removed from the outbox. */
@@ -91,7 +144,12 @@ export interface DrainSummary {
  * later commands stay valid; the rejected one is retained with its reason.
  * A transport failure stops immediately: order matters more than throughput.
  */
-export async function drainOutbox(db: LocalDb, send: SendCommand): Promise<DrainSummary> {
+export async function drainOutbox(
+  db: LocalDb,
+  householdId: string,
+  send: SendCommand,
+  userId?: string,
+): Promise<DrainSummary> {
   let applied = 0;
   let rejected = 0;
 
@@ -101,10 +159,15 @@ export async function drainOutbox(db: LocalDb, send: SendCommand): Promise<Drain
     const rows = await db
       .select()
       .from(outboxCommands)
-      .where(inArray(outboxCommands.status, [...QUEUED_STATUSES]))
+      .where(
+        and(
+          eq(outboxCommands.householdId, householdId),
+          inArray(outboxCommands.status, [...QUEUED_STATUSES]),
+        ),
+      )
       .orderBy(asc(outboxCommands.createdAt), asc(outboxCommands.commandId))
-      .limit(1);
-    const row = rows[0];
+      .all();
+    const row = rows.find((candidate) => rowBelongsToUser(candidate, userId));
     if (!row) {
       break;
     }
@@ -126,7 +189,7 @@ export async function drainOutbox(db: LocalDb, send: SendCommand): Promise<Drain
       return {
         applied,
         rejected,
-        pending: await countQueued(db),
+        pending: await countQueued(db, householdId, userId),
         stoppedOnNetworkError: true,
       };
     }
@@ -145,18 +208,23 @@ export async function drainOutbox(db: LocalDb, send: SendCommand): Promise<Drain
       return {
         applied,
         rejected,
-        pending: await countQueued(db),
+        pending: await countQueued(db, householdId, userId),
         stoppedOnLocalOnly: true,
       };
     } else {
-      await db
-        .update(outboxCommands)
-        .set({
-          status: "rejected",
-          rejectionKind: result.kind,
-          rejectionPayload: JSON.stringify(result),
-        })
-        .where(eq(outboxCommands.commandId, row.commandId));
+      await db.$client.withTransactionAsync(async () => {
+        await db
+          .update(outboxCommands)
+          .set({
+            status: "rejected",
+            rejectionKind: result.kind,
+            rejectionPayload: JSON.stringify(result),
+          })
+          .where(eq(outboxCommands.commandId, row.commandId));
+        if (result.kind === "invalid_intent") {
+          await rebaseInvalidTransactionDependents(db, householdId, userId, envelopeFrom(row));
+        }
+      });
       rejected += 1;
     }
   }
@@ -164,13 +232,61 @@ export async function drainOutbox(db: LocalDb, send: SendCommand): Promise<Drain
   return { applied, rejected, pending: 0 };
 }
 
-/** Number of commands awaiting their first ack. */
-async function countQueued(db: LocalDb): Promise<number> {
+async function rebaseInvalidTransactionDependents(
+  db: LocalDb,
+  householdId: string,
+  userId: string | undefined,
+  rejectedCommand: CommandEnvelope,
+): Promise<void> {
+  const transactionId = mutableTransactionId(rejectedCommand);
+  if (!transactionId) return;
   const rows = await db
-    .select({ commandId: outboxCommands.commandId })
+    .select()
     .from(outboxCommands)
-    .where(inArray(outboxCommands.status, [...QUEUED_STATUSES]));
-  return rows.length;
+    .where(
+      and(
+        eq(outboxCommands.householdId, householdId),
+        inArray(outboxCommands.status, [...QUEUED_STATUSES]),
+      ),
+    )
+    .orderBy(asc(outboxCommands.createdAt), asc(outboxCommands.commandId))
+    .all();
+
+  for (const row of rows) {
+    if (!rowBelongsToUser(row, userId)) continue;
+    const command = envelopeFrom(row);
+    if (mutableTransactionId(command) !== transactionId || !command.preconditions) continue;
+    const preconditions = command.preconditions.map((precondition) =>
+      precondition.entityId === transactionId && precondition.expectedVersion !== undefined
+        ? { ...precondition, expectedVersion: Math.max(0, precondition.expectedVersion - 1) }
+        : precondition,
+    );
+    await db
+      .update(outboxCommands)
+      .set({ preconditions: JSON.stringify(preconditions) })
+      .where(eq(outboxCommands.commandId, row.commandId));
+  }
+}
+
+function mutableTransactionId(command: CommandEnvelope): string | null {
+  if (command.kind !== "transaction.edit" && command.kind !== "transaction.remove") return null;
+  // SAFETY: these command kinds are emitted only with their registered transaction payload.
+  const payload = command.payload as { transactionId: string };
+  return payload.transactionId;
+}
+
+/** Number of commands awaiting their first ack. */
+async function countQueued(db: LocalDb, householdId: string, userId?: string): Promise<number> {
+  const rows = await db
+    .select()
+    .from(outboxCommands)
+    .where(
+      and(
+        eq(outboxCommands.householdId, householdId),
+        inArray(outboxCommands.status, [...QUEUED_STATUSES]),
+      ),
+    );
+  return rows.filter((row) => rowBelongsToUser(row, userId)).length;
 }
 
 export interface SyncPullArgs {
@@ -237,13 +353,14 @@ export interface RejectedChange {
 }
 
 function rejectedChangeFrom(row: typeof outboxCommands.$inferSelect): RejectedChange {
+  // SAFETY: rows come from the typed outbox schema and were serialized by enqueueCommand.
   return {
     commandId: row.commandId,
     householdId: row.householdId,
     kind: row.kind as CommandKind,
     rejectionKind: row.rejectionKind ?? "unknown",
     rejection: parseRejection(JSON.parse(row.rejectionPayload ?? "{}")),
-    payload: JSON.parse(row.payload) as unknown,
+    payload: decodeStoredPayload(row.payload).payload,
     ...(row.preconditions && {
       preconditions: JSON.parse(row.preconditions) as Precondition[],
     }),
@@ -256,19 +373,21 @@ function rejectedChangeFrom(row: typeof outboxCommands.$inferSelect): RejectedCh
 export async function listRejectedChanges(
   db: LocalDb,
   householdId: string,
+  userId?: string,
 ): Promise<readonly RejectedChange[]> {
   const rows = await db
     .select()
     .from(outboxCommands)
     .where(and(eq(outboxCommands.householdId, householdId), eq(outboxCommands.status, "rejected")))
     .orderBy(asc(outboxCommands.createdAt));
-  return rows.map(rejectedChangeFrom);
+  return rows.filter((row) => rowBelongsToUser(row, userId)).map(rejectedChangeFrom);
 }
 
 /** Loads one rejected change for the re-edit screen; null when gone. */
 export async function getRejectedChange(
   db: LocalDb,
   commandId: string,
+  userId?: string,
 ): Promise<RejectedChange | null> {
   const rows = await db
     .select()
@@ -276,7 +395,7 @@ export async function getRejectedChange(
     .where(and(eq(outboxCommands.commandId, commandId), eq(outboxCommands.status, "rejected")))
     .limit(1);
   const row = rows[0];
-  return row ? rejectedChangeFrom(row) : null;
+  return row && rowBelongsToUser(row, userId) ? rejectedChangeFrom(row) : null;
 }
 
 /**
@@ -291,7 +410,7 @@ export async function resubmitRejectedCommand(
     originalCommandId: string;
     newCommandId: string;
     /** Edited payload; defaults to the original intent unchanged. */
-    payload?: unknown;
+    payload?: CommandEnvelope["payload"];
   },
 ): Promise<void> {
   await db.$client.withTransactionAsync(async () => {
@@ -311,6 +430,7 @@ export async function resubmitRejectedCommand(
         "Nothing to resubmit — this rejected change was already discarded or resubmitted.",
       );
     }
+    const stored = decodeStoredPayload(original.payload);
 
     await db
       .insert(outboxCommands)
@@ -318,7 +438,10 @@ export async function resubmitRejectedCommand(
         commandId: input.newCommandId,
         householdId: original.householdId,
         kind: original.kind,
-        payload: input.payload === undefined ? original.payload : JSON.stringify(input.payload),
+        payload:
+          input.payload === undefined
+            ? original.payload
+            : encodeStoredPayload(input.payload, stored.userId ?? undefined),
         ...(original.preconditions && { preconditions: original.preconditions }),
       })
       .onConflictDoNothing();
@@ -347,9 +470,13 @@ export async function discardRejectedCommand(db: LocalDb, commandId: string): Pr
 }
 
 /** Count of commands still awaiting their first ack. */
-export async function countPendingCommands(db: LocalDb, householdId: string): Promise<number> {
+export async function countPendingCommands(
+  db: LocalDb,
+  householdId: string,
+  userId?: string,
+): Promise<number> {
   const rows = await db
-    .select({ commandId: outboxCommands.commandId })
+    .select()
     .from(outboxCommands)
     .where(
       and(
@@ -357,7 +484,7 @@ export async function countPendingCommands(db: LocalDb, householdId: string): Pr
         inArray(outboxCommands.status, [...QUEUED_STATUSES]),
       ),
     );
-  return rows.length;
+  return rows.filter((row) => rowBelongsToUser(row, userId)).length;
 }
 
 /**

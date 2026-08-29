@@ -21,7 +21,7 @@ import {
 } from "@/lib/sync/degradation";
 import { useSyncModeStore } from "@/stores/sync-mode-store";
 import { orpc } from "@/lib/server/orpc";
-import { cohereLedgerEffects } from "@/modules/ledger-cache";
+import { cohereLedgerEffects, cohereTransactionSurfaces } from "@/modules/ledger-cache";
 
 /** How often the worker drains the outbox and pulls deltas while active. */
 const SYNC_INTERVAL_MS = 30_000;
@@ -47,7 +47,7 @@ const KILL_SWITCH_POLL_INTERVAL_MS = 5 * 60_000;
  * Polling is the shipped notification path; push (#93) would only change
  * when a turn triggers, never what it returns.
  */
-export function useSyncWorker(householdId: string | null) {
+export function useSyncWorker(householdId: string | null, userId?: string) {
   const db = useDatabase();
   const queryClient = useQueryClient();
   const [pendingCount, setPendingCount] = useState(0);
@@ -69,15 +69,15 @@ export function useSyncWorker(householdId: string | null) {
     }
     try {
       const [pending, rejected] = await Promise.all([
-        countPendingCommands(db, householdId),
-        listRejectedChanges(db, householdId),
+        countPendingCommands(db, householdId, userId),
+        listRejectedChanges(db, householdId, userId),
       ]);
       setPendingCount(pending);
       setRejectedChanges(rejected);
     } catch (err) {
       setLastError(err instanceof Error ? err : new Error("Sync state read failed."));
     }
-  }, [db, householdId]);
+  }, [db, householdId, userId]);
 
   // Remote kill-switch probe (#99): checked on startup and re-polled on an
   // interval so turning the flag off restores synced mode without a restart.
@@ -123,15 +123,23 @@ export function useSyncWorker(householdId: string | null) {
       // Drain first: local intent leaves before remote changes arrive, so a
       // rejected command is visible in the inbox as soon as possible.
       // The generated oRPC input is mutable; keep the stored outbox envelope immutable.
-      const summary = await drainOutbox(db, (envelope) =>
-        orpc.commands.apply({
-          ...envelope,
-          preconditions: envelope.preconditions?.map((precondition) => ({ ...precondition })),
-        }),
+      const summary = await drainOutbox(
+        db,
+        householdId,
+        (envelope) =>
+          orpc.commands.apply({
+            ...envelope,
+            preconditions: envelope.preconditions?.map((precondition) => ({ ...precondition })),
+          }),
+        userId,
       );
 
       if (summary.stoppedOnLocalOnly) {
         useSyncModeStore.getState().setLocalOnly("kill_switch");
+      }
+
+      if (summary.applied > 0 || summary.rejected > 0) {
+        await cohereTransactionSurfaces(queryClient);
       }
 
       try {
@@ -170,7 +178,7 @@ export function useSyncWorker(householdId: string | null) {
       syncingRef.current = false;
       setIsSyncing(false);
     }
-  }, [db, householdId, queryClient, refreshCounters, statusPending]);
+  }, [db, householdId, queryClient, refreshCounters, statusPending, userId]);
 
   // Realtime push (#93): a household notice triggers the same drain+pull turn
   // as polling — push only changes when it runs, never what it computes.
@@ -211,18 +219,20 @@ export function useSyncWorker(householdId: string | null) {
   const discardRejected = useCallback(
     async (commandId: string) => {
       await discardRejectedCommand(db, commandId);
+      await cohereTransactionSurfaces(queryClient);
       await refreshCounters();
     },
-    [db, refreshCounters],
+    [db, queryClient, refreshCounters],
   );
 
   const retryRejected = useCallback(
     async (commandId: string) => {
       await retryRejectedCommand(db, commandId);
+      await cohereTransactionSurfaces(queryClient);
       await refreshCounters();
       await runSyncTurn();
     },
-    [db, refreshCounters, runSyncTurn],
+    [db, queryClient, refreshCounters, runSyncTurn],
   );
 
   return {

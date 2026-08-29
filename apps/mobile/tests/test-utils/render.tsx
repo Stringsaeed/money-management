@@ -13,6 +13,12 @@ import {
   type LedgerSourceSelection,
 } from "@/modules/ledger-data-source/provider";
 
+export type TestLedgerSourceSelection =
+  | { readonly kind: "local" }
+  | (Omit<Extract<LedgerSourceSelection, { kind: "synced" }>, "userId"> & {
+      readonly userId?: string;
+    });
+
 const trackedClients = new Set<QueryClient>();
 
 export const createTestQueryClient = () =>
@@ -38,18 +44,24 @@ afterEach(() => {
 interface TestProvidersProps {
   children: ReactNode;
   client: QueryClient;
-  ledgerSelection?: LedgerSourceSelection;
+  ledgerSelection?: TestLedgerSourceSelection;
 }
 
-const TestProviders = ({ children, client, ledgerSelection }: TestProvidersProps) => (
-  <QueryClientProvider client={client}>
-    <LedgerDataSourceProvider selection={ledgerSelection}>{children}</LedgerDataSourceProvider>
-  </QueryClientProvider>
-);
+const TestProviders = ({ children, client, ledgerSelection }: TestProvidersProps) => {
+  const selection: LedgerSourceSelection | undefined =
+    ledgerSelection?.kind === "synced"
+      ? { ...ledgerSelection, userId: ledgerSelection.userId ?? "test-user" }
+      : ledgerSelection;
+  return (
+    <QueryClientProvider client={client}>
+      <LedgerDataSourceProvider selection={selection}>{children}</LedgerDataSourceProvider>
+    </QueryClientProvider>
+  );
+};
 
 interface ProviderOptions {
   client?: QueryClient;
-  ledgerSelection?: LedgerSourceSelection;
+  ledgerSelection?: TestLedgerSourceSelection;
 }
 
 export const renderWithProviders = async (

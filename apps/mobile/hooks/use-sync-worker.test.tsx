@@ -16,6 +16,7 @@ const mockApply = jest.fn();
 const mockGetDelta = jest.fn();
 const mockStatus = jest.fn();
 const mockCohereLedgerEffects = jest.fn();
+const mockCohereTransactionSurfaces = jest.fn();
 
 const FAKE_DB = { __fakeDb: true };
 jest.mock("@/db/client", () => ({
@@ -49,6 +50,7 @@ jest.mock("@/lib/server/orpc", () => ({
 jest.mock("@/modules/ledger-cache", () => ({
   ...jest.requireActual("@/modules/ledger-cache"),
   cohereLedgerEffects: (...args: unknown[]) => mockCohereLedgerEffects(...args),
+  cohereTransactionSurfaces: (...args: unknown[]) => mockCohereTransactionSurfaces(...args),
 }));
 
 const HOUSEHOLD_ID = "household-1";
@@ -60,6 +62,7 @@ function defaultMocks() {
   mockPullDeltas.mockResolvedValue({ seq: 0, hasMore: false, changes: [] });
   mockStatus.mockResolvedValue({ killSwitchLocalOnly: false });
   mockCohereLedgerEffects.mockResolvedValue(undefined);
+  mockCohereTransactionSurfaces.mockResolvedValue(undefined);
   mockCountPending.mockResolvedValue(2);
   mockListRejected.mockResolvedValue([
     {
@@ -95,11 +98,16 @@ describe("useSyncWorker", () => {
   });
 
   it("runs one drain+pull turn on mount and refreshes counters", async () => {
-    const { result } = await await renderHookWithProviders(() => useSyncWorker(HOUSEHOLD_ID));
+    const { result } = await renderHookWithProviders(() => useSyncWorker(HOUSEHOLD_ID, "user-1"));
 
     // Drain and pull receive the injected db plus transports bound to oRPC.
     await waitFor(() => {
-      expect(mockDrainOutbox).toHaveBeenCalledWith(FAKE_DB, expect.any(Function));
+      expect(mockDrainOutbox).toHaveBeenCalledWith(
+        FAKE_DB,
+        HOUSEHOLD_ID,
+        expect.any(Function),
+        "user-1",
+      );
       expect(mockPullDeltas).toHaveBeenCalledWith(
         expect.anything(),
         expect.any(Function),
@@ -128,7 +136,7 @@ describe("useSyncWorker", () => {
       expect(mockDrainOutbox).toHaveBeenCalled();
     });
 
-    const drainSend = mockDrainOutbox.mock.calls[0][1] as (envelope: unknown) => Promise<unknown>;
+    const drainSend = mockDrainOutbox.mock.calls[0][2] as (envelope: unknown) => Promise<unknown>;
     mockApply.mockResolvedValue({
       kind: "applied",
       seq: 1,

@@ -38,8 +38,8 @@ export const transactionKeys = {
   list: (filters: TransactionQueryFilters) => ["transactions", "list", filters] as const,
   recent: (limit: number) => ["transactions", "recent", limit] as const,
   detail: (id: string) => ["transactions", id] as const,
-  page: (limit: number, beforeDate?: string) =>
-    ["transactions", "page", limit, beforeDate ?? null] as const,
+  page: (limit: number, beforeDate?: string, beforeId?: string) =>
+    ["transactions", "page", limit, beforeDate ?? null, beforeId ?? null] as const,
 };
 
 export const monthSummaryKeys = {
@@ -245,6 +245,10 @@ export async function cohereLedgerCache(
   await invalidateQueryKeys(queryClient, ledgerChangeQueryKeys[change.kind]);
 }
 
+export async function cohereTransactionSurfaces(queryClient: QueryClient): Promise<void> {
+  await invalidateQueryKeys(queryClient, transactionChangeQueryKeys);
+}
+
 export async function cohereRecurringEffects(
   queryClient: QueryClient,
   effects: readonly RecurringEffect[],
@@ -265,6 +269,9 @@ export async function cohereLedgerEffects(
   }
   if (effects.includes("summaries")) {
     queryKeys.push(categoryKeys.all, monthSummaryKeys.all, transactionDateRangeKeys.all);
+  }
+  if (effects.includes("projections")) {
+    queryKeys.push(budgetKeys.projections, accountKeys.lifecyclePreviews, budgetKeys.setupDraft);
   }
   await invalidateQueryKeys(queryClient, queryKeys);
 }

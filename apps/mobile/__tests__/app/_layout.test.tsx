@@ -116,6 +116,10 @@ jest.mock("@/modules/recurring-rules/clock", () => ({
   localDateInTimeZone: () => "2026-08-17",
 }));
 
+jest.mock("@/modules/ledger-data-source/ledger-data-source-gate", () => ({
+  LedgerDataSourceGate: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 jest.mock("@/modules/recurring-rules/provider", () => ({
   RecurringRulesProvider: ({ children }: { children: React.ReactNode }) => children,
 }));

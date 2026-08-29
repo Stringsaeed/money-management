@@ -174,7 +174,7 @@ describe("use-categories hooks", () => {
     expect(db.select).not.toHaveBeenCalled();
   });
 
-  it("does not reuse local Category cache entries after switching to synced", async () => {
+  it("isolates Category caches across local mode and same-household users", async () => {
     const client = createTestQueryClient();
     const localDb = createMockDb({
       selectResults: [{ all: [createCategory({ id: "local-category", name: "Local" })] }],
@@ -198,16 +198,28 @@ describe("use-categories hooks", () => {
     ]);
     const synced = await renderHookWithProviders(() => useCategories("expense"), {
       client,
-      ledgerSelection: { kind: "synced", householdId: "household-1" },
+      ledgerSelection: { kind: "synced", householdId: "household-1", userId: "user-1" },
     });
 
     await waitFor(() =>
       expect(synced.result.current.data).toMatchObject([{ id: "synced-category" }]),
     );
     expect(mockListServerCategories).toHaveBeenCalled();
-    expect(client.getQueryData(["categories", "expense", "synced:household-1"])).toMatchObject([
-      { id: "synced-category" },
-    ]);
+    expect(
+      client.getQueryData(["categories", "expense", "synced:household-1:user-1"]),
+    ).toMatchObject([{ id: "synced-category" }]);
+    await synced.unmount();
+
+    mockListServerCategories.mockRejectedValue(new Error("offline"));
+    const otherUser = await renderHookWithProviders(() => useCategories("expense"), {
+      client,
+      ledgerSelection: { kind: "synced", householdId: "household-1", userId: "user-2" },
+    });
+    await waitFor(() => expect(otherUser.result.current.isError).toBe(true));
+    expect(otherUser.result.current.data).toBeUndefined();
+    expect(
+      client.getQueryData(["categories", "expense", "synced:household-1:user-2"]),
+    ).toBeUndefined();
   });
 
   it("loads a single category by id", async () => {

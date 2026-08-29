@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useTransactionDataSource } from "@/modules/ledger-data-source/coordinator";
+import type { NewCardPayment, NewRefund } from "@/modules/ledger-data-source/contract";
 import {
   cohereLedgerCache,
   monthSummaryKeys,
@@ -44,12 +45,22 @@ export function useTransactionDateRange() {
   return { ...query, source: source.source };
 }
 
-export function useTransactionPage(options: { limit?: number; beforeDate?: string } = {}) {
+export function useTransactionPage(
+  options: { limit?: number; beforeDate?: string; beforeId?: string } = {},
+) {
   const source = useTransactionDataSource();
   const limit = options.limit ?? 100;
   const query = useQuery({
-    queryKey: [...transactionKeys.page(limit, options.beforeDate), source.cacheKey],
-    queryFn: () => source.transactions.page({ limit, beforeDate: options.beforeDate }),
+    queryKey: [
+      ...transactionKeys.page(limit, options.beforeDate, options.beforeId),
+      source.cacheKey,
+    ],
+    queryFn: () =>
+      source.transactions.page({
+        limit,
+        beforeDate: options.beforeDate,
+        beforeId: options.beforeId,
+      }),
   });
   return { ...query, source: source.source };
 }
@@ -109,6 +120,26 @@ export function useDeleteTransaction() {
   const mutation = useMutation({
     mutationFn: source.transactions.delete,
     onSuccess: (_, id) => cohereLedgerCache(queryClient, { kind: "transaction.deleted", id }),
+  });
+  return { ...mutation, source: source.source };
+}
+
+export function useRecordCardPayment() {
+  const source = useTransactionDataSource();
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (data: NewCardPayment) => source.transactions.recordCardPayment(data),
+    onSuccess: (id) => cohereLedgerCache(queryClient, { kind: "transaction.created", id }),
+  });
+  return { ...mutation, source: source.source };
+}
+
+export function useLinkRefund() {
+  const source = useTransactionDataSource();
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (data: NewRefund) => source.transactions.linkRefund(data),
+    onSuccess: (id) => cohereLedgerCache(queryClient, { kind: "transaction.created", id }),
   });
   return { ...mutation, source: source.source };
 }
