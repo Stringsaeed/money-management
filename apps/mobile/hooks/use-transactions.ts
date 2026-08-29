@@ -44,6 +44,16 @@ export function useTransactionDateRange() {
   return { ...query, source: source.source };
 }
 
+export function useTransactionPage(options: { limit?: number; beforeDate?: string } = {}) {
+  const source = useTransactionDataSource();
+  const limit = options.limit ?? 100;
+  const query = useQuery({
+    queryKey: [...transactionKeys.page(limit, options.beforeDate), source.cacheKey],
+    queryFn: () => source.transactions.page({ limit, beforeDate: options.beforeDate }),
+  });
+  return { ...query, source: source.source };
+}
+
 // ── Month summary ─────────────────────────────────────────────────────────────
 
 export function useMonthSummary(

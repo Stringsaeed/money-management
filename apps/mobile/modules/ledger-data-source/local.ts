@@ -83,6 +83,7 @@ export const useLocalTransactionDataSource = () => {
       get: port.reads.transaction,
       dateRange: port.reads.dateRange,
       monthSummary: port.reads.monthSummary,
+      page: port.reads.page,
       create: port.mutations.createTransaction,
       update: port.mutations.updateTransaction,
       delete: port.mutations.deleteTransaction,

@@ -1,10 +1,9 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { CommandEnvelope } from "@trove/protocol";
 
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
-import { useTransactions } from "@/hooks/use-transactions";
+import { useTransactionPage } from "@/hooks/use-transactions";
 import { useLedgerLifecycle } from "@/modules/ledger-data-source/coordinator";
 import { cohereLedgerEffects } from "@/modules/ledger-cache";
 import type { Account, Category, TransactionWithDetails } from "@/types";
@@ -34,15 +33,7 @@ export function useLedgerTransactions(
   _householdId: string | null,
   options: { limit?: number; beforeDate?: string } = {},
 ) {
-  const { limit, beforeDate } = options;
-  const query = useTransactions({ limit });
-  const transactions = beforeDate
-    ? query.data?.filter((transaction) => transaction.date < beforeDate)
-    : query.data;
-  return {
-    ...query,
-    data: transactions ? { transactions, hasMore: false } : undefined,
-  };
+  return useTransactionPage(options);
 }
 
 /**
@@ -66,7 +57,8 @@ export function useLedger(householdId: string | null, effects: readonly string[]
 
   const error = accounts.error ?? categories.error ?? transactions.error;
   return {
-    source: lifecycle.source,
+    source: lifecycle.kind,
+    lifecycle,
     offlineState: lifecycle.offlineState,
     accounts: accounts.data ?? [],
     categories: categories.data ?? [],
@@ -79,11 +71,5 @@ export function useLedger(householdId: string | null, effects: readonly string[]
       Promise.all([accounts.refetch(), categories.refetch(), transactions.refetch()]).then(
         () => undefined,
       ),
-    hydrate: (input: { since: number }) => {
-      return lifecycle.hydration.pull(input);
-    },
-    writeback: (command: CommandEnvelope) => {
-      return lifecycle.writeback.submit(command);
-    },
   };
 }

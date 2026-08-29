@@ -1,3 +1,5 @@
+import type { CommandEnvelope, CommandResult } from "@trove/protocol";
+
 import type { TransactionQueryFilters } from "@/modules/ledger-cache";
 import type {
   AccountArchivalPreview,
@@ -59,6 +61,12 @@ export class LedgerDataSourceError extends Error {
 
 export type LedgerErrorObserver = (error: LedgerDataSourceError) => void;
 
+export const unsupportedSyncedOperation = (
+  operation: string,
+  impact: string,
+  nextAction: string,
+): Error => new Error(`${operation} is unavailable for the synced ledger. ${impact} ${nextAction}`);
+
 export interface LedgerHydration<TInput, TResult> {
   pull: (input: TInput) => Promise<TResult>;
 }
@@ -66,6 +74,18 @@ export interface LedgerHydration<TInput, TResult> {
 export interface LedgerWriteback<TInput, TResult> {
   submit: (input: TInput) => Promise<TResult>;
 }
+
+export type LedgerLifecycle =
+  | {
+      readonly kind: "local";
+      readonly offlineState: { readonly kind: "offline_ready" };
+    }
+  | {
+      readonly kind: "synced";
+      readonly offlineState: Exclude<LedgerOfflineState, { kind: "offline_ready" }>;
+      readonly hydration: LedgerHydration<{ since: number }, unknown>;
+      readonly writeback: LedgerWriteback<CommandEnvelope, CommandResult>;
+    };
 
 export type NewAccount = Omit<
   Account,
@@ -183,6 +203,10 @@ export interface LedgerTransactionResource {
     month: number,
     accountId?: string | null,
   ) => Promise<{ totalIncome: number; totalExpense: number; netAmount: number }>;
+  page: (options: {
+    limit: number;
+    beforeDate?: string;
+  }) => Promise<{ transactions: TransactionWithDetails[]; hasMore: boolean }>;
   create: (data: NewTransaction) => Promise<string>;
   update: (id: string, data: TransactionUpdate) => Promise<unknown>;
   delete: (id: string) => Promise<unknown>;

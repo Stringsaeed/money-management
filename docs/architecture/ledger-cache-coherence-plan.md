@@ -257,4 +257,4 @@ This work has no intended visual change, so simulator QA is not required unless 
 - **Accidental duplicate refetch:** deduplicate mapped keys and avoid overlapping broad/detail invalidations where one prefix already covers both.
 - **Committed-write error ambiguity:** keep TanStack's default non-throwing refresh behavior.
 - **Recurring regression:** preserve the current effect protocol and partial-settlement report exactly; change only the cache adapter.
-- **Scope expansion:** retain current key shapes, hooks, SQL ownership, and UI behavior; defer observation and synchronization concerns.
+- **Scope expansion:** retain current key shapes and UI behavior; keep SQL/oRPC ownership inside ledger adapters, source selection inside the coordinator, and React Query/effect ownership inside hooks plus `modules/ledger-cache.ts`.

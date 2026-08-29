@@ -152,7 +152,7 @@ describe("useLedger", () => {
 
     expect(mockListAccounts).toHaveBeenCalledWith({ householdId: HOUSEHOLD_ID });
     expect(mockListCategories).toHaveBeenCalledWith({ householdId: HOUSEHOLD_ID });
-    expect(mockListTransactions).toHaveBeenCalledWith({ householdId: HOUSEHOLD_ID, limit: 200 });
+    expect(mockListTransactions).toHaveBeenCalledWith({ householdId: HOUSEHOLD_ID, limit: 100 });
     expect(result.current.accounts).toHaveLength(1);
     expect(result.current.categories).toHaveLength(1);
     expect(result.current.transactions).toHaveLength(1);
@@ -165,9 +165,13 @@ describe("useLedger", () => {
 
     await waitFor(() => expect(result.current.isPending).toBe(false));
 
-    await expect(result.current.hydrate({ since: 3 })).resolves.toMatchObject({ seq: 4 });
+    expect(result.current.lifecycle.kind).toBe("synced");
+    if (result.current.lifecycle.kind !== "synced") throw new Error("Expected synced lifecycle.");
+    await expect(result.current.lifecycle.hydration.pull({ since: 3 })).resolves.toMatchObject({
+      seq: 4,
+    });
     await expect(
-      result.current.writeback({
+      result.current.lifecycle.writeback.submit({
         commandId: "command-1",
         householdId: HOUSEHOLD_ID,
         kind: "transaction.remove",
@@ -189,8 +193,10 @@ describe("useLedger", () => {
 
     await waitFor(() => expect(result.current.isPending).toBe(false));
 
+    expect(result.current.lifecycle.kind).toBe("synced");
+    if (result.current.lifecycle.kind !== "synced") throw new Error("Expected synced lifecycle.");
     await expect(
-      result.current.writeback({
+      result.current.lifecycle.writeback.submit({
         commandId: "command-wrong-household",
         householdId: "household-2",
         kind: "transaction.remove",
@@ -232,6 +238,17 @@ describe("useLedger", () => {
     expect(result.current.accounts).toHaveLength(1);
   });
 
+  it("exposes no fake sync operations for the local lifecycle", async () => {
+    const { result } = await renderBaseHook(() => useLedger(null));
+    await waitFor(() => expect(result.current.isPending).toBe(false));
+    expect(result.current.lifecycle).toEqual({
+      kind: "local",
+      offlineState: { kind: "offline_ready" },
+    });
+    expect("hydration" in result.current.lifecycle).toBe(false);
+    expect("writeback" in result.current.lifecycle).toBe(false);
+  });
+
   it("remains readable when sync effects refresh covered resource caches", async () => {
     const { result, rerender } = await renderHookWithProviders(
       ({ effects }: { effects: readonly string[] }) => useLedger(HOUSEHOLD_ID, effects),
@@ -270,15 +287,45 @@ describe("useLedger", () => {
   });
 
   it("returns a normalized page to legacy Ledger callers", async () => {
+    mockListTransactions.mockResolvedValueOnce({
+      transactions: [
+        {
+          householdId: HOUSEHOLD_ID,
+          id: "older-1",
+          type: "expense",
+          amountMinor: 1000,
+          currency: "USD",
+          originalAmountMinor: null,
+          originalCurrency: null,
+          exchangeRate: null,
+          date: "2026-01-20",
+          accountId: "acc-1",
+          toAccountId: null,
+          categoryId: "cat-1",
+          isRecurring: false,
+          recurringRuleId: null,
+          description: "Older",
+          version: 0,
+          createdBy: "user-1",
+          updatedBy: "user-1",
+          createdAt: new Date("2026-01-20T00:00:00.000Z"),
+          updatedAt: new Date("2026-01-20T00:00:00.000Z"),
+        },
+      ],
+      hasMore: true,
+    });
     const { result } = await renderHookWithProviders(() =>
-      useLedgerTransactions(HOUSEHOLD_ID, { limit: 25, beforeDate: "2026-02-01" }),
+      useLedgerTransactions(HOUSEHOLD_ID, { limit: 2, beforeDate: "2026-02-01" }),
     );
     await waitFor(() => {
       expect(result.current.isPending).toBe(false);
     });
-    expect(result.current.data).toMatchObject({
-      transactions: [{ id: "tx-1", amount: 2500 }],
-      hasMore: false,
+    expect(mockListTransactions).toHaveBeenCalledWith({
+      householdId: HOUSEHOLD_ID,
+      limit: 2,
+      beforeDate: "2026-02-01",
     });
+    expect(result.current.data?.hasMore).toBe(true);
+    expect(result.current.data?.transactions).toMatchObject([{ id: "older-1" }]);
   });
 });

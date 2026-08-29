@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useAccountDataSource } from "@/modules/ledger-data-source/coordinator";
+import { unsupportedSyncedOperation } from "@/modules/ledger-data-source/contract";
 import { accountKeys, cohereLedgerCache } from "@/modules/ledger-cache";
 import { toDateString } from "@/utils/date";
 import type { Account } from "@/types";
@@ -77,10 +78,14 @@ export function useAccountArchivalPreview(id: string) {
   const source = useAccountDataSource();
   const localDate = toDateString(new Date());
   const query = useQuery({
-    queryKey: accountKeys.archivalPreview(id, localDate),
+    queryKey: [...accountKeys.archivalPreview(id, localDate), source.cacheKey],
     queryFn: () => {
       if (source.accountLifecycle.kind !== "local") {
-        throw new Error("Account archival preview is not available for the synced ledger yet.");
+        throw unsupportedSyncedOperation(
+          "Account archival preview",
+          "No Account was changed.",
+          "Archive only from a flow that does not require the local dependency preview.",
+        );
       }
       return source.accountLifecycle.archivalPreview(id, localDate);
     },
@@ -91,10 +96,14 @@ export function useAccountArchivalPreview(id: string) {
 export function useAccountDeletionPreview(id: string) {
   const source = useAccountDataSource();
   const query = useQuery({
-    queryKey: accountKeys.deletionPreview(id),
+    queryKey: [...accountKeys.deletionPreview(id), source.cacheKey],
     queryFn: () => {
       if (source.accountLifecycle.kind !== "local") {
-        throw new Error("Account deletion preview is not available for the synced ledger yet.");
+        throw unsupportedSyncedOperation(
+          "Account deletion preview",
+          "No Account was changed.",
+          "Archive the Account instead of deleting it.",
+        );
       }
       return source.accountLifecycle.deletionPreview(id);
     },
@@ -118,7 +127,11 @@ export function useRestoreAccount() {
   const mutation = useMutation({
     mutationFn: (id: string) => {
       if (source.accountLifecycle.kind !== "local") {
-        throw new Error("Account restore is not available for the synced ledger yet.");
+        throw unsupportedSyncedOperation(
+          "Account restore",
+          "The Account remains archived.",
+          "Leave it archived until synced restore is supported.",
+        );
       }
       return source.accountLifecycle.restore(id);
     },
@@ -133,7 +146,11 @@ export function useDeleteAccount() {
   const mutation = useMutation({
     mutationFn: (id: string) => {
       if (source.accountLifecycle.kind !== "local") {
-        throw new Error("Account deletion is not available for the synced ledger yet.");
+        throw unsupportedSyncedOperation(
+          "Account deletion",
+          "The Account remains unchanged.",
+          "Archive the Account instead.",
+        );
       }
       return source.accountLifecycle.delete(id);
     },

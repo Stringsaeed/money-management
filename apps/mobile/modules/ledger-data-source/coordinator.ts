@@ -1,5 +1,3 @@
-import type { CommandEnvelope } from "@trove/protocol";
-
 import {
   useLocalAccountDataSource,
   useLocalCategoryDataSource,
@@ -41,20 +39,8 @@ export const useLedgerLifecycle = () => {
   const selection = useLedgerSourceSelection();
   if (selection.kind === "local") {
     return {
-      source: "local" as const,
+      kind: "local" as const,
       offlineState: { kind: "offline_ready" as const },
-      hydration: {
-        pull: async () => ({
-          status: "not_required" as const,
-          reason: "local_authoritative" as const,
-        }),
-      },
-      writeback: {
-        submit: async (_command: CommandEnvelope) => ({
-          status: "not_required" as const,
-          reason: "local_authoritative" as const,
-        }),
-      },
     };
   }
   const synced = createSyncedLedgerDataSource({
@@ -62,7 +48,7 @@ export const useLedgerLifecycle = () => {
     offlineState: selection.offlineState,
   });
   return {
-    source: synced.source,
+    kind: "synced" as const,
     offlineState: synced.offlineState,
     hydration: synced.hydration,
     writeback: synced.writeback,

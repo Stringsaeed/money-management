@@ -1,7 +1,12 @@
 import type { orpc } from "@/lib/server/orpc";
 import type { Account, Category, TransactionWithDetails } from "@/types";
 
-import type { AccountUpdate, NewAccount, TransactionUpdate } from "./contract";
+import {
+  unsupportedSyncedOperation,
+  type AccountUpdate,
+  type NewAccount,
+  type TransactionUpdate,
+} from "./contract";
 
 export type SyncedAccount = Awaited<ReturnType<typeof orpc.ledger.accounts.list>>[number];
 export type SyncedCategory = Awaited<ReturnType<typeof orpc.ledger.categories.list>>[number];
@@ -114,8 +119,10 @@ export const toSyncedAccountType = (type: NewAccount["type"]): "cash" | "bank" |
 
 export const assertSupportedAccountUpdate = (data: AccountUpdate): void => {
   if (data.type !== undefined || data.currency !== undefined || data.initialBalance !== undefined) {
-    throw new Error(
-      "Synced Account type, currency, and opening balance edits are not available yet.",
+    throw unsupportedSyncedOperation(
+      "Account type, currency, or opening balance edit",
+      "Those fields remain unchanged.",
+      "Edit only the Account name, color, icon, total visibility, or sort order.",
     );
   }
 };
@@ -129,6 +136,10 @@ export const assertSupportedTransactionUpdate = (data: TransactionUpdate): void 
     data.isRecurring !== undefined ||
     data.recurringRuleId !== undefined
   ) {
-    throw new Error("This synced Transaction edit is not available yet.");
+    throw unsupportedSyncedOperation(
+      "This Transaction edit",
+      "Unsupported fields remain unchanged.",
+      "Edit only type, amount, date, Account, Category, or description.",
+    );
   }
 };

@@ -8,6 +8,7 @@ import {
   useMonthSummary,
   useTransaction,
   useTransactionDateRange,
+  useTransactionPage,
   useTransactions,
   useUpdateTransaction,
 } from "@/hooks/use-transactions";
@@ -374,6 +375,31 @@ describe("use-transactions hooks", () => {
     });
 
     expect(result.current.data).toEqual({ minDate: "2026-01-01", maxDate: "2026-03-28" });
+  });
+
+  it("pages older local Transactions before applying the limit", async () => {
+    const db = createMockDb({
+      selectResults: [
+        {
+          all: [
+            createTransaction({ id: "older-1", date: "2026-01-20" }),
+            createTransaction({ id: "older-2", date: "2026-01-19" }),
+            createTransaction({ id: "older-3", date: "2026-01-18" }),
+          ],
+        },
+      ],
+    });
+    mockUseDatabase.mockReturnValue(db);
+
+    const { result } = await renderHookWithProviders(() =>
+      useTransactionPage({ limit: 2, beforeDate: "2026-02-01" }),
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data).toMatchObject({
+      transactions: [{ id: "older-1" }, { id: "older-2" }],
+      hasMore: true,
+    });
   });
 
   it("hides private transaction dates from local filter metadata", async () => {

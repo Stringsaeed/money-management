@@ -115,7 +115,8 @@ export const createSyncedLedgerDataSource = ({
     householdId,
     listAccounts: listRawAccounts,
     listCategories: listRawCategories,
-    listTransactions: listAllRawTransactions,
+    listAllTransactions: listAllRawTransactions,
+    listTransactionPage: listRawTransactions,
     executeCommand,
   });
 

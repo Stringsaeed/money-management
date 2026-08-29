@@ -25,7 +25,8 @@ interface SyncedTransactionDependencies {
   householdId: string;
   listAccounts: () => Promise<readonly SyncedAccount[]>;
   listCategories: () => Promise<readonly SyncedCategory[]>;
-  listTransactions: (options?: {
+  listAllTransactions: () => Promise<SyncedTransactionPage>;
+  listTransactionPage: (options: {
     limit?: number;
     beforeDate?: string;
   }) => Promise<SyncedTransactionPage>;
@@ -36,14 +37,15 @@ export const createSyncedTransactionResource = ({
   householdId,
   listAccounts,
   listCategories,
-  listTransactions,
+  listAllTransactions,
+  listTransactionPage,
   executeCommand,
 }: SyncedTransactionDependencies): LedgerTransactionResource => {
   const list: LedgerTransactionResource["list"] = async (filters) => {
     const [accountRows, categoryRows, page] = await Promise.all([
       listAccounts(),
       listCategories(),
-      listTransactions({ limit: 200 }),
+      listAllTransactions(),
     ]);
     const accounts = accountRows.map(mapSyncedAccount);
     const categories = categoryRows.map(mapSyncedCategory);
@@ -88,6 +90,21 @@ export const createSyncedTransactionResource = ({
     },
     monthSummary: async (year, month, accountId) =>
       summarize(await list({ year, month, accountId })),
+    page: async ({ limit, beforeDate }) => {
+      const [accountRows, categoryRows, page] = await Promise.all([
+        listAccounts(),
+        listCategories(),
+        listTransactionPage({ limit, beforeDate }),
+      ]);
+      const accounts = accountRows.map(mapSyncedAccount);
+      const categories = categoryRows.map(mapSyncedCategory);
+      return {
+        transactions: page.transactions.map((transaction) =>
+          mapSyncedTransaction(transaction, accounts, categories),
+        ),
+        hasMore: page.hasMore,
+      };
+    },
     create: async (data) => {
       const id = generateId();
       const date = isDate(data.date) ? toDateString(data.date as unknown as Date) : data.date;

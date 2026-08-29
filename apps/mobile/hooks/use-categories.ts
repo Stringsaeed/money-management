@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useCategoryDataSource } from "@/modules/ledger-data-source/coordinator";
+import { unsupportedSyncedOperation } from "@/modules/ledger-data-source/contract";
 import { categoryKeys, cohereLedgerCache } from "@/modules/ledger-cache";
 import type { Category } from "@/types";
 
@@ -9,7 +10,7 @@ import type { Category } from "@/types";
 export function useCategories(type?: "income" | "expense") {
   const source = useCategoryDataSource();
   const query = useQuery({
-    queryKey: type ? categoryKeys.byType(type) : categoryKeys.all,
+    queryKey: [...(type ? categoryKeys.byType(type) : categoryKeys.all), source.cacheKey],
     queryFn: () => source.categories.list(type),
   });
   return { ...query, source: source.source };
@@ -18,7 +19,7 @@ export function useCategories(type?: "income" | "expense") {
 export function useAllCategories() {
   const source = useCategoryDataSource();
   const query = useQuery({
-    queryKey: categoryKeys.management,
+    queryKey: [...categoryKeys.management, source.cacheKey],
     queryFn: () => source.categories.list(undefined, true),
   });
   return { ...query, source: source.source };
@@ -27,7 +28,7 @@ export function useAllCategories() {
 export function useCategory(id: string) {
   const source = useCategoryDataSource();
   const query = useQuery({
-    queryKey: categoryKeys.detail(id),
+    queryKey: [...categoryKeys.detail(id), source.cacheKey],
     queryFn: () => source.categories.get(id),
   });
   return { ...query, source: source.source };
@@ -67,7 +68,11 @@ export function useDeleteCategory() {
   const mutation = useMutation({
     mutationFn: (id: string) => {
       if (source.categoryLifecycle.kind !== "local") {
-        throw new Error("Category deletion is not available for the synced ledger yet.");
+        throw unsupportedSyncedOperation(
+          "Category deletion",
+          "The Category remains unchanged.",
+          "Archive the Category instead.",
+        );
       }
       return source.categoryLifecycle.delete(id);
     },
@@ -79,10 +84,14 @@ export function useDeleteCategory() {
 export function useCategoryDeletionPreview(id: string) {
   const source = useCategoryDataSource();
   const query = useQuery({
-    queryKey: [...categoryKeys.detail(id), "deletion-preview"],
+    queryKey: [...categoryKeys.detail(id), "deletion-preview", source.cacheKey],
     queryFn: () => {
       if (source.categoryLifecycle.kind !== "local") {
-        throw new Error("Category deletion preview is not available for the synced ledger yet.");
+        throw unsupportedSyncedOperation(
+          "Category deletion preview",
+          "No Category was changed.",
+          "Archive the Category instead of deleting it.",
+        );
       }
       return source.categoryLifecycle.deletionPreview(id);
     },
@@ -106,7 +115,11 @@ export function useRestoreCategory() {
   const mutation = useMutation({
     mutationFn: (id: string) => {
       if (source.categoryLifecycle.kind !== "local") {
-        throw new Error("Category restore is not available for the synced ledger yet.");
+        throw unsupportedSyncedOperation(
+          "Category restore",
+          "The Category remains archived.",
+          "Leave it archived until synced restore is supported.",
+        );
       }
       return source.categoryLifecycle.restore(id);
     },

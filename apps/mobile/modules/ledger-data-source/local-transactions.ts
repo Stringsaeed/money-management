@@ -1,4 +1,4 @@
-import { aliasedTable, and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { aliasedTable, and, asc, desc, eq, gte, lt, lte, sql } from "drizzle-orm";
 import { isDate } from "date-fns";
 
 import { accounts, categories, transactions } from "@/db/schema";
@@ -191,6 +191,21 @@ export const createLocalTransactionPort = (
             else if (transaction.type === "expense") totalExpense += transaction.amount;
           }
           return { totalIncome, totalExpense, netAmount: totalIncome - totalExpense };
+        }),
+      page: ({ limit, beforeDate }: { limit: number; beforeDate?: string }) =>
+        runner.run("read.transaction-page", async () => {
+          const rows = await enrichedBaseQuery()
+            .where(beforeDate ? lt(transactions.date, beforeDate) : undefined)
+            .orderBy(desc(transactions.date), desc(transactions.createdAt))
+            .limit(limit + 1)
+            .all();
+          const visible = (rows as unknown as EnrichedRow[])
+            .map(mapRowToTransaction)
+            .filter(isVisible);
+          return {
+            transactions: visible.slice(0, limit),
+            hasMore: visible.length > limit,
+          };
         }),
     },
     mutations: {

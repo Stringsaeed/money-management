@@ -38,6 +38,8 @@ export const transactionKeys = {
   list: (filters: TransactionQueryFilters) => ["transactions", "list", filters] as const,
   recent: (limit: number) => ["transactions", "recent", limit] as const,
   detail: (id: string) => ["transactions", id] as const,
+  page: (limit: number, beforeDate?: string) =>
+    ["transactions", "page", limit, beforeDate ?? null] as const,
 };
 
 export const monthSummaryKeys = {
