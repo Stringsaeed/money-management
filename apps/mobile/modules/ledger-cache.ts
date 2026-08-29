@@ -253,6 +253,20 @@ export async function cohereRecurringEffects(
   );
 }
 
+export async function cohereLedgerEffects(
+  queryClient: QueryClient,
+  effects: readonly string[],
+): Promise<void> {
+  const queryKeys: QueryKey[] = [];
+  if (effects.some((effect) => effect === "ledger" || effect === "balances")) {
+    queryKeys.push(accountKeys.all, accountKeys.balances, transactionKeys.all);
+  }
+  if (effects.includes("summaries")) {
+    queryKeys.push(categoryKeys.all, monthSummaryKeys.all, transactionDateRangeKeys.all);
+  }
+  await invalidateQueryKeys(queryClient, queryKeys);
+}
+
 export async function cohereBudgetingEffects(
   queryClient: QueryClient,
   effects: readonly BudgetEffect[],

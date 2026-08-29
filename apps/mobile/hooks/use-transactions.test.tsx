@@ -19,6 +19,9 @@ import { renderHookWithProviders } from "@/tests/test-utils/render";
 const mockUseDatabase = jest.fn();
 const mockCohereLedgerCache = jest.fn();
 const mockUseAccountVisibility = jest.fn();
+const mockListServerAccounts = jest.fn();
+const mockListServerCategories = jest.fn();
+const mockListServerTransactions = jest.fn();
 
 interface CoherenceAwareMutation<T> {
   expectMutationPendingUntilCoherence: () => void;
@@ -74,6 +77,18 @@ async function resolveMutationAfterSemanticCoherence<T>(
 
 jest.mock("@/db/client", () => ({
   useDatabase: () => mockUseDatabase(),
+}));
+
+jest.mock("@/lib/server/orpc", () => ({
+  orpc: {
+    ledger: {
+      accounts: { list: (...args: unknown[]) => mockListServerAccounts(...args) },
+      categories: { list: (...args: unknown[]) => mockListServerCategories(...args) },
+      transactions: { list: (...args: unknown[]) => mockListServerTransactions(...args) },
+    },
+    commands: { apply: jest.fn() },
+    sync: { getDelta: jest.fn() },
+  },
 }));
 
 jest.mock("@/hooks/use-account-visibility", () => ({
@@ -185,6 +200,100 @@ describe("use-transactions hooks", () => {
         },
       }),
     ]);
+  });
+
+  it("loads the same enriched Transaction shape from an explicitly synced source", async () => {
+    const db = createMockDb({
+      selectResults: [{ all: [] }],
+    });
+    mockUseDatabase.mockReturnValue(db);
+    mockListServerAccounts.mockResolvedValue([
+      {
+        householdId: "household-1",
+        id: "account-1",
+        name: "Main Checking",
+        type: "bank",
+        currency: "USD",
+        color: "#8B9D83",
+        icon: "banknote.fill",
+        initialBalanceMinor: 100_00,
+        excludeFromTotal: false,
+        sortOrder: 0,
+        lifecycle: "active",
+        lifecycleChangedAt: null,
+        visibility: "public",
+        ownerUserId: "user-1",
+        version: 0,
+        createdBy: "user-1",
+        updatedBy: "user-1",
+        createdAt: new Date("2026-03-28T10:00:00.000Z"),
+        updatedAt: new Date("2026-03-28T10:00:00.000Z"),
+      },
+    ]);
+    mockListServerCategories.mockResolvedValue([
+      {
+        householdId: "household-1",
+        id: "category-1",
+        name: "Groceries",
+        type: "expense",
+        color: "#B48A7B",
+        icon: "🛒",
+        parentId: null,
+        sortOrder: 0,
+        lifecycle: "active",
+        lifecycleChangedAt: null,
+        version: 0,
+        createdBy: "user-1",
+        updatedBy: "user-1",
+        createdAt: new Date("2026-03-28T10:00:00.000Z"),
+        updatedAt: new Date("2026-03-28T10:00:00.000Z"),
+      },
+    ]);
+    mockListServerTransactions.mockResolvedValue({
+      transactions: [
+        {
+          householdId: "household-1",
+          id: "transaction-1",
+          type: "expense",
+          amountMinor: 40_00,
+          currency: "USD",
+          originalAmountMinor: null,
+          originalCurrency: null,
+          exchangeRate: null,
+          date: "2026-03-28",
+          accountId: "account-1",
+          toAccountId: null,
+          categoryId: "category-1",
+          isRecurring: false,
+          recurringRuleId: null,
+          description: "Coffee",
+          version: 0,
+          createdBy: "user-1",
+          updatedBy: "user-1",
+          createdAt: new Date("2026-03-28T10:00:00.000Z"),
+          updatedAt: new Date("2026-03-28T10:00:00.000Z"),
+        },
+      ],
+      hasMore: false,
+    });
+
+    const { result } = await renderHookWithProviders(
+      () => useTransactions({ year: 2026, month: 3, accountId: "account-1" }),
+      { ledgerSelection: { kind: "synced", householdId: "household-1" } },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data).toEqual([
+      createTransactionWithDetails({
+        id: "transaction-1",
+        amount: 40_00,
+        date: "2026-03-28",
+        createdAt: "2026-03-28T10:00:00.000Z",
+        updatedAt: "2026-03-28T10:00:00.000Z",
+      }),
+    ]);
+    expect(db.select).not.toHaveBeenCalled();
   });
 
   it("loads a transaction detail only when enabled", async () => {

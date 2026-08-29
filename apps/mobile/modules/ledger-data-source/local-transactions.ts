@@ -8,7 +8,7 @@ import { generateId } from "@/utils/id";
 import type { Transaction, TransactionWithDetails } from "@/types";
 import type { TransactionQueryFilters } from "@/modules/ledger-cache";
 
-import type { LedgerOperationRunner } from "./contract";
+import type { LedgerOperationRunner, NewTransaction, TransactionUpdate } from "./contract";
 import type { LocalDatabaseDependency, LocalVisibilityDependency } from "./local-types";
 
 const toAccounts = aliasedTable(accounts, "to_accounts");
@@ -97,13 +97,6 @@ const mapRowToTransaction = (row: EnrichedRow): TransactionWithDetails => ({
         }
       : null,
 });
-
-type NewTransaction = Omit<Transaction, "id" | "createdAt" | "updatedAt" | "isRecurring"> & {
-  isRecurring?: boolean;
-};
-type TransactionUpdate = Partial<
-  Omit<Transaction, "id" | "createdAt" | "date"> & { date?: Date | string }
->;
 
 export const createLocalTransactionPort = (
   { db, visibility }: LocalDatabaseDependency & LocalVisibilityDependency,

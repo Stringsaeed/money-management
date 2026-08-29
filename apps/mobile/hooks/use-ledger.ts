@@ -1,66 +1,48 @@
 import { useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import type { CommandEnvelope } from "@trove/protocol";
 
-import {
-  createSyncedLedgerDataSource,
-  type SyncedAccount as LedgerAccount,
-  type SyncedCategory as LedgerCategory,
-  type SyncedTransactionPage as TransactionPage,
-} from "@/modules/ledger-data-source/synced";
+import { useAccounts } from "@/hooks/use-accounts";
+import { useCategories } from "@/hooks/use-categories";
+import { useTransactions } from "@/hooks/use-transactions";
+import { useLedgerLifecycle } from "@/modules/ledger-data-source/coordinator";
+import { cohereLedgerEffects } from "@/modules/ledger-cache";
+import type { Account, Category, TransactionWithDetails } from "@/types";
 
-export type { LedgerAccount, LedgerCategory, TransactionPage };
+export type LedgerAccount = Account;
+export type LedgerCategory = Category;
+export interface TransactionPage {
+  readonly transactions: readonly TransactionWithDetails[];
+  readonly hasMore: boolean;
+}
 
 /**
- * Server-authoritative ledger reads (#86). Each list is a react-query entry;
- * committed commands announce their blast radius as effect tags on the sync
- * feed (`useSyncDeltas`), and those tags invalidate the matching entries here.
- * Screens read through these hooks and write through `commands.apply` until
- * #85's outbox worker takes over optimistic queueing.
+ * Provider-selected ledger reads. Anonymous surfaces use the local adapter;
+ * explicitly synced surfaces use the server adapter without fallback. React
+ * Query and the ledger-cache owner keep the public result shape coherent.
  */
 
-/** Maps sync effect tags onto the ledger query segments they invalidate. */
-export function ledgerQueriesForEffects(effects: readonly string[]): readonly string[] {
-  const queries = new Set<string>();
-  if (effects.some((e) => e === "ledger" || e === "balances")) {
-    queries.add("accounts");
-    queries.add("transactions");
-  }
-  if (effects.includes("summaries")) {
-    queries.add("categories");
-  }
-  return [...queries];
+export function useLedgerAccounts(_householdId: string | null) {
+  return useAccounts();
 }
 
-export function useLedgerAccounts(householdId: string | null) {
-  const source = householdId ? createSyncedLedgerDataSource({ householdId }) : null;
-  return useQuery({
-    queryKey: ["ledger", "accounts", householdId],
-    queryFn: () => source!.reads.accounts.list(),
-    enabled: Boolean(householdId),
-  });
-}
-
-export function useLedgerCategories(householdId: string | null) {
-  const source = householdId ? createSyncedLedgerDataSource({ householdId }) : null;
-  return useQuery({
-    queryKey: ["ledger", "categories", householdId],
-    queryFn: () => source!.reads.categories.list(),
-    enabled: Boolean(householdId),
-  });
+export function useLedgerCategories(_householdId: string | null) {
+  return useCategories();
 }
 
 export function useLedgerTransactions(
-  householdId: string | null,
+  _householdId: string | null,
   options: { limit?: number; beforeDate?: string } = {},
 ) {
   const { limit, beforeDate } = options;
-  const source = householdId ? createSyncedLedgerDataSource({ householdId }) : null;
-  return useQuery({
-    queryKey: ["ledger", "transactions", householdId, limit ?? null, beforeDate ?? null],
-    queryFn: () => source!.reads.transactions.list({ limit, beforeDate }),
-    enabled: Boolean(householdId),
-  });
+  const query = useTransactions({ limit });
+  const transactions = beforeDate
+    ? query.data?.filter((transaction) => transaction.date < beforeDate)
+    : query.data;
+  return {
+    ...query,
+    data: transactions ? { transactions, hasMore: false } : undefined,
+  };
 }
 
 /**
@@ -70,29 +52,24 @@ export function useLedgerTransactions(
  */
 export function useLedger(householdId: string | null, effects: readonly string[] = []) {
   const queryClient = useQueryClient();
-  const source = householdId ? createSyncedLedgerDataSource({ householdId }) : null;
+  const lifecycle = useLedgerLifecycle();
   const accounts = useLedgerAccounts(householdId);
   const categories = useLedgerCategories(householdId);
   const transactions = useLedgerTransactions(householdId);
 
   useEffect(() => {
-    if (!householdId) {
+    if (effects.length === 0) {
       return;
     }
-    for (const segment of ledgerQueriesForEffects(effects)) {
-      void queryClient.invalidateQueries({
-        queryKey: ["ledger", segment, householdId],
-      });
-    }
-  }, [effects, householdId, queryClient]);
+    void cohereLedgerEffects(queryClient, effects);
+  }, [effects, queryClient]);
 
   const error = accounts.error ?? categories.error ?? transactions.error;
   return {
-    source: "synced" as const,
-    offlineState: source?.offlineState ?? null,
+    source: lifecycle.source,
+    offlineState: lifecycle.offlineState,
     accounts: accounts.data ?? [],
     categories: categories.data ?? [],
-    /** Newest-first page plus its keyset cursor. */
     transactions: transactions.data?.transactions ?? [],
     hasMoreTransactions: transactions.data?.hasMore ?? false,
     isPending: accounts.isPending || categories.isPending || transactions.isPending,
@@ -103,18 +80,10 @@ export function useLedger(householdId: string | null, effects: readonly string[]
         () => undefined,
       ),
     hydrate: (input: { since: number }) => {
-      if (!source) {
-        return Promise.reject(new Error("A household is required to hydrate the synced ledger."));
-      }
-      return source.hydration.pull(input);
+      return lifecycle.hydration.pull(input);
     },
     writeback: (command: CommandEnvelope) => {
-      if (!source) {
-        return Promise.reject(
-          new Error("A household is required to write back to the synced ledger."),
-        );
-      }
-      return source.writeback.submit(command);
+      return lifecycle.writeback.submit(command);
     },
   };
 }

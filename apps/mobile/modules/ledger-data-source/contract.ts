@@ -1,3 +1,17 @@
+import type { TransactionQueryFilters } from "@/modules/ledger-cache";
+import type {
+  AccountArchivalPreview,
+  AccountDeletionPreview,
+} from "@/modules/accounts/account-lifecycle-types";
+import type { CategoryDeletionPreview } from "@/modules/categories/category-lifecycle";
+import type {
+  Account,
+  AccountWithBalance,
+  Category,
+  Transaction,
+  TransactionWithDetails,
+} from "@/types";
+
 export type LedgerDataSourceKind = "local" | "synced";
 
 export type LedgerOfflineState =
@@ -14,15 +28,32 @@ export type LedgerDataSourceOperation =
 export class LedgerDataSourceError extends Error {
   readonly cause: unknown;
   readonly operation: LedgerDataSourceOperation;
+  readonly reason: "offline" | "operation_failed";
   readonly source: LedgerDataSourceKind;
 
-  constructor(source: LedgerDataSourceKind, operation: LedgerDataSourceOperation, cause: unknown) {
+  constructor(
+    source: LedgerDataSourceKind,
+    operation: LedgerDataSourceOperation,
+    cause: unknown,
+    reason: "offline" | "operation_failed" = "operation_failed",
+  ) {
     const detail = cause instanceof Error ? cause.message : "Unknown ledger failure";
-    super(`The ${source} ledger could not ${operation.replace(".", " ")}: ${detail}`);
+    const impact =
+      source === "synced"
+        ? "Your last cached ledger data is unchanged."
+        : "No ledger changes were saved.";
+    const nextAction =
+      source === "synced"
+        ? "Check your connection and try again."
+        : "Try again. If the problem continues, restart the app.";
+    super(
+      `The ${source} ledger could not ${operation.replaceAll("-", " ").replace(".", " ")}. ${impact} ${nextAction} Details: ${detail}`,
+    );
     this.name = "LedgerDataSourceError";
     this.source = source;
     this.operation = operation;
     this.cause = cause;
+    this.reason = reason;
   }
 }
 
@@ -36,28 +67,32 @@ export interface LedgerWriteback<TInput, TResult> {
   submit: (input: TInput) => Promise<TResult>;
 }
 
-/**
- * Owned mobile ledger seam. Adapters expose authoritative reads and mutations,
- * plus the cache hydration/writeback lifecycle needed by a synced ledger.
- * Storage and transport handles never cross this interface.
- */
-export interface LedgerDataSource<
-  TReads,
-  TMutations,
-  THydrationInput,
-  THydrationResult,
-  TWriteInput,
-  TWriteResult,
-> {
-  readonly source: LedgerDataSourceKind;
-  readonly cacheKey: string;
-  readonly offlineState: LedgerOfflineState;
-  readonly reads: TReads;
-  readonly mutations: TMutations;
-  readonly hydration: LedgerHydration<THydrationInput, THydrationResult>;
-  readonly writeback: LedgerWriteback<TWriteInput, TWriteResult>;
-  observeErrors: (observer: LedgerErrorObserver) => () => void;
+export type NewAccount = Omit<
+  Account,
+  "id" | "createdAt" | "updatedAt" | "lifecycle" | "lifecycleChangedAt"
+>;
+export type AccountUpdate = Partial<
+  Omit<Account, "id" | "createdAt" | "lifecycle" | "lifecycleChangedAt">
+>;
+
+export interface LedgerAccountResource {
+  list: () => Promise<Account[]>;
+  get: (id: string) => Promise<Account | undefined>;
+  listWithBalances: (includeArchived: boolean) => Promise<AccountWithBalance[]>;
+  create: (data: NewAccount) => Promise<string>;
+  update: (id: string, data: AccountUpdate) => Promise<unknown>;
+  archive: (id: string) => Promise<unknown>;
 }
+
+export type LedgerAccountLifecycle =
+  | {
+      readonly kind: "local";
+      archivalPreview: (id: string, localDate: string) => Promise<AccountArchivalPreview>;
+      deletionPreview: (id: string) => Promise<AccountDeletionPreview>;
+      restore: (id: string) => Promise<unknown>;
+      delete: (id: string) => Promise<unknown>;
+    }
+  | { readonly kind: "synced" };
 
 export const createLedgerOperationRunner = (source: LedgerDataSourceKind) => {
   const observers = new Set<LedgerErrorObserver>();
@@ -88,3 +123,75 @@ export const createLedgerOperationRunner = (source: LedgerDataSourceKind) => {
 };
 
 export type LedgerOperationRunner = ReturnType<typeof createLedgerOperationRunner>;
+
+export interface LedgerAccountDataSource {
+  readonly source: LedgerDataSourceKind;
+  readonly cacheKey: string;
+  readonly offlineState: LedgerOfflineState;
+  readonly accounts: LedgerAccountResource;
+  readonly accountLifecycle: LedgerAccountLifecycle;
+  observeErrors: (observer: LedgerErrorObserver) => () => void;
+}
+
+export type NewCategory = Omit<
+  Category,
+  "id" | "createdAt" | "updatedAt" | "lifecycle" | "lifecycleChangedAt"
+>;
+export type CategoryUpdate = Partial<
+  Omit<Category, "id" | "createdAt" | "lifecycle" | "lifecycleChangedAt">
+>;
+
+export interface LedgerCategoryResource {
+  list: (type?: "income" | "expense", includeArchived?: boolean) => Promise<Category[]>;
+  get: (id: string) => Promise<Category | undefined>;
+  create: (data: NewCategory) => Promise<string>;
+  update: (id: string, data: CategoryUpdate) => Promise<unknown>;
+  archive: (id: string) => Promise<unknown>;
+}
+
+export type LedgerCategoryLifecycle =
+  | {
+      readonly kind: "local";
+      deletionPreview: (id: string) => Promise<CategoryDeletionPreview>;
+      restore: (id: string) => Promise<unknown>;
+      delete: (id: string) => Promise<unknown>;
+    }
+  | { readonly kind: "synced" };
+
+export interface LedgerCategoryDataSource {
+  readonly source: LedgerDataSourceKind;
+  readonly cacheKey: string;
+  readonly offlineState: LedgerOfflineState;
+  readonly categories: LedgerCategoryResource;
+  readonly categoryLifecycle: LedgerCategoryLifecycle;
+  observeErrors: (observer: LedgerErrorObserver) => () => void;
+}
+
+export type NewTransaction = Omit<Transaction, "id" | "createdAt" | "updatedAt" | "isRecurring"> & {
+  isRecurring?: boolean;
+};
+export type TransactionUpdate = Partial<
+  Omit<Transaction, "id" | "createdAt" | "date"> & { date?: Date | string }
+>;
+
+export interface LedgerTransactionResource {
+  list: (filters: TransactionQueryFilters) => Promise<TransactionWithDetails[]>;
+  get: (id: string) => Promise<TransactionWithDetails | undefined>;
+  dateRange: () => Promise<{ minDate: string | null; maxDate: string | null }>;
+  monthSummary: (
+    year: number,
+    month: number,
+    accountId?: string | null,
+  ) => Promise<{ totalIncome: number; totalExpense: number; netAmount: number }>;
+  create: (data: NewTransaction) => Promise<string>;
+  update: (id: string, data: TransactionUpdate) => Promise<unknown>;
+  delete: (id: string) => Promise<unknown>;
+}
+
+export interface LedgerTransactionDataSource {
+  readonly source: LedgerDataSourceKind;
+  readonly cacheKey: string;
+  readonly offlineState: LedgerOfflineState;
+  readonly transactions: LedgerTransactionResource;
+  observeErrors: (observer: LedgerErrorObserver) => () => void;
+}

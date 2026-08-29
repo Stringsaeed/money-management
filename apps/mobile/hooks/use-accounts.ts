@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { useLocalAccountDataSource } from "@/modules/ledger-data-source/local";
+import { useAccountDataSource } from "@/modules/ledger-data-source/coordinator";
 import { accountKeys, cohereLedgerCache } from "@/modules/ledger-cache";
 import { toDateString } from "@/utils/date";
 import type { Account } from "@/types";
@@ -8,19 +8,19 @@ import type { Account } from "@/types";
 // ── Queries ────────────────────────────────────────────────────────────────────
 
 export function useAccounts() {
-  const source = useLocalAccountDataSource();
+  const source = useAccountDataSource();
   const query = useQuery({
     queryKey: [...accountKeys.all, source.cacheKey],
-    queryFn: source.reads.accounts.accounts,
+    queryFn: source.accounts.list,
   });
   return { ...query, source: source.source, offlineState: source.offlineState };
 }
 
 export function useAccount(id: string) {
-  const source = useLocalAccountDataSource();
+  const source = useAccountDataSource();
   const query = useQuery({
     queryKey: [...accountKeys.detail(id), source.cacheKey],
-    queryFn: () => source.reads.accounts.account(id),
+    queryFn: () => source.accounts.get(id),
   });
   return { ...query, source: source.source };
 }
@@ -34,13 +34,13 @@ export function useAllAccountsWithBalances() {
 }
 
 function useAccountBalances(includeArchived: boolean) {
-  const source = useLocalAccountDataSource();
+  const source = useAccountDataSource();
   const query = useQuery({
     queryKey: [
       ...(includeArchived ? accountKeys.managementBalances : accountKeys.balances),
       source.cacheKey,
     ],
-    queryFn: () => source.reads.accounts.accountBalances(includeArchived),
+    queryFn: () => source.accounts.listWithBalances(includeArchived),
   });
   return { ...query, source: source.source };
 }
@@ -48,17 +48,17 @@ function useAccountBalances(includeArchived: boolean) {
 // ── Mutations ──────────────────────────────────────────────────────────────────
 
 export function useCreateAccount() {
-  const source = useLocalAccountDataSource();
+  const source = useAccountDataSource();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: source.mutations.accounts.createAccount,
+    mutationFn: source.accounts.create,
     onSuccess: (id) => cohereLedgerCache(queryClient, { kind: "account.created", id }),
   });
   return { ...mutation, source: source.source };
 }
 
 export function useUpdateAccount() {
-  const source = useLocalAccountDataSource();
+  const source = useAccountDataSource();
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: async ({
@@ -67,56 +67,76 @@ export function useUpdateAccount() {
     }: {
       id: string;
       data: Partial<Omit<Account, "id" | "createdAt" | "lifecycle" | "lifecycleChangedAt">>;
-    }) => source.mutations.accounts.updateAccount(id, data),
+    }) => source.accounts.update(id, data),
     onSuccess: (_, { id }) => cohereLedgerCache(queryClient, { kind: "account.updated", id }),
   });
   return { ...mutation, source: source.source };
 }
 
 export function useAccountArchivalPreview(id: string) {
-  const source = useLocalAccountDataSource();
+  const source = useAccountDataSource();
   const localDate = toDateString(new Date());
   const query = useQuery({
     queryKey: accountKeys.archivalPreview(id, localDate),
-    queryFn: () => source.reads.accounts.archivalPreview(id, localDate),
+    queryFn: () => {
+      if (source.accountLifecycle.kind !== "local") {
+        throw new Error("Account archival preview is not available for the synced ledger yet.");
+      }
+      return source.accountLifecycle.archivalPreview(id, localDate);
+    },
   });
   return { ...query, source: source.source };
 }
 
 export function useAccountDeletionPreview(id: string) {
-  const source = useLocalAccountDataSource();
+  const source = useAccountDataSource();
   const query = useQuery({
     queryKey: accountKeys.deletionPreview(id),
-    queryFn: () => source.reads.accounts.deletionPreview(id),
+    queryFn: () => {
+      if (source.accountLifecycle.kind !== "local") {
+        throw new Error("Account deletion preview is not available for the synced ledger yet.");
+      }
+      return source.accountLifecycle.deletionPreview(id);
+    },
   });
   return { ...query, source: source.source };
 }
 
 export function useArchiveAccount() {
-  const source = useLocalAccountDataSource();
+  const source = useAccountDataSource();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: source.mutations.accounts.archiveAccount,
+    mutationFn: source.accounts.archive,
     onSuccess: (_, id) => cohereLedgerCache(queryClient, { kind: "account.archived", id }),
   });
   return { ...mutation, source: source.source };
 }
 
 export function useRestoreAccount() {
-  const source = useLocalAccountDataSource();
+  const source = useAccountDataSource();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: source.mutations.accounts.restoreAccount,
+    mutationFn: (id: string) => {
+      if (source.accountLifecycle.kind !== "local") {
+        throw new Error("Account restore is not available for the synced ledger yet.");
+      }
+      return source.accountLifecycle.restore(id);
+    },
     onSuccess: (_, id) => cohereLedgerCache(queryClient, { kind: "account.restored", id }),
   });
   return { ...mutation, source: source.source };
 }
 
 export function useDeleteAccount() {
-  const source = useLocalAccountDataSource();
+  const source = useAccountDataSource();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: source.mutations.accounts.deleteAccount,
+    mutationFn: (id: string) => {
+      if (source.accountLifecycle.kind !== "local") {
+        throw new Error("Account deletion is not available for the synced ledger yet.");
+      }
+      return source.accountLifecycle.delete(id);
+    },
     onSuccess: (_, id) => cohereLedgerCache(queryClient, { kind: "account.deleted", id }),
   });
   return { ...mutation, source: source.source };

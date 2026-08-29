@@ -31,8 +31,8 @@ jest.mock("@/hooks/use-transactions", () => ({
   useTransactions: (...args: unknown[]) => mockUseTransactions(...args),
 }));
 
-jest.mock("@/hooks/use-ledger", () => ({
-  useLedgerAccounts: (...args: unknown[]) => mockUseLedgerAccounts(...args),
+jest.mock("@/hooks/use-authorized-ledger-accounts", () => ({
+  useAuthorizedLedgerAccounts: (...args: unknown[]) => mockUseLedgerAccounts(...args),
 }));
 
 jest.mock("@/hooks/use-households", () => ({

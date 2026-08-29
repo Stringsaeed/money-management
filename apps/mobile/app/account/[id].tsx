@@ -7,8 +7,8 @@ import { AccountPrivacyToggle } from "@/components/account/account-privacy-toggl
 import { TransactionGroup } from "@/components/transaction/transaction-group";
 import { useAccount } from "@/hooks/use-accounts";
 import { useAccountPrivacy } from "@/hooks/use-account-privacy";
+import { useAuthorizedLedgerAccounts } from "@/hooks/use-authorized-ledger-accounts";
 import { useActiveHousehold } from "@/hooks/use-households";
-import { useLedgerAccounts } from "@/hooks/use-ledger";
 import { useTransactions } from "@/hooks/use-transactions";
 import { authClient } from "@/lib/auth-client";
 import { useUIStore } from "@/stores/ui-store";
@@ -34,7 +34,7 @@ export default function AccountDetailScreen() {
   const { data: session } = authClient.useSession();
   const { activeHousehold } = useActiveHousehold();
   const householdId = activeHousehold?.householdId ?? null;
-  const { data: serverAccounts = [] } = useLedgerAccounts(householdId);
+  const { data: serverAccounts = [] } = useAuthorizedLedgerAccounts(householdId);
   const serverAccount = serverAccounts.find((candidate) => candidate.id === id);
   const accountPrivacy = useAccountPrivacy(serverAccount, householdId);
   const { data: account, isLoading: loadingAccount } = useAccount(id);

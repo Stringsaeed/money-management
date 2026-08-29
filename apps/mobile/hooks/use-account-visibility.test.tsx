@@ -9,8 +9,8 @@ jest.mock("@/hooks/use-households", () => ({
   useActiveHousehold: () => mockUseActiveHousehold(),
 }));
 
-jest.mock("@/hooks/use-ledger", () => ({
-  useLedgerAccounts: (...args: unknown[]) => mockUseLedgerAccounts(...args),
+jest.mock("@/hooks/use-authorized-ledger-accounts", () => ({
+  useAuthorizedLedgerAccounts: (...args: unknown[]) => mockUseLedgerAccounts(...args),
 }));
 
 describe("useAccountVisibility", () => {

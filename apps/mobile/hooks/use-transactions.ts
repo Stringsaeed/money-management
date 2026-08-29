@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { useLocalTransactionDataSource } from "@/modules/ledger-data-source/local";
+import { useTransactionDataSource } from "@/modules/ledger-data-source/coordinator";
 import {
   cohereLedgerCache,
   monthSummaryKeys,
@@ -15,19 +15,19 @@ type TransactionFilters = TransactionQueryFilters;
 // ── Queries ────────────────────────────────────────────────────────────────────
 
 export function useTransactions(filters: TransactionFilters) {
-  const source = useLocalTransactionDataSource();
+  const source = useTransactionDataSource();
   const query = useQuery({
     queryKey: [...transactionKeys.list(filters), source.cacheKey],
-    queryFn: () => source.reads.transactions.transactions(filters),
+    queryFn: () => source.transactions.list(filters),
   });
   return { ...query, source: source.source };
 }
 
 export function useTransaction(id: string | undefined) {
-  const source = useLocalTransactionDataSource();
+  const source = useTransactionDataSource();
   const query = useQuery({
     queryKey: [...transactionKeys.detail(id ?? ""), source.cacheKey],
-    queryFn: () => source.reads.transactions.transaction(id!),
+    queryFn: () => source.transactions.get(id!),
     enabled: !!id,
   });
   return { ...query, source: source.source };
@@ -36,10 +36,10 @@ export function useTransaction(id: string | undefined) {
 // ── Transaction date range ────────────────────────────────────────────────────
 
 export function useTransactionDateRange() {
-  const source = useLocalTransactionDataSource();
+  const source = useTransactionDataSource();
   const query = useQuery({
     queryKey: [...transactionDateRangeKeys.all, source.cacheKey],
-    queryFn: source.reads.transactions.dateRange,
+    queryFn: source.transactions.dateRange,
   });
   return { ...query, source: source.source };
 }
@@ -52,11 +52,11 @@ export function useMonthSummary(
   accountId?: string | null,
   enabled = true,
 ) {
-  const source = useLocalTransactionDataSource();
+  const source = useTransactionDataSource();
   const query = useQuery({
     queryKey: [...monthSummaryKeys.detail(year, month, accountId), source.cacheKey],
     enabled,
-    queryFn: () => source.reads.transactions.monthSummary(year, month, accountId),
+    queryFn: () => source.transactions.monthSummary(year, month, accountId),
   });
   return { ...query, source: source.source };
 }
@@ -68,17 +68,17 @@ type NewTransaction = Omit<Transaction, "id" | "createdAt" | "updatedAt" | "isRe
 };
 
 export function useCreateTransaction() {
-  const source = useLocalTransactionDataSource();
+  const source = useTransactionDataSource();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (data: NewTransaction) => source.mutations.transactions.createTransaction(data),
+    mutationFn: (data: NewTransaction) => source.transactions.create(data),
     onSuccess: (id) => cohereLedgerCache(queryClient, { kind: "transaction.created", id }),
   });
   return { ...mutation, source: source.source };
 }
 
 export function useUpdateTransaction() {
-  const source = useLocalTransactionDataSource();
+  const source = useTransactionDataSource();
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: async ({
@@ -87,17 +87,17 @@ export function useUpdateTransaction() {
     }: {
       id: string;
       data: Partial<Omit<Transaction, "id" | "createdAt" | "date"> & { date?: Date | string }>;
-    }) => source.mutations.transactions.updateTransaction(id, data),
+    }) => source.transactions.update(id, data),
     onSuccess: (_, { id }) => cohereLedgerCache(queryClient, { kind: "transaction.updated", id }),
   });
   return { ...mutation, source: source.source };
 }
 
 export function useDeleteTransaction() {
-  const source = useLocalTransactionDataSource();
+  const source = useTransactionDataSource();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: source.mutations.transactions.deleteTransaction,
+    mutationFn: source.transactions.delete,
     onSuccess: (_, id) => cohereLedgerCache(queryClient, { kind: "transaction.deleted", id }),
   });
   return { ...mutation, source: source.source };

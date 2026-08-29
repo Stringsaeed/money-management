@@ -21,7 +21,7 @@ import {
 } from "@/lib/sync/degradation";
 import { useSyncModeStore } from "@/stores/sync-mode-store";
 import { orpc } from "@/lib/server/orpc";
-import { ledgerQueriesForEffects } from "@/hooks/use-ledger";
+import { cohereLedgerEffects } from "@/modules/ledger-cache";
 
 /** How often the worker drains the outbox and pulls deltas while active. */
 const SYNC_INTERVAL_MS = 30_000;
@@ -143,9 +143,7 @@ export function useSyncWorker(householdId: string | null) {
         }
 
         for (const change of delta.changes) {
-          for (const segment of ledgerQueriesForEffects(change.effects)) {
-            void queryClient.invalidateQueries({ queryKey: ["ledger", segment, householdId] });
-          }
+          await cohereLedgerEffects(queryClient, change.effects);
         }
       } catch (err) {
         pullFailed = true;

@@ -11,16 +11,8 @@ import { nowIso, toDateString } from "@/utils/date";
 import { generateId } from "@/utils/id";
 import type { Category } from "@/types";
 
-import type { LedgerOperationRunner } from "./contract";
+import type { CategoryUpdate, LedgerOperationRunner, NewCategory } from "./contract";
 import type { LocalDatabaseDependency, LocalSQLiteDependency } from "./local-types";
-
-type NewCategory = Omit<
-  Category,
-  "id" | "createdAt" | "updatedAt" | "lifecycle" | "lifecycleChangedAt"
->;
-type CategoryUpdate = Partial<
-  Omit<Category, "id" | "createdAt" | "lifecycle" | "lifecycleChangedAt">
->;
 
 export const createLocalCategoryPort = (
   { db, sqlite }: LocalDatabaseDependency & LocalSQLiteDependency,

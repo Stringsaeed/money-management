@@ -15,20 +15,12 @@ import { nowIso, toDateString } from "@/utils/date";
 import { generateId } from "@/utils/id";
 import type { Account } from "@/types";
 
-import type { LedgerOperationRunner } from "./contract";
+import type { AccountUpdate, LedgerOperationRunner, NewAccount } from "./contract";
 import type {
   LocalDatabaseDependency,
   LocalSQLiteDependency,
   LocalVisibilityDependency,
 } from "./local-types";
-
-type NewAccount = Omit<
-  Account,
-  "id" | "createdAt" | "updatedAt" | "lifecycle" | "lifecycleChangedAt"
->;
-type AccountUpdate = Partial<
-  Omit<Account, "id" | "createdAt" | "lifecycle" | "lifecycleChangedAt">
->;
 
 export const createLocalAccountPort = (
   {

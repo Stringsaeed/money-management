@@ -5,48 +5,13 @@ import { useAccountVisibility } from "@/hooks/use-account-visibility";
 
 import {
   createLedgerOperationRunner,
-  type LedgerDataSource,
-  type LedgerOperationRunner,
+  type LedgerAccountDataSource,
+  type LedgerCategoryDataSource,
+  type LedgerTransactionDataSource,
 } from "./contract";
 import { createLocalAccountPort } from "./local-accounts";
 import { createLocalCategoryPort } from "./local-categories";
 import { createLocalTransactionPort } from "./local-transactions";
-
-type LocalTransferResult = { status: "not_required"; reason: "local_authoritative" };
-
-const createLocalSource = <TReads, TMutations>(
-  cacheKey: string,
-  reads: TReads,
-  mutations: TMutations,
-  runner: LedgerOperationRunner,
-) =>
-  ({
-    source: "local",
-    cacheKey,
-    offlineState: { kind: "offline_ready" },
-    reads,
-    mutations,
-    hydration: {
-      pull: async () => ({
-        status: "not_required" as const,
-        reason: "local_authoritative" as const,
-      }),
-    },
-    writeback: {
-      submit: async () => ({
-        status: "not_required" as const,
-        reason: "local_authoritative" as const,
-      }),
-    },
-    observeErrors: runner.observeErrors,
-  }) satisfies LedgerDataSource<
-    TReads,
-    TMutations,
-    undefined,
-    LocalTransferResult,
-    undefined,
-    LocalTransferResult
-  >;
 
 export const useLocalAccountDataSource = () => {
   const db = useDatabase();
@@ -54,12 +19,27 @@ export const useLocalAccountDataSource = () => {
   const visibility = useAccountVisibility();
   const runner = createLedgerOperationRunner("local");
   const port = createLocalAccountPort({ db, sqlite, visibility }, runner);
-  return createLocalSource(
-    visibility.cacheKey,
-    { accounts: port.reads },
-    { accounts: port.mutations },
-    runner,
-  );
+  return {
+    source: "local",
+    cacheKey: visibility.cacheKey,
+    offlineState: { kind: "offline_ready" },
+    accounts: {
+      list: port.reads.accounts,
+      get: port.reads.account,
+      listWithBalances: port.reads.accountBalances,
+      create: port.mutations.createAccount,
+      update: port.mutations.updateAccount,
+      archive: port.mutations.archiveAccount,
+    },
+    accountLifecycle: {
+      kind: "local",
+      archivalPreview: port.reads.archivalPreview,
+      deletionPreview: port.reads.deletionPreview,
+      restore: port.mutations.restoreAccount,
+      delete: port.mutations.deleteAccount,
+    },
+    observeErrors: runner.observeErrors,
+  } satisfies LedgerAccountDataSource;
 };
 
 export const useLocalCategoryDataSource = () => {
@@ -67,12 +47,26 @@ export const useLocalCategoryDataSource = () => {
   const sqlite = useSQLiteContext();
   const runner = createLedgerOperationRunner("local");
   const port = createLocalCategoryPort({ db, sqlite }, runner);
-  return createLocalSource(
-    "local-only",
-    { categories: port.reads },
-    { categories: port.mutations },
-    runner,
-  );
+  return {
+    source: "local",
+    cacheKey: "local-only",
+    offlineState: { kind: "offline_ready" },
+    categories: {
+      list: async (type, includeArchived = false) =>
+        includeArchived ? port.reads.allCategories() : port.reads.categories(type),
+      get: port.reads.category,
+      create: port.mutations.createCategory,
+      update: port.mutations.updateCategory,
+      archive: port.mutations.archiveCategory,
+    },
+    categoryLifecycle: {
+      kind: "local",
+      deletionPreview: port.reads.deletionPreview,
+      restore: port.mutations.restoreCategory,
+      delete: port.mutations.deleteCategory,
+    },
+    observeErrors: runner.observeErrors,
+  } satisfies LedgerCategoryDataSource;
 };
 
 export const useLocalTransactionDataSource = () => {
@@ -80,10 +74,19 @@ export const useLocalTransactionDataSource = () => {
   const visibility = useAccountVisibility();
   const runner = createLedgerOperationRunner("local");
   const port = createLocalTransactionPort({ db, visibility }, runner);
-  return createLocalSource(
-    visibility.cacheKey,
-    { transactions: port.reads },
-    { transactions: port.mutations },
-    runner,
-  );
+  return {
+    source: "local",
+    cacheKey: visibility.cacheKey,
+    offlineState: { kind: "offline_ready" },
+    transactions: {
+      list: port.reads.transactions,
+      get: port.reads.transaction,
+      dateRange: port.reads.dateRange,
+      monthSummary: port.reads.monthSummary,
+      create: port.mutations.createTransaction,
+      update: port.mutations.updateTransaction,
+      delete: port.mutations.deleteTransaction,
+    },
+    observeErrors: runner.observeErrors,
+  } satisfies LedgerTransactionDataSource;
 };

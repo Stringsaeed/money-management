@@ -1,39 +1,39 @@
 import type { CommandEnvelope } from "@trove/protocol";
 
 import { orpc } from "@/lib/server/orpc";
+import { generateId } from "@/utils/id";
+import type { Account } from "@/types";
 
 import {
   createLedgerOperationRunner,
-  type LedgerDataSource,
+  LedgerDataSourceError,
+  type LedgerAccountDataSource,
+  type LedgerCategoryDataSource,
+  type LedgerTransactionDataSource,
+  type LedgerHydration,
   type LedgerOfflineState,
+  type LedgerDataSourceOperation,
+  type LedgerWriteback,
 } from "./contract";
+import {
+  assertSupportedAccountUpdate,
+  calculateSyncedBalance,
+  mapSyncedAccount,
+  mapSyncedCategory,
+  toSyncedAccountType,
+  type SyncedTransaction,
+} from "./synced-mappers";
+import { createSyncedTransactionResource } from "./synced-transactions";
 
-type SyncedAccount = Awaited<ReturnType<typeof orpc.ledger.accounts.list>>[number];
-type SyncedCategory = Awaited<ReturnType<typeof orpc.ledger.categories.list>>[number];
-type SyncedTransactionPage = Awaited<ReturnType<typeof orpc.ledger.transactions.list>>;
 type SyncedHydration = Awaited<ReturnType<typeof orpc.sync.getDelta>>;
 type SyncedWriteback = Awaited<ReturnType<typeof orpc.commands.apply>>;
 
-export interface SyncedLedgerReads {
-  accounts: { list: () => Promise<readonly SyncedAccount[]> };
-  categories: { list: () => Promise<readonly SyncedCategory[]> };
-  transactions: {
-    list: (options?: { limit?: number; beforeDate?: string }) => Promise<SyncedTransactionPage>;
+export type SyncedLedgerDataSource = LedgerAccountDataSource &
+  LedgerCategoryDataSource &
+  LedgerTransactionDataSource & {
+    hydration: LedgerHydration<{ since: number }, SyncedHydration>;
+    writeback: LedgerWriteback<CommandEnvelope, SyncedWriteback>;
   };
-}
-
-export interface SyncedLedgerMutations {
-  execute: (command: CommandEnvelope) => Promise<SyncedWriteback>;
-}
-
-export type SyncedLedgerDataSource = LedgerDataSource<
-  SyncedLedgerReads,
-  SyncedLedgerMutations,
-  { since: number },
-  SyncedHydration,
-  CommandEnvelope,
-  SyncedWriteback
->;
 
 interface CreateSyncedLedgerDataSourceOptions {
   householdId: string;
@@ -45,6 +45,21 @@ export const createSyncedLedgerDataSource = ({
   offlineState = { kind: "online" },
 }: CreateSyncedLedgerDataSourceOptions): SyncedLedgerDataSource => {
   const runner = createLedgerOperationRunner("synced");
+  const runNetwork = <TResult>(
+    operation: LedgerDataSourceOperation,
+    execute: () => Promise<TResult>,
+  ) =>
+    runner.run(operation, async () => {
+      if (offlineState.kind === "offline_cached") {
+        throw new LedgerDataSourceError(
+          "synced",
+          operation,
+          new Error("This device is offline."),
+          "offline",
+        );
+      }
+      return execute();
+    });
   const apply = async (command: CommandEnvelope) => {
     if (command.householdId !== householdId) {
       throw new Error("The command belongs to a different household.");
@@ -54,42 +69,167 @@ export const createSyncedLedgerDataSource = ({
       preconditions: command.preconditions?.map((precondition) => ({ ...precondition })),
     });
   };
+  const listRawAccounts = () =>
+    runNetwork("read.accounts", () => orpc.ledger.accounts.list({ householdId }));
+  const listRawTransactions = (options: { limit?: number; beforeDate?: string } = {}) =>
+    runNetwork("read.transactions", () =>
+      orpc.ledger.transactions.list({
+        householdId,
+        ...(options.limit !== undefined && { limit: options.limit }),
+        ...(options.beforeDate !== undefined && { beforeDate: options.beforeDate }),
+      }),
+    );
+  const listAllRawTransactions = async () => {
+    const transactions: SyncedTransaction[] = [];
+    let beforeDate: string | undefined;
+    for (;;) {
+      const page = await listRawTransactions({ limit: 200, beforeDate });
+      transactions.push(...page.transactions);
+      if (!page.hasMore) {
+        return { transactions, hasMore: false };
+      }
+      const nextBeforeDate = page.transactions.at(-1)?.date;
+      if (!nextBeforeDate || nextBeforeDate === beforeDate) {
+        throw new Error("The synced Transaction cursor did not advance. Retry the ledger refresh.");
+      }
+      beforeDate = nextBeforeDate;
+    }
+  };
+  const listRawCategories = () =>
+    runNetwork("read.categories", () => orpc.ledger.categories.list({ householdId }));
+  const listAccounts = async (includeArchived: boolean): Promise<Account[]> => {
+    const rows = await listRawAccounts();
+    return rows
+      .filter((row) => includeArchived || row.lifecycle === "active")
+      .map(mapSyncedAccount);
+  };
+  const executeCommand = async (operation: LedgerDataSourceOperation, command: CommandEnvelope) =>
+    runNetwork(operation, async () => {
+      const result = await apply(command);
+      if (result.kind !== "applied") {
+        throw new Error(`The server rejected the command: ${result.kind}.`);
+      }
+      return result;
+    });
+  const transactions = createSyncedTransactionResource({
+    householdId,
+    listAccounts: listRawAccounts,
+    listCategories: listRawCategories,
+    listTransactions: listAllRawTransactions,
+    executeCommand,
+  });
 
   return {
     source: "synced",
     cacheKey: `synced:${householdId}`,
     offlineState,
-    reads: {
-      accounts: {
-        list: () => runner.run("read.accounts", () => orpc.ledger.accounts.list({ householdId })),
+    accounts: {
+      list: () => listAccounts(false),
+      get: async (id) => (await listAccounts(true)).find((account) => account.id === id),
+      listWithBalances: async (includeArchived) => {
+        const [accounts, page] = await Promise.all([
+          listAccounts(includeArchived),
+          listAllRawTransactions(),
+        ]);
+        return accounts.map((account) => ({
+          ...account,
+          balance: calculateSyncedBalance(account, page.transactions),
+        }));
       },
-      categories: {
-        list: () =>
-          runner.run("read.categories", () => orpc.ledger.categories.list({ householdId })),
+      create: async (data) => {
+        const id = generateId();
+        await executeCommand("mutation.account-create", {
+          commandId: generateId(),
+          householdId,
+          kind: "account.create",
+          payload: {
+            id,
+            name: data.name,
+            type: toSyncedAccountType(data.type),
+            currency: data.currency,
+            color: data.color,
+            icon: data.icon,
+            initialBalanceMinor: data.initialBalance,
+            excludeFromTotal: data.excludeFromTotal,
+            sortOrder: data.sortOrder,
+          },
+        });
+        return id;
       },
-      transactions: {
-        list: (options = {}) =>
-          runner.run("read.transactions", () =>
-            orpc.ledger.transactions.list({
-              householdId,
-              ...(options.limit !== undefined && { limit: options.limit }),
-              ...(options.beforeDate !== undefined && { beforeDate: options.beforeDate }),
+      update: async (id, data) => {
+        assertSupportedAccountUpdate(data);
+        return executeCommand("mutation.account-update", {
+          commandId: generateId(),
+          householdId,
+          kind: "account.update",
+          payload: {
+            accountId: id,
+            ...(data.name !== undefined && { name: data.name }),
+            ...(data.color !== undefined && { color: data.color }),
+            ...(data.icon !== undefined && { icon: data.icon }),
+            ...(data.excludeFromTotal !== undefined && {
+              excludeFromTotal: data.excludeFromTotal,
             }),
-          ),
+            ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
+          },
+        });
       },
+      archive: (id) =>
+        executeCommand("mutation.account-archive", {
+          commandId: generateId(),
+          householdId,
+          kind: "account.archive",
+          payload: { accountId: id },
+        }),
     },
-    mutations: {
-      execute: (command) => runner.run("mutation.execute", () => apply(command)),
+    accountLifecycle: { kind: "synced" },
+    categories: {
+      list: async (type, includeArchived = false) => {
+        const rows = await listRawCategories();
+        return rows
+          .filter(
+            (row) =>
+              (includeArchived || row.lifecycle === "active") &&
+              (type === undefined || row.type === type),
+          )
+          .map(mapSyncedCategory);
+      },
+      get: async (id) =>
+        (await listRawCategories()).map(mapSyncedCategory).find((category) => category.id === id),
+      create: async (data) => {
+        const id = generateId();
+        await executeCommand("mutation.category-create", {
+          commandId: generateId(),
+          householdId,
+          kind: "category.create",
+          payload: { id, ...data },
+        });
+        return id;
+      },
+      update: (id, data) =>
+        executeCommand("mutation.category-update", {
+          commandId: generateId(),
+          householdId,
+          kind: "category.update",
+          payload: { categoryId: id, ...data },
+        }),
+      archive: (id) =>
+        executeCommand("mutation.category-archive", {
+          commandId: generateId(),
+          householdId,
+          kind: "category.archive",
+          payload: { categoryId: id },
+        }),
     },
+    categoryLifecycle: { kind: "synced" },
+    transactions,
     hydration: {
       pull: ({ since }) =>
-        runner.run("hydration.pull", () => orpc.sync.getDelta({ householdId, since })),
+        runNetwork("hydration.pull", () => orpc.sync.getDelta({ householdId, since })),
     },
     writeback: {
-      submit: (command) => runner.run("writeback.submit", () => apply(command)),
+      submit: (command) => runNetwork("writeback.submit", () => apply(command)),
     },
     observeErrors: runner.observeErrors,
   };
 };
-
-export type { SyncedAccount, SyncedCategory, SyncedTransactionPage };
