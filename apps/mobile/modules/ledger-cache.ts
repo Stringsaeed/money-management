@@ -38,6 +38,8 @@ export const transactionKeys = {
   list: (filters: TransactionQueryFilters) => ["transactions", "list", filters] as const,
   recent: (limit: number) => ["transactions", "recent", limit] as const,
   detail: (id: string) => ["transactions", id] as const,
+  page: (limit: number, beforeDate?: string) =>
+    ["transactions", "page", limit, beforeDate ?? null] as const,
 };
 
 export const monthSummaryKeys = {
@@ -251,6 +253,20 @@ export async function cohereRecurringEffects(
     queryClient,
     effects.flatMap((effect) => recurringEffectQueryKeys[effect]),
   );
+}
+
+export async function cohereLedgerEffects(
+  queryClient: QueryClient,
+  effects: readonly string[],
+): Promise<void> {
+  const queryKeys: QueryKey[] = [];
+  if (effects.some((effect) => effect === "ledger" || effect === "balances")) {
+    queryKeys.push(accountKeys.all, accountKeys.balances, transactionKeys.all);
+  }
+  if (effects.includes("summaries")) {
+    queryKeys.push(categoryKeys.all, monthSummaryKeys.all, transactionDateRangeKeys.all);
+  }
+  await invalidateQueryKeys(queryClient, queryKeys);
 }
 
 export async function cohereBudgetingEffects(

@@ -1,55 +1,29 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { eq } from "drizzle-orm";
-import { useSQLiteContext } from "expo-sqlite";
 
-import { useDatabase } from "@/db/client";
-import { accounts } from "@/db/schema";
-import { hasVisibleAccount, useAccountVisibility } from "@/hooks/use-account-visibility";
-import { updateAccountWithRecurringRules } from "@/modules/account-recurring-coordinator";
-import {
-  archiveAccount,
-  deleteAccount,
-  previewAccountArchival,
-  previewAccountDeletion,
-  restoreAccount,
-} from "@/modules/accounts/account-lifecycle";
-import { loadAccountBalances } from "@/modules/accounts/account-balance";
+import { useAccountDataSource } from "@/modules/ledger-data-source/coordinator";
+import { unsupportedSyncedOperation } from "@/modules/ledger-data-source/contract";
 import { accountKeys, cohereLedgerCache } from "@/modules/ledger-cache";
-import { nowIso, toDateString } from "@/utils/date";
-import { generateId } from "@/utils/id";
+import { toDateString } from "@/utils/date";
 import type { Account } from "@/types";
 
 // ── Queries ────────────────────────────────────────────────────────────────────
 
 export function useAccounts() {
-  const db = useDatabase();
-  const visibility = useAccountVisibility();
-  return useQuery({
-    queryKey: [...accountKeys.all, visibility.cacheKey],
-    queryFn: async () => {
-      const rows = (await db
-        .select()
-        .from(accounts)
-        .where(eq(accounts.lifecycle, "active"))
-        .orderBy(accounts.sortOrder, accounts.createdAt)
-        .all()) as Account[];
-      return rows.filter((account) => hasVisibleAccount(visibility, account.id));
-    },
+  const source = useAccountDataSource();
+  const query = useQuery({
+    queryKey: [...accountKeys.all, source.cacheKey],
+    queryFn: source.accounts.list,
   });
+  return { ...query, source: source.source, offlineState: source.offlineState };
 }
 
 export function useAccount(id: string) {
-  const db = useDatabase();
-  const visibility = useAccountVisibility();
-  return useQuery({
-    queryKey: [...accountKeys.detail(id), visibility.cacheKey],
-    queryFn: () => {
-      if (!hasVisibleAccount(visibility, id)) {
-        return undefined;
-      }
-      return db.select().from(accounts).where(eq(accounts.id, id)).get() as Account | undefined;
-    },
+  const source = useAccountDataSource();
+  const query = useQuery({
+    queryKey: [...accountKeys.detail(id), source.cacheKey],
+    queryFn: () => source.accounts.get(id),
   });
+  return { ...query, source: source.source };
 }
 
 export function useAccountsWithBalances() {
@@ -61,116 +35,126 @@ export function useAllAccountsWithBalances() {
 }
 
 function useAccountBalances(includeArchived: boolean) {
-  const database = useSQLiteContext();
-  const visibility = useAccountVisibility();
-  return useQuery({
+  const source = useAccountDataSource();
+  const query = useQuery({
     queryKey: [
       ...(includeArchived ? accountKeys.managementBalances : accountKeys.balances),
-      visibility.cacheKey,
+      source.cacheKey,
     ],
-    queryFn: async () => {
-      const rows = await loadAccountBalances(database, includeArchived);
-      return rows.filter((account) => hasVisibleAccount(visibility, account.id));
-    },
+    queryFn: () => source.accounts.listWithBalances(includeArchived),
   });
+  return { ...query, source: source.source };
 }
 
 // ── Mutations ──────────────────────────────────────────────────────────────────
 
 export function useCreateAccount() {
-  const db = useDatabase();
-  const qc = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (
-      data: Omit<Account, "id" | "createdAt" | "updatedAt" | "lifecycle" | "lifecycleChangedAt">,
-    ) => {
-      const now = nowIso();
-      const id = generateId();
-      await db.insert(accounts).values({
-        ...data,
-        id,
-        lifecycle: "active",
-        lifecycleChangedAt: null,
-        createdAt: now,
-        updatedAt: now,
-      });
-      return id;
-    },
-    onSuccess: (id) => cohereLedgerCache(qc, { kind: "account.created", id }),
+  const source = useAccountDataSource();
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: source.accounts.create,
+    onSuccess: (id) => cohereLedgerCache(queryClient, { kind: "account.created", id }),
   });
+  return { ...mutation, source: source.source };
 }
 
 export function useUpdateAccount() {
-  const database = useSQLiteContext();
-  const qc = useQueryClient();
-
-  return useMutation({
+  const source = useAccountDataSource();
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
     mutationFn: async ({
       id,
       data,
     }: {
       id: string;
       data: Partial<Omit<Account, "id" | "createdAt" | "lifecycle" | "lifecycleChangedAt">>;
-    }) => {
-      return updateAccountWithRecurringRules(database, {
-        accountId: id,
-        changes: data,
-        now: nowIso(),
-      });
-    },
-    onSuccess: (_, { id }) => cohereLedgerCache(qc, { kind: "account.updated", id }),
+    }) => source.accounts.update(id, data),
+    onSuccess: (_, { id }) => cohereLedgerCache(queryClient, { kind: "account.updated", id }),
   });
+  return { ...mutation, source: source.source };
 }
 
 export function useAccountArchivalPreview(id: string) {
-  const database = useSQLiteContext();
+  const source = useAccountDataSource();
   const localDate = toDateString(new Date());
-  return useQuery({
-    queryKey: accountKeys.archivalPreview(id, localDate),
-    queryFn: () => previewAccountArchival(database, id, localDate),
+  const query = useQuery({
+    queryKey: [...accountKeys.archivalPreview(id, localDate), source.cacheKey],
+    queryFn: () => {
+      if (source.accountLifecycle.kind !== "local") {
+        throw unsupportedSyncedOperation(
+          "Account archival preview",
+          "No Account was changed.",
+          "Archive only from a flow that does not require the local dependency preview.",
+        );
+      }
+      return source.accountLifecycle.archivalPreview(id, localDate);
+    },
   });
+  return { ...query, source: source.source };
 }
 
 export function useAccountDeletionPreview(id: string) {
-  const database = useSQLiteContext();
-  return useQuery({
-    queryKey: accountKeys.deletionPreview(id),
-    queryFn: () => previewAccountDeletion(database, id),
+  const source = useAccountDataSource();
+  const query = useQuery({
+    queryKey: [...accountKeys.deletionPreview(id), source.cacheKey],
+    queryFn: () => {
+      if (source.accountLifecycle.kind !== "local") {
+        throw unsupportedSyncedOperation(
+          "Account deletion preview",
+          "No Account was changed.",
+          "Archive the Account instead of deleting it.",
+        );
+      }
+      return source.accountLifecycle.deletionPreview(id);
+    },
   });
+  return { ...query, source: source.source };
 }
 
 export function useArchiveAccount() {
-  const database = useSQLiteContext();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => {
-      const archivedAt = new Date(nowIso());
-      return archiveAccount(database, {
-        accountId: id,
-        localDate: toDateString(archivedAt),
-        now: archivedAt.toISOString(),
-      });
-    },
-    onSuccess: (_, id) => cohereLedgerCache(qc, { kind: "account.archived", id }),
+  const source = useAccountDataSource();
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: source.accounts.archive,
+    onSuccess: (_, id) => cohereLedgerCache(queryClient, { kind: "account.archived", id }),
   });
+  return { ...mutation, source: source.source };
 }
 
 export function useRestoreAccount() {
-  const database = useSQLiteContext();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => restoreAccount(database, { accountId: id, now: nowIso() }),
-    onSuccess: (_, id) => cohereLedgerCache(qc, { kind: "account.restored", id }),
+  const source = useAccountDataSource();
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (id: string) => {
+      if (source.accountLifecycle.kind !== "local") {
+        throw unsupportedSyncedOperation(
+          "Account restore",
+          "The Account remains archived.",
+          "Leave it archived until synced restore is supported.",
+        );
+      }
+      return source.accountLifecycle.restore(id);
+    },
+    onSuccess: (_, id) => cohereLedgerCache(queryClient, { kind: "account.restored", id }),
   });
+  return { ...mutation, source: source.source };
 }
 
 export function useDeleteAccount() {
-  const database = useSQLiteContext();
-  const qc = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => deleteAccount(database, id),
-    onSuccess: (_, id) => cohereLedgerCache(qc, { kind: "account.deleted", id }),
+  const source = useAccountDataSource();
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (id: string) => {
+      if (source.accountLifecycle.kind !== "local") {
+        throw unsupportedSyncedOperation(
+          "Account deletion",
+          "The Account remains unchanged.",
+          "Archive the Account instead.",
+        );
+      }
+      return source.accountLifecycle.delete(id);
+    },
+    onSuccess: (_, id) => cohereLedgerCache(queryClient, { kind: "account.deleted", id }),
   });
+  return { ...mutation, source: source.source };
 }

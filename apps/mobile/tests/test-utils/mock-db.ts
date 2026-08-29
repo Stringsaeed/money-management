@@ -13,6 +13,7 @@ const createBuilder = (result: QueryResult) => ({
   orderBy: jest.fn().mockReturnThis(),
   leftJoin: jest.fn().mockReturnThis(),
   groupBy: jest.fn().mockReturnThis(),
+  limit: jest.fn().mockReturnThis(),
   set: jest.fn().mockReturnThis(),
   values: jest.fn().mockResolvedValue(result.all ?? result.get),
   all: jest.fn().mockResolvedValue(result.all ?? []),

@@ -8,6 +8,11 @@ import {
 } from "@testing-library/react-native";
 import type { ReactElement, ReactNode } from "react";
 
+import {
+  LedgerDataSourceProvider,
+  type LedgerSourceSelection,
+} from "@/modules/ledger-data-source/provider";
+
 const trackedClients = new Set<QueryClient>();
 
 export const createTestQueryClient = () =>
@@ -33,40 +38,58 @@ afterEach(() => {
 interface TestProvidersProps {
   children: ReactNode;
   client: QueryClient;
+  ledgerSelection?: LedgerSourceSelection;
 }
 
-const TestProviders = ({ children, client }: TestProvidersProps) => (
-  <QueryClientProvider client={client}>{children}</QueryClientProvider>
+const TestProviders = ({ children, client, ledgerSelection }: TestProvidersProps) => (
+  <QueryClientProvider client={client}>
+    <LedgerDataSourceProvider selection={ledgerSelection}>{children}</LedgerDataSourceProvider>
+  </QueryClientProvider>
 );
+
+interface ProviderOptions {
+  client?: QueryClient;
+  ledgerSelection?: LedgerSourceSelection;
+}
 
 export const renderWithProviders = async (
   ui: ReactElement,
-  options?: Omit<RenderOptions, "wrapper"> & { client?: QueryClient },
+  options?: Omit<RenderOptions, "wrapper"> & ProviderOptions,
 ) => {
   const client = options?.client ?? createTestQueryClient();
+  const { client: _client, ledgerSelection: _ledgerSelection, ...renderOptions } = options ?? {};
   trackedClients.add(client);
 
   return {
     client,
     ...(await render(ui, {
-      ...options,
-      wrapper: ({ children }) => <TestProviders client={client}>{children}</TestProviders>,
+      ...renderOptions,
+      wrapper: ({ children }) => (
+        <TestProviders client={client} ledgerSelection={options?.ledgerSelection}>
+          {children}
+        </TestProviders>
+      ),
     })),
   };
 };
 
 export const renderHookWithProviders = async <TProps, TResult>(
   hook: (props: TProps) => TResult,
-  options?: Omit<RenderHookOptions<TProps>, "wrapper"> & { client?: QueryClient },
+  options?: Omit<RenderHookOptions<TProps>, "wrapper"> & ProviderOptions,
 ) => {
   const client = options?.client ?? createTestQueryClient();
+  const { client: _client, ledgerSelection: _ledgerSelection, ...renderOptions } = options ?? {};
   trackedClients.add(client);
 
   return {
     client,
     ...(await renderHook(hook, {
-      ...options,
-      wrapper: ({ children }) => <TestProviders client={client}>{children}</TestProviders>,
+      ...renderOptions,
+      wrapper: ({ children }) => (
+        <TestProviders client={client} ledgerSelection={options?.ledgerSelection}>
+          {children}
+        </TestProviders>
+      ),
     })),
   };
 };

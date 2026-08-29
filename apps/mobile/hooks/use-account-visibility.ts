@@ -1,5 +1,5 @@
 import { useActiveHousehold } from "@/hooks/use-households";
-import { useLedgerAccounts } from "@/hooks/use-ledger";
+import { useAuthorizedLedgerAccounts } from "@/hooks/use-authorized-ledger-accounts";
 
 export interface AccountVisibility {
   readonly cacheKey: string;
@@ -16,7 +16,7 @@ export interface AccountVisibility {
 export function useAccountVisibility(): AccountVisibility {
   const { activeHousehold } = useActiveHousehold();
   const householdId = activeHousehold?.householdId ?? null;
-  const { data: accounts = [] } = useLedgerAccounts(householdId);
+  const { data: accounts = [] } = useAuthorizedLedgerAccounts(householdId);
   const isFiltering = householdId !== null;
   const visibleAccountIds = new Set(accounts.map((account) => account.id));
 

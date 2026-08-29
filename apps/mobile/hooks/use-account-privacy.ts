@@ -1,11 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { orpc } from "@/lib/server/orpc";
-import type { LedgerAccount } from "@/hooks/use-ledger";
+import type { AuthorizedLedgerAccount } from "@/hooks/use-authorized-ledger-accounts";
+import { cohereLedgerCache } from "@/modules/ledger-cache";
 import { generateId } from "@/utils/id";
 
 /** Updates server visibility; local-only accounts deliberately have no remote toggle. */
-export function useAccountPrivacy(account: LedgerAccount | undefined, householdId: string | null) {
+export function useAccountPrivacy(
+  account: AuthorizedLedgerAccount | undefined,
+  householdId: string | null,
+) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -28,9 +32,14 @@ export function useAccountPrivacy(account: LedgerAccount | undefined, householdI
       }
     },
     onSuccess: async () => {
+      if (!account) {
+        return;
+      }
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["ledger", "accounts", householdId] }),
-        queryClient.invalidateQueries({ queryKey: ["ledger", "transactions", householdId] }),
+        queryClient.invalidateQueries({
+          queryKey: ["ledger-authorization", "accounts", householdId],
+        }),
+        cohereLedgerCache(queryClient, { kind: "account.updated", id: account.id }),
       ]);
     },
   });

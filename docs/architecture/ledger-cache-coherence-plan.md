@@ -1,6 +1,6 @@
 # Ledger Cache Coherence Plan
 
-- **Status:** Planned
+- **Status:** Implemented; ownership boundary revised by #132
 - **Recorded:** 2026-08-17
 - **Source review:** `architecture-review-20260816-204716.html`, “Own ledger cache coherence”
 - **Domain language:** [Money Management Context](../../CONTEXT.md)
@@ -40,7 +40,7 @@ The resulting gaps are observable:
 
 - Detect writes made by another process, a future sync engine, imports, or external database tooling.
 - Introduce cache persistence, database observation, event sourcing, or multiwriter synchronization.
-- Move SQL reads or writes into a repository layer.
+- Move React Query key or semantic-effect ownership out of the coherence module.
 - Patch enriched query data manually or add optimistic cache updates.
 - Add field-level dependency analysis, query predicates, a coherence queue, or debouncing.
 - Change query-key shapes as part of the ownership migration.
@@ -74,7 +74,9 @@ Add one pure module under `modules/` that accepts a `QueryClient`. It will own:
 - existing Recurring-effect-to-query mappings; and
 - full-ledger reset invalidation.
 
-React hooks will continue to own query functions, mutation functions, SQL access, and form-facing APIs. The Recurring Rules domain will continue to produce its current semantic effects. Background settlement and developer reset paths will call the same coherence owner without needing React context.
+React hooks own React Query orchestration, cache-effect reporting, and form-facing APIs. The owned ledger data-source coordinator introduced by #132 now owns source selection, while its local SQLite and synced oRPC adapters own persistence and transport details behind common Account, Category, and Transaction resource contracts. Selection is explicit (`local` by default or a configured `synced` Household); neither adapter falls back to the other. Source-specific hydration, writeback, offline state, errors, and local-only lifecycle operations remain discriminated capabilities rather than leaking storage details into hooks.
+
+The Recurring Rules domain continues to produce its current semantic effects. Background settlement, sync hydration, and developer reset paths call the same coherence owner without needing a second query-key map. `modules/ledger-cache.ts` remains the sole production owner of query-key factories and Effect Tag mappings.
 
 The module should expose pure functions rather than a provider or global QueryClient singleton. Proposed API shape:
 
@@ -255,4 +257,4 @@ This work has no intended visual change, so simulator QA is not required unless 
 - **Accidental duplicate refetch:** deduplicate mapped keys and avoid overlapping broad/detail invalidations where one prefix already covers both.
 - **Committed-write error ambiguity:** keep TanStack's default non-throwing refresh behavior.
 - **Recurring regression:** preserve the current effect protocol and partial-settlement report exactly; change only the cache adapter.
-- **Scope expansion:** retain current key shapes, hooks, SQL ownership, and UI behavior; defer observation and synchronization concerns.
+- **Scope expansion:** retain current key shapes and UI behavior; keep SQL/oRPC ownership inside ledger adapters, source selection inside the coordinator, and React Query/effect ownership inside hooks plus `modules/ledger-cache.ts`.

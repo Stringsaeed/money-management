@@ -28,6 +28,7 @@ const mockRestoreAccount = jest.fn();
 const mockUpdateAccountWithRecurringRules = jest.fn();
 const mockCohereLedgerCache = jest.fn();
 const mockUseAccountVisibility = jest.fn();
+const mockListServerAccounts = jest.fn();
 
 interface CoherenceAwareMutation<T> {
   expectPending: () => void;
@@ -71,6 +72,18 @@ async function startMutationAwaitingCoherence<T>(
 
 jest.mock("@/db/client", () => ({
   useDatabase: () => mockUseDatabase(),
+}));
+
+jest.mock("@/lib/server/orpc", () => ({
+  orpc: {
+    ledger: {
+      accounts: { list: (...args: unknown[]) => mockListServerAccounts(...args) },
+      categories: { list: jest.fn() },
+      transactions: { list: jest.fn() },
+    },
+    commands: { apply: jest.fn() },
+    sync: { getDelta: jest.fn() },
+  },
 }));
 
 jest.mock("@/hooks/use-account-visibility", () => ({
@@ -162,10 +175,85 @@ describe("use-accounts hooks", () => {
     });
 
     expect(db.select).toHaveBeenCalled();
+    expect(result.current.source).toBe("local");
+    expect(result.current.offlineState).toEqual({ kind: "offline_ready" });
     expect(result.current.data).toEqual([
       createAccount({ id: "account-1" }),
       createAccount({ id: "account-2" }),
     ]);
+  });
+
+  it("loads the same Account shape from an explicitly synced source", async () => {
+    const db = createMockDb({
+      selectResults: [{ all: [createAccount({ id: "local-account", name: "Local" })] }],
+    });
+    mockUseDatabase.mockReturnValue(db);
+    mockListServerAccounts.mockResolvedValue([
+      {
+        householdId: "household-1",
+        id: "account-1",
+        name: "Shared checking",
+        type: "bank",
+        currency: "AED",
+        color: "#8B9D83",
+        icon: "banknote.fill",
+        initialBalanceMinor: 125_00,
+        excludeFromTotal: false,
+        sortOrder: 0,
+        lifecycle: "active",
+        lifecycleChangedAt: null,
+        visibility: "public",
+        ownerUserId: "user-1",
+        version: 0,
+        createdBy: "user-1",
+        updatedBy: "user-1",
+        createdAt: new Date("2026-03-28T10:00:00.000Z"),
+        updatedAt: new Date("2026-03-28T10:00:00.000Z"),
+      },
+    ]);
+
+    const { result } = await renderHookWithProviders(() => useAccounts(), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data).toEqual([
+      createAccount({
+        id: "account-1",
+        name: "Shared checking",
+        type: "checking",
+        currency: "AED",
+        initialBalance: 125_00,
+      }),
+    ]);
+    expect(db.select).not.toHaveBeenCalled();
+  });
+
+  it("surfaces cached-offline impact without attempting a synced read", async () => {
+    const db = createMockDb();
+    mockUseDatabase.mockReturnValue(db);
+
+    const { result } = await renderHookWithProviders(() => useAccounts(), {
+      ledgerSelection: {
+        kind: "synced",
+        householdId: "household-1",
+        offlineState: { kind: "offline_cached", reason: "network_unavailable" },
+      },
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(result.current.error).toMatchObject({
+      name: "LedgerDataSourceError",
+      source: "synced",
+      operation: "read.accounts",
+      reason: "offline",
+    });
+    expect(result.current.error?.message).toContain("last cached ledger data is unchanged");
+    expect(result.current.error?.message).toContain("Check your connection and try again");
+    expect(mockListServerAccounts).not.toHaveBeenCalled();
+    expect(db.select).not.toHaveBeenCalled();
   });
 
   it("hides locally retained accounts that the server no longer authorizes", async () => {

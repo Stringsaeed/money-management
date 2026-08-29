@@ -8,6 +8,7 @@ import {
   categoryKeys,
   cohereBudgetingEffects,
   cohereLedgerCache,
+  cohereLedgerEffects,
   cohereRecurringEffects,
   monthSummaryKeys,
   recurringRuleKeys,
@@ -326,6 +327,23 @@ describe("cohereLedgerCache", () => {
 
     expect(invalidateQueries).toHaveBeenCalledTimes(1);
     expect(invalidateQueries).toHaveBeenCalledWith();
+  });
+});
+
+describe("cohereLedgerEffects", () => {
+  it("maps synced Effect Tags onto the existing resource cache keys", async () => {
+    const { queryClient, invalidateQueries } = createControlledQueryClient();
+
+    await cohereLedgerEffects(queryClient, ["ledger", "balances", "summaries", "members"]);
+
+    expect(invalidatedKeys(invalidateQueries)).toEqual([
+      accountKeys.all,
+      accountKeys.balances,
+      transactionKeys.all,
+      categoryKeys.all,
+      monthSummaryKeys.all,
+      transactionDateRangeKeys.all,
+    ]);
   });
 });
 

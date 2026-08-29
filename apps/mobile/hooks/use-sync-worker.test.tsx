@@ -15,6 +15,7 @@ const mockRetry = jest.fn();
 const mockApply = jest.fn();
 const mockGetDelta = jest.fn();
 const mockStatus = jest.fn();
+const mockCohereLedgerEffects = jest.fn();
 
 const FAKE_DB = { __fakeDb: true };
 jest.mock("@/db/client", () => ({
@@ -45,6 +46,11 @@ jest.mock("@/lib/server/orpc", () => ({
   },
 }));
 
+jest.mock("@/modules/ledger-cache", () => ({
+  ...jest.requireActual("@/modules/ledger-cache"),
+  cohereLedgerEffects: (...args: unknown[]) => mockCohereLedgerEffects(...args),
+}));
+
 const HOUSEHOLD_ID = "household-1";
 
 let appStateListener: ((state: string) => void) | undefined;
@@ -53,6 +59,7 @@ function defaultMocks() {
   mockDrainOutbox.mockResolvedValue({ applied: 0, rejected: 0, pending: 0 });
   mockPullDeltas.mockResolvedValue({ seq: 0, hasMore: false, changes: [] });
   mockStatus.mockResolvedValue({ killSwitchLocalOnly: false });
+  mockCohereLedgerEffects.mockResolvedValue(undefined);
   mockCountPending.mockResolvedValue(2);
   mockListRejected.mockResolvedValue([
     {
@@ -191,19 +198,10 @@ describe("useSyncWorker", () => {
       changes: [{ seq: 3, effects: ["ledger", "summaries"] }],
     });
     const client = createTestQueryClient();
-    const invalidateSpy = jest.spyOn(client, "invalidateQueries");
-
     await renderHookWithProviders(() => useSyncWorker(HOUSEHOLD_ID), { client });
     await flushTurn();
 
-    // accounts + transactions (from "ledger") and categories (from "summaries").
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["ledger", "accounts", HOUSEHOLD_ID] });
-    expect(invalidateSpy).toHaveBeenCalledWith({
-      queryKey: ["ledger", "transactions", HOUSEHOLD_ID],
-    });
-    expect(invalidateSpy).toHaveBeenCalledWith({
-      queryKey: ["ledger", "categories", HOUSEHOLD_ID],
-    });
+    expect(mockCohereLedgerEffects).toHaveBeenCalledWith(client, ["ledger", "summaries"]);
   });
 
   it("discard/retry delegate to the outbox core and retry re-drains immediately", async () => {

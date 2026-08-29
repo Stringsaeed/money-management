@@ -14,7 +14,7 @@ import {
 } from "@/hooks/use-categories";
 import { createCategory } from "@/tests/test-utils/factories";
 import { createMockDb } from "@/tests/test-utils/mock-db";
-import { renderHookWithProviders } from "@/tests/test-utils/render";
+import { createTestQueryClient, renderHookWithProviders } from "@/tests/test-utils/render";
 
 const mockUseDatabase = jest.fn();
 const mockUseSQLiteContext = jest.fn();
@@ -23,6 +23,7 @@ const mockArchiveCategory = jest.fn();
 const mockDeleteCategory = jest.fn();
 const mockPreviewCategoryDeletion = jest.fn();
 const mockRestoreCategory = jest.fn();
+const mockListServerCategories = jest.fn();
 
 interface CoherenceAwareMutation<T> {
   expectPending: () => void;
@@ -66,6 +67,18 @@ async function startMutationAwaitingCoherence<T>(
 
 jest.mock("@/db/client", () => ({
   useDatabase: () => mockUseDatabase(),
+}));
+
+jest.mock("@/lib/server/orpc", () => ({
+  orpc: {
+    ledger: {
+      accounts: { list: jest.fn() },
+      categories: { list: (...args: unknown[]) => mockListServerCategories(...args) },
+      transactions: { list: jest.fn() },
+    },
+    commands: { apply: jest.fn() },
+    sync: { getDelta: jest.fn() },
+  },
 }));
 
 jest.mock("expo-sqlite", () => ({
@@ -122,7 +135,79 @@ describe("use-categories hooks", () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
+    expect(result.current.source).toBe("local");
     expect(result.current.data).toEqual([createCategory({ id: "category-1", type: "expense" })]);
+  });
+
+  it("loads the same Category shape from an explicitly synced source", async () => {
+    const db = createMockDb({
+      selectResults: [{ all: [createCategory({ id: "local-category", name: "Local" })] }],
+    });
+    mockUseDatabase.mockReturnValue(db);
+    mockListServerCategories.mockResolvedValue([
+      {
+        householdId: "household-1",
+        id: "category-1",
+        name: "Groceries",
+        type: "expense",
+        color: "#B48A7B",
+        icon: "🛒",
+        parentId: null,
+        sortOrder: 0,
+        lifecycle: "active",
+        lifecycleChangedAt: null,
+        version: 0,
+        createdBy: "user-1",
+        updatedBy: "user-1",
+        createdAt: new Date("2026-03-28T10:00:00.000Z"),
+        updatedAt: new Date("2026-03-28T10:00:00.000Z"),
+      },
+    ]);
+
+    const { result } = await renderHookWithProviders(() => useCategories("expense"), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data).toEqual([createCategory({ id: "category-1" })]);
+    expect(db.select).not.toHaveBeenCalled();
+  });
+
+  it("does not reuse local Category cache entries after switching to synced", async () => {
+    const client = createTestQueryClient();
+    const localDb = createMockDb({
+      selectResults: [{ all: [createCategory({ id: "local-category", name: "Local" })] }],
+    });
+    mockUseDatabase.mockReturnValue(localDb);
+    const local = await renderHookWithProviders(() => useCategories("expense"), { client });
+    await waitFor(() => expect(local.result.current.isSuccess).toBe(true));
+    client.setQueryData(["categories", "expense", "local-only"], local.result.current.data);
+    await local.unmount();
+
+    mockListServerCategories.mockResolvedValue([
+      {
+        householdId: "household-1",
+        ...createCategory({ id: "synced-category", name: "Synced" }),
+        version: 0,
+        createdBy: "user-1",
+        updatedBy: "user-1",
+        createdAt: new Date("2026-03-28T10:00:00.000Z"),
+        updatedAt: new Date("2026-03-28T10:00:00.000Z"),
+      },
+    ]);
+    const synced = await renderHookWithProviders(() => useCategories("expense"), {
+      client,
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await waitFor(() =>
+      expect(synced.result.current.data).toMatchObject([{ id: "synced-category" }]),
+    );
+    expect(mockListServerCategories).toHaveBeenCalled();
+    expect(client.getQueryData(["categories", "expense", "synced:household-1"])).toMatchObject([
+      { id: "synced-category" },
+    ]);
   });
 
   it("loads a single category by id", async () => {
