@@ -6,6 +6,8 @@ import { renderHookWithProviders } from "@/tests/test-utils/render";
 const mockListAccounts = jest.fn();
 const mockListCategories = jest.fn();
 const mockListTransactions = jest.fn();
+const mockGetDelta = jest.fn();
+const mockApplyCommand = jest.fn();
 
 jest.mock("@/lib/server/orpc", () => ({
   orpc: {
@@ -14,6 +16,8 @@ jest.mock("@/lib/server/orpc", () => ({
       categories: { list: (...args: unknown[]) => mockListCategories(...args) },
       transactions: { list: (...args: unknown[]) => mockListTransactions(...args) },
     },
+    sync: { getDelta: (...args: unknown[]) => mockGetDelta(...args) },
+    commands: { apply: (...args: unknown[]) => mockApplyCommand(...args) },
   },
 }));
 
@@ -52,6 +56,14 @@ describe("useLedger", () => {
       transactions: [{ id: "tx-1", amountMinor: 2500, date: "2026-01-15" }],
       hasMore: false,
     });
+    mockGetDelta.mockResolvedValue({ seq: 4, changes: [], hasMore: false });
+    mockApplyCommand.mockResolvedValue({
+      kind: "applied",
+      seq: 5,
+      effects: ["ledger"],
+      applied: {},
+      replayed: false,
+    });
   });
 
   it("fetches all three lists for the household", async () => {
@@ -68,6 +80,69 @@ describe("useLedger", () => {
     expect(result.current.categories).toHaveLength(1);
     expect(result.current.transactions).toHaveLength(1);
     expect(result.current.hasMoreTransactions).toBe(false);
+    expect(result.current.offlineState).toEqual({ kind: "online" });
+  });
+
+  it("hydrates and writes back through the explicit synced source", async () => {
+    const { result } = await renderHookWithProviders(() => useLedger(HOUSEHOLD_ID));
+
+    await waitFor(() => expect(result.current.isPending).toBe(false));
+
+    await expect(result.current.hydrate({ since: 3 })).resolves.toMatchObject({ seq: 4 });
+    await expect(
+      result.current.writeback({
+        commandId: "command-1",
+        householdId: HOUSEHOLD_ID,
+        kind: "transaction.remove",
+        payload: { transactionId: "tx-1" },
+      }),
+    ).resolves.toMatchObject({ kind: "applied", seq: 5 });
+
+    expect(mockGetDelta).toHaveBeenCalledWith({ householdId: HOUSEHOLD_ID, since: 3 });
+    expect(mockApplyCommand).toHaveBeenCalledWith({
+      commandId: "command-1",
+      householdId: HOUSEHOLD_ID,
+      kind: "transaction.remove",
+      payload: { transactionId: "tx-1" },
+    });
+  });
+
+  it("rejects writeback addressed to a different household", async () => {
+    const { result } = await renderHookWithProviders(() => useLedger(HOUSEHOLD_ID));
+
+    await waitFor(() => expect(result.current.isPending).toBe(false));
+
+    await expect(
+      result.current.writeback({
+        commandId: "command-wrong-household",
+        householdId: "household-2",
+        kind: "transaction.remove",
+        payload: { transactionId: "tx-1" },
+      }),
+    ).rejects.toMatchObject({
+      name: "LedgerDataSourceError",
+      source: "synced",
+      operation: "writeback.submit",
+    });
+    expect(mockApplyCommand).not.toHaveBeenCalled();
+  });
+
+  it("surfaces synced read failures without falling back to another ledger", async () => {
+    mockListAccounts.mockRejectedValueOnce(new Error("network unavailable"));
+
+    const { result } = await renderHookWithProviders(() => useLedger(HOUSEHOLD_ID));
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+
+    expect(result.current.source).toBe("synced");
+    expect(result.current.error).toMatchObject({
+      name: "LedgerDataSourceError",
+      source: "synced",
+      operation: "read.accounts",
+      message: "The synced ledger could not read accounts: network unavailable",
+    });
   });
 
   it("stays idle without a household", async () => {

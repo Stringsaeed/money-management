@@ -162,6 +162,8 @@ describe("use-accounts hooks", () => {
     });
 
     expect(db.select).toHaveBeenCalled();
+    expect(result.current.source).toBe("local");
+    expect(result.current.offlineState).toEqual({ kind: "offline_ready" });
     expect(result.current.data).toEqual([
       createAccount({ id: "account-1" }),
       createAccount({ id: "account-2" }),

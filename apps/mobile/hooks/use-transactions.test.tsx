@@ -163,6 +163,7 @@ describe("use-transactions hooks", () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
+    expect(result.current.source).toBe("local");
     expect(result.current.data).toEqual([
       createTransactionWithDetails({
         id: "transaction-1",

@@ -122,6 +122,7 @@ describe("use-categories hooks", () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
+    expect(result.current.source).toBe("local");
     expect(result.current.data).toEqual([createCategory({ id: "category-1", type: "expense" })]);
   });
 

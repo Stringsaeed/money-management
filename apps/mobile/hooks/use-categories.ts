@@ -1,149 +1,101 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { and, eq } from "drizzle-orm";
-import { useSQLiteContext } from "expo-sqlite";
 
-import { useDatabase } from "@/db/client";
-import { categories } from "@/db/schema";
+import { useLocalCategoryDataSource } from "@/modules/ledger-data-source/local";
 import { categoryKeys, cohereLedgerCache } from "@/modules/ledger-cache";
-import {
-  archiveCategory,
-  deleteCategory,
-  previewCategoryDeletion,
-  restoreCategory,
-} from "@/modules/categories/category-lifecycle";
-import { generateId } from "@/utils/id";
-import { nowIso, toDateString } from "@/utils/date";
 import type { Category } from "@/types";
 
 // ── Queries ────────────────────────────────────────────────────────────────────
 
 export function useCategories(type?: "income" | "expense") {
-  const db = useDatabase();
-  return useQuery({
+  const source = useLocalCategoryDataSource();
+  const query = useQuery({
     queryKey: type ? categoryKeys.byType(type) : categoryKeys.all,
-    queryFn: async (): Promise<Category[]> => {
-      const query = db.select().from(categories).orderBy(categories.sortOrder, categories.name);
-      return (await query
-        .where(
-          type
-            ? and(eq(categories.lifecycle, "active"), eq(categories.type, type))
-            : eq(categories.lifecycle, "active"),
-        )
-        .all()) as Category[];
-    },
+    queryFn: () => source.reads.categories.categories(type),
   });
+  return { ...query, source: source.source };
 }
 
 export function useAllCategories() {
-  const db = useDatabase();
-  return useQuery({
+  const source = useLocalCategoryDataSource();
+  const query = useQuery({
     queryKey: categoryKeys.management,
-    queryFn: async () =>
-      (await db
-        .select()
-        .from(categories)
-        .orderBy(categories.sortOrder, categories.name)
-        .all()) as Category[],
+    queryFn: source.reads.categories.allCategories,
   });
+  return { ...query, source: source.source };
 }
 
 export function useCategory(id: string) {
-  const db = useDatabase();
-  return useQuery({
+  const source = useLocalCategoryDataSource();
+  const query = useQuery({
     queryKey: categoryKeys.detail(id),
-    queryFn: () =>
-      db.select().from(categories).where(eq(categories.id, id)).get() as Category | undefined,
+    queryFn: () => source.reads.categories.category(id),
   });
+  return { ...query, source: source.source };
 }
 
 // ── Mutations ──────────────────────────────────────────────────────────────────
 
 export function useCreateCategory() {
-  const db = useDatabase();
-  const qc = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (
-      data: Omit<Category, "id" | "createdAt" | "updatedAt" | "lifecycle" | "lifecycleChangedAt">,
-    ) => {
-      const now = nowIso();
-      const id = generateId();
-      await db.insert(categories).values({
-        ...data,
-        id,
-        lifecycle: "active",
-        lifecycleChangedAt: null,
-        createdAt: now,
-        updatedAt: now,
-      });
-      return id;
-    },
-    onSuccess: (id) => cohereLedgerCache(qc, { kind: "category.created", id }),
+  const source = useLocalCategoryDataSource();
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: source.mutations.categories.createCategory,
+    onSuccess: (id) => cohereLedgerCache(queryClient, { kind: "category.created", id }),
   });
+  return { ...mutation, source: source.source };
 }
 
 export function useUpdateCategory() {
-  const db = useDatabase();
-  const qc = useQueryClient();
-
-  return useMutation({
+  const source = useLocalCategoryDataSource();
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
     mutationFn: async ({
       id,
       data,
     }: {
       id: string;
       data: Partial<Omit<Category, "id" | "createdAt" | "lifecycle" | "lifecycleChangedAt">>;
-    }) => {
-      await db
-        .update(categories)
-        .set({ ...data, updatedAt: nowIso() })
-        .where(eq(categories.id, id));
-    },
-    onSuccess: (_, { id }) => cohereLedgerCache(qc, { kind: "category.updated", id }),
+    }) => source.mutations.categories.updateCategory(id, data),
+    onSuccess: (_, { id }) => cohereLedgerCache(queryClient, { kind: "category.updated", id }),
   });
+  return { ...mutation, source: source.source };
 }
 
 export function useDeleteCategory() {
-  const database = useSQLiteContext();
-  const qc = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await deleteCategory(database, id);
-    },
-    onSuccess: (_, id) => cohereLedgerCache(qc, { kind: "category.deleted", id }),
+  const source = useLocalCategoryDataSource();
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: source.mutations.categories.deleteCategory,
+    onSuccess: (_, id) => cohereLedgerCache(queryClient, { kind: "category.deleted", id }),
   });
+  return { ...mutation, source: source.source };
 }
 
 export function useCategoryDeletionPreview(id: string) {
-  const database = useSQLiteContext();
-  return useQuery({
+  const source = useLocalCategoryDataSource();
+  const query = useQuery({
     queryKey: [...categoryKeys.detail(id), "deletion-preview"],
-    queryFn: () => previewCategoryDeletion(database, id),
+    queryFn: () => source.reads.categories.deletionPreview(id),
   });
+  return { ...query, source: source.source };
 }
 
 export function useArchiveCategory() {
-  const database = useSQLiteContext();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => {
-      const archivedAt = new Date();
-      return archiveCategory(database, {
-        categoryId: id,
-        localDate: toDateString(archivedAt),
-        now: archivedAt.toISOString(),
-      });
-    },
-    onSuccess: (_, id) => cohereLedgerCache(qc, { kind: "category.archived", id }),
+  const source = useLocalCategoryDataSource();
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: source.mutations.categories.archiveCategory,
+    onSuccess: (_, id) => cohereLedgerCache(queryClient, { kind: "category.archived", id }),
   });
+  return { ...mutation, source: source.source };
 }
 
 export function useRestoreCategory() {
-  const database = useSQLiteContext();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => restoreCategory(database, { categoryId: id, now: nowIso() }),
-    onSuccess: (_, id) => cohereLedgerCache(qc, { kind: "category.restored", id }),
+  const source = useLocalCategoryDataSource();
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: source.mutations.categories.restoreCategory,
+    onSuccess: (_, id) => cohereLedgerCache(queryClient, { kind: "category.restored", id }),
   });
+  return { ...mutation, source: source.source };
 }
