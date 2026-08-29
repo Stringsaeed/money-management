@@ -81,6 +81,22 @@ async function loadAccount(
   return rows[0] ?? null;
 }
 
+async function validateExistingAccountAccess(
+  ctx: PlanContext,
+  existing: TransactionRow,
+): Promise<PlanRejection | null> {
+  for (const accountId of [existing.accountId, existing.toAccountId]) {
+    if (!accountId) continue;
+    const account = await loadAccount(ctx, accountId);
+    if (!account) {
+      return { kind: "missing_entity", entityType: "account", entityId: accountId };
+    }
+    const rejection = privateAccountAccessRejection(ctx, account);
+    if (rejection) return rejection;
+  }
+  return null;
+}
+
 /**
  * ADR-0005: a correction to a past transaction recalculates its Budget
  * Period and every later Rollover. Until #90 builds live waterfalls, that
@@ -312,6 +328,10 @@ export const transactionHandlers = {
           entityType: "transaction",
           entityId: input.transactionId,
         };
+      }
+      const existingAccessRejection = await validateExistingAccountAccess(ctx, existing);
+      if (existingAccessRejection) {
+        return existingAccessRejection;
       }
       const stale = checkExpectedVersion(existing, preconditions);
       if (stale) {

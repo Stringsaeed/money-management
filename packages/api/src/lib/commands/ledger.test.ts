@@ -381,6 +381,7 @@ describe("ledger commands — transactions", () => {
       .set({ ownerUserId: OWNER, visibility: "private" })
       .where(eq(ledgerAccount.id, "acc-1"));
     await seedTransaction({ id: "private-transaction" });
+    await seedAccount({ id: "acc-public", name: "Shared Account" });
 
     await expect(
       applyAs(MEMBER, {
@@ -399,6 +400,13 @@ describe("ledger commands — transactions", () => {
       applyAs(MEMBER, {
         ...makeEnvelope("transaction.remove"),
         payload: { transactionId: "private-transaction" },
+      }),
+    ).resolves.toMatchObject({ kind: "forbidden", requiredCapability: "accounts:private.owner" });
+
+    await expect(
+      applyAs(MEMBER, {
+        ...makeEnvelope("transaction.edit"),
+        payload: { transactionId: "private-transaction", accountId: "acc-public" },
       }),
     ).resolves.toMatchObject({ kind: "forbidden", requiredCapability: "accounts:private.owner" });
   });

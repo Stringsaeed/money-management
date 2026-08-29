@@ -163,6 +163,8 @@ async function seedExpense(
 }
 
 interface CardPaymentOverrides {
+  commandId?: string;
+  transactionId?: string;
   cardAccountId?: string;
   fundingAccountId?: string;
   amountMinor?: number;
@@ -174,10 +176,11 @@ function payCard(overrides: CardPaymentOverrides = {}, userId = OWNER): Promise<
     db,
     userId,
     envelope: {
-      commandId: crypto.randomUUID(),
+      commandId: overrides.commandId ?? crypto.randomUUID(),
       householdId: HOUSEHOLD_ID,
       kind: "card_payment.record",
       payload: {
+        transactionId: overrides.transactionId,
         cardAccountId: overrides.cardAccountId ?? "card-1",
         fundingAccountId: overrides.fundingAccountId ?? "acc-1",
         currency: "USD",
@@ -189,6 +192,8 @@ function payCard(overrides: CardPaymentOverrides = {}, userId = OWNER): Promise<
 }
 
 interface RefundOverrides {
+  commandId?: string;
+  transactionId?: string;
   originalTransactionId: string;
   depositAccountId?: string;
   amountMinor?: number;
@@ -200,10 +205,11 @@ function linkRefund(overrides: RefundOverrides, userId = OWNER): Promise<Command
     db,
     userId,
     envelope: {
-      commandId: crypto.randomUUID(),
+      commandId: overrides.commandId ?? crypto.randomUUID(),
       householdId: HOUSEHOLD_ID,
       kind: "refund.link",
       payload: {
+        transactionId: overrides.transactionId,
         originalTransactionId: overrides.originalTransactionId,
         depositAccountId: overrides.depositAccountId ?? "acc-1",
         currency: "USD",
@@ -493,6 +499,15 @@ describe("card_payment.record", () => {
     expect(transfers).toHaveLength(0);
   });
 
+  it("adopts the client Transaction id and replays without replacement", async () => {
+    const input = { commandId: "command-payment-replay", transactionId: "payment-client-id" };
+    expect(expectApplied(await payCard(input)).replayed).toBe(false);
+    expect(expectApplied(await payCard(input)).replayed).toBe(true);
+
+    const rows = await db.select().from(transaction).where(eq(transaction.id, "payment-client-id"));
+    expect(rows).toHaveLength(1);
+  });
+
   async function assignToEnvelopeDirectly(amountMinor: number) {
     await applyCommand({
       db,
@@ -601,6 +616,20 @@ describe("refund.link", () => {
     // A third refund would push the cumulative total past 5_000.
     const third = await linkRefund({ originalTransactionId: "tx-original", amountMinor: 1_000 });
     expect(third.kind).toBe("invalid_intent");
+  });
+
+  it("adopts the client Transaction id and replays the linked Refund exactly once", async () => {
+    const input = {
+      commandId: "command-refund-replay",
+      transactionId: "refund-client-id",
+      originalTransactionId: "tx-original",
+    };
+    expect(expectApplied(await linkRefund(input)).replayed).toBe(false);
+    expect(expectApplied(await linkRefund(input)).replayed).toBe(true);
+
+    const rows = await db.select().from(transaction).where(eq(transaction.id, "refund-client-id"));
+    expect(rows).toHaveLength(1);
+    expect(await db.select().from(refundLink)).toHaveLength(1);
   });
 
   it("rejects refunds of non-expense transactions", async () => {
