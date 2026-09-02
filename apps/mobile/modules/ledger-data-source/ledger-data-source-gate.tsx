@@ -17,7 +17,6 @@ type LedgerGateState = "loading" | "failure" | "local" | "ready";
 
 interface LedgerGateFacts {
   readonly sessionPending: boolean;
-  readonly sessionFailed: boolean;
   readonly authenticated: boolean;
   readonly householdsPending: boolean;
   readonly householdsFailed: boolean;
@@ -34,7 +33,6 @@ export function LedgerDataSourceGate({ children }: { readonly children: ReactNod
   const reason = useSyncModeStore((state) => state.reason);
   const gateState = resolveLedgerGateState({
     sessionPending: session.isPending,
-    sessionFailed: Boolean(session.error),
     authenticated: Boolean(session.data),
     householdsPending: households.isPending,
     householdsFailed: households.isError,
@@ -100,7 +98,9 @@ function selectReadyLedgerSource(
 
 function resolveLedgerGateState(facts: LedgerGateFacts): LedgerGateState {
   if (facts.sessionPending) return "loading";
-  if (facts.sessionFailed && !facts.authenticated) return "failure";
+  // Anonymous / signed-out users stay on the local ledger even when the auth
+  // session probe errors (server down, SecureStore hiccup). Blocking here would
+  // strand local-first use behind household infrastructure.
   if (!facts.authenticated) return "local";
   if (facts.householdsPending) return "loading";
   if (facts.migrationPending) return "loading";
