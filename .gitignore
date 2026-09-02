@@ -58,3 +58,6 @@ graphify-out
 
 # Alchemy generated bundles + local runtime state
 .alchemy/
+
+# verify-trove proof dumps (skill keeps path; do not commit screenshots)
+.cursor/skills/verify-trove/artifacts/
