@@ -140,6 +140,29 @@ export default defineConfig({
   ],
   overrides: [
     {
+      files: ["apps/mobile/**/*.{ts,tsx}"],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            paths: [
+              {
+                name: "@/lib/auth-client",
+                message:
+                  "authClient is private to modules/access. Use useAccess() or access actions.",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      files: ["apps/mobile/modules/access/**", "apps/mobile/lib/server/orpc.ts"],
+      rules: {
+        "no-restricted-imports": "off",
+      },
+    },
+    {
       files: ["**/metro.config.js", "apps/mobile/scripts/**/*.js", "apps/mobile/scripts/**/*.mjs"],
       env: {
         node: true,

@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { useDatabase } from "@/db/client";
 import { useActiveHousehold } from "@/hooks/use-households";
-import { authClient } from "@/lib/auth-client";
+import { signedInUserId, useAccess } from "@/modules/access";
 import {
   discardRejectedCommand,
   listRejectedChanges,
@@ -23,9 +23,8 @@ export function useRejectedChanges() {
   const db = useDatabase();
   const queryClient = useQueryClient();
   const { activeHousehold } = useActiveHousehold();
-  const { data: session } = authClient.useSession();
+  const userId = signedInUserId(useAccess());
   const householdId = activeHousehold?.householdId ?? null;
-  const userId = session?.user.id ?? null;
 
   const [changes, setChanges] = useState<readonly RejectedChange[]>([]);
   const [isLoading, setIsLoading] = useState(true);

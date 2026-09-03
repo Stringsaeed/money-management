@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 import { HOUSEHOLD_CHANNEL_PREFIX } from "@trove/protocol";
 
-import { authClient } from "@/lib/auth-client";
+import { getAuthCookie } from "@/modules/access";
 
 /** First reconnect delay — doubles per consecutive failure, capped below. */
 const PUSH_RECONNECT_BASE_MS = 1_000;
@@ -82,7 +82,7 @@ export function useHouseholdPush(householdId: string | null, onNotice: () => voi
       }
       let connection: WebSocket;
       try {
-        const cookie = authClient.getCookie();
+        const cookie = getAuthCookie();
         // RN-only options argument carries the session cookie for the upgrade.
         connection = new (WebSocket as unknown as RNWebSocket)(
           pushSocketUrl(activeHouseholdId),

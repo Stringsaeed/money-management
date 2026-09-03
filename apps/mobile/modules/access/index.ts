@@ -1,3 +1,6 @@
+export { coreFromAccess } from "./core-from-state";
+export { redeemMagicToken } from "./actions";
+export type { AuthActionFailure, AuthActionResult } from "./actions";
 export {
   nextClaim,
   pickActiveHousehold,
@@ -5,8 +8,14 @@ export {
   resolveReturnDestination,
   selectLedgerSourceForAccess,
 } from "./access";
-export { parseAuthLink } from "./links";
-export { PROFILE_HOUSEHOLD_HREF, returnTo } from "./return-to";
+export { AuthLinkGate } from "./auth-link-gate";
+export { HOUSEHOLDS_KEY } from "./households-key";
+export { parseAuthLink, parseAuthLinkFailure } from "./links";
+export { AccessProvider } from "./provider";
+export { firstRouteParam } from "./route-param";
+export { hrefForInternal, PROFILE_HOUSEHOLD_HREF, returnTo, serializeReturnTo } from "./return-to";
+export { endRemoteSession, getAuthCookie, probeSession } from "./session-probe";
+export { signedInUserId, useAccess } from "./use-access";
 export type {
   AccessCore,
   AccessState,
@@ -18,6 +27,8 @@ export type {
   IdentityClaim,
   InternalHref,
   LinkGrant,
+  LinkOperation,
+  LinkOutcome,
   MembershipSummary,
   ResolveAccessInput,
   ReturnTo,

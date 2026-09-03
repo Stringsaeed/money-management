@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { parseAuthLink } from "./links";
+import { parseAuthLink, parseAuthLinkFailure } from "./links";
 
 describe("parseAuthLink", () => {
   it("parses https and trove magic-link tokens", () => {
@@ -40,5 +40,12 @@ describe("parseAuthLink", () => {
     const grant = parseAuthLink("https://auth.trove.ing/l/magic?token=abc&cookie=session-material");
     expect(grant).toEqual({ kind: "sign_in_token", token: "abc" });
     expect(grant).not.toMatchObject({ kind: "session_cookie" });
+  });
+
+  it("treats trusted error redirects as unusable", () => {
+    expect(parseAuthLinkFailure("https://auth.trove.ing/l/magic?error=INVALID_TOKEN")).toBe(
+      "unusable",
+    );
+    expect(parseAuthLinkFailure("https://evil.example/l/magic?error=INVALID_TOKEN")).toBeNull();
   });
 });

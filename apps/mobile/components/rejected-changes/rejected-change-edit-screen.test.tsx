@@ -6,7 +6,7 @@ import type { RejectedChange } from "@/lib/sync/outbox";
 
 const mockGetRejectedChange = jest.fn();
 const mockResubmit = jest.fn();
-const mockUseSession = jest.requireMock("@/lib/auth-client").authClient.useSession as jest.Mock;
+const mockUseAccess = jest.requireMock("@/modules/access").useAccess as jest.Mock;
 
 jest.mock("expo-router", () => ({
   router: { push: jest.fn(), back: jest.fn() },
@@ -53,7 +53,14 @@ describe("RejectedChangeEditScreen", () => {
   beforeEach(() => {
     mockGetRejectedChange.mockReset();
     mockResubmit.mockReset();
-    mockUseSession.mockReturnValue({ data: { user: { id: "user-1" } }, isPending: false });
+    mockUseAccess.mockReturnValue({
+      kind: "signed_in",
+      user: { userId: "user-1", email: "ada@trove.ing", displayName: "Ada" },
+      household: { kind: "none" },
+      memberships: [],
+      setActiveHousehold: jest.fn(),
+      signOut: jest.fn(),
+    });
   });
 
   it("pre-populates the form with the original payload values and shows the reason", async () => {

@@ -12,6 +12,12 @@ export function parseAuthLink(url: string): LinkGrant | null {
   return kind === "magic" ? { kind: "sign_in_token", token } : { kind: "reset_token", token };
 }
 
+export function parseAuthLinkFailure(url: string): "unusable" | null {
+  const parsed = parseAbsoluteUrl(url);
+  if (!parsed || !isTrustedAuthCarrier(parsed)) return null;
+  return parsed.searchParams.get("error") ? "unusable" : null;
+}
+
 function parseAbsoluteUrl(url: string): URL | null {
   try {
     return new URL(url);

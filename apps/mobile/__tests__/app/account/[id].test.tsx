@@ -11,7 +11,7 @@ const mockUseTransactions = jest.fn();
 const mockUseLedgerAccounts = jest.fn();
 const mockUseActiveHousehold = jest.fn();
 const mockUseAccountPrivacy = jest.fn();
-const mockUseSession = jest.fn();
+const mockUseAccess = jest.fn();
 const mockSetSelectedMonth = jest.fn();
 const mockTransactionGroup = jest.fn((_: unknown) => null);
 
@@ -43,8 +43,10 @@ jest.mock("@/hooks/use-account-privacy", () => ({
   useAccountPrivacy: (...args: unknown[]) => mockUseAccountPrivacy(...args),
 }));
 
-jest.mock("@/lib/auth-client", () => ({
-  authClient: { useSession: () => mockUseSession() },
+jest.mock("@/modules/access", () => ({
+  useAccess: () => mockUseAccess(),
+  signedInUserId: (access: { kind: string; user?: { userId: string } }) =>
+    access.kind === "signed_in" ? (access.user?.userId ?? null) : null,
 }));
 
 jest.mock("@/stores/ui-store", () => ({
@@ -62,7 +64,14 @@ jest.mock("@/components/transaction/transaction-group", () => ({
 describe("app/account/[id]", () => {
   beforeEach(() => {
     mockUseLocalSearchParams.mockReturnValue({ id: "account-1" });
-    mockUseSession.mockReturnValue({ data: { user: { id: "user-owner" } } });
+    mockUseAccess.mockReturnValue({
+      kind: "signed_in",
+      user: { userId: "user-owner", email: "ada@trove.ing", displayName: "Ada" },
+      household: { kind: "none" },
+      memberships: [],
+      setActiveHousehold: jest.fn(),
+      signOut: jest.fn(),
+    });
     mockUseActiveHousehold.mockReturnValue({ activeHousehold: null });
     mockUseLedgerAccounts.mockReturnValue({ data: [] });
     mockUseAccountPrivacy.mockReturnValue({ error: null, isPending: false, mutate: jest.fn() });

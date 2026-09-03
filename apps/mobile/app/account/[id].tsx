@@ -10,7 +10,7 @@ import { useAccountPrivacy } from "@/hooks/use-account-privacy";
 import { useAuthorizedLedgerAccounts } from "@/hooks/use-authorized-ledger-accounts";
 import { useActiveHousehold } from "@/hooks/use-households";
 import { useTransactions } from "@/hooks/use-transactions";
-import { authClient } from "@/lib/auth-client";
+import { signedInUserId, useAccess } from "@/modules/access";
 import { useUIStore } from "@/stores/ui-store";
 import { formatMonth, addMonths } from "@/utils/date";
 import type { DayGroup } from "@/types";
@@ -31,7 +31,7 @@ function groupByDay(transactions: import("@/types").TransactionWithDetails[]): D
 
 export default function AccountDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: session } = authClient.useSession();
+  const userId = signedInUserId(useAccess());
   const { activeHousehold } = useActiveHousehold();
   const householdId = activeHousehold?.householdId ?? null;
   const { data: serverAccounts = [] } = useAuthorizedLedgerAccounts(householdId);
@@ -141,7 +141,7 @@ export default function AccountDetailScreen() {
         </View>
       </View>
 
-      {serverAccount && serverAccount.ownerUserId === session?.user.id ? (
+      {serverAccount && serverAccount.ownerUserId === userId ? (
         <View className="px-4 pt-4">
           <AccountPrivacyToggle
             isPending={accountPrivacy.isPending}
