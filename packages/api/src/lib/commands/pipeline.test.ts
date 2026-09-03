@@ -313,4 +313,24 @@ describe("commands.apply — intent validation", () => {
     }
     expect(await db.select().from(householdChange)).toHaveLength(0);
   });
+
+  it("rejects removed or unknown command kinds as invalid_intent", async () => {
+    const result = await applyAs(
+      OWNER,
+      makeEnvelope({
+        kind: "card_payment.record" as CommandKind,
+        payload: {},
+      }),
+    );
+    expect(result).toEqual({
+      kind: "invalid_intent",
+      issues: [
+        {
+          field: "kind",
+          message: 'Unknown or unsupported command kind "card_payment.record".',
+        },
+      ],
+    });
+    expect(await db.select().from(householdChange)).toHaveLength(0);
+  });
 });

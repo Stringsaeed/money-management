@@ -2,11 +2,13 @@ import type { SQL } from "drizzle-orm";
 import { and, eq } from "drizzle-orm";
 import type {
   CommandEnvelope,
+  CommandKind,
   CommandResult,
   EffectTag,
   HouseholdRole,
   Precondition,
 } from "@trove/protocol";
+import { isCommandKind } from "@trove/protocol";
 import { ORPCError } from "@orpc/server";
 
 import { commandResult, householdChange } from "@trove/db/schema/commands";
@@ -61,10 +63,14 @@ export function isPlanRejection(value: CommandPlan | PlanRejection): value is Pl
   return !("statements" in value);
 }
 
+export type ApplyCommandEnvelope = Omit<CommandEnvelope, "kind"> & {
+  readonly kind: string;
+};
+
 export interface ApplyCommandArgs {
   db: CommandDatabase;
   userId: string;
-  envelope: CommandEnvelope;
+  envelope: ApplyCommandEnvelope;
   /**
    * Best-effort realtime notification hook (#93): invoked after the change is
    * durably committed. Failures are swallowed — push only saves polling
@@ -73,6 +79,18 @@ export interface ApplyCommandArgs {
   publishChange?: ChangePublisher;
   /** Keeps a best-effort publish alive after the Worker returns its response. */
   waitUntil?: (promise: Promise<unknown>) => void;
+}
+
+function unknownKindRejection(kind: string): PlanRejection {
+  return {
+    kind: "invalid_intent",
+    issues: [
+      {
+        field: "kind",
+        message: `Unknown or unsupported command kind "${kind}".`,
+      },
+    ],
+  };
 }
 
 /**
@@ -87,7 +105,7 @@ export async function applyCommand({
   publishChange,
   waitUntil,
 }: ApplyCommandArgs): Promise<CommandResult> {
-  const kind = envelope.kind;
+  const rawKind = envelope.kind;
 
   // 1. Authorization against live membership — a typed rejection, not an
   //    HTTP error, so clients can render the Rejected Changes inbox.
@@ -98,8 +116,19 @@ export async function applyCommand({
     .limit(1);
   const actorMembership = membershipRows[0];
   if (!actorMembership) {
-    return { kind: "forbidden", role: null, requiredCapability: requiredCapability(kind) };
+    return {
+      kind: "forbidden",
+      role: null,
+      requiredCapability: requiredCapability(rawKind),
+    };
   }
+
+  // Removed / unknown kinds must be typed rejections (outbox drain), not
+  // Zod 400s or capability-matrix crashes.
+  if (!isCommandKind(rawKind)) {
+    return unknownKindRejection(rawKind);
+  }
+  const kind: CommandKind = rawKind;
   const actorRole = actorMembership.role as HouseholdRole;
   if (!can(actorRole, kind)) {
     return { kind: "forbidden", role: actorRole, requiredCapability: requiredCapability(kind) };
@@ -137,9 +166,7 @@ export async function applyCommand({
   // 3. Parse the kind-specific payload.
   const handler: CommandHandler | undefined = COMMAND_HANDLERS[kind];
   if (!handler) {
-    throw new ORPCError("NOT_IMPLEMENTED", {
-      message: `Command kind "${kind}" has no registered handler yet.`,
-    });
+    return unknownKindRejection(kind);
   }
   const parsed = handler.parsePayload(envelope.payload);
   if (!parsed.ok) {

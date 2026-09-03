@@ -1,9 +1,10 @@
-import { COMMAND_KINDS } from "@trove/protocol";
 import { z } from "zod";
 
 /**
  * Wire schema for a command envelope posted to `commands.apply`.
  * Payloads stay opaque here — each handler owns its payload schema.
+ * `kind` is a non-empty string so removed or unknown kinds reach the
+ * pipeline and return typed `invalid_intent` instead of Zod 400s.
  */
 export const preconditionSchema = z.object({
   entityId: z.string().min(1).optional(),
@@ -15,7 +16,7 @@ export const preconditionSchema = z.object({
 export const commandEnvelopeSchema = z.object({
   commandId: z.uuid(),
   householdId: z.string().min(1),
-  kind: z.enum(COMMAND_KINDS),
+  kind: z.string().min(1),
   payload: z.unknown(),
   preconditions: z.array(preconditionSchema).max(20).optional(),
   issuedAt: z.iso.datetime().optional(),

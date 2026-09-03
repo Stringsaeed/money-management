@@ -24,6 +24,6 @@ export function can(role: HouseholdRole, kind: CommandKind): boolean {
 }
 
 /** Label surfaced on `forbidden` results so clients know what was missing. */
-export function requiredCapability(kind: CommandKind): string {
+export function requiredCapability(kind: string): string {
   return `commands:${kind}`;
 }
