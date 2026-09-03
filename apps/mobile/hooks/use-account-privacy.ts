@@ -4,7 +4,6 @@ import type { AuthorizedLedgerAccount } from "@/hooks/use-authorized-ledger-acco
 import { useAccountDataSource } from "@/modules/ledger-data-source/coordinator";
 import { cohereLedgerCache } from "@/modules/ledger-cache";
 
-/** Updates visibility through the Account resource. Local-only ledgers have no remote toggle. */
 export function useAccountPrivacy(
   account: AuthorizedLedgerAccount | undefined,
   householdId: string | null,

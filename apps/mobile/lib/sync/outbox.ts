@@ -270,12 +270,10 @@ async function rebaseInvalidDependents(
 
 function mutableEntityId(command: CommandEnvelope): string | null {
   if (command.kind === "transaction.edit" || command.kind === "transaction.remove") {
-    // SAFETY: these command kinds are emitted only with their registered transaction payload.
     const payload = command.payload as { transactionId: string };
     return payload.transactionId;
   }
   if (command.kind === "account.update" || command.kind === "account.archive") {
-    // SAFETY: these command kinds are emitted only with their registered account payload.
     const payload = command.payload as { accountId: string };
     return payload.accountId;
   }

@@ -92,7 +92,6 @@ interface ProjectionState {
   readonly transactions: Map<string, SyncedTransaction>;
 }
 
-/** Folds queued Transaction and Account intents over one authorized server snapshot. */
 export function projectPendingTransactions(
   snapshot: SyncedTransactionSnapshot,
   commands: readonly ProjectableCommand[],
@@ -146,7 +145,6 @@ function projectCommand(state: ProjectionState, command: ProjectableCommand): vo
 }
 
 function projectAccountCreate(state: ProjectionState, command: ProjectableCommand): void {
-  // SAFETY: createSyncedLedgerDataSource is the sole writer for this command kind.
   const input = command.payload as PendingAccountCreatePayload;
   if (state.accounts.has(input.id)) return;
   const timestamp = command.issuedAt ?? "1970-01-01T00:00:00.000Z";
@@ -174,7 +172,6 @@ function projectAccountCreate(state: ProjectionState, command: ProjectableComman
 }
 
 function projectAccountUpdate(state: ProjectionState, command: ProjectableCommand): void {
-  // SAFETY: createSyncedLedgerDataSource is the sole writer for this command kind.
   const input = command.payload as PendingAccountUpdatePayload;
   const existing = state.accounts.get(input.accountId);
   if (!existing || existing.lifecycle === "archived") return;
@@ -193,7 +190,6 @@ function projectAccountUpdate(state: ProjectionState, command: ProjectableComman
 }
 
 function projectAccountArchive(state: ProjectionState, command: ProjectableCommand): void {
-  // SAFETY: createSyncedLedgerDataSource is the sole writer for this command kind.
   const input = command.payload as PendingAccountArchivePayload;
   const existing = state.accounts.get(input.accountId);
   if (!existing || existing.lifecycle === "archived") return;
