@@ -19,6 +19,7 @@ export const COMMAND_KINDS = [
   "account.create",
   "account.update",
   "account.archive",
+  "account.restore",
   "category.create",
   "category.update",
   "category.archive",

@@ -5,6 +5,7 @@ const KIND_LABELS: Record<CommandKind, string> = {
   "account.create": "New account",
   "account.update": "Update account",
   "account.archive": "Archive account",
+  "account.restore": "Restore account",
   "category.create": "New category",
   "category.update": "Update category",
   "category.archive": "Archive category",
