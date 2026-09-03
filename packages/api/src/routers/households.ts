@@ -74,6 +74,7 @@ export const householdsRouter = {
         role: "owner",
         isActive: true,
       });
+      await activateMembership(db, userId, id);
       return { householdId: id };
     }),
 
