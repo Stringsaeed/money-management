@@ -522,6 +522,46 @@ describe("household-scoped projection and drain", () => {
     expect(summary).toMatchObject({ applied: 1, rejected: 1, pending: 0 });
     expect(sent[1].preconditions).toEqual([{ entityId: "account-1", expectedVersion: 4 }]);
   });
+
+  it("rebases a later Category edit after an invalid dependent update is rejected", async () => {
+    const db = await setupDb();
+    await enqueueCommand(
+      db,
+      makeInput({
+        commandId: "cmd-category-invalid",
+        userId: "user-1",
+        kind: "category.update",
+        payload: { categoryId: "category-1", name: "" },
+        preconditions: [{ entityId: "category-1", expectedVersion: 4 }],
+      }),
+    );
+    await enqueueCommand(
+      db,
+      makeInput({
+        commandId: "cmd-category-valid",
+        userId: "user-1",
+        kind: "category.archive",
+        payload: { categoryId: "category-1" },
+        preconditions: [{ entityId: "category-1", expectedVersion: 5 }],
+      }),
+    );
+    const sent: CommandEnvelope[] = [];
+
+    const summary = await drainOutbox(
+      db,
+      HOUSEHOLD_ID,
+      async (envelope) => {
+        sent.push(envelope);
+        return sent.length === 1
+          ? { kind: "invalid_intent", issues: [{ field: "name", message: "required" }] }
+          : applied();
+      },
+      "user-1",
+    );
+
+    expect(summary).toMatchObject({ applied: 1, rejected: 1, pending: 0 });
+    expect(sent[1].preconditions).toEqual([{ entityId: "category-1", expectedVersion: 4 }]);
+  });
 });
 
 describe("truncateOutbox", () => {
