@@ -1,6 +1,7 @@
 export {
   COMMAND_KINDS,
   HOUSEHOLD_ROLES,
+  isCommandKind,
   type AppliedResult,
   type CommandEnvelope,
   type CommandKind,

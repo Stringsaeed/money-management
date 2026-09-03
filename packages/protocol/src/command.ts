@@ -32,6 +32,16 @@ export const COMMAND_KINDS = [
 
 export type CommandKind = (typeof COMMAND_KINDS)[number];
 
+/** True when `value` is a registered command kind on the wire vocabulary. */
+export function isCommandKind(value: string): value is CommandKind {
+  for (const kind of COMMAND_KINDS) {
+    if (kind === value) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /** Household roles resolved through the capability map, `can(role, kind)`. */
 export type HouseholdRole = "owner" | "admin" | "member" | "viewer";
 
