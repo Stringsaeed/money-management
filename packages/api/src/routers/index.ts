@@ -1,6 +1,6 @@
 import type { RouterClient } from "@orpc/server";
 
-import { protectedProcedure, publicProcedure } from "../index";
+import { publicProcedure } from "../index";
 import { activityRouter } from "./activity";
 import { budgetRouter } from "./budget";
 import { commandsRouter } from "./commands";
@@ -14,12 +14,6 @@ import { syncRouter } from "./sync";
 export const appRouter = {
   healthCheck: publicProcedure.handler(() => {
     return "OK";
-  }),
-  privateData: protectedProcedure.handler(({ context }) => {
-    return {
-      message: "This is private",
-      user: context.session?.user,
-    };
   }),
   households: householdsRouter,
   commands: commandsRouter,
