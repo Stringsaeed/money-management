@@ -5,6 +5,9 @@ import {
   type PendingAccountArchivePayload,
   type PendingAccountCreatePayload,
   type PendingAccountUpdatePayload,
+  type PendingCategoryArchivePayload,
+  type PendingCategoryCreatePayload,
+  type PendingCategoryUpdatePayload,
   type PendingTransactionCommandKind,
   type PendingTransactionPayload,
 } from "./pending-transaction-projector";
@@ -60,7 +63,25 @@ const snapshot: SyncedTransactionSnapshot = {
       updatedAt: timestamp,
     },
   ],
-  categories: [],
+  categories: [
+    {
+      householdId: HOUSEHOLD_ID,
+      id: "groceries",
+      name: "Groceries",
+      type: "expense",
+      color: "#B48A7B",
+      icon: "🛒",
+      parentId: null,
+      sortOrder: 0,
+      lifecycle: "active",
+      lifecycleChangedAt: null,
+      version: 0,
+      createdBy: "user-1",
+      updatedBy: "user-1",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+  ],
   transactions: [
     {
       householdId: HOUSEHOLD_ID,
@@ -103,6 +124,22 @@ const command = (
 const accountCommand = (
   kind: "account.create" | "account.update" | "account.archive",
   payload: PendingAccountCreatePayload | PendingAccountUpdatePayload | PendingAccountArchivePayload,
+  sequence: number,
+): ProjectableCommand => ({
+  commandId: `command-${sequence}`,
+  householdId: HOUSEHOLD_ID,
+  kind,
+  payload,
+  issuedAt: `2026-01-0${sequence}T00:00:00.000Z`,
+  status: "pending",
+});
+
+const categoryCommand = (
+  kind: "category.create" | "category.update" | "category.archive",
+  payload:
+    | PendingCategoryCreatePayload
+    | PendingCategoryUpdatePayload
+    | PendingCategoryArchivePayload,
   sequence: number,
 ): ProjectableCommand => ({
   commandId: `command-${sequence}`,
@@ -298,6 +335,130 @@ describe("projectPendingTransactions", () => {
     expect(projected.transactions.find((row) => row.id === "first")).toMatchObject({
       accountId: "everyday",
       currency: "AED",
+    });
+  });
+
+  it("inserts a pending Category create", () => {
+    const projected = projectPendingTransactions(snapshot, [
+      categoryCommand(
+        "category.create",
+        {
+          id: "dining",
+          name: "Dining",
+          type: "expense",
+          color: "#B48A7B",
+          icon: "🍽️",
+          parentId: null,
+          sortOrder: 1,
+        },
+        1,
+      ),
+    ]);
+
+    expect(projected.categories.find((row) => row.id === "dining")).toMatchObject({
+      name: "Dining",
+      type: "expense",
+      lifecycle: "active",
+      version: 0,
+    });
+  });
+
+  it("skips a duplicate Category create", () => {
+    const projected = projectPendingTransactions(snapshot, [
+      categoryCommand(
+        "category.create",
+        {
+          id: "groceries",
+          name: "Replacement",
+          type: "income",
+          color: "#111",
+          icon: "🏦",
+          parentId: null,
+          sortOrder: 9,
+        },
+        1,
+      ),
+    ]);
+
+    expect(projected.categories.find((row) => row.id === "groceries")).toMatchObject({
+      name: "Groceries",
+      type: "expense",
+      version: 0,
+    });
+  });
+
+  it("patches a Category update and bumps version", () => {
+    const projected = projectPendingTransactions(snapshot, [
+      categoryCommand(
+        "category.update",
+        { categoryId: "groceries", name: "Food", sortOrder: 4 },
+        1,
+      ),
+    ]);
+
+    expect(projected.categories.find((row) => row.id === "groceries")).toMatchObject({
+      name: "Food",
+      sortOrder: 4,
+      version: 1,
+    });
+  });
+
+  it("keeps an archived Category row and skips a later update", () => {
+    const projected = projectPendingTransactions(snapshot, [
+      categoryCommand("category.archive", { categoryId: "groceries" }, 1),
+      categoryCommand("category.update", { categoryId: "groceries", name: "Gone" }, 2),
+    ]);
+
+    expect(projected.categories.find((row) => row.id === "groceries")).toMatchObject({
+      name: "Groceries",
+      lifecycle: "archived",
+      version: 1,
+    });
+  });
+
+  it("skips archive and update when the Category is missing", () => {
+    const projected = projectPendingTransactions(snapshot, [
+      categoryCommand("category.update", { categoryId: "missing", name: "Nope" }, 1),
+      categoryCommand("category.archive", { categoryId: "missing" }, 2),
+    ]);
+
+    expect(projected.categories.map((row) => row.id)).toEqual(["groceries"]);
+  });
+
+  it("lets a later Transaction create land on a pending Category create", () => {
+    const projected = projectPendingTransactions(snapshot, [
+      categoryCommand(
+        "category.create",
+        {
+          id: "dining",
+          name: "Dining",
+          type: "expense",
+          color: "#B48A7B",
+          icon: "🍽️",
+          parentId: null,
+          sortOrder: 1,
+        },
+        1,
+      ),
+      command(
+        "transaction.create",
+        {
+          id: "first",
+          type: "expense",
+          amountMinor: 80,
+          date: "2026-01-03",
+          accountId: "cash",
+          categoryId: "dining",
+        },
+        2,
+      ),
+    ]);
+
+    expect(projected.transactions.find((row) => row.id === "first")).toMatchObject({
+      categoryId: "dining",
+    });
+    expect(projected.categories.find((row) => row.id === "dining")).toMatchObject({
+      name: "Dining",
     });
   });
 });

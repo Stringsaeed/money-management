@@ -1,11 +1,12 @@
 import type { ProjectableCommand } from "@/lib/sync/outbox";
 
-import type { SyncedAccount, SyncedTransaction } from "./synced-mappers";
+import type { SyncedAccount, SyncedCategory, SyncedTransaction } from "./synced-mappers";
 import type { SyncedTransactionSnapshot } from "./synced-transaction-snapshot";
 
 type TransactionType = SyncedTransaction["type"];
 type AccountType = SyncedAccount["type"];
 type AccountVisibility = SyncedAccount["visibility"];
+type CategoryType = SyncedCategory["type"];
 
 export type PendingTransactionCommandKind =
   | "transaction.create"
@@ -38,6 +39,29 @@ export interface PendingAccountUpdatePayload {
 
 export interface PendingAccountArchivePayload {
   accountId: string;
+}
+
+export interface PendingCategoryCreatePayload {
+  id: string;
+  name: string;
+  type: CategoryType;
+  color: string;
+  icon: string;
+  parentId: string | null;
+  sortOrder: number;
+}
+
+export interface PendingCategoryUpdatePayload {
+  categoryId: string;
+  name?: string;
+  color?: string;
+  icon?: string;
+  parentId?: string | null;
+  sortOrder?: number;
+}
+
+export interface PendingCategoryArchivePayload {
+  categoryId: string;
 }
 
 export interface PendingTransactionCreatePayload {
@@ -89,6 +113,7 @@ interface ProjectionState {
   readonly householdId: string;
   readonly userId: string;
   readonly accounts: Map<string, SyncedAccount>;
+  readonly categories: Map<string, SyncedCategory>;
   readonly transactions: Map<string, SyncedTransaction>;
 }
 
@@ -100,6 +125,7 @@ export function projectPendingTransactions(
     householdId: snapshot.householdId,
     userId: snapshot.userId,
     accounts: new Map(snapshot.accounts.map((row) => [row.id, row])),
+    categories: new Map(snapshot.categories.map((row) => [row.id, row])),
     transactions: new Map(snapshot.transactions.map((row) => [row.id, row])),
   };
 
@@ -110,6 +136,7 @@ export function projectPendingTransactions(
   return {
     ...snapshot,
     accounts: [...state.accounts.values()],
+    categories: [...state.categories.values()],
     transactions: [...state.transactions.values()].filter(
       (row) =>
         state.accounts.has(row.accountId) &&
@@ -118,7 +145,21 @@ export function projectPendingTransactions(
   };
 }
 
+function isCategoryCommand(command: ProjectableCommand): command is ProjectableCommand & {
+  kind: "category.create" | "category.update" | "category.archive";
+} {
+  return (
+    command.kind === "category.create" ||
+    command.kind === "category.update" ||
+    command.kind === "category.archive"
+  );
+}
+
 function projectCommand(state: ProjectionState, command: ProjectableCommand): void {
+  if (isCategoryCommand(command)) {
+    projectCategoryCommand(state, command);
+    return;
+  }
   switch (command.kind) {
     case "account.create":
       projectAccountCreate(state, command);
@@ -140,6 +181,25 @@ function projectCommand(state: ProjectionState, command: ProjectableCommand): vo
       break;
     case "refund.link":
       projectRefund(state, command);
+      break;
+  }
+}
+
+function projectCategoryCommand(
+  state: ProjectionState,
+  command: ProjectableCommand & {
+    kind: "category.create" | "category.update" | "category.archive";
+  },
+): void {
+  switch (command.kind) {
+    case "category.create":
+      projectCategoryCreate(state, command);
+      break;
+    case "category.update":
+      projectCategoryUpdate(state, command);
+      break;
+    case "category.archive":
+      projectCategoryArchive(state, command);
       break;
   }
 }
@@ -198,6 +258,64 @@ function projectAccountArchive(state: ProjectionState, command: ProjectableComma
   if (!existing || existing.lifecycle === "archived") return;
   const timestamp = command.issuedAt ?? existing.updatedAt;
   state.accounts.set(input.accountId, {
+    ...existing,
+    lifecycle: "archived",
+    lifecycleChangedAt: timestamp,
+    version: existing.version + 1,
+    updatedBy: "optimistic",
+    updatedAt: timestamp,
+  });
+}
+
+function projectCategoryCreate(state: ProjectionState, command: ProjectableCommand): void {
+  // SAFETY: createSyncedLedgerDataSource is the sole writer for this command kind.
+  const input = command.payload as PendingCategoryCreatePayload;
+  if (state.categories.has(input.id)) return;
+  const timestamp = command.issuedAt ?? "1970-01-01T00:00:00.000Z";
+  state.categories.set(input.id, {
+    householdId: state.householdId,
+    id: input.id,
+    name: input.name,
+    type: input.type,
+    color: input.color,
+    icon: input.icon,
+    parentId: input.parentId,
+    sortOrder: input.sortOrder,
+    lifecycle: "active",
+    lifecycleChangedAt: null,
+    version: 0,
+    createdBy: "optimistic",
+    updatedBy: "optimistic",
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  });
+}
+
+function projectCategoryUpdate(state: ProjectionState, command: ProjectableCommand): void {
+  // SAFETY: createSyncedLedgerDataSource is the sole writer for this command kind.
+  const input = command.payload as PendingCategoryUpdatePayload;
+  const existing = state.categories.get(input.categoryId);
+  if (!existing || existing.lifecycle === "archived") return;
+  state.categories.set(input.categoryId, {
+    ...existing,
+    ...(input.name !== undefined && { name: input.name }),
+    ...(input.color !== undefined && { color: input.color }),
+    ...(input.icon !== undefined && { icon: input.icon }),
+    ...(input.parentId !== undefined && { parentId: input.parentId }),
+    ...(input.sortOrder !== undefined && { sortOrder: input.sortOrder }),
+    version: existing.version + 1,
+    updatedBy: "optimistic",
+    updatedAt: command.issuedAt ?? existing.updatedAt,
+  });
+}
+
+function projectCategoryArchive(state: ProjectionState, command: ProjectableCommand): void {
+  // SAFETY: createSyncedLedgerDataSource is the sole writer for this command kind.
+  const input = command.payload as PendingCategoryArchivePayload;
+  const existing = state.categories.get(input.categoryId);
+  if (!existing || existing.lifecycle === "archived") return;
+  const timestamp = command.issuedAt ?? existing.updatedAt;
+  state.categories.set(input.categoryId, {
     ...existing,
     lifecycle: "archived",
     lifecycleChangedAt: timestamp,

@@ -1,7 +1,7 @@
 import type { CommandEnvelope } from "@trove/protocol";
 
 import { createSyncedLedgerDataSource } from "./synced";
-import type { SyncedAccount } from "./synced-mappers";
+import type { SyncedAccount, SyncedCategory } from "./synced-mappers";
 import type { SyncedTransactionSnapshot } from "./synced-transaction-snapshot";
 
 const mockEnqueueCommand = jest.fn();
@@ -65,11 +65,29 @@ const cashAccount: SyncedAccount = {
   updatedAt: timestamp,
 };
 
+const groceriesCategory: SyncedCategory = {
+  householdId: HOUSEHOLD_ID,
+  id: "groceries",
+  name: "Groceries",
+  type: "expense",
+  color: "#B48A7B",
+  icon: "🛒",
+  parentId: null,
+  sortOrder: 0,
+  lifecycle: "active",
+  lifecycleChangedAt: null,
+  version: 3,
+  createdBy: USER_ID,
+  updatedBy: USER_ID,
+  createdAt: timestamp,
+  updatedAt: timestamp,
+};
+
 const snapshot: SyncedTransactionSnapshot = {
   householdId: HOUSEHOLD_ID,
   userId: USER_ID,
   accounts: [cashAccount],
-  categories: [],
+  categories: [groceriesCategory],
   transactions: [],
 };
 
@@ -112,7 +130,7 @@ describe("createSyncedLedgerDataSource accounts", () => {
     mockReadSnapshot.mockResolvedValue(snapshot);
     mockWriteSnapshot.mockResolvedValue(undefined);
     mockListServerAccounts.mockResolvedValue(snapshot.accounts);
-    mockListServerCategories.mockResolvedValue([]);
+    mockListServerCategories.mockResolvedValue(snapshot.categories);
     mockListServerTransactions.mockResolvedValue({ transactions: [], hasMore: false });
   });
 
@@ -140,21 +158,14 @@ describe("createSyncedLedgerDataSource accounts", () => {
     expect(mockApply).not.toHaveBeenCalled();
   });
 
-  it("keeps Category writes on live apply", async () => {
-    mockApply.mockResolvedValue({
-      kind: "applied",
-      seq: 1,
-      effects: [],
-      applied: {},
-      replayed: false,
-    });
+  it("enqueues Category create, update, and archive without applying", async () => {
     const source = createSyncedLedgerDataSource({
       householdId: HOUSEHOLD_ID,
       userId: USER_ID,
       db: fakeDb,
     });
 
-    await source.categories.create({
+    const createdId = await source.categories.create({
       name: "Food",
       type: "expense",
       color: "#000",
@@ -162,9 +173,33 @@ describe("createSyncedLedgerDataSource accounts", () => {
       parentId: null,
       sortOrder: 0,
     });
+    await source.categories.update("groceries", { name: "Dining", sortOrder: 4 });
+    await source.categories.archive("groceries");
 
-    expect(mockApply).toHaveBeenCalledWith(expect.objectContaining({ kind: "category.create" }));
-    expect(mockEnqueueCommand).not.toHaveBeenCalled();
+    expect(createdId).toBe("generated-id");
+    expect(mockEnqueueCommand.mock.calls.map(([, command]) => command.kind)).toEqual([
+      "category.create",
+      "category.update",
+      "category.archive",
+    ]);
+    expect(mockEnqueueCommand.mock.calls[0][1]).toMatchObject({
+      payload: {
+        id: "generated-id",
+        name: "Food",
+        type: "expense",
+        parentId: null,
+        sortOrder: 0,
+      },
+    });
+    expect(mockEnqueueCommand.mock.calls[1][1]).toMatchObject({
+      payload: { categoryId: "groceries", name: "Dining", sortOrder: 4 },
+      preconditions: [{ entityId: "groceries", expectedVersion: 3 }],
+    });
+    expect(mockEnqueueCommand.mock.calls[2][1]).toMatchObject({
+      payload: { categoryId: "groceries" },
+      preconditions: [{ entityId: "groceries", expectedVersion: 3 }],
+    });
+    expect(mockApply).not.toHaveBeenCalled();
   });
 
   it("enqueues while offline_cached and never calls apply", async () => {
@@ -248,6 +283,127 @@ describe("createSyncedLedgerDataSource accounts", () => {
     });
 
     await expect(source.accounts.update("cash", { name: "Daily" })).rejects.toThrow(
+      "not in the authorized ledger snapshot",
+    );
+    expect(mockEnqueueCommand).not.toHaveBeenCalled();
+  });
+});
+
+const createCategoryCommand = (overrides: Partial<CommandEnvelope> = {}): CommandEnvelope => ({
+  commandId: "command-category-create",
+  householdId: HOUSEHOLD_ID,
+  kind: "category.create",
+  payload: {
+    id: "dining",
+    name: "Dining",
+    type: "expense",
+    color: "#B48A7B",
+    icon: "🍽️",
+    parentId: null,
+    sortOrder: 1,
+  },
+  issuedAt: "2026-01-06T00:00:00.000Z",
+  ...overrides,
+});
+
+const newCategory = {
+  name: "Dining",
+  type: "expense" as const,
+  color: "#B48A7B",
+  icon: "🍽️",
+  parentId: null,
+  sortOrder: 1,
+};
+
+describe("createSyncedLedgerDataSource categories", () => {
+  beforeEach(() => {
+    mockEnqueueCommand.mockResolvedValue(undefined);
+    mockListProjectableCommands.mockResolvedValue([]);
+    mockReadSnapshot.mockResolvedValue(snapshot);
+    mockWriteSnapshot.mockResolvedValue(undefined);
+    mockListServerAccounts.mockResolvedValue(snapshot.accounts);
+    mockListServerCategories.mockResolvedValue(snapshot.categories);
+    mockListServerTransactions.mockResolvedValue({ transactions: [], hasMore: false });
+  });
+
+  it("enqueues while offline_cached and never calls apply", async () => {
+    const source = createSyncedLedgerDataSource({
+      householdId: HOUSEHOLD_ID,
+      userId: USER_ID,
+      db: fakeDb,
+      offlineState: { kind: "offline_cached", reason: "network_unavailable" },
+    });
+
+    await source.categories.create(newCategory);
+
+    expect(mockEnqueueCommand).toHaveBeenCalledWith(
+      fakeDb,
+      expect.objectContaining({ kind: "category.create", userId: USER_ID }),
+    );
+    expect(mockApply).not.toHaveBeenCalled();
+    expect(mockListServerCategories).not.toHaveBeenCalled();
+  });
+
+  it("folds a queued create into list and get after a restart", async () => {
+    mockListProjectableCommands.mockResolvedValue([
+      { ...createCategoryCommand(), status: "pending" },
+    ]);
+    const source = createSyncedLedgerDataSource({
+      householdId: HOUSEHOLD_ID,
+      userId: USER_ID,
+      db: fakeDb,
+      offlineState: { kind: "offline_cached", reason: "network_unavailable" },
+    });
+
+    const listed = await source.categories.list("expense");
+    const found = await source.categories.get("dining");
+
+    expect(listed.map((category) => category.id)).toEqual(["groceries", "dining"]);
+    expect(found).toMatchObject({ id: "dining", name: "Dining", type: "expense" });
+    expect(mockListServerCategories).not.toHaveBeenCalled();
+  });
+
+  it("drops a rejected create from the projected snapshot", async () => {
+    mockListProjectableCommands.mockResolvedValue([]);
+    const source = createSyncedLedgerDataSource({
+      householdId: HOUSEHOLD_ID,
+      userId: USER_ID,
+      db: fakeDb,
+      offlineState: { kind: "offline_cached", reason: "network_unavailable" },
+    });
+
+    await expect(source.categories.get("dining")).resolves.toBeUndefined();
+    await expect(source.categories.list()).resolves.toEqual([
+      expect.objectContaining({ id: "groceries" }),
+    ]);
+  });
+
+  it("no-ops archive when the cached Category is already archived", async () => {
+    mockReadSnapshot.mockResolvedValue({
+      ...snapshot,
+      categories: [{ ...groceriesCategory, lifecycle: "archived", lifecycleChangedAt: timestamp }],
+    });
+    const source = createSyncedLedgerDataSource({
+      householdId: HOUSEHOLD_ID,
+      userId: USER_ID,
+      db: fakeDb,
+    });
+
+    await source.categories.archive("groceries");
+
+    expect(mockEnqueueCommand).not.toHaveBeenCalled();
+    expect(mockApply).not.toHaveBeenCalled();
+  });
+
+  it("refuses update when the authorized Category is missing", async () => {
+    mockReadSnapshot.mockResolvedValue({ ...snapshot, categories: [] });
+    const source = createSyncedLedgerDataSource({
+      householdId: HOUSEHOLD_ID,
+      userId: USER_ID,
+      db: fakeDb,
+    });
+
+    await expect(source.categories.update("groceries", { name: "Dining" })).rejects.toThrow(
       "not in the authorized ledger snapshot",
     );
     expect(mockEnqueueCommand).not.toHaveBeenCalled();

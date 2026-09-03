@@ -279,6 +279,11 @@ function mutableEntityId(command: CommandEnvelope): string | null {
     const payload = command.payload as { accountId: string };
     return payload.accountId;
   }
+  if (command.kind === "category.update" || command.kind === "category.archive") {
+    // SAFETY: these command kinds are emitted only with their registered category payload.
+    const payload = command.payload as { categoryId: string };
+    return payload.categoryId;
+  }
   return null;
 }
 
