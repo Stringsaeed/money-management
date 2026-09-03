@@ -41,6 +41,10 @@ export const archiveAccountPayloadSchema = z.object({
   accountId: z.string().min(1),
 });
 
+export const restoreAccountPayloadSchema = z.object({
+  accountId: z.string().min(1),
+});
+
 type CreateAccountPayload = z.infer<typeof createAccountPayloadSchema>;
 type UpdateAccountPayload = z.infer<typeof updateAccountPayloadSchema>;
 
@@ -274,6 +278,64 @@ export const accountHandlers = {
             .update(ledgerAccount)
             .set({
               lifecycle: "archived",
+              lifecycleChangedAt: new Date(),
+              updatedBy: ctx.actorUserId,
+              version: sql`${ledgerAccount.version} + 1`,
+            })
+            .where(rowGuard) as unknown as BatchStatement,
+        ],
+      };
+    },
+  },
+
+  "account.restore": {
+    parsePayload(payload: unknown) {
+      const result = restoreAccountPayloadSchema.safeParse(payload);
+      return result.success
+        ? { ok: true as const, value: result.data }
+        : { ok: false as const, issues: issuesFromZod(result.error) };
+    },
+
+    async plan(
+      ctx: PlanContext,
+      { payload, preconditions }: PlanRequest,
+    ): Promise<CommandPlan | PlanRejection> {
+      const input = payload as { accountId: string };
+
+      const existing = await loadAccount(ctx, input.accountId);
+      if (!existing) {
+        return {
+          kind: "missing_entity",
+          entityType: "account",
+          entityId: input.accountId,
+        } satisfies PlanRejection;
+      }
+      const privateAccessRejection = privateAccountAccessRejection(ctx, existing);
+      if (privateAccessRejection) {
+        return privateAccessRejection;
+      }
+      if (existing.lifecycle !== "archived") {
+        return {
+          kind: "invalid_intent",
+          issues: [{ field: "accountId", message: "Account is already active." }],
+        };
+      }
+
+      const stale = checkExpectedVersion(existing, preconditions);
+      if (stale) {
+        return stale;
+      }
+      const rowGuard = versionGuard(ctx, existing.id, existing.version);
+
+      return {
+        effects: [...ACCOUNT_EFFECTS],
+        applied: { accountId: existing.id, lifecycle: "active" },
+        guards: [sql`(SELECT COUNT(*) FROM ${ledgerAccount} WHERE ${rowGuard}) = 1`],
+        statements: [
+          ctx.db
+            .update(ledgerAccount)
+            .set({
+              lifecycle: "active",
               lifecycleChangedAt: new Date(),
               updatedBy: ctx.actorUserId,
               version: sql`${ledgerAccount.version} + 1`,

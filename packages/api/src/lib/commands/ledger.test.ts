@@ -234,6 +234,57 @@ describe("ledger commands — accounts", () => {
     expect(rows[0].lifecycleChangedAt).not.toBeNull();
   });
 
+  it("restores an archived Account and bumps version", async () => {
+    await seedAccount({ lifecycle: "archived", version: 2 });
+    expectApplied(
+      await applyAs(OWNER, { ...makeEnvelope("account.restore"), payload: { accountId: "acc-1" } }),
+    );
+
+    const rows = await db.select().from(ledgerAccount).where(eq(ledgerAccount.id, "acc-1"));
+    expect(rows[0].lifecycle).toBe("active");
+    expect(rows[0].version).toBe(3);
+  });
+
+  it("rejects restore when the Account is already active", async () => {
+    await seedAccount();
+    await expect(
+      applyAs(OWNER, { ...makeEnvelope("account.restore"), payload: { accountId: "acc-1" } }),
+    ).resolves.toMatchObject({ kind: "invalid_intent" });
+  });
+
+  it("rejects a stale Account restore with stale_version", async () => {
+    await seedAccount({ lifecycle: "archived", version: 4 });
+    await expect(
+      applyAs(OWNER, {
+        ...makeEnvelope("account.restore"),
+        payload: { accountId: "acc-1" },
+        preconditions: [{ entityId: "acc-1", expectedVersion: 2 }],
+      }),
+    ).resolves.toMatchObject({ kind: "stale_version", actualVersion: 4, expectedVersion: 2 });
+  });
+
+  it("keeps private Account restore owner-only and restore capability admin+", async () => {
+    await seedAccount({ ownerUserId: OWNER, visibility: "private", lifecycle: "archived" });
+    await expect(
+      applyAs(ADMIN, { ...makeEnvelope("account.restore"), payload: { accountId: "acc-1" } }),
+    ).resolves.toMatchObject({ kind: "forbidden", requiredCapability: "accounts:private.owner" });
+    await expect(
+      applyAs(VIEWER, { ...makeEnvelope("account.restore"), payload: { accountId: "acc-1" } }),
+    ).resolves.toMatchObject({ kind: "forbidden" });
+  });
+
+  it("replays a stored Account restore by commandId", async () => {
+    await seedAccount({ lifecycle: "archived" });
+    const envelope = { ...makeEnvelope("account.restore"), payload: { accountId: "acc-1" } };
+    const first = await applyAs(OWNER, envelope);
+    expectApplied(first);
+    const second = await applyAs(OWNER, envelope);
+    expect(second).toMatchObject({ kind: "applied", replayed: true });
+    const rows = await db.select().from(ledgerAccount).where(eq(ledgerAccount.id, "acc-1"));
+    expect(rows[0].lifecycle).toBe("active");
+    expect(rows[0].version).toBe(1);
+  });
+
   it("rejects a stale expectedVersion with stale_version", async () => {
     await seedAccount({ version: 3 });
     const result = await applyAs(OWNER, {

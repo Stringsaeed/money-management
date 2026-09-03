@@ -5,6 +5,7 @@ const CAPABILITY_MATRIX: Readonly<Record<CommandKind, readonly HouseholdRole[]>>
   "account.create": ["owner", "admin"],
   "account.update": ["owner", "admin"],
   "account.archive": ["owner", "admin"],
+  "account.restore": ["owner", "admin"],
   "category.create": ["owner", "admin"],
   "category.update": ["owner", "admin"],
   "category.archive": ["owner", "admin"],
