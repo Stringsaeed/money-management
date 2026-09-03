@@ -129,16 +129,8 @@ export const createSyncedTransactionResource = ({
         preconditions: [{ entityId: id, expectedVersion }],
       });
     },
-    recordCardPayment: async (data) => {
-      const transactionId = generateId();
-      await executeCommand("mutation.card-payment-record", {
-        commandId: generateId(),
-        householdId,
-        kind: "card_payment.record",
-        issuedAt: new Date().toISOString(),
-        payload: { transactionId, ...data },
-      });
-      return transactionId;
+    recordCardPayment: async () => {
+      throw new Error("Card payments need the budget cutover before they can be recorded.");
     },
     linkRefund: async (data) => {
       const transactionId = generateId();

@@ -3,14 +3,10 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "build": "tsdown",
-    "check-types": "tsc --noEmit",
-    "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server"
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
-    "@orpc/zod": "catalog:",
     "@trove/api": "workspace:*",
     "@trove/auth": "workspace:*",
     "@trove/db": "workspace:*",
@@ -24,7 +20,6 @@
     "@cloudflare/workers-types": "catalog:",
     "@trove/typescript-config": "workspace:*",
     "@types/node": "catalog:",
-    "tsdown": "^0.22.14",
     "typescript": "~7.0.2"
   }
 }

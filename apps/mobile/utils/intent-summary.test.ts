@@ -4,7 +4,7 @@ describe("commandKindLabel", () => {
   it("maps every command kind to a human label", () => {
     expect(commandKindLabel("transaction.create")).toBe("Record transaction");
     expect(commandKindLabel("account.archive")).toBe("Archive account");
-    expect(commandKindLabel("member.invite")).toBe("Invite member");
+    expect(commandKindLabel("member.role.change")).toBe("Change member role");
   });
 });
 

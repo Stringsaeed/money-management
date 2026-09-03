@@ -1,15 +1,7 @@
 import type { CommandKind } from "@trove/protocol";
 
-/**
- * Human labels + intent summaries for command kinds, used by the Rejected
- * Changes inbox (#94) to render "original intent" without knowing each
- * handler's schema. Pure formatting only — no validation.
- */
 const KIND_LABELS: Record<CommandKind, string> = {
-  "household.create": "Create household",
-  "member.invite": "Invite member",
   "member.role.change": "Change member role",
-  "member.remove": "Remove member",
   "account.create": "New account",
   "account.update": "Update account",
   "account.archive": "Archive account",
@@ -20,7 +12,6 @@ const KIND_LABELS: Record<CommandKind, string> = {
   "transaction.edit": "Edit transaction",
   "transaction.remove": "Delete transaction",
   "assignment.commit": "Assign transactions",
-  "card_payment.record": "Record card payment",
   "refund.link": "Link refund",
   import_bundle: "Import data",
 };
@@ -44,7 +35,6 @@ function readMinorAmount(payload: Record<string, unknown>): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-/** Formats minor units as an unsigned currency string; sign shown separately. */
 function formatMinor(amountMinor: number): string {
   const abs = Math.abs(amountMinor);
   const whole = Math.trunc(abs / 100);

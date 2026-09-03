@@ -8,15 +8,7 @@ import { migrateBudgeting } from "@/db/budgeting-migration";
 import { migrateCategoryLifecycle } from "@/db/category-lifecycle-migration";
 import { migrateRecurringRules } from "@/db/recurring-rules-migration";
 import * as schema from "@/db/schema";
-import {
-  accounts,
-  budgetWorkspaces,
-  categories,
-  categoryMappings,
-  envelopes,
-  fundingMemberships,
-  transactions,
-} from "@/db/schema";
+import { accounts, categories, transactions } from "@/db/schema";
 import { applyLegacyMigrations, createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
 
 import { buildImportChunks } from "./chunks";
@@ -47,7 +39,6 @@ async function setupDb(): Promise<LocalDb> {
   } & ExpoSQLiteDatabase<typeof schema>;
 }
 
-/** Groups chunks by entity type, in the order they were produced. */
 function entityTypesInOrder(chunks: readonly ImportBundlePayload[]): readonly string[] {
   const seen: string[] = [];
   for (const chunk of chunks) {
@@ -103,7 +94,7 @@ describe("buildImportChunks", () => {
     expect(transactionChunk?.rows[0]).not.toHaveProperty("amount");
   });
 
-  it("orders chunks account -> category -> transaction -> budgeting facts", async () => {
+  it("orders chunks account -> category -> transaction", async () => {
     const db = await setupDb();
     await db.insert(accounts).values({
       id: "account-1",
@@ -131,37 +122,8 @@ describe("buildImportChunks", () => {
       createdAt: "2026-01-05T00:00:00.000Z",
       updatedAt: "2026-01-05T00:00:00.000Z",
     });
-    await db.insert(budgetWorkspaces).values({
-      currency: "USD",
-      activationPeriod: "2026-01",
-      createdAt: "2026-01-01T00:00:00.000Z",
-      updatedAt: "2026-01-01T00:00:00.000Z",
-    });
-    await db.insert(envelopes).values({
-      id: "envelope-1",
-      currency: "USD",
-      name: "Groceries",
-      icon: "🛒",
-      color: "#8B9D83",
-      createdAt: "2026-01-01T00:00:00.000Z",
-      updatedAt: "2026-01-01T00:00:00.000Z",
-    });
-    await db.insert(categoryMappings).values({
-      categoryId: "category-1",
-      envelopeId: "envelope-1",
-      effectiveFromPeriod: "2026-01",
-      createdAt: "2026-01-01T00:00:00.000Z",
-    });
-
     const chunks = await buildImportChunks(db);
-    expect(entityTypesInOrder(chunks)).toEqual([
-      "account",
-      "category",
-      "transaction",
-      "budgetWorkspace",
-      "envelope",
-      "categoryMapping",
-    ]);
+    expect(entityTypesInOrder(chunks)).toEqual(["account", "category", "transaction"]);
   });
 
   it("splits a large table across chunks and preserves every row exactly once", async () => {
@@ -187,123 +149,5 @@ describe("buildImportChunks", () => {
 
     const allIds = chunks.flatMap((chunk) => chunk.rows.map((row) => row.id));
     expect(new Set(allIds).size).toBe(total);
-  });
-
-  it("drops the client-only effectiveToPeriod column from category mappings", async () => {
-    const db = await setupDb();
-    await db.insert(categories).values({
-      id: "category-1",
-      name: "Groceries",
-      type: "expense",
-      createdAt: "2026-01-01T00:00:00.000Z",
-      updatedAt: "2026-01-01T00:00:00.000Z",
-    });
-    await db.insert(budgetWorkspaces).values({
-      currency: "USD",
-      activationPeriod: "2026-01",
-      createdAt: "2026-01-01T00:00:00.000Z",
-      updatedAt: "2026-01-01T00:00:00.000Z",
-    });
-    await db.insert(envelopes).values({
-      id: "envelope-1",
-      currency: "USD",
-      name: "Groceries",
-      icon: "🛒",
-      color: "#8B9D83",
-      createdAt: "2026-01-01T00:00:00.000Z",
-      updatedAt: "2026-01-01T00:00:00.000Z",
-    });
-    await db.insert(categoryMappings).values({
-      categoryId: "category-1",
-      envelopeId: "envelope-1",
-      effectiveFromPeriod: "2026-01",
-      effectiveToPeriod: "2026-06",
-      createdAt: "2026-01-01T00:00:00.000Z",
-    });
-
-    const chunks = await buildImportChunks(db);
-    const mappingChunk = chunks.find((chunk) => chunk.entityType === "categoryMapping");
-    expect(mappingChunk?.rows[0]).not.toHaveProperty("effectiveToPeriod");
-    expect(mappingChunk?.rows[0]).toMatchObject({ effectiveFromPeriod: "2026-01" });
-  });
-
-  it("expands an ended funding membership into an active row plus a tombstone", async () => {
-    const db = await setupDb();
-    await db.insert(accounts).values({
-      id: "account-1",
-      name: "Checking",
-      type: "bank",
-      currency: "USD",
-      createdAt: "2026-01-01T00:00:00.000Z",
-      updatedAt: "2026-01-01T00:00:00.000Z",
-    });
-    await db.insert(budgetWorkspaces).values({
-      currency: "USD",
-      activationPeriod: "2026-01",
-      createdAt: "2026-01-01T00:00:00.000Z",
-      updatedAt: "2026-01-01T00:00:00.000Z",
-    });
-    await db.insert(fundingMemberships).values({
-      accountId: "account-1",
-      currency: "USD",
-      effectiveFromPeriod: "2026-01",
-      effectiveToPeriod: "2026-03",
-      createdAt: "2026-01-01T00:00:00.000Z",
-    });
-
-    const chunks = await buildImportChunks(db);
-    const membershipChunk = chunks.find((chunk) => chunk.entityType === "fundingMembership");
-    expect(membershipChunk?.rows).toEqual([
-      {
-        accountId: "account-1",
-        currency: "USD",
-        active: true,
-        effectiveFromPeriod: "2026-01",
-        createdAt: "2026-01-01T00:00:00.000Z",
-      },
-      {
-        accountId: "account-1",
-        currency: "USD",
-        active: false,
-        effectiveFromPeriod: "2026-04",
-        createdAt: "2026-01-01T00:00:00.000Z",
-      },
-    ]);
-  });
-
-  it("keeps an open-ended funding membership as a single active row", async () => {
-    const db = await setupDb();
-    await db.insert(accounts).values({
-      id: "account-1",
-      name: "Checking",
-      type: "bank",
-      currency: "USD",
-      createdAt: "2026-01-01T00:00:00.000Z",
-      updatedAt: "2026-01-01T00:00:00.000Z",
-    });
-    await db.insert(budgetWorkspaces).values({
-      currency: "USD",
-      activationPeriod: "2026-01",
-      createdAt: "2026-01-01T00:00:00.000Z",
-      updatedAt: "2026-01-01T00:00:00.000Z",
-    });
-    await db.insert(fundingMemberships).values({
-      accountId: "account-1",
-      currency: "USD",
-      effectiveFromPeriod: "2026-01",
-      createdAt: "2026-01-01T00:00:00.000Z",
-    });
-
-    const chunks = await buildImportChunks(db);
-    const membershipChunk = chunks.find((chunk) => chunk.entityType === "fundingMembership");
-    expect(membershipChunk?.rows).toEqual([
-      {
-        accountId: "account-1",
-        currency: "USD",
-        active: true,
-        effectiveFromPeriod: "2026-01",
-        createdAt: "2026-01-01T00:00:00.000Z",
-      },
-    ]);
   });
 });

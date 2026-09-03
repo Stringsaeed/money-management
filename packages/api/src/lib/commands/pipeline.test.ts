@@ -199,7 +199,6 @@ describe("commands.apply — idempotency", () => {
     const env = makeEnvelope();
     const first = expectApplied(await applyAs(OWNER, env));
 
-    // The owner is also an owner of a second household; MEMBER belongs there too.
     await db.insert(household).values({
       id: "household-2",
       name: "Other Household",
@@ -220,7 +219,6 @@ describe("commands.apply — idempotency", () => {
       version: 0,
     });
 
-    // Same commandId, different household → not a replay: fresh execution.
     const other = expectApplied(
       await applyCommand({
         db,
@@ -314,10 +312,5 @@ describe("commands.apply — intent validation", () => {
       expect(result.issues[0]?.field).toBe("preconditions");
     }
     expect(await db.select().from(householdChange)).toHaveLength(0);
-  });
-
-  it("rejects unregistered command kinds as not implemented", async () => {
-    const env = makeEnvelope({ kind: "member.invite", payload: {} });
-    await expect(applyAs(OWNER, env)).rejects.toThrow();
   });
 });

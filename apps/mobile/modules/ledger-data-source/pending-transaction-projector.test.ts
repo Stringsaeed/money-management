@@ -98,7 +98,7 @@ const command = (
 });
 
 describe("projectPendingTransactions", () => {
-  it("folds all five queued Transaction intents in FIFO order", () => {
+  it("folds queued Transaction intents in FIFO order", () => {
     const projected = projectPendingTransactions(snapshot, [
       command(
         "transaction.create",
@@ -114,18 +114,6 @@ describe("projectPendingTransactions", () => {
       ),
       command("transaction.edit", { transactionId: "created", amountMinor: 125 }, 2),
       command(
-        "card_payment.record",
-        {
-          transactionId: "payment",
-          cardAccountId: "card",
-          fundingAccountId: "cash",
-          currency: "USD",
-          amountMinor: 200,
-          budgetPeriod: "2026-01",
-        },
-        3,
-      ),
-      command(
         "refund.link",
         {
           transactionId: "refund",
@@ -135,21 +123,16 @@ describe("projectPendingTransactions", () => {
           amountMinor: 50,
           date: "2026-01-05",
         },
-        4,
+        3,
       ),
-      command("transaction.remove", { transactionId: "original" }, 5),
+      command("transaction.remove", { transactionId: "original" }, 4),
     ]);
 
-    expect(projected.transactions.map((row) => row.id).sort()).toEqual([
-      "created",
-      "payment",
-      "refund",
-    ]);
+    expect(projected.transactions.map((row) => row.id).sort()).toEqual(["created", "refund"]);
     expect(projected.transactions.find((row) => row.id === "created")).toMatchObject({
       amountMinor: 125,
       version: 1,
     });
-    expect(projected.transactions.find((row) => row.id === "payment")?.date).toBe("2026-01-31");
     expect(projected.transactions.find((row) => row.id === "refund")).toMatchObject({
       categoryId: "groceries",
       type: "income",

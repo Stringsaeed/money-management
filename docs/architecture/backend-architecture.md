@@ -1,7 +1,7 @@
 # Backend Architecture
 
-- **Status:** Revised — Phase 0 shipped on the Better-T Stack; sync substrate not yet built
-- **Recorded:** 2026-08-20 · **Revised:** 2026-08-23 (post #104 stack pivot)
+- **Status:** Revised — Phase 0 shipped on the Better-T Stack; ledger sync is shipped
+- **Recorded:** 2026-08-20 · **Revised:** 2026-09-03 (ledger sync shipped)
 - **Decision history:** this document
 - **Domain language:** [Money Management Context](../../CONTEXT.md)
 - **Related:** all 22 files in [`docs/adr/`](../adr/), [Recurring Rules Architecture](./recurring-rules-design.md), [Ledger Cache Coherence Plan](./ledger-cache-coherence-plan.md)
@@ -195,7 +195,7 @@ Moves server-side largely as-is: the settlement engine (`modules/recurring-rules
 
 ## Delivery sequence
 
-1. **Phase 0 — Foundations.** ✅ Shipped (#78–#82, #101–#105): the monorepo migration; `calendar.ts` extracted to `packages/domain` as a no-behavior-change proof; Better-T Stack foundations (D1 + better-auth + oRPC + alchemy); households/members/invites schema and the household/auth server shell with opt-in mobile sign-in. _(The original Supabase/pgTAP/`apps/api` shape of this phase was superseded by #104.)_ No app data syncs yet.
+1. **Phase 0 — Foundations.** ✅ Shipped (#78–#82, #101–#105): the monorepo migration; `calendar.ts` extracted to `packages/domain` as a no-behavior-change proof; Better-T Stack foundations (D1 + better-auth + oRPC + alchemy); households/members/invites schema and the household/auth server shell with opt-in mobile sign-in. _(The original Supabase/pgTAP/`apps/api` shape of this phase was superseded by #104.)_ Ledger sync now exists for accounts, categories, and transactions.
 2. **Phase 1 — Sync substrate and ledger.** Accounts, categories, and transactions become server-authoritative: `household_changes` + per-household seq, `commands.apply`, `sync.getDelta`, the client outbox and sync worker, optimistic apply/writeback. Neutralize `DATABASE_RESET_VERSION` (today it wipes every table on a version bump; it would now destroy an unsynced outbox).
 3. **Phase 2 — Recurring Rules server-side** _(parallelizable with Phase 3)_. Port the settlement engine behind a D1 persistence adapter; a Workers Cron Trigger per-rule-timezone settlement job.
 4. **Phase 3 — Envelope/budget domain server-side** _(parallelizable with Phase 2)_. The full schema, waterfalls, and projections from this document; commands for mapping changes, funding membership changes, assignments, card payments, refunds, and budget reset.

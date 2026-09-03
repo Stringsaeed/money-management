@@ -6,11 +6,8 @@ import { createDb } from "@trove/db";
 import { appRouter } from "@trove/api/routers/index";
 import { createAuth } from "@trove/auth";
 import { env } from "@trove/env/server";
-import { OpenAPIHandler } from "@orpc/openapi/fetch";
-import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
-import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -30,19 +27,6 @@ app.use(
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => createAuth().handler(c.req.raw));
 
-export const apiHandler = new OpenAPIHandler(appRouter, {
-  plugins: [
-    new OpenAPIReferencePlugin({
-      schemaConverters: [new ZodToJsonSchemaConverter()],
-    }),
-  ],
-  interceptors: [
-    onError((error) => {
-      console.error(error);
-    }),
-  ],
-});
-
 export const rpcHandler = new RPCHandler(appRouter, {
   interceptors: [
     onError((error) => {
@@ -61,15 +45,6 @@ app.use("/*", async (c, next) => {
 
   if (rpcResult.matched) {
     return c.newResponse(rpcResult.response.body, rpcResult.response);
-  }
-
-  const apiResult = await apiHandler.handle(c.req.raw, {
-    prefix: "/api-reference",
-    context: context,
-  });
-
-  if (apiResult.matched) {
-    return c.newResponse(apiResult.response.body, apiResult.response);
   }
 
   await next();

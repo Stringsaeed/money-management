@@ -1,5 +1,3 @@
-import { format, lastDayOfMonth, parseISO } from "date-fns";
-
 import type { ProjectableCommand } from "@/lib/sync/outbox";
 
 import type { SyncedAccount, SyncedTransaction } from "./synced-mappers";
@@ -11,7 +9,6 @@ export type PendingTransactionCommandKind =
   | "transaction.create"
   | "transaction.edit"
   | "transaction.remove"
-  | "card_payment.record"
   | "refund.link";
 
 export interface PendingTransactionCreatePayload {
@@ -44,16 +41,6 @@ export interface PendingTransactionRemovePayload {
   transactionId: string;
 }
 
-export interface PendingCardPaymentPayload {
-  transactionId: string;
-  cardAccountId: string;
-  fundingAccountId: string;
-  currency: string;
-  amountMinor: number;
-  budgetPeriod: string;
-  date?: string;
-}
-
 export interface PendingRefundPayload {
   transactionId: string;
   originalTransactionId: string;
@@ -67,7 +54,6 @@ export type PendingTransactionPayload =
   | PendingTransactionCreatePayload
   | PendingTransactionEditPayload
   | PendingTransactionRemovePayload
-  | PendingCardPaymentPayload
   | PendingRefundPayload;
 
 interface ProjectionState {
@@ -111,9 +97,6 @@ function projectCommand(state: ProjectionState, command: ProjectableCommand): vo
       break;
     case "transaction.remove":
       projectRemove(state, command);
-      break;
-    case "card_payment.record":
-      projectCardPayment(state, command);
       break;
     case "refund.link":
       projectRefund(state, command);
@@ -174,34 +157,6 @@ function projectRemove(state: ProjectionState, command: ProjectableCommand): voi
   // SAFETY: createSyncedTransactionResource is the sole writer for this command kind.
   const input = command.payload as PendingTransactionRemovePayload;
   state.transactions.delete(input.transactionId);
-}
-
-function projectCardPayment(state: ProjectionState, command: ProjectableCommand): void {
-  // SAFETY: createSyncedTransactionResource is the sole writer for this command kind.
-  const input = command.payload as PendingCardPaymentPayload;
-  const timestamp = command.issuedAt ?? "1970-01-01T00:00:00.000Z";
-  state.transactions.set(input.transactionId, {
-    householdId: state.householdId,
-    id: input.transactionId,
-    type: "transfer",
-    amountMinor: input.amountMinor,
-    currency: input.currency,
-    originalAmountMinor: null,
-    originalCurrency: null,
-    exchangeRate: null,
-    date: input.date ?? format(lastDayOfMonth(parseISO(`${input.budgetPeriod}-01`)), "yyyy-MM-dd"),
-    accountId: input.fundingAccountId,
-    toAccountId: input.cardAccountId,
-    categoryId: null,
-    isRecurring: false,
-    recurringRuleId: null,
-    description: "Card payment",
-    version: 0,
-    createdBy: "optimistic",
-    updatedBy: "optimistic",
-    createdAt: timestamp,
-    updatedAt: timestamp,
-  });
 }
 
 function projectRefund(state: ProjectionState, command: ProjectableCommand): void {
