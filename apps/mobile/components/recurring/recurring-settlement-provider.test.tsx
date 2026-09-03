@@ -3,6 +3,7 @@ import { act, render, waitFor } from "@testing-library/react-native";
 import { AppState, Text } from "react-native";
 
 import * as ledgerCache from "@/modules/ledger-cache";
+import { LedgerDataSourceProvider } from "@/modules/ledger-data-source/provider";
 import { RecurringSettlementError, type SettlementReport } from "@/modules/recurring-rules";
 import {
   RecurringSettlementProvider,
@@ -96,5 +97,41 @@ describe("RecurringSettlementProvider", () => {
     await waitFor(() =>
       expect(cohereRecurringEffects).toHaveBeenCalledWith(queryClient, report.effects),
     );
+  });
+
+  it("does not settle local SQLite copies when the ledger source is synced", async () => {
+    mockSettle.mockResolvedValue({
+      localDate: "2026-04-15",
+      startedAt: "2026-04-15T08:00:00.000Z",
+      finishedAt: "2026-04-15T08:00:00.000Z",
+      generatedCount: 1,
+      totalMinor: 120_000,
+      rules: [],
+      effects: ["ledger"],
+    });
+    let appStateListener: ((state: "active" | "background" | "inactive") => void) | undefined;
+    jest.spyOn(AppState, "addEventListener").mockImplementation((_, listener) => {
+      appStateListener = listener;
+      return { remove: jest.fn() };
+    });
+    const queryClient = new QueryClient();
+
+    await render(
+      <QueryClientProvider client={queryClient}>
+        <LedgerDataSourceProvider
+          selection={{ kind: "synced", householdId: "household-1", userId: "user-1" }}
+        >
+          <RecurringSettlementProvider>
+            <FeedbackProbe />
+          </RecurringSettlementProvider>
+        </LedgerDataSourceProvider>
+      </QueryClientProvider>,
+    );
+
+    await act(async () => {
+      appStateListener?.("background");
+      appStateListener?.("active");
+    });
+    expect(mockSettle).not.toHaveBeenCalled();
   });
 });

@@ -11,6 +11,7 @@ import {
 import { AppState } from "react-native";
 
 import { cohereRecurringEffects } from "@/modules/ledger-cache";
+import { useLedgerSourceSelection } from "@/modules/ledger-data-source/provider";
 import { RecurringSettlementError, type SettlementReport } from "@/modules/recurring-rules";
 import { useRecurringRulesModule } from "@/modules/recurring-rules/provider";
 
@@ -24,6 +25,7 @@ interface RecurringSettlementFeedback {
 const RecurringSettlementContext = createContext<RecurringSettlementFeedback | null>(null);
 
 export function RecurringSettlementProvider({ children }: PropsWithChildren) {
+  const selection = useLedgerSourceSelection();
   const recurringRules = useRecurringRulesModule();
   const queryClient = useQueryClient();
   const [report, setReport] = useState<SettlementReport | null>(null);
@@ -31,6 +33,7 @@ export function RecurringSettlementProvider({ children }: PropsWithChildren) {
   const mounted = useRef(true);
 
   const settle = async () => {
+    if (selection.kind !== "local") return;
     try {
       const nextReport = await recurringRules.settle();
       await cohereRecurringEffects(queryClient, nextReport.effects);
@@ -51,6 +54,7 @@ export function RecurringSettlementProvider({ children }: PropsWithChildren) {
   const settleInEffect = useEffectEvent(settle);
 
   useEffect(() => {
+    if (selection.kind !== "local") return;
     mounted.current = true;
     let previousState = AppState.currentState;
     const run = async () => {
@@ -68,7 +72,7 @@ export function RecurringSettlementProvider({ children }: PropsWithChildren) {
       mounted.current = false;
       subscription.remove();
     };
-  }, []);
+  }, [selection.kind]);
 
   return (
     <RecurringSettlementContext
