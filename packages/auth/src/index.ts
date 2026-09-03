@@ -11,6 +11,7 @@ import { AUTH_PUBLIC_URL, LINK_TTL_SECONDS } from "./link-policy";
 import { buildEmailLink } from "./links";
 import { consoleMailer, type Mailer } from "./mailer";
 
+export { createEmailMailer, renderAuthEmail } from "./email-mailer";
 export { AUTH_PUBLIC_URL, LINK_TTL_SECONDS } from "./link-policy";
 export { buildEmailLink } from "./links";
 export { consoleMailer, type Mailer } from "./mailer";
@@ -25,7 +26,13 @@ export function createAuth(deps: { readonly mailer?: Mailer } = {}) {
 
       schema: schema,
     }),
-    trustedOrigins: [env.CORS_ORIGIN, "trove://", "exp://", "http://localhost:8081"],
+    trustedOrigins: [
+      env.CORS_ORIGIN,
+      AUTH_PUBLIC_URL,
+      "trove://",
+      "exp://",
+      "http://localhost:8081",
+    ],
     emailAndPassword: {
       enabled: true,
       resetPasswordTokenExpiresIn: LINK_TTL_SECONDS,

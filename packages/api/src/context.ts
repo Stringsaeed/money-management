@@ -1,12 +1,13 @@
-import { createAuth } from "@trove/auth";
+import type { createAuth } from "@trove/auth";
 import type { Context as HonoContext } from "hono";
 
 export type CreateContextOptions = {
   context: HonoContext;
+  auth: ReturnType<typeof createAuth>;
 };
 
-export async function createContext({ context }: CreateContextOptions) {
-  const session = await createAuth().api.getSession({
+export async function createContext({ context, auth }: CreateContextOptions) {
+  const session = await auth.api.getSession({
     headers: context.req.raw.headers,
   });
   let waitUntil: ((promise: Promise<unknown>) => void) | undefined;
