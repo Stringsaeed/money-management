@@ -22,6 +22,15 @@ jest.mock("@/utils/id", () => ({
   generateId: () => "generated-envelope-id",
 }));
 
+jest.mock("@/utils/date", () => {
+  const actual = jest.requireActual<typeof import("@/utils/date")>("@/utils/date");
+  return {
+    ...actual,
+    today: () => "2026-08-19",
+    nowIso: () => "2026-08-19T08:00:00.000Z",
+  };
+});
+
 const databases: { close: VoidFunction }[] = [];
 const queryClients: QueryClient[] = [];
 

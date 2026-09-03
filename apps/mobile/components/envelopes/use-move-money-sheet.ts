@@ -10,6 +10,7 @@ import type {
   MoveMoneyPreview,
   MoveMoneyRequest,
 } from "@/modules/budgeting/budgeting";
+import { nowIso } from "@/utils/date";
 import { useSQLiteContext } from "expo-sqlite";
 
 interface UseMoveMoneySheetOptions {
@@ -76,7 +77,7 @@ export function useMoveMoneySheet({
     currency,
     destinationEnvelopeId,
     id: `assignment-${Date.now()}`,
-    now: new Date().toISOString(),
+    now: nowIso(),
     period,
     sourceEnvelopeId,
   });
