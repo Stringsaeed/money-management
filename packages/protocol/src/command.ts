@@ -26,7 +26,6 @@ export const COMMAND_KINDS = [
   "transaction.edit",
   "transaction.remove",
   "assignment.commit",
-  "card_payment.record",
   "refund.link",
   "import_bundle",
 ] as const;

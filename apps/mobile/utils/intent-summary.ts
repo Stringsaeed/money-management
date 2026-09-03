@@ -17,7 +17,6 @@ const KIND_LABELS: Record<CommandKind, string> = {
   "transaction.edit": "Edit transaction",
   "transaction.remove": "Delete transaction",
   "assignment.commit": "Assign transactions",
-  "card_payment.record": "Record card payment",
   "refund.link": "Link refund",
   import_bundle: "Import data",
 };

@@ -22,7 +22,6 @@ const CAPABILITY_MATRIX: Readonly<Record<CommandKind, readonly HouseholdRole[]>>
   "transaction.edit": ["owner", "admin", "member"],
   "transaction.remove": ["owner", "admin", "member"],
   "assignment.commit": ["owner", "admin", "member"],
-  "card_payment.record": ["owner", "admin", "member"],
   "refund.link": ["owner", "admin", "member"],
   // One-time local-to-cloud migration (#98): only the household's creator
   // may bulk-import — never a joined member, whose local data is separate.

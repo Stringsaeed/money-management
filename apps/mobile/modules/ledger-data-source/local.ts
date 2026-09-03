@@ -88,7 +88,7 @@ export const useLocalTransactionDataSource = () => {
       update: port.mutations.updateTransaction,
       delete: port.mutations.deleteTransaction,
       recordCardPayment: async () => {
-        throw new Error("Card Payments require a synced household.");
+        throw new Error("Card payments need the budget cutover before they can be recorded.");
       },
       linkRefund: async () => {
         throw new Error("Refund links require a synced household.");

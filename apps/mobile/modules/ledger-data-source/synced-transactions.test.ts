@@ -35,7 +35,7 @@ const makeTransaction = (id: string): SyncedTransaction => ({
   updatedAt: "2026-01-01T00:00:00.000Z",
 });
 describe("createSyncedTransactionResource mutations", () => {
-  it("enqueues all five Transaction command kinds and preserves optimistic identity", async () => {
+  it("enqueues Transaction command kinds and preserves optimistic identity", async () => {
     const commands: CommandEnvelope[] = [];
     const cachedSnapshot = {
       ...snapshot,
@@ -74,13 +74,15 @@ describe("createSyncedTransactionResource mutations", () => {
       recurringRuleId: null,
     });
     await resource.delete("transaction-existing");
-    const paymentId = await resource.recordCardPayment({
-      cardAccountId: "card",
-      fundingAccountId: "cash",
-      currency: "USD",
-      amountMinor: 200,
-      budgetPeriod: "2026-01",
-    });
+    await expect(
+      resource.recordCardPayment({
+        cardAccountId: "card",
+        fundingAccountId: "cash",
+        currency: "USD",
+        amountMinor: 200,
+        budgetPeriod: "2026-01",
+      }),
+    ).rejects.toThrow("budget cutover");
     const refundId = await resource.linkRefund({
       originalTransactionId: createdId,
       depositAccountId: "cash",
@@ -93,7 +95,6 @@ describe("createSyncedTransactionResource mutations", () => {
       "transaction.create",
       "transaction.edit",
       "transaction.remove",
-      "card_payment.record",
       "refund.link",
     ]);
     expect(commands[0].payload).toMatchObject({ id: createdId });
@@ -104,8 +105,7 @@ describe("createSyncedTransactionResource mutations", () => {
     expect(commands[1].preconditions).toEqual([
       { entityId: "transaction-existing", expectedVersion: 0 },
     ]);
-    expect(commands[3].payload).toMatchObject({ transactionId: paymentId });
-    expect(commands[4].payload).toMatchObject({ transactionId: refundId });
+    expect(commands[3].payload).toMatchObject({ transactionId: refundId });
   });
 
   it("refuses edit and remove when the authorized version is unavailable", async () => {

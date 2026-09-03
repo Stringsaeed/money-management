@@ -7,7 +7,6 @@ import { accountHandlers } from "./handlers/account";
 import { categoryHandlers } from "./handlers/category";
 import { importBundleHandler } from "./handlers/import-bundle";
 import { memberRoleChangeHandler } from "./handlers/member-role";
-import { paymentCreateHandler } from "./handlers/payment-create";
 import { refundCreateHandler } from "./handlers/refund-create";
 import { transactionHandlers } from "./handlers/transaction";
 
@@ -41,8 +40,7 @@ export const COMMAND_HANDLERS: Partial<Record<CommandKind, CommandHandler>> = {
   // ── Budget planning (#90) ────────────────────────────────────────────────
   "assignment.commit": assignmentCommitHandler,
 
-  // ── Card payments & refunds (#91) ────────────────────────────────────────
-  "card_payment.record": paymentCreateHandler,
+  // ── Refunds (#91) ────────────────────────────────────────────────────────
   "refund.link": refundCreateHandler,
 
   // ── Local-to-cloud migration (#98) ────────────────────────────────────────
