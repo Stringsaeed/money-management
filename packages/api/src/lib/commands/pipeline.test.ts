@@ -315,9 +315,4 @@ describe("commands.apply — intent validation", () => {
     }
     expect(await db.select().from(householdChange)).toHaveLength(0);
   });
-
-  it("rejects unregistered command kinds as not implemented", async () => {
-    const env = makeEnvelope({ kind: "member.invite", payload: {} });
-    await expect(applyAs(OWNER, env)).rejects.toThrow();
-  });
 });

@@ -9,10 +9,7 @@ import type { CommandKind, HouseholdRole } from "@trove/protocol";
  * handler are rejected as not-implemented before authorization matters.
  */
 const CAPABILITY_MATRIX: Readonly<Record<CommandKind, readonly HouseholdRole[]>> = {
-  "household.create": [],
-  "member.invite": ["owner", "admin"],
   "member.role.change": ["owner"],
-  "member.remove": ["owner", "admin"],
   // Structural entities (accounts, categories) are owner/admin territory;
   // ledger facts (transactions) are writable by every contributing role.
   "account.create": ["owner", "admin"],

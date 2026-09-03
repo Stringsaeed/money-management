@@ -6,10 +6,7 @@ import type { CommandKind } from "@trove/protocol";
  * handler's schema. Pure formatting only — no validation.
  */
 const KIND_LABELS: Record<CommandKind, string> = {
-  "household.create": "Create household",
-  "member.invite": "Invite member",
   "member.role.change": "Change member role",
-  "member.remove": "Remove member",
   "account.create": "New account",
   "account.update": "Update account",
   "account.archive": "Archive account",

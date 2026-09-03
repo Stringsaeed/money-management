@@ -15,10 +15,7 @@ import type { Effects } from "./effects.js";
  * only add.
  */
 export const COMMAND_KINDS = [
-  "household.create",
-  "member.invite",
   "member.role.change",
-  "member.remove",
   "account.create",
   "account.update",
   "account.archive",
