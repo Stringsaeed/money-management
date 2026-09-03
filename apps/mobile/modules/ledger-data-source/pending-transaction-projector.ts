@@ -195,7 +195,7 @@ function projectAccountUpdate(state: ProjectionState, command: ProjectableComman
 }
 
 function projectAccountRestore(state: ProjectionState, command: ProjectableCommand): void {
-  const input = decodeAccountIdPayload(command.payload as PendingAccountArchivePayload);
+  const input = decodeAccountIdPayload(command.payload);
   if (!input) return;
   const existing = state.accounts.get(input.accountId);
   if (!existing || existing.lifecycle !== "archived") return;
@@ -210,14 +210,15 @@ function projectAccountRestore(state: ProjectionState, command: ProjectableComma
   });
 }
 
-function decodeAccountIdPayload(
-  payload: PendingAccountArchivePayload,
-): PendingAccountArchivePayload | null {
-  return payload.accountId ? payload : null;
+function decodeAccountIdPayload(payload: unknown): PendingAccountArchivePayload | null {
+  if (!payload || typeof payload !== "object") return null;
+  const accountId = Reflect.get(payload, "accountId");
+  if (typeof accountId !== "string" || accountId.length === 0) return null;
+  return { accountId };
 }
 
 function projectAccountArchive(state: ProjectionState, command: ProjectableCommand): void {
-  const input = decodeAccountIdPayload(command.payload as PendingAccountArchivePayload);
+  const input = decodeAccountIdPayload(command.payload);
   if (!input) return;
   const existing = state.accounts.get(input.accountId);
   if (!existing || existing.lifecycle === "archived") return;
