@@ -1,0 +1,1164 @@
+{
+  "info": {
+    "_postman_id": "trove-api-collection",
+    "name": "Trove API",
+    "description": "Postman collection for the Trove Cloudflare Worker API.\n\n## Setup\n\n1. Start the dev server: `pnpm dev:server` (listens on http://localhost:3000)\n2. Import `Trove-Local.postman_environment.json` and select it\n3. Run **Auth \u2192 Sign up** (first time) or **Auth \u2192 Sign in**\n4. Run **Households \u2192 Create household** \u2014 saves `household_id`\n5. Use **Commands** and **Ledger** folders for the sync path\n\n## Auth\n\nBetter Auth uses an httpOnly cookie (`better-auth.session_token`). Sign-in/sign-up test scripts capture it into `session_cookie`. Protected requests inherit it via the collection pre-request script.\n\nThere is no seeded user. Create one via Sign up.\n\nMagic-link and password-reset URLs are logged to the Alchemy worker console (`[Auth] Magic link for ...`).\n\n## oRPC\n\nAll business procedures are `POST {{rpc_url}}/...`. Nested router keys become slash paths (`households.create` \u2192 `/rpc/households/create`).\n\n`householdId` goes in the JSON body, not a header.\n\n## Commands\n\n`commands.apply` returns HTTP 200 even for `forbidden` and `invalid_intent`. Inspect `kind` in the response body.\n\n## Not mounted\n\n`budget/*` and `projections/*` routers exist in source but are not on `appRouter`. They 404.\n\n## Wire format (important)\n\noRPC Standard RPC does **not** accept bare JSON input. Wrap every RPC body as:\n\n```json\n{\n  \"json\": { /* procedure input */ }\n}\n```\n\nProcedures with no input use `{ \"json\": null }` or `{ \"json\": {} }`.\nAuth routes under `/api/auth/*` stay bare JSON (Better Auth, not oRPC).\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const cookie = pm.environment.get('session_cookie') || pm.collectionVariables.get('session_cookie');",
+          "const url = pm.request.url.toString();",
+          "const isAuthRoute = url.includes('/api/auth/');",
+          "const isHealth = url.endsWith('/') && pm.request.method === 'GET';",
+          "if (cookie && !isAuthRoute && !isHealth) {",
+          "  pm.request.headers.upsert({ key: 'Cookie', value: cookie });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET / (plain OK)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/"
+          }
+        },
+        {
+          "name": "POST /rpc/healthCheck",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {}\n}"
+            },
+            "url": "{{rpc_url}}/healthCheck"
+          }
+        },
+        {
+          "name": "GET /api/auth/ok",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{auth_url}}/ok"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign up (email + password)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const setCookie = pm.response.headers.get('Set-Cookie');",
+                  "if (setCookie) {",
+                  "  const match = setCookie.match(/better-auth\\.session_token=([^;]+)/);",
+                  "  if (match) {",
+                  "    const cookie = `better-auth.session_token=${match[1]}`;",
+                  "    pm.environment.set('session_cookie', cookie);",
+                  "    pm.collectionVariables.set('session_cookie', cookie);",
+                  "  }",
+                  "}",
+                  "pm.test('Sign up succeeded', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{display_name}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{auth_url}}/sign-up/email"
+          }
+        },
+        {
+          "name": "Sign in (email + password)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const setCookie = pm.response.headers.get('Set-Cookie');",
+                  "if (setCookie) {",
+                  "  const match = setCookie.match(/better-auth\\.session_token=([^;]+)/);",
+                  "  if (match) {",
+                  "    const cookie = `better-auth.session_token=${match[1]}`;",
+                  "    pm.environment.set('session_cookie', cookie);",
+                  "    pm.collectionVariables.set('session_cookie', cookie);",
+                  "  }",
+                  "}",
+                  "pm.test('Sign in succeeded', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{auth_url}}/sign-in/email"
+          }
+        },
+        {
+          "name": "Get session",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{auth_url}}/get-session"
+          }
+        },
+        {
+          "name": "Sign out",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{auth_url}}/sign-out"
+          }
+        },
+        {
+          "name": "Request magic link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"callbackURL\": \"trove://\"\n}"
+            },
+            "url": "{{auth_url}}/sign-in/magic-link",
+            "description": "Link is printed to the Alchemy worker log, not emailed in local dev."
+          }
+        },
+        {
+          "name": "Request password reset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"redirectTo\": \"trove://reset-password\"\n}"
+            },
+            "url": "{{auth_url}}/request-password-reset",
+            "description": "Reset URL is printed to the Alchemy worker log."
+          }
+        },
+        {
+          "name": "Reset password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"{{password}}\",\n  \"token\": \"PASTE_TOKEN_FROM_WORKER_LOG\"\n}"
+            },
+            "url": "{{auth_url}}/reset-password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Households",
+      "item": [
+        {
+          "name": "Create household",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.householdId) {",
+                  "  pm.environment.set('household_id', json.householdId);",
+                  "}",
+                  "pm.test('Household created', () => pm.expect(json.householdId).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"name\": \"My Household\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/households/create"
+          }
+        },
+        {
+          "name": "List my households",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {}\n}"
+            },
+            "url": "{{rpc_url}}/households/listMine"
+          }
+        },
+        {
+          "name": "Get household",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/households/get"
+          }
+        },
+        {
+          "name": "Rename household",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\",\n    \"name\": \"Renamed Household\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/households/rename"
+          }
+        },
+        {
+          "name": "Set active household",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/households/setActive"
+          }
+        },
+        {
+          "name": "Generate invite",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.code) pm.environment.set('invite_code', json.code);",
+                  "if (json.inviteId) pm.environment.set('invite_id', json.inviteId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\",\n    \"expiresInDays\": 7,\n    \"singleUse\": true\n  }\n}"
+            },
+            "url": "{{rpc_url}}/households/generateInvite"
+          }
+        },
+        {
+          "name": "List invites",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/households/listInvites"
+          }
+        },
+        {
+          "name": "Revoke invite",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"inviteId\": \"{{invite_id}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/households/revokeInvite"
+          }
+        },
+        {
+          "name": "Accept invite",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"code\": \"{{invite_code}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/households/acceptInvite"
+          }
+        },
+        {
+          "name": "Leave household",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/households/leave"
+          }
+        },
+        {
+          "name": "Remove member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\",\n    \"userId\": \"{{member_user_id}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/households/removeMember"
+          }
+        },
+        {
+          "name": "Transfer ownership",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\",\n    \"userId\": \"{{member_user_id}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/households/transferOwnership"
+          }
+        },
+        {
+          "name": "Delete household",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/households/delete"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Commands",
+      "item": [
+        {
+          "name": "account.create",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.kind === 'applied' && json.applied?.accountId) {",
+                  "  pm.environment.set('account_id', json.applied.accountId);",
+                  "}",
+                  "pm.test('Command applied', () => pm.expect(json.kind).to.eql('applied'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"commandId\": \"{{$guid}}\",\n    \"householdId\": \"{{household_id}}\",\n    \"kind\": \"account.create\",\n    \"payload\": {\n      \"name\": \"Checking\",\n      \"type\": \"bank\",\n      \"currency\": \"USD\",\n      \"color\": \"#8B9D83\",\n      \"icon\": \"\\ud83c\\udfe6\",\n      \"initialBalanceMinor\": 100000,\n      \"excludeFromTotal\": false,\n      \"sortOrder\": 0,\n      \"visibility\": \"public\"\n    },\n    \"issuedAt\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/commands/apply"
+          }
+        },
+        {
+          "name": "account.update",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"commandId\": \"{{$guid}}\",\n    \"householdId\": \"{{household_id}}\",\n    \"kind\": \"account.update\",\n    \"payload\": {\n      \"accountId\": \"{{account_id}}\",\n      \"name\": \"Checking (renamed)\"\n    },\n    \"issuedAt\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/commands/apply"
+          }
+        },
+        {
+          "name": "account.archive",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"commandId\": \"{{$guid}}\",\n    \"householdId\": \"{{household_id}}\",\n    \"kind\": \"account.archive\",\n    \"payload\": {\n      \"accountId\": \"{{account_id}}\"\n    },\n    \"issuedAt\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/commands/apply"
+          }
+        },
+        {
+          "name": "category.create",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.kind === 'applied' && json.applied?.categoryId) {",
+                  "  pm.environment.set('category_id', json.applied.categoryId);",
+                  "}",
+                  "pm.test('Command applied', () => pm.expect(json.kind).to.eql('applied'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"commandId\": \"{{$guid}}\",\n    \"householdId\": \"{{household_id}}\",\n    \"kind\": \"category.create\",\n    \"payload\": {\n      \"name\": \"Groceries\",\n      \"type\": \"expense\",\n      \"color\": \"#B48A7B\",\n      \"icon\": \"\\ud83d\\uded2\",\n      \"parentId\": null,\n      \"sortOrder\": 0\n    },\n    \"issuedAt\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/commands/apply"
+          }
+        },
+        {
+          "name": "category.update",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"commandId\": \"{{$guid}}\",\n    \"householdId\": \"{{household_id}}\",\n    \"kind\": \"category.update\",\n    \"payload\": {\n      \"categoryId\": \"{{category_id}}\",\n      \"name\": \"Groceries (renamed)\"\n    },\n    \"issuedAt\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/commands/apply"
+          }
+        },
+        {
+          "name": "category.archive",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"commandId\": \"{{$guid}}\",\n    \"householdId\": \"{{household_id}}\",\n    \"kind\": \"category.archive\",\n    \"payload\": {\n      \"categoryId\": \"{{category_id}}\"\n    },\n    \"issuedAt\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/commands/apply"
+          }
+        },
+        {
+          "name": "transaction.create (expense)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.kind === 'applied' && json.applied?.transactionId) {",
+                  "  pm.environment.set('transaction_id', json.applied.transactionId);",
+                  "}",
+                  "pm.test('Command applied', () => pm.expect(json.kind).to.eql('applied'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"commandId\": \"{{$guid}}\",\n    \"householdId\": \"{{household_id}}\",\n    \"kind\": \"transaction.create\",\n    \"payload\": {\n      \"type\": \"expense\",\n      \"amountMinor\": 2500,\n      \"date\": \"2026-09-03\",\n      \"accountId\": \"{{account_id}}\",\n      \"categoryId\": \"{{category_id}}\",\n      \"description\": \"Weekly groceries\",\n      \"toAccountId\": null,\n      \"isRecurring\": false\n    },\n    \"issuedAt\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/commands/apply"
+          }
+        },
+        {
+          "name": "transaction.edit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"commandId\": \"{{$guid}}\",\n    \"householdId\": \"{{household_id}}\",\n    \"kind\": \"transaction.edit\",\n    \"payload\": {\n      \"transactionId\": \"{{transaction_id}}\",\n      \"description\": \"Updated description\",\n      \"amountMinor\": 3000\n    },\n    \"issuedAt\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/commands/apply"
+          }
+        },
+        {
+          "name": "transaction.remove",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"commandId\": \"{{$guid}}\",\n    \"householdId\": \"{{household_id}}\",\n    \"kind\": \"transaction.remove\",\n    \"payload\": {\n      \"transactionId\": \"{{transaction_id}}\"\n    },\n    \"issuedAt\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/commands/apply"
+          }
+        },
+        {
+          "name": "member.role.change",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"commandId\": \"{{$guid}}\",\n    \"householdId\": \"{{household_id}}\",\n    \"kind\": \"member.role.change\",\n    \"payload\": {\n      \"userId\": \"{{member_user_id}}\",\n      \"role\": \"viewer\"\n    },\n    \"issuedAt\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/commands/apply"
+          }
+        },
+        {
+          "name": "import_bundle (accounts chunk)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"commandId\": \"{{$guid}}\",\n    \"householdId\": \"{{household_id}}\",\n    \"kind\": \"import_bundle\",\n    \"payload\": {\n      \"entityType\": \"account\",\n      \"chunkIndex\": 0,\n      \"chunkCount\": 1,\n      \"rows\": []\n    },\n    \"issuedAt\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/commands/apply",
+            "description": "Enable Sync migration path. Populate `rows` with account records from the mobile manifest."
+          }
+        },
+        {
+          "name": "invalid kind (expect invalid_intent)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Returns invalid_intent', () => pm.expect(json.kind).to.eql('invalid_intent'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"commandId\": \"{{$guid}}\",\n    \"householdId\": \"{{household_id}}\",\n    \"kind\": \"card_payment.record\",\n    \"payload\": {},\n    \"issuedAt\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/commands/apply"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ledger",
+      "item": [
+        {
+          "name": "List accounts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/ledger/accounts/list"
+          }
+        },
+        {
+          "name": "List categories",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/ledger/categories/list"
+          }
+        },
+        {
+          "name": "List transactions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\",\n    \"limit\": 50\n  }\n}"
+            },
+            "url": "{{rpc_url}}/ledger/transactions/list"
+          }
+        },
+        {
+          "name": "Get transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\",\n    \"transactionId\": \"{{transaction_id}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/ledger/transactions/get"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sync",
+      "item": [
+        {
+          "name": "Get delta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (typeof json.latestSeq === 'number') {",
+                  "  pm.environment.set('sync_since', String(json.latestSeq));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n  \"householdId\": \"{{household_id}}\",\n  \"since\": {{sync_since}},\n  \"limit\": 500\n}\n}"
+            },
+            "url": "{{rpc_url}}/sync/getDelta"
+          }
+        },
+        {
+          "name": "Status (kill switch)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {}\n}"
+            },
+            "url": "{{rpc_url}}/sync/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Activity",
+      "item": [
+        {
+          "name": "List activity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\",\n    \"limit\": 50,\n    \"offset\": 0\n  }\n}"
+            },
+            "url": "{{rpc_url}}/activity/list"
+          }
+        },
+        {
+          "name": "List activity (date range)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\",\n    \"limit\": 50,\n    \"offset\": 0,\n    \"from\": \"2026-01-01\",\n    \"to\": \"2026-12-31\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/activity/list"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Migration",
+      "item": [
+        {
+          "name": "Get manifest",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/migration/getManifest",
+            "description": "Recomputes import integrity manifest after import_bundle chunks."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Push (WebSocket probe)",
+      "item": [
+        {
+          "name": "GET push endpoint (expect 426 or 401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/push/household/{{household_id}}",
+            "description": "Postman cannot complete a WebSocket handshake. Use this to verify auth (401) and membership (403). Native clients connect with ws:// and the session cookie."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Workflow \u2014 Full smoke",
+      "item": [
+        {
+          "name": "1. Sign in",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const setCookie = pm.response.headers.get('Set-Cookie');",
+                  "if (setCookie) {",
+                  "  const match = setCookie.match(/better-auth\\.session_token=([^;]+)/);",
+                  "  if (match) {",
+                  "    const cookie = `better-auth.session_token=${match[1]}`;",
+                  "    pm.environment.set('session_cookie', cookie);",
+                  "  }",
+                  "}",
+                  "pm.test('Signed in', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{auth_url}}/sign-in/email"
+          }
+        },
+        {
+          "name": "2. Create household",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.householdId) pm.environment.set('household_id', json.householdId);",
+                  "pm.test('Household created', () => pm.expect(json.householdId).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"name\": \"Smoke Test Household\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/households/create"
+          }
+        },
+        {
+          "name": "3. Create account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.kind === 'applied' && json.applied?.accountId) pm.environment.set('account_id', json.applied.accountId);",
+                  "pm.test('Account created', () => pm.expect(json.kind).to.eql('applied'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"commandId\": \"{{$guid}}\",\n    \"householdId\": \"{{household_id}}\",\n    \"kind\": \"account.create\",\n    \"payload\": {\n      \"name\": \"Checking\",\n      \"type\": \"bank\",\n      \"currency\": \"USD\",\n      \"initialBalanceMinor\": 100000\n    },\n    \"issuedAt\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/commands/apply"
+          }
+        },
+        {
+          "name": "4. Create category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.kind === 'applied' && json.applied?.categoryId) pm.environment.set('category_id', json.applied.categoryId);",
+                  "pm.test('Category created', () => pm.expect(json.kind).to.eql('applied'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"commandId\": \"{{$guid}}\",\n    \"householdId\": \"{{household_id}}\",\n    \"kind\": \"category.create\",\n    \"payload\": {\n      \"name\": \"Groceries\",\n      \"type\": \"expense\"\n    },\n    \"issuedAt\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/commands/apply"
+          }
+        },
+        {
+          "name": "5. Create transaction",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.kind === 'applied' && json.applied?.transactionId) pm.environment.set('transaction_id', json.applied.transactionId);",
+                  "pm.test('Transaction created', () => pm.expect(json.kind).to.eql('applied'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"commandId\": \"{{$guid}}\",\n    \"householdId\": \"{{household_id}}\",\n    \"kind\": \"transaction.create\",\n    \"payload\": {\n      \"type\": \"expense\",\n      \"amountMinor\": 1500,\n      \"date\": \"2026-09-03\",\n      \"accountId\": \"{{account_id}}\",\n      \"categoryId\": \"{{category_id}}\",\n      \"description\": \"Smoke test purchase\"\n    },\n    \"issuedAt\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": "{{rpc_url}}/commands/apply"
+          }
+        },
+        {
+          "name": "6. List transactions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Has transactions', () => pm.expect(json.transactions.length).to.be.at.least(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\",\n    \"limit\": 10\n  }\n}"
+            },
+            "url": "{{rpc_url}}/ledger/transactions/list"
+          }
+        },
+        {
+          "name": "7. Get sync delta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Delta returned', () => pm.expect(json).to.have.property('changes'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\",\n    \"since\": 0,\n    \"limit\": 500\n  }\n}"
+            },
+            "url": "{{rpc_url}}/sync/getDelta"
+          }
+        }
+      ]
+    }
+  ]
+}
