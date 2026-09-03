@@ -30,13 +30,18 @@ export const useLocalAccountDataSource = () => {
       create: port.mutations.createAccount,
       update: port.mutations.updateAccount,
       archive: port.mutations.archiveAccount,
+      restore: port.mutations.restoreAccount,
+      policy: { immutableFields: new Set() },
     },
     accountLifecycle: {
       kind: "local",
       archivalPreview: port.reads.archivalPreview,
       deletionPreview: port.reads.deletionPreview,
-      restore: port.mutations.restoreAccount,
       delete: port.mutations.deleteAccount,
+    },
+    accountPrivacy: {
+      kind: "unavailable",
+      reason: "Account privacy is a household feature. Sign in and migrate this ledger first.",
     },
     observeErrors: runner.observeErrors,
   } satisfies LedgerAccountDataSource;

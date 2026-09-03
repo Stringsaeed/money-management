@@ -2,7 +2,6 @@ import type { CommandEnvelope } from "@trove/protocol";
 
 import { orpc } from "@/lib/server/orpc";
 import { generateId } from "@/utils/id";
-import type { Account } from "@/types";
 import { enqueueCommand, listProjectableCommands, type LocalDb } from "@/lib/sync/outbox";
 
 import {
@@ -16,16 +15,9 @@ import {
   type LedgerDataSourceOperation,
   type LedgerWriteback,
 } from "./contract";
-import {
-  assertSupportedAccountUpdate,
-  calculateSyncedBalance,
-  mapSyncedAccount,
-  mapSyncedCategory,
-  toSyncedAccountType,
-  type SyncedAccount,
-  type SyncedTransaction,
-} from "./synced-mappers";
-import { projectPendingTransactions } from "./pending-transaction-projector";
+import { mapSyncedCategory, type SyncedTransaction } from "./synced-mappers";
+import { projectPendingLedger } from "./pending-transaction-projector";
+import { createSyncedAccountResource } from "./synced-accounts";
 import {
   readSyncedTransactionSnapshot,
   writeSyncedTransactionSnapshot,
@@ -42,6 +34,8 @@ export type SyncedLedgerDataSource = LedgerAccountDataSource &
     hydration: LedgerHydration<{ since: number }, SyncedHydration>;
     writeback: LedgerWriteback<CommandEnvelope, SyncedWriteback>;
   };
+
+const snapshotRefreshByCacheKey = new Map<string, Promise<SyncedTransactionSnapshot>>();
 
 interface CreateSyncedLedgerDataSourceOptions {
   householdId: string;
@@ -124,6 +118,9 @@ export const createSyncedLedgerDataSource = ({
     try {
       return await readSyncedTransactionSnapshot(db, householdId, userId);
     } catch (cause) {
+      if (offlineState.kind === "offline_cached") {
+        return { householdId, userId, accounts: [], categories: [], transactions: [] };
+      }
       throw new LedgerDataSourceError("synced", operation, cause, "offline");
     }
   };
@@ -148,6 +145,16 @@ export const createSyncedLedgerDataSource = ({
     await writeSyncedTransactionSnapshot(db, snapshot);
     return snapshot;
   };
+  const refreshSnapshotCoalesced = (): Promise<SyncedTransactionSnapshot> => {
+    const cacheKey = `synced:${householdId}:${userId}`;
+    const inflight = snapshotRefreshByCacheKey.get(cacheKey);
+    if (inflight) return inflight;
+    const pending = refreshSnapshot().finally(() => {
+      snapshotRefreshByCacheKey.delete(cacheKey);
+    });
+    snapshotRefreshByCacheKey.set(cacheKey, pending);
+    return pending;
+  };
   const readCachedProjectedSnapshot = async (
     operation: LedgerDataSourceOperation = "read.transactions",
   ): Promise<SyncedTransactionSnapshot> => {
@@ -155,7 +162,7 @@ export const createSyncedLedgerDataSource = ({
       readOfflineSnapshot(operation),
       listProjectableCommands(db, householdId, userId),
     ]);
-    return projectPendingTransactions(snapshot, commands);
+    return projectPendingLedger(snapshot, commands);
   };
   const readProjectedSnapshot = (operation: LedgerDataSourceOperation = "read.transactions") =>
     runner.run(operation, async () => {
@@ -164,7 +171,7 @@ export const createSyncedLedgerDataSource = ({
       }
       let snapshot: SyncedTransactionSnapshot;
       try {
-        snapshot = await refreshSnapshot();
+        snapshot = await refreshSnapshotCoalesced();
       } catch (cause) {
         try {
           snapshot = await readSyncedTransactionSnapshot(db, householdId, userId);
@@ -173,7 +180,7 @@ export const createSyncedLedgerDataSource = ({
         }
       }
       const commands = await listProjectableCommands(db, householdId, userId);
-      return projectPendingTransactions(snapshot, commands);
+      return projectPendingLedger(snapshot, commands);
     });
   const enqueueTransactionIntent = (
     operation: LedgerDataSourceOperation,
@@ -185,27 +192,17 @@ export const createSyncedLedgerDataSource = ({
       }
       await enqueueCommand(db, { ...command, userId });
     });
-  const listProjectedAccounts = async (includeArchived: boolean): Promise<Account[]> => {
-    const snapshot = await readProjectedSnapshot("read.accounts");
-    return snapshot.accounts
-      .filter((row) => includeArchived || row.lifecycle === "active")
-      .map(mapSyncedAccount);
-  };
-  const findCachedAccount = async (id: string): Promise<SyncedAccount> => {
-    const account = (await readCachedProjectedSnapshot("read.accounts")).accounts.find(
-      (row) => row.id === id,
-    );
-    if (!account) {
-      throw new Error(
-        "This Account is not in the authorized ledger snapshot. Refresh the ledger before editing it.",
-      );
-    }
-    return account;
-  };
+  const { accounts, accountPrivacy } = createSyncedAccountResource({
+    householdId,
+    userId,
+    readSnapshot: readProjectedSnapshot,
+    readCachedSnapshot: readCachedProjectedSnapshot,
+    enqueue: enqueueTransactionIntent,
+  });
   const transactions = createSyncedTransactionResource({
     householdId,
-    readSnapshot: () => readProjectedSnapshot(),
-    readCachedSnapshot: () => readCachedProjectedSnapshot(),
+    readSnapshot: readProjectedSnapshot,
+    readCachedSnapshot: readCachedProjectedSnapshot,
     executeCommand: enqueueTransactionIntent,
   });
 
@@ -213,75 +210,9 @@ export const createSyncedLedgerDataSource = ({
     source: "synced",
     cacheKey: `synced:${householdId}:${userId}`,
     offlineState,
-    accounts: {
-      list: () => listProjectedAccounts(false),
-      get: async (id) => (await listProjectedAccounts(true)).find((account) => account.id === id),
-      listWithBalances: async (includeArchived) => {
-        const snapshot = await readProjectedSnapshot("read.accounts");
-        return snapshot.accounts
-          .map(mapSyncedAccount)
-          .filter((account) => includeArchived || account.lifecycle === "active")
-          .map((account) => ({
-            ...account,
-            balance: calculateSyncedBalance(account, snapshot.transactions),
-          }));
-      },
-      create: async (data) => {
-        const id = generateId();
-        await enqueueTransactionIntent("mutation.account-create", {
-          commandId: generateId(),
-          householdId,
-          kind: "account.create",
-          payload: {
-            id,
-            name: data.name,
-            type: toSyncedAccountType(data.type),
-            currency: data.currency,
-            color: data.color,
-            icon: data.icon,
-            initialBalanceMinor: data.initialBalance,
-            excludeFromTotal: data.excludeFromTotal,
-            sortOrder: data.sortOrder,
-          },
-        });
-        return id;
-      },
-      update: async (id, data) => {
-        assertSupportedAccountUpdate(data);
-        const expectedVersion = (await findCachedAccount(id)).version;
-        return enqueueTransactionIntent("mutation.account-update", {
-          commandId: generateId(),
-          householdId,
-          kind: "account.update",
-          payload: {
-            accountId: id,
-            ...(data.name !== undefined && { name: data.name }),
-            ...(data.color !== undefined && { color: data.color }),
-            ...(data.icon !== undefined && { icon: data.icon }),
-            ...(data.excludeFromTotal !== undefined && {
-              excludeFromTotal: data.excludeFromTotal,
-            }),
-            ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
-            ...(data.visibility !== undefined && { visibility: data.visibility }),
-          },
-          preconditions: [{ entityId: id, expectedVersion }],
-        });
-      },
-      archive: async (id) => {
-        const account = await findCachedAccount(id);
-        if (account.lifecycle === "archived") {
-          return;
-        }
-        return enqueueTransactionIntent("mutation.account-archive", {
-          commandId: generateId(),
-          householdId,
-          kind: "account.archive",
-          payload: { accountId: id },
-          preconditions: [{ entityId: id, expectedVersion: account.version }],
-        });
-      },
-    },
+    accounts,
     accountLifecycle: { kind: "synced" },
+    accountPrivacy,
     categories: {
       list: async (type, includeArchived = false) => {
         const rows =

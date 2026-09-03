@@ -98,6 +98,15 @@ export type AccountUpdate = Partial<
   readonly visibility?: AccountVisibilityValue;
 };
 
+export interface AccountPrivacy {
+  readonly visibility: AccountVisibilityValue;
+  readonly isOwner: boolean;
+}
+
+export interface LedgerAccountPolicy {
+  readonly immutableFields: ReadonlySet<keyof AccountUpdate>;
+}
+
 export interface LedgerAccountResource {
   list: () => Promise<Account[]>;
   get: (id: string) => Promise<Account | undefined>;
@@ -105,6 +114,8 @@ export interface LedgerAccountResource {
   create: (data: NewAccount) => Promise<string>;
   update: (id: string, data: AccountUpdate) => Promise<unknown>;
   archive: (id: string) => Promise<unknown>;
+  restore: (id: string) => Promise<unknown>;
+  readonly policy: LedgerAccountPolicy;
 }
 
 export type LedgerAccountLifecycle =
@@ -112,10 +123,17 @@ export type LedgerAccountLifecycle =
       readonly kind: "local";
       archivalPreview: (id: string, localDate: string) => Promise<AccountArchivalPreview>;
       deletionPreview: (id: string) => Promise<AccountDeletionPreview>;
-      restore: (id: string) => Promise<unknown>;
       delete: (id: string) => Promise<unknown>;
     }
   | { readonly kind: "synced" };
+
+export type LedgerAccountPrivacy =
+  | { readonly kind: "unavailable"; readonly reason: string }
+  | {
+      readonly kind: "synced";
+      read: (id: string) => Promise<AccountPrivacy | undefined>;
+      set: (id: string, visibility: AccountPrivacy["visibility"]) => Promise<unknown>;
+    };
 
 export const createLedgerOperationRunner = (source: LedgerDataSourceKind) => {
   const observers = new Set<LedgerErrorObserver>();
@@ -153,6 +171,7 @@ export interface LedgerAccountDataSource {
   readonly offlineState: LedgerOfflineState;
   readonly accounts: LedgerAccountResource;
   readonly accountLifecycle: LedgerAccountLifecycle;
+  readonly accountPrivacy: LedgerAccountPrivacy;
   observeErrors: (observer: LedgerErrorObserver) => () => void;
 }
 

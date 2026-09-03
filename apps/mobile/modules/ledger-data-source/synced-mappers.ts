@@ -3,6 +3,7 @@ import type { Account, Category, TransactionWithDetails } from "@/types";
 
 import {
   unsupportedSyncedOperation,
+  type AccountPrivacy,
   type AccountUpdate,
   type NewAccount,
   type TransactionUpdate,
@@ -34,6 +35,14 @@ export type SyncedTransactionPage = Omit<TransactionResponse, "transactions"> & 
 
 const toIso = (value: Date | string): string =>
   value instanceof Date ? value.toISOString() : value;
+
+export const mapSyncedAccountPrivacy = (
+  row: SyncedAccount,
+  viewerUserId: string,
+): AccountPrivacy => ({
+  visibility: row.visibility,
+  isOwner: row.ownerUserId === viewerUserId,
+});
 
 export const mapSyncedAccount = (row: SyncedAccount): Account => ({
   id: row.id,

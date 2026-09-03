@@ -268,16 +268,28 @@ async function rebaseInvalidDependents(
   }
 }
 
+const MUTABLE_ENTITY_ID = {
+  "transaction.edit": "transactionId",
+  "transaction.remove": "transactionId",
+  "account.update": "accountId",
+  "account.archive": "accountId",
+  "account.restore": "accountId",
+} as const;
+
 function mutableEntityId(command: CommandEnvelope): string | null {
   if (command.kind === "transaction.edit" || command.kind === "transaction.remove") {
     // SAFETY: these command kinds are emitted only with their registered transaction payload.
     const payload = command.payload as { transactionId: string };
-    return payload.transactionId;
+    return payload[MUTABLE_ENTITY_ID[command.kind]];
   }
-  if (command.kind === "account.update" || command.kind === "account.archive") {
+  if (
+    command.kind === "account.update" ||
+    command.kind === "account.archive" ||
+    command.kind === "account.restore"
+  ) {
     // SAFETY: these command kinds are emitted only with their registered account payload.
     const payload = command.payload as { accountId: string };
-    return payload.accountId;
+    return payload[MUTABLE_ENTITY_ID[command.kind]];
   }
   return null;
 }
