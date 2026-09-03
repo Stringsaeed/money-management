@@ -6,6 +6,7 @@ import { ACCOUNT_TYPE_META } from "@/components/account/account-form-options";
 import { ArchivedAccountSummary } from "@/components/account/archived-account-summary";
 import { CreateResourceBottomSheet } from "@/components/resource/create-resource-bottom-sheet";
 import { CreateResourceSheetFooter } from "@/components/resource/create-resource-sheet-footer";
+import { useUpdateAccount } from "@/hooks/use-accounts";
 import type { AccountType, AccountWithBalance } from "@/types";
 
 import { useEditAccountForm } from "./form";
@@ -21,6 +22,7 @@ export function AccountEditSheet({ account, onDismiss, onUpdated }: AccountEditS
   const [error, setError] = useState("");
   const [hasCustomColor, setHasCustomColor] = useState(false);
   const [hasCustomIcon, setHasCustomIcon] = useState(isCustomAccountIcon(account.icon));
+  const local = useUpdateAccount().source === "local";
   const form = useEditAccountForm({
     account,
     onError: setError,
@@ -63,6 +65,8 @@ export function AccountEditSheet({ account, onDismiss, onUpdated }: AccountEditS
               onCurrencyExpandToggle={() => undefined}
               onIconChange={handleIconChange}
               onTypeChange={handleTypeChange}
+              typeEditable={local}
+              currencyEditable={local}
             />
           )}
           <AccountLifecycleActions account={account} onCompleted={onUpdated} />

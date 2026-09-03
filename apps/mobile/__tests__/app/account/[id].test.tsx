@@ -84,6 +84,31 @@ describe("app/account/[id]", () => {
     await render(<AccountDetailScreen />);
 
     expect(screen.getByRole("switch", { name: "Private account" })).toBeOnTheScreen();
+    expect(screen.getByRole("switch", { name: "Private account" })).not.toBeChecked();
+  });
+
+  it("prefers in-flight privacy variables over the authorized list", async () => {
+    mockUseAccount.mockReturnValue({
+      data: createAccount({ id: "account-1" }),
+      isLoading: false,
+    });
+    mockUseTransactions.mockReturnValue({ data: [], isLoading: false });
+    mockUseActiveHousehold.mockReturnValue({
+      activeHousehold: { householdId: "household-1" },
+    });
+    mockUseLedgerAccounts.mockReturnValue({
+      data: [{ id: "account-1", ownerUserId: "user-owner", visibility: "public" }],
+    });
+    mockUseAccountPrivacy.mockReturnValue({
+      error: null,
+      isPending: true,
+      mutate: jest.fn(),
+      variables: true,
+    });
+
+    await render(<AccountDetailScreen />);
+
+    expect(screen.getByRole("switch", { name: "Private account" })).toBeChecked();
   });
 
   it("renders account details, month navigation, and grouped transactions", async () => {

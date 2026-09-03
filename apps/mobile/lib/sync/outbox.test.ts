@@ -482,6 +482,46 @@ describe("household-scoped projection and drain", () => {
     expect(summary).toMatchObject({ applied: 1, rejected: 1, pending: 0 });
     expect(sent[1].preconditions).toEqual([{ entityId: "transaction-1", expectedVersion: 4 }]);
   });
+
+  it("rebases a later Account edit after an invalid dependent update is rejected", async () => {
+    const db = await setupDb();
+    await enqueueCommand(
+      db,
+      makeInput({
+        commandId: "cmd-account-invalid",
+        userId: "user-1",
+        kind: "account.update",
+        payload: { accountId: "account-1", visibility: "private" },
+        preconditions: [{ entityId: "account-1", expectedVersion: 4 }],
+      }),
+    );
+    await enqueueCommand(
+      db,
+      makeInput({
+        commandId: "cmd-account-valid",
+        userId: "user-1",
+        kind: "account.archive",
+        payload: { accountId: "account-1" },
+        preconditions: [{ entityId: "account-1", expectedVersion: 5 }],
+      }),
+    );
+    const sent: CommandEnvelope[] = [];
+
+    const summary = await drainOutbox(
+      db,
+      HOUSEHOLD_ID,
+      async (envelope) => {
+        sent.push(envelope);
+        return sent.length === 1
+          ? { kind: "invalid_intent", issues: [{ field: "visibility", message: "funding" }] }
+          : applied();
+      },
+      "user-1",
+    );
+
+    expect(summary).toMatchObject({ applied: 1, rejected: 1, pending: 0 });
+    expect(sent[1].preconditions).toEqual([{ entityId: "account-1", expectedVersion: 4 }]);
+  });
 });
 
 describe("truncateOutbox", () => {

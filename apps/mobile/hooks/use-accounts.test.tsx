@@ -7,6 +7,7 @@ import {
   useAccountDeletionPreview,
   useAccounts,
   useAccountsWithBalances,
+  useAllAccountsWithBalances,
   useArchiveAccount,
   useCreateAccount,
   useDeleteAccount,
@@ -29,6 +30,13 @@ const mockUpdateAccountWithRecurringRules = jest.fn();
 const mockCohereLedgerCache = jest.fn();
 const mockUseAccountVisibility = jest.fn();
 const mockListServerAccounts = jest.fn();
+const mockListServerCategories = jest.fn();
+const mockListServerTransactions = jest.fn();
+const mockEnqueueCommand = jest.fn();
+const mockListProjectableCommands = jest.fn();
+const mockApply = jest.fn();
+const mockReadSnapshot = jest.fn();
+const mockWriteSnapshot = jest.fn();
 
 interface CoherenceAwareMutation<T> {
   expectPending: () => void;
@@ -78,12 +86,23 @@ jest.mock("@/lib/server/orpc", () => ({
   orpc: {
     ledger: {
       accounts: { list: (...args: unknown[]) => mockListServerAccounts(...args) },
-      categories: { list: jest.fn() },
-      transactions: { list: jest.fn() },
+      categories: { list: (...args: unknown[]) => mockListServerCategories(...args) },
+      transactions: { list: (...args: unknown[]) => mockListServerTransactions(...args) },
     },
-    commands: { apply: jest.fn() },
+    commands: { apply: (...args: unknown[]) => mockApply(...args) },
     sync: { getDelta: jest.fn() },
   },
+}));
+
+jest.mock("@/lib/sync/outbox", () => ({
+  ...jest.requireActual("@/lib/sync/outbox"),
+  enqueueCommand: (...args: unknown[]) => mockEnqueueCommand(...args),
+  listProjectableCommands: (...args: unknown[]) => mockListProjectableCommands(...args),
+}));
+
+jest.mock("@/modules/ledger-data-source/synced-transaction-snapshot", () => ({
+  readSyncedTransactionSnapshot: (...args: unknown[]) => mockReadSnapshot(...args),
+  writeSyncedTransactionSnapshot: (...args: unknown[]) => mockWriteSnapshot(...args),
 }));
 
 jest.mock("@/hooks/use-account-visibility", () => ({
@@ -158,6 +177,21 @@ describe("use-accounts hooks", () => {
       rulesNeedingAttention: [],
     });
     mockCohereLedgerCache.mockResolvedValue(undefined);
+    mockEnqueueCommand.mockResolvedValue(undefined);
+    mockListProjectableCommands.mockResolvedValue([]);
+    mockReadSnapshot.mockRejectedValue(
+      new Error("No authoritative synced Transaction snapshot is cached for this household."),
+    );
+    mockWriteSnapshot.mockResolvedValue(undefined);
+    mockListServerCategories.mockResolvedValue([]);
+    mockListServerTransactions.mockResolvedValue({ transactions: [], hasMore: false });
+    mockApply.mockResolvedValue({
+      kind: "applied",
+      seq: 1,
+      effects: [],
+      applied: {},
+      replayed: false,
+    });
   });
 
   it("loads sorted accounts", async () => {
@@ -230,7 +264,34 @@ describe("use-accounts hooks", () => {
     expect(db.select).not.toHaveBeenCalled();
   });
 
-  it("surfaces cached-offline impact without attempting a synced read", async () => {
+  it("projects a pending offline create over an empty cached snapshot", async () => {
+    mockListProjectableCommands.mockResolvedValue([
+      {
+        commandId: "command-create",
+        householdId: "household-1",
+        kind: "account.create",
+        payload: {
+          id: "everyday",
+          name: "Everyday",
+          type: "bank",
+          currency: "AED",
+          color: "#4A90D9",
+          icon: "🏦",
+          initialBalanceMinor: 250_00,
+          excludeFromTotal: false,
+          sortOrder: 0,
+        },
+        issuedAt: "2026-03-28T12:00:00.000Z",
+        status: "pending",
+      },
+    ]);
+    mockReadSnapshot.mockResolvedValue({
+      householdId: "household-1",
+      userId: "test-user",
+      accounts: [],
+      categories: [],
+      transactions: [],
+    });
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
 
@@ -242,18 +303,11 @@ describe("use-accounts hooks", () => {
       },
     });
 
-    await waitFor(() => expect(result.current.isError).toBe(true));
-
-    expect(result.current.error).toMatchObject({
-      name: "LedgerDataSourceError",
-      source: "synced",
-      operation: "read.accounts",
-      reason: "offline",
-    });
-    expect(result.current.error?.message).toContain("last cached ledger data is unchanged");
-    expect(result.current.error?.message).toContain("Check your connection and try again");
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual([
+      expect.objectContaining({ id: "everyday", name: "Everyday", currency: "AED" }),
+    ]);
     expect(mockListServerAccounts).not.toHaveBeenCalled();
-    expect(db.select).toHaveBeenCalledTimes(1);
   });
 
   it("hides locally retained accounts that the server no longer authorizes", async () => {
@@ -365,7 +419,7 @@ describe("use-accounts hooks", () => {
     const mutation = await startMutationAwaitingCoherence(() =>
       result.current.mutateAsync({
         id: "account-1",
-        data: { name: "Updated Name" },
+        data: { name: "Updated Name", visibility: "private" },
       }),
     );
 
@@ -461,5 +515,132 @@ describe("use-accounts hooks", () => {
     });
     mutation.expectPending();
     await mutation.resolve();
+  });
+
+  it("shows a queued synced create in pickers and balances without applying", async () => {
+    mockListServerAccounts.mockResolvedValue([]);
+    mockListProjectableCommands.mockResolvedValue([
+      {
+        commandId: "command-create",
+        householdId: "household-1",
+        kind: "account.create",
+        payload: {
+          id: "everyday",
+          name: "Everyday",
+          type: "bank",
+          currency: "AED",
+          color: "#4A90D9",
+          icon: "🏦",
+          initialBalanceMinor: 250_00,
+          excludeFromTotal: false,
+          sortOrder: 0,
+        },
+        issuedAt: "2026-03-28T12:00:00.000Z",
+        status: "pending",
+      },
+    ]);
+    const db = createMockDb();
+    mockUseDatabase.mockReturnValue(db);
+
+    const picker = await renderHookWithProviders(() => useAccounts(), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+    const balances = await renderHookWithProviders(() => useAllAccountsWithBalances(), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await waitFor(() => expect(picker.result.current.isSuccess).toBe(true));
+    await waitFor(() => expect(balances.result.current.isSuccess).toBe(true));
+
+    expect(picker.result.current.data).toEqual([
+      expect.objectContaining({
+        id: "everyday",
+        name: "Everyday",
+        type: "checking",
+        currency: "AED",
+      }),
+    ]);
+    expect(balances.result.current.data).toEqual([
+      expect.objectContaining({
+        id: "everyday",
+        name: "Everyday",
+        balance: 250_00,
+      }),
+    ]);
+  });
+
+  it("enqueues a synced create instead of applying or writing sqlite accounts", async () => {
+    const db = createMockDb();
+    mockUseDatabase.mockReturnValue(db);
+
+    const { result } = await renderHookWithProviders(() => useCreateAccount(), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        name: "Travel",
+        type: "savings",
+        currency: "USD",
+        color: "#8B9D83",
+        icon: "banknote.fill",
+        initialBalance: 0,
+        excludeFromTotal: false,
+        sortOrder: 0,
+      });
+    });
+
+    expect(mockEnqueueCommand).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({
+        kind: "account.create",
+        userId: "test-user",
+      }),
+    );
+    expect(mockApply).not.toHaveBeenCalled();
+    expect(db.insert).not.toHaveBeenCalledWith(accounts);
+  });
+
+  it("throws on synced restore instead of enqueueing a protocol kind", async () => {
+    const db = createMockDb();
+    mockUseDatabase.mockReturnValue(db);
+
+    const { result } = await renderHookWithProviders(() => useRestoreAccount(), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await expect(
+      act(async () => {
+        await result.current.mutateAsync("account-1");
+      }),
+    ).rejects.toThrow("unavailable for the synced ledger");
+    expect(mockEnqueueCommand).not.toHaveBeenCalled();
+    expect(mockApply).not.toHaveBeenCalled();
+    expect(mockRestoreAccount).not.toHaveBeenCalled();
+  });
+
+  it("disables archival and deletion previews on synced and keeps delete unsupported", async () => {
+    const db = createMockDb();
+    mockUseDatabase.mockReturnValue(db);
+
+    const archival = await renderHookWithProviders(() => useAccountArchivalPreview("account-1"), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+    const deletion = await renderHookWithProviders(() => useAccountDeletionPreview("account-1"), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+    const remove = await renderHookWithProviders(() => useDeleteAccount(), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    expect(archival.result.current.fetchStatus).toBe("idle");
+    expect(deletion.result.current.fetchStatus).toBe("idle");
+    expect(mockPreviewAccountArchival).not.toHaveBeenCalled();
+    expect(mockPreviewAccountDeletion).not.toHaveBeenCalled();
+    await expect(
+      act(async () => {
+        await remove.result.current.mutateAsync("account-1");
+      }),
+    ).rejects.toThrow("unavailable for the synced ledger");
   });
 });

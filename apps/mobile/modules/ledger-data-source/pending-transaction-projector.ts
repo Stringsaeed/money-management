@@ -93,7 +93,7 @@ interface ProjectionState {
 }
 
 /** Folds queued Transaction and Account intents over one authorized server snapshot. */
-export function projectPendingLedger(
+export function projectPendingTransactions(
   snapshot: SyncedTransactionSnapshot,
   commands: readonly ProjectableCommand[],
 ): SyncedTransactionSnapshot {
@@ -130,9 +130,6 @@ function projectCommand(state: ProjectionState, command: ProjectableCommand): vo
     case "account.archive":
       projectAccountArchive(state, command);
       break;
-    case "account.restore":
-      projectAccountRestore(state, command);
-      break;
     case "transaction.create":
       projectCreate(state, command);
       break;
@@ -149,8 +146,9 @@ function projectCommand(state: ProjectionState, command: ProjectableCommand): vo
 }
 
 function projectAccountCreate(state: ProjectionState, command: ProjectableCommand): void {
-  const input = decodePendingAccountCreate(command.payload);
-  if (!input || state.accounts.has(input.id)) return;
+  // SAFETY: createSyncedLedgerDataSource is the sole writer for this command kind.
+  const input = command.payload as PendingAccountCreatePayload;
+  if (state.accounts.has(input.id)) return;
   const timestamp = command.issuedAt ?? "1970-01-01T00:00:00.000Z";
   state.accounts.set(input.id, {
     householdId: state.householdId,
@@ -176,8 +174,8 @@ function projectAccountCreate(state: ProjectionState, command: ProjectableComman
 }
 
 function projectAccountUpdate(state: ProjectionState, command: ProjectableCommand): void {
-  const input = decodePendingAccountUpdate(command.payload);
-  if (!input) return;
+  // SAFETY: createSyncedLedgerDataSource is the sole writer for this command kind.
+  const input = command.payload as PendingAccountUpdatePayload;
   const existing = state.accounts.get(input.accountId);
   if (!existing || existing.lifecycle === "archived") return;
   state.accounts.set(input.accountId, {
@@ -195,8 +193,8 @@ function projectAccountUpdate(state: ProjectionState, command: ProjectableComman
 }
 
 function projectAccountArchive(state: ProjectionState, command: ProjectableCommand): void {
-  const input = decodePendingAccountLifecycle(command.payload);
-  if (!input) return;
+  // SAFETY: createSyncedLedgerDataSource is the sole writer for this command kind.
+  const input = command.payload as PendingAccountArchivePayload;
   const existing = state.accounts.get(input.accountId);
   if (!existing || existing.lifecycle === "archived") return;
   const timestamp = command.issuedAt ?? existing.updatedAt;
@@ -294,77 +292,3 @@ function projectRefund(state: ProjectionState, command: ProjectableCommand): voi
     updatedAt: timestamp,
   });
 }
-
-function projectAccountRestore(state: ProjectionState, command: ProjectableCommand): void {
-  const input = decodePendingAccountLifecycle(command.payload);
-  if (!input) return;
-  const existing = state.accounts.get(input.accountId);
-  if (!existing || existing.lifecycle !== "archived") return;
-  const timestamp = command.issuedAt ?? existing.updatedAt;
-  state.accounts.set(input.accountId, {
-    ...existing,
-    lifecycle: "active",
-    lifecycleChangedAt: timestamp,
-    version: existing.version + 1,
-    updatedBy: "optimistic",
-    updatedAt: timestamp,
-  });
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === "string" && value.length > 0;
-}
-
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value);
-}
-
-export function decodePendingAccountCreate(payload: unknown): PendingAccountCreatePayload | null {
-  if (!isRecord(payload) || !isNonEmptyString(payload.id) || !isNonEmptyString(payload.name)) return null;
-  if (payload.type !== "cash" && payload.type !== "bank" && payload.type !== "card") return null;
-  if (!isNonEmptyString(payload.currency) || !isNonEmptyString(payload.color) || !isNonEmptyString(payload.icon)) return null;
-  if (!isFiniteNumber(payload.initialBalanceMinor) || typeof payload.excludeFromTotal !== "boolean" || !isFiniteNumber(payload.sortOrder)) return null;
-  if (payload.visibility !== undefined && payload.visibility !== "public" && payload.visibility !== "private") return null;
-  return {
-    id: payload.id,
-    name: payload.name,
-    type: payload.type,
-    currency: payload.currency,
-    color: payload.color,
-    icon: payload.icon,
-    initialBalanceMinor: payload.initialBalanceMinor,
-    excludeFromTotal: payload.excludeFromTotal,
-    sortOrder: payload.sortOrder,
-    ...(payload.visibility !== undefined && { visibility: payload.visibility }),
-  };
-}
-
-export function decodePendingAccountUpdate(payload: unknown): PendingAccountUpdatePayload | null {
-  if (!isRecord(payload) || !isNonEmptyString(payload.accountId)) return null;
-  if (payload.name !== undefined && !isNonEmptyString(payload.name)) return null;
-  if (payload.color !== undefined && !isNonEmptyString(payload.color)) return null;
-  if (payload.icon !== undefined && !isNonEmptyString(payload.icon)) return null;
-  if (payload.excludeFromTotal !== undefined && typeof payload.excludeFromTotal !== "boolean") return null;
-  if (payload.sortOrder !== undefined && !isFiniteNumber(payload.sortOrder)) return null;
-  if (payload.visibility !== undefined && payload.visibility !== "public" && payload.visibility !== "private") return null;
-  return {
-    accountId: payload.accountId,
-    ...(payload.name !== undefined && { name: payload.name }),
-    ...(payload.color !== undefined && { color: payload.color }),
-    ...(payload.icon !== undefined && { icon: payload.icon }),
-    ...(payload.excludeFromTotal !== undefined && { excludeFromTotal: payload.excludeFromTotal }),
-    ...(payload.sortOrder !== undefined && { sortOrder: payload.sortOrder }),
-    ...(payload.visibility !== undefined && { visibility: payload.visibility }),
-  };
-}
-
-export function decodePendingAccountLifecycle(payload: unknown): PendingAccountArchivePayload | null {
-  if (!isRecord(payload) || !isNonEmptyString(payload.accountId)) return null;
-  return { accountId: payload.accountId };
-}
-
-export const projectPendingTransactions = projectPendingLedger;

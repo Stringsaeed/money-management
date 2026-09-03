@@ -105,6 +105,7 @@ type EntityLedgerChange = Exclude<LedgerChange, { kind: "ledger.reset" }>;
 
 const transactionChangeQueryKeys = [
   transactionKeys.all,
+  accountKeys.all,
   accountKeys.balances,
   monthSummaryKeys.all,
   transactionDateRangeKeys.all,

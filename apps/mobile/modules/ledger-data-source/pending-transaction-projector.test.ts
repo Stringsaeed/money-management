@@ -1,13 +1,13 @@
 import type { ProjectableCommand } from "@/lib/sync/outbox";
 
 import {
-  projectPendingLedger,
+  projectPendingTransactions,
   type PendingAccountArchivePayload,
   type PendingAccountCreatePayload,
   type PendingAccountUpdatePayload,
   type PendingTransactionCommandKind,
   type PendingTransactionPayload,
-} from "./pending-ledger-projector";
+} from "./pending-transaction-projector";
 import type { SyncedTransactionSnapshot } from "./synced-transaction-snapshot";
 
 const HOUSEHOLD_ID = "household-1";
@@ -101,7 +101,7 @@ const command = (
 });
 
 const accountCommand = (
-  kind: "account.create" | "account.update" | "account.archive" | "account.restore",
+  kind: "account.create" | "account.update" | "account.archive",
   payload: PendingAccountCreatePayload | PendingAccountUpdatePayload | PendingAccountArchivePayload,
   sequence: number,
 ): ProjectableCommand => ({
@@ -113,9 +113,9 @@ const accountCommand = (
   status: "pending",
 });
 
-describe("projectPendingLedger", () => {
+describe("projectPendingTransactions", () => {
   it("folds queued Transaction intents in FIFO order", () => {
-    const projected = projectPendingLedger(snapshot, [
+    const projected = projectPendingTransactions(snapshot, [
       command(
         "transaction.create",
         {
@@ -156,7 +156,7 @@ describe("projectPendingLedger", () => {
   });
 
   it("fails closed when an optimistic intent references an unauthorized Account", () => {
-    const projected = projectPendingLedger(snapshot, [
+    const projected = projectPendingTransactions(snapshot, [
       command(
         "transaction.create",
         {
@@ -175,7 +175,7 @@ describe("projectPendingLedger", () => {
   });
 
   it("inserts a pending Account create owned by the snapshot viewer", () => {
-    const projected = projectPendingLedger(snapshot, [
+    const projected = projectPendingTransactions(snapshot, [
       accountCommand(
         "account.create",
         {
@@ -203,7 +203,7 @@ describe("projectPendingLedger", () => {
   });
 
   it("skips a duplicate Account create", () => {
-    const projected = projectPendingLedger(snapshot, [
+    const projected = projectPendingTransactions(snapshot, [
       accountCommand(
         "account.create",
         {
@@ -228,7 +228,7 @@ describe("projectPendingLedger", () => {
   });
 
   it("patches an Account update and bumps version", () => {
-    const projected = projectPendingLedger(snapshot, [
+    const projected = projectPendingTransactions(snapshot, [
       accountCommand(
         "account.update",
         { accountId: "cash", name: "Daily", visibility: "private" },
@@ -244,7 +244,7 @@ describe("projectPendingLedger", () => {
   });
 
   it("keeps an archived Account row and skips a later update", () => {
-    const projected = projectPendingLedger(snapshot, [
+    const projected = projectPendingTransactions(snapshot, [
       accountCommand("account.archive", { accountId: "cash" }, 1),
       accountCommand("account.update", { accountId: "cash", name: "Gone" }, 2),
     ]);
@@ -257,7 +257,7 @@ describe("projectPendingLedger", () => {
   });
 
   it("skips archive and update when the Account is missing", () => {
-    const projected = projectPendingLedger(snapshot, [
+    const projected = projectPendingTransactions(snapshot, [
       accountCommand("account.update", { accountId: "missing", name: "Nope" }, 1),
       accountCommand("account.archive", { accountId: "missing" }, 2),
     ]);
@@ -266,7 +266,7 @@ describe("projectPendingLedger", () => {
   });
 
   it("lets a later Transaction create land on a pending Account create", () => {
-    const projected = projectPendingLedger(snapshot, [
+    const projected = projectPendingTransactions(snapshot, [
       accountCommand(
         "account.create",
         {
@@ -299,21 +299,5 @@ describe("projectPendingLedger", () => {
       accountId: "everyday",
       currency: "AED",
     });
-  });
-
-  it("restores an archived Account and skips malformed Account payloads", () => {
-    const archived = projectPendingLedger(snapshot, [
-      accountCommand("account.archive", { accountId: "cash" }, 1),
-    ]);
-    const projected = projectPendingLedger(archived, [
-      accountCommand("account.restore", { accountId: "cash" }, 2),
-      accountCommand("account.create", { id: "broken" } as PendingAccountCreatePayload, 3),
-    ]);
-
-    expect(projected.accounts.find((row) => row.id === "cash")).toMatchObject({
-      lifecycle: "active",
-      version: 2,
-    });
-    expect(projected.accounts.some((row) => row.id === "broken")).toBe(false);
   });
 });

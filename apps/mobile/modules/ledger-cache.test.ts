@@ -10,6 +10,7 @@ import {
   cohereLedgerCache,
   cohereLedgerEffects,
   cohereRecurringEffects,
+  cohereTransactionSurfaces,
   monthSummaryKeys,
   recurringRuleKeys,
   transactionDateRangeKeys,
@@ -277,6 +278,7 @@ describe("cohereLedgerCache", () => {
       change: { kind: "transaction.created", id: "transaction-1" },
       expectedKeys: [
         ["transactions"],
+        ["accounts"],
         ["account-balances"],
         ["month-summary"],
         ["transaction-date-range"],
@@ -290,6 +292,7 @@ describe("cohereLedgerCache", () => {
       change: { kind: "transaction.updated", id: "transaction-1" },
       expectedKeys: [
         ["transactions"],
+        ["accounts"],
         ["account-balances"],
         ["month-summary"],
         ["transaction-date-range"],
@@ -303,6 +306,7 @@ describe("cohereLedgerCache", () => {
       change: { kind: "transaction.deleted", id: "transaction-1" },
       expectedKeys: [
         ["transactions"],
+        ["accounts"],
         ["account-balances"],
         ["month-summary"],
         ["transaction-date-range"],
@@ -327,6 +331,18 @@ describe("cohereLedgerCache", () => {
 
     expect(invalidateQueries).toHaveBeenCalledTimes(1);
     expect(invalidateQueries).toHaveBeenCalledWith();
+  });
+});
+
+describe("cohereTransactionSurfaces", () => {
+  it("invalidates Account picker keys after outbox settlement", async () => {
+    const { queryClient, invalidateQueries } = createControlledQueryClient();
+
+    await cohereTransactionSurfaces(queryClient);
+
+    expect(invalidatedKeys(invalidateQueries)).toEqual(
+      expect.arrayContaining([accountKeys.all, accountKeys.balances, transactionKeys.all]),
+    );
   });
 });
 

@@ -222,7 +222,7 @@ export async function drainOutbox(
           })
           .where(eq(outboxCommands.commandId, row.commandId));
         if (result.kind === "invalid_intent") {
-          await rebaseInvalidTransactionDependents(db, householdId, userId, envelopeFrom(row));
+          await rebaseInvalidDependents(db, householdId, userId, envelopeFrom(row));
         }
       });
       rejected += 1;
@@ -232,14 +232,14 @@ export async function drainOutbox(
   return { applied, rejected, pending: 0 };
 }
 
-async function rebaseInvalidTransactionDependents(
+async function rebaseInvalidDependents(
   db: LocalDb,
   householdId: string,
   userId: string | undefined,
   rejectedCommand: CommandEnvelope,
 ): Promise<void> {
-  const transactionId = mutableTransactionId(rejectedCommand);
-  if (!transactionId) return;
+  const entityId = mutableEntityId(rejectedCommand);
+  if (!entityId) return;
   const rows = await db
     .select()
     .from(outboxCommands)
@@ -255,9 +255,9 @@ async function rebaseInvalidTransactionDependents(
   for (const row of rows) {
     if (!rowBelongsToUser(row, userId)) continue;
     const command = envelopeFrom(row);
-    if (mutableTransactionId(command) !== transactionId || !command.preconditions) continue;
+    if (mutableEntityId(command) !== entityId || !command.preconditions) continue;
     const preconditions = command.preconditions.map((precondition) =>
-      precondition.entityId === transactionId && precondition.expectedVersion !== undefined
+      precondition.entityId === entityId && precondition.expectedVersion !== undefined
         ? { ...precondition, expectedVersion: Math.max(0, precondition.expectedVersion - 1) }
         : precondition,
     );
@@ -268,11 +268,18 @@ async function rebaseInvalidTransactionDependents(
   }
 }
 
-function mutableTransactionId(command: CommandEnvelope): string | null {
-  if (command.kind !== "transaction.edit" && command.kind !== "transaction.remove") return null;
-  // SAFETY: these command kinds are emitted only with their registered transaction payload.
-  const payload = command.payload as { transactionId: string };
-  return payload.transactionId;
+function mutableEntityId(command: CommandEnvelope): string | null {
+  if (command.kind === "transaction.edit" || command.kind === "transaction.remove") {
+    // SAFETY: these command kinds are emitted only with their registered transaction payload.
+    const payload = command.payload as { transactionId: string };
+    return payload.transactionId;
+  }
+  if (command.kind === "account.update" || command.kind === "account.archive") {
+    // SAFETY: these command kinds are emitted only with their registered account payload.
+    const payload = command.payload as { accountId: string };
+    return payload.accountId;
+  }
+  return null;
 }
 
 /** Number of commands awaiting their first ack. */

@@ -14,6 +14,7 @@ import {
 import { Text } from "@/components/ui/text";
 import type { AccountType } from "@/types";
 
+import { ACCOUNT_TYPE_META } from "./account-form-options";
 import type { AccountFormApi } from "./form";
 
 type SheetTextInputProps = ComponentProps<typeof TextInput>;
@@ -29,6 +30,8 @@ interface AccountFormContentProps {
   onIconChange: (icon: string) => void;
   onTypeChange: (type: AccountType) => void;
   TextInputComponent?: ComponentType<SheetTextInputProps>;
+  typeEditable?: boolean;
+  currencyEditable?: boolean;
 }
 
 export function AccountFormContent({
@@ -42,6 +45,8 @@ export function AccountFormContent({
   onIconChange,
   onTypeChange,
   TextInputComponent = TextInput,
+  typeEditable = true,
+  currencyEditable = true,
 }: AccountFormContentProps) {
   return (
     <>
@@ -84,6 +89,7 @@ export function AccountFormContent({
 
         <AccountFormBalanceSection
           amountEditable={amountEditable}
+          currencyEditable={currencyEditable}
           currencyExpanded={currencyExpanded}
           form={form}
           lockedBalanceCents={lockedBalanceCents}
@@ -96,13 +102,22 @@ export function AccountFormContent({
           {(field) => (
             <View className="gap-2">
               <Text className="font-body-medium text-sm text-ink/60">Account type</Text>
-              <View className="-mx-5">
-                <AccountTypePicker
-                  contentContainerClassName="gap-2 px-5"
-                  onChange={onTypeChange}
-                  value={field.state.value}
-                />
-              </View>
+              {typeEditable ? (
+                <View className="-mx-5">
+                  <AccountTypePicker
+                    contentContainerClassName="gap-2 px-5"
+                    onChange={onTypeChange}
+                    value={field.state.value}
+                  />
+                </View>
+              ) : (
+                <View className="rounded-2xl border border-ledger-outline bg-surface-container px-4 py-3">
+                  <Text className="font-body-medium text-base text-ink">
+                    {ACCOUNT_TYPE_META[field.state.value].emoji}{" "}
+                    {ACCOUNT_TYPE_META[field.state.value].label}
+                  </Text>
+                </View>
+              )}
             </View>
           )}
         </form.Field>

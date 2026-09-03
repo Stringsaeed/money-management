@@ -1,15 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { orpc } from "@/lib/server/orpc";
 import type { AuthorizedLedgerAccount } from "@/hooks/use-authorized-ledger-accounts";
+import { useAccountDataSource } from "@/modules/ledger-data-source/coordinator";
 import { cohereLedgerCache } from "@/modules/ledger-cache";
-import { generateId } from "@/utils/id";
 
-/** Updates server visibility; local-only accounts deliberately have no remote toggle. */
+/** Updates visibility through the Account resource. Local-only ledgers have no remote toggle. */
 export function useAccountPrivacy(
   account: AuthorizedLedgerAccount | undefined,
   householdId: string | null,
 ) {
+  const source = useAccountDataSource();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -17,19 +17,9 @@ export function useAccountPrivacy(
       if (!account || !householdId) {
         throw new Error("This account is not available in the active household.");
       }
-      const result = await orpc.commands.apply({
-        commandId: generateId(),
-        householdId,
-        kind: "account.update",
-        payload: {
-          accountId: account.id,
-          visibility: isPrivate ? "private" : "public",
-        },
-        preconditions: [{ entityId: account.id, expectedVersion: account.version }],
+      await source.accounts.update(account.id, {
+        visibility: isPrivate ? "private" : "public",
       });
-      if (result.kind !== "applied") {
-        throw new Error("Could not update account privacy. Please try again.");
-      }
     },
     onSuccess: async () => {
       if (!account) {

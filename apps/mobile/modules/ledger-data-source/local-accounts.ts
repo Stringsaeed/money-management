@@ -76,13 +76,14 @@ export const createLocalAccountPort = (
         return id;
       }),
     updateAccount: (id: string, data: AccountUpdate) =>
-      runner.run("mutation.account-update", () =>
-        updateAccountWithRecurringRules(sqlite, {
+      runner.run("mutation.account-update", () => {
+        const { visibility: _ignored, ...changes } = data;
+        return updateAccountWithRecurringRules(sqlite, {
           accountId: id,
-          changes: data,
+          changes,
           now: nowIso(),
-        }),
-      ),
+        });
+      }),
     archiveAccount: (id: string) =>
       runner.run("mutation.account-archive", () => {
         const archivedAt = new Date(nowIso());

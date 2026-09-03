@@ -25,7 +25,7 @@ import {
   type SyncedAccount,
   type SyncedTransaction,
 } from "./synced-mappers";
-import { projectPendingLedger } from "./pending-ledger-projector";
+import { projectPendingTransactions } from "./pending-transaction-projector";
 import {
   readSyncedTransactionSnapshot,
   writeSyncedTransactionSnapshot,
@@ -155,7 +155,7 @@ export const createSyncedLedgerDataSource = ({
       readOfflineSnapshot(operation),
       listProjectableCommands(db, householdId, userId),
     ]);
-    return projectPendingLedger(snapshot, commands);
+    return projectPendingTransactions(snapshot, commands);
   };
   const readProjectedSnapshot = (operation: LedgerDataSourceOperation = "read.transactions") =>
     runner.run(operation, async () => {
@@ -173,7 +173,7 @@ export const createSyncedLedgerDataSource = ({
         }
       }
       const commands = await listProjectableCommands(db, householdId, userId);
-      return projectPendingLedger(snapshot, commands);
+      return projectPendingTransactions(snapshot, commands);
     });
   const enqueueTransactionIntent = (
     operation: LedgerDataSourceOperation,
