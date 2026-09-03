@@ -24,6 +24,13 @@ const mockDeleteCategory = jest.fn();
 const mockPreviewCategoryDeletion = jest.fn();
 const mockRestoreCategory = jest.fn();
 const mockListServerCategories = jest.fn();
+const mockListServerAccounts = jest.fn();
+const mockListServerTransactions = jest.fn();
+const mockEnqueueCommand = jest.fn();
+const mockListProjectableCommands = jest.fn();
+const mockApply = jest.fn();
+const mockReadSnapshot = jest.fn();
+const mockWriteSnapshot = jest.fn();
 
 interface CoherenceAwareMutation<T> {
   expectPending: () => void;
@@ -72,13 +79,24 @@ jest.mock("@/db/client", () => ({
 jest.mock("@/lib/server/orpc", () => ({
   orpc: {
     ledger: {
-      accounts: { list: jest.fn() },
+      accounts: { list: (...args: unknown[]) => mockListServerAccounts(...args) },
       categories: { list: (...args: unknown[]) => mockListServerCategories(...args) },
-      transactions: { list: jest.fn() },
+      transactions: { list: (...args: unknown[]) => mockListServerTransactions(...args) },
     },
-    commands: { apply: jest.fn() },
+    commands: { apply: (...args: unknown[]) => mockApply(...args) },
     sync: { getDelta: jest.fn() },
   },
+}));
+
+jest.mock("@/lib/sync/outbox", () => ({
+  ...jest.requireActual("@/lib/sync/outbox"),
+  enqueueCommand: (...args: unknown[]) => mockEnqueueCommand(...args),
+  listProjectableCommands: (...args: unknown[]) => mockListProjectableCommands(...args),
+}));
+
+jest.mock("@/modules/ledger-data-source/synced-transaction-snapshot", () => ({
+  readSyncedTransactionSnapshot: (...args: unknown[]) => mockReadSnapshot(...args),
+  writeSyncedTransactionSnapshot: (...args: unknown[]) => mockWriteSnapshot(...args),
 }));
 
 jest.mock("expo-sqlite", () => ({
@@ -121,6 +139,21 @@ describe("use-categories hooks", () => {
     });
     mockRestoreCategory.mockResolvedValue(undefined);
     mockCohereLedgerCache.mockResolvedValue(undefined);
+    mockEnqueueCommand.mockResolvedValue(undefined);
+    mockListProjectableCommands.mockResolvedValue([]);
+    mockReadSnapshot.mockRejectedValue(
+      new Error("No authoritative synced Transaction snapshot is cached for this household."),
+    );
+    mockWriteSnapshot.mockResolvedValue(undefined);
+    mockListServerAccounts.mockResolvedValue([]);
+    mockListServerTransactions.mockResolvedValue({ transactions: [], hasMore: false });
+    mockApply.mockResolvedValue({
+      kind: "applied",
+      seq: 1,
+      effects: [],
+      applied: {},
+      replayed: false,
+    });
   });
 
   it("loads categories with an optional type filter", async () => {
@@ -391,5 +424,193 @@ describe("use-categories hooks", () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it("shows a queued synced create in pickers without applying", async () => {
+    mockListServerCategories.mockResolvedValue([]);
+    mockListProjectableCommands.mockResolvedValue([
+      {
+        commandId: "command-create",
+        householdId: "household-1",
+        kind: "category.create",
+        payload: {
+          id: "dining",
+          name: "Dining",
+          type: "expense",
+          color: "#B48A7B",
+          icon: "🍽️",
+          parentId: null,
+          sortOrder: 0,
+        },
+        issuedAt: "2026-03-28T12:00:00.000Z",
+        status: "pending",
+      },
+    ]);
+    const db = createMockDb();
+    mockUseDatabase.mockReturnValue(db);
+
+    const { result } = await renderHookWithProviders(() => useCategories("expense"), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data).toEqual([
+      expect.objectContaining({
+        id: "dining",
+        name: "Dining",
+        type: "expense",
+      }),
+    ]);
+    expect(mockApply).not.toHaveBeenCalled();
+  });
+
+  it("enqueues a synced create instead of applying or writing sqlite categories", async () => {
+    const db = createMockDb();
+    mockUseDatabase.mockReturnValue(db);
+
+    const { result } = await renderHookWithProviders(() => useCreateCategory(), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        name: "Salary",
+        type: "income",
+        color: "#8B9D83",
+        icon: "💼",
+        parentId: null,
+        sortOrder: 0,
+      });
+    });
+
+    expect(mockEnqueueCommand).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({
+        kind: "category.create",
+        userId: "test-user",
+      }),
+    );
+    expect(mockApply).not.toHaveBeenCalled();
+    expect(db.insert).not.toHaveBeenCalledWith(categories);
+  });
+
+  it("enqueues a synced update with the cached version precondition", async () => {
+    mockReadSnapshot.mockResolvedValue({
+      householdId: "household-1",
+      userId: "test-user",
+      accounts: [],
+      categories: [
+        {
+          householdId: "household-1",
+          id: "category-1",
+          name: "Groceries",
+          type: "expense",
+          color: "#B48A7B",
+          icon: "🛒",
+          parentId: null,
+          sortOrder: 0,
+          lifecycle: "active",
+          lifecycleChangedAt: null,
+          version: 3,
+          createdBy: "test-user",
+          updatedBy: "test-user",
+          createdAt: "2026-03-28T10:00:00.000Z",
+          updatedAt: "2026-03-28T10:00:00.000Z",
+        },
+      ],
+      transactions: [],
+    });
+    const db = createMockDb();
+    mockUseDatabase.mockReturnValue(db);
+
+    const { result } = await renderHookWithProviders(() => useUpdateCategory(), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        id: "category-1",
+        data: { name: "Dining", sortOrder: 4 },
+      });
+    });
+
+    expect(mockEnqueueCommand).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({
+        kind: "category.update",
+        payload: { categoryId: "category-1", name: "Dining", sortOrder: 4 },
+        preconditions: [{ entityId: "category-1", expectedVersion: 3 }],
+      }),
+    );
+    expect(mockApply).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalledWith(categories);
+  });
+
+  it("enqueues a synced archive instead of applying", async () => {
+    mockReadSnapshot.mockResolvedValue({
+      householdId: "household-1",
+      userId: "test-user",
+      accounts: [],
+      categories: [
+        {
+          householdId: "household-1",
+          id: "category-1",
+          name: "Groceries",
+          type: "expense",
+          color: "#B48A7B",
+          icon: "🛒",
+          parentId: null,
+          sortOrder: 0,
+          lifecycle: "active",
+          lifecycleChangedAt: null,
+          version: 3,
+          createdBy: "test-user",
+          updatedBy: "test-user",
+          createdAt: "2026-03-28T10:00:00.000Z",
+          updatedAt: "2026-03-28T10:00:00.000Z",
+        },
+      ],
+      transactions: [],
+    });
+    const db = createMockDb();
+    mockUseDatabase.mockReturnValue(db);
+
+    const { result } = await renderHookWithProviders(() => useArchiveCategory(), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync("category-1");
+    });
+
+    expect(mockEnqueueCommand).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({
+        kind: "category.archive",
+        payload: { categoryId: "category-1" },
+        preconditions: [{ entityId: "category-1", expectedVersion: 3 }],
+      }),
+    );
+    expect(mockApply).not.toHaveBeenCalled();
+    expect(mockArchiveCategory).not.toHaveBeenCalled();
+  });
+
+  it("throws on synced restore instead of enqueueing a protocol kind", async () => {
+    const db = createMockDb();
+    mockUseDatabase.mockReturnValue(db);
+
+    const { result } = await renderHookWithProviders(() => useRestoreCategory(), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await expect(
+      act(async () => {
+        await result.current.mutateAsync("category-1");
+      }),
+    ).rejects.toThrow("unavailable for the synced ledger");
+    expect(mockEnqueueCommand).not.toHaveBeenCalled();
+    expect(mockApply).not.toHaveBeenCalled();
+    expect(mockRestoreCategory).not.toHaveBeenCalled();
   });
 });

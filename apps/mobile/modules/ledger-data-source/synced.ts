@@ -23,6 +23,7 @@ import {
   mapSyncedCategory,
   toSyncedAccountType,
   type SyncedAccount,
+  type SyncedCategory,
   type SyncedTransaction,
 } from "./synced-mappers";
 import { projectPendingTransactions } from "./pending-transaction-projector";
@@ -127,17 +128,6 @@ export const createSyncedLedgerDataSource = ({
       throw new LedgerDataSourceError("synced", operation, cause, "offline");
     }
   };
-  const executeServerCommand = async (
-    operation: LedgerDataSourceOperation,
-    command: CommandEnvelope,
-  ) =>
-    runNetwork(operation, async () => {
-      const result = await apply(command);
-      if (result.kind !== "applied") {
-        throw new Error(`The server rejected the command: ${result.kind}.`);
-      }
-      return result;
-    });
   const refreshSnapshot = async (): Promise<SyncedTransactionSnapshot> => {
     const [accounts, categories, transactions] = await Promise.all([
       listRawAccounts(),
@@ -201,6 +191,27 @@ export const createSyncedLedgerDataSource = ({
       );
     }
     return account;
+  };
+  const listProjectedCategories = async (type?: "income" | "expense", includeArchived = false) => {
+    const snapshot = await readProjectedSnapshot("read.categories");
+    return snapshot.categories
+      .filter(
+        (row) =>
+          (includeArchived || row.lifecycle === "active") &&
+          (type === undefined || row.type === type),
+      )
+      .map(mapSyncedCategory);
+  };
+  const findCachedCategory = async (id: string): Promise<SyncedCategory> => {
+    const category = (await readCachedProjectedSnapshot("read.categories")).categories.find(
+      (row) => row.id === id,
+    );
+    if (!category) {
+      throw new Error(
+        "This Category is not in the authorized ledger snapshot. Refresh the ledger before editing it.",
+      );
+    }
+    return category;
   };
   const transactions = createSyncedTransactionResource({
     householdId,
@@ -283,50 +294,57 @@ export const createSyncedLedgerDataSource = ({
     },
     accountLifecycle: { kind: "synced" },
     categories: {
-      list: async (type, includeArchived = false) => {
-        const rows =
-          offlineState.kind === "offline_cached"
-            ? (await readOfflineSnapshot("read.categories")).categories
-            : await listRawCategories();
-        return rows
-          .filter(
-            (row) =>
-              (includeArchived || row.lifecycle === "active") &&
-              (type === undefined || row.type === type),
-          )
-          .map(mapSyncedCategory);
-      },
-      get: async (id) => {
-        const rows =
-          offlineState.kind === "offline_cached"
-            ? (await readOfflineSnapshot("read.categories")).categories
-            : await listRawCategories();
-        return rows.map(mapSyncedCategory).find((category) => category.id === id);
-      },
+      list: (type, includeArchived = false) => listProjectedCategories(type, includeArchived),
+      get: async (id) =>
+        (await listProjectedCategories(undefined, true)).find((category) => category.id === id),
       create: async (data) => {
         const id = generateId();
-        await executeServerCommand("mutation.category-create", {
+        await enqueueTransactionIntent("mutation.category-create", {
           commandId: generateId(),
           householdId,
           kind: "category.create",
-          payload: { id, ...data },
+          payload: {
+            id,
+            name: data.name,
+            type: data.type,
+            color: data.color,
+            icon: data.icon,
+            parentId: data.parentId ?? null,
+            sortOrder: data.sortOrder,
+          },
         });
         return id;
       },
-      update: (id, data) =>
-        executeServerCommand("mutation.category-update", {
+      update: async (id, data) => {
+        const expectedVersion = (await findCachedCategory(id)).version;
+        return enqueueTransactionIntent("mutation.category-update", {
           commandId: generateId(),
           householdId,
           kind: "category.update",
-          payload: { categoryId: id, ...data },
-        }),
-      archive: (id) =>
-        executeServerCommand("mutation.category-archive", {
+          payload: {
+            categoryId: id,
+            ...(data.name !== undefined && { name: data.name }),
+            ...(data.color !== undefined && { color: data.color }),
+            ...(data.icon !== undefined && { icon: data.icon }),
+            ...(data.parentId !== undefined && { parentId: data.parentId }),
+            ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
+          },
+          preconditions: [{ entityId: id, expectedVersion }],
+        });
+      },
+      archive: async (id) => {
+        const category = await findCachedCategory(id);
+        if (category.lifecycle === "archived") {
+          return;
+        }
+        return enqueueTransactionIntent("mutation.category-archive", {
           commandId: generateId(),
           householdId,
           kind: "category.archive",
           payload: { categoryId: id },
-        }),
+          preconditions: [{ entityId: id, expectedVersion: category.version }],
+        });
+      },
     },
     categoryLifecycle: { kind: "synced" },
     transactions,
