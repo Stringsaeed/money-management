@@ -38,7 +38,6 @@ export async function computeLocalManifest(db: LocalDb): Promise<ImportManifest>
   };
 }
 
-/** Collapses grouped `{key, total}` rows into a `key -> total` record. */
 function sumsByKey(rows: readonly { key: string; total: number }[]): Record<string, number> {
   const totals: Record<string, number> = {};
   for (const row of rows) {

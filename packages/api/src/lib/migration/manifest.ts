@@ -40,7 +40,6 @@ export async function computeImportManifest(
   };
 }
 
-/** `SELECT COUNT(*)` for one household-scoped table — shared by every entity above. */
 function countRows<Table extends SQLiteTable & { householdId: SQLiteColumn }>(
   db: CommandDatabase,
   table: Table,
@@ -52,7 +51,6 @@ function countRows<Table extends SQLiteTable & { householdId: SQLiteColumn }>(
     .where(eq(table.householdId, householdId));
 }
 
-/** Collapses grouped `{key, total}` rows into a `key -> total` record. */
 function sumsByKey(rows: readonly { key: string; total: number }[]): Record<string, number> {
   const totals: Record<string, number> = {};
   for (const row of rows) {

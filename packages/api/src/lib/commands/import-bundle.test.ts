@@ -240,8 +240,6 @@ describe("commands.apply — import_bundle idempotency", () => {
       rows: [ACCOUNT_ROW],
     };
     expectApplied(await applyAs(OWNER, bundleEnvelope(envelopeChunk)));
-    // A different commandId — as if the client's ack was lost and it retried
-    // with a brand-new envelope rather than replaying the stored result.
     expectApplied(await applyAs(OWNER, bundleEnvelope(envelopeChunk)));
 
     const rows = await db

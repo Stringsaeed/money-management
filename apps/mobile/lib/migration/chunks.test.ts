@@ -39,7 +39,6 @@ async function setupDb(): Promise<LocalDb> {
   } & ExpoSQLiteDatabase<typeof schema>;
 }
 
-/** Groups chunks by entity type, in the order they were produced. */
 function entityTypesInOrder(chunks: readonly ImportBundlePayload[]): readonly string[] {
   const seen: string[] = [];
   for (const chunk of chunks) {

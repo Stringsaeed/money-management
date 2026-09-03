@@ -23,31 +23,16 @@ export interface CommandHandler<TPayload = unknown> {
   readonly supportedPredicates?: readonly string[];
 }
 
-/**
- * Handler registry, grown phase by phase as command kinds ship (#86 ledger,
- * #89 workspace/envelopes, #90 waterfalls, #91 card payments).
- */
 export const COMMAND_HANDLERS: Partial<Record<CommandKind, CommandHandler>> = {
   "member.role.change": memberRoleChangeHandler,
-
-  // ── Ledger structure (#86): owner/admin territory ─────────────────────────
   ...accountHandlers,
   ...categoryHandlers,
-
-  // ── Ledger facts (#86): every contributing role may write ────────────────
   ...transactionHandlers,
-
-  // ── Budget planning (#90) ────────────────────────────────────────────────
   "assignment.commit": assignmentCommitHandler,
-
-  // ── Refunds (#91) ────────────────────────────────────────────────────────
   "refund.link": refundCreateHandler,
-
-  // ── Local-to-cloud migration (#98) ────────────────────────────────────────
   import_bundle: importBundleHandler,
 };
 
-// HOUSEHOLD_ROLES is re-exported for consumers building payload schemas.
 export { HOUSEHOLD_ROLES };
 
 export type { CommandPlan, PlanRejection };

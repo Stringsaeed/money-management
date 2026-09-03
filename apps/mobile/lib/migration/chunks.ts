@@ -36,7 +36,6 @@ export async function buildImportChunks(db: LocalDb): Promise<readonly ImportBun
   return chunks;
 }
 
-/** Loads every local row for `entityType`, mapped onto the server's wire row shape. */
 async function loadWireRows(
   db: LocalDb,
   entityType: ImportEntityType,

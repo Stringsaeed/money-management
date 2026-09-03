@@ -11,10 +11,6 @@ export const db = Cloudflare.D1.Database("database", {
   migrationsDir: "../../packages/db/src/migrations",
 });
 
-// Observability metrics (#99): one Analytics Engine dataset receiving
-// latency samples + error events via writeDataPoint. Percentiles (p50/p95/
-// p99) are computed with AE SQL at query time — see docs/architecture/
-// observability.md.
 const metrics = Cloudflare.AnalyticsEngine.Dataset("metrics");
 
 export const server = Cloudflare.Worker("server", {
@@ -22,8 +18,6 @@ export const server = Cloudflare.Worker("server", {
   compatibility: {
     flags: ["nodejs_compat"],
   },
-  // Workers Logs: persisted invocation logs + console output power the
-  // dashboard in docs/architecture/observability.md.
   observability: {
     enabled: true,
     headSamplingRate: 1,
@@ -34,13 +28,9 @@ export const server = Cloudflare.Worker("server", {
       persist: true,
     },
   },
-  // Hourly settlement sweep (#88): the entry module's exported `scheduled`
-  // handler runs settleDueRules; safe under retries (occurrence-PK guard).
   crons: ["0 * * * *"],
   env: {
     DB: db,
-    // Per-household realtime push (#93): one WebSocket-holding DO instance
-    // per household, addressed with idFromName(householdId).
     PUSH_HOUSEHOLD_DO: Cloudflare.DurableObject("PUSH_HOUSEHOLD_DO", {
       className: "HouseholdPushDO",
     }),

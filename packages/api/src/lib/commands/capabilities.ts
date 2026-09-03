@@ -1,17 +1,7 @@
 import type { CommandKind, HouseholdRole } from "@trove/protocol";
 
-/**
- * Role capability map: `can(role, commandKind)`.
- *
- * The vocabulary is total over the protocol roles so `admin`/`viewer` can
- * land without touching call sites. The matrix grows phase by phase as
- * command handlers ship (#86, #89, #90, #91); kinds without a registered
- * handler are rejected as not-implemented before authorization matters.
- */
 const CAPABILITY_MATRIX: Readonly<Record<CommandKind, readonly HouseholdRole[]>> = {
   "member.role.change": ["owner"],
-  // Structural entities (accounts, categories) are owner/admin territory;
-  // ledger facts (transactions) are writable by every contributing role.
   "account.create": ["owner", "admin"],
   "account.update": ["owner", "admin"],
   "account.archive": ["owner", "admin"],

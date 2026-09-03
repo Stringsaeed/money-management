@@ -124,7 +124,6 @@ describe("computeImportManifest", () => {
         updatedBy: OWNER,
       },
     ]);
-    // A different household's rows must never leak into this manifest.
     await db.insert(ledgerAccount).values({
       householdId: OTHER_HOUSEHOLD_ID,
       id: "account-other",

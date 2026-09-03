@@ -79,7 +79,6 @@ const transactionRowSchema = z.object({
   updatedAt: isoDateTime,
 });
 
-/** Parses `rows` against `entityType`'s row schema, or collects the issues. */
 function parseRows(
   entityType: ImportEntityType,
   rows: readonly unknown[],
@@ -99,7 +98,6 @@ const ROW_SCHEMA_BY_ENTITY = {
   transaction: transactionRowSchema,
 } satisfies Record<ImportEntityType, z.ZodType>;
 
-/** Builds the one insert statement covering every row in this chunk. */
 function buildInsertStatement(
   ctx: PlanContext,
   entityType: ImportEntityType,

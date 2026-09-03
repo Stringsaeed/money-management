@@ -209,7 +209,6 @@ describe("routeCardPayment (pure waterfall)", () => {
   });
 
   it("never pays out of Unassigned when no unfunded spending exists", () => {
-    // Everything is already reserved; Unassigned must stay untouched.
     const routing = routeCardPayment({
       amountMinor: 800,
       reserveMinor: 300,
@@ -230,8 +229,6 @@ describe("routeCardPayment (pure waterfall)", () => {
       unassignedMinor: 400,
       unfundedCardSpendingMinor: 100,
     });
-    // The 300 of funded opening debt already over-covers the 100 of
-    // unfunded spending, so Unassigned contributes nothing.
     expect(routing).toEqual({
       reserveConsumedMinor: 500,
       openingDebtConsumedMinor: 300,
@@ -294,7 +291,6 @@ describe("card payment reserve calculation", () => {
 
   it("reserves categorized card spending capped by the envelope's assigned money", async () => {
     await assignToEnvelope(3_000);
-    // Card purchase of 5_000 on a mapped category: only 3_000 is supported.
     await seedExpense("tx-card-1", "card-1", 5_000);
 
     const facts = await getReserveFacts(db, HOUSEHOLD_ID, "USD", PERIOD);
@@ -308,14 +304,13 @@ describe("card payment reserve calculation", () => {
     let facts = await getReserveFacts(db, HOUSEHOLD_ID, "USD", PERIOD);
     expect(facts.reserveMinor).toBe(4_000);
 
-    // Refund half — the reserve shrinks without any separate write path.
     expectApplied(await linkRefund({ originalTransactionId: "tx-card-2", amountMinor: 1_500 }));
     facts = await getReserveFacts(db, HOUSEHOLD_ID, "USD", PERIOD);
     expect(facts.reserveMinor).toBe(2_500);
   });
 
   it("ignores unmapped and cash-account spending entirely", async () => {
-    await mapCategory("cat-unmapped", null); // tombstone mapping
+    await mapCategory("cat-unmapped", null);
     await seedExpense("tx-cash", "acc-1", 7_000, "cat-groceries");
     await seedExpense("tx-nomap", "card-1", 7_000, "cat-unmapped");
 
@@ -342,8 +337,6 @@ describe("refund.link", () => {
         date: "2026-04-20",
       }),
     );
-    // The refund landed in April and affects April's plan — its own period —
-    // while the linkage keeps the original expense visible in February.
     expect(result.applied.budgetPeriod).toBe("2026-04");
 
     const links = await db.select().from(refundLink);
@@ -361,7 +354,6 @@ describe("refund.link", () => {
     expectApplied(await linkRefund({ originalTransactionId: "tx-original", amountMinor: 3_000 }));
     expectApplied(await linkRefund({ originalTransactionId: "tx-original", amountMinor: 2_000 }));
 
-    // A third refund would push the cumulative total past 5_000.
     const third = await linkRefund({ originalTransactionId: "tx-original", amountMinor: 1_000 });
     expect(third.kind).toBe("invalid_intent");
   });
@@ -432,7 +424,6 @@ describe("refund.link", () => {
         preconditions: [],
       });
 
-    // Both plans read an empty refund sum.
     const planA = await makePlan();
     const planB = await makePlan();
     if (!("statements" in planA) || !("statements" in planB)) {
@@ -456,8 +447,6 @@ describe("refund.link", () => {
     };
 
     await commit(planA);
-    // The second stale batch trips the cumulative-cap guard: only 4_000 of
-    // the 5_000 expense can ever be refunded across interleaved writers.
     await expect(commit(planB)).rejects.toThrow();
     expect(await db.select().from(refundLink)).toHaveLength(1);
   });
