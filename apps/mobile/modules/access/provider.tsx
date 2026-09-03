@@ -10,7 +10,7 @@ import { clearClaim, readClaim, writeClaim } from "./claim-store";
 import { HOUSEHOLDS_KEY } from "./households-key";
 import { toMembershipSummary } from "./memberships";
 import { serializeReturnTo } from "./return-to";
-import { endRemoteSession, useSessionProbe } from "./session-probe";
+import { tryRemoteSignOut, useSessionProbe } from "./session-probe";
 import type { HouseholdRead, IdentityClaim, ReturnTo } from "./types";
 import { AccessContext } from "./use-access";
 
@@ -102,7 +102,7 @@ function useAccessActions(
 
   async function signOut() {
     setSignedOut(true);
-    await endRemoteSession();
+    await tryRemoteSignOut();
     await clearClaim();
     setClaim({ kind: "none" });
   }

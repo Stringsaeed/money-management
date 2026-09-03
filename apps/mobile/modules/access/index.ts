@@ -14,7 +14,7 @@ export { parseAuthLink, parseAuthLinkFailure } from "./links";
 export { AccessProvider } from "./provider";
 export { firstRouteParam } from "./route-param";
 export { hrefForInternal, PROFILE_HOUSEHOLD_HREF, returnTo, serializeReturnTo } from "./return-to";
-export { endRemoteSession, getAuthCookie, probeSession } from "./session-probe";
+export { getAuthCookie, probeSession, tryRemoteSignOut } from "./session-probe";
 export { signedInUserId, useAccess } from "./use-access";
 export type {
   AccessCore,

@@ -18,11 +18,14 @@ export async function probeSession(): Promise<SessionProbe> {
   }
 }
 
-export async function endRemoteSession(): Promise<void> {
+export async function tryRemoteSignOut(): Promise<"ok" | "unreachable"> {
   try {
     await authClient.signOut();
-  } catch {
-    // Offline sign-out still clears the local claim in the provider.
+    return "ok";
+  } catch (error) {
+    return isUnreachableFailure(error instanceof Error ? error : { message: "failed" })
+      ? "unreachable"
+      : "ok";
   }
 }
 
