@@ -9,15 +9,6 @@ import {
   type ValidationIssue,
 } from "@trove/protocol";
 import { category, ledgerAccount, transaction } from "@trove/db/schema/ledger";
-import { recurringOccurrence, recurringRule } from "@trove/db/schema/recurring";
-import {
-  assignment,
-  budgetWorkspace,
-  categoryMapping,
-  envelope,
-  fundingMembership,
-  rolloverSetting,
-} from "@trove/db/schema/budget";
 
 import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
@@ -27,9 +18,9 @@ import { issuesFromZod } from "./shared";
  * import_bundle (#98): the local-to-cloud migration's one-time bulk upload.
  * One command carries exactly one chunk of one entity type; the client sends
  * chunks in `IMPORT_ENTITY_TYPES` order so every reference (account before
- * transaction, envelope before assignment, ...) already exists by the time a
- * later chunk lands. Rows are inserted verbatim under the caller's ids, with
- * `onConflictDoNothing()` making a retried chunk safe to resend.
+ * transaction) already exists by the time a later chunk lands. Rows are
+ * inserted verbatim under the caller's ids, with `onConflictDoNothing()`
+ * making a retried chunk safe to resend.
  *
  * Every table's `household_id`, `version` (0), and `created_by`/`updated_by`
  * (the importing owner) are stamped here — the client never sends them.
@@ -38,33 +29,6 @@ import { issuesFromZod } from "./shared";
 const isoDateTime = z.string().min(1);
 
 const LEDGER_EFFECTS: readonly EffectTag[] = ["ledger", "balances", "summaries", "projections"];
-const RECURRING_EFFECTS: readonly EffectTag[] = ["rules", "upcoming"];
-const BUDGET_EFFECTS: readonly EffectTag[] = [
-  "envelopes",
-  "assignments",
-  "projections",
-  "summaries",
-];
-
-/** Effect tags a chunk of `entityType` invalidates. */
-function effectsFor(entityType: ImportEntityType): readonly EffectTag[] {
-  switch (entityType) {
-    case "account":
-    case "category":
-    case "transaction":
-      return LEDGER_EFFECTS;
-    case "recurringRule":
-    case "recurringOccurrence":
-      return RECURRING_EFFECTS;
-    case "budgetWorkspace":
-    case "envelope":
-    case "categoryMapping":
-    case "fundingMembership":
-    case "rolloverSetting":
-    case "assignment":
-      return BUDGET_EFFECTS;
-  }
-}
 
 const accountRowSchema = z.object({
   id: z.string().min(1),
@@ -96,43 +60,6 @@ const categoryRowSchema = z.object({
   updatedAt: isoDateTime,
 });
 
-const recurringRuleRowSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1),
-  type: z.enum(["expense", "income", "transfer"]),
-  amountMinor: z.number().int().nullable(),
-  currency: z.string().min(3).max(3),
-  accountId: z.string().min(1).nullable(),
-  toAccountId: z.string().min(1).nullable(),
-  categoryId: z.string().min(1).nullable(),
-  description: z.string(),
-  frequency: z.enum(["day", "week", "month", "year"]),
-  intervalCount: z.number().int().positive(),
-  startDate: z.string().min(1),
-  endDate: z.string().min(1).nullable(),
-  endCount: z.number().int().nullable(),
-  timeZone: z.string().min(1),
-  lifecycle: z.enum(["active", "paused", "completed", "archived"]),
-  health: z.enum(["ready", "needs_attention"]),
-  attentionReasons: z.string(),
-  attentionDetails: z.string().nullable(),
-  eligibilityFloor: z.string().min(1),
-  revision: z.number().int(),
-  lifecycleChangedAt: isoDateTime.nullable(),
-  healthChangedAt: isoDateTime.nullable(),
-  lastSettlementAttemptAt: isoDateTime.nullable(),
-  lastSettlementError: z.string().nullable(),
-  createdAt: isoDateTime,
-  updatedAt: isoDateTime,
-});
-
-const recurringOccurrenceRowSchema = z.object({
-  ruleId: z.string().min(1),
-  scheduledDate: z.string().min(1),
-  transactionId: z.string().min(1).nullable(),
-  settledAt: isoDateTime,
-});
-
 const transactionRowSchema = z.object({
   id: z.string().min(1),
   type: z.enum(["expense", "income", "transfer"]),
@@ -152,61 +79,6 @@ const transactionRowSchema = z.object({
   updatedAt: isoDateTime,
 });
 
-const budgetWorkspaceRowSchema = z.object({
-  currency: z.string().min(3).max(3),
-  activationPeriod: z.string().regex(/^\d{4}-\d{2}$/, "activationPeriod must be YYYY-MM"),
-  createdAt: isoDateTime,
-  updatedAt: isoDateTime,
-});
-
-const envelopeRowSchema = z.object({
-  id: z.string().min(1),
-  currency: z.string().min(3).max(3),
-  name: z.string().min(1),
-  icon: z.string().min(1),
-  color: z.string().min(1),
-  lifecycle: z.enum(["active", "archived"]),
-  sortOrder: z.number().int(),
-  createdAt: isoDateTime,
-  updatedAt: isoDateTime,
-});
-
-const periodSchema = z.string().regex(/^\d{4}-\d{2}$/, "period must be YYYY-MM");
-
-const categoryMappingRowSchema = z.object({
-  categoryId: z.string().min(1),
-  envelopeId: z.string().min(1).nullable(),
-  effectiveFromPeriod: periodSchema,
-  createdAt: isoDateTime,
-});
-
-const fundingMembershipRowSchema = z.object({
-  accountId: z.string().min(1),
-  currency: z.string().min(3).max(3),
-  /** Client expands a local from/to period range into active + tombstone rows. */
-  active: z.boolean(),
-  effectiveFromPeriod: periodSchema,
-  createdAt: isoDateTime,
-});
-
-const rolloverSettingRowSchema = z.object({
-  envelopeId: z.string().min(1),
-  positiveRollover: z.boolean(),
-  effectiveFromPeriod: periodSchema,
-  createdAt: isoDateTime,
-});
-
-const assignmentRowSchema = z.object({
-  id: z.string().min(1),
-  currency: z.string().min(3).max(3),
-  budgetPeriod: periodSchema,
-  sourceEnvelopeId: z.string().min(1).nullable(),
-  destinationEnvelopeId: z.string().min(1).nullable(),
-  amountMinor: z.number().int().positive(),
-  reversesAssignmentId: z.string().min(1).nullable(),
-  createdAt: isoDateTime,
-});
-
 /** Parses `rows` against `entityType`'s row schema, or collects the issues. */
 function parseRows(
   entityType: ImportEntityType,
@@ -224,15 +96,7 @@ function parseRows(
 const ROW_SCHEMA_BY_ENTITY = {
   account: accountRowSchema,
   category: categoryRowSchema,
-  recurringRule: recurringRuleRowSchema,
-  recurringOccurrence: recurringOccurrenceRowSchema,
   transaction: transactionRowSchema,
-  budgetWorkspace: budgetWorkspaceRowSchema,
-  envelope: envelopeRowSchema,
-  categoryMapping: categoryMappingRowSchema,
-  fundingMembership: fundingMembershipRowSchema,
-  rolloverSetting: rolloverSettingRowSchema,
-  assignment: assignmentRowSchema,
 } satisfies Record<ImportEntityType, z.ZodType>;
 
 /** Builds the one insert statement covering every row in this chunk. */
@@ -295,59 +159,6 @@ function buildInsertStatement(
         .values(values)
         .onConflictDoNothing() as unknown as BatchStatement;
     }
-    case "recurringRule": {
-      const values = (rows as z.infer<typeof recurringRuleRowSchema>[]).map((row) => ({
-        householdId,
-        id: row.id,
-        name: row.name,
-        type: row.type,
-        amountMinor: row.amountMinor,
-        currency: row.currency,
-        accountId: row.accountId,
-        toAccountId: row.toAccountId,
-        categoryId: row.categoryId,
-        description: row.description,
-        frequency: row.frequency,
-        intervalCount: row.intervalCount,
-        startDate: row.startDate,
-        endDate: row.endDate,
-        endCount: row.endCount,
-        timeZone: row.timeZone,
-        lifecycle: row.lifecycle,
-        health: row.health,
-        attentionReasons: row.attentionReasons,
-        attentionDetails: row.attentionDetails,
-        eligibilityFloor: row.eligibilityFloor,
-        revision: row.revision,
-        lifecycleChangedAt: row.lifecycleChangedAt ? new Date(row.lifecycleChangedAt) : null,
-        healthChangedAt: row.healthChangedAt ? new Date(row.healthChangedAt) : null,
-        lastSettlementAttemptAt: row.lastSettlementAttemptAt
-          ? new Date(row.lastSettlementAttemptAt)
-          : null,
-        lastSettlementError: row.lastSettlementError,
-        createdBy: actorUserId,
-        updatedBy: actorUserId,
-        createdAt: new Date(row.createdAt),
-        updatedAt: new Date(row.updatedAt),
-      }));
-      return ctx.db
-        .insert(recurringRule)
-        .values(values)
-        .onConflictDoNothing() as unknown as BatchStatement;
-    }
-    case "recurringOccurrence": {
-      const values = (rows as z.infer<typeof recurringOccurrenceRowSchema>[]).map((row) => ({
-        householdId,
-        ruleId: row.ruleId,
-        scheduledDate: row.scheduledDate,
-        transactionId: row.transactionId,
-        settledAt: new Date(row.settledAt),
-      }));
-      return ctx.db
-        .insert(recurringOccurrence)
-        .values(values)
-        .onConflictDoNothing() as unknown as BatchStatement;
-    }
     case "transaction": {
       const values = (rows as z.infer<typeof transactionRowSchema>[]).map((row) => ({
         householdId,
@@ -373,116 +184,6 @@ function buildInsertStatement(
       }));
       return ctx.db
         .insert(transaction)
-        .values(values)
-        .onConflictDoNothing() as unknown as BatchStatement;
-    }
-    case "budgetWorkspace": {
-      const values = (rows as z.infer<typeof budgetWorkspaceRowSchema>[]).map((row) => ({
-        householdId,
-        currency: row.currency,
-        activationPeriod: row.activationPeriod,
-        version: 0,
-        createdBy: actorUserId,
-        updatedBy: actorUserId,
-        createdAt: new Date(row.createdAt),
-        updatedAt: new Date(row.updatedAt),
-      }));
-      return ctx.db
-        .insert(budgetWorkspace)
-        .values(values)
-        .onConflictDoNothing() as unknown as BatchStatement;
-    }
-    case "envelope": {
-      const values = (rows as z.infer<typeof envelopeRowSchema>[]).map((row) => ({
-        id: row.id,
-        householdId,
-        currency: row.currency,
-        name: row.name,
-        icon: row.icon,
-        color: row.color,
-        lifecycle: row.lifecycle,
-        sortOrder: row.sortOrder,
-        version: 0,
-        createdBy: actorUserId,
-        updatedBy: actorUserId,
-        createdAt: new Date(row.createdAt),
-        updatedAt: new Date(row.updatedAt),
-      }));
-      return ctx.db
-        .insert(envelope)
-        .values(values)
-        .onConflictDoNothing() as unknown as BatchStatement;
-    }
-    case "categoryMapping": {
-      const values = (rows as z.infer<typeof categoryMappingRowSchema>[]).map((row) => ({
-        householdId,
-        categoryId: row.categoryId,
-        envelopeId: row.envelopeId,
-        effectiveFromPeriod: row.effectiveFromPeriod,
-        version: 0,
-        createdBy: actorUserId,
-        updatedBy: actorUserId,
-        createdAt: new Date(row.createdAt),
-        updatedAt: new Date(row.createdAt),
-      }));
-      return ctx.db
-        .insert(categoryMapping)
-        .values(values)
-        .onConflictDoNothing() as unknown as BatchStatement;
-    }
-    case "fundingMembership": {
-      const values = (rows as z.infer<typeof fundingMembershipRowSchema>[]).map((row) => ({
-        householdId,
-        accountId: row.accountId,
-        currency: row.currency,
-        active: row.active,
-        effectiveFromPeriod: row.effectiveFromPeriod,
-        version: 0,
-        createdBy: actorUserId,
-        updatedBy: actorUserId,
-        createdAt: new Date(row.createdAt),
-        updatedAt: new Date(row.createdAt),
-      }));
-      return ctx.db
-        .insert(fundingMembership)
-        .values(values)
-        .onConflictDoNothing() as unknown as BatchStatement;
-    }
-    case "rolloverSetting": {
-      const values = (rows as z.infer<typeof rolloverSettingRowSchema>[]).map((row) => ({
-        householdId,
-        envelopeId: row.envelopeId,
-        positiveRollover: row.positiveRollover,
-        effectiveFromPeriod: row.effectiveFromPeriod,
-        version: 0,
-        createdBy: actorUserId,
-        updatedBy: actorUserId,
-        createdAt: new Date(row.createdAt),
-        updatedAt: new Date(row.createdAt),
-      }));
-      return ctx.db
-        .insert(rolloverSetting)
-        .values(values)
-        .onConflictDoNothing() as unknown as BatchStatement;
-    }
-    case "assignment": {
-      const values = (rows as z.infer<typeof assignmentRowSchema>[]).map((row) => ({
-        id: row.id,
-        householdId,
-        currency: row.currency,
-        budgetPeriod: row.budgetPeriod,
-        sourceEnvelopeId: row.sourceEnvelopeId,
-        destinationEnvelopeId: row.destinationEnvelopeId,
-        amountMinor: row.amountMinor,
-        reversesAssignmentId: row.reversesAssignmentId,
-        version: 0,
-        createdBy: actorUserId,
-        updatedBy: actorUserId,
-        createdAt: new Date(row.createdAt),
-        updatedAt: new Date(row.createdAt),
-      }));
-      return ctx.db
-        .insert(assignment)
         .values(values)
         .onConflictDoNothing() as unknown as BatchStatement;
     }
@@ -517,7 +218,7 @@ export const importBundleHandler = {
     }
 
     return {
-      effects: [...effectsFor(input.entityType)],
+      effects: [...LEDGER_EFFECTS],
       applied: {
         entityType: input.entityType,
         chunkIndex: input.chunkIndex,

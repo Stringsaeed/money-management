@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { user } from "@trove/db/schema/auth";
 import { household, membership } from "@trove/db/schema/household";
-import { assignment, budgetWorkspace, envelope } from "@trove/db/schema/budget";
 import { ledgerAccount, transaction } from "@trove/db/schema/ledger";
 import type {
   AppliedResult,
@@ -316,93 +315,12 @@ describe("commands.apply — import_bundle end-to-end + manifest recompute", () 
         }),
       ),
     );
-    expectApplied(
-      await applyAs(
-        OWNER,
-        bundleEnvelope({
-          entityType: "budgetWorkspace",
-          chunkIndex: 0,
-          chunkCount: 1,
-          rows: [
-            {
-              currency: "USD",
-              activationPeriod: "2026-01",
-              createdAt: "2026-01-01T00:00:00.000Z",
-              updatedAt: "2026-01-01T00:00:00.000Z",
-            },
-          ],
-        }),
-      ),
-    );
-    expectApplied(
-      await applyAs(
-        OWNER,
-        bundleEnvelope({
-          entityType: "envelope",
-          chunkIndex: 0,
-          chunkCount: 1,
-          rows: [
-            {
-              id: "envelope-1",
-              currency: "USD",
-              name: "Groceries",
-              icon: "🛒",
-              color: "#8B9D83",
-              lifecycle: "active",
-              sortOrder: 0,
-              createdAt: "2026-01-01T00:00:00.000Z",
-              updatedAt: "2026-01-01T00:00:00.000Z",
-            },
-          ],
-        }),
-      ),
-    );
-    expectApplied(
-      await applyAs(
-        OWNER,
-        bundleEnvelope({
-          entityType: "assignment",
-          chunkIndex: 0,
-          chunkCount: 1,
-          rows: [
-            {
-              id: "assignment-1",
-              currency: "USD",
-              budgetPeriod: "2026-01",
-              sourceEnvelopeId: null,
-              destinationEnvelopeId: "envelope-1",
-              amountMinor: 5_000,
-              reversesAssignmentId: null,
-              createdAt: "2026-01-01T00:00:00.000Z",
-            },
-          ],
-        }),
-      ),
-    );
-
     const manifest = await computeImportManifest(db, HOUSEHOLD_ID);
-    expect(manifest.rowCounts.account).toBe(1);
-    expect(manifest.rowCounts.transaction).toBe(2);
-    expect(manifest.rowCounts.budgetWorkspace).toBe(1);
-    expect(manifest.rowCounts.envelope).toBe(1);
-    expect(manifest.rowCounts.assignment).toBe(1);
+    expect(manifest.rowCounts).toEqual({
+      account: 1,
+      category: 0,
+      transaction: 2,
+    });
     expect(manifest.transactionAmountMinorByAccount).toEqual({ [ACCOUNT_ROW.id]: 1_500 });
-    expect(manifest.assignmentAmountMinorByCurrency).toEqual({ USD: 5_000 });
-
-    const workspaceRows = await db
-      .select()
-      .from(budgetWorkspace)
-      .where(eq(budgetWorkspace.householdId, HOUSEHOLD_ID));
-    expect(workspaceRows).toHaveLength(1);
-    const envelopeRows = await db
-      .select()
-      .from(envelope)
-      .where(eq(envelope.householdId, HOUSEHOLD_ID));
-    expect(envelopeRows).toHaveLength(1);
-    const assignmentRows = await db
-      .select()
-      .from(assignment)
-      .where(eq(assignment.householdId, HOUSEHOLD_ID));
-    expect(assignmentRows).toHaveLength(1);
   });
 });

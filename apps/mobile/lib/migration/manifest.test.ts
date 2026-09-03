@@ -7,14 +7,7 @@ import { migrateBudgeting } from "@/db/budgeting-migration";
 import { migrateCategoryLifecycle } from "@/db/category-lifecycle-migration";
 import { migrateRecurringRules } from "@/db/recurring-rules-migration";
 import * as schema from "@/db/schema";
-import {
-  accounts,
-  assignments,
-  budgetWorkspaces,
-  categories,
-  envelopes,
-  transactions,
-} from "@/db/schema";
+import { accounts, categories, transactions } from "@/db/schema";
 import { applyLegacyMigrations, createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
 
 import { computeLocalManifest, type LocalDb } from "./manifest";
@@ -45,7 +38,7 @@ async function setupDb(): Promise<LocalDb> {
 }
 
 describe("computeLocalManifest", () => {
-  it("counts every entity and sums transactions/assignments by account/currency", async () => {
+  it("counts ledger facts and sums transactions by account", async () => {
     const db = await setupDb();
 
     await db.insert(accounts).values([
@@ -123,55 +116,18 @@ describe("computeLocalManifest", () => {
         updatedAt: "2026-01-08T00:00:00.000Z",
       },
     ]);
-    await db.insert(budgetWorkspaces).values({
-      currency: "USD",
-      activationPeriod: "2026-01",
-      createdAt: "2026-01-01T00:00:00.000Z",
-      updatedAt: "2026-01-01T00:00:00.000Z",
-    });
-    await db.insert(envelopes).values({
-      id: "envelope-1",
-      currency: "USD",
-      name: "Groceries",
-      icon: "🛒",
-      color: "#8B9D83",
-      createdAt: "2026-01-01T00:00:00.000Z",
-      updatedAt: "2026-01-01T00:00:00.000Z",
-    });
-    await db.insert(assignments).values([
-      {
-        id: "assignment-1",
-        currency: "USD",
-        budgetPeriod: "2026-01",
-        destinationEnvelopeId: "envelope-1",
-        sourceEnvelopeId: null,
-        amountMinor: 4_000,
-        createdAt: "2026-01-01T00:00:00.000Z",
-      },
-      {
-        id: "assignment-2",
-        currency: "USD",
-        budgetPeriod: "2026-01",
-        destinationEnvelopeId: "envelope-1",
-        sourceEnvelopeId: null,
-        amountMinor: 1_000,
-        createdAt: "2026-01-01T00:00:00.000Z",
-      },
-    ]);
-
     const manifest = await computeLocalManifest(db);
 
-    expect(manifest.rowCounts.account).toBe(3);
-    expect(manifest.rowCounts.category).toBe(1);
-    expect(manifest.rowCounts.transaction).toBe(4);
-    expect(manifest.rowCounts.assignment).toBe(2);
-    expect(manifest.rowCounts.recurringRule).toBe(0);
+    expect(manifest.rowCounts).toEqual({
+      account: 3,
+      category: 1,
+      transaction: 4,
+    });
     expect(manifest.transactionAmountMinorByAccount).toEqual({
       "account-1": 1_500,
       "account-2": 2_000,
       "account-3": 300,
     });
-    expect(manifest.assignmentAmountMinorByCurrency).toEqual({ USD: 5_000 });
   });
 
   it("returns zeroed counts and empty sums for an empty install", async () => {
@@ -179,6 +135,5 @@ describe("computeLocalManifest", () => {
     const manifest = await computeLocalManifest(db);
     expect(Object.values(manifest.rowCounts).every((count) => count === 0)).toBe(true);
     expect(manifest.transactionAmountMinorByAccount).toEqual({});
-    expect(manifest.assignmentAmountMinorByCurrency).toEqual({});
   });
 });

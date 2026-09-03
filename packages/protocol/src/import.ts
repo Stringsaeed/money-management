@@ -2,28 +2,15 @@
  * Local-to-cloud migration wire contract (#98).
  *
  * A fresh local-only install opts into sync by creating a household and
- * uploading its existing data as chunked, idempotent `import_bundle`
+ * uploading its existing ledger facts as chunked, idempotent `import_bundle`
  * commands, dependency-ordered so every reference resolves by the time it
- * lands: accounts → categories → recurring rules/occurrences → transactions
- * → budgeting facts (workspace → envelopes → mappings/memberships/rollover →
- * assignments). The server recomputes an integrity manifest from the
- * imported rows; only a match flips the client to synced mode.
+ * lands: accounts → categories → transactions. The server recomputes an
+ * integrity manifest from the imported rows; only a match flips the client
+ * to synced mode.
  */
 
 /** Import entity types, in the exact order chunks must be sent. */
-export const IMPORT_ENTITY_TYPES = [
-  "account",
-  "category",
-  "recurringRule",
-  "recurringOccurrence",
-  "transaction",
-  "budgetWorkspace",
-  "envelope",
-  "categoryMapping",
-  "fundingMembership",
-  "rolloverSetting",
-  "assignment",
-] as const;
+export const IMPORT_ENTITY_TYPES = ["account", "category", "transaction"] as const;
 
 export type ImportEntityType = (typeof IMPORT_ENTITY_TYPES)[number];
 
@@ -48,16 +35,13 @@ export interface ImportManifest {
   readonly rowCounts: Readonly<Record<ImportEntityType, number>>;
   /** Sum of every transaction's `amountMinor`, grouped by account id. */
   readonly transactionAmountMinorByAccount: Readonly<Record<string, number>>;
-  /** Sum of every assignment's `amountMinor`, grouped by currency. */
-  readonly assignmentAmountMinorByCurrency: Readonly<Record<string, number>>;
 }
 
 /** True when every count/sum in `a` and `b` agrees (missing keys read as 0). */
 export function manifestsMatch(a: ImportManifest, b: ImportManifest): boolean {
   return (
     numberRecordsEqual(a.rowCounts, b.rowCounts) &&
-    numberRecordsEqual(a.transactionAmountMinorByAccount, b.transactionAmountMinorByAccount) &&
-    numberRecordsEqual(a.assignmentAmountMinorByCurrency, b.assignmentAmountMinorByCurrency)
+    numberRecordsEqual(a.transactionAmountMinorByAccount, b.transactionAmountMinorByAccount)
   );
 }
 

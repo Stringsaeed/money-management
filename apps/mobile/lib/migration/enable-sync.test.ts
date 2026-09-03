@@ -59,18 +59,9 @@ const MATCHING_MANIFEST: ImportManifest = {
   rowCounts: {
     account: 1,
     category: 0,
-    recurringRule: 0,
-    recurringOccurrence: 0,
     transaction: 0,
-    budgetWorkspace: 0,
-    envelope: 0,
-    categoryMapping: 0,
-    fundingMembership: 0,
-    rolloverSetting: 0,
-    assignment: 0,
   },
   transactionAmountMinorByAccount: {},
-  assignmentAmountMinorByCurrency: {},
 };
 
 const APPLIED_RESULT: CommandResult = {
