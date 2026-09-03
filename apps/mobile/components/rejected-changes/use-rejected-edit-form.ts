@@ -8,7 +8,7 @@ import {
 } from "@/components/rejected-changes/payload-fields";
 import { useDatabase } from "@/db/client";
 import { useRejectedChanges } from "@/hooks/use-rejected-changes";
-import { authClient } from "@/lib/auth-client";
+import { signedInUserId, useAccess } from "@/modules/access";
 import type { RejectedChange } from "@/lib/sync/outbox";
 import { getRejectedChange } from "@/lib/sync/outbox";
 
@@ -20,8 +20,7 @@ import { getRejectedChange } from "@/lib/sync/outbox";
 export function useRejectedEditForm(commandId: string | null) {
   const db = useDatabase();
   const { resubmit } = useRejectedChanges();
-  const { data: session } = authClient.useSession();
-  const userId = session?.user.id ?? null;
+  const userId = signedInUserId(useAccess());
 
   const [change, setChange] = useState<RejectedChange | null>(null);
   const [fields, setFields] = useState<readonly EditableField[]>([]);

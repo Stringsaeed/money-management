@@ -23,27 +23,22 @@ import {
 import { clearSeedVersion } from "@/db/seed";
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useAllCategories } from "@/hooks/use-categories";
-import { useActiveHousehold } from "@/hooks/use-households";
 import { useRecurringRulesList } from "@/hooks/use-recurring-rules";
 import { useTransactions } from "@/hooks/use-transactions";
-import { authClient } from "@/lib/auth-client";
+import { useAccess, type AccessState } from "@/modules/access";
 import { cohereLedgerCache } from "@/modules/ledger-cache";
 
 export default function SettingsScreen() {
   const db = useDatabase();
   const qc = useQueryClient();
   const [erasing, setErasing] = useState(false);
-  const { data: session } = authClient.useSession();
-  const { activeHousehold } = useActiveHousehold();
+  const access = useAccess();
   const { data: accounts = [] } = useAccountsWithBalances();
   const { data: allCategories = [] } = useAllCategories();
   const { data: recurring = [] } = useRecurringRulesList("current");
   const { data: allTransactions = [] } = useTransactions({});
 
-  const user = session?.user ?? null;
-  const profileSubtitle = user
-    ? (activeHousehold?.name ?? "No active household")
-    : "Sign in or create profile";
+  const profileSubtitle = subtitleForAccess(access);
   const totalCategories = allCategories.length;
   const activeRecurring = recurring.filter((rule) => rule.lifecycle === "active").length;
 
@@ -172,10 +167,10 @@ export default function SettingsScreen() {
           className="px-4 py-3.5 items-center active:bg-destructive/10"
         >
           <Text className="font-body-semibold text-base text-destructive">
-            {erasing ? "Erasing…" : "Erase All Data"}
+            {erasing ? "Erasing…" : "Erase local data from this device"}
           </Text>
           <Text className="font-body-normal text-xs text-ink/40 mt-0.5">
-            Permanently delete all accounts, categories, and transactions
+            Permanently delete accounts, categories, and transactions on this device
           </Text>
         </Pressable>
       </Card>
@@ -184,4 +179,13 @@ export default function SettingsScreen() {
       {(__DEV__ || Updates.channel === "preview") && <DevToolsSection />}
     </ScrollView>
   );
+}
+
+function subtitleForAccess(access: AccessState): string {
+  if (access.kind === "signed_in") {
+    return access.household.kind === "active" ? access.household.name : "No active household";
+  }
+  if (access.kind === "session_revoked") return "Signed out remotely";
+  if (access.kind === "resolving") return "Loading…";
+  return "Sign in or create profile";
 }

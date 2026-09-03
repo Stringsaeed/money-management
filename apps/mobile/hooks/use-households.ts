@@ -1,19 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/server/orpc";
-
-const HOUSEHOLDS_KEY = ["households"] as const;
+import { HOUSEHOLDS_KEY, useAccess } from "@/modules/access";
 
 export type HouseholdSummary = Awaited<ReturnType<typeof orpc.households.listMine>>[number];
 
 export function useHouseholds() {
-  const { data: session, isPending } = authClient.useSession();
+  const access = useAccess();
   return useQuery({
     queryKey: HOUSEHOLDS_KEY,
     queryFn: () => orpc.households.listMine(),
-    // Stay silent while signed out — household APIs are opt-in.
-    enabled: !isPending && Boolean(session),
+    enabled: access.kind === "signed_in",
   });
 }
 

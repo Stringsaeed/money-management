@@ -11,11 +11,50 @@ jest.mock("expo-font", () => ({
 
 // better-auth's Expo client ships untranspiled ESM and talks to the network —
 // tests get an inert signed-out client instead.
+jest.mock("expo-secure-store", () => ({
+  getItemAsync: jest.fn(async () => null),
+  setItemAsync: jest.fn(async () => undefined),
+  deleteItemAsync: jest.fn(async () => undefined),
+}));
+
 jest.mock("@/lib/auth-client", () => ({
   authClient: {
     useSession: jest.fn(() => ({ data: null, isPending: true })),
+    getSession: jest.fn(async () => ({ data: null })),
+    signOut: jest.fn(async () => undefined),
     getCookie: jest.fn(() => ""),
+    magicLink: { verify: jest.fn() },
+    signIn: { magicLink: jest.fn(), email: jest.fn() },
+    signUp: { email: jest.fn() },
+    resetPassword: jest.fn(),
+    requestPasswordReset: jest.fn(),
   },
+}));
+
+jest.mock("@/modules/access", () => ({
+  useAccess: jest.fn(() => ({
+    kind: "anonymous" as const,
+    beginAuth: jest.fn(),
+  })),
+  AccessProvider: ({ children }: { children: React.ReactNode }) => children,
+  AuthLinkGate: () => null,
+  signedInUserId: (access: { kind: string; user?: { userId: string } }) =>
+    access.kind === "signed_in" ? (access.user?.userId ?? null) : null,
+  getAuthCookie: jest.fn(() => ""),
+  HOUSEHOLDS_KEY: ["households"],
+  PROFILE_HOUSEHOLD_HREF: "/(tabs)/settings/household",
+  returnTo: {
+    profileHousehold: () => ({ kind: "profile_household" }),
+    current: () => ({ kind: "profile_household" }),
+    parse: (raw?: string) =>
+      raw === "/(tabs)" || raw === "/(tabs)/settings"
+        ? { kind: "screen", href: raw }
+        : { kind: "profile_household" },
+  },
+  selectLedgerSourceForAccess: () => ({ kind: "local" }),
+  coreFromAccess: (access: { kind: string }) => access,
+  firstRouteParam: (value: string | string[] | undefined) =>
+    Array.isArray(value) ? value[0] : value,
 }));
 
 // The oRPC link ships untranspiled ESM and would hit the dev server — tests

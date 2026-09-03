@@ -12,7 +12,8 @@
     }
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@better-auth/expo": "catalog:",
@@ -26,6 +27,7 @@
     "@cloudflare/workers-types": "catalog:",
     "@trove/typescript-config": "workspace:*",
     "@types/node": "catalog:",
-    "typescript": "~7.0.2"
+    "typescript": "~7.0.2",
+    "vitest": "^3.2.4"
   }
 }

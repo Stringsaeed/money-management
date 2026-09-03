@@ -2,8 +2,8 @@ import { act, renderHook } from "@testing-library/react-native";
 
 import { useHouseholdPush } from "@/hooks/use-household-push";
 
-jest.mock("@/lib/auth-client", () => ({
-  authClient: { getCookie: () => "money-management.session=fake" },
+jest.mock("@/modules/access", () => ({
+  getAuthCookie: () => "money-management.session=fake",
 }));
 
 interface FakeMessageEvent {

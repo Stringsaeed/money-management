@@ -266,7 +266,7 @@ describe("app/settings", () => {
       </QueryClientProvider>,
     );
 
-    await fireEvent.press(screen.getByText("Erase All Data"));
+    await fireEvent.press(screen.getByText("Erase local data from this device"));
 
     const destructiveAction = alertSpy.mock.calls[0]?.[2]?.[1];
     let erasePromise: Promise<void> | void | undefined;
