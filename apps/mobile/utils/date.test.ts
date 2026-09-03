@@ -1,3 +1,5 @@
+import { describe, expect, it, jest } from "@jest/globals";
+
 import {
   addMonths,
   clampDay,
@@ -5,7 +7,10 @@ import {
   formatMonth,
   monthBounds,
   monthsBetween,
+  nextBudgetPeriod,
+  nowIso,
   parseDate,
+  today,
   toDateString,
 } from "@/utils/date";
 
@@ -49,5 +54,20 @@ describe("date utils", () => {
   it("returns an empty array for missing or inverted ranges", () => {
     expect(monthsBetween(null, "2026-03-28")).toEqual([]);
     expect(monthsBetween("2026-04-01", "2026-03-01")).toEqual([]);
+  });
+
+  it("returns the current local date and ISO timestamp", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-19T08:00:00.000Z"));
+
+    expect(today()).toBe(toDateString(new Date("2026-08-19T08:00:00.000Z")));
+    expect(nowIso()).toBe("2026-08-19T08:00:00.000Z");
+
+    jest.useRealTimers();
+  });
+
+  it("returns the next budget period", () => {
+    expect(nextBudgetPeriod("2026-08")).toBe("2026-09");
+    expect(nextBudgetPeriod("2026-12")).toBe("2027-01");
   });
 });
