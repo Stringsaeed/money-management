@@ -52,7 +52,15 @@ export async function writeSyncedTransactionSnapshot(
   db: LocalDb,
   snapshot: SyncedTransactionSnapshot,
 ): Promise<void> {
-  const value = JSON.stringify(snapshot);
+  const authorizedAccountIds = new Set(snapshot.accounts.map((account) => account.id));
+  const value = JSON.stringify({
+    ...snapshot,
+    transactions: snapshot.transactions.filter(
+      (transaction) =>
+        authorizedAccountIds.has(transaction.accountId) &&
+        (transaction.toAccountId === null || authorizedAccountIds.has(transaction.toAccountId)),
+    ),
+  });
   await db
     .insert(appSettings)
     .values({ key: snapshotKey(snapshot.householdId, snapshot.userId), value })

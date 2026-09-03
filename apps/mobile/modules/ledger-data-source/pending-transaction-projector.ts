@@ -92,7 +92,7 @@ interface ProjectionState {
   readonly transactions: Map<string, SyncedTransaction>;
 }
 
-export function projectPendingTransactions(
+export function projectPendingLedger(
   snapshot: SyncedTransactionSnapshot,
   commands: readonly ProjectableCommand[],
 ): SyncedTransactionSnapshot {
@@ -118,6 +118,8 @@ export function projectPendingTransactions(
   };
 }
 
+export const projectPendingTransactions = projectPendingLedger;
+
 function projectCommand(state: ProjectionState, command: ProjectableCommand): void {
   switch (command.kind) {
     case "account.create":
@@ -128,6 +130,9 @@ function projectCommand(state: ProjectionState, command: ProjectableCommand): vo
       break;
     case "account.archive":
       projectAccountArchive(state, command);
+      break;
+    case "account.restore":
+      projectAccountRestore(state, command);
       break;
     case "transaction.create":
       projectCreate(state, command);
@@ -145,9 +150,9 @@ function projectCommand(state: ProjectionState, command: ProjectableCommand): vo
 }
 
 function projectAccountCreate(state: ProjectionState, command: ProjectableCommand): void {
-  // SAFETY: createSyncedLedgerDataSource is the sole writer for this command kind.
+  // SAFETY: createSyncedAccountResource is the sole writer for this command kind.
   const input = command.payload as PendingAccountCreatePayload;
-  if (state.accounts.has(input.id)) return;
+  if (!input.id || state.accounts.has(input.id)) return;
   const timestamp = command.issuedAt ?? "1970-01-01T00:00:00.000Z";
   state.accounts.set(input.id, {
     householdId: state.householdId,
@@ -173,7 +178,7 @@ function projectAccountCreate(state: ProjectionState, command: ProjectableComman
 }
 
 function projectAccountUpdate(state: ProjectionState, command: ProjectableCommand): void {
-  // SAFETY: createSyncedLedgerDataSource is the sole writer for this command kind.
+  // SAFETY: createSyncedAccountResource is the sole writer for this command kind.
   const input = command.payload as PendingAccountUpdatePayload;
   const existing = state.accounts.get(input.accountId);
   if (!existing || existing.lifecycle === "archived") return;
@@ -191,9 +196,33 @@ function projectAccountUpdate(state: ProjectionState, command: ProjectableComman
   });
 }
 
+function projectAccountRestore(state: ProjectionState, command: ProjectableCommand): void {
+  // SAFETY: createSyncedAccountResource writes archive/restore with accountId.
+  const input = decodeAccountIdPayload(command.payload as PendingAccountArchivePayload);
+  if (!input) return;
+  const existing = state.accounts.get(input.accountId);
+  if (!existing || existing.lifecycle !== "archived") return;
+  const timestamp = command.issuedAt ?? existing.updatedAt;
+  state.accounts.set(input.accountId, {
+    ...existing,
+    lifecycle: "active",
+    lifecycleChangedAt: timestamp,
+    version: existing.version + 1,
+    updatedBy: "optimistic",
+    updatedAt: timestamp,
+  });
+}
+
+function decodeAccountIdPayload(
+  payload: PendingAccountArchivePayload,
+): PendingAccountArchivePayload | null {
+  return payload.accountId ? payload : null;
+}
+
 function projectAccountArchive(state: ProjectionState, command: ProjectableCommand): void {
-  // SAFETY: createSyncedLedgerDataSource is the sole writer for this command kind.
-  const input = command.payload as PendingAccountArchivePayload;
+  // SAFETY: createSyncedAccountResource writes archive/restore with accountId.
+  const input = decodeAccountIdPayload(command.payload as PendingAccountArchivePayload);
+  if (!input) return;
   const existing = state.accounts.get(input.accountId);
   if (!existing || existing.lifecycle === "archived") return;
   const timestamp = command.issuedAt ?? existing.updatedAt;

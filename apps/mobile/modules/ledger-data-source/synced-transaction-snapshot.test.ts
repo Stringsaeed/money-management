@@ -52,6 +52,91 @@ describe("synced Transaction snapshot", () => {
     ).rejects.toThrow("No authoritative");
   });
 
+  it("prunes Transactions whose Accounts leave the authorized set", async () => {
+    const { db } = await setup();
+    const timestamp = "2026-01-01T00:00:00.000Z";
+    await writeSyncedTransactionSnapshot(db, {
+      householdId: "household-1",
+      userId: "user-1",
+      accounts: [
+        {
+          householdId: "household-1",
+          id: "cash",
+          name: "Cash",
+          type: "bank",
+          currency: "USD",
+          color: "#000",
+          icon: "banknote.fill",
+          initialBalanceMinor: 0,
+          excludeFromTotal: false,
+          sortOrder: 0,
+          lifecycle: "active",
+          lifecycleChangedAt: null,
+          visibility: "public",
+          ownerUserId: "user-1",
+          version: 1,
+          createdBy: "user-1",
+          updatedBy: "user-1",
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      ],
+      categories: [],
+      transactions: [
+        {
+          householdId: "household-1",
+          id: "kept",
+          type: "expense",
+          amountMinor: 10,
+          currency: "USD",
+          originalAmountMinor: null,
+          originalCurrency: null,
+          exchangeRate: null,
+          date: "2026-01-02",
+          accountId: "cash",
+          toAccountId: null,
+          categoryId: null,
+          isRecurring: false,
+          recurringRuleId: null,
+          description: "Kept",
+          version: 1,
+          createdBy: "user-1",
+          updatedBy: "user-1",
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+        {
+          householdId: "household-1",
+          id: "private-tx",
+          type: "expense",
+          amountMinor: 20,
+          currency: "USD",
+          originalAmountMinor: null,
+          originalCurrency: null,
+          exchangeRate: null,
+          date: "2026-01-02",
+          accountId: "hidden",
+          toAccountId: null,
+          categoryId: null,
+          isRecurring: false,
+          recurringRuleId: null,
+          description: "Hidden",
+          version: 1,
+          createdBy: "user-1",
+          updatedBy: "user-1",
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      ],
+    });
+
+    await expect(readSyncedTransactionSnapshot(db, "household-1", "user-1")).resolves.toMatchObject(
+      {
+        transactions: [{ id: "kept" }],
+      },
+    );
+  });
+
   it("rejects corrupt cached data instead of exposing another ledger", async () => {
     const { db } = await setup();
     await db.insert(schema.appSettings).values({
