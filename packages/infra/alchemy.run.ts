@@ -48,7 +48,6 @@ export const server = Cloudflare.Worker("server", {
     CORS_ORIGIN: Config.string("CORS_ORIGIN"),
     BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
     BETTER_AUTH_URL: Cloudflare.Worker.URL,
-    SETTLEMENT_ADMIN_SECRET: Config.redacted("SETTLEMENT_ADMIN_SECRET"),
     // Remote kill switch (#99). Env var over KV on purpose: the stack binds
     // no KV namespace today and the flag is a single coarse toggle — flip it
     // with `alchemy deploy` after changing KILL_SWITCH_LOCAL_ONLY in

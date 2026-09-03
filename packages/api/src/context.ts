@@ -17,9 +17,6 @@ export async function createContext({ context }: CreateContextOptions) {
   }
   return {
     session,
-    // Exposed so procedures can guard on request metadata (e.g. the
-    // #88 settlement trigger's admin secret) without re-parsing Hono.
-    headers: context.req.raw.headers,
     waitUntil,
   };
 }

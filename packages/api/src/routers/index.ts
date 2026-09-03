@@ -2,13 +2,10 @@ import type { RouterClient } from "@orpc/server";
 
 import { publicProcedure } from "../index";
 import { activityRouter } from "./activity";
-import { budgetRouter } from "./budget";
 import { commandsRouter } from "./commands";
 import { householdsRouter } from "./households";
 import { ledgerRouter } from "./ledger";
 import { migrationRouter } from "./migration";
-import { projectionsRouter } from "./projections";
-import { settlementRouter } from "./settlement";
 import { syncRouter } from "./sync";
 
 export const appRouter = {
@@ -19,10 +16,7 @@ export const appRouter = {
   commands: commandsRouter,
   sync: syncRouter,
   activity: activityRouter,
-  budget: budgetRouter,
   ledger: ledgerRouter,
-  settlement: settlementRouter,
-  projections: projectionsRouter,
   migration: migrationRouter,
 };
 export type AppRouter = typeof appRouter;
