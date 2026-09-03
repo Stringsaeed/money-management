@@ -1,35 +1,28 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { AuthorizedLedgerAccount } from "@/hooks/use-authorized-ledger-accounts";
 import { useAccountDataSource } from "@/modules/ledger-data-source/coordinator";
-import { cohereLedgerCache } from "@/modules/ledger-cache";
+import { accountKeys, cohereLedgerCache } from "@/modules/ledger-cache";
 
-export function useAccountPrivacy(
-  account: AuthorizedLedgerAccount | undefined,
-  householdId: string | null,
-) {
+export function useAccountPrivacyState(id: string) {
+  const source = useAccountDataSource();
+  return useQuery({
+    queryKey: [...accountKeys.privacy(id), source.cacheKey],
+    enabled: source.accountPrivacy.kind === "synced",
+    queryFn: () =>
+      source.accountPrivacy.kind === "synced" ? source.accountPrivacy.read(id) : undefined,
+  });
+}
+
+export function useSetAccountPrivacy(id: string) {
   const source = useAccountDataSource();
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async (isPrivate: boolean) => {
-      if (!account || !householdId) {
-        throw new Error("This account is not available in the active household.");
+    mutationFn: (isPrivate: boolean) => {
+      if (source.accountPrivacy.kind !== "synced") {
+        throw new Error(source.accountPrivacy.reason);
       }
-      await source.accounts.update(account.id, {
-        visibility: isPrivate ? "private" : "public",
-      });
+      return source.accountPrivacy.set(id, isPrivate ? "private" : "public");
     },
-    onSuccess: async () => {
-      if (!account) {
-        return;
-      }
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["ledger-authorization", "accounts", householdId],
-        }),
-        cohereLedgerCache(queryClient, { kind: "account.updated", id: account.id }),
-      ]);
-    },
+    onSuccess: () => cohereLedgerCache(queryClient, { kind: "account.updated", id }),
   });
 }

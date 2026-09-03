@@ -1,7 +1,7 @@
 import { formOptions, useForm } from "@tanstack/react-form";
 
 import { AccountTypeColors } from "@/constants/theme";
-import { useCreateAccount, useUpdateAccount } from "@/hooks/use-accounts";
+import { useAccountPolicy, useCreateAccount, useUpdateAccount } from "@/hooks/use-accounts";
 import type { Account, AccountType } from "@/types";
 import { decimalStringToCents } from "@/utils/currency";
 
@@ -73,7 +73,7 @@ export type UseAccountFormReturn = ReturnType<typeof useAccountForm>;
 
 export function useEditAccountForm({ account, onError, onUpdated }: UseEditAccountFormArgs) {
   const updateAccount = useUpdateAccount();
-  const local = updateAccount.source === "local";
+  const policy = useAccountPolicy();
 
   return useForm({
     ...accountFormOptions,
@@ -93,7 +93,8 @@ export function useEditAccountForm({ account, onError, onUpdated }: UseEditAccou
             color: value.color,
             icon: value.icon,
             name: value.name.trim(),
-            ...(local && { currency: value.currency, type: value.type }),
+            ...(!policy.immutableFields.has("currency") && { currency: value.currency }),
+            ...(!policy.immutableFields.has("type") && { type: value.type }),
           },
         });
         onUpdated?.();

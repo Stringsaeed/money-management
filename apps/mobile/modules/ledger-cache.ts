@@ -20,6 +20,7 @@ export const accountKeys = {
   balances: ["account-balances"] as const,
   managementBalances: ["account-balances", "management"] as const,
   detail: (id: string) => ["accounts", id] as const,
+  privacy: (id: string) => ["accounts", id, "privacy"] as const,
   lifecyclePreviews: ["account-lifecycle-previews"] as const,
   archivalPreview: (id: string, localDate: string) =>
     ["account-lifecycle-previews", "archival", id, localDate] as const,
@@ -50,6 +51,10 @@ export const monthSummaryKeys = {
 
 export const transactionDateRangeKeys = {
   all: ["transaction-date-range"] as const,
+};
+
+export const ledgerAuthorizationKeys = {
+  accounts: ["ledger-authorization", "accounts"] as const,
 };
 
 export const recurringRuleKeys = {
@@ -250,6 +255,17 @@ export async function cohereTransactionSurfaces(queryClient: QueryClient): Promi
   await invalidateQueryKeys(queryClient, transactionChangeQueryKeys);
 }
 
+const outboxSettlementQueryKeys = [
+  ...transactionChangeQueryKeys,
+  accountKeys.managementBalances,
+  categoryKeys.all,
+  ledgerAuthorizationKeys.accounts,
+] as const;
+
+export async function cohereOutboxSettlement(queryClient: QueryClient): Promise<void> {
+  await invalidateQueryKeys(queryClient, outboxSettlementQueryKeys);
+}
+
 export async function cohereRecurringEffects(
   queryClient: QueryClient,
   effects: readonly RecurringEffect[],
@@ -266,7 +282,12 @@ export async function cohereLedgerEffects(
 ): Promise<void> {
   const queryKeys: QueryKey[] = [];
   if (effects.some((effect) => effect === "ledger" || effect === "balances")) {
-    queryKeys.push(accountKeys.all, accountKeys.balances, transactionKeys.all);
+    queryKeys.push(
+      accountKeys.all,
+      accountKeys.balances,
+      transactionKeys.all,
+      ledgerAuthorizationKeys.accounts,
+    );
   }
   if (effects.includes("summaries")) {
     queryKeys.push(categoryKeys.all, monthSummaryKeys.all, transactionDateRangeKeys.all);

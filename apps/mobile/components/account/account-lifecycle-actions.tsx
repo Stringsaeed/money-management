@@ -34,16 +34,14 @@ export function AccountLifecycleActions({ account, onCompleted }: AccountLifecyc
           <Text className="font-body-normal text-sm text-ink/60">
             Archived Accounts keep their history but cannot receive new activity or fund a budget.
           </Text>
-          {synced ? null : (
-            <Button
-              aria-label={`Restore ${account.name}`}
-              onPress={actions.confirmRestore}
-              size="lg"
-              variant="secondary"
-            >
-              <Text>Restore Account</Text>
-            </Button>
-          )}
+          <Button
+            aria-label={`Restore ${account.name}`}
+            onPress={actions.confirmRestore}
+            size="lg"
+            variant="secondary"
+          >
+            <Text>Restore Account</Text>
+          </Button>
         </Animated.View>
       ) : (
         <Animated.View

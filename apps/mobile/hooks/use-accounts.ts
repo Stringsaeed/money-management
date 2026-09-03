@@ -4,6 +4,7 @@ import { useAccountDataSource } from "@/modules/ledger-data-source/coordinator";
 import {
   unsupportedSyncedOperation,
   type AccountUpdate,
+  type LedgerAccountPolicy,
 } from "@/modules/ledger-data-source/contract";
 import { accountKeys, cohereLedgerCache } from "@/modules/ledger-cache";
 import { toDateString } from "@/utils/date";
@@ -124,19 +125,14 @@ export function useRestoreAccount() {
   const source = useAccountDataSource();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (id: string) => {
-      if (source.accountLifecycle.kind !== "local") {
-        throw unsupportedSyncedOperation(
-          "Account restore",
-          "The Account remains archived.",
-          "Leave it archived until synced restore is supported.",
-        );
-      }
-      return source.accountLifecycle.restore(id);
-    },
+    mutationFn: source.accounts.restore,
     onSuccess: (_, id) => cohereLedgerCache(queryClient, { kind: "account.restored", id }),
   });
   return { ...mutation, source: source.source };
+}
+
+export function useAccountPolicy(): LedgerAccountPolicy {
+  return useAccountDataSource().accounts.policy;
 }
 
 export function useDeleteAccount() {

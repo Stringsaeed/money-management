@@ -21,7 +21,7 @@ import {
 } from "@/lib/sync/degradation";
 import { useSyncModeStore } from "@/stores/sync-mode-store";
 import { orpc } from "@/lib/server/orpc";
-import { cohereLedgerEffects, cohereTransactionSurfaces } from "@/modules/ledger-cache";
+import { cohereLedgerEffects, cohereOutboxSettlement } from "@/modules/ledger-cache";
 
 /** How often the worker drains the outbox and pulls deltas while active. */
 const SYNC_INTERVAL_MS = 30_000;
@@ -139,7 +139,7 @@ export function useSyncWorker(householdId: string | null, userId?: string) {
       }
 
       if (summary.applied > 0 || summary.rejected > 0) {
-        await cohereTransactionSurfaces(queryClient);
+        await cohereOutboxSettlement(queryClient);
       }
 
       try {
@@ -219,7 +219,7 @@ export function useSyncWorker(householdId: string | null, userId?: string) {
   const discardRejected = useCallback(
     async (commandId: string) => {
       await discardRejectedCommand(db, commandId);
-      await cohereTransactionSurfaces(queryClient);
+      await cohereOutboxSettlement(queryClient);
       await refreshCounters();
     },
     [db, queryClient, refreshCounters],
@@ -228,7 +228,7 @@ export function useSyncWorker(householdId: string | null, userId?: string) {
   const retryRejected = useCallback(
     async (commandId: string) => {
       await retryRejectedCommand(db, commandId);
-      await cohereTransactionSurfaces(queryClient);
+      await cohereOutboxSettlement(queryClient);
       await refreshCounters();
       await runSyncTurn();
     },

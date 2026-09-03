@@ -10,7 +10,7 @@ import {
   resubmitRejectedCommand,
   type RejectedChange,
 } from "@/lib/sync/outbox";
-import { cohereTransactionSurfaces } from "@/modules/ledger-cache";
+import { cohereOutboxSettlement } from "@/modules/ledger-cache";
 import { generateId } from "@/utils/id";
 
 /**
@@ -54,7 +54,7 @@ export function useRejectedChanges() {
   const discard = useCallback(
     async (commandId: string) => {
       await discardRejectedCommand(db, commandId);
-      await cohereTransactionSurfaces(queryClient);
+      await cohereOutboxSettlement(queryClient);
       await refresh();
     },
     [db, queryClient, refresh],
@@ -70,7 +70,7 @@ export function useRejectedChanges() {
         newCommandId,
         ...(editedPayload !== undefined && { payload: editedPayload }),
       });
-      await cohereTransactionSurfaces(queryClient);
+      await cohereOutboxSettlement(queryClient);
       await refresh();
       return newCommandId;
     },
