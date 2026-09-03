@@ -15,6 +15,7 @@ const metrics = Cloudflare.AnalyticsEngine.Dataset("metrics");
 
 export const server = Cloudflare.Worker("server", {
   main: "../../apps/server/src/index.ts",
+  domain: "auth.trove.ing",
   compatibility: {
     flags: ["nodejs_compat"],
   },
@@ -38,6 +39,9 @@ export const server = Cloudflare.Worker("server", {
     CORS_ORIGIN: Config.string("CORS_ORIGIN"),
     BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
     BETTER_AUTH_URL: Cloudflare.Worker.URL,
+    EMAIL: Cloudflare.Email.SendEmail("EMAIL", {
+      allowedSenderAddresses: ["noreply@trove.ing"],
+    }),
     // Remote kill switch (#99). Env var over KV on purpose: the stack binds
     // no KV namespace today and the flag is a single coarse toggle — flip it
     // with `alchemy deploy` after changing KILL_SWITCH_LOCAL_ONLY in

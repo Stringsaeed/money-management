@@ -4,13 +4,14 @@ import { handleHouseholdPushUpgrade } from "@trove/api/lib/push/upgrade";
 import { HouseholdPushDO } from "@trove/api/lib/push/household-push-do";
 import { createDb } from "@trove/db";
 import { appRouter } from "@trove/api/routers/index";
-import { createAuth } from "@trove/auth";
 import { env } from "@trove/env/server";
 import { onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+
+import { auth } from "./auth";
 
 const app = new Hono();
 
@@ -25,7 +26,7 @@ app.use(
   }),
 );
 
-app.on(["POST", "GET"], "/api/auth/*", (c) => createAuth().handler(c.req.raw));
+app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 export const rpcHandler = new RPCHandler(appRouter, {
   interceptors: [
@@ -36,7 +37,7 @@ export const rpcHandler = new RPCHandler(appRouter, {
 });
 
 app.use("/*", async (c, next) => {
-  const context = await createContext({ context: c });
+  const context = await createContext({ context: c, auth });
 
   const rpcResult = await rpcHandler.handle(c.req.raw, {
     prefix: "/rpc",
@@ -62,7 +63,7 @@ app.get("/", (c) => {
  */
 app.get("/api/push/household/:householdId", (c) =>
   handleHouseholdPushUpgrade(
-    { getSession: createAuth().api.getSession, db: createDb(), namespace: env.PUSH_HOUSEHOLD_DO },
+    { getSession: auth.api.getSession, db: createDb(), namespace: env.PUSH_HOUSEHOLD_DO },
     c.req.raw,
     c.req.param("householdId"),
   ),
