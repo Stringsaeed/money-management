@@ -199,6 +199,15 @@ describe("useSyncWorker", () => {
     });
   });
 
+  it("invalidates ledger surfaces after outbox drain settlement", async () => {
+    mockDrainOutbox.mockResolvedValue({ applied: 1, rejected: 1, pending: 0 });
+    const client = createTestQueryClient();
+    await renderHookWithProviders(() => useSyncWorker(HOUSEHOLD_ID), { client });
+    await flushTurn();
+
+    expect(mockCohereTransactionSurfaces).toHaveBeenCalledWith(client);
+  });
+
   it("invalidates the covered ledger queries for delta effect tags (cache coherence)", async () => {
     mockPullDeltas.mockResolvedValue({
       seq: 4,

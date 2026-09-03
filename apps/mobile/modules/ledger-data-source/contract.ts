@@ -91,9 +91,12 @@ export type NewAccount = Omit<
   Account,
   "id" | "createdAt" | "updatedAt" | "lifecycle" | "lifecycleChangedAt"
 >;
+export type AccountVisibilityValue = "public" | "private";
 export type AccountUpdate = Partial<
   Omit<Account, "id" | "createdAt" | "lifecycle" | "lifecycleChangedAt">
->;
+> & {
+  readonly visibility?: AccountVisibilityValue;
+};
 
 export interface LedgerAccountResource {
   list: () => Promise<Account[]>;

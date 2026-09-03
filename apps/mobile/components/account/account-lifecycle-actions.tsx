@@ -16,8 +16,10 @@ interface AccountLifecycleActionsProps {
 
 export function AccountLifecycleActions({ account, onCompleted }: AccountLifecycleActionsProps) {
   const actions = useAccountLifecycleActions(account, onCompleted);
+  const synced = actions.archivalPreview.source === "synced";
   const blockers = actions.archivalPreview.data?.blockers ?? [];
-  const previewFailed = actions.archivalPreview.isError || actions.deletionPreview.isError;
+  const previewFailed =
+    !synced && (actions.archivalPreview.isError || actions.deletionPreview.isError);
 
   return (
     <View className="gap-3 border-t border-ledger-outline pt-5">
@@ -32,14 +34,16 @@ export function AccountLifecycleActions({ account, onCompleted }: AccountLifecyc
           <Text className="font-body-normal text-sm text-ink/60">
             Archived Accounts keep their history but cannot receive new activity or fund a budget.
           </Text>
-          <Button
-            aria-label={`Restore ${account.name}`}
-            onPress={actions.confirmRestore}
-            size="lg"
-            variant="secondary"
-          >
-            <Text>Restore Account</Text>
-          </Button>
+          {synced ? null : (
+            <Button
+              aria-label={`Restore ${account.name}`}
+              onPress={actions.confirmRestore}
+              size="lg"
+              variant="secondary"
+            >
+              <Text>Restore Account</Text>
+            </Button>
+          )}
         </Animated.View>
       ) : (
         <Animated.View
@@ -53,14 +57,14 @@ export function AccountLifecycleActions({ account, onCompleted }: AccountLifecyc
           ) : null}
           <Button
             aria-label={`Archive ${account.name}`}
-            disabled={!actions.archivalPreview.data?.canArchive}
+            disabled={!synced && !actions.archivalPreview.data?.canArchive}
             onPress={actions.confirmArchive}
             size="lg"
             variant="outline"
           >
             <Text>Archive Account</Text>
           </Button>
-          {actions.deletionPreview.data?.canDelete ? (
+          {synced ? null : actions.deletionPreview.data?.canDelete ? (
             <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
               <Button
                 aria-label={`Permanently delete ${account.name}`}

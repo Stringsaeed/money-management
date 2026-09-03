@@ -145,7 +145,11 @@ export default function AccountDetailScreen() {
         <View className="px-4 pt-4">
           <AccountPrivacyToggle
             isPending={accountPrivacy.isPending}
-            isPrivate={serverAccount.visibility === "private"}
+            isPrivate={
+              accountPrivacy.variables !== undefined
+                ? accountPrivacy.variables
+                : serverAccount.visibility === "private"
+            }
             onChange={accountPrivacy.mutate}
           />
           {accountPrivacy.error ? (

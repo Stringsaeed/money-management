@@ -4,12 +4,41 @@ import type { SyncedAccount, SyncedTransaction } from "./synced-mappers";
 import type { SyncedTransactionSnapshot } from "./synced-transaction-snapshot";
 
 type TransactionType = SyncedTransaction["type"];
+type AccountType = SyncedAccount["type"];
+type AccountVisibility = SyncedAccount["visibility"];
 
 export type PendingTransactionCommandKind =
   | "transaction.create"
   | "transaction.edit"
   | "transaction.remove"
   | "refund.link";
+
+export interface PendingAccountCreatePayload {
+  id: string;
+  name: string;
+  type: AccountType;
+  currency: string;
+  color: string;
+  icon: string;
+  initialBalanceMinor: number;
+  excludeFromTotal: boolean;
+  sortOrder: number;
+  visibility?: AccountVisibility;
+}
+
+export interface PendingAccountUpdatePayload {
+  accountId: string;
+  name?: string;
+  color?: string;
+  icon?: string;
+  excludeFromTotal?: boolean;
+  sortOrder?: number;
+  visibility?: AccountVisibility;
+}
+
+export interface PendingAccountArchivePayload {
+  accountId: string;
+}
 
 export interface PendingTransactionCreatePayload {
   id: string;
@@ -58,17 +87,18 @@ export type PendingTransactionPayload =
 
 interface ProjectionState {
   readonly householdId: string;
+  readonly userId: string;
   readonly accounts: Map<string, SyncedAccount>;
   readonly transactions: Map<string, SyncedTransaction>;
 }
 
-/** Folds queued Transaction intents over one authorized server snapshot. */
 export function projectPendingTransactions(
   snapshot: SyncedTransactionSnapshot,
   commands: readonly ProjectableCommand[],
 ): SyncedTransactionSnapshot {
   const state: ProjectionState = {
     householdId: snapshot.householdId,
+    userId: snapshot.userId,
     accounts: new Map(snapshot.accounts.map((row) => [row.id, row])),
     transactions: new Map(snapshot.transactions.map((row) => [row.id, row])),
   };
@@ -79,6 +109,7 @@ export function projectPendingTransactions(
 
   return {
     ...snapshot,
+    accounts: [...state.accounts.values()],
     transactions: [...state.transactions.values()].filter(
       (row) =>
         state.accounts.has(row.accountId) &&
@@ -89,6 +120,15 @@ export function projectPendingTransactions(
 
 function projectCommand(state: ProjectionState, command: ProjectableCommand): void {
   switch (command.kind) {
+    case "account.create":
+      projectAccountCreate(state, command);
+      break;
+    case "account.update":
+      projectAccountUpdate(state, command);
+      break;
+    case "account.archive":
+      projectAccountArchive(state, command);
+      break;
     case "transaction.create":
       projectCreate(state, command);
       break;
@@ -102,6 +142,69 @@ function projectCommand(state: ProjectionState, command: ProjectableCommand): vo
       projectRefund(state, command);
       break;
   }
+}
+
+function projectAccountCreate(state: ProjectionState, command: ProjectableCommand): void {
+  // SAFETY: createSyncedLedgerDataSource is the sole writer for this command kind.
+  const input = command.payload as PendingAccountCreatePayload;
+  if (state.accounts.has(input.id)) return;
+  const timestamp = command.issuedAt ?? "1970-01-01T00:00:00.000Z";
+  state.accounts.set(input.id, {
+    householdId: state.householdId,
+    id: input.id,
+    name: input.name,
+    type: input.type,
+    currency: input.currency,
+    color: input.color,
+    icon: input.icon,
+    initialBalanceMinor: input.initialBalanceMinor,
+    excludeFromTotal: input.excludeFromTotal,
+    sortOrder: input.sortOrder,
+    lifecycle: "active",
+    lifecycleChangedAt: null,
+    visibility: input.visibility ?? "public",
+    ownerUserId: state.userId,
+    version: 0,
+    createdBy: "optimistic",
+    updatedBy: "optimistic",
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  });
+}
+
+function projectAccountUpdate(state: ProjectionState, command: ProjectableCommand): void {
+  // SAFETY: createSyncedLedgerDataSource is the sole writer for this command kind.
+  const input = command.payload as PendingAccountUpdatePayload;
+  const existing = state.accounts.get(input.accountId);
+  if (!existing || existing.lifecycle === "archived") return;
+  state.accounts.set(input.accountId, {
+    ...existing,
+    ...(input.name !== undefined && { name: input.name }),
+    ...(input.color !== undefined && { color: input.color }),
+    ...(input.icon !== undefined && { icon: input.icon }),
+    ...(input.excludeFromTotal !== undefined && { excludeFromTotal: input.excludeFromTotal }),
+    ...(input.sortOrder !== undefined && { sortOrder: input.sortOrder }),
+    ...(input.visibility !== undefined && { visibility: input.visibility }),
+    version: existing.version + 1,
+    updatedBy: "optimistic",
+    updatedAt: command.issuedAt ?? existing.updatedAt,
+  });
+}
+
+function projectAccountArchive(state: ProjectionState, command: ProjectableCommand): void {
+  // SAFETY: createSyncedLedgerDataSource is the sole writer for this command kind.
+  const input = command.payload as PendingAccountArchivePayload;
+  const existing = state.accounts.get(input.accountId);
+  if (!existing || existing.lifecycle === "archived") return;
+  const timestamp = command.issuedAt ?? existing.updatedAt;
+  state.accounts.set(input.accountId, {
+    ...existing,
+    lifecycle: "archived",
+    lifecycleChangedAt: timestamp,
+    version: existing.version + 1,
+    updatedBy: "optimistic",
+    updatedAt: timestamp,
+  });
 }
 
 function projectCreate(state: ProjectionState, command: ProjectableCommand): void {

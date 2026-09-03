@@ -73,6 +73,7 @@ export type UseAccountFormReturn = ReturnType<typeof useAccountForm>;
 
 export function useEditAccountForm({ account, onError, onUpdated }: UseEditAccountFormArgs) {
   const updateAccount = useUpdateAccount();
+  const local = updateAccount.source === "local";
 
   return useForm({
     ...accountFormOptions,
@@ -90,10 +91,9 @@ export function useEditAccountForm({ account, onError, onUpdated }: UseEditAccou
           id: account.id,
           data: {
             color: value.color,
-            currency: value.currency,
             icon: value.icon,
             name: value.name.trim(),
-            type: value.type,
+            ...(local && { currency: value.currency, type: value.type }),
           },
         });
         onUpdated?.();

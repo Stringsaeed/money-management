@@ -2,6 +2,9 @@ import type { ProjectableCommand } from "@/lib/sync/outbox";
 
 import {
   projectPendingTransactions,
+  type PendingAccountArchivePayload,
+  type PendingAccountCreatePayload,
+  type PendingAccountUpdatePayload,
   type PendingTransactionCommandKind,
   type PendingTransactionPayload,
 } from "./pending-transaction-projector";
@@ -97,6 +100,19 @@ const command = (
   status: "pending",
 });
 
+const accountCommand = (
+  kind: "account.create" | "account.update" | "account.archive",
+  payload: PendingAccountCreatePayload | PendingAccountUpdatePayload | PendingAccountArchivePayload,
+  sequence: number,
+): ProjectableCommand => ({
+  commandId: `command-${sequence}`,
+  householdId: HOUSEHOLD_ID,
+  kind,
+  payload,
+  issuedAt: `2026-01-0${sequence}T00:00:00.000Z`,
+  status: "pending",
+});
+
 describe("projectPendingTransactions", () => {
   it("folds queued Transaction intents in FIFO order", () => {
     const projected = projectPendingTransactions(snapshot, [
@@ -156,5 +172,132 @@ describe("projectPendingTransactions", () => {
     ]);
 
     expect(projected.transactions.some((row) => row.id === "hidden")).toBe(false);
+  });
+
+  it("inserts a pending Account create owned by the snapshot viewer", () => {
+    const projected = projectPendingTransactions(snapshot, [
+      accountCommand(
+        "account.create",
+        {
+          id: "everyday",
+          name: "Everyday",
+          type: "bank",
+          currency: "AED",
+          color: "#4A90D9",
+          icon: "🏦",
+          initialBalanceMinor: 0,
+          excludeFromTotal: false,
+          sortOrder: 2,
+        },
+        1,
+      ),
+    ]);
+
+    expect(projected.accounts.find((row) => row.id === "everyday")).toMatchObject({
+      name: "Everyday",
+      ownerUserId: "user-1",
+      visibility: "public",
+      lifecycle: "active",
+      version: 0,
+    });
+  });
+
+  it("skips a duplicate Account create", () => {
+    const projected = projectPendingTransactions(snapshot, [
+      accountCommand(
+        "account.create",
+        {
+          id: "cash",
+          name: "Replacement",
+          type: "cash",
+          currency: "USD",
+          color: "#111",
+          icon: "🏦",
+          initialBalanceMinor: 1,
+          excludeFromTotal: true,
+          sortOrder: 9,
+        },
+        1,
+      ),
+    ]);
+
+    expect(projected.accounts.find((row) => row.id === "cash")).toMatchObject({
+      name: "Cash",
+      version: 0,
+    });
+  });
+
+  it("patches an Account update and bumps version", () => {
+    const projected = projectPendingTransactions(snapshot, [
+      accountCommand(
+        "account.update",
+        { accountId: "cash", name: "Daily", visibility: "private" },
+        1,
+      ),
+    ]);
+
+    expect(projected.accounts.find((row) => row.id === "cash")).toMatchObject({
+      name: "Daily",
+      visibility: "private",
+      version: 1,
+    });
+  });
+
+  it("keeps an archived Account row and skips a later update", () => {
+    const projected = projectPendingTransactions(snapshot, [
+      accountCommand("account.archive", { accountId: "cash" }, 1),
+      accountCommand("account.update", { accountId: "cash", name: "Gone" }, 2),
+    ]);
+
+    expect(projected.accounts.find((row) => row.id === "cash")).toMatchObject({
+      name: "Cash",
+      lifecycle: "archived",
+      version: 1,
+    });
+  });
+
+  it("skips archive and update when the Account is missing", () => {
+    const projected = projectPendingTransactions(snapshot, [
+      accountCommand("account.update", { accountId: "missing", name: "Nope" }, 1),
+      accountCommand("account.archive", { accountId: "missing" }, 2),
+    ]);
+
+    expect(projected.accounts.map((row) => row.id)).toEqual(["cash", "card"]);
+  });
+
+  it("lets a later Transaction create land on a pending Account create", () => {
+    const projected = projectPendingTransactions(snapshot, [
+      accountCommand(
+        "account.create",
+        {
+          id: "everyday",
+          name: "Everyday",
+          type: "bank",
+          currency: "AED",
+          color: "#4A90D9",
+          icon: "🏦",
+          initialBalanceMinor: 0,
+          excludeFromTotal: false,
+          sortOrder: 2,
+        },
+        1,
+      ),
+      command(
+        "transaction.create",
+        {
+          id: "first",
+          type: "expense",
+          amountMinor: 80,
+          date: "2026-01-03",
+          accountId: "everyday",
+        },
+        2,
+      ),
+    ]);
+
+    expect(projected.transactions.find((row) => row.id === "first")).toMatchObject({
+      accountId: "everyday",
+      currency: "AED",
+    });
   });
 });

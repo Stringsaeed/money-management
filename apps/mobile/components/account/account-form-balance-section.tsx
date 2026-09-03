@@ -16,6 +16,7 @@ type SheetTextInputProps = ComponentProps<typeof TextInput>;
 
 interface AccountFormBalanceSectionProps {
   amountEditable: boolean;
+  currencyEditable?: boolean;
   currencyExpanded: boolean;
   form: AccountFormApi;
   lockedBalanceCents?: number;
@@ -26,6 +27,7 @@ interface AccountFormBalanceSectionProps {
 
 export function AccountFormBalanceSection({
   amountEditable,
+  currencyEditable = true,
   currencyExpanded,
   form,
   lockedBalanceCents,
@@ -59,13 +61,22 @@ export function AccountFormBalanceSection({
           {(field) => (
             <View className="gap-2">
               <Text className="font-body-medium text-sm text-ink/60">Currency</Text>
-              <View className="-mx-5">
-                <AccountCurrencyPicker
-                  contentContainerClassName="gap-2 px-5"
-                  onChange={field.handleChange}
-                  value={field.state.value}
-                />
-              </View>
+              {currencyEditable ? (
+                <View className="-mx-5">
+                  <AccountCurrencyPicker
+                    contentContainerClassName="gap-2 px-5"
+                    onChange={field.handleChange}
+                    value={field.state.value}
+                  />
+                </View>
+              ) : (
+                <View className="rounded-2xl border border-ledger-outline bg-surface-container px-4 py-3">
+                  <Text className="font-body-medium text-base text-ink">{field.state.value}</Text>
+                  <Text className="font-body-normal text-xs text-ink/40">
+                    Currency stays on the Account after it is created. 💱
+                  </Text>
+                </View>
+              )}
             </View>
           )}
         </form.Field>

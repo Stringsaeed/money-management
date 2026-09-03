@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useAccountDataSource } from "@/modules/ledger-data-source/coordinator";
-import { unsupportedSyncedOperation } from "@/modules/ledger-data-source/contract";
+import {
+  unsupportedSyncedOperation,
+  type AccountUpdate,
+} from "@/modules/ledger-data-source/contract";
 import { accountKeys, cohereLedgerCache } from "@/modules/ledger-cache";
 import { toDateString } from "@/utils/date";
-import type { Account } from "@/types";
 
 // ── Queries ────────────────────────────────────────────────────────────────────
 
@@ -62,13 +64,8 @@ export function useUpdateAccount() {
   const source = useAccountDataSource();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: async ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: Partial<Omit<Account, "id" | "createdAt" | "lifecycle" | "lifecycleChangedAt">>;
-    }) => source.accounts.update(id, data),
+    mutationFn: async ({ id, data }: { id: string; data: AccountUpdate }) =>
+      source.accounts.update(id, data),
     onSuccess: (_, { id }) => cohereLedgerCache(queryClient, { kind: "account.updated", id }),
   });
   return { ...mutation, source: source.source };
@@ -79,6 +76,7 @@ export function useAccountArchivalPreview(id: string) {
   const localDate = toDateString(new Date());
   const query = useQuery({
     queryKey: [...accountKeys.archivalPreview(id, localDate), source.cacheKey],
+    enabled: source.accountLifecycle.kind === "local",
     queryFn: () => {
       if (source.accountLifecycle.kind !== "local") {
         throw unsupportedSyncedOperation(
@@ -97,6 +95,7 @@ export function useAccountDeletionPreview(id: string) {
   const source = useAccountDataSource();
   const query = useQuery({
     queryKey: [...accountKeys.deletionPreview(id), source.cacheKey],
+    enabled: source.accountLifecycle.kind === "local",
     queryFn: () => {
       if (source.accountLifecycle.kind !== "local") {
         throw unsupportedSyncedOperation(

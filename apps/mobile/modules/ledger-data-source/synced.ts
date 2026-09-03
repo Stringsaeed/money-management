@@ -22,6 +22,7 @@ import {
   mapSyncedAccount,
   mapSyncedCategory,
   toSyncedAccountType,
+  type SyncedAccount,
   type SyncedTransaction,
 } from "./synced-mappers";
 import { projectPendingTransactions } from "./pending-transaction-projector";
@@ -126,15 +127,6 @@ export const createSyncedLedgerDataSource = ({
       throw new LedgerDataSourceError("synced", operation, cause, "offline");
     }
   };
-  const listAccounts = async (includeArchived: boolean): Promise<Account[]> => {
-    const rows =
-      offlineState.kind === "offline_cached"
-        ? (await readOfflineSnapshot("read.accounts")).accounts
-        : await listRawAccounts();
-    return rows
-      .filter((row) => includeArchived || row.lifecycle === "active")
-      .map(mapSyncedAccount);
-  };
   const executeServerCommand = async (
     operation: LedgerDataSourceOperation,
     command: CommandEnvelope,
@@ -165,10 +157,10 @@ export const createSyncedLedgerDataSource = ({
     ]);
     return projectPendingTransactions(snapshot, commands);
   };
-  const readProjectedSnapshot = () =>
-    runner.run("read.transactions", async () => {
+  const readProjectedSnapshot = (operation: LedgerDataSourceOperation = "read.transactions") =>
+    runner.run(operation, async () => {
       if (offlineState.kind === "offline_cached") {
-        return readCachedProjectedSnapshot();
+        return readCachedProjectedSnapshot(operation);
       }
       let snapshot: SyncedTransactionSnapshot;
       try {
@@ -193,10 +185,27 @@ export const createSyncedLedgerDataSource = ({
       }
       await enqueueCommand(db, { ...command, userId });
     });
+  const listProjectedAccounts = async (includeArchived: boolean): Promise<Account[]> => {
+    const snapshot = await readProjectedSnapshot("read.accounts");
+    return snapshot.accounts
+      .filter((row) => includeArchived || row.lifecycle === "active")
+      .map(mapSyncedAccount);
+  };
+  const findCachedAccount = async (id: string): Promise<SyncedAccount> => {
+    const account = (await readCachedProjectedSnapshot("read.accounts")).accounts.find(
+      (row) => row.id === id,
+    );
+    if (!account) {
+      throw new Error(
+        "This Account is not in the authorized ledger snapshot. Refresh the ledger before editing it.",
+      );
+    }
+    return account;
+  };
   const transactions = createSyncedTransactionResource({
     householdId,
-    readSnapshot: readProjectedSnapshot,
-    readCachedSnapshot: readCachedProjectedSnapshot,
+    readSnapshot: () => readProjectedSnapshot(),
+    readCachedSnapshot: () => readCachedProjectedSnapshot(),
     executeCommand: enqueueTransactionIntent,
   });
 
@@ -205,10 +214,10 @@ export const createSyncedLedgerDataSource = ({
     cacheKey: `synced:${householdId}:${userId}`,
     offlineState,
     accounts: {
-      list: () => listAccounts(false),
-      get: async (id) => (await listAccounts(true)).find((account) => account.id === id),
+      list: () => listProjectedAccounts(false),
+      get: async (id) => (await listProjectedAccounts(true)).find((account) => account.id === id),
       listWithBalances: async (includeArchived) => {
-        const snapshot = await readProjectedSnapshot();
+        const snapshot = await readProjectedSnapshot("read.accounts");
         return snapshot.accounts
           .map(mapSyncedAccount)
           .filter((account) => includeArchived || account.lifecycle === "active")
@@ -219,7 +228,7 @@ export const createSyncedLedgerDataSource = ({
       },
       create: async (data) => {
         const id = generateId();
-        await executeServerCommand("mutation.account-create", {
+        await enqueueTransactionIntent("mutation.account-create", {
           commandId: generateId(),
           householdId,
           kind: "account.create",
@@ -239,7 +248,8 @@ export const createSyncedLedgerDataSource = ({
       },
       update: async (id, data) => {
         assertSupportedAccountUpdate(data);
-        return executeServerCommand("mutation.account-update", {
+        const expectedVersion = (await findCachedAccount(id)).version;
+        return enqueueTransactionIntent("mutation.account-update", {
           commandId: generateId(),
           householdId,
           kind: "account.update",
@@ -252,16 +262,24 @@ export const createSyncedLedgerDataSource = ({
               excludeFromTotal: data.excludeFromTotal,
             }),
             ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
+            ...(data.visibility !== undefined && { visibility: data.visibility }),
           },
+          preconditions: [{ entityId: id, expectedVersion }],
         });
       },
-      archive: (id) =>
-        executeServerCommand("mutation.account-archive", {
+      archive: async (id) => {
+        const account = await findCachedAccount(id);
+        if (account.lifecycle === "archived") {
+          return;
+        }
+        return enqueueTransactionIntent("mutation.account-archive", {
           commandId: generateId(),
           householdId,
           kind: "account.archive",
           payload: { accountId: id },
-        }),
+          preconditions: [{ entityId: id, expectedVersion: account.version }],
+        });
+      },
     },
     accountLifecycle: { kind: "synced" },
     categories: {
