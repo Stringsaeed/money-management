@@ -7,6 +7,7 @@ import { GARDEN_STAGES, GrowingGarden } from "@/components/graphics/growing-gard
 import { OnboardingBloomBurst } from "@/components/onboarding/onboarding-bloom-burst";
 import { OnboardingCta } from "@/components/onboarding/onboarding-cta";
 import { Text } from "@/components/ui/text";
+import { returnTo, useAccess } from "@/modules/access";
 
 const HEADLINE_DELAY = 640;
 const SUBHEAD_DELAY = 740;
@@ -23,6 +24,8 @@ interface OnboardingCompleteStepProps {
  * the user just built is handed back to them before the app opens.
  */
 export function OnboardingCompleteStep({ onFinish, values }: OnboardingCompleteStepProps) {
+  const access = useAccess();
+
   return (
     <View className="flex-1 justify-between px-6 pb-2 pt-safe-offset-4">
       <View className="flex-1 justify-center gap-9">
@@ -64,7 +67,17 @@ export function OnboardingCompleteStep({ onFinish, values }: OnboardingCompleteS
           testID="onboarding-finish"
         />
         <Pressable
-          onPress={() => router.push("/(tabs)/settings/household")}
+          onPress={() => {
+            if (access.kind === "anonymous") {
+              access.beginAuth(returnTo.profileHousehold());
+              return;
+            }
+            if (access.kind === "session_revoked") {
+              access.reauthenticate(returnTo.profileHousehold());
+              return;
+            }
+            router.push("/(tabs)/settings/household");
+          }}
           className="py-2 items-center"
           testID="onboarding-share-prompt"
         >
