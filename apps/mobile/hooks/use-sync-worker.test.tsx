@@ -16,7 +16,7 @@ const mockApply = jest.fn();
 const mockGetDelta = jest.fn();
 const mockStatus = jest.fn();
 const mockCohereLedgerEffects = jest.fn();
-const mockCohereTransactionSurfaces = jest.fn();
+const mockCohereOutboxSettlement = jest.fn();
 
 const FAKE_DB = { __fakeDb: true };
 jest.mock("@/db/client", () => ({
@@ -50,7 +50,7 @@ jest.mock("@/lib/server/orpc", () => ({
 jest.mock("@/modules/ledger-cache", () => ({
   ...jest.requireActual("@/modules/ledger-cache"),
   cohereLedgerEffects: (...args: unknown[]) => mockCohereLedgerEffects(...args),
-  cohereTransactionSurfaces: (...args: unknown[]) => mockCohereTransactionSurfaces(...args),
+  cohereOutboxSettlement: (...args: unknown[]) => mockCohereOutboxSettlement(...args),
 }));
 
 const HOUSEHOLD_ID = "household-1";
@@ -62,7 +62,7 @@ function defaultMocks() {
   mockPullDeltas.mockResolvedValue({ seq: 0, hasMore: false, changes: [] });
   mockStatus.mockResolvedValue({ killSwitchLocalOnly: false });
   mockCohereLedgerEffects.mockResolvedValue(undefined);
-  mockCohereTransactionSurfaces.mockResolvedValue(undefined);
+  mockCohereOutboxSettlement.mockResolvedValue(undefined);
   mockCountPending.mockResolvedValue(2);
   mockListRejected.mockResolvedValue([
     {
@@ -205,7 +205,7 @@ describe("useSyncWorker", () => {
     await renderHookWithProviders(() => useSyncWorker(HOUSEHOLD_ID), { client });
     await flushTurn();
 
-    expect(mockCohereTransactionSurfaces).toHaveBeenCalledWith(client);
+    expect(mockCohereOutboxSettlement).toHaveBeenCalledWith(client);
   });
 
   it("invalidates the covered ledger queries for delta effect tags (cache coherence)", async () => {
@@ -232,11 +232,13 @@ describe("useSyncWorker", () => {
       await result.current.discardRejected("cmd-rej");
     });
     expect(mockDiscard).toHaveBeenCalledWith(FAKE_DB, "cmd-rej");
+    expect(mockCohereOutboxSettlement).toHaveBeenCalled();
 
     await act(async () => {
       await result.current.retryRejected("cmd-rej");
     });
     expect(mockRetry).toHaveBeenCalledWith(FAKE_DB, "cmd-rej");
+    expect(mockCohereOutboxSettlement).toHaveBeenCalledTimes(2);
     // Retry triggers an immediate extra drain turn.
     expect(mockDrainOutbox.mock.calls.length).toBeGreaterThan(turnsAfterMount);
   });

@@ -123,6 +123,7 @@ jest.mock("@/hooks/use-accounts", () => ({
   useDeleteAccount: () => ({ mutateAsync: mockDeleteAccount }),
   useRestoreAccount: () => ({ mutateAsync: mockRestoreAccount }),
   useUpdateAccount: () => ({ mutateAsync: mockUpdateAccount }),
+  useAccountPolicy: () => ({ immutableFields: new Set() }),
 }));
 
 describe("app/accounts", () => {

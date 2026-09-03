@@ -9,8 +9,10 @@ import {
   cohereBudgetingEffects,
   cohereLedgerCache,
   cohereLedgerEffects,
+  cohereOutboxSettlement,
   cohereRecurringEffects,
   cohereTransactionSurfaces,
+  ledgerAuthorizationKeys,
   monthSummaryKeys,
   recurringRuleKeys,
   transactionDateRangeKeys,
@@ -346,6 +348,23 @@ describe("cohereTransactionSurfaces", () => {
   });
 });
 
+describe("cohereOutboxSettlement", () => {
+  it("invalidates Account, Transaction, and authorization keys after drain", async () => {
+    const { queryClient, invalidateQueries } = createControlledQueryClient();
+
+    await cohereOutboxSettlement(queryClient);
+
+    expect(invalidatedKeys(invalidateQueries)).toEqual(
+      expect.arrayContaining([
+        accountKeys.all,
+        accountKeys.balances,
+        transactionKeys.all,
+        ledgerAuthorizationKeys.accounts,
+      ]),
+    );
+  });
+});
+
 describe("cohereLedgerEffects", () => {
   it("maps synced Effect Tags onto the existing resource cache keys", async () => {
     const { queryClient, invalidateQueries } = createControlledQueryClient();
@@ -356,6 +375,7 @@ describe("cohereLedgerEffects", () => {
       accountKeys.all,
       accountKeys.balances,
       transactionKeys.all,
+      ledgerAuthorizationKeys.accounts,
       categoryKeys.all,
       monthSummaryKeys.all,
       transactionDateRangeKeys.all,

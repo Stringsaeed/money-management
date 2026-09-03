@@ -126,12 +126,17 @@ describe("createSyncedLedgerDataSource accounts", () => {
     const createdId = await source.accounts.create(newAccount);
     await source.accounts.update("cash", { name: "Daily", visibility: "private" });
     await source.accounts.archive("cash");
+    expect(source.accountPrivacy.kind).toBe("synced");
+    if (source.accountPrivacy.kind === "synced") {
+      await source.accountPrivacy.set("cash", "private");
+    }
 
     expect(createdId).toBe("generated-id");
     expect(mockEnqueueCommand.mock.calls.map(([, command]) => command.kind)).toEqual([
       "account.create",
       "account.update",
       "account.archive",
+      "account.update",
     ]);
     expect(mockEnqueueCommand.mock.calls[1][1]).toMatchObject({
       payload: { accountId: "cash", name: "Daily", visibility: "private" },
@@ -220,6 +225,91 @@ describe("createSyncedLedgerDataSource accounts", () => {
     await expect(source.accounts.list()).resolves.toEqual([
       expect.objectContaining({ id: "cash" }),
     ]);
+  });
+
+  it("enqueues restore for an archived Account and no-ops an active one", async () => {
+    mockReadSnapshot.mockResolvedValue({
+      ...snapshot,
+      accounts: [{ ...cashAccount, lifecycle: "archived", lifecycleChangedAt: timestamp }],
+    });
+    const source = createSyncedLedgerDataSource({
+      householdId: HOUSEHOLD_ID,
+      userId: USER_ID,
+      db: fakeDb,
+    });
+
+    await source.accounts.restore("cash");
+    expect(mockEnqueueCommand).toHaveBeenCalledWith(
+      fakeDb,
+      expect.objectContaining({
+        kind: "account.restore",
+        payload: { accountId: "cash" },
+        preconditions: [{ entityId: "cash", expectedVersion: 3 }],
+      }),
+    );
+
+    mockEnqueueCommand.mockClear();
+    mockReadSnapshot.mockResolvedValue(snapshot);
+    await source.accounts.restore("cash");
+    expect(mockEnqueueCommand).not.toHaveBeenCalled();
+  });
+
+  it("refuses privacy changes from a non-owner", async () => {
+    mockReadSnapshot.mockResolvedValue({
+      ...snapshot,
+      accounts: [{ ...cashAccount, ownerUserId: "other-user" }],
+    });
+    const source = createSyncedLedgerDataSource({
+      householdId: HOUSEHOLD_ID,
+      userId: USER_ID,
+      db: fakeDb,
+    });
+
+    expect(source.accountPrivacy.kind).toBe("synced");
+    if (source.accountPrivacy.kind !== "synced") {
+      throw new Error("expected synced privacy");
+    }
+    await expect(source.accountPrivacy.set("cash", "private")).rejects.toThrow(
+      "Only the Account owner can change this.",
+    );
+    expect(mockEnqueueCommand).not.toHaveBeenCalled();
+  });
+
+  it("projects first-launch offline creates over an empty snapshot", async () => {
+    mockReadSnapshot.mockRejectedValue(new Error("No authoritative synced Transaction snapshot"));
+    mockListProjectableCommands.mockResolvedValue([{ ...createCommand(), status: "pending" }]);
+    const source = createSyncedLedgerDataSource({
+      householdId: HOUSEHOLD_ID,
+      userId: USER_ID,
+      db: fakeDb,
+      offlineState: { kind: "offline_cached", reason: "network_unavailable" },
+    });
+
+    await expect(source.accounts.list()).resolves.toEqual([
+      expect.objectContaining({ id: "everyday", name: "Everyday" }),
+    ]);
+  });
+
+  it("coalesces concurrent online snapshot refreshes", async () => {
+    let release!: () => void;
+    mockListServerAccounts.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = () => resolve(snapshot.accounts);
+        }),
+    );
+    const source = createSyncedLedgerDataSource({
+      householdId: HOUSEHOLD_ID,
+      userId: USER_ID,
+      db: fakeDb,
+    });
+
+    const first = source.accounts.list();
+    const second = source.accounts.list();
+    release();
+    await Promise.all([first, second]);
+
+    expect(mockListServerAccounts).toHaveBeenCalledTimes(1);
   });
 
   it("no-ops archive when the cached Account is already archived", async () => {

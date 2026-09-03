@@ -8,10 +8,8 @@ const mockPush = jest.fn();
 const mockUseLocalSearchParams = jest.fn();
 const mockUseAccount = jest.fn();
 const mockUseTransactions = jest.fn();
-const mockUseLedgerAccounts = jest.fn();
-const mockUseActiveHousehold = jest.fn();
-const mockUseAccountPrivacy = jest.fn();
-const mockUseSession = jest.fn();
+const mockUseAccountPrivacyState = jest.fn();
+const mockUseSetAccountPrivacy = jest.fn();
 const mockSetSelectedMonth = jest.fn();
 const mockTransactionGroup = jest.fn((_: unknown) => null);
 
@@ -31,20 +29,9 @@ jest.mock("@/hooks/use-transactions", () => ({
   useTransactions: (...args: unknown[]) => mockUseTransactions(...args),
 }));
 
-jest.mock("@/hooks/use-authorized-ledger-accounts", () => ({
-  useAuthorizedLedgerAccounts: (...args: unknown[]) => mockUseLedgerAccounts(...args),
-}));
-
-jest.mock("@/hooks/use-households", () => ({
-  useActiveHousehold: () => mockUseActiveHousehold(),
-}));
-
 jest.mock("@/hooks/use-account-privacy", () => ({
-  useAccountPrivacy: (...args: unknown[]) => mockUseAccountPrivacy(...args),
-}));
-
-jest.mock("@/lib/auth-client", () => ({
-  authClient: { useSession: () => mockUseSession() },
+  useAccountPrivacyState: (...args: unknown[]) => mockUseAccountPrivacyState(...args),
+  useSetAccountPrivacy: (...args: unknown[]) => mockUseSetAccountPrivacy(...args),
 }));
 
 jest.mock("@/stores/ui-store", () => ({
@@ -62,10 +49,14 @@ jest.mock("@/components/transaction/transaction-group", () => ({
 describe("app/account/[id]", () => {
   beforeEach(() => {
     mockUseLocalSearchParams.mockReturnValue({ id: "account-1" });
-    mockUseSession.mockReturnValue({ data: { user: { id: "user-owner" } } });
-    mockUseActiveHousehold.mockReturnValue({ activeHousehold: null });
-    mockUseLedgerAccounts.mockReturnValue({ data: [] });
-    mockUseAccountPrivacy.mockReturnValue({ error: null, isPending: false, mutate: jest.fn() });
+    mockUseAccountPrivacyState.mockReturnValue({
+      data: { visibility: "public", isOwner: true },
+    });
+    mockUseSetAccountPrivacy.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutate: jest.fn(),
+    });
   });
 
   it("shows the privacy control only for the server account owner", async () => {
@@ -74,12 +65,6 @@ describe("app/account/[id]", () => {
       isLoading: false,
     });
     mockUseTransactions.mockReturnValue({ data: [], isLoading: false });
-    mockUseActiveHousehold.mockReturnValue({
-      activeHousehold: { householdId: "household-1" },
-    });
-    mockUseLedgerAccounts.mockReturnValue({
-      data: [{ id: "account-1", ownerUserId: "user-owner", visibility: "public" }],
-    });
 
     await render(<AccountDetailScreen />);
 
@@ -93,13 +78,7 @@ describe("app/account/[id]", () => {
       isLoading: false,
     });
     mockUseTransactions.mockReturnValue({ data: [], isLoading: false });
-    mockUseActiveHousehold.mockReturnValue({
-      activeHousehold: { householdId: "household-1" },
-    });
-    mockUseLedgerAccounts.mockReturnValue({
-      data: [{ id: "account-1", ownerUserId: "user-owner", visibility: "public" }],
-    });
-    mockUseAccountPrivacy.mockReturnValue({
+    mockUseSetAccountPrivacy.mockReturnValue({
       error: null,
       isPending: true,
       mutate: jest.fn(),

@@ -9,6 +9,10 @@ let mockUpdateSource: "local" | "synced" = "local";
 jest.mock("@/hooks/use-accounts", () => ({
   useCreateAccount: () => ({ mutateAsync: jest.fn() }),
   useUpdateAccount: () => ({ mutateAsync: mockUpdateAccount, source: mockUpdateSource }),
+  useAccountPolicy: () => ({
+    immutableFields:
+      mockUpdateSource === "synced" ? new Set(["type", "currency", "initialBalance"]) : new Set(),
+  }),
 }));
 
 describe("useEditAccountForm", () => {

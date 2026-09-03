@@ -601,20 +601,55 @@ describe("use-accounts hooks", () => {
     expect(db.insert).not.toHaveBeenCalledWith(accounts);
   });
 
-  it("throws on synced restore instead of enqueueing a protocol kind", async () => {
+  it("enqueues a synced restore from the cached archived snapshot", async () => {
     const db = createMockDb();
     mockUseDatabase.mockReturnValue(db);
+    mockReadSnapshot.mockResolvedValue({
+      householdId: "household-1",
+      userId: "test-user",
+      accounts: [
+        {
+          householdId: "household-1",
+          id: "account-1",
+          name: "Archived",
+          type: "bank",
+          currency: "USD",
+          color: "#000",
+          icon: "banknote.fill",
+          initialBalanceMinor: 0,
+          excludeFromTotal: false,
+          sortOrder: 0,
+          lifecycle: "archived",
+          lifecycleChangedAt: "2026-03-01T00:00:00.000Z",
+          visibility: "public",
+          ownerUserId: "test-user",
+          version: 2,
+          createdBy: "test-user",
+          updatedBy: "test-user",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-03-01T00:00:00.000Z",
+        },
+      ],
+      categories: [],
+      transactions: [],
+    });
 
     const { result } = await renderHookWithProviders(() => useRestoreAccount(), {
       ledgerSelection: { kind: "synced", householdId: "household-1" },
     });
 
-    await expect(
-      act(async () => {
-        await result.current.mutateAsync("account-1");
+    await act(async () => {
+      await result.current.mutateAsync("account-1");
+    });
+
+    expect(mockEnqueueCommand).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({
+        kind: "account.restore",
+        userId: "test-user",
+        payload: { accountId: "account-1" },
       }),
-    ).rejects.toThrow("unavailable for the synced ledger");
-    expect(mockEnqueueCommand).not.toHaveBeenCalled();
+    );
     expect(mockApply).not.toHaveBeenCalled();
     expect(mockRestoreAccount).not.toHaveBeenCalled();
   });

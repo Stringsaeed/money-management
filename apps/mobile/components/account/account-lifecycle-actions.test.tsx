@@ -44,7 +44,7 @@ describe("AccountLifecycleActions", () => {
     expect(screen.queryByRole("button", { name: "Permanently delete Everyday" })).toBeNull();
   });
 
-  it("hides Restore on a synced archived Account", async () => {
+  it("shows Restore on a synced archived Account", async () => {
     mockArchivalPreview.mockReturnValue({
       data: undefined,
       isError: false,
@@ -64,7 +64,7 @@ describe("AccountLifecycleActions", () => {
       />,
     );
 
-    expect(screen.queryByRole("button", { name: "Restore Everyday" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Restore Everyday" })).toBeOnTheScreen();
     expect(screen.getByText(/keep their history/)).toBeOnTheScreen();
   });
 
