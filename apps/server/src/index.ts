@@ -11,6 +11,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
+import { appLinks } from "./app-links";
 import { auth } from "./auth";
 
 const app = new Hono();
@@ -25,6 +26,8 @@ app.use(
     credentials: true,
   }),
 );
+
+app.route("/", appLinks);
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
