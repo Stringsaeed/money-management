@@ -47,6 +47,12 @@ export const server = Cloudflare.Worker("server", {
     // with `alchemy deploy` after changing KILL_SWITCH_LOCAL_ONLY in
     // packages/infra/.env, or edit the Worker variable in the dashboard.
     KILL_SWITCH_LOCAL_ONLY: Config.string("KILL_SWITCH_LOCAL_ONLY").pipe(Config.withDefault("off")),
+    // Comma-separated SHA-256 signing cert fingerprints for Android App Links
+    // (upload key and/or Play App Signing key). Empty = serve an assetlinks
+    // document with no statements; Android then opens /l/* in the browser.
+    ANDROID_CERT_FINGERPRINTS: Config.string("ANDROID_CERT_FINGERPRINTS").pipe(
+      Config.withDefault(""),
+    ),
   },
   dev: {
     port: 3000,
