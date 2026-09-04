@@ -75,7 +75,10 @@ jobs:
           stores=$(curl -sS "${auth[@]}" \
             "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/secrets_store/stores")
           echo "secrets_store/stores: $(echo "$stores" | jq -c '{success,errors,count:(.result|length)}')"
-          echo "$stores" | jq -e '.success == true' >/dev/null
+          if ! echo "$stores" | jq -e '.success == true' >/dev/null; then
+            echo "::error::CLOUDFLARE_API_TOKEN cannot use Secrets Store on this account. Alchemy Cloudflare.state() requires Account permission 'Secrets Store — Edit' (secrets_store:write). Edit the token at https://dash.cloudflare.com/profile/api-tokens or create a new one with that permission, then update the repository secret."
+            exit 1
+          fi
 
       - name: 🏗 Setup repo
         uses: actions/checkout@v7

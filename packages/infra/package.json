@@ -6,7 +6,9 @@
     "check-types": "tsc --noEmit",
     "dev": "alchemy dev",
     "deploy": "alchemy deploy",
-    "destroy": "alchemy destroy"
+    "deploy:prod": "alchemy deploy --stage prod --yes",
+    "destroy": "alchemy destroy",
+    "destroy:stage": "alchemy destroy"
   },
   "dependencies": {
     "dotenv": "catalog:",
