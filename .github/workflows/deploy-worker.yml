@@ -37,13 +37,45 @@ jobs:
           missing=0
           for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID CORS_ORIGIN BETTER_AUTH_SECRET; do
             if [ -z "${!name}" ]; then
-              echo "::error::Missing secret $name. Add it under Settings → Secrets and variables → Actions."
+              echo "::error::Missing secret $name. Add it under Settings → Secrets and variables → Actions (repository secrets, not Environment secrets)."
               missing=1
             fi
           done
           if [ "$missing" -ne 0 ]; then
             exit 1
           fi
+
+      # GitHub UI pastes often include a trailing newline. Cloudflare then
+      # returns code 10000 Authentication error while the same token works
+      # in a local curl. Trim before any CF / Alchemy call.
+      - name: 🔐 Prove Actions token authenticates
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          TOKEN=$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '\r\n')
+          ACCOUNT=$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '\r\n' | tr '[:upper:]' '[:lower:]')
+          echo "token_len=${#TOKEN} account_len=${#ACCOUNT}"
+          if [ "${#ACCOUNT}" -ne 32 ]; then
+            echo "::error::CLOUDFLARE_ACCOUNT_ID must be 32 hex chars (got ${#ACCOUNT}). Use Workers & Pages → Account details."
+            exit 1
+          fi
+          auth=(-H "Authorization: Bearer ${TOKEN}")
+          # 1) Same check as a local curl — user-scoped; can pass with zero account access.
+          verify=$(curl -sS "${auth[@]}" https://api.cloudflare.com/client/v4/user/tokens/verify)
+          echo "tokens/verify: $(echo "$verify" | jq -c '{success,status:.result.status,errors}')"
+          echo "$verify" | jq -e '.success == true and .result.status == "active"' >/dev/null
+          # 2) Alchemy's first CF call (errors are swallowed inside Alchemy).
+          sub=$(curl -sS "${auth[@]}" \
+            "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/workers/subdomain")
+          echo "workers/subdomain: $(echo "$sub" | jq -c '{success,errors}')"
+          echo "$sub" | jq -e '.success == true' >/dev/null
+          # 3) Cloudflare.state() needs Secrets Store on this account.
+          stores=$(curl -sS "${auth[@]}" \
+            "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/secrets_store/stores")
+          echo "secrets_store/stores: $(echo "$stores" | jq -c '{success,errors,count:(.result|length)}')"
+          echo "$stores" | jq -e '.success == true' >/dev/null
 
       - name: 🏗 Setup repo
         uses: actions/checkout@v7
@@ -71,4 +103,7 @@ jobs:
           if [ -z "$KILL_SWITCH_LOCAL_ONLY" ]; then
             export KILL_SWITCH_LOCAL_ONLY=off
           fi
+          # Strip UI paste newlines so Alchemy sees the same bytes as curl.
+          export CLOUDFLARE_API_TOKEN=$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '\r\n')
+          export CLOUDFLARE_ACCOUNT_ID=$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '\r\n' | tr '[:upper:]' '[:lower:]')
           pnpm exec alchemy deploy --stage "$STAGE" --yes
