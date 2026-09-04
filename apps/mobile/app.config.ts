@@ -1,5 +1,15 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
+// Mirrors apps/mobile/modules/access/links.ts AUTH_LINK_HOST and
+// packages/auth TROVE_APP_IDENTITY. Dev/preview append ?mode=developer so
+// Associated Domains Development bypasses Apple's AASA CDN.
+const AUTH_LINK_HOST = "auth.trove.ing";
+
+const associatedDomains = (appEnv: string | undefined) => {
+  const suffix = appEnv === "production" ? "" : "?mode=developer";
+  return [`applinks:${AUTH_LINK_HOST}${suffix}`, `webcredentials:${AUTH_LINK_HOST}${suffix}`];
+};
+
 const isOtaUpdateMandatory = process.env.EXPO_PUBLIC_OTA_UPDATE_MANDATORY === "true";
 
 // Dependencies are hoisted to the workspace root node_modules by pnpm
@@ -45,6 +55,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       supportsTablet: true,
       bundleIdentifier: getAppId(),
       appleTeamId: "V3HN8HXZYK",
+      associatedDomains: associatedDomains(process.env.APP_ENV),
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
@@ -59,6 +70,14 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       },
       predictiveBackGestureEnabled: false,
       package: getAppId(),
+      intentFilters: [
+        {
+          action: "VIEW",
+          autoVerify: true,
+          data: [{ scheme: "https", host: AUTH_LINK_HOST, pathPrefix: "/l/" }],
+          category: ["BROWSABLE", "DEFAULT"],
+        },
+      ],
     },
     web: {
       output: "static",
