@@ -12,6 +12,7 @@ import { buildEmailLink } from "./links";
 import { consoleMailer, type Mailer } from "./mailer";
 
 export { createEmailMailer, renderAuthEmail } from "./email-mailer";
+export { AUTH_LINK_PATHS, TROVE_APP_IDENTITY, buildSchemeLink } from "./app-association";
 export { AUTH_PUBLIC_URL, LINK_TTL_SECONDS } from "./link-policy";
 export { buildEmailLink } from "./links";
 export { consoleMailer, type Mailer } from "./mailer";
