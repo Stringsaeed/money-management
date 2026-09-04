@@ -15,6 +15,8 @@ import {
 import type { SetupDraft, SetupDraftEnvelope } from "@/modules/budgeting/budgeting";
 import { UnreadableSetupDraftError } from "@/modules/budgeting/setup-draft-codec";
 import { budgetKeys } from "@/modules/ledger-cache";
+import { assertLocalLedgerAuthority } from "@/modules/ledger-data-source/contract";
+import { useLedgerSourceSelection } from "@/modules/ledger-data-source/provider";
 import { nowIso, today } from "@/utils/date";
 import { generateId } from "@/utils/id";
 
@@ -31,6 +33,7 @@ type SetupDraftCommand =
   | { kind: "update"; transform: DraftTransform; localDate: string; now: string };
 
 export function useSetupDraft() {
+  const selection = useLedgerSourceSelection();
   const database = useSQLiteContext();
   const queryClient = useQueryClient();
   const [actionError, setActionError] = useState<string | null>(null);
@@ -38,6 +41,7 @@ export function useSetupDraft() {
   const query = useQuery({
     queryKey: budgetKeys.setupDraft,
     queryFn: async () => {
+      assertLocalLedgerAuthority(selection, "envelopes.setup-draft");
       const [draft, prerequisites] = await Promise.all([
         coordinator.loadSetupDraft(),
         coordinator.getSetupDraftPrerequisites(),

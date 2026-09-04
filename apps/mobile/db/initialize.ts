@@ -1,6 +1,8 @@
-import { drizzle } from "drizzle-orm/expo-sqlite";
+import { eq } from "drizzle-orm";
+import { drizzle, type ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
 import type { SQLiteDatabase } from "expo-sqlite";
 
+import { COMPLETED_HOUSEHOLD_ID_KEY } from "@/lib/migration/status";
 import { getSystemTimeZone, localDateInTimeZone } from "@/modules/recurring-rules/clock";
 
 import { migrateAccountLifecycle } from "./account-lifecycle-migration";
@@ -9,6 +11,7 @@ import { migrateCategoryLifecycle } from "./category-lifecycle-migration";
 import { runMigrations } from "./migrate";
 import { migrateRecurringRules } from "./recurring-rules-migration";
 import { markDatabaseReset, resetDatabaseIfNeeded } from "./reset";
+import { appSettings } from "./schema";
 import { seedDatabase } from "./seed";
 
 interface InitializeDatabaseOptions {
@@ -41,5 +44,16 @@ export async function initializeDatabase(
   await migrateAccountLifecycle(database);
 
   if (shouldMarkReset) await markDatabaseReset(drizzleDatabase);
-  await seedDatabase(drizzleDatabase);
+  if (await shouldSeedDefaultCategories(drizzleDatabase)) {
+    await seedDatabase(drizzleDatabase);
+  }
+}
+
+export async function shouldSeedDefaultCategories(db: ExpoSQLiteDatabase): Promise<boolean> {
+  const row = await db
+    .select()
+    .from(appSettings)
+    .where(eq(appSettings.key, COMPLETED_HOUSEHOLD_ID_KEY))
+    .get();
+  return row == null;
 }

@@ -1,5 +1,3 @@
-import type { CommandEnvelope, CommandResult } from "@trove/protocol";
-
 import type { TransactionQueryFilters } from "@/modules/ledger-cache";
 import type {
   AccountArchivalPreview,
@@ -21,11 +19,7 @@ export type LedgerOfflineState =
   | { readonly kind: "online" }
   | { readonly kind: "offline_cached"; readonly reason: string };
 
-export type LedgerDataSourceOperation =
-  | `read.${string}`
-  | `mutation.${string}`
-  | "hydration.pull"
-  | "writeback.submit";
+export type LedgerDataSourceOperation = `read.${string}` | `mutation.${string}`;
 
 export class LedgerDataSourceError extends Error {
   readonly cause: unknown;
@@ -67,25 +61,17 @@ export const unsupportedSyncedOperation = (
   nextAction: string,
 ): Error => new Error(`${operation} is unavailable for the synced ledger. ${impact} ${nextAction}`);
 
-export interface LedgerHydration<TInput, TResult> {
-  pull: (input: TInput) => Promise<TResult>;
-}
-
-export interface LedgerWriteback<TInput, TResult> {
-  submit: (input: TInput) => Promise<TResult>;
-}
-
-export type LedgerLifecycle =
-  | {
-      readonly kind: "local";
-      readonly offlineState: { readonly kind: "offline_ready" };
-    }
-  | {
-      readonly kind: "synced";
-      readonly offlineState: Exclude<LedgerOfflineState, { kind: "offline_ready" }>;
-      readonly hydration: LedgerHydration<{ since: number }, unknown>;
-      readonly writeback: LedgerWriteback<CommandEnvelope, CommandResult>;
-    };
+export const assertLocalLedgerAuthority = (
+  selection: { readonly kind: string },
+  operation: string,
+): void => {
+  if (selection.kind !== "synced") return;
+  throw unsupportedSyncedOperation(
+    operation,
+    "Local Accounts, Categories, and Transactions are not money authority while this device is synced.",
+    "Use the household ledger on the server, or disable sync before using this local-only tool.",
+  );
+};
 
 export type NewAccount = Omit<
   Account,

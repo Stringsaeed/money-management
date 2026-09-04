@@ -156,7 +156,7 @@ export const LEDGER_SQLITE_ALLOWLIST: SqliteRoleEntry[] = [
   {
     role: "erase",
     files: [
-      "apps/mobile/app/(tabs)/settings/index.tsx",
+      "apps/mobile/components/settings/use-erase-local-data.ts",
       "apps/mobile/components/settings/dev-tools-section.tsx",
     ],
     reason: 'Erase / force-seed. Both refuse when selection.kind === "synced".',
@@ -180,4 +180,27 @@ export function ledgerBoundaryOverrides(): OxlintOverride[] {
 
 export function allowlistFilePaths(): string[] {
   return LEDGER_SQLITE_ALLOWLIST.flatMap((entry) => entry.files);
+}
+
+export function formatSqliteRolesMarkdown(): string {
+  const rows = LEDGER_SQLITE_ALLOWLIST.flatMap((entry) =>
+    entry.files.map(
+      (file) => `| \`${entry.role}\` | \`${file}\` | ${entry.reason} | #${entry.issue} |`,
+    ),
+  );
+  return [
+    "# SQLite roles",
+    "",
+    "Device SQLite is money authority only while `selection.kind === \"local\"`.",
+    "When the device is synced (including `offline_cached` / kill switch), Accounts, Categories, and Transactions live on the server.",
+    "The device may still hold `app_settings` snapshots, `outbox_commands`, and `sync_state`.",
+    "",
+    "This table is generated from `tools/oxlint/ledger-boundary/allowlist.ts`.",
+    "Edit the allowlist, not this file.",
+    "",
+    "| Role | File | Reason | Issue |",
+    "| --- | --- | --- | --- |",
+    ...rows,
+    "",
+  ].join("\n");
 }

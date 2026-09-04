@@ -3,6 +3,8 @@ import { useSQLiteContext } from "expo-sqlite";
 
 import { createBudgetingCoordinator } from "@/modules/budgeting/budgeting";
 import { budgetKeys } from "@/modules/ledger-cache";
+import { assertLocalLedgerAuthority } from "@/modules/ledger-data-source/contract";
+import { useLedgerSourceSelection } from "@/modules/ledger-data-source/provider";
 import type { CreateEnvelopeRequest, UpdateEnvelopeRequest } from "@/modules/budgeting/budgeting";
 
 export function useBudgetWorkspaceSelection() {
@@ -23,19 +25,26 @@ export function useSelectBudgetWorkspace() {
 }
 
 export function useBudgetProjection(currency: string, period: string) {
+  const selection = useLedgerSourceSelection();
   const database = useSQLiteContext();
   return useQuery({
     queryKey: budgetKeys.projection(currency, period),
-    queryFn: () => createBudgetingCoordinator(database).getProjection({ currency, period }),
+    queryFn: () => {
+      assertLocalLedgerAuthority(selection, "envelopes.projection");
+      return createBudgetingCoordinator(database).getProjection({ currency, period });
+    },
   });
 }
 
 export function useEnvelopeFormOptions(currency: string, period: string) {
+  const selection = useLedgerSourceSelection();
   const database = useSQLiteContext();
   return useQuery({
     queryKey: budgetKeys.envelopeFormOptionsFor(currency, period),
-    queryFn: () =>
-      createBudgetingCoordinator(database).getEnvelopeFormOptions({ currency, period }),
+    queryFn: () => {
+      assertLocalLedgerAuthority(selection, "envelopes.form-options");
+      return createBudgetingCoordinator(database).getEnvelopeFormOptions({ currency, period });
+    },
   });
 }
 

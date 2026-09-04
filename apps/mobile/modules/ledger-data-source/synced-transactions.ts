@@ -7,6 +7,7 @@ import { generateId } from "@/utils/id";
 
 import type { LedgerDataSourceOperation, LedgerTransactionResource } from "./contract";
 import {
+  assertSupportedTransactionUpdate,
   mapSyncedAccount,
   mapSyncedCategory,
   mapSyncedTransaction,
@@ -97,6 +98,7 @@ export const createSyncedTransactionResource = ({
       return id;
     },
     update: async (id, data) => {
+      assertSupportedTransactionUpdate(data);
       const expectedVersion = await findCachedVersion(readCachedSnapshot, id);
       return executeCommand("mutation.transaction-update", {
         commandId: generateId(),

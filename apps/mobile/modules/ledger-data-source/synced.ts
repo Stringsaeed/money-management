@@ -11,10 +11,8 @@ import {
   type LedgerAccountDataSource,
   type LedgerCategoryDataSource,
   type LedgerTransactionDataSource,
-  type LedgerHydration,
   type LedgerOfflineState,
   type LedgerDataSourceOperation,
-  type LedgerWriteback,
 } from "./contract";
 import {
   assertSupportedAccountUpdate,
@@ -34,15 +32,9 @@ import {
 } from "./synced-transaction-snapshot";
 import { createSyncedTransactionResource } from "./synced-transactions";
 
-type SyncedHydration = Awaited<ReturnType<typeof orpc.sync.getDelta>>;
-type SyncedWriteback = Awaited<ReturnType<typeof orpc.commands.apply>>;
-
 export type SyncedLedgerDataSource = LedgerAccountDataSource &
   LedgerCategoryDataSource &
-  LedgerTransactionDataSource & {
-    hydration: LedgerHydration<{ since: number }, SyncedHydration>;
-    writeback: LedgerWriteback<CommandEnvelope, SyncedWriteback>;
-  };
+  LedgerTransactionDataSource;
 
 interface CreateSyncedLedgerDataSourceOptions {
   householdId: string;
@@ -73,15 +65,6 @@ export const createSyncedLedgerDataSource = ({
       }
       return execute();
     });
-  const apply = async (command: CommandEnvelope) => {
-    if (command.householdId !== householdId) {
-      throw new Error("The command belongs to a different household.");
-    }
-    return orpc.commands.apply({
-      ...command,
-      preconditions: command.preconditions?.map((precondition) => ({ ...precondition })),
-    });
-  };
   const listRawAccounts = () =>
     runNetwork("read.accounts", () => orpc.ledger.accounts.list({ householdId }));
   const listRawTransactions = (
@@ -348,13 +331,6 @@ export const createSyncedLedgerDataSource = ({
     },
     categoryLifecycle: { kind: "synced" },
     transactions,
-    hydration: {
-      pull: ({ since }) =>
-        runNetwork("hydration.pull", () => orpc.sync.getDelta({ householdId, since })),
-    },
-    writeback: {
-      submit: (command) => runNetwork("writeback.submit", () => apply(command)),
-    },
     observeErrors: runner.observeErrors,
   };
 };
