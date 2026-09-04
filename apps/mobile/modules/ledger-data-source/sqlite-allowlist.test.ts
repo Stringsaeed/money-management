@@ -1,7 +1,8 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 
 import {
+  formatSqliteRolesMarkdown,
   LEDGER_SQLITE_ALLOWLIST,
   type SqliteRoleEntry,
 } from "../../../../tools/oxlint/ledger-boundary/allowlist";
@@ -42,5 +43,10 @@ describe("LEDGER_SQLITE_ALLOWLIST", () => {
       }
     }
     expect(missing).toEqual([]);
+  });
+
+  it("keeps docs/architecture/sqlite-roles.md identical to the allowlist", () => {
+    const doc = readFileSync(join(REPO_ROOT, "docs/architecture/sqlite-roles.md"), "utf8");
+    expect(doc).toBe(formatSqliteRolesMarkdown());
   });
 });

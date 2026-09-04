@@ -7,6 +7,12 @@ import {
   markLegacyMigrationsApplied,
 } from "@/tests/test-utils/sqlite";
 
+import { drizzle } from "drizzle-orm/expo-sqlite";
+
+import { markMigrationCompleted } from "@/lib/migration/status";
+import { clearSeedVersion } from "./seed";
+import * as schema from "./schema";
+
 import { initializeDatabase } from "./initialize";
 
 const databases: { database: SQLiteDatabase; close: VoidFunction }[] = [];
@@ -102,5 +108,30 @@ describe("initializeDatabase", () => {
         "SELECT value FROM app_settings WHERE key = 'resetVersion'",
       ),
     ).resolves.toEqual({ value: "1" });
+  });
+
+  it("skips default category seed once a migrated household id exists", async () => {
+    const testDatabase = createTestSQLiteDatabase();
+    databases.push(testDatabase);
+
+    await initializeDatabase(testDatabase.database, {
+      migrationInstant: new Date("2026-08-18T08:00:00.000Z"),
+      timeZone: "Asia/Dubai",
+    });
+    const db = drizzle(testDatabase.database, { schema });
+    await markMigrationCompleted(db, "household-1");
+    await testDatabase.database.runAsync("DELETE FROM categories");
+    await clearSeedVersion(db);
+
+    await initializeDatabase(testDatabase.database, {
+      migrationInstant: new Date("2026-08-18T08:00:00.000Z"),
+      timeZone: "Asia/Dubai",
+    });
+
+    await expect(
+      testDatabase.database.getFirstAsync<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM categories",
+      ),
+    ).resolves.toEqual({ count: 0 });
   });
 });

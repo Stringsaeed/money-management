@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import SettingsScreen from "@/app/(tabs)/settings";
+import { LedgerDataSourceProvider } from "@/modules/ledger-data-source/provider";
 
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
@@ -293,5 +294,30 @@ describe("app/settings", () => {
     });
 
     expect(mockReplace).toHaveBeenCalledWith("/onboarding");
+  });
+
+  it("disables erase while synced, including offline_cached", async () => {
+    await render(
+      <QueryClientProvider client={client}>
+        <LedgerDataSourceProvider
+          selection={{
+            kind: "synced",
+            householdId: "household-1",
+            userId: "user-1",
+            offlineState: { kind: "offline_cached", reason: "kill_switch" },
+          }}
+        >
+          <SettingsScreen />
+        </LedgerDataSourceProvider>
+      </QueryClientProvider>,
+    );
+
+    expect(
+      screen.getByText(
+        "This device is synced to your household; the ledger lives on the server. Disable sync to erase local data.",
+      ),
+    ).toBeOnTheScreen();
+    await fireEvent.press(screen.getByText("Erase local data from this device"));
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 });

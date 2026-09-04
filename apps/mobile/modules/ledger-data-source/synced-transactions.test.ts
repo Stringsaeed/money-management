@@ -66,12 +66,6 @@ describe("createSyncedTransactionResource mutations", () => {
     });
     await resource.update("transaction-existing", {
       amount: 125,
-      currency: "USD",
-      originalAmount: null,
-      originalCurrency: null,
-      exchangeRate: null,
-      isRecurring: false,
-      recurringRuleId: null,
     });
     await resource.delete("transaction-existing");
     await expect(
@@ -106,6 +100,24 @@ describe("createSyncedTransactionResource mutations", () => {
       { entityId: "transaction-existing", expectedVersion: 0 },
     ]);
     expect(commands[3].payload).toMatchObject({ transactionId: refundId });
+  });
+
+  it("rejects unsupported Transaction field updates", async () => {
+    const executeCommand = jest.fn();
+    const resource = createSyncedTransactionResource({
+      householdId: "household-1",
+      readSnapshot: async () => snapshot,
+      readCachedSnapshot: async () => ({
+        ...snapshot,
+        transactions: [makeTransaction("transaction-existing")],
+      }),
+      executeCommand,
+    });
+
+    await expect(
+      resource.update("transaction-existing", { currency: "EUR" }),
+    ).rejects.toThrow("unavailable for the synced ledger");
+    expect(executeCommand).not.toHaveBeenCalled();
   });
 
   it("refuses edit and remove when the authorized version is unavailable", async () => {

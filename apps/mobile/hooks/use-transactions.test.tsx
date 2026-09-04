@@ -5,6 +5,7 @@ import { transactions } from "@/db/schema";
 import {
   useCreateTransaction,
   useDeleteTransaction,
+  useLinkRefund,
   useMonthSummary,
   useTransaction,
   useTransactionDateRange,
@@ -23,6 +24,11 @@ const mockUseAccountVisibility = jest.fn();
 const mockListServerAccounts = jest.fn();
 const mockListServerCategories = jest.fn();
 const mockListServerTransactions = jest.fn();
+const mockEnqueueCommand = jest.fn();
+const mockListProjectableCommands = jest.fn();
+const mockApply = jest.fn();
+const mockReadSnapshot = jest.fn();
+const mockWriteSnapshot = jest.fn();
 
 interface CoherenceAwareMutation<T> {
   expectMutationPendingUntilCoherence: () => void;
@@ -87,9 +93,20 @@ jest.mock("@/lib/server/orpc", () => ({
       categories: { list: (...args: unknown[]) => mockListServerCategories(...args) },
       transactions: { list: (...args: unknown[]) => mockListServerTransactions(...args) },
     },
-    commands: { apply: jest.fn() },
+    commands: { apply: (...args: unknown[]) => mockApply(...args) },
     sync: { getDelta: jest.fn() },
   },
+}));
+
+jest.mock("@/lib/sync/outbox", () => ({
+  ...jest.requireActual("@/lib/sync/outbox"),
+  enqueueCommand: (...args: unknown[]) => mockEnqueueCommand(...args),
+  listProjectableCommands: (...args: unknown[]) => mockListProjectableCommands(...args),
+}));
+
+jest.mock("@/modules/ledger-data-source/synced-transaction-snapshot", () => ({
+  readSyncedTransactionSnapshot: (...args: unknown[]) => mockReadSnapshot(...args),
+  writeSyncedTransactionSnapshot: (...args: unknown[]) => mockWriteSnapshot(...args),
 }));
 
 jest.mock("@/hooks/use-account-visibility", () => ({
@@ -126,6 +143,19 @@ describe("use-transactions hooks", () => {
       visibleAccountIds: new Set(),
     });
     mockCohereLedgerCache.mockResolvedValue(undefined);
+    mockEnqueueCommand.mockResolvedValue(undefined);
+    mockListProjectableCommands.mockResolvedValue([]);
+    mockApply.mockResolvedValue({
+      kind: "applied",
+      seq: 1,
+      effects: [],
+      applied: {},
+      replayed: false,
+    });
+    mockReadSnapshot.mockRejectedValue(
+      new Error("No authoritative synced Transaction snapshot is cached for this household."),
+    );
+    mockWriteSnapshot.mockResolvedValue(undefined);
   });
   it("loads and enriches transaction lists via JOIN", async () => {
     const db = createMockDb({
@@ -295,7 +325,10 @@ describe("use-transactions hooks", () => {
         updatedAt: "2026-03-28T10:00:00.000Z",
       }),
     ]);
-    expect(db.select).toHaveBeenCalledTimes(1);
+    expect(mockWriteSnapshot).toHaveBeenCalled();
+    expect(db.insert).not.toHaveBeenCalledWith(transactions);
+    expect(db.update).not.toHaveBeenCalledWith(transactions);
+    expect(db.delete).not.toHaveBeenCalledWith(transactions);
   });
 
   it("loads a transaction detail only when enabled", async () => {
@@ -524,5 +557,267 @@ describe("use-transactions hooks", () => {
       kind: "transaction.deleted",
       id: "transaction-1",
     });
+  });
+
+  it("enqueues a synced create instead of inserting sqlite transactions or applying", async () => {
+    const db = createMockDb();
+    mockUseDatabase.mockReturnValue(db);
+
+    const { result } = await renderHookWithProviders(() => useCreateTransaction(), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        type: "expense",
+        amount: 40_00,
+        currency: "USD",
+        originalAmount: null,
+        originalCurrency: null,
+        exchangeRate: null,
+        date: "2026-03-28",
+        accountId: "account-1",
+        toAccountId: null,
+        categoryId: "category-1",
+        description: "Coffee",
+        recurringRuleId: null,
+      });
+    });
+
+    expect(mockEnqueueCommand).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({
+        kind: "transaction.create",
+        userId: "test-user",
+      }),
+    );
+    expect(mockApply).not.toHaveBeenCalled();
+    expect(db.insert).not.toHaveBeenCalledWith(transactions);
+  });
+
+  it("enqueues a synced update with expectedVersion and never updates sqlite transactions", async () => {
+    const db = createMockDb();
+    mockUseDatabase.mockReturnValue(db);
+    mockReadSnapshot.mockResolvedValue({
+      householdId: "household-1",
+      userId: "test-user",
+      accounts: [
+        {
+          householdId: "household-1",
+          id: "account-1",
+          name: "Main",
+          type: "bank",
+          currency: "USD",
+          color: "#8B9D83",
+          icon: "banknote.fill",
+          initialBalanceMinor: 0,
+          excludeFromTotal: false,
+          sortOrder: 0,
+          lifecycle: "active",
+          lifecycleChangedAt: null,
+          visibility: "public",
+          ownerUserId: "user-1",
+          version: 1,
+          createdBy: "user-1",
+          updatedBy: "user-1",
+          createdAt: "2026-03-28T10:00:00.000Z",
+          updatedAt: "2026-03-28T10:00:00.000Z",
+        },
+      ],
+      categories: [],
+      transactions: [
+        {
+          householdId: "household-1",
+          id: "transaction-1",
+          type: "expense",
+          amountMinor: 40_00,
+          currency: "USD",
+          originalAmountMinor: null,
+          originalCurrency: null,
+          exchangeRate: null,
+          date: "2026-03-28",
+          accountId: "account-1",
+          toAccountId: null,
+          categoryId: "category-1",
+          isRecurring: false,
+          recurringRuleId: null,
+          description: "Coffee",
+          version: 4,
+          createdBy: "user-1",
+          updatedBy: "user-1",
+          createdAt: "2026-03-28T10:00:00.000Z",
+          updatedAt: "2026-03-28T10:00:00.000Z",
+        },
+      ],
+    });
+
+    const { result } = await renderHookWithProviders(() => useUpdateTransaction(), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        id: "transaction-1",
+        data: { description: "Dinner" },
+      });
+    });
+
+    expect(mockEnqueueCommand).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({
+        kind: "transaction.edit",
+        preconditions: [{ entityId: "transaction-1", expectedVersion: 4 }],
+      }),
+    );
+    expect(mockApply).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalledWith(transactions);
+  });
+
+  it("enqueues a synced delete and never deletes sqlite transactions", async () => {
+    const db = createMockDb();
+    mockUseDatabase.mockReturnValue(db);
+    mockReadSnapshot.mockResolvedValue({
+      householdId: "household-1",
+      userId: "test-user",
+      accounts: [
+        {
+          householdId: "household-1",
+          id: "account-1",
+          name: "Main",
+          type: "bank",
+          currency: "USD",
+          color: "#8B9D83",
+          icon: "banknote.fill",
+          initialBalanceMinor: 0,
+          excludeFromTotal: false,
+          sortOrder: 0,
+          lifecycle: "active",
+          lifecycleChangedAt: null,
+          visibility: "public",
+          ownerUserId: "user-1",
+          version: 1,
+          createdBy: "user-1",
+          updatedBy: "user-1",
+          createdAt: "2026-03-28T10:00:00.000Z",
+          updatedAt: "2026-03-28T10:00:00.000Z",
+        },
+      ],
+      categories: [],
+      transactions: [
+        {
+          householdId: "household-1",
+          id: "transaction-1",
+          type: "expense",
+          amountMinor: 40_00,
+          currency: "USD",
+          originalAmountMinor: null,
+          originalCurrency: null,
+          exchangeRate: null,
+          date: "2026-03-28",
+          accountId: "account-1",
+          toAccountId: null,
+          categoryId: "category-1",
+          isRecurring: false,
+          recurringRuleId: null,
+          description: "Coffee",
+          version: 2,
+          createdBy: "user-1",
+          updatedBy: "user-1",
+          createdAt: "2026-03-28T10:00:00.000Z",
+          updatedAt: "2026-03-28T10:00:00.000Z",
+        },
+      ],
+    });
+
+    const { result } = await renderHookWithProviders(() => useDeleteTransaction(), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync("transaction-1");
+    });
+
+    expect(mockEnqueueCommand).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({ kind: "transaction.remove" }),
+    );
+    expect(mockApply).not.toHaveBeenCalled();
+    expect(db.delete).not.toHaveBeenCalledWith(transactions);
+  });
+
+  it("enqueues refund.link on synced and never inserts sqlite transactions", async () => {
+    const db = createMockDb();
+    mockUseDatabase.mockReturnValue(db);
+
+    const { result } = await renderHookWithProviders(() => useLinkRefund(), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        originalTransactionId: "transaction-1",
+        depositAccountId: "account-1",
+        currency: "USD",
+        amountMinor: 10_00,
+        date: "2026-03-29",
+      });
+    });
+
+    expect(mockEnqueueCommand).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({ kind: "refund.link" }),
+    );
+    expect(mockApply).not.toHaveBeenCalled();
+    expect(db.insert).not.toHaveBeenCalledWith(transactions);
+  });
+
+  it("rejects unsupported synced Transaction field updates", async () => {
+    const db = createMockDb();
+    mockUseDatabase.mockReturnValue(db);
+    mockReadSnapshot.mockResolvedValue({
+      householdId: "household-1",
+      userId: "test-user",
+      accounts: [],
+      categories: [],
+      transactions: [
+        {
+          householdId: "household-1",
+          id: "transaction-1",
+          type: "expense",
+          amountMinor: 40_00,
+          currency: "USD",
+          originalAmountMinor: null,
+          originalCurrency: null,
+          exchangeRate: null,
+          date: "2026-03-28",
+          accountId: "account-1",
+          toAccountId: null,
+          categoryId: "category-1",
+          isRecurring: false,
+          recurringRuleId: null,
+          description: "Coffee",
+          version: 1,
+          createdBy: "user-1",
+          updatedBy: "user-1",
+          createdAt: "2026-03-28T10:00:00.000Z",
+          updatedAt: "2026-03-28T10:00:00.000Z",
+        },
+      ],
+    });
+
+    const { result } = await renderHookWithProviders(() => useUpdateTransaction(), {
+      ledgerSelection: { kind: "synced", householdId: "household-1" },
+    });
+
+    await expect(
+      act(async () => {
+        await result.current.mutateAsync({
+          id: "transaction-1",
+          data: { currency: "EUR" },
+        });
+      }),
+    ).rejects.toThrow("unavailable for the synced ledger");
+    expect(mockEnqueueCommand).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalledWith(transactions);
   });
 });
