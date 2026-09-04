@@ -1,0 +1,74 @@
+name: Deploy Worker
+
+concurrency:
+  group: deploy-worker
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "apps/server/**"
+      - "packages/api/**"
+      - "packages/auth/**"
+      - "packages/db/**"
+      - "packages/domain/**"
+      - "packages/env/**"
+      - "packages/infra/**"
+      - "packages/protocol/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/deploy-worker.yml"
+
+jobs:
+  deploy:
+    name: Alchemy deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: 🔍 Check Cloudflare + app secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+        run: |
+          missing=0
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID CORS_ORIGIN BETTER_AUTH_SECRET; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing secret $name. Add it under Settings → Secrets and variables → Actions."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v7
+
+      - name: 🧰 Setup project
+        uses: ./.github/actions/setup
+
+      - name: 🚀 Deploy Worker
+        working-directory: packages/infra
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          # Optional. Empty uses Alchemy Config defaults (kill switch off).
+          KILL_SWITCH_LOCAL_ONLY: ${{ secrets.KILL_SWITCH_LOCAL_ONLY }}
+          ANDROID_CERT_FINGERPRINTS: ${{ secrets.ANDROID_CERT_FINGERPRINTS }}
+          # Must match the stage used for prior Alchemy deploys. Override with
+          # repo variable ALCHEMY_STAGE if your cloud state is not "prod".
+          ALCHEMY_STAGE: ${{ vars.ALCHEMY_STAGE }}
+          CI: true
+        run: |
+          STAGE="${ALCHEMY_STAGE:-prod}"
+          echo "Deploying Alchemy stage: $STAGE"
+          if [ -z "$KILL_SWITCH_LOCAL_ONLY" ]; then
+            export KILL_SWITCH_LOCAL_ONLY=off
+          fi
+          pnpm exec alchemy deploy --stage "$STAGE" --yes
