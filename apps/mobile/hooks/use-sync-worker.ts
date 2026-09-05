@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import type { CommandEnvelope } from "@trove/protocol";
 
 import { useDatabase } from "@/db/client";
 import { useHouseholdPush } from "@/hooks/use-household-push";
@@ -11,6 +12,8 @@ import {
   listRejectedChanges,
   pullDeltas,
   retryRejectedCommand,
+  type DrainSummary,
+  type LocalDb,
   type RejectedChange,
 } from "@/lib/sync/outbox";
 import {
@@ -18,9 +21,13 @@ import {
   isDeltaPullDegraded,
   recordDeltaPullFailure,
   recordDeltaPullSuccess,
+  type DeltaAvailabilityTracker,
 } from "@/lib/sync/degradation";
 import { useSyncModeStore } from "@/stores/sync-mode-store";
 import { orpc } from "@/lib/server/orpc";
+import { createLedgerDependencies } from "@/modules/ledger-db/deps";
+import type { SyncedTransactionLedger } from "@/modules/ledger-db/ledger";
+import { acquireSyncedTransactionLedger } from "@/modules/ledger-db/registry";
 import { cohereLedgerEffects, cohereTransactionSurfaces } from "@/modules/ledger-cache";
 
 /** How often the worker drains the outbox and pulls deltas while active. */
@@ -57,6 +64,7 @@ export function useSyncWorker(householdId: string | null, userId?: string) {
   /** True until the startup status probe settles — turns wait for it. */
   const [statusPending, setStatusPending] = useState(Boolean(householdId));
   const syncingRef = useRef(false);
+  const ledgerRef = useRef<SyncedTransactionLedger | null>(null);
   const deltaAvailability = useRef(createDeltaAvailabilityTracker());
   /** null = unknown yet (fail-open; the server's local_only result backstops). */
   const killSwitchRef = useRef<boolean | null>(null);
@@ -77,6 +85,21 @@ export function useSyncWorker(householdId: string | null, userId?: string) {
     } catch (err) {
       setLastError(err instanceof Error ? err : new Error("Sync state read failed."));
     }
+  }, [db, householdId, userId]);
+
+  useEffect(() => {
+    if (!householdId || !userId) {
+      ledgerRef.current = null;
+      return;
+    }
+    const handle = acquireSyncedTransactionLedger(
+      createLedgerDependencies({ householdId, userId, db }),
+    );
+    ledgerRef.current = handle.ledger;
+    return () => {
+      handle.release();
+      if (ledgerRef.current === handle.ledger) ledgerRef.current = null;
+    };
   }, [db, householdId, userId]);
 
   // Remote kill-switch probe (#99): checked on startup and re-polled on an
@@ -106,73 +129,27 @@ export function useSyncWorker(householdId: string | null, userId?: string) {
   }, [householdId, statusQuery.data, statusQuery.isPending]);
 
   const runSyncTurn = useCallback(async () => {
-    if (!householdId || syncingRef.current) {
-      return;
-    }
-    if (householdId && statusPending) {
-      // Startup kill-switch check (#99) has not settled yet — hold turns.
-      return;
-    }
-    if (useSyncModeStore.getState().reason === "kill_switch" || killSwitchRef.current === true) {
+    if (
+      !householdId ||
+      syncingRef.current ||
+      shouldSkipSyncTurn(householdId, statusPending, killSwitchRef.current)
+    ) {
       return;
     }
     syncingRef.current = true;
     setIsSyncing(true);
-    let pullFailed = false;
     try {
-      // Drain first: local intent leaves before remote changes arrive, so a
-      // rejected command is visible in the inbox as soon as possible.
-      // The generated oRPC input is mutable; keep the stored outbox envelope immutable.
-      const summary = await drainOutbox(
+      await executeSyncTurn({
         db,
         householdId,
-        (envelope) =>
-          orpc.commands.apply({
-            ...envelope,
-            preconditions: envelope.preconditions?.map((precondition) => ({ ...precondition })),
-          }),
         userId,
-      );
-
-      if (summary.stoppedOnLocalOnly) {
-        useSyncModeStore.getState().setLocalOnly("kill_switch");
-      }
-
-      if (summary.applied > 0 || summary.rejected > 0) {
-        await cohereTransactionSurfaces(queryClient);
-      }
-
-      try {
-        const delta = await pullDeltas(db, (args) => orpc.sync.getDelta(args), householdId);
-
-        deltaAvailability.current = recordDeltaPullSuccess(deltaAvailability.current, Date.now());
-        if (useSyncModeStore.getState().reason === "delta_unavailable") {
-          useSyncModeStore.getState().setSynced();
-        }
-
-        for (const change of delta.changes) {
-          await cohereLedgerEffects(queryClient, change.effects);
-        }
-      } catch (err) {
-        pullFailed = true;
-        deltaAvailability.current = recordDeltaPullFailure(deltaAvailability.current, Date.now());
-        if (isDeltaPullDegraded(deltaAvailability.current, Date.now())) {
-          useSyncModeStore.getState().setLocalOnly("delta_unavailable");
-        }
-        setLastError(err instanceof Error ? err : new Error("Delta pull failed."));
-      }
-
-      // Transport-stopped drains report an accurate pending count too.
-      if (summary.applied > 0 || summary.rejected > 0 || summary.stoppedOnNetworkError) {
-        await refreshCounters();
-      } else {
-        setPendingCount(summary.pending);
-      }
-      if (!pullFailed) {
-        setLastError(null);
-      }
+        queryClient,
+        ledger: ledgerRef.current,
+        deltaAvailability,
+        refreshCounters,
+        setLastError,
+      });
     } catch (err) {
-      // Surfaced without crashing; the next turn retries.
       setLastError(err instanceof Error ? err : new Error("Sync failed."));
     } finally {
       syncingRef.current = false;
@@ -246,3 +223,121 @@ export function useSyncWorker(householdId: string | null, userId?: string) {
     retryRejected,
   };
 }
+
+const shouldSkipSyncTurn = (
+  householdId: string | null,
+  statusPending: boolean,
+  killSwitch: boolean | null,
+): boolean =>
+  !householdId ||
+  statusPending ||
+  useSyncModeStore.getState().reason === "kill_switch" ||
+  killSwitch === true;
+
+interface SyncTurnInput {
+  readonly db: LocalDb;
+  readonly householdId: string;
+  readonly userId?: string;
+  readonly queryClient: QueryClient;
+  readonly ledger: SyncedTransactionLedger | null;
+  readonly deltaAvailability: { current: DeltaAvailabilityTracker };
+  readonly refreshCounters: () => Promise<void>;
+  readonly setLastError: (error: Error | null) => void;
+}
+
+const executeSyncTurn = async ({
+  db,
+  householdId,
+  userId,
+  queryClient,
+  ledger,
+  deltaAvailability,
+  refreshCounters,
+  setLastError,
+}: SyncTurnInput): Promise<void> => {
+  const summary = await drainOutbox(
+    db,
+    householdId,
+    (envelope) => applyAndSettle(envelope, ledger),
+    userId,
+  );
+  await applyDrainEffects(summary, queryClient, ledger);
+  const pullFailed = await tryPullAndNote(
+    db,
+    householdId,
+    queryClient,
+    ledger,
+    deltaAvailability,
+    setLastError,
+  );
+  await refreshCounters();
+  if (!pullFailed) setLastError(null);
+};
+
+const applyDrainEffects = async (
+  summary: DrainSummary,
+  queryClient: QueryClient,
+  ledger: SyncedTransactionLedger | null,
+): Promise<void> => {
+  if (summary.stoppedOnLocalOnly) {
+    useSyncModeStore.getState().setLocalOnly("kill_switch");
+  }
+  if ((summary.applied > 0 || summary.rejected > 0) && !ledger) {
+    await cohereTransactionSurfaces(queryClient);
+  }
+};
+
+const tryPullAndNote = async (
+  db: LocalDb,
+  householdId: string,
+  queryClient: QueryClient,
+  ledger: SyncedTransactionLedger | null,
+  deltaAvailability: { current: DeltaAvailabilityTracker },
+  setLastError: (error: Error | null) => void,
+): Promise<boolean> => {
+  try {
+    await pullAndNote(db, householdId, queryClient, ledger, deltaAvailability);
+    return false;
+  } catch (err) {
+    setLastError(err instanceof Error ? err : new Error("Delta pull failed."));
+    return true;
+  }
+};
+
+const applyAndSettle = async (
+  envelope: CommandEnvelope,
+  ledger: SyncedTransactionLedger | null,
+) => {
+  const result = await orpc.commands.apply({
+    ...envelope,
+    preconditions: envelope.preconditions?.map((precondition) => ({ ...precondition })),
+  });
+  ledger?.settle(envelope, result);
+  return result;
+};
+
+const pullAndNote = async (
+  db: LocalDb,
+  householdId: string,
+  queryClient: QueryClient,
+  ledger: SyncedTransactionLedger | null,
+  deltaAvailability: { current: DeltaAvailabilityTracker },
+): Promise<void> => {
+  try {
+    const delta = await pullDeltas(db, (args) => orpc.sync.getDelta(args), householdId);
+    deltaAvailability.current = recordDeltaPullSuccess(deltaAvailability.current, Date.now());
+    if (useSyncModeStore.getState().reason === "delta_unavailable") {
+      useSyncModeStore.getState().setSynced();
+    }
+    ledger?.noteRemoteChanges(delta.changes);
+    for (const change of delta.changes) {
+      await cohereLedgerEffects(queryClient, change.effects);
+    }
+  } catch (error) {
+    deltaAvailability.current = recordDeltaPullFailure(deltaAvailability.current, Date.now());
+    if (isDeltaPullDegraded(deltaAvailability.current, Date.now())) {
+      useSyncModeStore.getState().setLocalOnly("delta_unavailable");
+    }
+    throw error;
+  }
+};

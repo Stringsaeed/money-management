@@ -17,6 +17,9 @@ const mockGetDelta = jest.fn();
 const mockStatus = jest.fn();
 const mockCohereLedgerEffects = jest.fn();
 const mockCohereTransactionSurfaces = jest.fn();
+const mockSettle = jest.fn();
+const mockNoteRemoteChanges = jest.fn();
+const mockReleaseLedger = jest.fn();
 
 const FAKE_DB = { __fakeDb: true };
 jest.mock("@/db/client", () => ({
@@ -51,6 +54,20 @@ jest.mock("@/modules/ledger-cache", () => ({
   ...jest.requireActual("@/modules/ledger-cache"),
   cohereLedgerEffects: (...args: unknown[]) => mockCohereLedgerEffects(...args),
   cohereTransactionSurfaces: (...args: unknown[]) => mockCohereTransactionSurfaces(...args),
+}));
+
+jest.mock("@/modules/ledger-db/deps", () => ({
+  createLedgerDependencies: (input: unknown) => input,
+}));
+
+jest.mock("@/modules/ledger-db/registry", () => ({
+  acquireSyncedTransactionLedger: () => ({
+    ledger: {
+      settle: (...args: unknown[]) => mockSettle(...args),
+      noteRemoteChanges: (...args: unknown[]) => mockNoteRemoteChanges(...args),
+    },
+    release: () => mockReleaseLedger(),
+  }),
 }));
 
 const HOUSEHOLD_ID = "household-1";
@@ -199,13 +216,48 @@ describe("useSyncWorker", () => {
     });
   });
 
-  it("invalidates ledger surfaces after outbox drain settlement", async () => {
+  it("invalidates ledger surfaces after outbox drain settlement when no ledger is acquired", async () => {
     mockDrainOutbox.mockResolvedValue({ applied: 1, rejected: 1, pending: 0 });
     const client = createTestQueryClient();
     await renderHookWithProviders(() => useSyncWorker(HOUSEHOLD_ID), { client });
     await flushTurn();
 
     expect(mockCohereTransactionSurfaces).toHaveBeenCalledWith(client);
+    expect(mockSettle).not.toHaveBeenCalled();
+  });
+
+  it("settles apply results and notes remote changes on the acquired ledger", async () => {
+    const envelope = {
+      commandId: "cmd-1",
+      householdId: HOUSEHOLD_ID,
+      kind: "transaction.create",
+      payload: { id: "txn-1" },
+    };
+    const result = {
+      kind: "applied",
+      seq: 3,
+      applied: { transactionId: "txn-1" },
+      effects: ["ledger"],
+    };
+    mockApply.mockResolvedValue(result);
+    mockDrainOutbox.mockImplementation(
+      async (_db, _householdId, send: (next: typeof envelope) => Promise<unknown>) => {
+        await send(envelope);
+        return { applied: 1, rejected: 0, pending: 0 };
+      },
+    );
+    mockPullDeltas.mockResolvedValue({
+      seq: 4,
+      hasMore: false,
+      changes: [{ seq: 4, effects: ["ledger"] }],
+    });
+    const client = createTestQueryClient();
+    await renderHookWithProviders(() => useSyncWorker(HOUSEHOLD_ID, "user-1"), { client });
+    await flushTurn();
+
+    expect(mockSettle).toHaveBeenCalledWith(envelope, result);
+    expect(mockNoteRemoteChanges).toHaveBeenCalledWith([{ seq: 4, effects: ["ledger"] }]);
+    expect(mockCohereTransactionSurfaces).not.toHaveBeenCalled();
   });
 
   it("invalidates the covered ledger queries for delta effect tags (cache coherence)", async () => {

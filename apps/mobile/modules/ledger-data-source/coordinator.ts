@@ -1,4 +1,6 @@
 import { useDatabase } from "@/db/client";
+import { toLedgerTransactionResource } from "@/modules/ledger-db/compat";
+import { useSyncedTransactionLedger } from "@/modules/ledger-db/provider";
 
 import {
   useLocalAccountDataSource,
@@ -12,6 +14,8 @@ import type {
   LedgerCategoryDataSource,
   LedgerTransactionDataSource,
 } from "./contract";
+
+const ignoreLedgerError = () => undefined;
 
 export const useAccountDataSource = (): LedgerAccountDataSource => {
   const selection = useLedgerSourceSelection();
@@ -32,8 +36,18 @@ export const useTransactionDataSource = (): LedgerTransactionDataSource => {
   const selection = useLedgerSourceSelection();
   const db = useDatabase();
   const local = useLocalTransactionDataSource();
+  const ledger = useSyncedTransactionLedger();
   if (selection.kind === "local") {
     return local;
+  }
+  if (ledger) {
+    return {
+      source: "synced",
+      cacheKey: `synced:${selection.householdId}:${selection.userId}`,
+      offlineState: selection.offlineState ?? { kind: "online" },
+      transactions: toLedgerTransactionResource(ledger),
+      observeErrors: () => ignoreLedgerError,
+    };
   }
   return createSyncedLedgerDataSource({
     householdId: selection.householdId,
