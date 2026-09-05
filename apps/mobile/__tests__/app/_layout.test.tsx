@@ -33,6 +33,7 @@ jest.mock("expo-router", () => ({
       })(),
     {
       Screen: (props: unknown) => mockStackScreen(props),
+      Protected: ({ children }: { children: React.ReactNode }) => children,
     },
   ),
 }));

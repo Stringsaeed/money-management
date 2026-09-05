@@ -78,6 +78,7 @@ function LoadingFallback() {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  // @ts-expect-error: useNativeVariable is not typed correctly
   const surfaceColor = useNativeVariable("--surface-color");
 
   const [fontsLoaded, fontError] = useFonts({
