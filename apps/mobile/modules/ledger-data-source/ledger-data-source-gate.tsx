@@ -5,6 +5,8 @@ import { useMigratedHouseholdId } from "@/hooks/use-enable-sync";
 import { coreFromAccess, selectLedgerSourceForAccess, useAccess } from "@/modules/access";
 import { useSyncModeStore } from "@/stores/sync-mode-store";
 
+import { SyncedTransactionsProvider } from "@/modules/ledger-db/provider";
+
 import { LedgerDataSourceProvider } from "./provider";
 
 export function LedgerDataSourceGate({ children }: { readonly children: ReactNode }) {
@@ -21,16 +23,22 @@ export function LedgerDataSourceGate({ children }: { readonly children: ReactNod
     );
   }
 
+  const selection = selectLedgerSourceForAccess(
+    coreFromAccess(access),
+    migration.data ?? null,
+    mode,
+    reason,
+  );
+
   return (
-    <LedgerDataSourceProvider
-      selection={selectLedgerSourceForAccess(
-        coreFromAccess(access),
-        migration.data ?? null,
-        mode,
-        reason,
+    <LedgerDataSourceProvider selection={selection}>
+      {selection.kind === "synced" ? (
+        <SyncedTransactionsProvider householdId={selection.householdId} userId={selection.userId}>
+          {children}
+        </SyncedTransactionsProvider>
+      ) : (
+        children
       )}
-    >
-      {children}
     </LedgerDataSourceProvider>
   );
 }

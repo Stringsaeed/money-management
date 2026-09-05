@@ -59,6 +59,35 @@ function decodeStoredPayload(serialized: string): DecodedCommandPayload {
 
 const rowBelongsToUser = (row: typeof outboxCommands.$inferSelect, userId?: string): boolean =>
   !userId || decodeStoredPayload(row.payload).userId === userId;
+
+export interface OutboxChange {
+  readonly householdId: string;
+  readonly userId?: string;
+}
+
+type OutboxListener = (change: OutboxChange) => void;
+
+const outboxListeners = new Set<OutboxListener>();
+
+export function observeOutbox(listener: OutboxListener): () => void {
+  outboxListeners.add(listener);
+  return () => {
+    outboxListeners.delete(listener);
+  };
+}
+
+const notifyOutboxChanged = (change: OutboxChange): void => {
+  for (const listener of [...outboxListeners]) listener(change);
+};
+
+const changeFromRow = (row: typeof outboxCommands.$inferSelect): OutboxChange => {
+  const userId = decodeStoredPayload(row.payload).userId;
+  return userId ? { householdId: row.householdId, userId } : { householdId: row.householdId };
+};
+
+const scopedChange = (householdId: string, userId?: string): OutboxChange =>
+  userId ? { householdId, userId } : { householdId };
+
 /** Appends one durable command to the selected household's FIFO outbox. */
 export async function enqueueCommand(db: LocalDb, input: EnqueueInput): Promise<void> {
   await db
@@ -73,6 +102,7 @@ export async function enqueueCommand(db: LocalDb, input: EnqueueInput): Promise<
       }),
     })
     .onConflictDoNothing();
+  notifyOutboxChanged(scopedChange(input.householdId, input.userId));
 }
 
 function envelopeFrom(row: typeof outboxCommands.$inferSelect): CommandEnvelope {
@@ -186,6 +216,7 @@ export async function drainOutbox(
         .update(outboxCommands)
         .set({ status: "pending", attempts: row.attempts + 1, lastAttemptAt: new Date() })
         .where(eq(outboxCommands.commandId, row.commandId));
+      notifyOutboxChanged(scopedChange(householdId, userId));
       return {
         applied,
         rejected,
@@ -198,6 +229,7 @@ export async function drainOutbox(
       // Acked — the idempotency store owns the history now.
       await db.delete(outboxCommands).where(eq(outboxCommands.commandId, row.commandId));
       applied += 1;
+      notifyOutboxChanged(scopedChange(householdId, userId));
     } else if (result.kind === "local_only") {
       // Remote kill switch (#99): not a rejection. Put the row back to
       // pending and stop — the server refuses everything until it is off.
@@ -205,6 +237,7 @@ export async function drainOutbox(
         .update(outboxCommands)
         .set({ status: "pending" })
         .where(eq(outboxCommands.commandId, row.commandId));
+      notifyOutboxChanged(scopedChange(householdId, userId));
       return {
         applied,
         rejected,
@@ -226,6 +259,7 @@ export async function drainOutbox(
         }
       });
       rejected += 1;
+      notifyOutboxChanged(scopedChange(householdId, userId));
     }
   }
 
@@ -425,6 +459,7 @@ export async function resubmitRejectedCommand(
     payload?: CommandEnvelope["payload"];
   },
 ): Promise<void> {
+  let change: OutboxChange | undefined;
   await db.$client.withTransactionAsync(async () => {
     const rows = await db
       .select()
@@ -442,6 +477,7 @@ export async function resubmitRejectedCommand(
         "Nothing to resubmit — this rejected change was already discarded or resubmitted.",
       );
     }
+    change = changeFromRow(original);
     const stored = decodeStoredPayload(original.payload);
 
     await db
@@ -460,6 +496,7 @@ export async function resubmitRejectedCommand(
 
     await db.delete(outboxCommands).where(eq(outboxCommands.commandId, original.commandId));
   });
+  if (change) notifyOutboxChanged(change);
 }
 
 /**
@@ -468,17 +505,33 @@ export async function resubmitRejectedCommand(
  * the retry replays the stored result instead of double-applying.
  */
 export async function retryRejectedCommand(db: LocalDb, commandId: string): Promise<void> {
+  const change = await lookupOutboxChange(db, commandId);
   await db
     .update(outboxCommands)
     .set({ status: "pending", rejectionKind: null, rejectionPayload: null })
     .where(and(eq(outboxCommands.commandId, commandId), eq(outboxCommands.status, "rejected")));
+  if (change) notifyOutboxChanged(change);
 }
 
 /** Drops a rejected command the user chose not to re-edit. */
 export async function discardRejectedCommand(db: LocalDb, commandId: string): Promise<void> {
+  const change = await lookupOutboxChange(db, commandId);
   await db
     .delete(outboxCommands)
     .where(and(eq(outboxCommands.commandId, commandId), eq(outboxCommands.status, "rejected")));
+  if (change) notifyOutboxChanged(change);
+}
+
+async function lookupOutboxChange(
+  db: LocalDb,
+  commandId: string,
+): Promise<OutboxChange | undefined> {
+  const rows = await db
+    .select()
+    .from(outboxCommands)
+    .where(eq(outboxCommands.commandId, commandId))
+    .limit(1);
+  return rows[0] ? changeFromRow(rows[0]) : undefined;
 }
 
 /** Count of commands still awaiting their first ack. */
@@ -507,4 +560,14 @@ export async function countPendingCommands(
  */
 export async function truncateOutbox(db: LocalDb, householdId: string): Promise<void> {
   await db.delete(outboxCommands).where(eq(outboxCommands.householdId, householdId));
+  notifyOutboxChanged({ householdId });
+}
+
+export async function readSyncWatermark(db: LocalDb, householdId: string): Promise<number> {
+  const stateRows = await db
+    .select()
+    .from(syncState)
+    .where(eq(syncState.householdId, householdId))
+    .limit(1);
+  return stateRows[0]?.watermark ?? 0;
 }

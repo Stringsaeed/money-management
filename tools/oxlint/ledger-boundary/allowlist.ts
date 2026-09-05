@@ -116,6 +116,7 @@ export const LEDGER_SQLITE_ALLOWLIST: SqliteRoleEntry[] = [
     role: "sync-bookkeeping",
     files: [
       "apps/mobile/modules/ledger-data-source/coordinator.ts",
+      "apps/mobile/modules/ledger-db/provider.tsx",
       "apps/mobile/hooks/use-sync-worker.ts",
       "apps/mobile/hooks/use-rejected-changes.ts",
       "apps/mobile/components/rejected-changes/use-rejected-edit-form.ts",
@@ -191,7 +192,7 @@ export function formatSqliteRolesMarkdown(): string {
   return [
     "# SQLite roles",
     "",
-    "Device SQLite is money authority only while `selection.kind === \"local\"`.",
+    'Device SQLite is money authority only while `selection.kind === "local"`.',
     "When the device is synced (including `offline_cached` / kill switch), Accounts, Categories, and Transactions live on the server.",
     "The device may still hold `app_settings` snapshots, `outbox_commands`, and `sync_state`.",
     "",

@@ -15,6 +15,7 @@ import {
   getRejectedChange,
   listRejectedChanges,
   listProjectableCommands,
+  observeOutbox,
   pullDeltas,
   resubmitRejectedCommand,
   retryRejectedCommand,
@@ -584,5 +585,75 @@ describe("truncateOutbox", () => {
     const remaining = await db.select().from(schema.outboxCommands);
     expect(remaining).toHaveLength(1);
     expect(remaining[0].commandId).toBe("cmd-other-household");
+  });
+});
+
+describe("observeOutbox", () => {
+  it("notifies scoped changes and unsubscribes deterministically", async () => {
+    const db = await setupDb();
+    const seen: { householdId: string; userId?: string }[] = [];
+    const unsubscribe = observeOutbox((change) => {
+      seen.push(change);
+    });
+
+    await enqueueCommand(db, makeInput({ commandId: "cmd-a", userId: "user-1" }));
+    await enqueueCommand(
+      db,
+      makeInput({ commandId: "cmd-other", householdId: "household-2", userId: "user-2" }),
+    );
+    await drainOutbox(db, HOUSEHOLD_ID, async () => applied(), "user-1");
+
+    expect(seen).toEqual([
+      { householdId: HOUSEHOLD_ID, userId: "user-1" },
+      { householdId: "household-2", userId: "user-2" },
+      { householdId: HOUSEHOLD_ID, userId: "user-1" },
+    ]);
+
+    unsubscribe();
+    unsubscribe();
+    await enqueueCommand(db, makeInput({ commandId: "cmd-after", userId: "user-1" }));
+    expect(seen).toHaveLength(3);
+  });
+
+  it("notifies discard and resubmit with the row's household", async () => {
+    const db = await setupDb();
+    const seen: string[] = [];
+    const unsubscribe = observeOutbox((change) => {
+      seen.push(`${change.householdId}:${change.userId ?? ""}`);
+    });
+
+    await enqueueCommand(db, makeInput({ commandId: "cmd-rej", userId: "user-1" }));
+    await drainOutbox(
+      db,
+      HOUSEHOLD_ID,
+      async () => ({
+        kind: "stale_version",
+        entityId: "txn-1",
+        expectedVersion: 1,
+        actualVersion: 2,
+      }),
+      "user-1",
+    );
+    await discardRejectedCommand(db, "cmd-rej");
+
+    await enqueueCommand(db, makeInput({ commandId: "cmd-resubmit", userId: "user-1" }));
+    await drainOutbox(
+      db,
+      HOUSEHOLD_ID,
+      async () => ({
+        kind: "invalid_intent",
+        issues: [{ field: "amount", message: "bad" }],
+      }),
+      "user-1",
+    );
+    await resubmitRejectedCommand(db, {
+      originalCommandId: "cmd-resubmit",
+      newCommandId: "cmd-new",
+    });
+
+    expect(
+      seen.filter((entry) => entry === `${HOUSEHOLD_ID}:user-1`).length,
+    ).toBeGreaterThanOrEqual(4);
+    unsubscribe();
   });
 });
