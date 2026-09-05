@@ -90,6 +90,7 @@ export type LinkOutcome =
   | { readonly kind: "signed_in"; readonly user: Identity }
   | { readonly kind: "needs_password"; readonly grant: { readonly token: string } }
   | { readonly kind: "unusable"; readonly operation: LinkOperation }
+  | { readonly kind: "no_account" }
   | { readonly kind: "offline" };
 
 export interface ResolveAccessInput {

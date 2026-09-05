@@ -6,6 +6,7 @@ import {
 } from "@trove/protocol";
 
 import { accounts, categories, transactions } from "@/db/schema";
+import { toWireAccountType } from "@/lib/account-wire-type";
 
 import type { LocalDb } from "./manifest";
 
@@ -46,7 +47,7 @@ async function loadWireRows(
       return rows.map((row) => ({
         id: row.id,
         name: row.name,
-        type: row.type,
+        type: toWireAccountType(row.type),
         currency: row.currency,
         color: row.color,
         icon: row.icon,

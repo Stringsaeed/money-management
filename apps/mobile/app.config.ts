@@ -172,6 +172,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "@rnrepo/expo-config-plugin",
       "./plugins/withRocketSimConnect.js",
       "react-native-nitro-fetch",
+      "expo-secure-store",
     ],
     experiments: {
       typedRoutes: true,

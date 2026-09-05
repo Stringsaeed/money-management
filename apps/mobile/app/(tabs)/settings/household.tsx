@@ -1,18 +1,19 @@
-import { ScrollView } from "react-native";
-
 import { SessionRevokedCard } from "@/components/access/session-revoked-card";
 import { SignedOutCard } from "@/components/access/signed-out-card";
 import { SignedInHousehold } from "@/components/household/signed-in-household";
-import { SectionHeader } from "@/components/settings/section-header";
 import { Text } from "@/components/ui/text";
 import { returnTo, useAccess } from "@/modules/access";
+import { ScrollView } from "react-native";
 
 export default function HouseholdScreen() {
   const access = useAccess();
 
   return (
-    <ScrollView contentContainerClassName="gap-2 px-4 pb-safe pt-safe">
-      <SectionHeader title="Profile & household 👤" />
+    <ScrollView
+      className="flex-1 bg-background"
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerClassName="gap-2 px-4 bg-background grow"
+    >
       {access.kind === "resolving" ? (
         <Text className="text-muted-foreground px-1 py-6 text-sm">Loading…</Text>
       ) : null}

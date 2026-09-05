@@ -1,12 +1,7 @@
 import type { orpc } from "@/lib/server/orpc";
 import type { Account, Category, TransactionWithDetails } from "@/types";
 
-import {
-  unsupportedSyncedOperation,
-  type AccountUpdate,
-  type NewAccount,
-  type TransactionUpdate,
-} from "./contract";
+import { unsupportedSyncedOperation, type AccountUpdate, type TransactionUpdate } from "./contract";
 
 type WireTimestamp = Date | string;
 type AccountRow = Awaited<ReturnType<typeof orpc.ledger.accounts.list>>[number];
@@ -130,11 +125,7 @@ export const calculateSyncedBalance = (
   return balance;
 };
 
-export const toSyncedAccountType = (type: NewAccount["type"]): "cash" | "bank" | "card" => {
-  if (type === "cash") return "cash";
-  if (type === "credit_card") return "card";
-  return "bank";
-};
+export { toWireAccountType as toSyncedAccountType } from "@/lib/account-wire-type";
 
 export const assertSupportedAccountUpdate = (data: AccountUpdate): void => {
   if (data.type !== undefined || data.currency !== undefined || data.initialBalance !== undefined) {

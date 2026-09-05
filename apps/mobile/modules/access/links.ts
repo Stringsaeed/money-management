@@ -2,20 +2,51 @@ import type { AuthLinkKind, LinkGrant } from "./types";
 
 const AUTH_LINK_HOST = "auth.trove.ing";
 
-export function parseAuthLink(url: string): LinkGrant | null {
-  const parsed = parseAbsoluteUrl(url);
-  if (!parsed) return null;
-  if (!isTrustedAuthCarrier(parsed)) return null;
-  const kind = linkKindFromUrl(parsed);
-  const token = parsed.searchParams.get("token");
-  if (!kind || !token) return null;
-  return kind === "magic" ? { kind: "sign_in_token", token } : { kind: "reset_token", token };
+export function isAuthCarrierPath(pathOrUrl: string): boolean {
+  return parseAuthLink(pathOrUrl) !== null || parseAuthLinkFailure(pathOrUrl) !== null;
 }
 
-export function parseAuthLinkFailure(url: string): "unusable" | null {
-  const parsed = parseAbsoluteUrl(url);
-  if (!parsed || !isTrustedAuthCarrier(parsed)) return null;
-  return parsed.searchParams.get("error") ? "unusable" : null;
+export function parseAuthLink(pathOrUrl: string): LinkGrant | null {
+  const carrier = parseAuthCarrier(pathOrUrl);
+  if (!carrier || !carrier.token) return null;
+  return carrier.kind === "magic"
+    ? { kind: "sign_in_token", token: carrier.token }
+    : { kind: "reset_token", token: carrier.token };
+}
+
+export function parseAuthLinkFailure(pathOrUrl: string): "unusable" | null {
+  return parseAuthVerifyError(pathOrUrl) ? "unusable" : null;
+}
+
+/** Better Auth verify failures 302 to a trusted host with `?error=`. */
+export function parseAuthVerifyError(pathOrUrl: string): string | null {
+  const absolute = parseAbsoluteUrl(pathOrUrl);
+  if (absolute) {
+    if (!isTrustedAuthHost(absolute)) return null;
+    return absolute.searchParams.get("error");
+  }
+  return parseAuthCarrier(pathOrUrl)?.error ?? null;
+}
+
+interface AuthCarrier {
+  readonly kind: AuthLinkKind;
+  readonly token: string | null;
+  readonly error: string | null;
+}
+
+function parseAuthCarrier(pathOrUrl: string): AuthCarrier | null {
+  const absolute = parseAbsoluteUrl(pathOrUrl);
+  if (absolute) {
+    if (!isTrustedAuthCarrier(absolute)) return null;
+    const kind = linkKindFromUrl(absolute);
+    if (!kind) return null;
+    return {
+      kind,
+      token: absolute.searchParams.get("token"),
+      error: absolute.searchParams.get("error"),
+    };
+  }
+  return parseRelativeAuthCarrier(pathOrUrl);
 }
 
 function parseAbsoluteUrl(url: string): URL | null {
@@ -26,17 +57,39 @@ function parseAbsoluteUrl(url: string): URL | null {
   }
 }
 
-function isTrustedAuthCarrier(parsed: URL): boolean {
+function parseRelativeAuthCarrier(pathOrUrl: string): AuthCarrier | null {
+  const stripped = pathOrUrl.replace(/^\/+/, "");
+  const queryStart = stripped.indexOf("?");
+  const pathname = queryStart === -1 ? stripped : stripped.slice(0, queryStart);
+  const kind = kindFromPathname(pathname);
+  if (!kind) return null;
+  const params = new URLSearchParams(queryStart === -1 ? "" : stripped.slice(queryStart + 1));
+  return {
+    kind,
+    token: params.get("token"),
+    error: params.get("error"),
+  };
+}
+
+function isTrustedAuthHost(parsed: URL): boolean {
   if (parsed.protocol === "trove:") return true;
   return parsed.protocol === "https:" && parsed.hostname === AUTH_LINK_HOST;
+}
+
+function isTrustedAuthCarrier(parsed: URL): boolean {
+  return isTrustedAuthHost(parsed);
 }
 
 function linkKindFromUrl(parsed: URL): AuthLinkKind | null {
   if (parsed.protocol === "trove:" && parsed.hostname === "l") {
     return kindFromSegment(parsed.pathname.replace(/^\//, ""));
   }
-  if (parsed.pathname === "/l/magic") return "magic";
-  if (parsed.pathname === "/l/reset") return "reset";
+  return kindFromPathname(parsed.pathname.replace(/^\/+/, ""));
+}
+
+function kindFromPathname(pathname: string): AuthLinkKind | null {
+  if (pathname === "l/magic") return "magic";
+  if (pathname === "l/reset") return "reset";
   return null;
 }
 

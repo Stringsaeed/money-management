@@ -98,6 +98,34 @@ const ROW_SCHEMA_BY_ENTITY = {
   transaction: transactionRowSchema,
 } satisfies Record<ImportEntityType, z.ZodType>;
 
+function buildInsertStatements(
+  ctx: PlanContext,
+  entityType: ImportEntityType,
+  rows: readonly Record<string, unknown>[],
+): BatchStatement[] {
+  const maxRowsPerStatement = maxRowsPerInsertStatement(entityType);
+  const statements: BatchStatement[] = [];
+  for (let start = 0; start < rows.length; start += maxRowsPerStatement) {
+    statements.push(
+      buildInsertStatement(ctx, entityType, rows.slice(start, start + maxRowsPerStatement)),
+    );
+  }
+  return statements;
+}
+
+/** D1 rejects queries with more than 100 bound parameters. */
+const D1_MAX_BOUND_PARAMS = 100;
+
+const INSERT_COLUMNS_BY_ENTITY = {
+  account: 19,
+  category: 15,
+  transaction: 20,
+} as const satisfies Record<ImportEntityType, number>;
+
+export function maxRowsPerInsertStatement(entityType: ImportEntityType): number {
+  return Math.max(1, Math.floor(D1_MAX_BOUND_PARAMS / INSERT_COLUMNS_BY_ENTITY[entityType]));
+}
+
 function buildInsertStatement(
   ctx: PlanContext,
   entityType: ImportEntityType,
@@ -224,7 +252,7 @@ export const importBundleHandler = {
         inserted: parsedRows.value.length,
       },
       guards: [],
-      statements: [buildInsertStatement(ctx, input.entityType, parsedRows.value)],
+      statements: buildInsertStatements(ctx, input.entityType, parsedRows.value),
     };
   },
 };
