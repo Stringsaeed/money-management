@@ -11,6 +11,7 @@ import { migrateCategoryLifecycle } from "./category-lifecycle-migration";
 import { runMigrations } from "./migrate";
 import { migrateRecurringRules } from "./recurring-rules-migration";
 import { markDatabaseReset, resetDatabaseIfNeeded } from "./reset";
+import * as schema from "./schema";
 import { seedDatabase } from "./seed";
 
 interface InitializeDatabaseOptions {
@@ -43,7 +44,7 @@ export async function initializeDatabase(
   await migrateAccountLifecycle(database);
 
   if (shouldMarkReset) await markDatabaseReset(drizzleDatabase);
-  if (await shouldSeedDefaultCategories(drizzleDatabase)) {
+  if (await shouldSeedDefaultCategories(drizzle(database, { schema }) as LocalDb)) {
     await seedDatabase(drizzleDatabase);
   }
 }
