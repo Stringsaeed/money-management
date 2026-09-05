@@ -14,7 +14,7 @@ module.exports = {
     sessionStorage: {},
   },
   transformIgnorePatterns: [
-    "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|expo-modules-core|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|@rn-primitives|number-flow-react-native|phosphor-react-native))",
+    "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|expo-modules-core|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|@rn-primitives|number-flow-react-native|phosphor-react-native|@tanstack/db|@tanstack/react-db|@tanstack/db-ivm|@tanstack/pacer-lite|fractional-indexing))",
     "/node_modules/react-native-reanimated/plugin/",
   ],
   collectCoverageFrom: [
