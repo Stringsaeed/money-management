@@ -55,6 +55,12 @@ jest.mock("drizzle-orm/expo-sqlite", () => ({
   drizzle: () => "drizzle-database",
 }));
 
+jest.mock("@/lib/migration/status", () => ({
+  COMPLETED_HOUSEHOLD_ID_KEY: "migration.completedHouseholdId",
+  getMigratedHouseholdId: async () => null,
+  markMigrationCompleted: jest.fn(),
+}));
+
 jest.mock("@rn-primitives/portal", () => ({
   PortalHost: () => {
     const React = require("react");
