@@ -8,6 +8,7 @@ import { useDatabase } from "@/db/client";
 import { backupLocalDatabase } from "@/lib/migration/backup";
 import { runImport } from "@/lib/migration/enable-sync";
 import { getMigratedHouseholdId, markMigrationCompleted } from "@/lib/migration/status";
+import { describeRejection, parseRejection } from "@/lib/sync/rejection";
 import { pullDeltas, truncateOutbox } from "@/lib/sync/outbox";
 import { orpc } from "@/lib/server/orpc";
 import { useSyncModeStore } from "@/stores/sync-mode-store";
@@ -84,9 +85,11 @@ export function useEnableSync() {
 
         if (result.status === "rejected") {
           setStatus("error");
+          const rejection = parseRejection(result.result);
+          const detail = rejection ? describeRejection(rejection) : result.result.kind;
           setError(
             new Error(
-              `Import paused while uploading "${result.entityType}" (chunk ${result.chunkIndex + 1}): ${result.result.kind}.`,
+              `Import paused while uploading "${result.entityType}" (chunk ${result.chunkIndex + 1}): ${detail}`,
             ),
           );
           return;

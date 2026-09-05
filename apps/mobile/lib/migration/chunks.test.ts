@@ -94,6 +94,95 @@ describe("buildImportChunks", () => {
     expect(transactionChunk?.rows[0]).not.toHaveProperty("amount");
   });
 
+  it("maps local account types onto cash|bank|card for import_bundle", async () => {
+    const db = await setupDb();
+    await db.insert(accounts).values([
+      {
+        id: "checking-1",
+        name: "Everyday",
+        type: "checking",
+        currency: "USD",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+      {
+        id: "savings-1",
+        name: "Nest",
+        type: "savings",
+        currency: "USD",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+      {
+        id: "cash-1",
+        name: "Wallet",
+        type: "cash",
+        currency: "USD",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+      {
+        id: "card-1",
+        name: "Visa",
+        type: "credit_card",
+        currency: "USD",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+      {
+        id: "invest-1",
+        name: "Brokerage",
+        type: "investment",
+        currency: "USD",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+      {
+        id: "other-1",
+        name: "Misc",
+        type: "other",
+        currency: "USD",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+    ]);
+
+    const accountChunks = (await buildImportChunks(db)).filter(
+      (chunk) => chunk.entityType === "account",
+    );
+    const byId = new Map(
+      accountChunks.flatMap((chunk) => chunk.rows.map((row) => [row.id, row.type] as const)),
+    );
+
+    expect(byId.get("checking-1")).toBe("bank");
+    expect(byId.get("savings-1")).toBe("bank");
+    expect(byId.get("cash-1")).toBe("cash");
+    expect(byId.get("card-1")).toBe("card");
+    expect(byId.get("invest-1")).toBe("bank");
+    expect(byId.get("other-1")).toBe("bank");
+  });
+
+  it("splits seeded category volume into D1-safe chunk sizes", async () => {
+    const db = await setupDb();
+    const total = 11;
+    await db.insert(categories).values(
+      Array.from({ length: total }, (_, i) => ({
+        id: `category-${i}`,
+        name: `Category ${i}`,
+        type: "expense" as const,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      })),
+    );
+
+    const chunks = (await buildImportChunks(db)).filter((chunk) => chunk.entityType === "category");
+    expect(chunks.length).toBeGreaterThan(1);
+    for (const chunk of chunks) {
+      expect(chunk.rows.length).toBeLessThanOrEqual(MAX_IMPORT_CHUNK_ROWS);
+    }
+    expect(chunks.flatMap((chunk) => chunk.rows)).toHaveLength(total);
+  });
+
   it("orders chunks account -> category -> transaction", async () => {
     const db = await setupDb();
     await db.insert(accounts).values({

@@ -252,6 +252,15 @@ describe("commands.apply — import_bundle idempotency", () => {
   });
 });
 
+describe("import_bundle D1 bind budget", () => {
+  it("keeps each multi-row insert under D1's 100 bound-parameter ceiling", async () => {
+    const { maxRowsPerInsertStatement } = await import("./handlers/import-bundle");
+    expect(maxRowsPerInsertStatement("account") * 19).toBeLessThanOrEqual(100);
+    expect(maxRowsPerInsertStatement("category") * 15).toBeLessThanOrEqual(100);
+    expect(maxRowsPerInsertStatement("transaction") * 20).toBeLessThanOrEqual(100);
+  });
+});
+
 describe("commands.apply — import_bundle end-to-end + manifest recompute", () => {
   it("imports the full dependency-ordered chain and the manifest reconciles", async () => {
     expectApplied(

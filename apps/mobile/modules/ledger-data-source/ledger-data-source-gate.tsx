@@ -15,7 +15,10 @@ export function LedgerDataSourceGate({ children }: { readonly children: ReactNod
   const mode = useSyncModeStore((state) => state.mode);
   const reason = useSyncModeStore((state) => state.reason);
 
-  if (access.kind === "resolving" || migration.isPending) {
+  // Only block the first migration read. Access "resolving" (session/households
+  // pending) must not unmount the tree — that remounts onboarding at welcome
+  // and looks like a loop when the session probe flaps.
+  if (migration.isPending) {
     return (
       <View className="safe-top safe-bottom flex-1 items-center justify-center">
         <ActivityIndicator size="large" />

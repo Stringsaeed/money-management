@@ -52,19 +52,26 @@ export async function runImport(args: RunImportArgs): Promise<ImportResult> {
   const chunks = await buildImportChunks(db);
 
   for (const chunk of chunks) {
-    const result = await sendCommand({
-      commandId: generateId(),
-      householdId,
-      kind: "import_bundle",
-      payload: chunk,
-    });
-    if (result.kind !== "applied") {
-      return {
-        status: "rejected",
-        entityType: chunk.entityType,
-        chunkIndex: chunk.chunkIndex,
-        result,
-      };
+    try {
+      const result = await sendCommand({
+        commandId: generateId(),
+        householdId,
+        kind: "import_bundle",
+        payload: chunk,
+      });
+      if (result.kind !== "applied") {
+        return {
+          status: "rejected",
+          entityType: chunk.entityType,
+          chunkIndex: chunk.chunkIndex,
+          result,
+        };
+      }
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "upload failed";
+      throw new Error(
+        `Import paused while uploading "${chunk.entityType}" (chunk ${chunk.chunkIndex + 1}): ${reason}`,
+      );
     }
   }
 
