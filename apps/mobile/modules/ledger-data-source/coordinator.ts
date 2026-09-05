@@ -43,29 +43,6 @@ export const useTransactionDataSource = (): LedgerTransactionDataSource => {
   });
 };
 
-export const useLedgerLifecycle = () => {
-  const selection = useLedgerSourceSelection();
-  const db = useDatabase();
-  if (selection.kind === "local") {
-    return {
-      kind: "local" as const,
-      offlineState: { kind: "offline_ready" as const },
-    };
-  }
-  const synced = createSyncedLedgerDataSource({
-    householdId: selection.householdId,
-    userId: selection.userId,
-    db,
-    offlineState: selection.offlineState,
-  });
-  return {
-    kind: "synced" as const,
-    offlineState: synced.offlineState,
-    hydration: synced.hydration,
-    writeback: synced.writeback,
-  };
-};
-
 export const useCategoryDataSource = (): LedgerCategoryDataSource => {
   const selection = useLedgerSourceSelection();
   const db = useDatabase();

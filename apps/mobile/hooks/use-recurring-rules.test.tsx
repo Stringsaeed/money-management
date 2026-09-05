@@ -211,4 +211,21 @@ describe("Recurring Rules hooks", () => {
 
     expect(cohereRecurringEffects).toHaveBeenCalledWith(client, report.effects);
   });
+
+  it("refuses settle while the device is synced, including offline_cached", async () => {
+    const { result } = await renderHookWithProviders(() => useSettleRecurringRules(), {
+      ledgerSelection: {
+        kind: "synced",
+        householdId: "household-1",
+        offlineState: { kind: "offline_cached", reason: "Sync is temporarily unavailable." },
+      },
+    });
+
+    await act(async () => {
+      await expect(result.current.mutateAsync()).rejects.toThrow(
+        "unavailable for the synced ledger",
+      );
+    });
+    expect(mockModule.settle).not.toHaveBeenCalled();
+  });
 });

@@ -7,6 +7,8 @@ import {
   type RecurringRule,
 } from "@/modules/recurring-rules";
 import { useRecurringRulesModule } from "@/modules/recurring-rules/provider";
+import { assertLocalLedgerAuthority } from "@/modules/ledger-data-source/contract";
+import { useLedgerSourceSelection } from "@/modules/ledger-data-source/provider";
 import { cohereRecurringEffects, recurringRuleKeys } from "@/modules/ledger-cache";
 
 type ChangeOfKind<Kind extends RecurringChange["kind"]> = Extract<RecurringChange, { kind: Kind }>;
@@ -65,10 +67,14 @@ export const useRestoreRecurringRule = () => useRecurringChange("restore");
 export const useRepairRecurringRule = () => useRecurringChange("repair");
 
 export function useSettleRecurringRules() {
+  const selection = useLedgerSourceSelection();
   const recurringRules = useRecurringRulesModule();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => recurringRules.settle(),
+    mutationFn: () => {
+      assertLocalLedgerAuthority(selection, "recurring.settle");
+      return recurringRules.settle();
+    },
     onSuccess: (report) => cohereRecurringEffects(queryClient, report.effects),
     onError: (error) => {
       if (error instanceof RecurringSettlementError) {
@@ -79,10 +85,16 @@ export function useSettleRecurringRules() {
 }
 
 function useRecurringChange<Kind extends RecurringChange["kind"]>(kind: Kind) {
+  const selection = useLedgerSourceSelection();
   const recurringRules = useRecurringRulesModule();
   const queryClient = useQueryClient();
   return useMutation<RecurringChangeResult, Error, ChangeVariables<Kind>>({
-    mutationFn: (variables) => recurringRules.change({ kind, ...variables } as ChangeOfKind<Kind>),
+    mutationFn: (variables) => {
+      if (kind === "create" || kind === "edit" || kind === "repair") {
+        assertLocalLedgerAuthority(selection, `recurring.${kind}`);
+      }
+      return recurringRules.change({ kind, ...variables } as ChangeOfKind<Kind>);
+    },
     onSuccess: (result) => {
       if (result.kind === "applied") {
         updateRecurringRuleLifecycle(queryClient, kind, result);

@@ -2,6 +2,12 @@ import { defineConfig } from "oxlint";
 // @ts-expect-error - no types for oxlint-config
 import strict from "@rnx-kit/oxlint-config";
 
+import {
+  AUTH_CLIENT_ONLY_IMPORTS,
+  LEDGER_RESTRICTED_IMPORTS,
+  ledgerBoundaryOverrides,
+} from "./tools/oxlint/ledger-boundary/allowlist.ts";
+
 export default defineConfig({
   extends: [strict],
   plugins: ["import", "react"],
@@ -126,6 +132,7 @@ export default defineConfig({
     ".roo/**",
     ".windsurf/**",
     "tools/oxlint/anti-slop/**",
+    "tools/oxlint/ledger-boundary/**",
     "android/app/build",
     "**/dist/**",
     "**/.alchemy/**",
@@ -137,25 +144,20 @@ export default defineConfig({
       name: "anti-slop-effect",
       specifier: "./tools/oxlint/anti-slop/effect/index.ts",
     },
+    {
+      name: "ledger-boundary",
+      specifier: "./tools/oxlint/ledger-boundary/index.ts",
+    },
   ],
   overrides: [
     {
       files: ["apps/mobile/**/*.{ts,tsx}"],
       rules: {
-        "no-restricted-imports": [
-          "error",
-          {
-            paths: [
-              {
-                name: "@/lib/auth-client",
-                message:
-                  "authClient is private to modules/access. Use useAccess() or access actions.",
-              },
-            ],
-          },
-        ],
+        "no-restricted-imports": ["error", LEDGER_RESTRICTED_IMPORTS],
+        "ledger-boundary/no-raw-entity-sql": "error",
       },
     },
+    ...ledgerBoundaryOverrides(),
     {
       files: ["apps/mobile/modules/access/**", "apps/mobile/lib/server/orpc.ts"],
       rules: {
@@ -209,6 +211,8 @@ export default defineConfig({
         "apps/mobile/jest/setup-env.ts",
         "apps/mobile/tests/**/*.ts",
         "apps/mobile/tests/**/*.{ts,tsx}",
+        "**/*-test-utils.ts",
+        "**/*-test-support.ts",
       ],
       plugins: ["jest"],
       env: {
@@ -216,6 +220,8 @@ export default defineConfig({
       },
       rules: {
         "typescript/no-require-imports": "off",
+        "no-restricted-imports": ["error", AUTH_CLIENT_ONLY_IMPORTS],
+        "ledger-boundary/no-raw-entity-sql": "off",
       },
       globals: {
         jest: "readonly",

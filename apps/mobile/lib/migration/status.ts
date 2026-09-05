@@ -12,7 +12,7 @@ import type { LocalDb } from "./manifest";
  * same household — even across app restarts, before `sync_state` has any
  * watermark of its own.
  */
-const COMPLETED_HOUSEHOLD_ID_KEY = "migration.completedHouseholdId";
+export const COMPLETED_HOUSEHOLD_ID_KEY = "migration.completedHouseholdId";
 const COMPLETED_AT_KEY = "migration.completedAt";
 
 /** The household id this device last completed a matched import into, or null. */

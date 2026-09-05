@@ -1,37 +1,22 @@
 import { router } from "expo-router";
-import { useState } from "react";
-import { Alert, Pressable, ScrollView, View } from "react-native";
-import { useQueryClient } from "@tanstack/react-query";
+import { ScrollView, View } from "react-native";
 import * as Updates from "expo-updates";
 
 import { Card } from "@/components/settings/card";
 import { DevToolsSection } from "@/components/settings/dev-tools-section";
 import { Divider } from "@/components/settings/divider";
+import { EraseLocalDataControl } from "@/components/settings/erase-local-data-control";
 import { SectionHeader } from "@/components/settings/section-header";
 import { SettingsRow } from "@/components/settings/settings-row";
 import { UpdateSection } from "@/components/settings/update-section";
 import { Text } from "@/components/ui/text";
-import { useDatabase } from "@/db/client";
-import {
-  accounts as accountsTable,
-  categories,
-  exchangeRates,
-  recurringOccurrences,
-  recurringRules,
-  transactions,
-} from "@/db/schema";
-import { clearSeedVersion } from "@/db/seed";
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useAllCategories } from "@/hooks/use-categories";
 import { useRecurringRulesList } from "@/hooks/use-recurring-rules";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useAccess, type AccessState } from "@/modules/access";
-import { cohereLedgerCache } from "@/modules/ledger-cache";
 
 export default function SettingsScreen() {
-  const db = useDatabase();
-  const qc = useQueryClient();
-  const [erasing, setErasing] = useState(false);
   const access = useAccess();
   const { data: accounts = [] } = useAccountsWithBalances();
   const { data: allCategories = [] } = useAllCategories();
@@ -41,40 +26,6 @@ export default function SettingsScreen() {
   const profileSubtitle = subtitleForAccess(access);
   const totalCategories = allCategories.length;
   const activeRecurring = recurring.filter((rule) => rule.lifecycle === "active").length;
-
-  function handleEraseAll() {
-    Alert.alert(
-      "Erase All Data",
-      "This will permanently delete all accounts, categories, transactions, and settings. This cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Erase Everything",
-          style: "destructive",
-          onPress: async () => {
-            setErasing(true);
-            try {
-              await db.delete(recurringOccurrences);
-              await db.delete(transactions);
-              await db.delete(recurringRules);
-              await db.delete(categories);
-              await db.delete(exchangeRates);
-              await db.delete(accountsTable);
-              // Rewind the seed so the next launch re-inserts the default
-              // categories the erase just removed.
-              await clearSeedVersion(db);
-              await cohereLedgerCache(qc, { kind: "ledger.reset" });
-              router.replace("/onboarding");
-            } catch {
-              Alert.alert("Error", "Failed to erase data — please try again.");
-            } finally {
-              setErasing(false);
-            }
-          },
-        },
-      ],
-    );
-  }
 
   return (
     <ScrollView
@@ -161,18 +112,7 @@ export default function SettingsScreen() {
       {/* Danger Zone */}
       <SectionHeader title="Danger Zone ⚠️" />
       <Card>
-        <Pressable
-          onPress={handleEraseAll}
-          disabled={erasing}
-          className="px-4 py-3.5 items-center active:bg-destructive/10"
-        >
-          <Text className="font-body-semibold text-base text-destructive">
-            {erasing ? "Erasing…" : "Erase local data from this device"}
-          </Text>
-          <Text className="font-body-normal text-xs text-ink/40 mt-0.5">
-            Permanently delete accounts, categories, and transactions on this device
-          </Text>
-        </Pressable>
+        <EraseLocalDataControl />
       </Card>
 
       {/* Dev Tools — only in development or preview builds */}
