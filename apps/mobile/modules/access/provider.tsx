@@ -1,39 +1,56 @@
-import { router } from "expo-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { orpc } from "@/lib/server/orpc";
 
 import { resolveAccess, nextClaim } from "./access";
+import { AuthSheetHost } from "./auth-sheet-host";
+import {
+  AUTH_SHEET_CLOSED,
+  canPresentAuthSheet,
+  openAuthSheetSession,
+  type AuthSheetSession,
+  type PresentAuthSheetInput,
+} from "./auth-sheet-session";
 import { attachCapabilities } from "./capabilities";
 import { clearClaim, readClaim, writeClaim } from "./claim-store";
 import { HOUSEHOLDS_KEY } from "./households-key";
 import { toMembershipSummary } from "./memberships";
-import { serializeReturnTo } from "./return-to";
 import { tryRemoteSignOut, useSessionProbe } from "./session-probe";
-import type { HouseholdRead, IdentityClaim, ReturnTo } from "./types";
+import type { AccessCore, HouseholdRead, IdentityClaim, ReturnTo } from "./types";
+import { AuthSheetContext } from "./use-auth-sheet";
 import { AccessContext } from "./use-access";
 
 export function AccessProvider({ children }: { readonly children: ReactNode }) {
   const claim = useIdentityClaim();
   const probe = useSessionProbe();
   const [signedOut, setSignedOut] = useState(false);
+  const [sheetSession, setSheetSession] = useState<AuthSheetSession>(AUTH_SHEET_CLOSED);
   const households = useHouseholdRead(probe?.kind === "session" && !signedOut);
   const persistClaim = usePersistedClaim(claim.value, signedOut ? { kind: "no_session" } : probe);
-  const access = attachCapabilities(
-    resolveAccess({
-      claim: signedOut ? { kind: "none" } : (persistClaim ?? { kind: "none" }),
-      probe: claim.ready ? (signedOut ? { kind: "no_session" } : probe) : null,
-      households,
-    }),
-    useAccessActions(claim.setValue, setSignedOut),
-  );
+  const core = resolveAccess({
+    claim: signedOut ? { kind: "none" } : (persistClaim ?? { kind: "none" }),
+    probe: claim.ready ? (signedOut ? { kind: "no_session" } : probe) : null,
+    households,
+  });
+  const actions = useAccessActions(claim.setValue, setSignedOut, core, setSheetSession);
+  const access = attachCapabilities(core, actions);
 
   useEffect(() => {
     if (probe?.kind === "no_session") setSignedOut(false);
   }, [probe]);
 
-  return <AccessContext value={access}>{children}</AccessContext>;
+  return (
+    <AccessContext value={access}>
+      <AuthSheetContext value={{ presentAuthSheet: actions.presentAuthSheet }}>
+        {children}
+        <AuthSheetHost
+          session={sheetSession}
+          onDismiss={() => setSheetSession(AUTH_SHEET_CLOSED)}
+        />
+      </AuthSheetContext>
+    </AccessContext>
+  );
 }
 
 function useIdentityClaim() {
@@ -90,14 +107,18 @@ function useHouseholdRead(enabled: boolean): HouseholdRead {
 function useAccessActions(
   setClaim: (claim: IdentityClaim) => void,
   setSignedOut: (value: boolean) => void,
+  core: AccessCore,
+  setSheetSession: (session: AuthSheetSession) => void,
 ) {
   const queryClient = useQueryClient();
 
+  function presentAuthSheet(input: PresentAuthSheetInput) {
+    setSheetSession(openAuthSheetSession(input));
+  }
+
   function beginAuth(target: ReturnTo) {
-    router.push({
-      pathname: "/(auth)/sign-in",
-      params: { returnTo: serializeReturnTo(target) },
-    });
+    if (!canPresentAuthSheet(core)) return;
+    presentAuthSheet({ target });
   }
 
   async function signOut() {
@@ -116,5 +137,5 @@ function useAccessActions(
     void queryClient.invalidateQueries({ queryKey: HOUSEHOLDS_KEY });
   }
 
-  return { beginAuth, signOut, setActiveHousehold, retryHouseholds };
+  return { beginAuth, presentAuthSheet, signOut, setActiveHousehold, retryHouseholds };
 }

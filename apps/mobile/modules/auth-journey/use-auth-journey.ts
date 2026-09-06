@@ -1,13 +1,11 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 
-import {
-  coreFromAccess,
-  hrefForInternal,
-  resolveReturnDestination,
-  useAccess,
-  type ReturnTo,
-} from "@/modules/access";
+import { resolveReturnDestination } from "@/modules/access/access";
+import { coreFromAccess } from "@/modules/access/core-from-state";
+import { hrefForInternal } from "@/modules/access/return-to";
+import type { ReturnTo } from "@/modules/access/types";
+import { useAccess } from "@/modules/access/use-access";
 
 import { runEffect } from "./commands";
 import { initialChoosePasswordState, initialIdentifyState, reduce } from "./journey";

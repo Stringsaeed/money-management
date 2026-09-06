@@ -84,6 +84,13 @@ jest.mock("expo-splash-screen", () => ({
   hideAsync: jest.fn(),
 }));
 
+jest.mock("react-native-keyboard-controller", () => {
+  const React = require("react");
+  return {
+    KeyboardProvider: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
+
 jest.mock("expo-haptics", () => ({
   notificationAsync: jest.fn(),
   impactAsync: jest.fn(),

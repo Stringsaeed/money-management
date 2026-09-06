@@ -1,9 +1,15 @@
+// oxlint-disable anti-slop/no-module-mocking -- required native, ledger, and access boundaries
 import { Alert } from "react-native";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import SettingsScreen from "@/app/(tabs)/settings";
+import { useAccess } from "@/modules/access";
 import { LedgerDataSourceProvider } from "@/modules/ledger-data-source/provider";
+
+const mockUseAccess = jest.mocked(useAccess);
+const mockBeginAuth = jest.fn();
+const mockReauthenticate = jest.fn();
 
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
@@ -235,6 +241,12 @@ describe("app/settings", () => {
       update: jest.fn(() => updateBuilder),
       insert: jest.fn(() => insertBuilder),
     });
+    mockBeginAuth.mockReset();
+    mockReauthenticate.mockReset();
+    mockUseAccess.mockReturnValue({
+      kind: "anonymous",
+      beginAuth: mockBeginAuth,
+    });
   });
 
   it("renders settings content and dev tools", async () => {
@@ -319,5 +331,57 @@ describe("app/settings", () => {
     ).toBeOnTheScreen();
     await fireEvent.press(screen.getByText("Erase local data from this device"));
     expect(mockDelete).not.toHaveBeenCalled();
+  });
+
+  it("begins auth from profile when anonymous", async () => {
+    await render(
+      <QueryClientProvider client={client}>
+        <SettingsScreen />
+      </QueryClientProvider>,
+    );
+
+    await fireEvent.press(screen.getByText("Profile & household"));
+    expect(mockBeginAuth).toHaveBeenCalledWith({ kind: "profile_household" });
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("navigates to household from profile when signed in", async () => {
+    mockUseAccess.mockReturnValue({
+      kind: "signed_in",
+      user: { userId: "user-1", email: "ada@trove.ing", displayName: "Ada" },
+      household: { kind: "none" },
+      memberships: [],
+      setActiveHousehold: jest.fn(),
+      signOut: jest.fn(),
+    });
+
+    await render(
+      <QueryClientProvider client={client}>
+        <SettingsScreen />
+      </QueryClientProvider>,
+    );
+
+    await fireEvent.press(screen.getByText("Profile & household"));
+    expect(mockPush).toHaveBeenCalledWith("/(tabs)/settings/household");
+    expect(mockBeginAuth).not.toHaveBeenCalled();
+  });
+
+  it("reauthenticates from profile when the session was revoked", async () => {
+    mockUseAccess.mockReturnValue({
+      kind: "session_revoked",
+      lastKnown: { userId: "user-1", email: "ada@trove.ing", displayName: "Ada" },
+      reauthenticate: mockReauthenticate,
+      signOut: jest.fn(),
+    });
+
+    await render(
+      <QueryClientProvider client={client}>
+        <SettingsScreen />
+      </QueryClientProvider>,
+    );
+
+    await fireEvent.press(screen.getByText("Profile & household"));
+    expect(mockReauthenticate).toHaveBeenCalledWith({ kind: "profile_household" });
+    expect(mockPush).not.toHaveBeenCalled();
   });
 });

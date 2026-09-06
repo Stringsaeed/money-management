@@ -1,6 +1,6 @@
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,11 @@ import { Text } from "@/components/ui/text";
 
 import { redeemMagicToken } from "./actions";
 import { logAuthLink, summarizeToken } from "./auth-link-debug";
+import type { PresentAuthSheetInput } from "./auth-sheet-session";
 import { isAuthCarrierPath, parseAuthLink, parseAuthLinkFailure } from "./links";
 import { hrefForInternal, PROFILE_HOUSEHOLD_HREF, returnTo } from "./return-to";
 import { useAccess } from "./use-access";
+import { usePresentAuthSheet } from "./use-auth-sheet";
 
 type GateStatus =
   | { readonly kind: "idle" }
@@ -28,6 +30,9 @@ export function resetConsumedAuthTokensForTests() {
 
 export function AuthLinkGate() {
   const access = useAccess();
+  const presentAuthSheet = usePresentAuthSheet();
+  const presentAuthSheetRef = useRef(presentAuthSheet);
+  presentAuthSheetRef.current = presentAuthSheet;
   const [status, setStatus] = useState<GateStatus>({ kind: "idle" });
 
   useEffect(() => {
@@ -46,7 +51,7 @@ export function AuthLinkGate() {
     async function applyRedeem(url: string, source: "initial" | "event") {
       const isAuthCarrier = isAuthCarrierPath(url);
       if (isAuthCarrier) setStatus({ kind: "redeeming" });
-      const next = await redeemUrl(url);
+      const next = await redeemUrl(url, presentAuthSheetRef.current);
       logAuthLink("gate.outcome", {
         source,
         status: next.kind,
@@ -105,12 +110,18 @@ export function AuthLinkGate() {
   );
 }
 
-async function redeemUrl(url: string): Promise<GateStatus | { readonly kind: "ignored" }> {
+async function redeemUrl(
+  url: string,
+  presentAuthSheet: (input: PresentAuthSheetInput) => void,
+): Promise<GateStatus | { readonly kind: "ignored" }> {
   if (parseAuthLinkFailure(url)) return { kind: "unusable" };
   const grant = parseAuthLink(url);
   if (!grant) return { kind: "ignored" };
   if (grant.kind === "reset_token") {
-    router.push({ pathname: "/(auth)/reset-password", params: { token: grant.token } });
+    presentAuthSheet({
+      target: returnTo.profileHousehold(),
+      grant: { token: grant.token },
+    });
     return { kind: "ignored" };
   }
   const outcome = await redeemMagicToken(grant.token);

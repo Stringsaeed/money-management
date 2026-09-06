@@ -22,6 +22,7 @@ import "react-native-reanimated";
 import "../global.css";
 import { BottomSheetProvider } from "@swmansion/react-native-bottom-sheet";
 import { PostHogProvider } from "posthog-react-native";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { initializeDatabase } from "@/db/initialize";
@@ -40,7 +41,6 @@ import { RecurringSettlementProvider } from "@/components/recurring/recurring-se
 import { AccessProvider, AuthLinkGate } from "@/modules/access";
 import { RecurringRulesProvider } from "@/modules/recurring-rules/provider";
 import { LedgerDataSourceGate } from "@/modules/ledger-data-source/ledger-data-source-gate";
-import { useNativeVariable } from "react-native-css";
 
 // Keep the native splash screen visible while fonts load
 SplashScreen.preventAutoHideAsync();
@@ -78,8 +78,6 @@ function LoadingFallback() {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  // @ts-expect-error: useNativeVariable is not typed correctly
-  const surfaceColor = useNativeVariable("--surface-color");
 
   const [fontsLoaded, fontError] = useFonts({
     Nunito_200ExtraLight,
@@ -118,101 +116,79 @@ export default function RootLayout() {
                 <RecurringRulesProvider>
                   <RecurringSettlementProvider>
                     <GestureHandlerRootView style={{ flex: 1 }}>
-                      <PressablesConfig
-                        globalHandlers={{
-                          onPress: () => {
-                            Haptics.selectionAsync();
-                          },
-                        }}
-                        config={{ minScale: 0.7, activeOpacity: 0.6 }}
-                      >
-                        <BottomSheetProvider>
-                          <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-                            <AppUpdateProvider>
-                              <SyncWorker />
-                              <Stack
-                                screenOptions={{
-                                  headerTransparent: true,
-                                  headerShadowVisible: false,
-                                  headerBlurEffect: "none",
-                                  headerLargeTitleStyle: { fontFamily: "Nunito_400Regular" },
-                                  headerTitleStyle: { fontFamily: "Nunito_400Regular" },
-                                  headerBackButtonDisplayMode: "minimal",
-                                }}
-                              >
-                                <Stack.Screen name="splash" options={{ headerShown: false }} />
-                                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                                <Stack.Screen name="categories" options={{ title: "Categories" }} />
-                                <Stack.Screen name="accounts" options={{ title: "Accounts" }} />
-                                <Stack.Screen
-                                  name="activity"
-                                  options={{ title: "Activity Timeline" }}
-                                />
-                                <Stack.Screen
-                                  name="(auth)"
-                                  options={{ headerShown: false, presentation: "modal" }}
-                                />
-                                <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-                                <Stack.Screen
-                                  name="transaction/[id]"
-                                  options={{ presentation: "card" }}
-                                />
-                                <Stack.Screen
-                                  name="account/[id]"
-                                  options={{ headerShown: false }}
-                                />
-                                <Stack.Screen
-                                  name="category/new"
-                                  options={{
-                                    presentation: "modal",
-                                    title: "New Category",
-                                    headerTransparent: false,
+                      <KeyboardProvider>
+                        <PressablesConfig
+                          globalHandlers={{
+                            onPress: () => {
+                              Haptics.selectionAsync();
+                            },
+                          }}
+                          config={{ minScale: 0.7, activeOpacity: 0.6 }}
+                        >
+                          <BottomSheetProvider>
+                            <ThemeProvider
+                              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+                            >
+                              <AppUpdateProvider>
+                                <SyncWorker />
+                                <Stack
+                                  screenOptions={{
+                                    headerTransparent: true,
+                                    headerShadowVisible: false,
+                                    headerBlurEffect: "none",
+                                    headerLargeTitleStyle: { fontFamily: "Nunito_400Regular" },
+                                    headerTitleStyle: { fontFamily: "Nunito_400Regular" },
+                                    headerBackButtonDisplayMode: "minimal",
                                   }}
-                                />
-                                <Stack.Screen
-                                  name="recurring/index"
-                                  options={{ title: "Recurring Rules" }}
-                                />
-
-                                <Stack.Protected guard>
+                                >
+                                  <Stack.Screen name="splash" options={{ headerShown: false }} />
+                                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                                   <Stack.Screen
-                                    name="(auth)/sign-in"
+                                    name="categories"
+                                    options={{ title: "Categories" }}
+                                  />
+                                  <Stack.Screen name="accounts" options={{ title: "Accounts" }} />
+                                  <Stack.Screen
+                                    name="activity"
+                                    options={{ title: "Activity Timeline" }}
+                                  />
+                                  <Stack.Screen
+                                    name="onboarding"
+                                    options={{ headerShown: false }}
+                                  />
+                                  <Stack.Screen
+                                    name="transaction/[id]"
+                                    options={{ presentation: "card" }}
+                                  />
+                                  <Stack.Screen
+                                    name="account/[id]"
+                                    options={{ headerShown: false }}
+                                  />
+                                  <Stack.Screen
+                                    name="category/new"
                                     options={{
-                                      title: "Sign in",
-                                      // presentation: "formSheet",
-                                      sheetAllowedDetents: "fitToContents",
-                                      sheetCornerRadius: 16,
-                                      headerTransparent: true,
-                                      headerShadowVisible: false,
-                                      contentStyle: {
-                                        backgroundColor: surfaceColor,
-                                      },
+                                      presentation: "modal",
+                                      title: "New Category",
+                                      headerTransparent: false,
                                     }}
                                   />
                                   <Stack.Screen
-                                    name="(auth)/reset-password"
-                                    options={{
-                                      title: "Reset password",
-                                      // presentation: "formSheet",
-                                      sheetAllowedDetents: "fitToContents",
-                                      sheetCornerRadius: 16,
-                                      headerTransparent: true,
-                                      headerShadowVisible: false,
-                                    }}
+                                    name="recurring/index"
+                                    options={{ title: "Recurring Rules" }}
                                   />
-                                </Stack.Protected>
-                              </Stack>
-                              <StatusBar style="auto" />
-                              <MandatoryUpdateGate />
-                              <RecurringSettlementBanner />
-                              <SyncModeBanner />
-                              <AccessBanner />
-                              <AuthLinkGate />
-                              <PortalHost />
-                            </AppUpdateProvider>
-                          </ThemeProvider>
-                        </BottomSheetProvider>
-                      </PressablesConfig>
+                                </Stack>
+                                <StatusBar style="auto" />
+                                <MandatoryUpdateGate />
+                                <RecurringSettlementBanner />
+                                <SyncModeBanner />
+                                <AccessBanner />
+                                <AuthLinkGate />
+                                <PortalHost />
+                              </AppUpdateProvider>
+                            </ThemeProvider>
+                          </BottomSheetProvider>
+                        </PressablesConfig>
+                      </KeyboardProvider>
                     </GestureHandlerRootView>
                   </RecurringSettlementProvider>
                 </RecurringRulesProvider>

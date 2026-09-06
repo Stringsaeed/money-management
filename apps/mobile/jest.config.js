@@ -4,6 +4,7 @@ module.exports = {
   modulePathIgnorePatterns: ["<rootDir>/e2e"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
+    "^@expo/ui$": "<rootDir>/jest/mocks/expo-ui.tsx",
     "^@rn-primitives/slot$": "<rootDir>/jest/mocks/slot.js",
     "^.+\\.css$": "<rootDir>/jest/mocks/style.js",
   },
