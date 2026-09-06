@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { ScrollView, View } from "react-native";
 import * as Updates from "expo-updates";
 
@@ -14,10 +14,15 @@ import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useAllCategories } from "@/hooks/use-categories";
 import { useRecurringRulesList } from "@/hooks/use-recurring-rules";
 import { useTransactions } from "@/hooks/use-transactions";
-import { useAccess, type AccessState } from "@/modules/access";
+import { firstRouteParam, returnTo, useAccess, type AccessState } from "@/modules/access";
+import { AuthBottomSheet } from "@/components/auth/auth-bottom-sheet";
+import { useAuthJourney } from "@/modules/auth-journey";
+import { SignInStep } from "@/components/auth/sign-in-step";
 
 export default function SettingsScreen() {
   const access = useAccess();
+  const params = useLocalSearchParams();
+  const authJourney = useAuthJourney(returnTo.parse(firstRouteParam(params.returnTo)));
   const { data: accounts = [] } = useAccountsWithBalances();
   const { data: allCategories = [] } = useAllCategories();
   const { data: recurring = [] } = useRecurringRulesList("current");
@@ -33,15 +38,16 @@ export default function SettingsScreen() {
       contentInsetAdjustmentBehavior="automatic"
       contentContainerClassName="pb-safe-offset-12"
     >
-      {/* Profile & Household */}
-      <SectionHeader title="Profile & household 👤" />
+      {/* Profile */}
+      <SectionHeader title="Profile" />
       <Card>
-        <SettingsRow
-          emoji="🏠"
-          label="Profile & household"
-          subtitle={profileSubtitle}
-          onPress={() => router.push("/settings/household")}
-        />
+        <AuthBottomSheet
+          trigger={
+            <SettingsRow emoji="🏠" label="Profile & household" subtitle={profileSubtitle} />
+          }
+        >
+          <SignInStep journey={authJourney} />
+        </AuthBottomSheet>
       </Card>
 
       {/* Manage */}

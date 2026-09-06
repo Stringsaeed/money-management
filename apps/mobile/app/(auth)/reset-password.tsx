@@ -1,8 +1,7 @@
 import { useLocalSearchParams } from "expo-router";
 
-import { AuthScreenShell } from "@/components/auth/auth-screen-shell";
 import { ChoosePasswordStep } from "@/components/auth/choose-password-step";
-import { Text } from "@/components/ui/text";
+import { AuthNote, AuthScreenShell } from "@/components/auth/ui";
 import { firstRouteParam, returnTo } from "@/modules/access";
 import { useAuthJourney } from "@/modules/auth-journey";
 
@@ -24,9 +23,7 @@ export default function ResetPasswordScreen() {
         title="This reset link isn't usable"
         subtitle="Request a new password reset from sign-in."
       >
-        <Text className="text-muted-foreground text-sm">
-          The link may have expired or already been used.
-        </Text>
+        <AuthNote>The link may have expired or already been used.</AuthNote>
       </AuthScreenShell>
     );
   }
