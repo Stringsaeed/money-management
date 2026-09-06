@@ -33,6 +33,7 @@ export function AuthBottomSheet({
         isPresented={isPresented}
         onDismiss={() => setIsPresented(false)}
         containerColor={bgSurface}
+        contentPadding={{ top: 24, bottom: 24, left: 24, right: 24 }}
       >
         <AuthSurfaceProvider surface="sheet">{children}</AuthSurfaceProvider>
       </BottomSheet>
