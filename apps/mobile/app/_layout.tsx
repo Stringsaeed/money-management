@@ -41,7 +41,6 @@ import { RecurringSettlementProvider } from "@/components/recurring/recurring-se
 import { AccessProvider, AuthLinkGate } from "@/modules/access";
 import { RecurringRulesProvider } from "@/modules/recurring-rules/provider";
 import { LedgerDataSourceGate } from "@/modules/ledger-data-source/ledger-data-source-gate";
-import { useNativeVariable } from "react-native-css";
 
 // Keep the native splash screen visible while fonts load
 SplashScreen.preventAutoHideAsync();
@@ -79,8 +78,6 @@ function LoadingFallback() {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  // @ts-expect-error: useNativeVariable is not typed correctly
-  const surfaceColor = useNativeVariable("--color-surface");
 
   const [fontsLoaded, fontError] = useFonts({
     Nunito_200ExtraLight,
@@ -179,34 +176,6 @@ export default function RootLayout() {
                                     name="recurring/index"
                                     options={{ title: "Recurring Rules" }}
                                   />
-
-                                  <Stack.Protected guard>
-                                    <Stack.Screen
-                                      name="(auth)/sign-in"
-                                      options={{
-                                        title: "Sign in",
-                                        // presentation: "formSheet",
-                                        sheetAllowedDetents: "fitToContents",
-                                        sheetCornerRadius: 16,
-                                        headerTransparent: true,
-                                        headerShadowVisible: false,
-                                        contentStyle: {
-                                          backgroundColor: surfaceColor,
-                                        },
-                                      }}
-                                    />
-                                    <Stack.Screen
-                                      name="(auth)/reset-password"
-                                      options={{
-                                        title: "Reset password",
-                                        // presentation: "formSheet",
-                                        sheetAllowedDetents: "fitToContents",
-                                        sheetCornerRadius: 16,
-                                        headerTransparent: true,
-                                        headerShadowVisible: false,
-                                      }}
-                                    />
-                                  </Stack.Protected>
                                 </Stack>
                                 <StatusBar style="auto" />
                                 <MandatoryUpdateGate />

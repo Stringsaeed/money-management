@@ -8,20 +8,32 @@ import { AuthSurfaceProvider } from "@/components/auth/ui";
 export function AuthBottomSheet({
   trigger,
   children,
+  isPresented: presentedProp,
+  onDismiss,
 }: {
-  trigger: ReactNode;
+  trigger?: ReactNode;
   children: ReactNode;
+  isPresented?: boolean;
+  onDismiss?: () => void;
 }) {
-  const [isPresented, setIsPresented] = useState(false);
+  const [uncontrolledPresented, setUncontrolledPresented] = useState(false);
+  const isControlled = presentedProp !== undefined;
+  const isPresented = isControlled ? presentedProp : uncontrolledPresented;
   const bgSurface = useNativeVariable("--color-surface");
-  const onOpen = () => setIsPresented(true);
+
+  const handleDismiss = () => {
+    if (!isControlled) setUncontrolledPresented(false);
+    onDismiss?.();
+  };
 
   const renderTrigger = () => {
     if (!trigger) return null;
     const child = Children.only(trigger);
     // SAFETY: Children.only guarantees one element; we only replace onPress.
     return cloneElement(child as ReactElement<PressableProps>, {
-      onPress: onOpen,
+      onPress: () => {
+        if (!isControlled) setUncontrolledPresented(true);
+      },
     });
   };
 
@@ -31,7 +43,7 @@ export function AuthBottomSheet({
       <BottomSheet
         snapPoints={["half"]}
         isPresented={isPresented}
-        onDismiss={() => setIsPresented(false)}
+        onDismiss={handleDismiss}
         containerColor={bgSurface}
         contentPadding={{ top: 24, bottom: 24, left: 24, right: 24 }}
       >

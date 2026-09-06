@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import { ScrollView, View } from "react-native";
 import * as Updates from "expo-updates";
 
@@ -14,15 +14,10 @@ import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useAllCategories } from "@/hooks/use-categories";
 import { useRecurringRulesList } from "@/hooks/use-recurring-rules";
 import { useTransactions } from "@/hooks/use-transactions";
-import { firstRouteParam, returnTo, useAccess, type AccessState } from "@/modules/access";
-import { AuthBottomSheet } from "@/components/auth/auth-bottom-sheet";
-import { useAuthJourney } from "@/modules/auth-journey";
-import { SignInStep } from "@/components/auth/sign-in-step";
+import { returnTo, useAccess, type AccessState } from "@/modules/access";
 
 export default function SettingsScreen() {
   const access = useAccess();
-  const params = useLocalSearchParams();
-  const authJourney = useAuthJourney(returnTo.parse(firstRouteParam(params.returnTo)));
   const { data: accounts = [] } = useAccountsWithBalances();
   const { data: allCategories = [] } = useAllCategories();
   const { data: recurring = [] } = useRecurringRulesList("current");
@@ -41,13 +36,12 @@ export default function SettingsScreen() {
       {/* Profile */}
       <SectionHeader title="Profile" />
       <Card>
-        <AuthBottomSheet
-          trigger={
-            <SettingsRow emoji="🏠" label="Profile & household" subtitle={profileSubtitle} />
-          }
-        >
-          <SignInStep journey={authJourney} />
-        </AuthBottomSheet>
+        <SettingsRow
+          emoji="🏠"
+          label="Profile & household"
+          subtitle={profileSubtitle}
+          onPress={access.kind === "resolving" ? undefined : () => onProfilePress(access)}
+        />
       </Card>
 
       {/* Manage */}
@@ -125,6 +119,20 @@ export default function SettingsScreen() {
       {(__DEV__ || Updates.channel === "preview") && <DevToolsSection />}
     </ScrollView>
   );
+}
+
+function onProfilePress(access: AccessState) {
+  if (access.kind === "signed_in") {
+    router.push("/(tabs)/settings/household");
+    return;
+  }
+  if (access.kind === "anonymous") {
+    access.beginAuth(returnTo.profileHousehold());
+    return;
+  }
+  if (access.kind === "session_revoked") {
+    access.reauthenticate(returnTo.profileHousehold());
+  }
 }
 
 function subtitleForAccess(access: AccessState): string {

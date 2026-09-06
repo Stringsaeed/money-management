@@ -1,7 +1,8 @@
 import { Text } from "@expo/ui";
 import type { ReactElement } from "react";
 
-import { noticeCopy, type Notice } from "@/modules/auth-journey";
+import { noticeCopy } from "@/modules/auth-journey/copy";
+import type { Notice } from "@/modules/auth-journey/types";
 
 import { useAuthPaletteContext } from "./auth-host";
 import { textRecipe } from "./recipes";

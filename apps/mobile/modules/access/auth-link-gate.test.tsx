@@ -6,6 +6,7 @@ import { router } from "expo-router";
 
 import { redeemMagicToken } from "./actions";
 import { AuthLinkGate, resetConsumedAuthTokensForTests } from "./auth-link-gate";
+import { usePresentAuthSheet } from "./use-auth-sheet";
 
 jest.mock("expo-linking", () => ({
   getInitialURL: jest.fn(),
@@ -23,11 +24,17 @@ jest.mock("./actions", () => ({
   redeemMagicToken: jest.fn(),
 }));
 
+const mockPresentAuthSheet = jest.fn();
+
 jest.mock("./use-access", () => ({
   useAccess: jest.fn(() => ({
     kind: "anonymous",
     beginAuth: jest.fn(),
   })),
+}));
+
+jest.mock("./use-auth-sheet", () => ({
+  usePresentAuthSheet: jest.fn(),
 }));
 
 const signedInOutcome = {
@@ -47,10 +54,26 @@ describe("AuthLinkGate", () => {
     jest.mocked(redeemMagicToken).mockReset();
     jest.mocked(router.replace).mockReset();
     jest.mocked(router.push).mockReset();
+    mockPresentAuthSheet.mockReset();
+    jest.mocked(usePresentAuthSheet).mockReturnValue(mockPresentAuthSheet);
   });
 
   afterEach(async () => {
     await cleanup();
+  });
+
+  it("presents the auth sheet with a reset grant instead of routing", async () => {
+    jest.mocked(Linking.getInitialURL).mockResolvedValue(null);
+
+    await render(<AuthLinkGate />);
+    await emitUrl("trove://l/reset?token=rst");
+
+    expect(mockPresentAuthSheet).toHaveBeenCalledWith({
+      target: { kind: "profile_household" },
+      grant: { token: "rst" },
+    });
+    expect(router.push).not.toHaveBeenCalled();
+    expect(redeemMagicToken).not.toHaveBeenCalled();
   });
 
   it("redeems the same token only once across initial and event URLs", async () => {
@@ -125,7 +148,7 @@ describe("AuthLinkGate", () => {
 });
 
 async function emitUrl(url: string): Promise<void> {
-  const listener = jest.mocked(Linking.addEventListener).mock.calls[0]?.[1];
+  const listener = jest.mocked(Linking.addEventListener).mock.calls.at(-1)?.[1];
   if (!listener) throw new Error("Expected AuthLinkGate to subscribe to URL events.");
 
   await act(async () => {
