@@ -4,7 +4,6 @@ import {
   fixedSize,
   font,
   foregroundStyle,
-  frame,
   italic,
   opacity,
   padding,
@@ -25,6 +24,7 @@ import {
   type AuthTextRole,
   type AuthTextSpec,
 } from "./roles";
+import { stretchHorizontal } from "./stretch.ios";
 import { fontFace, type AuthFontWeight, type AuthPalette } from "./tokens";
 
 export type { AuthControlRecipe, AuthRecipe } from "./recipe-types";
@@ -73,9 +73,7 @@ export function controlRecipe(
       weight: FONT_WEIGHT[spec.label.weight],
     }),
     foregroundStyle(resolveColor(spec.label.color, palette)),
-    spec.height != null
-      ? frame({ maxWidth: Infinity, height: spec.height })
-      : frame({ maxWidth: Infinity }),
+    ...stretchHorizontal(spec.height),
   ];
   if (spec.paddingVertical != null) {
     modifiers.push(padding({ vertical: spec.paddingVertical }));
@@ -115,7 +113,7 @@ export function fieldRecipe(palette: AuthPalette): AuthRecipe {
     modifiers: [
       textFieldStyle("plain"),
       padding({ all: spec.padding }),
-      frame({ maxWidth: Infinity, height: spec.height }),
+      ...stretchHorizontal(spec.height),
       background(
         resolveColor(spec.fill, palette),
         swiftUiShapes.roundedRectangle({ cornerRadius: spec.radius }),
