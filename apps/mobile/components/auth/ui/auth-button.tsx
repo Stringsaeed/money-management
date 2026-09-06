@@ -12,6 +12,10 @@ export interface AuthButtonProps extends AuthSealedChrome {
   readonly testID?: string;
 }
 
+/**
+ * iOS: string `label` + chrome modifiers on the button (custom Text children hug width).
+ * Android/web: Text child keeps CVA-equivalent textStyle from the recipe.
+ */
 function AuthButton({
   role,
   label,
@@ -21,6 +25,22 @@ function AuthButton({
 }: AuthButtonProps & { readonly role: AuthControlRole }): ReactElement {
   const palette = useAuthPaletteContext();
   const { control, label: labelRecipe } = controlRecipe(role, palette, disabled);
+  const useNativeLabel = labelRecipe.modifiers == null && labelRecipe.textStyle == null;
+
+  if (useNativeLabel) {
+    return (
+      <Button
+        variant="text"
+        label={label}
+        onPress={onPress}
+        disabled={disabled}
+        testID={testID}
+        style={control.style}
+        modifiers={control.modifiers ? [...control.modifiers] : undefined}
+      />
+    );
+  }
+
   return (
     <Button
       variant="text"

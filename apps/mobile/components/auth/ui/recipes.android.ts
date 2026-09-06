@@ -35,6 +35,6 @@ export function fieldRecipe(palette: AuthPalette): AuthRecipe {
   return {
     style: fieldBoxStyle(palette),
     textStyle: fieldTextStyle(palette),
-    modifiers: [],
+    modifiers: [fillMaxWidth()],
   };
 }

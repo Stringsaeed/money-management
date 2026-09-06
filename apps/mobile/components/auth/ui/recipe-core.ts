@@ -1,7 +1,8 @@
 import type { UniversalStyle, UniversalTextStyle } from "@expo/ui";
 
-// UniversalStyle has no minHeight or italic. Field height is fixed so transformStyle
-// can emit padding -> frame -> background -> border -> clip in the right order.
+// UniversalStyle has no minHeight or italic. Prefer height over minHeight.
+// iOS auth fields must not use borderRadius+border together: transformStyle
+// emits border() then clipShape, which shears the stroke corners.
 
 import {
   AUTH_CONTROL_SPECS,
