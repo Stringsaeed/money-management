@@ -222,12 +222,9 @@ function noDifferentAccount(ctx: PlanContext, row: z.infer<typeof accountRowSche
     same(ledgerAccount.excludeFromTotal, row.excludeFromTotal),
     same(ledgerAccount.sortOrder, row.sortOrder),
     same(ledgerAccount.lifecycle, row.lifecycle),
-    same(
-      ledgerAccount.lifecycleChangedAt,
-      row.lifecycleChangedAt ? new Date(row.lifecycleChangedAt) : null,
-    ),
-    same(ledgerAccount.createdAt, new Date(row.createdAt)),
-    same(ledgerAccount.updatedAt, new Date(row.updatedAt)),
+    sameTimestamp(ledgerAccount.lifecycleChangedAt, row.lifecycleChangedAt),
+    sameTimestamp(ledgerAccount.createdAt, row.createdAt),
+    sameTimestamp(ledgerAccount.updatedAt, row.updatedAt),
   ]);
 }
 
@@ -241,12 +238,9 @@ function noDifferentCategory(ctx: PlanContext, row: z.infer<typeof categoryRowSc
     same(category.parentId, row.parentId),
     same(category.sortOrder, row.sortOrder),
     same(category.lifecycle, row.lifecycle),
-    same(
-      category.lifecycleChangedAt,
-      row.lifecycleChangedAt ? new Date(row.lifecycleChangedAt) : null,
-    ),
-    same(category.createdAt, new Date(row.createdAt)),
-    same(category.updatedAt, new Date(row.updatedAt)),
+    sameTimestamp(category.lifecycleChangedAt, row.lifecycleChangedAt),
+    sameTimestamp(category.createdAt, row.createdAt),
+    sameTimestamp(category.updatedAt, row.updatedAt),
   ]);
 }
 
@@ -266,13 +260,19 @@ function noDifferentTransaction(ctx: PlanContext, row: z.infer<typeof transactio
     same(transaction.isRecurring, row.isRecurring),
     same(transaction.recurringRuleId, row.recurringRuleId),
     same(transaction.description, row.description),
-    same(transaction.createdAt, new Date(row.createdAt)),
-    same(transaction.updatedAt, new Date(row.updatedAt)),
+    sameTimestamp(transaction.createdAt, row.createdAt),
+    sameTimestamp(transaction.updatedAt, row.updatedAt),
   ]);
 }
 
 function same(column: SQLWrapper, value: unknown): SQL {
   return sql`${column} IS NOT DISTINCT FROM ${value}`;
+}
+
+function sameTimestamp(column: SQLWrapper, value: string | null): SQL {
+  return value === null
+    ? sql`${column} IS NULL`
+    : sql`${column} IS NOT DISTINCT FROM ${value}::timestamptz`;
 }
 
 function noDifferentRow(

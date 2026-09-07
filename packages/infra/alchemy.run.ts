@@ -4,12 +4,18 @@ import { config } from "dotenv";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 
-import { assertProductionCutoverApproved } from "./cutover-gate.ts";
-
 config({ path: "./.env" });
 config({ path: "../../apps/server/.env" });
 
 const AUTH_HOSTNAME = "auth.trove.ing";
+const REQUIRED_PRODUCTION_CUTOVER_APPROVAL = "issue-173-approved";
+
+function assertProductionCutoverApproved(stage: string, approval: string): void {
+  if (stage !== "prod" || approval === REQUIRED_PRODUCTION_CUTOVER_APPROVAL) return;
+  throw new Error(
+    "Production PlanetScale cutover is blocked. Close #173, finish the D1 export/import parity checks, then set PLANETSCALE_CUTOVER_APPROVED=issue-173-approved.",
+  );
+}
 
 const hyperdrive = Cloudflare.Hyperdrive.Connection("HYPERDRIVE_FRESH", {
   name: "trove-ledger-fresh",
