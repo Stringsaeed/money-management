@@ -1,0 +1,11 @@
+observed_at=2026-09-07T19:36:05.605Z
+cloud_slot=powersync_6a9e0dd3a77ca1231d260e01_3_d1bd
+cloud_active=true
+cloud_application=powersync/1.26.0
+cloud_confirmed_flush_lsn_before=0/F9001460
+cloud_confirmed_flush_lsn_after=0/FA0000E0
+cloud_lag_bytes_after=0
+active_powersync_slots=1
+legacy_local_slot=powersync_1_0d29
+legacy_local_slot_active=false
+result=pass

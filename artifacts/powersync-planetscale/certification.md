@@ -14,15 +14,15 @@ Verified at the current local Z6 head: mobile 165 suites / 680 tests, API 24 fil
 | Z3 Sync Streams + auth         | PowerSync Cloud ES256 auth, tenancy, and private-isolation proof                                                                                                                                                                                                                                                                                                                                                                     | complete; review media pending                                      |
 | Z4 PowerSync collections       | `feat/z4-powersync-collections` local commit `d334c33`                                                                                                                                                                                                                                                                                                                                                                               | unit complete; live review pending                                  |
 | Z5 legacy sync retirement      | `feat/z5-retire-delta-outbox` commit `b16b1e7`                                                                                                                                                                                                                                                                                                                                                                                       | unit complete; live/perf review pending                             |
-| Z6 all domains + certification | [`z6-expanded-streams-live.md`](z6-expanded-streams-live.md): budget + recurring tenancy/private isolation pass, direct replication p95 292 ms; [`load.mjs`](load.mjs); [`../../docs/architecture/powersync-operations.md`](../../docs/architecture/powersync-operations.md)                                                                                                                                                         | expanded streams deployed; Worker-path load/device evidence pending |
+| Z6 all domains + certification | [`z6-expanded-streams-live.md`](z6-expanded-streams-live.md): budget + recurring tenancy/private isolation pass, 10 buckets, direct replication p95 278 ms; [`load.mjs`](load.mjs); [`../../docs/architecture/powersync-operations.md`](../../docs/architecture/powersync-operations.md)                                                                                                                                             | expanded streams deployed; Worker-path load/device evidence pending |
 
 ## Required Z6 receipts
 
 - [x] Full Enable Sync import contract covers ledger, recurring, workspace, envelope, mapping, funding, rollover, assignment, transaction, and occurrence rows with matching canonical digest tests.
 - [ ] Recurring Rules and Envelopes rendered from PowerSync collections.
 - [ ] Three interleaved 50-create load runs, with device-B p95 below 2 seconds and no lost rows.
-- [ ] Replication-slot samples showing one active slot and advancing `confirmed_flush_lsn`.
-- [ ] Bucket diagnostics below 1,000 per user and no `PSYNC_S2305`.
+- [x] [`z6-slot-health.txt`](z6-slot-health.txt) shows exactly one active PowerSync slot, advancing `confirmed_flush_lsn`, and zero final lag bytes.
+- [x] Live owner diagnostics show 10 buckets and no `PSYNC_S2305`.
 - [ ] Cache-disabled `HYPERDRIVE_FRESH` receipt.
 - [ ] US-region PowerSync receipt or reviewed exception for the current EU development instance.
 - [x] Static stack guard, cutover checks, and [`z6-no-d1-dry-run.txt`](z6-no-d1-dry-run.txt) prove no D1 resource or binding.

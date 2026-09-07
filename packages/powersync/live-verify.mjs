@@ -137,6 +137,9 @@ try {
   const samples = await measureLag(clientA.db, 20, "sample");
   const sorted = [...samples].sort((a, b) => a - b);
   const p95 = sorted[Math.ceil(sorted.length * 0.95) - 1];
+  const bucketCount = Number(
+    (await clientA.db.getAll("SELECT COUNT(*) AS count FROM ps_buckets"))[0]?.count ?? 0,
+  );
 
   console.log(
     JSON.stringify(
@@ -151,6 +154,7 @@ try {
         warmupMs: warmup,
         samplesMs: samples,
         p95Ms: p95,
+        bucketCount,
         rule: "p95 < 2000ms",
         result: p95 < 2_000 ? "pass" : "fail",
         writePath: "direct PlanetScale verification seed; Worker commands.apply pending",
@@ -161,6 +165,7 @@ try {
     ),
   );
   assert.ok(p95 < 2_000, `PowerSync replication p95 ${p95}ms exceeds 2000ms`);
+  assert.ok(bucketCount < 1_000, `PowerSync bucket count ${bucketCount} exceeds 999`);
 } finally {
   for (const client of clients) {
     for (const subscription of client.subscriptions) await subscription.unsubscribe();

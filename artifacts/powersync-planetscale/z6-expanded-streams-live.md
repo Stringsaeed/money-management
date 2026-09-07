@@ -6,7 +6,7 @@
 - Publication: 13 tables
 - Stream config deployment: passed
 - Validation: passed
-- Run ID: `z3-1788808776802`
+- Run ID: `z3-1788809808867`
 
 ## Isolation
 
@@ -19,8 +19,9 @@
 
 - Warmup inserts: 10
 - Measured inserts: 20
-- p95: 292 ms
+- p95: 278 ms
+- Active buckets for the owner connection: 10
 - Acceptance rule: p95 under 2,000 ms
-- Result: pass
+- Result: pass; no `PSYNC_S2305`
 
 The harness retained its uniquely prefixed append-only fixture for audit. This receipt measures direct PlanetScale-to-PowerSync client visibility; the Worker `commands.apply` load receipt is tracked separately.
