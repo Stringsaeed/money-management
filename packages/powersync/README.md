@@ -1,6 +1,6 @@
 # Trove PowerSync configuration
 
-This package is the reviewed source for Trove's PowerSync Sync Streams. Z3 configures the service and server authentication only. The mobile client continues using the command outbox and `sync.getDelta` until Z4.
+This package is the reviewed source for Trove's PowerSync Sync Streams. The mobile client reads PowerSync-backed collections and sends command metadata through the SDK upload queue; no parallel delta poll or custom outbox remains.
 
 ## Cloud target
 

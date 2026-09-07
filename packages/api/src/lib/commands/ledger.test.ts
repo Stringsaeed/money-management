@@ -8,7 +8,6 @@ import { fundingMembership, periodProjectionCache } from "@trove/db/schema/budge
 import { ledgerAccount, category, transaction } from "@trove/db/schema/ledger";
 import type { AppliedResult, CommandEnvelope, CommandResult } from "@trove/protocol";
 
-import { getDelta } from "../sync/delta";
 import { applyCommand } from "./pipeline";
 import { createTestDb } from "../../test-support/db";
 
@@ -622,44 +621,6 @@ describe("ledger commands — transactions", () => {
 });
 
 describe("ledger sync accuracy", () => {
-  it("emits ordered delta entries covering every committed ledger change", async () => {
-    await seedAccount();
-    await seedCategory();
-
-    await applyAs(MEMBER, {
-      ...makeEnvelope("transaction.create"),
-      payload: {
-        type: "expense",
-        amountMinor: 700,
-        date: "2026-02-14",
-        accountId: "acc-1",
-        categoryId: "cat-1",
-      },
-    });
-    await applyAs(OWNER, {
-      ...makeEnvelope("account.archive"),
-      payload: { accountId: "acc-1" },
-    });
-
-    const delta = await getDelta({
-      db,
-      userId: VIEWER,
-      householdId: HOUSEHOLD_ID,
-      since: 0,
-    });
-
-    expect(delta.seq).toBeGreaterThanOrEqual(2);
-    expect(delta.hasMore).toBe(false);
-    const effects = delta.changes.map((c) => c.effects);
-    expect(effects.some((tags) => tags.includes("ledger"))).toBe(true);
-    expect(effects.some((tags) => tags.includes("balances") && !tags.includes("ledger"))).toBe(
-      true,
-    );
-    expect([...delta.changes.map((c) => c.seq)]).toEqual(
-      [...delta.changes.map((c) => c.seq)].sort((a, b) => a - b),
-    );
-  });
-
   it("replays the stored result for a retried ledger command without re-executing", async () => {
     await seedAccount();
     await seedCategory();

@@ -94,10 +94,10 @@ Phase 0 shipped on the **Better-T Stack**, replacing the original Supabase + sta
 | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Supabase Postgres + RLS as durable store            | **PlanetScale Postgres** via drizzle `postgres-js` over cache-disabled Hyperdrive `HYPERDRIVE_FRESH`. Tenancy stays in oRPC middleware; PowerSync publication lists four tables only |
 | `apps/api` standalone containerized Hono service    | **`apps/server`** — Hono entry on Cloudflare Workers; business logic in oRPC routers in `packages/api`                                                                               |
-| `POST /commands` / `GET /sync` REST routes          | Protected oRPC procedures (`commands.apply`, `sync.getDelta`) exposed via RPC + OpenAPI handlers                                                                                     |
+| `POST /commands` / `GET /sync` REST routes          | Protected oRPC command/status procedures plus `powersync.token`; PowerSync Sync Streams deliver ledger rows                                                                          |
 | Supabase Auth + JWT verification                    | **better-auth** (`packages/auth`) with the Expo plugin; session-based, household/role resolved from membership tables                                                                |
 | `pg_advisory_xact_lock` per `(household, currency)` | One `db.transaction` per command with `pg_advisory_xact_lock(hashtext(householdId))`; optimistic version preconditions stay the safety net                                           |
-| Supabase Realtime (logical replication)             | Polling-first delta pull (#84/#85); optional Durable Object WebSocket push as a later enhancement (#93) — no drop-in equivalent exists                                               |
+| Supabase Realtime (logical replication)             | PowerSync Sync Streams over the `powersync` publication, with an SDK-managed local database and upload queue                                                                         |
 | pgTAP RLS negative tests                            | oRPC authorization audit — integration tests over shipped procedures (#97)                                                                                                           |
 | `supabase/` infra-as-code                           | alchemy config in `packages/infra`; drizzle migrations in `packages/db`; orphaned `supabase/` retired (#106)                                                                         |
 | Horizontal scaling via stateless replicas           | Workers' automatic horizontal scaling; new constraints: CPU/wall-clock limits per invocation, no held connections or pools                                                           |
@@ -109,7 +109,7 @@ The original "don't run business logic in Edge Functions" concern now applies _t
 - **PlanetScale Postgres** — the durable store. Workers reach it through cache-disabled Hyperdrive `HYPERDRIVE_FRESH` (`trove-ledger-fresh`). Migrations live in `packages/db` as a Postgres baseline. The `powersync` publication lists `membership`, `accounts`, `categories`, and `transactions` only.
 - **Authorization at the API boundary** — household tenancy and role capability checks live in oRPC middleware plus household-scoped query filters.
 - **Auth** — better-auth on the same Postgres database (`packages/auth`, provider `pg`), with the Expo client plugin. Households/memberships/invite codes already modeled in `packages/db/src/schema/household.ts`.
-- **Change notification** — polling-first: clients pull deltas by seq watermark. Push, if built later, is a Durable Object holding one WebSocket per household, published to by the command procedure after commit.
+- **Ledger synchronization** — PowerSync Sync Streams publish authorized account, category, and transaction rows into an SDK-managed local database. `household_changes` remains the ordered activity log, not a client replication feed.
 
 ### Compute: `apps/server` on Cloudflare Workers
 
@@ -129,7 +129,7 @@ Derived values (Available Money, Funding Pool, Rollover, Card Payment Reserve) s
 
 ## Sync protocol
 
-The client gains two local, never-synced tables: `outbox_commands` (queued commands, keyed by their idempotency-doubling `command_id`) and `sync_state` (per-household watermark). A write is applied optimistically to the local cache immediately on creation, queued in the outbox in the same local transaction, and drained to the `commands.apply` oRPC mutation in order.
+Synced accounts, categories, and transactions live in PowerSync-managed SQLite collections. Client writes enter PowerSync's upload queue with local command metadata; the connector drains the CRUD transaction through the server command pipeline. Rejected writes remain in the local-only `rejected_changes` table for re-edit or discard. The app does not maintain a second outbox, snapshot cache, or seq watermark.
 
 The commands pipeline runs in one Postgres transaction per command:
 
@@ -141,7 +141,7 @@ The commands pipeline runs in one Postgres transaction per command:
 6. **Commit** — everything above is one `db.transaction` under `pg_advisory_xact_lock(hashtext(householdId))`. Optimistic version preconditions still reject stale waterfalls.
 7. **Return** a discriminated result — `applied | stale_version | invalid_intent | preview_required | missing_entity | forbidden | conflict` — mirroring the client's existing `RecurringChangeResult` shape, plus the recomputed rows/projections so the client can write back without a second round trip.
 
-The client pulls the actual delta via `sync.getDelta({ since: <seq> })`; push notification (`{seq, effects[]}`), if built later (#93), is purely a latency optimization telling the client when to pull — never a correctness dependency; polling produces identical results and is the shipped path.
+PowerSync checkpoints and Sync Streams deliver committed rows back to every authorized client. A continuous disconnection is tolerated from the cached PowerSync database; after 10 minutes the UI enters explicit local-only degradation while keeping that migrated PowerSync ledger selected. `sync.status` remains only for the remote kill switch.
 
 **Conflict policy is server-authoritative rebase-or-discard.** No CRDTs, no automatic merge. A rejected command is never silently dropped or silently merged — it surfaces in a client-side "Rejected Changes" inbox for the user to re-edit or discard.
 
@@ -196,15 +196,15 @@ Moves server-side largely as-is: the settlement engine (`modules/recurring-rules
 ## Delivery sequence
 
 1. **Phase 0 — Foundations.** ✅ Shipped (#78–#82, #101–#105): the monorepo migration; `calendar.ts` extracted to `packages/domain` as a no-behavior-change proof; Better-T Stack foundations (D1 + better-auth + oRPC + alchemy); households/members/invites schema and the household/auth server shell with opt-in mobile sign-in. _(The original Supabase/pgTAP/`apps/api` shape of this phase was superseded by #104.)_ Ledger sync now exists for accounts, categories, and transactions.
-2. **Phase 1 — Sync substrate and ledger.** Accounts, categories, and transactions become server-authoritative: `household_changes` + per-household seq, `commands.apply`, `sync.getDelta`, the client outbox and sync worker, optimistic apply/writeback. Neutralize `DATABASE_RESET_VERSION` (today it wipes every table on a version bump; it would now destroy an unsynced outbox).
+2. **Phase 1 — Sync substrate and ledger.** Accounts, categories, and transactions become server-authoritative: `household_changes` + per-household seq, `commands.apply`, PowerSync Sync Streams, SDK upload queue, and typed rejected changes.
 3. **Phase 2 — Recurring Rules server-side** _(parallelizable with Phase 3)_. Port the settlement engine behind a D1 persistence adapter; a Workers Cron Trigger per-rule-timezone settlement job.
 4. **Phase 3 — Envelope/budget domain server-side** _(parallelizable with Phase 2)_. The full schema, waterfalls, and projections from this document; commands for mapping changes, funding membership changes, assignments, card payments, refunds, and budget reset.
-5. **Phase 4 — Collaboration UX.** Delta pull + optional Durable Object push; activity history from `household_changes`; the Rejected Changes inbox; the private-account visibility toggle.
+5. **Phase 4 — Collaboration UX.** PowerSync-backed live ledger; activity history from `household_changes`; the Rejected Changes inbox; the private-account visibility toggle.
 6. **Phase 5 — Hardening and rollout.** Authorization audit over shipped oRPC procedures (#97); a migration runbook with staging dry-runs; the local-to-cloud import below; backup/restore strategy for D1 (time travel / export); observability via Workers Logs/Analytics Engine; a kill switch back to local-only; staged rollout via `expo-updates`.
 
 ## Migration path for existing local-only installs
 
-Opt-in, never forced — solo/local-only mode remains fully supported. On "Enable Sync": create a household → the client uploads existing local data as chunked, idempotent `import_bundle` commands, dependency-ordered (accounts → categories → recurring rules/occurrences → transactions → budgeting facts). The server recomputes a manifest (row counts, per-account transaction sums, assignment sums per currency) from the imported rows and compares it against a client-computed manifest; only on a match does the client flip to synced mode and re-seed its cache from `sync.getDelta({ since: 0 })`, rather than trusting the upload was lossless. The pre-import SQLite file is retained as a backup until the user confirms, mirroring Invariant 5's archive-not-delete discipline applied to the migration itself. Joining an _existing_ household with local data is never auto-merged — the user explicitly chooses to import into that household or keep their local data as a solo archive.
+Opt-in, never forced — solo/local-only mode remains fully supported. On "Enable Sync": create a household → the client uploads existing local data as chunked, idempotent `import_bundle` commands, dependency-ordered (accounts → categories → recurring rules/occurrences → transactions → budgeting facts). The server recomputes a manifest (row counts, per-account transaction sums, assignment sums per currency) from the imported rows and compares it against a client-computed manifest; only on a match does the client connect PowerSync and wait for the initial stream, rather than trusting the upload was lossless. The pre-import SQLite file is retained as a backup until the user confirms, mirroring Invariant 5's archive-not-delete discipline applied to the migration itself. Joining an _existing_ household with local data is never auto-merged — the user explicitly chooses to import into that household or keep their local data as a solo archive.
 
 ## Explicit non-goals
 

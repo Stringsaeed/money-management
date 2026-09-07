@@ -6,7 +6,6 @@ import { coreFromAccess, selectLedgerSourceForAccess, useAccess } from "@/module
 import { useSyncModeStore } from "@/stores/sync-mode-store";
 
 import { SyncedTransactionsProvider } from "@/modules/ledger-db/provider";
-import { isPowerSyncEnabled } from "@/modules/powersync/feature";
 
 import { LedgerDataSourceProvider } from "./provider";
 
@@ -36,7 +35,7 @@ export function LedgerDataSourceGate({ children }: { readonly children: ReactNod
 
   return (
     <LedgerDataSourceProvider selection={selection}>
-      {selection.kind === "synced" && isPowerSyncEnabled() ? (
+      {selection.kind === "synced" ? (
         <SyncedTransactionsProvider householdId={selection.householdId} userId={selection.userId}>
           {children}
         </SyncedTransactionsProvider>

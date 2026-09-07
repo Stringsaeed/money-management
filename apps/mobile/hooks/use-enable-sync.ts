@@ -8,8 +8,7 @@ import { useDatabase } from "@/db/client";
 import { backupLocalDatabase } from "@/lib/migration/backup";
 import { runImport } from "@/lib/migration/enable-sync";
 import { getMigratedHouseholdId, markMigrationCompleted } from "@/lib/migration/status";
-import { describeRejection, parseRejection } from "@/lib/sync/rejection";
-import { truncateOutbox } from "@/lib/sync/outbox";
+import { describeRejection, parseRejection } from "@/modules/powersync/rejection";
 import { orpc } from "@/lib/server/orpc";
 import { signedInUserId, useAccess } from "@/modules/access";
 import { connectPowerSync } from "@/modules/powersync/database";
@@ -42,7 +41,7 @@ export interface EnableSyncInput {
  * creates the household if needed, backs up the pre-import SQLite file,
  * uploads every local row via {@link runImport}, and — only once the
  * server's recomputed manifest matches — waits for the first PowerSync
- * household stream, truncates the legacy outbox, and flips this device to synced mode.
+ * household stream and flips this device to synced mode.
  *
  * A rejected chunk or a manifest mismatch leaves the household, the backup,
  * and sync mode untouched: the import is paused, not rolled back, so the
@@ -119,7 +118,6 @@ export function useEnableSync() {
         }
 
         setStatus("verifying");
-        await truncateOutbox(db, householdId);
         await markMigrationCompleted(db, householdId);
         useSyncModeStore.getState().setSynced();
 

@@ -1,12 +1,10 @@
-import { LegacySyncWorker } from "@/components/sync/legacy-sync-worker";
 import { PowerSyncWorker } from "@/components/sync/powersync-worker";
-import { isPowerSyncEnabled } from "@/modules/powersync/feature";
 
 /**
- * Mounts the background sync worker (#85) inside the provider tree: drains
- * the outbox and pulls deltas on mount, on app focus, and on an interval for
+ * Mounts the PowerSync worker inside the provider tree. It maintains the
+ * connection, upload-queue status, kill switch, and degraded-mode state for
  * the active household. Renders nothing.
  */
 export function SyncWorker() {
-  return isPowerSyncEnabled() ? <PowerSyncWorker /> : <LegacySyncWorker />;
+  return <PowerSyncWorker />;
 }

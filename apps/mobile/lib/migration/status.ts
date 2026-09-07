@@ -9,8 +9,7 @@ import type { LocalDb } from "./manifest";
  * Persisted migration flag (#98): once this device's local data has been
  * imported and its manifest matched, the household id it migrated into is
  * recorded here so the "Enable Sync" CTA never re-runs the import for the
- * same household — even across app restarts, before `sync_state` has any
- * watermark of its own.
+ * same household, including across app restarts before PowerSync reconnects.
  */
 export const COMPLETED_HOUSEHOLD_ID_KEY = "migration.completedHouseholdId";
 const COMPLETED_AT_KEY = "migration.completedAt";

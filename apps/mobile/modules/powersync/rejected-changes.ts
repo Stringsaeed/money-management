@@ -2,7 +2,7 @@ import { parseISO } from "date-fns";
 import type { CommandEnvelope, CommandKind, Precondition } from "@trove/protocol";
 import { z } from "zod";
 
-import { parseRejection, type RejectionResult } from "@/lib/sync/rejection";
+import { parseRejection, type RejectionResult } from "@/modules/powersync/rejection";
 import type { PowerSyncLedgerCollections } from "@/modules/ledger-db/collections";
 import type { SyncedTransactionLedger } from "@/modules/ledger-db/ledger";
 import { nowIso } from "@/utils/date";

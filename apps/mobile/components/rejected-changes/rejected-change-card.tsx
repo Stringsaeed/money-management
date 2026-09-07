@@ -6,7 +6,7 @@ import { RejectionKindBadge } from "@/components/rejected-changes/rejection-kind
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import type { RejectedChange } from "@/modules/powersync/rejected-changes";
-import { describeRejection } from "@/lib/sync/rejection";
+import { describeRejection } from "@/modules/powersync/rejection";
 import { commandKindLabel, describeIntent } from "@/utils/intent-summary";
 
 interface RejectedChangeCardProps {

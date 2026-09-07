@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/op-sqlite";
 
 import { useSQLiteContext, type SQLiteDatabase } from "@/db/sqlite";
-import type { LocalDb } from "@/lib/sync/outbox";
+import type { LocalDb } from "@/lib/migration/manifest";
 
 import * as schema from "./schema";
 

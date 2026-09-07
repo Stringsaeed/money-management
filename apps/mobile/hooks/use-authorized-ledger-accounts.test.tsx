@@ -20,7 +20,7 @@ beforeEach(() => {
 });
 
 it("fails closed without calling oRPC while sync is local-only", async () => {
-  useSyncModeStore.setState({ mode: "local_only", reason: "delta_unavailable" });
+  useSyncModeStore.setState({ mode: "local_only", reason: "powersync_unavailable" });
 
   const { result } = await renderHookWithProviders(() =>
     useAuthorizedLedgerAccounts("household-1"),

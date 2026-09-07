@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 describe("initializeDatabase", () => {
-  it("runs the complete fresh startup sequence through the budgeting migration", async () => {
+  it("runs the complete fresh startup sequence and removes legacy sync tables", async () => {
     const testDatabase = createTestSQLiteDatabase();
     databases.push(testDatabase);
 
@@ -41,6 +41,11 @@ describe("initializeDatabase", () => {
         "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'budget_workspaces'",
       ),
     ).resolves.toEqual({ name: "budget_workspaces" });
+    await expect(
+      testDatabase.database.getAllAsync(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('outbox_commands', 'sync_state')",
+      ),
+    ).resolves.toEqual([]);
     await expect(
       testDatabase.database.getAllAsync(
         `SELECT key, value FROM app_settings

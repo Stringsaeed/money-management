@@ -2,11 +2,9 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { user } from "@trove/db/schema/auth";
 import { household, membership } from "@trove/db/schema/household";
-import { category, ledgerAccount, transaction } from "@trove/db/schema/ledger";
+import { ledgerAccount, transaction } from "@trove/db/schema/ledger";
 
 import { createTestDb } from "../test-support/db";
-import { applyCommand } from "../lib/commands/pipeline";
-import { getDelta } from "../lib/sync/delta";
 import { getTransaction, listAccounts, listTransactions } from "../lib/ledger/read";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
@@ -180,48 +178,5 @@ describe("transaction pagination", () => {
       "transaction-same-a",
       "transaction-public",
     ]);
-  });
-});
-
-describe("poll-only convergence", () => {
-  it("exposes a server-created Transaction after a delta pull without push", async () => {
-    await db.insert(category).values({
-      householdId: HOUSEHOLD_ID,
-      id: "category-income",
-      name: "Income",
-      type: "income",
-      version: 0,
-      createdBy: OWNER,
-      updatedBy: OWNER,
-    });
-
-    const result = await applyCommand({
-      db,
-      userId: MEMBER,
-      envelope: {
-        commandId: "poll-created-transaction",
-        householdId: HOUSEHOLD_ID,
-        kind: "transaction.create",
-        payload: {
-          id: "transaction-polled",
-          type: "income",
-          amountMinor: 2500,
-          date: "2026-03-02",
-          accountId: "account-public",
-          categoryId: "category-income",
-        },
-      },
-    });
-    expect(result.kind).toBe("applied");
-
-    const delta = await getDelta({
-      db,
-      userId: MEMBER,
-      householdId: HOUSEHOLD_ID,
-      since: 0,
-    });
-    expect(delta.changes.some(({ effects }) => effects.includes("ledger"))).toBe(true);
-    const page = await listTransactions(db, { userId: MEMBER, householdId: HOUSEHOLD_ID }, 10);
-    expect(page.transactions).toContainEqual(expect.objectContaining({ id: "transaction-polled" }));
   });
 });

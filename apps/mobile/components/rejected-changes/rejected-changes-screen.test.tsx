@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react-native";
 
 import { RejectedChangesScreen } from "@/components/rejected-changes/rejected-changes-screen";
-import type { RejectedChange } from "@/lib/sync/outbox";
+import type { RejectedChange } from "@/modules/powersync/rejected-changes";
 
 const mockChanges: { current: readonly RejectedChange[] } = { current: [] };
 const mockDiscard = jest.fn();

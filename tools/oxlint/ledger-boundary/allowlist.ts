@@ -1,9 +1,7 @@
 export type SqliteRole =
   | "authority-local"
-  | "snapshot-cache"
-  | "outbox"
+  | "powersync-store"
   | "migration-backup"
-  | "sync-bookkeeping"
   | "legacy-local-pending-cutover"
   | "erase";
 
@@ -91,16 +89,15 @@ export const LEDGER_SQLITE_ALLOWLIST: SqliteRoleEntry[] = [
     issue: 136,
   },
   {
-    role: "snapshot-cache",
-    files: ["apps/mobile/modules/ledger-data-source/synced-transaction-snapshot.ts"],
-    reason: "app_settings JSON snapshot of the last server list. Never A/C/T tables.",
-    issue: 136,
-  },
-  {
-    role: "outbox",
-    files: ["apps/mobile/lib/sync/outbox.ts"],
-    reason: "outbox_commands + sync_state watermark. Never A/C/T tables as money authority.",
-    issue: 136,
+    role: "powersync-store",
+    files: [
+      "apps/mobile/modules/powersync/database.ts",
+      "apps/mobile/modules/powersync/rejected-changes.ts",
+      "apps/mobile/modules/ledger-db/collections.ts",
+    ],
+    reason:
+      "PowerSync-managed SQLite and local-only rejection rows. Never the local ledger tables.",
+    issue: 180,
   },
   {
     role: "migration-backup",
@@ -110,15 +107,6 @@ export const LEDGER_SQLITE_ALLOWLIST: SqliteRoleEntry[] = [
       "apps/mobile/hooks/use-enable-sync.ts",
     ],
     reason: "Reads local A/C/T once to build import_bundle chunks; keeps the #98 backup.",
-    issue: 136,
-  },
-  {
-    role: "sync-bookkeeping",
-    files: [
-      "apps/mobile/modules/ledger-data-source/coordinator.ts",
-      "apps/mobile/hooks/use-legacy-sync-worker.ts",
-    ],
-    reason: "Passes the raw db handle to snapshot/outbox drain. Touch outbox_commands only.",
     issue: 136,
   },
   {
@@ -181,24 +169,33 @@ export function allowlistFilePaths(): string[] {
 }
 
 export function formatSqliteRolesMarkdown(): string {
+  const headers = ["Role", "File", "Reason", "Issue"];
   const rows = LEDGER_SQLITE_ALLOWLIST.flatMap((entry) =>
-    entry.files.map(
-      (file) => `| \`${entry.role}\` | \`${file}\` | ${entry.reason} | #${entry.issue} |`,
-    ),
+    entry.files.map((file) => [
+      `\`${entry.role}\``,
+      `\`${file}\``,
+      entry.reason,
+      `#${entry.issue}`,
+    ]),
   );
+  const widths = headers.map((header, column) =>
+    Math.max(header.length, ...rows.map((row) => row[column]!.length)),
+  );
+  const formatRow = (row: string[]) =>
+    `| ${row.map((cell, column) => cell.padEnd(widths[column]!)).join(" | ")} |`;
   return [
     "# SQLite roles",
     "",
     'Device SQLite is money authority only while `selection.kind === "local"`.',
     "When the device is synced (including `offline_cached` / kill switch), Accounts, Categories, and Transactions live on the server.",
-    "The device may still hold `app_settings` snapshots, `outbox_commands`, and `sync_state`.",
+    "Synced Accounts, Categories, Transactions, upload metadata, and rejected changes live in PowerSync-managed SQLite.",
     "",
     "This table is generated from `tools/oxlint/ledger-boundary/allowlist.ts`.",
     "Edit the allowlist, not this file.",
     "",
-    "| Role | File | Reason | Issue |",
-    "| --- | --- | --- | --- |",
-    ...rows,
+    formatRow(headers),
+    formatRow(widths.map((width) => "-".repeat(width))),
+    ...rows.map(formatRow),
     "",
   ].join("\n");
 }

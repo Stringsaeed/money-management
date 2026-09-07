@@ -816,37 +816,6 @@
       "name": "Sync",
       "item": [
         {
-          "name": "Get delta",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const json = pm.response.json();",
-                  "if (typeof json.latestSeq === 'number') {",
-                  "  pm.environment.set('sync_since', String(json.latestSeq));",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"json\": {\n  \"householdId\": \"{{household_id}}\",\n  \"since\": {{sync_since}},\n  \"limit\": 500\n}\n}"
-            },
-            "url": "{{rpc_url}}/sync/getDelta"
-          }
-        },
-        {
           "name": "Status (kill switch)",
           "request": {
             "method": "POST",
@@ -1127,35 +1096,6 @@
               "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\",\n    \"limit\": 10\n  }\n}"
             },
             "url": "{{rpc_url}}/ledger/transactions/list"
-          }
-        },
-        {
-          "name": "7. Get sync delta",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const json = pm.response.json();",
-                  "pm.test('Delta returned', () => pm.expect(json).to.have.property('changes'));"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"json\": {\n    \"householdId\": \"{{household_id}}\",\n    \"since\": 0,\n    \"limit\": 500\n  }\n}"
-            },
-            "url": "{{rpc_url}}/sync/getDelta"
           }
         }
       ]

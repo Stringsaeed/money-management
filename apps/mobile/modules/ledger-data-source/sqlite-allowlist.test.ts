@@ -19,7 +19,7 @@ describe("LEDGER_SQLITE_ALLOWLIST", () => {
     expect(LEDGER_SQLITE_ALLOWLIST.length).toBeGreaterThan(0);
     for (const entry of LEDGER_SQLITE_ALLOWLIST) {
       expect(entry.role).toMatch(
-        /^(authority-local|snapshot-cache|outbox|migration-backup|sync-bookkeeping|legacy-local-pending-cutover|erase)$/,
+        /^(authority-local|powersync-store|migration-backup|legacy-local-pending-cutover|erase)$/,
       );
       expect(entry.reason.trim().length).toBeGreaterThan(0);
       expect(entry.issue).toBeGreaterThan(0);

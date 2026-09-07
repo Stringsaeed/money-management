@@ -26,13 +26,16 @@ describe("selectLedgerSource", () => {
         authenticatedUserId: "user-1",
         activeHouseholdId: "household-1",
         migratedHouseholdId: "household-1",
-        offlineReason: "Delta polling is unavailable.",
+        offlineReason: "PowerSync has been disconnected for over 10 minutes.",
       }),
     ).toEqual({
       kind: "synced",
       householdId: "household-1",
       userId: "user-1",
-      offlineState: { kind: "offline_cached", reason: "Delta polling is unavailable." },
+      offlineState: {
+        kind: "offline_cached",
+        reason: "PowerSync has been disconnected for over 10 minutes.",
+      },
     });
   });
 

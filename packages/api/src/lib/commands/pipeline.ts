@@ -24,7 +24,6 @@ import {
   type BatchStatement,
 } from "./statements";
 import type { CommandDatabase } from "./types";
-import type { ChangePublisher } from "../push/publisher";
 
 /** Everything a handler needs to read current state and plan writes. */
 export interface PlanContext {
@@ -71,14 +70,6 @@ export interface ApplyCommandArgs {
   db: CommandDatabase;
   userId: string;
   envelope: ApplyCommandEnvelope;
-  /**
-   * Best-effort realtime notification hook (#93): invoked after the change is
-   * durably committed. Failures are swallowed — push only saves polling
-   * latency, so it must never fail (or retry) the mutation itself.
-   */
-  publishChange?: ChangePublisher;
-  /** Keeps a best-effort publish alive after the Worker returns its response. */
-  waitUntil?: (promise: Promise<unknown>) => void;
 }
 
 function unknownKindRejection(kind: string): PlanRejection {
@@ -102,8 +93,6 @@ export async function applyCommand({
   db,
   userId,
   envelope,
-  publishChange,
-  waitUntil,
 }: ApplyCommandArgs): Promise<CommandResult> {
   const rawKind = envelope.kind;
 
@@ -282,36 +271,6 @@ export async function applyCommand({
     throw new ORPCError("INTERNAL_SERVER_ERROR", {
       message: "Command committed but no change row was appended. Verify the batch statements.",
     });
-  }
-  return finishApplied(publishChange, waitUntil, envelope.householdId, applied);
-}
-
-/**
- * Returns the applied result and kicks off the realtime notification without
- * awaiting it: a failed or slow publish must never delay or fail the mutation
- * (#93 best-effort contract — polling remains the correctness floor).
- */
-function finishApplied(
-  publishChange: ChangePublisher | undefined,
-  waitUntil: ((promise: Promise<unknown>) => void) | undefined,
-  householdId: string,
-  applied: Extract<CommandResult, { kind: "applied" }>,
-): Extract<CommandResult, { kind: "applied" }> {
-  if (publishChange) {
-    const publishing = publishChange({
-      householdId,
-      seq: applied.seq,
-      effects: applied.effects,
-    }).catch((error) => {
-      console.error("commands.apply: change notification failed", {
-        householdId,
-        seq: applied.seq,
-        error,
-      });
-    });
-    if (waitUntil) {
-      waitUntil(publishing);
-    }
   }
   return applied;
 }

@@ -37,28 +37,28 @@ _Avoid_: Invite Link, Password
 > **Naming note**: "Account" in this context always means a _financial_ Account (see Cash Account, Archived Account). The server's internal authentication table named `account` (better-auth credential storage) is plumbing and carries no domain meaning.
 
 **Command**:
-The unit of a client write to the backend: a domain intent (e.g. `member.role.change`, `transaction.create`) — not a row diff — carrying a client-generated `commandId` that doubles as its idempotency key. Applied optimistically on the device, queued in the outbox, and processed exactly once server-side regardless of retry count. Wire shape lives in `packages/protocol`.
+The unit of a client write to the backend: a domain intent (e.g. `member.role.change`, `transaction.create`) — not a row diff — carrying a client-generated `commandId` that doubles as its idempotency key. Applied optimistically to the PowerSync collection, stored with its full envelope in the PowerSync upload queue, and processed exactly once server-side regardless of retry count. Wire shape lives in `packages/protocol`.
 _Avoid_: Mutation Payload, CRUD Request
 
 **Rejected Changes Inbox**:
-The client-side list of Commands the server refused with a typed rejection reason (for example `stale_version` or `invalid_intent`). A rejected Command is never silently dropped or silently merged; the user re-edits or discards it from here. Backed by the local outbox, never synced.
+The client-side list of Commands the server refused with a typed rejection reason (for example `stale_version` or `invalid_intent`). A rejected Command is never silently dropped or silently merged; the user re-edits or discards it from here. Backed by PowerSync's `rejected_changes` local-only table, never synced.
 _Avoid_: Failed Syncs, Dead Letter Queue
 
 **Household Change**:
-One row appended per committed Command in `household_changes`, carrying a per-household monotonic sequence number (`seq`), the acting user, the command's `commandId`, and the `effects[]` tags it invalidated. It is simultaneously the sync feed, the change-notification watermark unit, and the household's activity history — not a compliance-only audit log.
+One row appended per committed Command in `household_changes`, carrying a per-household monotonic sequence number (`seq`), the acting user, the command's `commandId`, and the `effects[]` tags it invalidated. It is the household's activity history and the source of the `seq` returned by `commands.apply`; PowerSync streams the authoritative ledger rows directly.
 _Avoid_: Audit Log Entry
 
 **Effect Tag**:
 A token from a fixed vocabulary (`rules | upcoming | ledger | balances | summaries | envelopes | assignments | projections | members`) naming what a committed Command invalidated. Clients map tags onto their local cache-invalidation matrix; the API maps them onto projection recomputation. Defined in `packages/protocol`.
 _Avoid_: Change Type, Event Type
 
-**Delta**:
-The notification-shaped list of Household Changes after a given watermark, returned by `sync.getDelta`. Entries carry `{seq, effects[]}` only — never raw row data; clients invalidate local caches by Effect Tag, and authoritative row payloads arrive through command results and dedicated read procedures.
-_Avoid_: Diff (implies row-level patches), Feed
+**Sync Stream**:
+A PowerSync query that selects the authoritative rows a signed-in client may retain. `memberships` auto-subscribes by JWT subject; `household_ledger` is subscribed with a Household parameter and independently proves membership before streaming Accounts, Categories, and Transactions.
+_Avoid_: Delta, Poll Feed
 
-**Watermark**:
-The last `seq` a client has processed for a Household — its position in the household's change log. Polling sends the Watermark as `since` and receives everything newer plus the current head to store next.
-_Avoid_: Cursor, Offset, Version
+**PowerSync Checkpoint**:
+The service-managed position proving which source-database changes have reached the device. Application code does not persist or send a custom Watermark; collection readiness waits for the relevant Sync Stream's first checkpoint.
+_Avoid_: Watermark, Cursor, Offset
 
 ### Recurring Rules
 

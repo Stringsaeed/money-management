@@ -218,6 +218,6 @@ function offlineReasonForSignedIn(
   if (mode === "local_only" && reason === "kill_switch") {
     return "Sync is temporarily unavailable.";
   }
-  if (mode === "local_only") return "Delta polling is unavailable.";
+  if (mode === "local_only") return "PowerSync has been disconnected for over 10 minutes.";
   return null;
 }
