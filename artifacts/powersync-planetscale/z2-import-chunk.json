@@ -1,0 +1,24 @@
+{
+  "base": "http://127.0.0.1:3001",
+  "householdId": "c182b85a-1a49-4edd-9525-eaee14a99946",
+  "binds": 114,
+  "durationMs": 6098,
+  "kind": "applied",
+  "result": {
+    "kind": "applied",
+    "seq": 1,
+    "effects": [
+      "ledger",
+      "balances",
+      "summaries",
+      "projections"
+    ],
+    "applied": {
+      "entityType": "account",
+      "chunkIndex": 0,
+      "chunkCount": 1,
+      "inserted": 6
+    },
+    "replayed": false
+  }
+}

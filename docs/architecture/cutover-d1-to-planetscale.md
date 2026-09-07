@@ -13,7 +13,7 @@ Reuse the Z0 config. Do not create a second fresh Hyperdrive unless `wrangler hy
 ## Staging first
 
 1. Create a PlanetScale development branch from `trove/main` if one does not exist. Keep `main` write-frozen while #173 is open.
-2. Apply `packages/db/src/migrations/0007_postgres_baseline.sql` on that branch. Confirm `\dRp+ powersync` lists `membership`, `accounts`, `categories`, and `transactions` only.
+2. Apply `packages/db/src/migrations/0007_postgres_baseline.sql` on that branch. Confirm `\dRp+ powersync` lists `membership`, `accounts`, `categories`, and `transactions` only. PlanetScale denies `CREATE ROLE ... REPLICATION` from SQL. Create `powersync_role` with `pscale role create ... --inherited-roles postgres --with-replication`, then `GRANT SELECT` to the generated `pscale_api_*` role name.
 3. Point Hyperdrive origin at the staging branch pooled URL (`:6432`) for the proof, or keep the existing origin and write only to objects this runbook creates.
 4. Record row counts before import and after import.
 

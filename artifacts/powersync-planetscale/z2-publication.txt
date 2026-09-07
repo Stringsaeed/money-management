@@ -1,0 +1,21 @@
+  pubname  | puballtables 
+-----------+--------------
+ powersync | f
+(1 row)
+
+      published      
+---------------------
+ public.accounts
+ public.categories
+ public.membership
+ public.transactions
+(4 rows)
+
+         grantee         |  table_name  
+-------------------------+--------------
+ pscale_api_01dna1q9bk7h | accounts
+ pscale_api_01dna1q9bk7h | categories
+ pscale_api_01dna1q9bk7h | membership
+ pscale_api_01dna1q9bk7h | transactions
+(4 rows)
+
