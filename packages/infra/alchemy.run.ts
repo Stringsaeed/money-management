@@ -4,6 +4,8 @@ import { config } from "dotenv";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 
+import { hyperdriveNameForStage } from "./hyperdrive-name.mjs";
+
 config({ path: "./.env" });
 config({ path: "../../apps/server/.env" });
 
@@ -15,16 +17,6 @@ function assertProductionCutoverApproved(stage: string, approval: string): void 
   throw new Error(
     "Production PlanetScale cutover is blocked. Close #173, finish the D1 export/import parity checks, then set PLANETSCALE_CUTOVER_APPROVED=issue-173-approved.",
   );
-}
-
-function hyperdriveNameForStage(stage: string): string {
-  if (stage === "prod") return "trove-ledger-fresh";
-  const safeStage =
-    stage
-      .toLowerCase()
-      .replaceAll(/[^a-z0-9-]/g, "-")
-      .slice(0, 32) || "development";
-  return `trove-ledger-fresh-${safeStage}`;
 }
 
 const metrics = Cloudflare.AnalyticsEngine.Dataset("metrics");

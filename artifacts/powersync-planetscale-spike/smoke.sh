@@ -521,7 +521,7 @@ assert_teardown_safe() {
 	local infra="$ROOT/../../packages/infra/alchemy.run.ts"
 	if [ -f "$infra" ] && {
 		/usr/bin/grep -F 'name: "trove-ledger-fresh"' "$infra" >/dev/null ||
-			/usr/bin/grep -F 'return "trove-ledger-fresh"' "$infra" >/dev/null
+			/usr/bin/grep -F 'hyperdriveNameForStage(stage)' "$infra" >/dev/null
 	}; then
 		printf 'HARD STOP: packages/infra has adopted Hyperdrive %s; Z0 teardown cannot delete it.\n' "$HD_NAME" >&2
 		exit 2
