@@ -284,6 +284,13 @@ describe("buildImportChunks", () => {
       effectiveToPeriod: "2026-02",
       createdAt,
     });
+    await db.insert(categoryMappings).values({
+      categoryId: "category-1",
+      envelopeId: "envelope-1",
+      effectiveFromPeriod: "2026-03",
+      effectiveToPeriod: null,
+      createdAt,
+    });
     await db.insert(fundingMemberships).values({
       accountId: "account-1",
       currency: "USD",
@@ -344,9 +351,12 @@ describe("buildImportChunks", () => {
     expect(mappings).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ effectiveFromPeriod: "2026-01", envelopeId: "envelope-1" }),
-        expect.objectContaining({ effectiveFromPeriod: "2026-03", envelopeId: null }),
+        expect.objectContaining({ effectiveFromPeriod: "2026-03", envelopeId: "envelope-1" }),
       ]),
     );
+    expect(
+      mappings.filter((row) => row.effectiveFromPeriod === "2026-03" && row.envelopeId === null),
+    ).toEqual([]);
   });
 
   it("splits a large table across chunks and preserves every row exactly once", async () => {

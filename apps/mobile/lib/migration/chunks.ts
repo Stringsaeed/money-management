@@ -147,6 +147,7 @@ async function loadWireRows(
     }
     case "category_mapping": {
       const rows = await db.select().from(categoryMappings);
+      const starts = new Set(rows.map((row) => `${row.categoryId}\0${row.effectiveFromPeriod}`));
       return rows.flatMap((row) => [
         {
           id: `migration:mapping:${row.categoryId}:${row.effectiveFromPeriod}`,
@@ -155,7 +156,8 @@ async function loadWireRows(
           effectiveFromPeriod: row.effectiveFromPeriod,
           createdAt: row.createdAt,
         },
-        ...(row.effectiveToPeriod
+        ...(row.effectiveToPeriod &&
+        !starts.has(`${row.categoryId}\0${nextPeriod(row.effectiveToPeriod)}`)
           ? [
               {
                 id: `migration:mapping:${row.categoryId}:${nextPeriod(row.effectiveToPeriod)}`,
@@ -170,6 +172,7 @@ async function loadWireRows(
     }
     case "funding_membership": {
       const rows = await db.select().from(fundingMemberships);
+      const starts = new Set(rows.map((row) => `${row.accountId}\0${row.effectiveFromPeriod}`));
       return rows.flatMap((row) => [
         {
           id: `migration:funding:${row.accountId}:${row.effectiveFromPeriod}`,
@@ -179,7 +182,8 @@ async function loadWireRows(
           effectiveFromPeriod: row.effectiveFromPeriod,
           createdAt: row.createdAt,
         },
-        ...(row.effectiveToPeriod
+        ...(row.effectiveToPeriod &&
+        !starts.has(`${row.accountId}\0${nextPeriod(row.effectiveToPeriod)}`)
           ? [
               {
                 id: `migration:funding:${row.accountId}:${nextPeriod(row.effectiveToPeriod)}`,
