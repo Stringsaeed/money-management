@@ -5,7 +5,6 @@ import type { CommandResult } from "@trove/protocol";
 import {
   createBufferSink,
   instrumentCommandApply,
-  instrumentSyncPull,
   rejectionReason,
   type MetricEvent,
 } from "./metrics";
@@ -126,38 +125,5 @@ describe("metrics", () => {
     expect(rejectionReason({ kind: "local_only", reason: "kill_switch_local_only" })).toBe(
       "kill_switch_local_only",
     );
-  });
-
-  it("records sync latency samples on success", async () => {
-    const sink = createBufferSink();
-
-    await instrumentSyncPull(
-      sink,
-      () => Promise.resolve({ seq: 5 }),
-      () => 0,
-      () => 33,
-    );
-
-    expect(sink.events).toEqual([
-      { event: "latency_sample", operation: "sync.getDelta", durationMs: 33, outcome: "ok" },
-    ]);
-  });
-
-  it("captures sync failures with their reason and rethrows", async () => {
-    const sink = createBufferSink();
-
-    await expect(
-      instrumentSyncPull(
-        sink,
-        () => Promise.reject(new Error("network dropped")),
-        () => 0,
-        () => 8,
-      ),
-    ).rejects.toThrow("network dropped");
-
-    expect(sink.events).toEqual([
-      { event: "operation_failure", operation: "sync.getDelta", reason: "network dropped" },
-      { event: "latency_sample", operation: "sync.getDelta", durationMs: 8, outcome: "error" },
-    ]);
   });
 });

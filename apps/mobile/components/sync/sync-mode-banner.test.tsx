@@ -21,8 +21,8 @@ describe("SyncModeBanner", () => {
     expect(screen.getByText(/paused remotely/)).toBeOnTheScreen();
   });
 
-  it("explains degraded local-only mode after delta pulls became unavailable", async () => {
-    useSyncModeStore.setState({ mode: "local_only", reason: "delta_unavailable" });
+  it("explains degraded local-only mode after PowerSync became unavailable", async () => {
+    useSyncModeStore.setState({ mode: "local_only", reason: "powersync_unavailable" });
     await render(<SyncModeBanner />);
 
     expect(screen.getByText("Local-only mode")).toBeOnTheScreen();

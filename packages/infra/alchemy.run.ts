@@ -70,9 +70,6 @@ export const server = Cloudflare.Worker(
       crons: ["0 * * * *"],
       env: {
         HYPERDRIVE_FRESH: hd,
-        PUSH_HOUSEHOLD_DO: Cloudflare.DurableObject("PUSH_HOUSEHOLD_DO", {
-          className: "HouseholdPushDO",
-        }),
         METRICS: metrics,
         CORS_ORIGIN: Config.string("CORS_ORIGIN"),
         BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),

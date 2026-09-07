@@ -20,7 +20,7 @@ export interface AnalyticsEngineDatasetLike {
   }): void;
 }
 
-export type MeasuredOperation = "commands.apply" | "sync.getDelta";
+export type MeasuredOperation = "commands.apply";
 
 export type MetricEvent =
   /** A typed command rejection — kind + short reason; frequency = event count. */
@@ -148,39 +148,6 @@ export async function instrumentCommandApply(
     sink.record({
       event: "latency_sample",
       operation: "commands.apply",
-      durationMs: endedAt() - start,
-      outcome: "error",
-    });
-    throw error;
-  }
-}
-
-/** Times one `sync.getDelta` pull; captures failures with their reason. */
-export async function instrumentSyncPull<T>(
-  sink: MetricsSink,
-  run: () => Promise<T>,
-  startedAt: () => number = Date.now,
-  endedAt: () => number = Date.now,
-): Promise<T> {
-  const start = startedAt();
-  try {
-    const result = await run();
-    sink.record({
-      event: "latency_sample",
-      operation: "sync.getDelta",
-      durationMs: endedAt() - start,
-      outcome: "ok",
-    });
-    return result;
-  } catch (error) {
-    sink.record({
-      event: "operation_failure",
-      operation: "sync.getDelta",
-      reason: error instanceof Error ? error.message : String(error),
-    });
-    sink.record({
-      event: "latency_sample",
-      operation: "sync.getDelta",
       durationMs: endedAt() - start,
       outcome: "error",
     });

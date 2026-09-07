@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react-nativ
 import { router } from "expo-router";
 
 import { RejectedChangeCard } from "@/components/rejected-changes/rejected-change-card";
-import type { RejectedChange } from "@/lib/sync/outbox";
+import type { RejectedChange } from "@/modules/powersync/rejected-changes";
 
 jest.mock("expo-router", () => ({
   router: { push: jest.fn(), back: jest.fn() },

@@ -1,12 +1,37 @@
+import { act, renderHook } from "@testing-library/react-native";
+
+import { useSyncWorker } from "@/hooks/use-sync-worker";
 import {
   reconcilePowerSyncStatus,
   type PowerSyncStatusDependencies,
 } from "@/modules/powersync/status";
+import { POWERSYNC_DISCONNECT_THRESHOLD_MS } from "@/modules/powersync/availability";
+import { useSyncModeStore } from "@/stores/sync-mode-store";
+
+const mockConnectPowerSync = jest.fn();
+const mockDisconnectPowerSync = jest.fn();
+const mockDisconnectAndClearPowerSync = jest.fn();
+const mockPeekPowerSyncDatabase = jest.fn();
+
+jest.mock("@/modules/powersync/database", () => ({
+  connectPowerSync: (...args: unknown[]) => mockConnectPowerSync(...args),
+  disconnectPowerSync: (...args: unknown[]) => mockDisconnectPowerSync(...args),
+  disconnectAndClearPowerSync: (...args: unknown[]) => mockDisconnectAndClearPowerSync(...args),
+  peekPowerSyncDatabase: () => mockPeekPowerSyncDatabase(),
+}));
+
+jest.mock("@tanstack/react-query", () => ({
+  useQuery: () => ({
+    data: { killSwitchLocalOnly: false },
+    refetch: jest.fn(),
+  }),
+}));
 
 const createDependencies = (initialReason: string | null = null) => {
   let reason = initialReason;
   const connect = jest.fn(async () => undefined);
   const disconnect = jest.fn(async () => undefined);
+  const disconnectAndClear = jest.fn(async () => undefined);
   const setLocalOnly = jest.fn((next: "kill_switch") => {
     reason = next;
   });
@@ -16,11 +41,12 @@ const createDependencies = (initialReason: string | null = null) => {
   const dependencies: PowerSyncStatusDependencies = {
     connect,
     disconnect,
+    disconnectAndClear,
     reason: () => reason,
     setLocalOnly,
     setSynced,
   };
-  return { connect, dependencies, disconnect, setLocalOnly, setSynced };
+  return { connect, dependencies, disconnect, disconnectAndClear, setLocalOnly, setSynced };
 };
 
 describe("reconcilePowerSyncStatus", () => {
@@ -61,8 +87,8 @@ describe("reconcilePowerSyncStatus", () => {
     expect(harness.connect).toHaveBeenCalledWith("user-1");
   });
 
-  it("replaces a legacy delta-unavailable fallback with the PowerSync connection", async () => {
-    const harness = createDependencies("delta_unavailable");
+  it("replaces a PowerSync-unavailable fallback after the connection recovers", async () => {
+    const harness = createDependencies("powersync_unavailable");
 
     await reconcilePowerSyncStatus(
       { householdId: "household-1", userId: "user-1", killSwitchLocalOnly: false },
@@ -81,7 +107,59 @@ describe("reconcilePowerSyncStatus", () => {
       harness.dependencies,
     );
 
-    expect(harness.disconnect).toHaveBeenCalledTimes(1);
+    expect(harness.disconnectAndClear).toHaveBeenCalledTimes(1);
     expect(harness.connect).not.toHaveBeenCalled();
+  });
+});
+
+describe("useSyncWorker availability", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-09-07T00:00:00.000Z"));
+    jest.clearAllMocks();
+    useSyncModeStore.setState({ mode: "synced", reason: null });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("degrades after ten disconnected minutes and restores on reconnect", async () => {
+    let statusChanged: ((status: { connected: boolean }) => void) | undefined;
+    const database = {
+      currentStatus: { connected: false },
+      getUploadQueueStats: jest.fn(async () => ({ count: 0 })),
+      registerListener: jest.fn(
+        (listener: { statusChanged: (status: { connected: boolean }) => void }) => {
+          statusChanged = listener.statusChanged;
+          return jest.fn();
+        },
+      ),
+    };
+    mockConnectPowerSync.mockResolvedValue(database);
+    mockPeekPowerSyncDatabase.mockReturnValue(database);
+
+    const { unmount } = await renderHook(() => useSyncWorker("household-1", "user-1"));
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(database.registerListener).toHaveBeenCalledTimes(1);
+    expect(useSyncModeStore.getState()).toMatchObject({ mode: "synced", reason: null });
+
+    act(() => {
+      jest.advanceTimersByTime(POWERSYNC_DISCONNECT_THRESHOLD_MS);
+    });
+    expect(useSyncModeStore.getState()).toMatchObject({
+      mode: "local_only",
+      reason: "powersync_unavailable",
+    });
+
+    act(() => {
+      statusChanged?.({ connected: true });
+    });
+    expect(useSyncModeStore.getState()).toMatchObject({ mode: "synced", reason: null });
+
+    await unmount();
   });
 });

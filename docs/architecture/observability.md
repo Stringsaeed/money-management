@@ -22,9 +22,9 @@ Worker variable. There are no containers and no local files involved.
     is a short payload-free string (`expected_version_3_actual_7`,
     `transaction.create`, entity ids, …).
   - `latency_sample { operation, durationMs, outcome }` — one raw sample per
-    call to `commands.apply` or `sync.getDelta`.
-  - `operation_failure { operation, reason }` — unexpected throws (e.g.
-    D1 batch failures, delta-pull transport errors).
+    call to `commands.apply`.
+  - `operation_failure { operation, reason }` — unexpected throws from the
+    command pipeline or its PlanetScale transaction.
   - `kill_switch_engaged` — a mutation was refused by the kill switch.
 - Sinks:
   - **Analytics Engine** (`createMetricsSink`) when the deployment binds the
@@ -35,8 +35,8 @@ Worker variable. There are no containers and no local files involved.
   - **Workers Logs JSON** (`createConsoleSink`) as the always-available
     fallback — single-line `{metric: true, event, ...}` objects.
 
-Routers wrap their handlers with `instrumentCommandApply` /
-`instrumentSyncPull`, which never swallow errors — they observe and rethrow.
+The command router wraps its handler with `instrumentCommandApply`, which
+never swallows errors: it observes and rethrows.
 
 ### Percentiles (p50/p95/p99)
 
@@ -106,15 +106,15 @@ Two layers, both configured in code:
 ## Remote kill switch: `KILL_SWITCH_LOCAL_ONLY`
 
 **Carrier choice — a Worker env var, not KV.** The stack binds no KV namespace
-today (`packages/infra/alchemy.run.ts`: D1 + Analytics Engine only), and the
+today (`packages/infra/alchemy.run.ts`: Hyperdrive + Analytics Engine), and the
 flag is one coarse, rarely-flipped toggle read once per mutation — KV's
 eventual consistency buys nothing here. Documented trade-off: flipping the
 variable requires an env update rather than an instant KV write.
 
 - Server behavior: while engaged, `commands.apply` applies nothing and returns
-  the typed result `{ kind: "local_only", reason: "kill_switch_local_only" }`;
-  `sync.getDelta` keeps working so clients can still converge history. The
-  probe endpoint is `sync.status` → `{ killSwitchLocalOnly: boolean }`.
+  the typed result `{ kind: "local_only", reason: "kill_switch_local_only" }`.
+  PowerSync keeps the last checkpoint cached locally. The probe endpoint is
+  `sync.status` → `{ killSwitchLocalOnly: boolean }`.
 - Toggle remotely (no code deploy):
   ```sh
   # set in packages/infra/.env then redeploy config
@@ -122,19 +122,19 @@ variable requires an env update rather than an instant KV write.
   ```
   or edit the variable in Dashboard → Workers & Pages → `server` → Settings →
   Variables & Secrets (`on` / `true` / `1` engage it; anything else is off).
-- Client behavior: on startup the sync worker probes `sync.status()` before
-  its first drain+pull turn; while engaged it skips turns entirely and shows
-  local-only mode. A queued command that still reaches a switched-on server
-  gets the typed `local_only` result, which the outbox treats as "keep
-  pending" — never a Rejected Changes entry.
+- Client behavior: on startup the worker probes `sync.status()` before
+  connecting PowerSync; while engaged it disconnects and shows local-only
+  mode. An upload that reaches a switched-on server receives the typed
+  `local_only` result and remains in PowerSync's upload queue rather than
+  becoming a Rejected Changes entry.
 
 ## Graceful degradation (client)
 
-- `apps/mobile/lib/sync/degradation.ts` tracks consecutive delta-pull
-  failures anchored at the **first** failure of an outage streak.
-- Once `sync.getDelta` has been unavailable for **10+ minutes**
-  (`DELTA_DEGRADATION_THRESHOLD_MS`), `use-sync-worker` flips the app to
-  local-only mode (`delta_unavailable`); any later successful pull restores
+- `apps/mobile/modules/powersync/availability.ts` tracks a continuous
+  disconnected window from `PowerSyncDatabase.currentStatus.connected`.
+- Once PowerSync has remained disconnected for **10+ minutes**
+  (`POWERSYNC_DISCONNECT_THRESHOLD_MS`), `use-sync-worker` flips the app to
+  local-only mode (`powersync_unavailable`); a connected status restores
   synced mode immediately.
 - Mode lives in `stores/sync-mode-store.ts`; the persistent amber
   `SyncModeBanner` ("📴 Local-only mode") distinguishes both reasons and only

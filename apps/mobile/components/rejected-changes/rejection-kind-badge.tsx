@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Text } from "@/components/ui/text";
-import type { RejectionKind } from "@/lib/sync/rejection";
+import type { RejectionKind } from "@/modules/powersync/rejection";
 import { cn } from "@/lib/utils";
 
 const KIND_PRESENTATION: Record<RejectionKind, { emoji: string; label: string }> = {

@@ -1,5 +1,6 @@
 export interface PowerSyncStatusDependencies {
   readonly connect: (userId: string) => Promise<void>;
+  readonly disconnectAndClear: () => Promise<void>;
   readonly disconnect: () => Promise<void>;
   readonly reason: () => string | null;
   readonly setLocalOnly: (reason: "kill_switch") => void;
@@ -15,7 +16,7 @@ export const reconcilePowerSyncStatus = async (
   dependencies: PowerSyncStatusDependencies,
 ): Promise<void> => {
   if (!input.householdId || !input.userId) {
-    await dependencies.disconnect();
+    await dependencies.disconnectAndClear();
     return;
   }
   if (input.killSwitchLocalOnly === undefined) return;

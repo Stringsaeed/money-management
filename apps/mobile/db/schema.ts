@@ -1,7 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
   check,
-  index,
   integer,
   primaryKey,
   sqliteTable,
@@ -156,51 +155,6 @@ export const exchangeRates = sqliteTable(
 export const appSettings = sqliteTable("app_settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
-});
-
-// ── Sync Outbox ──────────────────────────────────────────────────────────────
-// Local-only tables backing the offline outbox (#85). Never synced; see
-// docs/architecture/backend-architecture.md "Sync protocol".
-
-/**
- * Queued client commands awaiting drain to `commands.apply`. `commandId`
- * doubles as the idempotency key, so a retry after a timeout can never
- * double-apply. Rejected commands are retained with their rejection reason
- * for the Rejected Changes inbox; applied ones are deleted on ack.
- */
-export const outboxCommands = sqliteTable(
-  "outbox_commands",
-  {
-    commandId: text("command_id").primaryKey(),
-    householdId: text("household_id").notNull(),
-    kind: text("kind").notNull(),
-    /** JSON-serialized command payload. */
-    payload: text("payload").notNull(),
-    /** JSON-serialized preconditions array, when the caller sent one. */
-    preconditions: text("preconditions"),
-    /** pending → sending → (deleted | rejected). */
-    status: text("status", { enum: ["pending", "sending", "rejected"] })
-      .notNull()
-      .default("pending"),
-    rejectionKind: text("rejection_kind"),
-    /** Full discriminated CommandResult JSON for inbox rendering. */
-    rejectionPayload: text("rejection_payload"),
-    attempts: integer("attempts").notNull().default(0),
-    lastAttemptAt: integer("last_attempt_at", { mode: "timestamp_ms" }),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .notNull()
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`),
-  },
-  (table) => [index("outbox_commands_status_created_idx").on(table.status, table.createdAt)],
-);
-
-/** Per-household sync watermark persisted across launches. */
-export const syncState = sqliteTable("sync_state", {
-  householdId: text("household_id").primaryKey(),
-  watermark: integer("watermark").notNull().default(0),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-    .notNull()
-    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`),
 });
 
 export const {

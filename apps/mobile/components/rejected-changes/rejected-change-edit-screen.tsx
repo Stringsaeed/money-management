@@ -5,7 +5,7 @@ import { RejectedChangeEditForm } from "@/components/rejected-changes/rejected-c
 import { useRejectedEditForm } from "@/components/rejected-changes/use-rejected-edit-form";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { describeRejection } from "@/lib/sync/rejection";
+import { describeRejection } from "@/modules/powersync/rejection";
 import { commandKindLabel, describeIntent } from "@/utils/intent-summary";
 
 interface RejectedChangeEditScreenProps {

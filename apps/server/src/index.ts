@@ -1,8 +1,6 @@
 import { createContext } from "@trove/api/context";
 import { createSettlementIdentity, settleDueRules } from "@trove/api/lib/recurring/scheduler";
 import { createPowerSyncJwksResponse } from "@trove/api/lib/powersync/jwks";
-import { handleHouseholdPushUpgrade } from "@trove/api/lib/push/upgrade";
-import { HouseholdPushDO } from "@trove/api/lib/push/household-push-do";
 import { createDb, withDbScope } from "@trove/db";
 import { appRouter } from "@trove/api/routers/index";
 import { env, getPowerSyncServerConfig } from "@trove/env/server";
@@ -61,27 +59,6 @@ app.use("/*", async (c, next) => {
 app.get("/", (c) => {
   return c.text("OK");
 });
-
-/**
- * Realtime push upgrade (#93): session + household membership are checked on
- * the Worker, then the request is handed to the household's Durable Object,
- * which holds that household's WebSocket subscriptions. Best-effort channel —
- * clients fall back to polling when this is unavailable.
- */
-app.get("/api/push/household/:householdId", (c) => {
-  const auth = createServerAuth();
-  return handleHouseholdPushUpgrade(
-    { getSession: auth.api.getSession, db: createDb(), namespace: env.PUSH_HOUSEHOLD_DO },
-    c.req.raw,
-    c.req.param("householdId"),
-  );
-});
-
-/**
- * The per-household push Durable Object (#93). Exported from the worker entry
- * so the PUSH_HOUSEHOLD_DO binding resolves to this module.
- */
-export { HouseholdPushDO };
 
 /**
  * Hourly Cron Trigger entry (#88): settles every active Recurring Rule on

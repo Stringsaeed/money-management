@@ -3,12 +3,12 @@ import { create } from "zustand";
 /**
  * Client sync mode (#99). `synced` is the normal state; `local_only` means
  * every write stays on this device — either because the server's remote
- * `kill_switch_local_only` flag is engaged, or because delta pulls have been
- * unavailable for 10+ minutes (graceful degradation).
+ * `kill_switch_local_only` flag is engaged, or because PowerSync has been
+ * disconnected for 10+ minutes (graceful degradation).
  */
 export type SyncMode = "synced" | "local_only";
 
-export type LocalOnlyReason = "kill_switch" | "delta_unavailable";
+export type LocalOnlyReason = "kill_switch" | "powersync_unavailable";
 
 interface SyncModeState {
   mode: SyncMode;

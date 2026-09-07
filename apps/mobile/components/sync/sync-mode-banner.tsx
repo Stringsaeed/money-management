@@ -6,7 +6,7 @@ import { useSyncModeStore } from "@/stores/sync-mode-store";
 
 /**
  * Persistent mode indicator (#99): while the app is in local-only mode —
- * remote kill switch engaged or delta pulls unavailable for 10+ minutes —
+ * remote kill switch engaged or PowerSync disconnected for 10+ minutes —
  * an amber banner makes the state unmistakable. In normal synced mode the
  * banner is absent; the ledger simply looks and behaves as usual.
  */

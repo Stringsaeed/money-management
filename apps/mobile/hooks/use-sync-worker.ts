@@ -1,13 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { useQuery } from "@tanstack/react-query";
+import type { PowerSyncDatabase, SyncStatus } from "@powersync/react-native";
 
 import { orpc } from "@/lib/server/orpc";
 import {
   connectPowerSync,
+  disconnectAndClearPowerSync,
   disconnectPowerSync,
   peekPowerSyncDatabase,
 } from "@/modules/powersync/database";
+import {
+  initialPowerSyncAvailability,
+  isPowerSyncUnavailable,
+  POWERSYNC_DISCONNECT_THRESHOLD_MS,
+  recordPowerSyncConnection,
+} from "@/modules/powersync/availability";
 import { useSyncModeStore } from "@/stores/sync-mode-store";
 import type { RejectedChange } from "@/modules/powersync/rejected-changes";
 import { reconcilePowerSyncStatus } from "@/modules/powersync/status";
@@ -21,6 +29,10 @@ export function useSyncWorker(householdId: string | null, userId?: string) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastError, setLastError] = useState<Error | null>(null);
   const syncingRef = useRef(false);
+  const observedDatabaseRef = useRef<PowerSyncDatabase | null>(null);
+  const statusUnsubscribeRef = useRef<(() => void) | null>(null);
+  const degradationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const availabilityRef = useRef(initialPowerSyncAvailability());
 
   const statusQuery = useQuery({
     queryKey: ["sync", "status", householdId],
@@ -39,13 +51,62 @@ export function useSyncWorker(householdId: string | null, userId?: string) {
     setPendingCount(stats.count);
   }, []);
 
+  const clearAvailabilityObserver = useCallback(() => {
+    statusUnsubscribeRef.current?.();
+    statusUnsubscribeRef.current = null;
+    observedDatabaseRef.current = null;
+    availabilityRef.current = initialPowerSyncAvailability();
+    if (degradationTimerRef.current) clearTimeout(degradationTimerRef.current);
+    degradationTimerRef.current = null;
+  }, []);
+
+  const recordAvailability = useCallback((status: SyncStatus) => {
+    const now = Date.now();
+    availabilityRef.current = recordPowerSyncConnection(
+      availabilityRef.current,
+      status.connected,
+      now,
+    );
+    if (status.connected) {
+      if (degradationTimerRef.current) clearTimeout(degradationTimerRef.current);
+      degradationTimerRef.current = null;
+      if (useSyncModeStore.getState().reason === "powersync_unavailable") {
+        useSyncModeStore.getState().setSynced();
+      }
+      return;
+    }
+    if (degradationTimerRef.current) return;
+    degradationTimerRef.current = setTimeout(() => {
+      degradationTimerRef.current = null;
+      if (
+        isPowerSyncUnavailable(availabilityRef.current, Date.now()) &&
+        useSyncModeStore.getState().reason !== "kill_switch"
+      ) {
+        useSyncModeStore.getState().setLocalOnly("powersync_unavailable");
+      }
+    }, POWERSYNC_DISCONNECT_THRESHOLD_MS);
+  }, []);
+
+  const observeAvailability = useCallback(
+    (database: PowerSyncDatabase) => {
+      if (observedDatabaseRef.current === database) return;
+      clearAvailabilityObserver();
+      observedDatabaseRef.current = database;
+      statusUnsubscribeRef.current = database.registerListener({
+        statusChanged: recordAvailability,
+      });
+      recordAvailability(database.currentStatus);
+    },
+    [clearAvailabilityObserver, recordAvailability],
+  );
+
   const syncNow = useCallback(async () => {
     if (!householdId || !userId || statusQuery.data?.killSwitchLocalOnly) return;
     if (syncingRef.current) return;
     syncingRef.current = true;
     setIsSyncing(true);
     try {
-      await connectPowerSync(userId);
+      observeAvailability(await connectPowerSync(userId));
       await refreshPendingCount();
       setLastError(null);
     } catch (error) {
@@ -54,7 +115,13 @@ export function useSyncWorker(householdId: string | null, userId?: string) {
       syncingRef.current = false;
       setIsSyncing(false);
     }
-  }, [householdId, refreshPendingCount, statusQuery.data?.killSwitchLocalOnly, userId]);
+  }, [
+    householdId,
+    observeAvailability,
+    refreshPendingCount,
+    statusQuery.data?.killSwitchLocalOnly,
+    userId,
+  ]);
 
   useEffect(() => {
     const store = useSyncModeStore.getState();
@@ -66,10 +133,14 @@ export function useSyncWorker(householdId: string | null, userId?: string) {
       },
       {
         connect: async (nextUserId) => {
-          await connectPowerSync(nextUserId);
+          observeAvailability(await connectPowerSync(nextUserId));
           await refreshPendingCount();
         },
         disconnect: disconnectPowerSync,
+        disconnectAndClear: async () => {
+          clearAvailabilityObserver();
+          await disconnectAndClearPowerSync();
+        },
         reason: () => useSyncModeStore.getState().reason,
         setLocalOnly: store.setLocalOnly,
         setSynced: store.setSynced,
@@ -78,7 +149,16 @@ export function useSyncWorker(householdId: string | null, userId?: string) {
       setLastError(error instanceof Error ? error : new Error("PowerSync connection failed."));
     });
     if (!householdId || !userId) setPendingCount(0);
-  }, [householdId, refreshPendingCount, statusQuery.data, userId]);
+  }, [
+    clearAvailabilityObserver,
+    householdId,
+    observeAvailability,
+    refreshPendingCount,
+    statusQuery.data,
+    userId,
+  ]);
+
+  useEffect(() => clearAvailabilityObserver, [clearAvailabilityObserver]);
 
   useEffect(() => {
     if (!householdId || !userId) return;

@@ -387,29 +387,30 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 
 **Files.**
 
-- [ ] Delete `packages/api/src/lib/sync/delta.ts` and `delta.test.ts`.
-- [ ] Edit `packages/api/src/routers/sync.ts`. Delete `getDelta`. Keep `status`.
-- [ ] Edit `packages/api/src/lib/observability/metrics.ts`. Delete `instrumentSyncPull`.
-- [ ] Delete `apps/mobile/lib/sync/outbox.ts`, `outbox.test.ts`, `degradation.ts`, `degradation.test.ts`, `rejection.ts`, and `rejection.test.ts`.
-- [ ] Delete `apps/mobile/hooks/use-household-push.ts` and its test. The stream replaces the poke.
-- [ ] Delete `apps/mobile/modules/ledger-data-source/synced-transaction-snapshot.ts`, `pending-transaction-projector.ts`, and their tests.
-- [ ] Edit `apps/mobile/db/schema.ts`. Drop `outbox_commands` and `sync_state`. Add the drizzle migration.
-- [ ] Edit `apps/mobile/hooks/use-sync-worker.ts`. Degrade to local-only from `powersync.currentStatus.connected` false for 10 minutes, and restore on reconnect.
-- [ ] Edit `tools/oxlint/ledger-boundary/allowlist.ts`. Replace the `outbox` and `snapshot-cache` roles with `powersync-store`. Regenerate `docs/architecture/sqlite-roles.md`.
-- [ ] Edit `CONTEXT.md`. Rewrite the Delta, Watermark, and Outbox entries to name PowerSync streams and the upload queue.
-- [ ] Edit `docs/postman/Trove-API.postman_collection.json`. Remove `sync.getDelta`.
+- [x] Delete `packages/api/src/lib/sync/delta.ts` and `delta.test.ts`.
+- [x] Edit `packages/api/src/routers/sync.ts`. Delete `getDelta`. Keep `status`.
+- [x] Edit `packages/api/src/lib/observability/metrics.ts`. Delete `instrumentSyncPull`.
+- [x] Delete `packages/api/src/lib/push/`, its command-publisher seam, the Worker upgrade route, and the Durable Object binding.
+- [x] Delete `apps/mobile/lib/sync/outbox.ts`, `outbox.test.ts`, `degradation.ts`, `degradation.test.ts`, `rejection.ts`, and `rejection.test.ts`.
+- [x] Delete `apps/mobile/hooks/use-household-push.ts` and its test. The stream replaces the poke.
+- [x] Delete `apps/mobile/modules/ledger-data-source/synced-transaction-snapshot.ts`, `pending-transaction-projector.ts`, and their tests.
+- [x] Edit `apps/mobile/db/schema.ts`. Drop `outbox_commands` and `sync_state`. Add the drizzle migration.
+- [x] Edit `apps/mobile/hooks/use-sync-worker.ts`. Degrade to local-only from `powersync.currentStatus.connected` false for 10 minutes, and restore on reconnect.
+- [x] Edit `tools/oxlint/ledger-boundary/allowlist.ts`. Replace the `outbox` and `snapshot-cache` roles with `powersync-store`. Regenerate `docs/architecture/sqlite-roles.md`.
+- [x] Edit `CONTEXT.md`. Rewrite the Delta, Watermark, and Outbox entries to name PowerSync streams and the upload queue.
+- [x] Edit `docs/postman/Trove-API.postman_collection.json`. Remove `sync.getDelta`.
 
 **Build.**
 
-- [ ] Synced mode converges only through PowerSync streams and the connector's upload queue. The custom poll, the push poke, the local snapshot cache, and `outbox_commands` are gone. `household_changes` stays on the server for audit and for the `seq` in applied results.
+- [x] Synced mode converges only through PowerSync streams and the connector's upload queue. The custom poll, the push poke, the local snapshot cache, and `outbox_commands` are gone. `household_changes` stays on the server for audit and for the `seq` in applied results.
 
 **You see.**
 
-- [ ] `rg "getDelta|outbox_commands|pullDeltas" apps/mobile packages/api --glob '!node_modules'` returns nothing. `pnpm lint` passes the ledger-boundary rule with no `outbox` role.
+- [x] `rg "getDelta|outbox_commands|pullDeltas" apps/mobile packages/api --glob '!node_modules' --glob '!db/migrations/**' --glob '!**/*.test.*'` returns nothing. The ledger-boundary suite passes with no `outbox` role. Historical create/drop migrations and the migration assertion intentionally retain the table names.
 
 **Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] `use-sync-worker.test.tsx` covers connect, kill switch disconnect, and the 10-minute disconnected degrade. `tools/oxlint/ledger-boundary` fixtures assert no file writes `outbox_commands`. Run `pnpm test:ci`.
+- [x] `use-sync-worker.test.tsx` covers connect, kill switch disconnect, the 10-minute disconnected degrade, and reconnect recovery. `tools/oxlint/ledger-boundary` fixtures assert no production file writes `outbox_commands`. `pnpm test:ci` passes.
 
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `grok-4.6-fast-xhigh` at the PR head, per the boot recipe.
 

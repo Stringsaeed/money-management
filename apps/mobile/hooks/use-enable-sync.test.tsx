@@ -32,11 +32,6 @@ jest.mock("@/lib/migration/status", () => ({
   getMigratedHouseholdId: (...args: unknown[]) => mockGetMigratedHouseholdId(...args),
 }));
 
-const mockTruncateOutbox = jest.fn();
-jest.mock("@/lib/sync/outbox", () => ({
-  truncateOutbox: (...args: unknown[]) => mockTruncateOutbox(...args),
-}));
-
 jest.mock("@/modules/powersync/database", () => ({
   connectPowerSync: jest.fn(),
 }));
@@ -44,13 +39,11 @@ jest.mock("@/modules/powersync/database", () => ({
 const mockHouseholdsCreate = jest.fn();
 const mockCommandsApply = jest.fn();
 const mockGetManifest = jest.fn();
-const mockGetDelta = jest.fn();
 jest.mock("@/lib/server/orpc", () => ({
   orpc: {
     households: { create: (...args: unknown[]) => mockHouseholdsCreate(...args) },
     commands: { apply: (...args: unknown[]) => mockCommandsApply(...args) },
     migration: { getManifest: (...args: unknown[]) => mockGetManifest(...args) },
-    sync: { getDelta: (...args: unknown[]) => mockGetDelta(...args) },
   },
 }));
 
@@ -59,9 +52,8 @@ const MATCHED_RESULT = { status: "matched" as const, localManifest: {}, serverMa
 beforeEach(() => {
   jest.clearAllMocks();
   mockBackupLocalDatabase.mockResolvedValue("file:///backup.db");
-  mockTruncateOutbox.mockResolvedValue(undefined);
   mockMarkMigrationCompleted.mockResolvedValue(undefined);
-  useSyncModeStore.setState({ mode: "local_only", reason: "delta_unavailable" });
+  useSyncModeStore.setState({ mode: "local_only", reason: "powersync_unavailable" });
 });
 
 describe("useEnableSync", () => {
@@ -79,7 +71,6 @@ describe("useEnableSync", () => {
     expect(mockRunImport).toHaveBeenCalledWith(
       expect.objectContaining({ db: FAKE_DB, householdId: "household-new" }),
     );
-    expect(mockTruncateOutbox).toHaveBeenCalledWith(FAKE_DB, "household-new");
     expect(mockMarkMigrationCompleted).toHaveBeenCalledWith(FAKE_DB, "household-new");
     await waitFor(() => expect(result.current.status).toBe("matched"));
     expect(useSyncModeStore.getState().mode).toBe("synced");
@@ -116,7 +107,6 @@ describe("useEnableSync", () => {
 
     await waitFor(() => expect(result.current.status).toBe("error"));
     expect(result.current.error?.message).toContain("transaction");
-    expect(mockTruncateOutbox).not.toHaveBeenCalled();
     expect(mockMarkMigrationCompleted).not.toHaveBeenCalled();
     expect(useSyncModeStore.getState().mode).toBe("local_only");
   });
@@ -134,7 +124,6 @@ describe("useEnableSync", () => {
 
     await waitFor(() => expect(result.current.status).toBe("mismatched"));
     expect(result.current.discrepancy).toEqual({ localManifest, serverManifest });
-    expect(mockTruncateOutbox).not.toHaveBeenCalled();
     expect(mockMarkMigrationCompleted).not.toHaveBeenCalled();
     expect(useSyncModeStore.getState().mode).toBe("local_only");
   });
