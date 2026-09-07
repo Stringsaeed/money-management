@@ -474,7 +474,7 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 
 - [x] `tools/oxlint/ledger-boundary` fixtures assert no `legacy-local-pending-cutover` role. `packages/powersync/sync-streams.test.ts` validates the extended YAML. `packages/infra` has a test that the stack exports no D1 resource. Run `pnpm test:ci && pnpm --filter @trove/powersync validate`.
 
-  Current status: mobile 165 suites / 680 tests pass, API 24 files / 208 tests pass, Sync Streams tests and cloud validation pass, the no-D1 guard passes, and the publication migration is replay-safe on the non-production database.
+  Current status: mobile 166 suites / 683 tests pass, API 24 files / 209 tests pass, the cutover importer tests pass, Sync Streams tests and cloud validation pass, the no-D1 guard passes, and the publication migration is replay-safe. The frozen production D1 snapshot now matches PlanetScale `trove/main` by per-table digest.
 
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `grok-4.6-fast-xhigh` at the PR head, per the boot recipe.
 

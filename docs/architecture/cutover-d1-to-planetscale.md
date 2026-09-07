@@ -1,8 +1,8 @@
 # Cutover D1 to PlanetScale Postgres
 
-- **Status:** Z2 runbook
+- **Status:** Production D1 freeze, export, and PlanetScale import completed on 2026-09-08. Worker cutover remains blocked until the environment and PowerSync deployment gates pass.
 - **Issue:** #177
-- **Freeze:** #173 is still open. Production D1 import waits on that freeze. This runbook uses a PlanetScale development branch.
+- **Freeze:** `KILL_SWITCH_LOCAL_ONLY=on` is deployed. The reviewed receipt is [`../../artifacts/powersync-planetscale/production-d1-cutover.md`](../../artifacts/powersync-planetscale/production-d1-cutover.md).
 
 ## Binding
 
