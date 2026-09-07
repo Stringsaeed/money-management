@@ -12,7 +12,10 @@ for name in \
   PLANETSCALE_HOST \
   PLANETSCALE_DATABASE \
   PLANETSCALE_USER \
-  PLANETSCALE_PASSWORD; do
+  PLANETSCALE_PASSWORD \
+  POWERSYNC_URL \
+  POWERSYNC_JWT_PRIVATE_KEY \
+  POWERSYNC_JWT_KID; do
   if [ -z "${!name:-}" ]; then
     printf 'Missing required deployment secret: %s\n' "$name" >&2
     missing=1

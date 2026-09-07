@@ -1,0 +1,14 @@
+{
+  "name": "@trove/powersync",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test sync-streams.test.ts",
+    "validate": "pnpm dlx powersync@0.10.0 validate --directory . --sync-config-file-path sync-streams.yaml --validate-only sync-config",
+    "deploy": "pnpm dlx powersync@0.10.0 deploy sync-config --directory . --sync-config-file-path sync-streams.yaml"
+  },
+  "devDependencies": {
+    "yaml": "^2.9.0"
+  }
+}

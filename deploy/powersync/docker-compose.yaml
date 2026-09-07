@@ -1,0 +1,37 @@
+services:
+  storage:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: powersync_storage
+      POSTGRES_PASSWORD: ${PS_STORAGE_PASSWORD:?Set PS_STORAGE_PASSWORD}
+      POSTGRES_USER: powersync_storage
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U powersync_storage -d powersync_storage"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - powersync-storage:/var/lib/postgresql/data
+
+  powersync:
+    image: journeyapps/powersync-service:latest
+    depends_on:
+      storage:
+        condition: service_healthy
+    environment:
+      POWERSYNC_CONFIG_PATH: /config/service.yaml
+      PS_API_TOKEN: ${PS_API_TOKEN:?Set PS_API_TOKEN}
+      PS_AUDIENCE: ${PS_AUDIENCE:-http://127.0.0.1:8080}
+      PS_JWKS_URI: ${PS_JWKS_URI:-http://host.docker.internal:3000/api/powersync/jwks.json}
+      PS_SOURCE_DATABASE_URI: ${PS_SOURCE_DATABASE_URI:?Set a direct PlanetScale port 5432 URI}
+      PS_STORAGE_DATABASE_URI: postgresql://powersync_storage:${PS_STORAGE_PASSWORD:?Set PS_STORAGE_PASSWORD}@storage:5432/powersync_storage
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./service.yaml:/config/service.yaml:ro
+      - ../../packages/powersync/sync-streams.yaml:/config/sync-streams.yaml:ro
+
+volumes:
+  powersync-storage:

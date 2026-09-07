@@ -77,6 +77,9 @@ export const server = Cloudflare.Worker(
         CORS_ORIGIN: Config.string("CORS_ORIGIN"),
         BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
         BETTER_AUTH_URL: Cloudflare.Worker.URL,
+        POWERSYNC_URL: Config.string("POWERSYNC_URL"),
+        POWERSYNC_JWT_PRIVATE_KEY: Config.redacted("POWERSYNC_JWT_PRIVATE_KEY"),
+        POWERSYNC_JWT_KID: Config.string("POWERSYNC_JWT_KID"),
         EMAIL: Cloudflare.Email.SendEmail("EMAIL", {
           allowedSenderAddresses: ["noreply@trove.ing"],
         }),

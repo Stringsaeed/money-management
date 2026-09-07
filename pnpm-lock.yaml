@@ -415,6 +415,9 @@ importers:
       dotenv:
         specifier: 'catalog:'
         version: 17.4.2
+      jose:
+        specifier: 6.2.9
+        version: 6.2.9
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -589,6 +592,12 @@ importers:
       typescript:
         specifier: ~7.0.2
         version: 7.0.2
+
+  packages/powersync:
+    devDependencies:
+      yaml:
+        specifier: ^2.9.0
+        version: 2.9.0
 
   packages/protocol:
     devDependencies:

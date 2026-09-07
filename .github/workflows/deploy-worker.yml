@@ -40,6 +40,9 @@ jobs:
           PLANETSCALE_DATABASE: ${{ secrets.PLANETSCALE_DATABASE }}
           PLANETSCALE_USER: ${{ secrets.PLANETSCALE_USER }}
           PLANETSCALE_PASSWORD: ${{ secrets.PLANETSCALE_PASSWORD }}
+          POWERSYNC_URL: ${{ secrets.POWERSYNC_URL }}
+          POWERSYNC_JWT_PRIVATE_KEY: ${{ secrets.POWERSYNC_JWT_PRIVATE_KEY }}
+          POWERSYNC_JWT_KID: ${{ secrets.POWERSYNC_JWT_KID }}
           PLANETSCALE_CUTOVER_APPROVED: ${{ vars.PLANETSCALE_CUTOVER_APPROVED }}
           ALCHEMY_STAGE: ${{ vars.ALCHEMY_STAGE }}
         run: bash packages/infra/scripts/check-production-cutover.sh
@@ -93,6 +96,9 @@ jobs:
           PLANETSCALE_DATABASE: ${{ secrets.PLANETSCALE_DATABASE }}
           PLANETSCALE_USER: ${{ secrets.PLANETSCALE_USER }}
           PLANETSCALE_PASSWORD: ${{ secrets.PLANETSCALE_PASSWORD }}
+          POWERSYNC_URL: ${{ secrets.POWERSYNC_URL }}
+          POWERSYNC_JWT_PRIVATE_KEY: ${{ secrets.POWERSYNC_JWT_PRIVATE_KEY }}
+          POWERSYNC_JWT_KID: ${{ secrets.POWERSYNC_JWT_KID }}
           PLANETSCALE_CUTOVER_APPROVED: ${{ vars.PLANETSCALE_CUTOVER_APPROVED }}
           # Optional. Empty uses Alchemy Config defaults (kill switch off).
           KILL_SWITCH_LOCAL_ONLY: ${{ secrets.KILL_SWITCH_LOCAL_ONLY }}
