@@ -1,0 +1,11 @@
+head=e3c725de111dbd24a51f6a7848d3f9e256292fff
+parent=912d1e78f0f74eeb2a5e27ecfe3631460e44ce5b
+previous_live_head=ba218ecd31e8c0b9313af345ff140c233e8c7aa9
+previous_layer_patch_id=915fe500b9dab690703f806a6ddf50827776dbfa
+rebased_layer_patch_id=a850b5fef964c5e492ab5ed11b0a4191e98ffdd2
+
+The layer patch id changed because the op-sqlite Jest boundary moved into the Z1 parent.
+`git diff --name-only ba218ec e3c725d` lists only the twelve committed Z1 review artifacts.
+No application, server, database, protocol, infra, test, or configuration file changed between the live-verified tree and this rebased head.
+
+The ba218ec non-production migration, public API, 114-bind import, manifest, and latency receipts therefore describe the same executable source tree. A fresh exact-head CI and review verdict are still required.
