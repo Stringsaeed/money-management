@@ -1,10 +1,9 @@
-              command_id              | seq 
+              command_id              | seq
 --------------------------------------+-----
  6451409d-9005-4bbf-9deb-aaa85ad9756f |   3
 (1 row)
 
- txn 
+ txn
 -----
    1
 (1 row)
-

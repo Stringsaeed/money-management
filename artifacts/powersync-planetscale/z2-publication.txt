@@ -1,9 +1,9 @@
-  pubname  | puballtables 
+  pubname  | puballtables
 -----------+--------------
  powersync | f
 (1 row)
 
-      published      
+      published
 ---------------------
  public.accounts
  public.categories
@@ -11,7 +11,7 @@
  public.transactions
 (4 rows)
 
-         rolname         | rolreplication | rolbypassrls 
+         rolname         | rolreplication | rolbypassrls
 -------------------------+----------------+--------------
  postgres                | t              | t
  pscale_admin            | t              | t
@@ -19,4 +19,3 @@
  pscale_replication      | t              | f
  pscale_superuser        | t              | t
 (5 rows)
-
