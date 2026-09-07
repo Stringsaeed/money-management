@@ -16,11 +16,15 @@ test("keeps non-production names valid and within Cloudflare's limit", () => {
   }
 });
 
-test("uses the original stage in the hash to avoid normalized collisions", () => {
+test("uses a 52-bit digest of the original stage", () => {
   assert.notEqual(hyperdriveNameForStage("foo/bar"), hyperdriveNameForStage("foo_bar"));
   assert.notEqual(
     hyperdriveNameForStage(`same-prefix-${"a".repeat(40)}`),
     hyperdriveNameForStage(`same-prefix-${"b".repeat(40)}`),
+  );
+  assert.notEqual(
+    hyperdriveNameForStage("same-chku22t0sv34gv"),
+    hyperdriveNameForStage("same-1sha4dak82bsbl"),
   );
   assert.equal(hyperdriveNameForStage("dev_saeed"), hyperdriveNameForStage("dev_saeed"));
 });
