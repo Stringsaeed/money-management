@@ -16,10 +16,10 @@
 
 ## Results
 
-| Metric | Trunk median | Head median | Head change | Rule | Result |
-| --- | ---: | ---: | ---: | --- | --- |
-| Cold launch to Home | 6,897 ms | 6,579 ms | 4.61% faster | within 15% of trunk | PASS |
-| Commit 100 local transaction inserts | 78.701 ms | 71.409 ms | 9.26% faster | at or under trunk | PASS |
+| Metric                               | Trunk median | Head median |  Head change | Rule                | Result |
+| ------------------------------------ | -----------: | ----------: | -----------: | ------------------- | ------ |
+| Cold launch to Home                  |     6,897 ms |    6,579 ms | 4.61% faster | within 15% of trunk | PASS   |
+| Commit 100 local transaction inserts |    78.701 ms |   71.409 ms | 9.26% faster | at or under trunk   | PASS   |
 
 Raw receipts:
 
