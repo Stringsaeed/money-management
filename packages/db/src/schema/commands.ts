@@ -46,6 +46,13 @@ export const householdChange = pgTable(
   ],
 );
 
+export const householdChangeSequence = pgTable("household_change_sequences", {
+  householdId: text("household_id")
+    .primaryKey()
+    .references(() => household.id, { onDelete: "cascade" }),
+  seq: integer("seq").notNull(),
+});
+
 export const commandResult = pgTable(
   "command_results",
   {

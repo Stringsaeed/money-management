@@ -7,7 +7,7 @@ import * as schema from "./schema";
 
 const openConnection = () => {
   const client = postgres(env.HYPERDRIVE_FRESH.connectionString, {
-    max: 5,
+    max: 1,
     fetch_types: false,
   });
   return { client, db: drizzle({ client, schema }) };

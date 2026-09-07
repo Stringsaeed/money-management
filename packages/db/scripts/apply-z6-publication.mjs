@@ -13,15 +13,15 @@ const connectionUrl = new URL(databaseUrl);
 connectionUrl.searchParams.delete("sslrootcert");
 
 const sql = postgres(connectionUrl.toString(), { max: 1, ssl: "prefer" });
-const migration = readFileSync(
-  new URL("../src/migrations/0009_expand_powersync_publication.sql", import.meta.url),
-  "utf8",
-);
+const migrations = ["0009_expand_powersync_publication.sql", "0010_concurrent_change_sequence.sql"];
 
 try {
-  for (const statement of migration.split("--> statement-breakpoint")) {
-    const source = statement.trim();
-    if (source) await sql.unsafe(source);
+  for (const name of migrations) {
+    const migration = readFileSync(new URL(`../src/migrations/${name}`, import.meta.url), "utf8");
+    for (const statement of migration.split("--> statement-breakpoint")) {
+      const source = statement.trim();
+      if (source) await sql.unsafe(source);
+    }
   }
   const rows = await sql`
     SELECT schemaname, tablename
