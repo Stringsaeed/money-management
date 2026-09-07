@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { KeyboardAvoidingView, Platform, View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { useForm } from "@tanstack/react-form";
@@ -102,6 +103,12 @@ export function TransactionForm({
       });
     },
   });
+
+  useEffect(() => {
+    if (firstAccountId && !form.state.values.accountId) {
+      form.setFieldValue("accountId", firstAccountId);
+    }
+  }, [firstAccountId, form]);
 
   // Expose submit to parent via ref for native header integration
   if (formRef) {
