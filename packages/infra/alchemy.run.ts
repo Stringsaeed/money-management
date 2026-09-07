@@ -17,20 +17,15 @@ function assertProductionCutoverApproved(stage: string, approval: string): void 
   );
 }
 
-const hyperdrive = Cloudflare.Hyperdrive.Connection("HYPERDRIVE_FRESH", {
-  name: "trove-ledger-fresh",
-  origin: {
-    scheme: "postgresql",
-    host: Config.string("PLANETSCALE_HOST").pipe(
-      Config.withDefault("aws-us-east-1-3.pg.psdb.cloud"),
-    ),
-    port: 6432,
-    database: Config.string("PLANETSCALE_DATABASE").pipe(Config.withDefault("postgres")),
-    user: Config.string("PLANETSCALE_USER"),
-    password: Config.redacted("PLANETSCALE_PASSWORD"),
-  },
-  caching: { disabled: true },
-});
+function hyperdriveNameForStage(stage: string): string {
+  if (stage === "prod") return "trove-ledger-fresh";
+  const safeStage =
+    stage
+      .toLowerCase()
+      .replaceAll(/[^a-z0-9-]/g, "-")
+      .slice(0, 32) || "development";
+  return `trove-ledger-fresh-${safeStage}`;
+}
 
 const metrics = Cloudflare.AnalyticsEngine.Dataset("metrics");
 
@@ -45,7 +40,20 @@ export const server = Cloudflare.Worker(
     const devPort = yield* Config.port("ALCHEMY_DEV_PORT").pipe(Config.withDefault(3000));
     assertProductionCutoverApproved(stage, cutoverApproval);
     const routing = isProd ? { domain: AUTH_HOSTNAME, workersDev: false } : { workersDev: true };
-    const hd = yield* hyperdrive;
+    const hd = yield* Cloudflare.Hyperdrive.Connection("HYPERDRIVE_FRESH", {
+      name: hyperdriveNameForStage(stage),
+      origin: {
+        scheme: "postgresql",
+        host: Config.string("PLANETSCALE_HOST").pipe(
+          Config.withDefault("aws-us-east-1-3.pg.psdb.cloud"),
+        ),
+        port: 6432,
+        database: Config.string("PLANETSCALE_DATABASE").pipe(Config.withDefault("postgres")),
+        user: Config.string("PLANETSCALE_USER"),
+        password: Config.redacted("PLANETSCALE_PASSWORD"),
+      },
+      caching: { disabled: true },
+    });
 
     return {
       main: "../../apps/server/src/index.ts",

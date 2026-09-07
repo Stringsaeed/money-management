@@ -8,7 +8,7 @@
 
 Workers reach PlanetScale through Hyperdrive `HYPERDRIVE_FRESH`. Caching stays disabled. PowerSync (Z3) uses the direct `:5432` host as `powersync_role`, never this Hyperdrive host.
 
-`alchemy.run.ts` declares `Cloudflare.Hyperdrive.Connection("HYPERDRIVE_FRESH", { name: "trove-ledger-fresh" })`. That is a name match, not a pin of id `8e9800a6f0ff4d738ccde750c2120dd1`. `alchemy dev` creates a **local** Hyperdrive from `PLANETSCALE_*` and does not exercise the remote config. `wrangler hyperdrive get 8e9800a6f0ff4d738ccde750c2120dd1` is a separate check.
+`alchemy.run.ts` keeps production on `trove-ledger-fresh` and gives every non-production stage a stage-suffixed Hyperdrive name. That prevents a verification deploy from retargeting the shared production config. The production name is still a name match, not a pin of id `8e9800a6f0ff4d738ccde750c2120dd1`. `alchemy dev` creates a **local** Hyperdrive from `PLANETSCALE_*` and does not exercise the remote config. `wrangler hyperdrive get 8e9800a6f0ff4d738ccde750c2120dd1` is a separate check.
 
 Do not put `z2-staging` credentials in a prod Alchemy env. That retargets the shared name at the development branch. Do not run `artifacts/powersync-planetscale-spike/smoke.sh --teardown`. That script deletes this Hyperdrive.
 
