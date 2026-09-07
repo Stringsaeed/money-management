@@ -25,7 +25,7 @@ Verified at the current local Z6 head: mobile 165 suites / 680 tests, API 24 fil
 - [ ] Bucket diagnostics below 1,000 per user and no `PSYNC_S2305`.
 - [ ] Cache-disabled `HYPERDRIVE_FRESH` receipt.
 - [ ] US-region PowerSync receipt or reviewed exception for the current EU development instance.
-- [x] Static stack guard and cutover checks prove no D1 resource or binding; public dry-run screenshot remains a review artifact.
+- [x] Static stack guard, cutover checks, and [`z6-no-d1-dry-run.txt`](z6-no-d1-dry-run.txt) prove no D1 resource or binding.
 - [ ] Ten Z6 lane artifacts, review screenshots, and review video.
 - [ ] Exact-head code review and operator approval.
 
