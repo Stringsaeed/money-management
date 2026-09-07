@@ -220,6 +220,21 @@ describe("createSyncedLedgerDataSource accounts", () => {
     expect(mockListServerAccounts).not.toHaveBeenCalled();
   });
 
+  it("reads the cached snapshot online instead of listing the server", async () => {
+    const source = createSyncedLedgerDataSource({
+      householdId: HOUSEHOLD_ID,
+      userId: USER_ID,
+      db: fakeDb,
+    });
+
+    await expect(source.accounts.list()).resolves.toEqual([
+      expect.objectContaining({ id: "cash", name: "Cash" }),
+    ]);
+    expect(mockReadSnapshot).toHaveBeenCalled();
+    expect(mockListServerAccounts).not.toHaveBeenCalled();
+    expect(mockListServerTransactions).not.toHaveBeenCalled();
+  });
+
   it("folds a queued create into list, get, and listWithBalances after a restart", async () => {
     mockListProjectableCommands.mockResolvedValue([{ ...createCommand(), status: "pending" }]);
     const source = createSyncedLedgerDataSource({

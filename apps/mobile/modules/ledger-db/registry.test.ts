@@ -35,7 +35,7 @@ afterEach(() => {
 });
 
 describe("ledger registry", () => {
-  it("reuses one instance per household, user, and db identity", () => {
+  it("reuses one instance per household and user", () => {
     const db = { label: "one" };
     const first = acquireSyncedTransactionLedger(deps(db));
     const second = acquireSyncedTransactionLedger(deps(db));
@@ -47,12 +47,12 @@ describe("ledger registry", () => {
     expect(peekSyncedTransactionLedger("household-1", "user-1")).toBeNull();
   });
 
-  it("replaces the instance when the db identity changes", () => {
+  it("keeps the instance when a second drizzle wrapper acquires the same household", () => {
     const first = acquireSyncedTransactionLedger(deps({ label: "a" }));
-    const disposed = first.ledger;
     const second = acquireSyncedTransactionLedger(deps({ label: "b" }));
-    expect(second.ledger).not.toBe(disposed);
-    expect(peekSyncedTransactionLedger("household-1", "user-1")).toBe(second.ledger);
+    expect(second.ledger).toBe(first.ledger);
     second.release();
+    expect(peekSyncedTransactionLedger("household-1", "user-1")).toBe(first.ledger);
+    first.release();
   });
 });

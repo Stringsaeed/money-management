@@ -46,6 +46,9 @@ export function TransactionForm({
 
   const firstAccountId = accounts[0]?.id ?? "";
   const firstAccountCurrency = accounts[0]?.currency ?? "USD";
+  const firstExpenseCategoryId =
+    categories.find((category) => category.type === "expense" && category.lifecycle !== "archived")
+      ?.id ?? "";
 
   const numPad = useNumPadNumber((initialData?.amount ?? 0) / 100);
 
@@ -108,7 +111,10 @@ export function TransactionForm({
     if (firstAccountId && !form.state.values.accountId) {
       form.setFieldValue("accountId", firstAccountId);
     }
-  }, [firstAccountId, form]);
+    if (firstExpenseCategoryId && !form.state.values.categoryId) {
+      form.setFieldValue("categoryId", firstExpenseCategoryId);
+    }
+  }, [firstAccountId, firstExpenseCategoryId, form]);
 
   // Expose submit to parent via ref for native header integration
   if (formRef) {

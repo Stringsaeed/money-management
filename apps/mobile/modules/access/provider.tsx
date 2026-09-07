@@ -1,9 +1,9 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { orpc } from "@/lib/server/orpc";
 
-import { resolveAccess, nextClaim } from "./access";
+import { householdReadFromQuery, nextClaim, resolveAccess } from "./access";
 import { AuthSheetHost } from "./auth-sheet-host";
 import {
   AUTH_SHEET_CLOSED,
@@ -17,7 +17,13 @@ import { clearClaim, readClaim, writeClaim } from "./claim-store";
 import { HOUSEHOLDS_KEY } from "./households-key";
 import { toMembershipSummary } from "./memberships";
 import { tryRemoteSignOut, useSessionProbe } from "./session-probe";
-import type { AccessCore, HouseholdRead, IdentityClaim, ReturnTo } from "./types";
+import type {
+  AccessCore,
+  HouseholdRead,
+  IdentityClaim,
+  MembershipSummary,
+  ReturnTo,
+} from "./types";
 import { AuthSheetContext } from "./use-auth-sheet";
 import { AccessContext } from "./use-access";
 
@@ -95,13 +101,15 @@ function useHouseholdRead(enabled: boolean): HouseholdRead {
     queryFn: () => orpc.households.listMine(),
     enabled,
   });
-  if (!enabled) return { kind: "loaded", memberships: [] };
-  if (query.isPending) return { kind: "pending" };
-  if (query.isError) return { kind: "failed" };
-  return {
-    kind: "loaded",
-    memberships: (query.data ?? []).map(toMembershipSummary),
-  };
+  const lastMemberships = useRef<readonly MembershipSummary[] | undefined>(undefined);
+  const memberships = query.data?.map(toMembershipSummary);
+  if (memberships) lastMemberships.current = memberships;
+  return householdReadFromQuery({
+    enabled,
+    isPending: query.isPending,
+    isError: query.isError,
+    memberships: memberships ?? lastMemberships.current,
+  });
 }
 
 function useAccessActions(

@@ -26,8 +26,26 @@ interface LedgerSourceFacts {
 }
 
 export function resolveAccess(input: ResolveAccessInput): AccessCore {
-  if (input.probe === null) return { kind: "resolving" };
+  if (input.probe === null) {
+    if (input.claim.kind === "held") {
+      return signedInFromSession(input.claim.user, input.households);
+    }
+    return { kind: "resolving" };
+  }
   return mergeClaimAndProbe(input.claim, input.probe, input.households);
+}
+
+export function householdReadFromQuery(input: {
+  readonly enabled: boolean;
+  readonly isPending: boolean;
+  readonly isError: boolean;
+  readonly memberships?: readonly MembershipSummary[];
+}): HouseholdRead {
+  if (input.memberships) return { kind: "loaded", memberships: input.memberships };
+  if (!input.enabled) return { kind: "loaded", memberships: [] };
+  if (input.isPending) return { kind: "pending" };
+  if (input.isError) return { kind: "failed" };
+  return { kind: "loaded", memberships: [] };
 }
 
 export function nextClaim(current: IdentityClaim, probe: SessionProbe, now: Date): IdentityClaim {
