@@ -1,6 +1,6 @@
 # Z0 verdict
 
-Intended path. PowerSync Cloud on PlanetScale Postgres, with Worker writes through a cache-disabled Hyperdrive. Rocicorp Zero was not used. PowerSync Cloud replication and the client round trip are still unproven, so this is not a winner declaration.
+Winner path for the spike proof. PowerSync Open Edition (self-hosted Docker on Colima) replicating from PlanetScale Postgres `trove/main` over direct `:5432`, with Worker writes through cache-disabled Hyperdrive. Rocicorp Zero was not used. Production still prefers PowerSync Cloud (#172) once a Cloud PAT exists. The Z0 connect proof used local Open Edition because Cloud auth was missing on this machine.
 
 Live run was against org `stringsaeed`, database `trove`, branch `main`, host `aws-us-east-1-3.pg.psdb.cloud`.
 
@@ -34,12 +34,12 @@ Live run was against org `stringsaeed`, database `trove`, branch `main`, host `a
 - `SELECT 1`. `{"n":1}` after redeploy (colo `FRA` on the safety rewrite sample)
 - Insert. `{"id":"txn-z0-spike-2"}` into `spike.transactions` after redeploy
 
-## PowerSync Cloud
+## PowerSync (local Open Edition against PlanetScale)
 
 - Source host rule. Direct PlanetScale host on `:5432` as the role from `pscale role create --with-replication`. The Postgres role name is `pscale_api_<id>`, not `powersync_role`. The connection username is `pscale_api_<id>.<branch_id>`
-- Instance URL. Claimed in an earlier draft as `https://6a9e0dd3a77ca1231d260e01.powersync.journeyapps.com`. Not verified by `powersync fetch instances` on this machine. Treat as unconfirmed until PAT login succeeds.
-- Replication. Not proven
-- Round trip. Not proven. Two separate blockers: (1) no `PS_ADMIN_TOKEN` / `POWERSYNC_URL`+`POWERSYNC_TOKEN`, (2) `@powersync/node` fails to build on Node 26. Round trip must run under Node 22 (see `.nvmrc` and `check-node.mjs`).
+- Local instance. `http://127.0.0.1:8080` via Colima + `journeyapps/powersync-service:latest`. Config under `.local/z0-powersync/` (not committed).
+- Replication. Slot `powersync_1_0d29` created. Tables `spike.transactions|membership|accounts|categories` snapshot_done. Bucket storage held rows before the client connected.
+- Round trip. Proven under Node 22 with `@powersync/node` + `better-sqlite3` worker. Insert `txn-z0-local-1788744741` via `psql` into `spike.transactions`, client saw the same id in 565 ms (`firstSync`). Cloud PAT still missing for a Cloud-hosted instance.
 
 ## Teardown
 

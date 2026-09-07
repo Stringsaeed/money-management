@@ -1,4 +1,5 @@
 import { existsSync, unlinkSync } from "node:fs";
+import { Worker } from "node:worker_threads";
 import { PowerSyncDatabase } from "@powersync/node";
 import { column, Schema, Table } from "@powersync/common";
 
@@ -37,13 +38,23 @@ const categories = new Table({
   name: column.text,
 });
 
+const workerUrl = new URL("./powersync.worker.mjs", import.meta.url);
+
 const db = new PowerSyncDatabase({
   schema: new Schema({ transactions, membership, accounts, categories }),
-  database: { dbFilename: dbPath },
+  database: {
+    dbFilename: dbPath,
+    openWorker: (_options, workerOptions) => new Worker(workerUrl, workerOptions),
+  },
 });
 
+const connector = {
+  fetchCredentials: async () => ({ endpoint: url, token }),
+  uploadData: async () => {},
+};
+
 const started = Date.now();
-await db.connect({ endpoint: url, token });
+await db.connect(connector);
 await db.waitForFirstSync();
 
 const deadline = started + timeoutMs;
