@@ -5,7 +5,7 @@ import { household, membership } from "@trove/db/schema/household";
 import { ledgerAccount, category, transaction } from "@trove/db/schema/ledger";
 
 import { createTestDb } from "../../test-support/db";
-import { computeImportManifest } from "./manifest";
+import { computeImportManifest, parseImportAggregate } from "./manifest";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 
@@ -32,6 +32,11 @@ beforeEach(async () => {
 });
 
 describe("computeImportManifest", () => {
+  it("normalizes PostgreSQL bigint aggregates at the database boundary", () => {
+    expect(parseImportAggregate("101", "transaction count")).toBe(101);
+    expect(parseImportAggregate("10100", "transaction amount sum")).toBe(10_100);
+  });
+
   it("counts ledger facts and sums transactions by account, scoped to the household", async () => {
     await db.insert(ledgerAccount).values([
       {
