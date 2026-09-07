@@ -498,7 +498,7 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 
 **Review gate.** The operator reviews before merge.
 
-- [ ] Copy lane 4 and lane 5 screenshots into `artifacts/powersync-planetscale/Z6-review-load.png` and `artifacts/powersync-planetscale/Z6-review-buckets.png`.
+- [x] [`../../artifacts/powersync-planetscale/Z6-review-load.png`](../../artifacts/powersync-planetscale/Z6-review-load.png) and [`../../artifacts/powersync-planetscale/Z6-review-buckets.png`](../../artifacts/powersync-planetscale/Z6-review-buckets.png) render the committed live receipts for operator review.
 - [ ] [`../../artifacts/powersync-planetscale/Z6-review.mp4`](../../artifacts/powersync-planetscale/Z6-review.mp4) records the native Envelopes, Home, and Recurring Rules collection reads. A dedicated two-device load-convergence video is still required.
 - [ ] Post the screenshots, the video, and `certification.md` in chat. Stop at merge-ready. Wait for the operator's click.
 
