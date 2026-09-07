@@ -2,21 +2,7 @@ import type { PowerSyncDatabase } from "@powersync/react-native";
 import { powerSyncCollectionOptions } from "@tanstack/powersync-db-collection";
 import { createCollection, type CollectionStatus, type OperationConfig } from "@tanstack/react-db";
 
-import {
-  powerSyncAssignments,
-  powerSyncAccounts,
-  powerSyncBudgetWorkspaces,
-  powerSyncCategories,
-  powerSyncCategoryMappings,
-  powerSyncEnvelopes,
-  powerSyncFundingMemberships,
-  powerSyncRecurringOccurrences,
-  powerSyncRecurringRules,
-  powerSyncRefundLinks,
-  powerSyncRolloverSettings,
-  powerSyncTransactions,
-  rejectedChanges,
-} from "@/modules/powersync/schema";
+import { powerSyncSchema } from "@/modules/powersync/schema";
 import {
   powerSyncAssignmentRowSchema,
   powerSyncBudgetWorkspaceRowSchema,
@@ -37,6 +23,7 @@ import {
   type PowerSyncRefundLinkRow,
   type PowerSyncRolloverSettingRow,
 } from "@/modules/powersync/domain-types";
+import { withLegacyPowerSyncLogger } from "@/modules/powersync/collection-compat";
 
 import {
   powerSyncAccountRowSchema,
@@ -99,6 +86,8 @@ export const createPowerSyncLedgerCollections = (
   database: PowerSyncDatabase,
   householdId: string,
 ): PowerSyncLedgerCollections => {
+  const collectionDatabase = withLegacyPowerSyncLogger(database);
+  const tables = powerSyncSchema.props;
   const onLedgerLoad = householdStreamLoader(database, "household_ledger", householdId);
   const onBudgetLoad = householdStreamLoader(database, "household_budget", householdId);
   const onRecurringLoad = householdStreamLoader(database, "household_recurring", householdId);
@@ -106,8 +95,8 @@ export const createPowerSyncLedgerCollections = (
     accounts: createCollection(
       powerSyncCollectionOptions({
         id: `powersync-accounts:${householdId}`,
-        database,
-        table: powerSyncAccounts,
+        database: collectionDatabase,
+        table: tables.accounts,
         schema: powerSyncAccountRowSchema,
         onDeserializationError: (error) => {
           throw new Error(`Invalid PowerSync Account row: ${JSON.stringify(error.issues)}`);
@@ -119,8 +108,8 @@ export const createPowerSyncLedgerCollections = (
     categories: createCollection(
       powerSyncCollectionOptions({
         id: `powersync-categories:${householdId}`,
-        database,
-        table: powerSyncCategories,
+        database: collectionDatabase,
+        table: tables.categories,
         schema: powerSyncCategoryRowSchema,
         onDeserializationError: (error) => {
           throw new Error(`Invalid PowerSync Category row: ${JSON.stringify(error.issues)}`);
@@ -132,8 +121,8 @@ export const createPowerSyncLedgerCollections = (
     transactions: createCollection(
       powerSyncCollectionOptions({
         id: `powersync-transactions:${householdId}`,
-        database,
-        table: powerSyncTransactions,
+        database: collectionDatabase,
+        table: tables.transactions,
         schema: powerSyncTransactionRowSchema,
         onDeserializationError: (error) => {
           throw new Error(`Invalid PowerSync Transaction row: ${JSON.stringify(error.issues)}`);
@@ -145,8 +134,8 @@ export const createPowerSyncLedgerCollections = (
     assignments: createCollection(
       powerSyncCollectionOptions({
         id: `powersync-assignments:${householdId}`,
-        database,
-        table: powerSyncAssignments,
+        database: collectionDatabase,
+        table: tables.assignments,
         schema: powerSyncAssignmentRowSchema,
         onDeserializationError: (error) => {
           throw new Error(`Invalid PowerSync Assignment row: ${JSON.stringify(error.issues)}`);
@@ -158,8 +147,8 @@ export const createPowerSyncLedgerCollections = (
     budgetWorkspaces: createCollection(
       powerSyncCollectionOptions({
         id: `powersync-budget-workspaces:${householdId}`,
-        database,
-        table: powerSyncBudgetWorkspaces,
+        database: collectionDatabase,
+        table: tables.budget_workspaces,
         schema: powerSyncBudgetWorkspaceRowSchema,
         onDeserializationError: (error) => {
           throw new Error(
@@ -173,8 +162,8 @@ export const createPowerSyncLedgerCollections = (
     categoryMappings: createCollection(
       powerSyncCollectionOptions({
         id: `powersync-category-mappings:${householdId}`,
-        database,
-        table: powerSyncCategoryMappings,
+        database: collectionDatabase,
+        table: tables.category_mappings,
         schema: powerSyncCategoryMappingRowSchema,
         onDeserializationError: (error) => {
           throw new Error(
@@ -188,8 +177,8 @@ export const createPowerSyncLedgerCollections = (
     envelopes: createCollection(
       powerSyncCollectionOptions({
         id: `powersync-envelopes:${householdId}`,
-        database,
-        table: powerSyncEnvelopes,
+        database: collectionDatabase,
+        table: tables.envelopes,
         schema: powerSyncEnvelopeRowSchema,
         onDeserializationError: (error) => {
           throw new Error(`Invalid PowerSync Envelope row: ${JSON.stringify(error.issues)}`);
@@ -201,8 +190,8 @@ export const createPowerSyncLedgerCollections = (
     fundingMemberships: createCollection(
       powerSyncCollectionOptions({
         id: `powersync-funding-memberships:${householdId}`,
-        database,
-        table: powerSyncFundingMemberships,
+        database: collectionDatabase,
+        table: tables.funding_memberships,
         schema: powerSyncFundingMembershipRowSchema,
         onDeserializationError: (error) => {
           throw new Error(
@@ -216,8 +205,8 @@ export const createPowerSyncLedgerCollections = (
     recurringOccurrences: createCollection(
       powerSyncCollectionOptions({
         id: `powersync-recurring-occurrences:${householdId}`,
-        database,
-        table: powerSyncRecurringOccurrences,
+        database: collectionDatabase,
+        table: tables.recurring_occurrences,
         schema: powerSyncRecurringOccurrenceRowSchema,
         onDeserializationError: (error) => {
           throw new Error(
@@ -231,8 +220,8 @@ export const createPowerSyncLedgerCollections = (
     recurringRules: createCollection(
       powerSyncCollectionOptions({
         id: `powersync-recurring-rules:${householdId}`,
-        database,
-        table: powerSyncRecurringRules,
+        database: collectionDatabase,
+        table: tables.recurring_rules,
         schema: powerSyncRecurringRuleRowSchema,
         onDeserializationError: (error) => {
           throw new Error(`Invalid PowerSync Recurring Rule row: ${JSON.stringify(error.issues)}`);
@@ -244,8 +233,8 @@ export const createPowerSyncLedgerCollections = (
     refundLinks: createCollection(
       powerSyncCollectionOptions({
         id: `powersync-refund-links:${householdId}`,
-        database,
-        table: powerSyncRefundLinks,
+        database: collectionDatabase,
+        table: tables.refund_links,
         schema: powerSyncRefundLinkRowSchema,
         onDeserializationError: (error) => {
           throw new Error(`Invalid PowerSync Refund Link row: ${JSON.stringify(error.issues)}`);
@@ -257,8 +246,8 @@ export const createPowerSyncLedgerCollections = (
     rolloverSettings: createCollection(
       powerSyncCollectionOptions({
         id: `powersync-rollover-settings:${householdId}`,
-        database,
-        table: powerSyncRolloverSettings,
+        database: collectionDatabase,
+        table: tables.rollover_settings,
         schema: powerSyncRolloverSettingRowSchema,
         onDeserializationError: (error) => {
           throw new Error(
@@ -272,8 +261,8 @@ export const createPowerSyncLedgerCollections = (
     rejectedChanges: createCollection(
       powerSyncCollectionOptions({
         id: `powersync-rejected-changes:${householdId}`,
-        database,
-        table: rejectedChanges,
+        database: collectionDatabase,
+        table: tables.rejected_changes,
         schema: powerSyncRejectedChangeRowSchema,
         onDeserializationError: (error) => {
           throw new Error(`Invalid rejected change row: ${JSON.stringify(error.issues)}`);

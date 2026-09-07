@@ -24,7 +24,11 @@ const KILL_SWITCH_POLL_INTERVAL_MS = 5 * 60_000;
 const QUEUE_STATUS_INTERVAL_MS = 5_000;
 const EMPTY_REJECTED_CHANGES: readonly RejectedChange[] = [];
 
-export function useSyncWorker(householdId: string | null, userId?: string) {
+export function useSyncWorker(
+  householdId: string | null,
+  userId?: string,
+  preserveWhenIneligible = false,
+) {
   const [pendingCount, setPendingCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastError, setLastError] = useState<Error | null>(null);
@@ -130,6 +134,7 @@ export function useSyncWorker(householdId: string | null, userId?: string) {
         householdId,
         userId,
         killSwitchLocalOnly: statusQuery.data?.killSwitchLocalOnly,
+        preserveWhenIneligible,
       },
       {
         connect: async (nextUserId) => {
@@ -153,6 +158,7 @@ export function useSyncWorker(householdId: string | null, userId?: string) {
     clearAvailabilityObserver,
     householdId,
     observeAvailability,
+    preserveWhenIneligible,
     refreshPendingCount,
     statusQuery.data,
     userId,

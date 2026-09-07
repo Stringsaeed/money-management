@@ -4,11 +4,16 @@ import { useSyncWorker } from "@/hooks/use-sync-worker";
 import { signedInUserId, useAccess } from "@/modules/access";
 
 export function PowerSyncWorker() {
-  const userId = signedInUserId(useAccess());
+  const access = useAccess();
+  const userId = signedInUserId(access);
   const { activeHousehold } = useActiveHousehold();
   const migration = useMigratedHouseholdId();
   const householdId = activeHousehold?.householdId ?? null;
   const eligible = Boolean(userId && householdId && migration.data === householdId);
-  useSyncWorker(eligible ? householdId : null, eligible ? (userId ?? undefined) : undefined);
+  useSyncWorker(
+    eligible ? householdId : null,
+    eligible ? (userId ?? undefined) : undefined,
+    access.kind !== "anonymous",
+  );
   return null;
 }

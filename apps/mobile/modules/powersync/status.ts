@@ -12,11 +12,16 @@ export const reconcilePowerSyncStatus = async (
     readonly householdId: string | null;
     readonly userId?: string;
     readonly killSwitchLocalOnly?: boolean;
+    readonly preserveWhenIneligible?: boolean;
   },
   dependencies: PowerSyncStatusDependencies,
 ): Promise<void> => {
   if (!input.householdId || !input.userId) {
-    await dependencies.disconnectAndClear();
+    if (input.preserveWhenIneligible) {
+      await dependencies.disconnect();
+    } else {
+      await dependencies.disconnectAndClear();
+    }
     return;
   }
   if (input.killSwitchLocalOnly === undefined) return;
