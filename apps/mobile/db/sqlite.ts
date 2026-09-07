@@ -48,13 +48,10 @@ export function wrapOpSqlite(client: DB): SQLiteDatabase {
   const execute = (query: string, params: Scalar[] = []) =>
     drizzleResult(client.executeSync(query, params));
 
-  const executeAsync = async (query: string, params: Scalar[] = []) =>
-    drizzleResult(await client.execute(query, params));
+  const executeAsync = async (query: string, params: Scalar[] = []) => execute(query, params);
 
-  const executeRawAsync = async (query: string, params: Scalar[] = []) => {
-    const result = await client.executeRaw(query, params);
-    return result.rawRows ?? [];
-  };
+  const executeRawAsync = async (query: string, params: Scalar[] = []) =>
+    client.executeRawSync(query, params).rawRows ?? [];
 
   const database: SQLiteDatabase = {
     execute,

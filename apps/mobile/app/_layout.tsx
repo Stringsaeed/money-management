@@ -59,13 +59,7 @@ const queryClient = new QueryClient({
 });
 
 async function onDatabaseInit(db: SQLiteDatabase) {
-  try {
-    console.log("Initializing database...");
-    await initializeDatabase(db);
-  } catch (error) {
-    console.error("Error initializing database:", error);
-    throw error;
-  }
+  await initializeDatabase(db);
 }
 
 function LoadingFallback() {
@@ -103,8 +97,8 @@ export default function RootLayout() {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <PostHogProvider
-        debug={__DEV__}
-        apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY}
+        debug={Boolean(__DEV__ && process.env.EXPO_PUBLIC_POSTHOG_API_KEY)}
+        apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY || "phc_local_disabled"}
         options={{
           host: "https://us.i.posthog.com",
         }}
