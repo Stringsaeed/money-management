@@ -1,35 +1,54 @@
 import { createContext, use, useRef, type PropsWithChildren } from "react";
 import type { SQLiteDatabase } from "@/db/sqlite";
 import { useSQLiteContext } from "@/db/sqlite";
+import { useLedgerSourceSelection } from "@/modules/ledger-data-source/provider";
+import { useSyncedTransactionLedger } from "@/modules/ledger-db/provider";
 
 import { generateId } from "@/utils/id";
 
 import { createSystemClock } from "./clock";
 import { createRecurringRules } from "./recurring-rules";
+import { createSyncedRecurringRules } from "./synced";
 import type { RecurringRules } from "./types";
 
 const RecurringRulesContext = createContext<RecurringRules | null>(null);
 
 interface RecurringRulesBinding {
-  database: SQLiteDatabase;
+  identity: SQLiteDatabase | object;
   module: RecurringRules;
 }
 
 export function RecurringRulesProvider({ children }: PropsWithChildren) {
   const database = useSQLiteContext();
+  const selection = useLedgerSourceSelection();
+  const ledger = useSyncedTransactionLedger();
   const binding = useRef<RecurringRulesBinding | null>(null);
-  if (binding.current?.database !== database) {
+  const identity = selection.kind === "synced" ? ledger : database;
+  if (identity && binding.current?.identity !== identity) {
     binding.current = {
-      database,
-      module: createRecurringRules({
-        database,
-        clock: createSystemClock(),
-        identity: { next: () => generateId() },
-      }),
+      identity,
+      module:
+        selection.kind === "synced" && ledger
+          ? createSyncedRecurringRules({
+              collections: ledger.collections,
+              householdId: selection.householdId,
+              userId: selection.userId,
+              clock: createSystemClock(),
+              nextId: generateId,
+            })
+          : createRecurringRules({
+              database,
+              clock: createSystemClock(),
+              identity: { next: () => generateId() },
+            }),
     };
   }
 
-  return <RecurringRulesContext value={binding.current.module}>{children}</RecurringRulesContext>;
+  return (
+    <RecurringRulesContext value={binding.current?.module ?? null}>
+      {children}
+    </RecurringRulesContext>
+  );
 }
 
 export function useRecurringRulesModule(): RecurringRules {

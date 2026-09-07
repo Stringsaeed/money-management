@@ -18,7 +18,7 @@
     "test": "turbo run build && pnpm -C apps/mobile test",
     "test:watch": "turbo run build && pnpm -C apps/mobile test:watch",
     "test:coverage": "turbo run build && pnpm -C apps/mobile test:coverage",
-    "test:ci": "turbo run build && pnpm -C apps/mobile test:ci",
+    "test:ci": "turbo run build && pnpm -C apps/mobile test:ci && pnpm --filter @trove/db cutover:test",
     "ts:check": "turbo run build && pnpm -C apps/mobile ts:check",
     "push:storage": "node apps/mobile/scripts/push-code-storage.mjs",
     "dev:server": "pnpm --filter @trove/infra dev",

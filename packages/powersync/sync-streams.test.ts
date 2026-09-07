@@ -37,3 +37,40 @@ test("keeps private accounts and their transactions visible only to their owner"
   assert.match(transactions, /to_account_id IS NULL OR to_account_id IN/);
   assert.match(transactions, /visibility = 'public' OR owner_user_id = auth\.user_id\(\)/g);
 });
+
+test("publishes every budget table through a membership-guarded household stream", () => {
+  const stream = config.streams.household_budget;
+  const tables = [
+    "budget_workspaces",
+    "envelopes",
+    "category_mappings",
+    "funding_memberships",
+    "rollover_settings",
+    "assignments",
+    "refund_links",
+  ];
+  assert.equal(stream.accept_potentially_dangerous_queries, true);
+  assert.equal(stream.queries.length, tables.length);
+  for (const [index, table] of tables.entries()) {
+    const query = stream.queries[index];
+    assert.match(query, new RegExp(`FROM ${table}`));
+    assert.match(query, /household_id = subscription\.parameter\('household_id'\)/);
+    assert.match(query, /SELECT household_id\s+FROM membership/);
+    assert.match(query, /user_id = auth\.user_id\(\)/);
+  }
+});
+
+test("publishes recurring rules and occurrences without leaking private-account schedules", () => {
+  const stream = config.streams.household_recurring;
+  assert.equal(stream.accept_potentially_dangerous_queries, true);
+  assert.equal(stream.queries.length, 2);
+  for (const query of stream.queries) {
+    assert.match(query, /household_id = subscription\.parameter\('household_id'\)/);
+    assert.match(query, /SELECT household_id\s+FROM membership/);
+    assert.match(query, /user_id = auth\.user_id\(\)/);
+    assert.match(query, /visibility = 'public' OR owner_user_id = auth\.user_id\(\)/);
+  }
+  assert.match(stream.queries[0], /FROM recurring_rules/);
+  assert.match(stream.queries[1], /FROM recurring_occurrences/);
+  assert.match(stream.queries[1], /rule_id IN/);
+});

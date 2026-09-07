@@ -45,6 +45,7 @@ export const server = Cloudflare.Worker(
         password: Config.redacted("PLANETSCALE_PASSWORD"),
       },
       caching: { disabled: true },
+      originConnectionLimit: 15,
     });
 
     return {

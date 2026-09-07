@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { useAssignmentHistory, useCorrectMoveMoney, useMoveMoney } from "@/hooks/use-move-money";
-import { createBudgetingCoordinator } from "@/modules/budgeting/budgeting";
+import { useBudgetingCoordinator } from "@/hooks/use-budgeting-coordinator";
 import type {
   AssignmentHistoryEntry,
   BudgetProjection,
@@ -11,7 +11,6 @@ import type {
   MoveMoneyRequest,
 } from "@/modules/budgeting/budgeting";
 import { nowIso } from "@/utils/date";
-import { useSQLiteContext } from "@/db/sqlite";
 
 interface UseMoveMoneySheetOptions {
   currency: string;
@@ -26,7 +25,7 @@ export function useMoveMoneySheet({
   period: initialPeriod,
   projection,
 }: UseMoveMoneySheetOptions) {
-  const database = useSQLiteContext();
+  const budgeting = useBudgetingCoordinator();
   const moveMoney = useMoveMoney();
   const correctMoveMoney = useCorrectMoveMoney();
   const [sourceEnvelopeId, setSourceEnvelopeId] = useState<MoveMoneyEndpoint>(null);
@@ -89,7 +88,6 @@ export function useMoveMoneySheet({
   const handlePreview = async () => {
     try {
       setPreviewError(null);
-      const budgeting = createBudgetingCoordinator(database);
       const nextPreview = correctionId
         ? await budgeting.previewCorrectMoveMoney(createCorrectionRequest())
         : await budgeting.previewMoveMoney(createRequest());

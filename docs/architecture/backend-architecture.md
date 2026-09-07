@@ -1,6 +1,6 @@
 # Backend Architecture
 
-- **Status:** Revised — Phase 0 shipped on the Better-T Stack; ledger sync is shipped; Z2 moves the server store to PlanetScale Postgres
+- **Status:** Revised — PlanetScale + Hyperdrive + PowerSync is the final server/sync shape
 - **Recorded:** 2026-08-20 · **Revised:** 2026-09-07 (PlanetScale + Hyperdrive)
 - **Decision history:** this document
 - **Domain language:** [Money Management Context](../../CONTEXT.md)
@@ -8,7 +8,7 @@
 
 ## Purpose
 
-Turn Trove from a single-device, local-only app into a multi-user, shared-budget product: households and partners sharing one budget, with the server as the authoritative source of truth for every derived financial value (Available Money, Funding Pool, Card Payment Reserve, Rollover, Budget/Envelope Health). The client keeps local SQLite, but its role changes from _the_ truth to an offline cache and outbox — the app must stay fully usable offline for reads and queued writes, syncing and reconciling once connected.
+Turn Trove from a single-device, local-only app into a multi-user, shared-budget product: households and partners sharing one budget, with the server as the authoritative source of truth for every derived financial value (Available Money, Funding Pool, Card Payment Reserve, Rollover, Budget/Envelope Health). Synced installs retain authorized facts in PowerSync-managed op-sqlite and queue optimistic writes through PowerSync; anonymous installs keep the independent local SQLite ledger.
 
 The backend must be **scalable and agnostic**: the compute layer must not be locked to a single vendor's serverless product, and must scale horizontally without a per-request compute ceiling.
 
@@ -17,9 +17,9 @@ The backend must be **scalable and agnostic**: the compute layer must not be loc
 This document specifies:
 
 - the household/multi-user data model and its resolution of ownership questions the ADRs leave implicit (single-owner budgeting facts, versus multiple household members);
-- the D1 schema strategy for both the already-shipped domain (accounts, categories, transactions, recurring rules) and the not-yet-shipped envelope/budget domain, built directly from the 22 ADRs;
-- the sync protocol between client and server (offline outbox, command idempotency, conflict resolution);
-- the compute and hosting architecture (Cloudflare D1 for managed state, `apps/server` on Workers for business logic);
+- the PlanetScale Postgres schema for ledger, recurring, and envelope/budget domains, built directly from the 22 ADRs;
+- the PowerSync upload/stream protocol, command idempotency, and conflict resolution;
+- the compute and hosting architecture (PlanetScale through cache-disabled Hyperdrive, with `apps/server` on Workers for business logic);
 - the Turborepo monorepo restructuring hosting `apps/server` and its supporting packages alongside the existing Expo app;
 - a phased delivery sequence and the migration path for existing local-only installs.
 
@@ -53,19 +53,19 @@ _Avoid_: Personal Envelope, Hidden Budget.
 
 ### Command
 
-The unit of a client write. A domain intent (`assignment.commit`, `transaction.create`) — not a row diff — carrying a client-generated `command_id` that doubles as its idempotency key, mirroring the shape of the existing `RecurringChange` type. Applied optimistically to the local cache on creation, queued in the client's outbox, and processed exactly once server-side regardless of retry count.
+The unit of a client write. A domain intent (`assignment.commit`, `transaction.create`) — not a row diff — carrying a client-generated `command_id` that doubles as its idempotency key, mirroring the shape of the existing `RecurringChange` type. Applied optimistically to a PowerSync collection, carried in upload metadata, and processed exactly once server-side regardless of retry count.
 
 _Avoid_: Mutation Payload, CRUD Request.
 
 ### Household Change
 
-One row appended to `household_changes` per committed command (or per entity it touched), carrying a per-household sequence number, the acting user, and an `effects[]` tag vocabulary (extending the client's existing `ledger-cache.ts` matrix: `rules|upcoming|ledger|balances|summaries` plus new `envelopes|assignments|projections|members`). Simultaneously the sync feed, the change-notification signal (polling-first; optional push later), and the household's activity history.
+One row appended to `household_changes` per committed command (or per entity it touched), carrying a per-household sequence number, the acting user, and an `effects[]` tag vocabulary (`rules|upcoming|ledger|balances|summaries|envelopes|assignments|projections|members`). It is the ordered household activity history; PowerSync publishes authoritative table rows independently.
 
 _Avoid_: Audit Log Entry (implies compliance-only; this is load-bearing for sync).
 
 ## Invariants
 
-Every point below is a hard constraint on the D1 schema and the command pipeline's transactional business logic, carried forward from the 22 ADRs (cited inline) plus two invariants specific to the multi-user extension itself.
+Every point below is a hard constraint on the PlanetScale schema and the command pipeline's transactional business logic, carried forward from the 22 ADRs (cited inline) plus two invariants specific to the multi-user extension itself.
 
 1. Store only durable facts; derive everything else on read or via a provably-reconstructible cache — never a second mutable financial authority (ADR-0017).
 2. Cross-ledger/budget writes (refunds, card payments, resource archival) commit as one atomic transaction — no eventually-consistent window between ledger and budget state (ADR-0019).
@@ -90,26 +90,26 @@ Every point below is a hard constraint on the D1 schema and the command pipeline
 
 Phase 0 shipped on the **Better-T Stack**, replacing the original Supabase + standalone-API plan. The original rationale is preserved below where it still holds; the substitutions:
 
-| Original                                            | Shipped / planned                                                                                                                                                                    |
-| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Supabase Postgres + RLS as durable store            | **PlanetScale Postgres** via drizzle `postgres-js` over cache-disabled Hyperdrive `HYPERDRIVE_FRESH`. Tenancy stays in oRPC middleware; PowerSync publication lists four tables only |
-| `apps/api` standalone containerized Hono service    | **`apps/server`** — Hono entry on Cloudflare Workers; business logic in oRPC routers in `packages/api`                                                                               |
-| `POST /commands` / `GET /sync` REST routes          | Protected oRPC command/status procedures plus `powersync.token`; PowerSync Sync Streams deliver ledger rows                                                                          |
-| Supabase Auth + JWT verification                    | **better-auth** (`packages/auth`) with the Expo plugin; session-based, household/role resolved from membership tables                                                                |
-| `pg_advisory_xact_lock` per `(household, currency)` | One `db.transaction` per command with `pg_advisory_xact_lock(hashtext(householdId))`; optimistic version preconditions stay the safety net                                           |
-| Supabase Realtime (logical replication)             | PowerSync Sync Streams over the `powersync` publication, with an SDK-managed local database and upload queue                                                                         |
-| pgTAP RLS negative tests                            | oRPC authorization audit — integration tests over shipped procedures (#97)                                                                                                           |
-| `supabase/` infra-as-code                           | alchemy config in `packages/infra`; drizzle migrations in `packages/db`; orphaned `supabase/` retired (#106)                                                                         |
-| Horizontal scaling via stateless replicas           | Workers' automatic horizontal scaling; new constraints: CPU/wall-clock limits per invocation, no held connections or pools                                                           |
+| Original                                            | Shipped / planned                                                                                                                                                                     |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Supabase Postgres + RLS as durable store            | **PlanetScale Postgres** via drizzle `postgres-js` over cache-disabled Hyperdrive `HYPERDRIVE_FRESH`. Tenancy stays in oRPC middleware; PowerSync publishes every synced domain table |
+| `apps/api` standalone containerized Hono service    | **`apps/server`** — Hono entry on Cloudflare Workers; business logic in oRPC routers in `packages/api`                                                                                |
+| `POST /commands` / `GET /sync` REST routes          | Protected oRPC command/status procedures plus `powersync.token`; PowerSync Sync Streams deliver ledger rows                                                                           |
+| Supabase Auth + JWT verification                    | **better-auth** (`packages/auth`) with the Expo plugin; session-based, household/role resolved from membership tables                                                                 |
+| `pg_advisory_xact_lock` per `(household, currency)` | One `db.transaction` per command with `pg_advisory_xact_lock(hashtext(householdId))`; optimistic version preconditions stay the safety net                                            |
+| Supabase Realtime (logical replication)             | PowerSync Sync Streams over the `powersync` publication, with an SDK-managed local database and upload queue                                                                          |
+| pgTAP RLS negative tests                            | oRPC authorization audit — integration tests over shipped procedures (#97)                                                                                                            |
+| `supabase/` infra-as-code                           | alchemy config in `packages/infra`; drizzle migrations in `packages/db`; orphaned `supabase/` retired (#106)                                                                          |
+| Horizontal scaling via stateless replicas           | Workers' automatic horizontal scaling; new constraints: CPU/wall-clock limits per invocation, no held connections or pools                                                            |
 
 The original "don't run business logic in Edge Functions" concern now applies _to us_ differently: Workers invocations have CPU limits, so ADR-0005 historical-adjustment cascades must be designed bounded/resumable, with queue/Durable-Object fan-out for whole-household sweeps (#88).
 
 ### Managed state: PlanetScale Postgres through Hyperdrive
 
-- **PlanetScale Postgres** — the durable store. Workers reach it through cache-disabled Hyperdrive `HYPERDRIVE_FRESH` (`trove-ledger-fresh`). Migrations live in `packages/db` as a Postgres baseline. The `powersync` publication lists `membership`, `accounts`, `categories`, and `transactions` only.
+- **PlanetScale Postgres** — the durable store. Workers reach it through cache-disabled Hyperdrive `HYPERDRIVE_FRESH` (`trove-ledger-fresh`). Migrations live in `packages/db` as a Postgres baseline. The `powersync` publication includes membership, ledger, recurring, workspace, envelope, period-effective, assignment, and refund-link facts.
 - **Authorization at the API boundary** — household tenancy and role capability checks live in oRPC middleware plus household-scoped query filters.
 - **Auth** — better-auth on the same Postgres database (`packages/auth`, provider `pg`), with the Expo client plugin. Households/memberships/invite codes already modeled in `packages/db/src/schema/household.ts`.
-- **Ledger synchronization** — PowerSync Sync Streams publish authorized account, category, and transaction rows into an SDK-managed local database. `household_changes` remains the ordered activity log, not a client replication feed.
+- **Domain synchronization** — PowerSync Sync Streams publish authorized ledger, recurring, and budget facts into TanStack DB collections backed by op-sqlite. `household_changes` remains the ordered activity log, not a client replication feed.
 
 ### Compute: `apps/server` on Cloudflare Workers
 
@@ -129,7 +129,7 @@ Derived values (Available Money, Funding Pool, Rollover, Card Payment Reserve) s
 
 ## Sync protocol
 
-Synced accounts, categories, and transactions live in PowerSync-managed SQLite collections. Client writes enter PowerSync's upload queue with local command metadata; the connector drains the CRUD transaction through the server command pipeline. Rejected writes remain in the local-only `rejected_changes` table for re-edit or discard. The app does not maintain a second outbox, snapshot cache, or seq watermark.
+Every synced domain fact lives in a PowerSync-backed TanStack DB collection. Client writes enter PowerSync's upload queue with local command metadata; the connector drains the CRUD transaction through the server command pipeline. Rejected writes remain in the local-only `rejected_changes` table for re-edit or discard. The app does not maintain a second outbox, snapshot cache, or seq watermark.
 
 The commands pipeline runs in one Postgres transaction per command:
 
@@ -197,10 +197,10 @@ Moves server-side largely as-is: the settlement engine (`modules/recurring-rules
 
 1. **Phase 0 — Foundations.** ✅ Shipped (#78–#82, #101–#105): the monorepo migration; `calendar.ts` extracted to `packages/domain` as a no-behavior-change proof; Better-T Stack foundations (D1 + better-auth + oRPC + alchemy); households/members/invites schema and the household/auth server shell with opt-in mobile sign-in. _(The original Supabase/pgTAP/`apps/api` shape of this phase was superseded by #104.)_ Ledger sync now exists for accounts, categories, and transactions.
 2. **Phase 1 — Sync substrate and ledger.** Accounts, categories, and transactions become server-authoritative: `household_changes` + per-household seq, `commands.apply`, PowerSync Sync Streams, SDK upload queue, and typed rejected changes.
-3. **Phase 2 — Recurring Rules server-side** _(parallelizable with Phase 3)_. Port the settlement engine behind a D1 persistence adapter; a Workers Cron Trigger per-rule-timezone settlement job.
+3. **Phase 2 — Recurring Rules server-side.** Port the settlement engine behind the Postgres persistence adapter; a Workers Cron Trigger runs per-rule-timezone settlement.
 4. **Phase 3 — Envelope/budget domain server-side** _(parallelizable with Phase 2)_. The full schema, waterfalls, and projections from this document; commands for mapping changes, funding membership changes, assignments, card payments, refunds, and budget reset.
 5. **Phase 4 — Collaboration UX.** PowerSync-backed live ledger; activity history from `household_changes`; the Rejected Changes inbox; the private-account visibility toggle.
-6. **Phase 5 — Hardening and rollout.** Authorization audit over shipped oRPC procedures (#97); a migration runbook with staging dry-runs; the local-to-cloud import below; backup/restore strategy for D1 (time travel / export); observability via Workers Logs/Analytics Engine; a kill switch back to local-only; staged rollout via `expo-updates`.
+6. **Phase 5 — Hardening and rollout.** Authorization audit over shipped oRPC procedures (#97); a migration runbook with staging dry-runs; the local-to-cloud import below; PlanetScale backup/restore operations; observability via Workers Logs/Analytics Engine; a kill switch back to local-only; staged rollout via `expo-updates`.
 
 ## Migration path for existing local-only installs
 
@@ -219,7 +219,7 @@ Opt-in, never forced — solo/local-only mode remains fully supported. On "Enabl
 ## Open risks
 
 - **Multi-currency households** need a product decision before the Phase 3 schema is cut: ADR-0002 forbids conversion and assumes one Home Currency, ambiguous once two household members are in different countries. The one decision most likely to reshape the schema if deferred too long.
-- **Concurrent assignments to the same envelope/workspace** are handled correctly by atomic D1 `batch()` + re-validated optimistic preconditions (no advisory locks exist on D1); the remaining work is UX — explaining a rejection well ("Sara assigned $200 to Groceries while you were offline; only $50 remains").
+- **Concurrent assignments to the same envelope/workspace** are handled by one Postgres transaction under a household advisory lock plus re-validated optimistic preconditions; the remaining work is UX — explaining a rejection well ("Sara assigned $200 to Groceries while you were offline; only $50 remains").
 - **The in-flight envelope branches are a moving target** — the two shape conflicts in [Porting strategy](#porting-strategy) should be raised with that stream now.
 - **Privacy positioning changes**: `db/reset.ts` currently documents "everything stays on-device, no sync or backup." Shipping a server is a real change to that promise, needing deliberate messaging and decisions on data residency, retention, export/deletion (App Store requires in-app account deletion once accounts exist).
 - **Hosting** is decided (Cloudflare Workers via alchemy), but the new constraints are real: per-invocation CPU/wall-clock limits bound ADR-0005 historical-adjustment cascades and whole-household settlement sweeps (#88) — these need bounded, resumable, queue/DO-fanned-out designs.
@@ -228,7 +228,7 @@ Opt-in, never forced — solo/local-only mode remains fully supported. On "Enabl
 ## Acceptance criteria
 
 - `pnpm ts:check` (`turbo run check-types`) and `pnpm test:ci` (`turbo run test`) stay green throughout every phase — no phase regresses the existing client test suite, since `packages/domain` extraction is a no-behavior-change refactor at each step.
-- The existing 492-line `recurring-rules.test.ts` suite passes unmodified against the new D1 persistence adapter in Phase 2 — same scenarios, two stores.
+- The existing Recurring Rules suite remains the behavioral reference for the Postgres persistence and PowerSync collection adapters.
 - An ADR-indexed golden-scenario suite (one fixture per relevant ADR) passes for the envelope/budget domain in Phase 3, plus invariant tests (Assigned + Unassigned + reserves reconciles to Funding Pool).
 - An authorization audit (#97, retargeted from pgTAP RLS) proves cross-household reads/writes are rejected at the oRPC boundary, for every procedure.
 - An airplane-mode end-to-end test and a fuzz test replaying randomized two-client command interleavings both converge to the same server state, from Phase 1 onward.

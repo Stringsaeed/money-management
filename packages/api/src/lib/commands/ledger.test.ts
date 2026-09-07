@@ -1,8 +1,8 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { user } from "@trove/db/schema/auth";
-import { commandResult } from "@trove/db/schema/commands";
+import { commandResult, householdChange } from "@trove/db/schema/commands";
 import { household, membership } from "@trove/db/schema/household";
 import { fundingMembership, periodProjectionCache } from "@trove/db/schema/budget";
 import { ledgerAccount, category, transaction } from "@trove/db/schema/ledger";
@@ -372,6 +372,33 @@ describe("ledger commands — transactions", () => {
       amountMinor: 4200,
       createdBy: MEMBER,
     });
+  });
+
+  it("allocates contiguous change sequences for concurrent creates", async () => {
+    const results = await Promise.all(
+      Array.from({ length: 20 }, (_, index) =>
+        applyAs(MEMBER, {
+          ...makeEnvelope("transaction.create"),
+          payload: {
+            id: `tx-concurrent-${index}`,
+            type: "expense",
+            amountMinor: 100 + index,
+            date: "2026-02-10",
+            accountId: "acc-1",
+            categoryId: "cat-1",
+          },
+        }),
+      ),
+    );
+
+    expect(results.every((result) => result.kind === "applied")).toBe(true);
+    const changes = await db
+      .select({ seq: householdChange.seq })
+      .from(householdChange)
+      .orderBy(asc(householdChange.seq));
+    expect(changes.map(({ seq }) => seq)).toEqual(
+      Array.from({ length: 20 }, (_, index) => index + 1),
+    );
   });
 
   it("rejects a household member writing a private account transaction", async () => {

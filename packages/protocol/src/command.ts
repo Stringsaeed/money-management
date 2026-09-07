@@ -3,8 +3,8 @@
  *
  * A command is a domain intent (not a row diff) carrying a client-generated
  * `commandId` that doubles as its idempotency key. Applied optimistically to
- * the local cache on creation, queued in the outbox, and processed exactly
- * once server-side regardless of retry count.
+ * a PowerSync collection, carried through the SDK upload queue, and processed
+ * exactly once server-side regardless of retry count.
  */
 
 import type { Effects } from "./effects.js";
@@ -25,7 +25,10 @@ export const COMMAND_KINDS = [
   "transaction.create",
   "transaction.edit",
   "transaction.remove",
+  "recurring.change",
+  "budget.configure",
   "assignment.commit",
+  "assignment.correct",
   "refund.link",
   "import_bundle",
 ] as const;

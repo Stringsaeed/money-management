@@ -10,7 +10,19 @@
  */
 
 /** Import entity types, in the exact order chunks must be sent. */
-export const IMPORT_ENTITY_TYPES = ["account", "category", "transaction"] as const;
+export const IMPORT_ENTITY_TYPES = [
+  "account",
+  "category",
+  "recurring_rule",
+  "budget_workspace",
+  "envelope",
+  "category_mapping",
+  "funding_membership",
+  "rollover_setting",
+  "assignment",
+  "transaction",
+  "recurring_occurrence",
+] as const;
 
 export type ImportEntityType = (typeof IMPORT_ENTITY_TYPES)[number];
 

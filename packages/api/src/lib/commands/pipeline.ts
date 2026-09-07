@@ -213,7 +213,9 @@ export async function applyCommand({
     }),
   ];
   try {
-    await executeHouseholdTransaction(db, statements, envelope.householdId);
+    await executeHouseholdTransaction(db, statements, envelope.householdId, {
+      lockHousehold: kind !== "transaction.create",
+    });
   } catch (error) {
     // Concurrent duplicate: another writer committed this exact commandId
     // between our idempotency read and this batch — replay their result.

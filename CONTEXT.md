@@ -53,7 +53,7 @@ A token from a fixed vocabulary (`rules | upcoming | ledger | balances | summari
 _Avoid_: Change Type, Event Type
 
 **Sync Stream**:
-A PowerSync query that selects the authoritative rows a signed-in client may retain. `memberships` auto-subscribes by JWT subject; `household_ledger` is subscribed with a Household parameter and independently proves membership before streaming Accounts, Categories, and Transactions.
+A PowerSync query that selects the authoritative rows a signed-in client may retain. `memberships` auto-subscribes by JWT subject; `household_ledger`, `household_budget`, and `household_recurring` are subscribed with a Household parameter and independently prove membership before streaming ledger, envelope, and recurring facts.
 _Avoid_: Delta, Poll Feed
 
 **PowerSync Checkpoint**:

@@ -9,14 +9,17 @@ This package is the reviewed source for Trove's PowerSync Sync Streams. The mobi
 - Instance URL: supply the dashboard's Connect URL as `POWERSYNC_URL`.
 - Source database: PlanetScale Postgres over its direct TLS connection on port `5432` using the replication role.
 - Never use Hyperdrive as the PowerSync replication source. Hyperdrive remains the Worker path for `commands.apply`.
-- Publication: `powersync` with exactly `public.membership`, `public.accounts`, `public.categories`, and `public.transactions`.
+- Publication: `powersync` contains membership, ledger, budget, refund-link, and recurring fact tables. `packages/api/src/lib/powersync-publication.test.ts` locks the exact list.
+- Every published source table has one text primary key named `id`; migration 0009 backfills and converts the expanded domain tables before adding them to the publication.
 
 ## Sync Streams
 
-`sync-streams.yaml` uses edition 3 and exposes two streams:
+`sync-streams.yaml` uses edition 3 and exposes four streams:
 
 - `memberships` automatically syncs the signed-in user's memberships at priority 1.
 - `household_ledger` is on demand. The client supplies `household_id`, but every query also proves membership with the signed JWT `sub`. Account and transaction queries apply private-account ownership rules.
+- `household_budget` streams workspaces, envelopes, period-effective facts, assignments, and refund links.
+- `household_recurring` streams rules and occurrences and repeats private-account ownership checks.
 
 The subscription parameter is client controlled and is never treated as authorization by itself.
 

@@ -15,6 +15,20 @@
       "when": 1788791240327,
       "tag": "0008_powersync_row_ids",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788807600000,
+      "tag": "0009_expand_powersync_publication",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788810900000,
+      "tag": "0010_concurrent_change_sequence",
+      "breakpoints": true
     }
   ]
 }

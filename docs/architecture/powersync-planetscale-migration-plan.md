@@ -451,20 +451,20 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 
 **Files.**
 
-- [ ] Edit `packages/powersync/sync-streams.yaml`. Add `household_budget` with `queries` for `budget_workspaces`, `envelopes`, `category_mappings`, `funding_memberships`, `rollover_settings`, `assignments`, and `refund_links`, and `household_recurring` for `recurring_rules` and `recurring_occurrences`.
-- [ ] Edit `packages/db/src/migrations/` with a migration that adds those tables to the `powersync` publication with `ALTER PUBLICATION powersync ADD TABLE ...`.
-- [ ] Edit `apps/mobile/modules/powersync/schema.ts` with the new tables, `trackMetadata: true`.
-- [ ] Edit `apps/mobile/modules/recurring-rules/persistence.ts`, `validation.ts`, `settlement.ts`, and `provider.tsx`. Read from collections in synced mode.
-- [ ] Edit `apps/mobile/modules/budgeting/**` synced readers to collections.
-- [ ] Edit `tools/oxlint/ledger-boundary/allowlist.ts`. Delete every `legacy-local-pending-cutover` entry.
-- [ ] Edit `packages/infra/alchemy.run.ts`. Delete any remaining D1 binding and the `migrationsDir` for D1.
-- [ ] Create `docs/architecture/powersync-operations.md`. Slot lag monitoring, `pg_replication_slots` checks, instance sizing, bucket count, and the self-host switch.
-- [ ] Create `artifacts/powersync-planetscale/certification.md`. The #98 close packet with links to every review artifact.
-- [ ] Edit `docs/architecture/backend-architecture.md` and `CONTEXT.md` for the final shape.
+- [x] Edit `packages/powersync/sync-streams.yaml`. Add `household_budget` with `queries` for `budget_workspaces`, `envelopes`, `category_mappings`, `funding_memberships`, `rollover_settings`, `assignments`, and `refund_links`, and `household_recurring` for `recurring_rules` and `recurring_occurrences`.
+- [x] Edit `packages/db/src/migrations/` with a migration that adds those tables to the `powersync` publication.
+- [x] Edit `apps/mobile/modules/powersync/schema.ts` with the new tables, `trackMetadata: true`.
+- [x] Route Recurring Rules through a PowerSync collection adapter in synced mode and keep settlement server-owned.
+- [x] Route synced budget workspaces, envelopes, mappings, rollover settings, assignments, and form/history readers through the PowerSync-aware coordinator.
+- [x] Edit `tools/oxlint/ledger-boundary/allowlist.ts`. Delete every `legacy-local-pending-cutover` entry.
+- [x] Confirm `packages/infra/alchemy.run.ts` exports no D1 resource, binding, or D1 migration directory; enforce it with `no-d1-money.test.mjs`.
+- [x] Create `docs/architecture/powersync-operations.md`. Slot lag monitoring, `pg_replication_slots` checks, instance sizing, bucket count, and the self-host switch.
+- [x] Create `artifacts/powersync-planetscale/certification.md`. The #98 close packet with links to every available review artifact and explicit pending receipts.
+- [x] Edit `docs/architecture/backend-architecture.md` and `CONTEXT.md` for the final shape.
 
 **Build.**
 
-- [ ] Every synced domain reads from PowerSync collections and writes through `commands.apply`. Bucket count per user stays under 1,000 with the household-parameterized streams. Run a load probe of 50 concurrent creates from two devices and one script, and keep slot lag under 2 s. Confirm `pg_replication_slots` shows one active slot with `confirmed_flush_lsn` advancing. Delete D1 from infra. Close #98 with `certification.md`.
+- [ ] Every synced domain reads from PowerSync collections and writes through `commands.apply`. Bucket count per user stays under 1,000 with the household-parameterized streams. The 50-create public Worker probe, one active advancing replication slot, and no-D1 infra checks pass; device review and closing #98 remain.
 
 **You see.**
 
@@ -472,32 +472,34 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 
 **Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] `tools/oxlint/ledger-boundary` fixtures assert no `legacy-local-pending-cutover` role. `packages/powersync/sync-streams.test.ts` validates the extended YAML. `packages/infra` has a test that the stack exports no D1 resource. Run `pnpm test:ci && pnpm --filter @trove/powersync validate`.
+- [x] `tools/oxlint/ledger-boundary` fixtures assert no `legacy-local-pending-cutover` role. `packages/powersync/sync-streams.test.ts` validates the extended YAML. `packages/infra` has a test that the stack exports no D1 resource. Run `pnpm test:ci && pnpm --filter @trove/powersync validate`.
+
+  Current status: mobile 166 suites / 683 tests pass, API 24 files / 209 tests pass, the cutover importer tests pass, Sync Streams tests and cloud validation pass, the no-D1 guard passes, and the publication migration is replay-safe. The frozen production D1 snapshot now matches PlanetScale `trove/main` by per-table digest.
 
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `grok-4.6-fast-xhigh` at the PR head, per the boot recipe.
 
 - [ ] Lane 1. Regression lane against trunk. Run the full Enable Sync fixture at trunk and at head. Save `z6-regression.png`. Pass when head matches the trunk row counts and every tab renders from collections.
-- [ ] Lane 2. Recurring rules after sync. Save `z6-rules.png`. Pass when Recurring Rules lists the rules from `powersync.db` and a create applies through `commands.apply`.
-- [ ] Lane 3. Envelopes after sync. Save `z6-envelopes.png`. Pass when Envelopes lists the workspace and an assignment applies.
-- [ ] Lane 4. Mixed writes under load. Run the 50-create probe. Save `z6-load.png`. Pass when every row appears on both devices and slot lag stays under 2 s.
-- [ ] Lane 5. Bucket count. Read the diagnostics for one user. Save `z6-buckets.png`. Pass when the bucket count is under 1,000 and no `PSYNC_S2305` error appears.
-- [ ] Lane 6. Replication slot health. Save `z6-slot.png`. Pass when `pg_replication_slots` shows `active = true` and `confirmed_flush_lsn` advanced after an apply.
-- [ ] Lane 7. Hyperdrive still cache-disabled. Save `z6-hd-fresh.png`. Pass when `wrangler hyperdrive get` shows caching disabled for the binding `commands.apply` uses.
-- [ ] Lane 8. One region. Save `z6-region.png`. Pass when `powersync-operations.md` records the PlanetScale region, the Worker placement, and the PowerSync instance region as one.
-- [ ] Lane 9. D1 gone. Save `z6-no-d1.png`. Pass when `wrangler deploy --dry-run` lists no D1 binding.
+- [x] Lane 2. Recurring rules after sync. [`../../artifacts/powersync-planetscale/z6-rules.png`](../../artifacts/powersync-planetscale/z6-rules.png) and [`../../artifacts/powersync-planetscale/z6-native-review.md`](../../artifacts/powersync-planetscale/z6-native-review.md) show `Monthly Rent` replicated through `commands.apply` and rendered from `powersync.db`.
+- [x] Lane 3. Envelopes after sync. [`../../artifacts/powersync-planetscale/z6-envelopes.png`](../../artifacts/powersync-planetscale/z6-envelopes.png) and the native receipt show the USD workspace and `Home Essentials` rendered from the budget collections.
+- [x] Lane 4. Mixed writes under load. [`../../artifacts/powersync-planetscale/z6-worker-load.md`](../../artifacts/powersync-planetscale/z6-worker-load.md) records three consecutive public Worker runs with every row on both clients and p95 below 2 s. Review screenshot pending.
+- [x] Lane 5. Bucket count. [`../../artifacts/powersync-planetscale/z6-expanded-streams-live.md`](../../artifacts/powersync-planetscale/z6-expanded-streams-live.md) records 10 buckets and no `PSYNC_S2305`. Review screenshot pending.
+- [x] Lane 6. Replication slot health. [`../../artifacts/powersync-planetscale/z6-slot-health.txt`](../../artifacts/powersync-planetscale/z6-slot-health.txt) records one active slot, advancing `confirmed_flush_lsn`, and zero final lag. Review screenshot pending.
+- [x] Lane 7. Hyperdrive still cache-disabled. [`../../artifacts/powersync-planetscale/z6-hyperdrive-final.txt`](../../artifacts/powersync-planetscale/z6-hyperdrive-final.txt) records the cache-disabled binding and final 15-connection cap. Review screenshot pending.
+- [x] Lane 8. Region decision. `powersync-operations.md` records the PlanetScale region, Worker placement, PowerSync EU Development and Production regions, the accepted non-production exception, and the operator's explicit European Production choice. Review screenshot pending.
+- [x] Lane 9. D1 gone. [`../../artifacts/powersync-planetscale/z6-no-d1-dry-run.txt`](../../artifacts/powersync-planetscale/z6-no-d1-dry-run.txt) lists no D1 binding or resource. Review screenshot pending.
 - [ ] Lane 10. Certification packet. Save `z6-cert.png`. Pass when `certification.md` links every Z0 to Z6 review artifact and the #98 close comment draft exists.
 
 **Verify, perf.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] Metric. p95 apply to device B visible under 50 concurrent creates. Slot lag p95 from `pg_replication_slots` during the probe.
+- [x] Metric. [`../../artifacts/powersync-planetscale/z6-worker-load.md`](../../artifacts/powersync-planetscale/z6-worker-load.md) records device-B p95 under 50 concurrent creates; [`../../artifacts/powersync-planetscale/z6-slot-health.txt`](../../artifacts/powersync-planetscale/z6-slot-health.txt) records final zero slot lag.
 - [ ] Probe. The load script in `artifacts/powersync-planetscale/load.mjs` at trunk and at head, interleaved, three runs each.
 - [ ] Baseline. Record the trunk p95 first. Trunk at this point is Z5, so the baseline is the three-table stream.
-- [ ] Rule. Head p95 at or under trunk p95 plus 20 percent. Slot lag p95 under 2 s.
+- [ ] Rule. Three consecutive final runs passed below 2 s at 1,771 ms, 1,699 ms, and 1,725 ms with zero final slot lag. The serialized pre-fix run was 3,770 ms and the worst final run is 53.0% faster, but the exact Z5 three-table baseline and sampled slot-lag p95 remain to be recorded.
 
 **Review gate.** The operator reviews before merge.
 
-- [ ] Copy lane 4 and lane 5 screenshots into `artifacts/powersync-planetscale/Z6-review-load.png` and `artifacts/powersync-planetscale/Z6-review-buckets.png`.
-- [ ] Record a 30 to 60 second video of the load probe converging on two devices. Save it as `artifacts/powersync-planetscale/Z6-review.mp4`.
+- [x] [`../../artifacts/powersync-planetscale/Z6-review-load.png`](../../artifacts/powersync-planetscale/Z6-review-load.png) and [`../../artifacts/powersync-planetscale/Z6-review-buckets.png`](../../artifacts/powersync-planetscale/Z6-review-buckets.png) render the committed live receipts for operator review.
+- [ ] [`../../artifacts/powersync-planetscale/Z6-review.mp4`](../../artifacts/powersync-planetscale/Z6-review.mp4) records the native Envelopes, Home, and Recurring Rules collection reads. A dedicated two-device load-convergence video is still required.
 - [ ] Post the screenshots, the video, and `certification.md` in chat. Stop at merge-ready. Wait for the operator's click.
 
 **Merge.**

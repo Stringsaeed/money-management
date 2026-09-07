@@ -110,6 +110,24 @@ describe("reconcilePowerSyncStatus", () => {
     expect(harness.disconnectAndClear).toHaveBeenCalledTimes(1);
     expect(harness.connect).not.toHaveBeenCalled();
   });
+
+  it("preserves cached rows while access is transient or remotely revoked", async () => {
+    const harness = createDependencies();
+
+    await reconcilePowerSyncStatus(
+      {
+        householdId: null,
+        userId: undefined,
+        killSwitchLocalOnly: false,
+        preserveWhenIneligible: true,
+      },
+      harness.dependencies,
+    );
+
+    expect(harness.disconnect).toHaveBeenCalledTimes(1);
+    expect(harness.disconnectAndClear).not.toHaveBeenCalled();
+    expect(harness.connect).not.toHaveBeenCalled();
+  });
 });
 
 describe("useSyncWorker availability", () => {

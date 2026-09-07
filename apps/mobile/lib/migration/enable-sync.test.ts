@@ -58,7 +58,15 @@ async function setupDb(): Promise<LocalDb> {
 const MATCHING_MANIFEST: ImportManifest = {
   rowCounts: {
     account: 1,
+    assignment: 0,
+    budget_workspace: 0,
     category: 0,
+    category_mapping: 0,
+    envelope: 0,
+    funding_membership: 0,
+    recurring_occurrence: 0,
+    recurring_rule: 0,
+    rollover_setting: 0,
     transaction: 0,
   },
   transactionAmountMinorByAccount: {},

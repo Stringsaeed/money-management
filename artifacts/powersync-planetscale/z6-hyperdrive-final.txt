@@ -1,0 +1,15 @@
+observed_at=2026-09-07T20:09:26.339Z
+stage=z6_verify_pool10
+hyperdrive_id=6c59b049a54e4bd3b6ebfc0159f84939
+hyperdrive_name=trove-ledger-fresh-f3e623372193e
+binding=HYPERDRIVE_FRESH
+caching_disabled=true
+origin_connection_limit=15
+worker_post_teardown_status=404
+worker_deleted=true
+hyperdrive_deleted=true
+idle_worker_sessions_terminated=14
+remaining_powersync_slots=1
+cloud_slot_active=true
+cloud_slot_lag_bytes=0
+result=pass

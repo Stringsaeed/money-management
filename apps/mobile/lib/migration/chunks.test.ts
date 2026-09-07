@@ -8,7 +8,19 @@ import { migrateBudgeting } from "@/db/budgeting-migration";
 import { migrateCategoryLifecycle } from "@/db/category-lifecycle-migration";
 import { migrateRecurringRules } from "@/db/recurring-rules-migration";
 import * as schema from "@/db/schema";
-import { accounts, categories, transactions } from "@/db/schema";
+import {
+  accounts,
+  assignments,
+  budgetWorkspaces,
+  categories,
+  categoryMappings,
+  envelopes,
+  fundingMemberships,
+  recurringOccurrences,
+  recurringRules,
+  rolloverSettings,
+  transactions,
+} from "@/db/schema";
 import { applyLegacyMigrations, createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
 
 import { buildImportChunks } from "./chunks";
@@ -213,6 +225,138 @@ describe("buildImportChunks", () => {
     });
     const chunks = await buildImportChunks(db);
     expect(entityTypesInOrder(chunks)).toEqual(["account", "category", "transaction"]);
+  });
+
+  it("imports recurring and budget facts in dependency order", async () => {
+    const db = await setupDb();
+    const createdAt = "2026-01-01T00:00:00.000Z";
+    await db.insert(accounts).values({
+      id: "account-1",
+      name: "Checking",
+      type: "bank",
+      currency: "USD",
+      createdAt,
+      updatedAt: createdAt,
+    });
+    await db.insert(categories).values({
+      id: "category-1",
+      name: "Groceries",
+      type: "expense",
+      createdAt,
+      updatedAt: createdAt,
+    });
+    await db.insert(recurringRules).values({
+      id: "rule-1",
+      name: "Monthly",
+      type: "expense",
+      amountMinor: 100,
+      currency: "USD",
+      accountId: "account-1",
+      categoryId: "category-1",
+      description: "",
+      frequency: "month",
+      intervalCount: 1,
+      startDate: "2026-01-01",
+      timeZone: "Asia/Dubai",
+      eligibilityFloor: "2026-01-01",
+      createdAt,
+      updatedAt: createdAt,
+    });
+    await db.insert(budgetWorkspaces).values({
+      currency: "USD",
+      activationPeriod: "2026-01",
+      createdAt,
+      updatedAt: createdAt,
+    });
+    await db.insert(envelopes).values({
+      id: "envelope-1",
+      currency: "USD",
+      name: "Needs",
+      icon: "📦",
+      color: "#8B9D83",
+      createdAt,
+      updatedAt: createdAt,
+    });
+    await db.insert(categoryMappings).values({
+      categoryId: "category-1",
+      envelopeId: "envelope-1",
+      effectiveFromPeriod: "2026-01",
+      effectiveToPeriod: "2026-02",
+      createdAt,
+    });
+    await db.insert(categoryMappings).values({
+      categoryId: "category-1",
+      envelopeId: "envelope-1",
+      effectiveFromPeriod: "2026-03",
+      effectiveToPeriod: null,
+      createdAt,
+    });
+    await db.insert(fundingMemberships).values({
+      accountId: "account-1",
+      currency: "USD",
+      effectiveFromPeriod: "2026-01",
+      createdAt,
+    });
+    await db.insert(rolloverSettings).values({
+      envelopeId: "envelope-1",
+      effectiveFromPeriod: "2026-01",
+      positiveRollover: true,
+      createdAt,
+    });
+    await db.insert(assignments).values({
+      id: "assignment-1",
+      currency: "USD",
+      budgetPeriod: "2026-01",
+      destinationEnvelopeId: "envelope-1",
+      amountMinor: 500,
+      createdAt,
+    });
+    await db.insert(transactions).values({
+      id: "transaction-1",
+      type: "expense",
+      amount: 100,
+      currency: "USD",
+      date: "2026-01-01",
+      accountId: "account-1",
+      categoryId: "category-1",
+      recurringRuleId: "rule-1",
+      isRecurring: true,
+      createdAt,
+      updatedAt: createdAt,
+    });
+    await db.insert(recurringOccurrences).values({
+      ruleId: "rule-1",
+      scheduledDate: "2026-01-01",
+      transactionId: "transaction-1",
+      settledAt: createdAt,
+    });
+
+    const chunks = await buildImportChunks(db);
+    expect(entityTypesInOrder(chunks)).toEqual([
+      "account",
+      "category",
+      "recurring_rule",
+      "budget_workspace",
+      "envelope",
+      "category_mapping",
+      "funding_membership",
+      "rollover_setting",
+      "assignment",
+      "transaction",
+      "recurring_occurrence",
+    ]);
+    const mappings = chunks
+      .filter((chunk) => chunk.entityType === "category_mapping")
+      .flatMap((chunk) => chunk.rows);
+    expect(mappings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ effectiveFromPeriod: "2026-01", envelopeId: "envelope-1" }),
+        expect.objectContaining({ effectiveFromPeriod: "2026-03", envelopeId: "envelope-1" }),
+      ]),
+    );
+    expect(
+      mappings.filter((row) => row.effectiveFromPeriod === "2026-03" && row.envelopeId === null),
+    ).toEqual([]);
   });
 
   it("splits a large table across chunks and preserves every row exactly once", async () => {

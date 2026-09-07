@@ -30,7 +30,9 @@ import { issuesFromZod } from "./shared";
  */
 
 const assignmentCommitPayloadSchema = z.object({
-  destinationEnvelopeId: z.string().min(1),
+  /** Client-generated id used by PowerSync optimistic inserts. */
+  assignmentId: z.string().min(1).optional(),
+  destinationEnvelopeId: z.string().min(1).nullable(),
   /** Omit/null for a plain top-up from Unassigned Money. */
   sourceEnvelopeId: z.string().min(1).nullable().default(null),
   currency: z.string().min(3).max(3),
@@ -66,29 +68,44 @@ export const assignmentCommitHandler = {
   ): Promise<CommandPlan | PlanRejection> {
     const input = payload as AssignmentCommitPayload;
 
-    // Destination envelope must exist and share the workspace currency.
-    const destination = await loadEnvelope(ctx, input.destinationEnvelopeId);
-    if (!destination) {
-      return {
-        kind: "missing_entity",
-        entityType: "envelope",
-        entityId: input.destinationEnvelopeId,
-      };
-    }
-    if (destination.currency !== input.currency) {
+    if (
+      !input.reversesAssignmentId &&
+      (input.destinationEnvelopeId === input.sourceEnvelopeId ||
+        (input.destinationEnvelopeId === null && input.sourceEnvelopeId === null))
+    ) {
       return {
         kind: "invalid_intent",
         issues: [
-          {
-            field: "currency",
-            message: `Envelope "${destination.name}" lives in the ${destination.currency} workspace.`,
-          },
+          { field: "destinationEnvelopeId", message: "Choose two different Money endpoints." },
         ],
       };
     }
 
+    // A destination, when present, must exist and share the workspace currency.
+    if (input.destinationEnvelopeId) {
+      const destination = await loadEnvelope(ctx, input.destinationEnvelopeId);
+      if (!destination) {
+        return {
+          kind: "missing_entity",
+          entityType: "envelope",
+          entityId: input.destinationEnvelopeId,
+        };
+      }
+      if (destination.currency !== input.currency) {
+        return {
+          kind: "invalid_intent",
+          issues: [
+            {
+              field: "currency",
+              message: `Envelope "${destination.name}" lives in the ${destination.currency} workspace.`,
+            },
+          ],
+        };
+      }
+    }
+
     let sourceEnvelopeId: string | null = null;
-    let destinationEnvelopeId: string = input.destinationEnvelopeId;
+    let destinationEnvelopeId: string | null = input.destinationEnvelopeId;
     let amountMinor = input.amountMinor;
 
     if (input.reversesAssignmentId) {
@@ -159,7 +176,7 @@ export const assignmentCommitHandler = {
       // original came straight from Unassigned Money (no source), the
       // reversing row is source-only and returns it there.
       sourceEnvelopeId = original.destinationEnvelopeId;
-      destinationEnvelopeId = original.sourceEnvelopeId ?? "";
+      destinationEnvelopeId = original.sourceEnvelopeId;
       amountMinor = original.amountMinor;
     } else if (input.sourceEnvelopeId) {
       // Envelope-to-envelope move — budget-neutral, no Unassigned guard.
@@ -267,10 +284,12 @@ export const assignmentCommitHandler = {
               reversalOf: input.reversesAssignmentId,
               unassignedAfter: facts.unassignedMinor + amountMinor,
             }
-          : {
-              envelopeId: destinationEnvelopeId,
-              unassignedAfter: facts.unassignedMinor - (consumesUnassigned ? amountMinor : 0),
-            }),
+          : destinationEnvelopeId
+            ? {
+                envelopeId: destinationEnvelopeId,
+                unassignedAfter: facts.unassignedMinor - (consumesUnassigned ? amountMinor : 0),
+              }
+            : { unassignedAfter: facts.unassignedMinor + amountMinor }),
         currency: input.currency,
         budgetPeriod: input.budgetPeriod,
         amountMinor,
@@ -283,10 +302,10 @@ export const assignmentCommitHandler = {
           .insert(assignment)
           .values({
             householdId: ctx.householdId,
-            id: crypto.randomUUID(),
+            id: input.assignmentId ?? crypto.randomUUID(),
             currency: input.currency,
             budgetPeriod: input.budgetPeriod,
-            destinationEnvelopeId: destinationEnvelopeId || null,
+            destinationEnvelopeId,
             sourceEnvelopeId,
             amountMinor,
             ...(input.reversesAssignmentId && {

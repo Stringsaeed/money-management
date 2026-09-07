@@ -11,7 +11,10 @@ const KIND_LABELS: Record<CommandKind, string> = {
   "transaction.create": "Record transaction",
   "transaction.edit": "Edit transaction",
   "transaction.remove": "Delete transaction",
+  "recurring.change": "Change recurring rule",
+  "budget.configure": "Change budget",
   "assignment.commit": "Assign transactions",
+  "assignment.correct": "Correct assignment",
   "refund.link": "Link refund",
   import_bundle: "Import data",
 };

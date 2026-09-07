@@ -3,7 +3,12 @@ import { sql } from "drizzle-orm";
 
 import type { EffectTag } from "@trove/protocol";
 
-import { commandResult, householdChange, pipelineAssertion } from "@trove/db/schema/commands";
+import {
+  commandResult,
+  householdChange,
+  householdChangeSequence,
+  pipelineAssertion,
+} from "@trove/db/schema/commands";
 
 import type { CommandDatabase } from "./types";
 
@@ -19,7 +24,7 @@ export function assertionStatement(db: CommandDatabase, guard: SQL): BatchStatem
 }
 
 export function changeLogStatement(
-  db: CommandDatabase,
+  _db: CommandDatabase,
   input: {
     householdId: string;
     userId: string;
@@ -27,14 +32,22 @@ export function changeLogStatement(
     effects: readonly EffectTag[];
   },
 ): BatchStatement {
-  return db.insert(householdChange).values({
-    id: crypto.randomUUID(),
-    householdId: input.householdId,
-    userId: input.userId,
-    commandId: input.commandId,
-    effects: [...input.effects],
-    seq: sql`(SELECT COALESCE(MAX(${householdChange.seq}), 0) + 1 FROM ${householdChange} WHERE ${householdChange.householdId} = ${input.householdId})`,
-  });
+  const changeId = crypto.randomUUID();
+  const effects = JSON.stringify(input.effects);
+  return {
+    getSQL: () => sql`
+      WITH next_sequence AS (
+        INSERT INTO ${householdChangeSequence} (household_id, seq)
+        VALUES (${input.householdId}, 1)
+        ON CONFLICT (household_id) DO UPDATE
+        SET seq = ${householdChangeSequence.seq} + 1
+        RETURNING seq
+      )
+      INSERT INTO ${householdChange} (id, household_id, seq, user_id, command_id, effects)
+      SELECT ${changeId}, ${input.householdId}, next_sequence.seq, ${input.userId}, ${input.commandId}, ${effects}::jsonb
+      FROM next_sequence
+    `,
+  };
 }
 
 export function resultStatement(
@@ -52,9 +65,12 @@ export async function executeHouseholdTransaction(
   db: CommandDatabase,
   statements: readonly BatchStatement[],
   householdId: string,
+  options: { readonly lockHousehold?: boolean } = {},
 ): Promise<void> {
   await db.transaction(async (tx) => {
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${householdId}))`);
+    if (options.lockHousehold !== false) {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${householdId}))`);
+    }
     for (const statement of statements) {
       await tx.execute(statement.getSQL());
     }

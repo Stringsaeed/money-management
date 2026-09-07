@@ -1,6 +1,5 @@
 /**
- * Effect tag vocabulary shared by the sync feed, the Realtime invalidation
- * signal, and the household activity history.
+ * Effect tag vocabulary shared by command results and household activity.
  *
  * A committed command appends one `HouseholdChange` carrying the subset of
  * tags it invalidated. Clients map tags onto their local cache invalidation
@@ -30,7 +29,7 @@ export const coversEffects = (effects: Effects, subset: Effects): boolean =>
 
 /** One row appended to `household_changes` per committed command. */
 export interface HouseholdChange {
-  /** Per-household monotonic sequence number — the sync watermark unit. */
+  /** Per-household monotonic sequence number used for ordered activity. */
   readonly seq: number;
   readonly householdId: string;
   /** Idempotency key of the command that produced this change. */

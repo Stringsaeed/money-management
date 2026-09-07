@@ -26,7 +26,19 @@ export async function computeLocalManifest(db: LocalDb): Promise<ImportManifest>
 export async function computeLocalManifestFromChunks(
   chunks: readonly ImportBundlePayload[],
 ): Promise<ImportManifest> {
-  const rowCounts = { account: 0, category: 0, transaction: 0 };
+  const rowCounts = {
+    account: 0,
+    category: 0,
+    recurring_rule: 0,
+    budget_workspace: 0,
+    envelope: 0,
+    category_mapping: 0,
+    funding_membership: 0,
+    rollover_setting: 0,
+    assignment: 0,
+    transaction: 0,
+    recurring_occurrence: 0,
+  };
   const transactionAmountMinorByAccount: Record<string, number> = {};
   const contentRows = chunks.flatMap((chunk) =>
     chunk.rows.map((row) => {

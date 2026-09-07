@@ -5,17 +5,13 @@ import { renderHookWithProviders } from "@/tests/test-utils/render";
 
 const mockGetProjection = jest.fn();
 
-jest.mock("@/db/sqlite", () => ({
-  useSQLiteContext: () => ({ raw: "poisoned-sqlite" }),
-}));
-
-jest.mock("@/modules/budgeting/budgeting", () => ({
-  createBudgetingCoordinator: () => ({
+jest.mock("@/hooks/use-budgeting-coordinator", () => ({
+  useBudgetingCoordinator: () => ({
     getProjection: (...args: unknown[]) => mockGetProjection(...args),
   }),
 }));
 
-describe("useBudgetProjection synced fail-closed", () => {
+describe("useBudgetProjection synced", () => {
   beforeEach(() => {
     mockGetProjection.mockResolvedValue({
       currency: "USD",
@@ -25,7 +21,7 @@ describe("useBudgetProjection synced fail-closed", () => {
     });
   });
 
-  it("does not treat poisoned local A/C/T as $0 money while synced", async () => {
+  it("loads the projection through the selected PowerSync-aware coordinator", async () => {
     const { result } = await renderHookWithProviders(() => useBudgetProjection("USD", "2026-03"), {
       ledgerSelection: {
         kind: "synced",
@@ -34,9 +30,8 @@ describe("useBudgetProjection synced fail-closed", () => {
       },
     });
 
-    await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(result.current.error?.message).toMatch(/unavailable for the synced ledger/);
-    expect(result.current.data).toBeUndefined();
-    expect(mockGetProjection).not.toHaveBeenCalled();
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toMatchObject({ currency: "USD", period: "2026-03" });
+    expect(mockGetProjection).toHaveBeenCalledWith({ currency: "USD", period: "2026-03" });
   });
 });
