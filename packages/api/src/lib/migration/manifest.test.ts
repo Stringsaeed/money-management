@@ -35,6 +35,23 @@ describe("computeImportManifest", () => {
   it("normalizes PostgreSQL bigint aggregates at the database boundary", () => {
     expect(parseImportAggregate("101", "transaction count")).toBe(101);
     expect(parseImportAggregate("10100", "transaction amount sum")).toBe(10_100);
+    expect(parseImportAggregate(101, "transaction count")).toBe(101);
+    expect(parseImportAggregate(10_100n, "transaction amount sum")).toBe(10_100);
+  });
+
+  it.each(["", "10.5", "invalid", "-1", 10.5, -1, 9_007_199_254_740_992n])(
+    "rejects an unsafe aggregate value: %s",
+    (value) => {
+      expect(() => parseImportAggregate(value, "transaction count")).toThrow(
+        "Invalid transaction count returned by the database.",
+      );
+    },
+  );
+
+  it("rejects an unsafe numeric aggregate string", () => {
+    expect(() => parseImportAggregate("9007199254740992", "transaction count")).toThrow(
+      "Invalid transaction count returned by the database.",
+    );
   });
 
   it("counts ledger facts and sums transactions by account, scoped to the household", async () => {

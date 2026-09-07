@@ -1,11 +1,16 @@
 import { eq, sql } from "drizzle-orm";
+import { z } from "zod";
 
 import type { ImportManifest } from "@trove/protocol";
 import { category, ledgerAccount, transaction } from "@trove/db/schema/ledger";
 
 import type { CommandDatabase } from "../commands/types";
 
-type ImportAggregate = number | string;
+type ImportAggregate = string | number | bigint;
+
+const importAggregateSchema = z
+  .union([z.string().regex(/^\d+$/).transform(Number), z.number(), z.bigint().transform(Number)])
+  .pipe(z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER));
 
 export async function computeImportManifest(
   db: CommandDatabase,
@@ -45,11 +50,11 @@ export async function computeImportManifest(
 }
 
 export function parseImportAggregate(value: ImportAggregate, label: string): number {
-  const parsed = typeof value === "number" ? value : Number(value);
-  if (!Number.isSafeInteger(parsed)) {
+  const result = importAggregateSchema.safeParse(value);
+  if (!result.success) {
     throw new Error(`Invalid ${label} returned by the database.`);
   }
-  return parsed;
+  return result.data;
 }
 
 function sumsByKey(rows: readonly { key: string; total: ImportAggregate }[]) {
