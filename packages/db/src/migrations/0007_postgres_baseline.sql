@@ -224,7 +224,7 @@ CREATE TABLE "membership" (
 --> statement-breakpoint
 CREATE TABLE "categories" (
 	"household_id" text NOT NULL,
-	"id" text NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
 	"type" text NOT NULL,
 	"color" text DEFAULT '#FF6B6B' NOT NULL,
@@ -238,14 +238,14 @@ CREATE TABLE "categories" (
 	"updated_by" text NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "categories_household_id_id_pk" PRIMARY KEY("household_id","id"),
+	CONSTRAINT "categories_household_id_id_unique" UNIQUE("household_id","id"),
 	CONSTRAINT "categories_lifecycle_valid" CHECK ("categories"."lifecycle" IN ('active', 'archived')),
 	CONSTRAINT "categories_type_valid" CHECK ("categories"."type" IN ('income', 'expense'))
 );
 --> statement-breakpoint
 CREATE TABLE "accounts" (
 	"household_id" text NOT NULL,
-	"id" text NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
 	"type" text NOT NULL,
 	"currency" text DEFAULT 'USD' NOT NULL,
@@ -263,7 +263,7 @@ CREATE TABLE "accounts" (
 	"updated_by" text NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "accounts_household_id_id_pk" PRIMARY KEY("household_id","id"),
+	CONSTRAINT "accounts_household_id_id_unique" UNIQUE("household_id","id"),
 	CONSTRAINT "accounts_lifecycle_valid" CHECK ("accounts"."lifecycle" IN ('active', 'archived')),
 	CONSTRAINT "accounts_type_valid" CHECK ("accounts"."type" IN ('cash', 'bank', 'card')),
 	CONSTRAINT "accounts_private_owner_required" CHECK ("accounts"."visibility" = 'public' OR "accounts"."owner_user_id" IS NOT NULL)
@@ -271,7 +271,7 @@ CREATE TABLE "accounts" (
 --> statement-breakpoint
 CREATE TABLE "transactions" (
 	"household_id" text NOT NULL,
-	"id" text NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"type" text NOT NULL,
 	"amount_minor" integer NOT NULL,
 	"currency" text NOT NULL,
@@ -290,7 +290,6 @@ CREATE TABLE "transactions" (
 	"updated_by" text NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "transactions_household_id_id_pk" PRIMARY KEY("household_id","id"),
 	CONSTRAINT "transactions_type_valid" CHECK ("transactions"."type" IN ('expense', 'income', 'transfer')),
 	CONSTRAINT "transactions_amount_positive" CHECK ("transactions"."amount_minor" > 0),
 	CONSTRAINT "transactions_date_shape" CHECK ("transactions"."date" ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'),

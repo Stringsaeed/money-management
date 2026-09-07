@@ -32,8 +32,11 @@ export {
   IMPORT_ENTITY_TYPES,
   MAX_IMPORT_APPLY_ROWS,
   MAX_IMPORT_CHUNK_ROWS,
+  canonicalizeImportContent,
   manifestsMatch,
   type ImportBundlePayload,
+  type ImportContentRow,
+  type ImportContentValue,
   type ImportEntityType,
   type ImportManifest,
 } from "./import.js";

@@ -10,6 +10,8 @@ import { describe, expect, it } from "@jest/globals";
 
 import {
   householdReadFromQuery,
+  householdUserIdForQuery,
+  householdsQueryKeyForUser,
   nextClaim,
   pickActiveHousehold,
   resolveAccess,
@@ -322,6 +324,18 @@ describe("selectLedgerSourceForAccess", () => {
 });
 
 describe("householdReadFromQuery", () => {
+  it("uses the live session identity instead of a prior held claim", () => {
+    expect(householdUserIdForQuery(held, { kind: "session", user: other }, false)).toBe("user-2");
+    expect(householdUserIdForQuery(held, null, false)).toBe("user-1");
+    expect(householdUserIdForQuery(held, { kind: "session", user: other }, true)).toBeNull();
+  });
+
+  it("keeps cached household pages isolated by authenticated user", () => {
+    expect(householdsQueryKeyForUser("user-1")).toEqual(["households", "user-1"]);
+    expect(householdsQueryKeyForUser("user-2")).toEqual(["households", "user-2"]);
+    expect(householdsQueryKeyForUser("user-1")).not.toEqual(householdsQueryKeyForUser("user-2"));
+  });
+
   it("keeps cached memberships when the session probe disables the query", () => {
     expect(
       householdReadFromQuery({

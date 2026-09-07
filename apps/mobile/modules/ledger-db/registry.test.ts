@@ -47,12 +47,17 @@ describe("ledger registry", () => {
     expect(peekSyncedTransactionLedger("household-1", "user-1")).toBeNull();
   });
 
-  it("keeps the instance when a second drizzle wrapper acquires the same household", () => {
-    const first = acquireSyncedTransactionLedger(deps({ label: "a" }));
-    const second = acquireSyncedTransactionLedger(deps({ label: "b" }));
-    expect(second.ledger).toBe(first.ledger);
-    second.release();
-    expect(peekSyncedTransactionLedger("household-1", "user-1")).toBe(first.ledger);
+  it("does not reuse a ledger backed by a different database identity", () => {
+    const firstDb = { label: "a" };
+    const secondDb = { label: "b" };
+    const first = acquireSyncedTransactionLedger(deps(firstDb));
+    const second = acquireSyncedTransactionLedger(deps(secondDb));
+
+    expect(second.ledger).not.toBe(first.ledger);
+    expect(peekSyncedTransactionLedger("household-1", "user-1")).toBe(second.ledger);
+
     first.release();
+    expect(peekSyncedTransactionLedger("household-1", "user-1")).toBe(second.ledger);
+    second.release();
   });
 });

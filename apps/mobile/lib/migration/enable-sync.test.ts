@@ -17,7 +17,7 @@ import { accounts } from "@/db/schema";
 import { applyLegacyMigrations, createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
 
 import { runImport } from "./enable-sync";
-import type { LocalDb } from "./manifest";
+import { computeLocalManifest, type LocalDb } from "./manifest";
 
 type TestSQLiteDatabase = ReturnType<typeof createTestSQLiteDatabase>;
 
@@ -62,6 +62,7 @@ const MATCHING_MANIFEST: ImportManifest = {
     transaction: 0,
   },
   transactionAmountMinorByAccount: {},
+  contentDigest: "matching-digest",
 };
 
 const APPLIED_RESULT: CommandResult = {
@@ -75,6 +76,7 @@ const APPLIED_RESULT: CommandResult = {
 describe("runImport", () => {
   it("uploads every chunk in order and reports a match when manifests agree", async () => {
     const db = await setupDb();
+    const matchingManifest = await computeLocalManifest(db);
     const sent: CommandEnvelope<ImportBundlePayload>[] = [];
     const result = await runImport({
       db,
@@ -83,7 +85,7 @@ describe("runImport", () => {
         sent.push(envelope);
         return APPLIED_RESULT;
       },
-      fetchManifest: async () => MATCHING_MANIFEST,
+      fetchManifest: async () => matchingManifest,
     });
 
     expect(result.status).toBe("matched");
@@ -134,5 +136,31 @@ describe("runImport", () => {
     });
 
     expect(result.status).toBe("mismatched");
+  });
+
+  it("does not certify when the local ledger changes during upload", async () => {
+    const db = await setupDb();
+    const uploadedSnapshot = await computeLocalManifest(db);
+    const result = await runImport({
+      db,
+      householdId: HOUSEHOLD_ID,
+      sendCommand: async () => {
+        await db.insert(schema.categories).values({
+          id: "category-during-import",
+          name: "Changed locally",
+          type: "expense",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        });
+        return APPLIED_RESULT;
+      },
+      fetchManifest: async () => uploadedSnapshot,
+    });
+
+    expect(result.status).toBe("mismatched");
+    if (result.status === "mismatched") {
+      expect(result.localManifest.rowCounts.category).toBe(1);
+      expect(result.serverManifest.rowCounts.category).toBe(0);
+    }
   });
 });

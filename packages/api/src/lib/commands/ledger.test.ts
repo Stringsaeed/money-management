@@ -591,10 +591,9 @@ describe("ledger commands — transactions", () => {
   });
 
   it("scopes every write by the envelope's household — cross-household ids are invisible", async () => {
-    // Same ids exist in the other household.
     await db.insert(ledgerAccount).values({
       householdId: OTHER_HOUSEHOLD_ID,
-      id: "acc-1",
+      id: "acc-foreign",
       name: "Foreign Account",
       type: "bank",
       currency: "USD",
@@ -616,7 +615,7 @@ describe("ledger commands — transactions", () => {
 
     const outsiderResult = await applyAs(
       OUTSIDER,
-      makeEnvelope("account.update", { accountId: "acc-1", name: "Hijack" }, HOUSEHOLD_ID),
+      makeEnvelope("account.update", { accountId: "acc-foreign", name: "Hijack" }, HOUSEHOLD_ID),
     );
     expect(outsiderResult).toMatchObject({ kind: "forbidden", role: null });
   });

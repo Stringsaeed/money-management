@@ -1,10 +1,16 @@
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import type { ImportManifest } from "@trove/protocol";
+import { canonicalizeImportContent, type ImportManifest } from "@trove/protocol";
 import { category, ledgerAccount, transaction } from "@trove/db/schema/ledger";
 
 import type { CommandDatabase } from "../commands/types";
+import {
+  accountContentRow,
+  categoryContentRow,
+  sha256Hex,
+  transactionContentRow,
+} from "./import-content";
 
 type ImportAggregate = string | number | bigint;
 
@@ -16,7 +22,27 @@ export async function computeImportManifest(
   db: CommandDatabase,
   householdId: string,
 ): Promise<ImportManifest> {
-  const [accountCount, categoryCount, transactionCount, transactionSums] = await Promise.all([
+  return db.transaction((tx) => computeImportManifestSnapshot(tx, householdId), {
+    isolationLevel: "repeatable read",
+    accessMode: "read only",
+  });
+}
+
+type ManifestDatabase = Pick<CommandDatabase, "select">;
+
+async function computeImportManifestSnapshot(
+  db: ManifestDatabase,
+  householdId: string,
+): Promise<ImportManifest> {
+  const [
+    accountCount,
+    categoryCount,
+    transactionCount,
+    transactionSums,
+    accountRows,
+    categoryRows,
+    transactionRows,
+  ] = await Promise.all([
     db
       .select({ count: sql<ImportAggregate>`COUNT(*)` })
       .from(ledgerAccount)
@@ -37,6 +63,14 @@ export async function computeImportManifest(
       .from(transaction)
       .where(eq(transaction.householdId, householdId))
       .groupBy(transaction.accountId),
+    db.select().from(ledgerAccount).where(eq(ledgerAccount.householdId, householdId)),
+    db.select().from(category).where(eq(category.householdId, householdId)),
+    db.select().from(transaction).where(eq(transaction.householdId, householdId)),
+  ]);
+  const canonicalContent = canonicalizeImportContent([
+    ...accountRows.map(accountContentRow),
+    ...categoryRows.map(categoryContentRow),
+    ...transactionRows.map(transactionContentRow),
   ]);
 
   return {
@@ -46,6 +80,7 @@ export async function computeImportManifest(
       transaction: parseImportAggregate(transactionCount[0]?.count ?? 0, "transaction count"),
     },
     transactionAmountMinorByAccount: sumsByKey(transactionSums),
+    contentDigest: await sha256Hex(canonicalContent),
   };
 }
 

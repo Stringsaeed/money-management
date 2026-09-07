@@ -4,6 +4,8 @@ import { config } from "dotenv";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 
+import { assertProductionCutoverApproved } from "./cutover-gate";
+
 config({ path: "./.env" });
 config({ path: "../../apps/server/.env" });
 
@@ -31,6 +33,10 @@ export const server = Cloudflare.Worker(
   Effect.gen(function* () {
     const stage = yield* Alchemy.Stage;
     const isProd = stage === "prod";
+    const cutoverApproval = yield* Config.string("PLANETSCALE_CUTOVER_APPROVED").pipe(
+      Config.withDefault("blocked"),
+    );
+    assertProductionCutoverApproved(stage, cutoverApproval);
     const routing = isProd ? { domain: AUTH_HOSTNAME, workersDev: false } : { workersDev: true };
     const hd = yield* hyperdrive;
 

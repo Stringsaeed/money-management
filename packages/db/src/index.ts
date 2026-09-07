@@ -5,32 +5,45 @@ import postgres from "postgres";
 
 import * as schema from "./schema";
 
-type SqlClient = ReturnType<typeof postgres>;
-
-const requestClients = new AsyncLocalStorage<SqlClient[]>();
-
-export function createDb() {
+const openConnection = () => {
   const client = postgres(env.HYPERDRIVE_FRESH.connectionString, {
     max: 5,
     fetch_types: false,
   });
-  requestClients.getStore()?.push(client);
-  return drizzle({ client, schema });
+  return { client, db: drizzle({ client, schema }) };
+};
+
+type DbConnection = ReturnType<typeof openConnection>;
+
+interface DbScope {
+  connection?: DbConnection;
+}
+
+const requestScope = new AsyncLocalStorage<DbScope>();
+
+export function createDb() {
+  const scope = requestScope.getStore();
+  if (!scope) return openConnection().db;
+  scope.connection ??= openConnection();
+  return scope.connection.db;
 }
 
 export async function withDbScope<T>(
   run: () => Promise<T>,
   waitUntil?: { waitUntil(promise: Promise<unknown>): void },
 ): Promise<T> {
-  const created: SqlClient[] = [];
+  const scope: DbScope = {};
   try {
-    return await requestClients.run(created, run);
+    return await requestScope.run(scope, run);
   } finally {
-    const closing = Promise.allSettled(created.map((client) => client.end({ timeout: 5 })));
-    if (waitUntil) {
-      waitUntil.waitUntil(closing);
-    } else {
-      await closing;
+    const client = scope.connection?.client;
+    if (client) {
+      const closing = Promise.allSettled([client.end({ timeout: 5 })]);
+      if (waitUntil) {
+        waitUntil.waitUntil(closing);
+      } else {
+        await closing;
+      }
     }
   }
 }

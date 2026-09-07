@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // oxlint-disable typescript/no-require-imports
 // oxlint-disable anti-slop/no-module-mocking -- Jest setup owns native dependency boundaries.
+import type { ReactNode } from "react";
 import { notifyManager } from "@tanstack/query-core";
 import { act } from "@testing-library/react-native";
 
@@ -13,6 +14,17 @@ jest.mock("expo-font", () => ({
 jest.mock("@op-engineering/op-sqlite", () => ({
   open: jest.fn(),
   openAsync: jest.fn(),
+}));
+
+jest.mock("expo-crypto", () => ({
+  CryptoDigestAlgorithm: { SHA256: "SHA-256" },
+  digestStringAsync: async (_algorithm: string, value: string) => {
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join(
+      "",
+    );
+  },
+  randomUUID: jest.fn(() => crypto.randomUUID()),
 }));
 
 // better-auth's Expo client ships untranspiled ESM and talks to the network —
@@ -91,9 +103,8 @@ jest.mock("expo-splash-screen", () => ({
 }));
 
 jest.mock("react-native-keyboard-controller", () => {
-  const React = require("react");
   return {
-    KeyboardProvider: ({ children }: { children: React.ReactNode }) => children,
+    KeyboardProvider: ({ children }: { children: ReactNode }) => children,
   };
 });
 

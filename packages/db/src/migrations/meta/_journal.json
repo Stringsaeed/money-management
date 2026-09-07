@@ -8,6 +8,13 @@
       "when": 1788764743939,
       "tag": "0007_postgres_baseline",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788791240327,
+      "tag": "0008_powersync_row_ids",
+      "breakpoints": true
     }
   ]
 }

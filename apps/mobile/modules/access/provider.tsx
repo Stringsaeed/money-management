@@ -1,9 +1,15 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { orpc } from "@/lib/server/orpc";
 
-import { householdReadFromQuery, nextClaim, resolveAccess } from "./access";
+import {
+  householdReadFromQuery,
+  householdUserIdForQuery,
+  householdsQueryKeyForUser,
+  nextClaim,
+  resolveAccess,
+} from "./access";
 import { AuthSheetHost } from "./auth-sheet-host";
 import {
   AUTH_SHEET_CLOSED,
@@ -17,13 +23,7 @@ import { clearClaim, readClaim, writeClaim } from "./claim-store";
 import { HOUSEHOLDS_KEY } from "./households-key";
 import { toMembershipSummary } from "./memberships";
 import { tryRemoteSignOut, useSessionProbe } from "./session-probe";
-import type {
-  AccessCore,
-  HouseholdRead,
-  IdentityClaim,
-  MembershipSummary,
-  ReturnTo,
-} from "./types";
+import type { AccessCore, HouseholdRead, IdentityClaim, ReturnTo } from "./types";
 import { AuthSheetContext } from "./use-auth-sheet";
 import { AccessContext } from "./use-access";
 
@@ -32,8 +32,9 @@ export function AccessProvider({ children }: { readonly children: ReactNode }) {
   const probe = useSessionProbe();
   const [signedOut, setSignedOut] = useState(false);
   const [sheetSession, setSheetSession] = useState<AuthSheetSession>(AUTH_SHEET_CLOSED);
-  const households = useHouseholdRead(probe?.kind === "session" && !signedOut);
   const persistClaim = usePersistedClaim(claim.value, signedOut ? { kind: "no_session" } : probe);
+  const householdUserId = householdUserIdForQuery(persistClaim, probe, signedOut);
+  const households = useHouseholdRead(householdUserId, probe?.kind === "session" && !signedOut);
   const core = resolveAccess({
     claim: signedOut ? { kind: "none" } : (persistClaim ?? { kind: "none" }),
     probe: claim.ready ? (signedOut ? { kind: "no_session" } : probe) : null,
@@ -95,20 +96,18 @@ function usePersistedClaim(
   return held ?? claim;
 }
 
-function useHouseholdRead(enabled: boolean): HouseholdRead {
+function useHouseholdRead(userId: string | null, enabled: boolean): HouseholdRead {
   const query = useQuery({
-    queryKey: HOUSEHOLDS_KEY,
+    queryKey: householdsQueryKeyForUser(userId),
     queryFn: () => orpc.households.listMine(),
     enabled,
   });
-  const lastMemberships = useRef<readonly MembershipSummary[] | undefined>(undefined);
   const memberships = query.data?.map(toMembershipSummary);
-  if (memberships) lastMemberships.current = memberships;
   return householdReadFromQuery({
     enabled,
     isPending: query.isPending,
     isError: query.isError,
-    memberships: memberships ?? lastMemberships.current,
+    memberships,
   });
 }
 

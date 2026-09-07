@@ -474,6 +474,7 @@ roundtrip() {
 
 teardown() {
 	load_secrets
+	assert_teardown_safe
 	if wrangler delete --name "$WORKER_NAME" --force >/dev/null 2>&1 || wrangler delete --name "$WORKER_NAME" --yes >/dev/null 2>&1; then
 		printf 'deleted worker %s\n' "$WORKER_NAME" | tee "$RECEIPTS/teardown-worker.txt"
 	else
@@ -500,6 +501,27 @@ teardown() {
 	wrangler hyperdrive list 2>/dev/null | tee "$RECEIPTS/teardown-hyperdrive-list.txt"
 	if [ -n "${DIRECT_URL:-}" ]; then
 		psql "$DIRECT_URL" -tAc "SELECT nspname FROM pg_namespace WHERE nspname = 'spike'; SELECT pubname FROM pg_publication WHERE pubname IN ('powersync','powersync_forall');" | tee "$RECEIPTS/teardown-schema-check.txt" || true
+	fi
+}
+
+assert_teardown_safe() {
+	if [ -z "${DIRECT_URL:-}" ]; then
+		printf 'HARD STOP: teardown needs DIRECT_URL to prove publication powersync is spike-only.\n' >&2
+		exit 2
+	fi
+	ensure_psql
+
+	local adopted_tables
+	adopted_tables="$(psql "$DIRECT_URL" -v ON_ERROR_STOP=1 -tAc "SELECT schemaname || '.' || tablename FROM pg_publication_tables WHERE pubname = 'powersync' AND schemaname <> 'spike' ORDER BY 1")"
+	if [ -n "$adopted_tables" ]; then
+		printf 'HARD STOP: publication powersync contains non-spike tables; Z0 teardown cannot delete adopted infrastructure:\n%s\n' "$adopted_tables" >&2
+		exit 2
+	fi
+
+	local infra="$ROOT/../../packages/infra/alchemy.run.ts"
+	if [ -f "$infra" ] && /usr/bin/grep -F 'name: "trove-ledger-fresh"' "$infra" >/dev/null; then
+		printf 'HARD STOP: packages/infra has adopted Hyperdrive %s; Z0 teardown cannot delete it.\n' "$HD_NAME" >&2
+		exit 2
 	fi
 }
 

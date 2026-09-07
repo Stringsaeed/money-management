@@ -10,7 +10,6 @@ const drizzleBySqlite = new WeakMap<SQLiteDatabase, LocalDb>();
 export function databaseFor(sqlite: SQLiteDatabase): LocalDb {
   const existing = drizzleBySqlite.get(sqlite);
   if (existing) return existing;
-  // SAFETY: drizzle(sqlite, { schema }) is the LocalDb wrapper; $client is this sqlite handle.
   const db = drizzle(sqlite, { schema }) as LocalDb;
   drizzleBySqlite.set(sqlite, db);
   return db;

@@ -6,9 +6,9 @@ import {
   index,
   integer,
   pgTable,
-  primaryKey,
   text,
   timestamp,
+  unique,
 } from "drizzle-orm/pg-core";
 
 import * as auth from "./auth";
@@ -27,7 +27,7 @@ export const ledgerAccount = pgTable(
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
-    id: text("id").notNull(),
+    id: text("id").primaryKey(),
     name: text("name").notNull(),
     type: text("type", { enum: ACCOUNT_TYPES }).notNull(),
     currency: text("currency").notNull().default("USD"),
@@ -56,7 +56,7 @@ export const ledgerAccount = pgTable(
       .notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.householdId, table.id] }),
+    unique("accounts_household_id_id_unique").on(table.householdId, table.id),
     check("accounts_lifecycle_valid", sql`${table.lifecycle} IN ('active', 'archived')`),
     check("accounts_type_valid", sql`${table.type} IN ('cash', 'bank', 'card')`),
     check(
@@ -78,7 +78,7 @@ export const category = pgTable(
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
-    id: text("id").notNull(),
+    id: text("id").primaryKey(),
     name: text("name").notNull(),
     type: text("type", { enum: CATEGORY_TYPES }).notNull(),
     color: text("color").notNull().default("#FF6B6B"),
@@ -103,7 +103,7 @@ export const category = pgTable(
       .notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.householdId, table.id] }),
+    unique("categories_household_id_id_unique").on(table.householdId, table.id),
     check("categories_lifecycle_valid", sql`${table.lifecycle} IN ('active', 'archived')`),
     check("categories_type_valid", sql`${table.type} IN ('income', 'expense')`),
     index("categories_household_lifecycle_idx").on(table.householdId, table.lifecycle),
@@ -116,7 +116,7 @@ export const transaction = pgTable(
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
-    id: text("id").notNull(),
+    id: text("id").primaryKey(),
     type: text("type", { enum: TRANSACTION_TYPES }).notNull(),
     amountMinor: integer("amount_minor").notNull(),
     currency: text("currency").notNull(),
@@ -144,7 +144,6 @@ export const transaction = pgTable(
       .notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.householdId, table.id] }),
     check("transactions_type_valid", sql`${table.type} IN ('expense', 'income', 'transfer')`),
     check("transactions_amount_positive", sql`${table.amountMinor} > 0`),
     check("transactions_date_shape", sql`${table.date} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'`),

@@ -2,6 +2,7 @@ import type { LedgerSourceSelection } from "@/modules/ledger-data-source/provide
 import { selectLedgerSource } from "@/modules/ledger-data-source/provider";
 import type { LocalOnlyReason, SyncMode } from "@/stores/sync-mode-store";
 
+import { HOUSEHOLDS_KEY } from "./households-key";
 import { PROFILE_HOUSEHOLD_HREF } from "./return-to";
 import type {
   AccessCore,
@@ -17,6 +18,19 @@ import type {
 } from "./types";
 
 export type { AccessCore, HouseholdRead, ResolveAccessInput };
+
+export const householdsQueryKeyForUser = (userId: string | null) =>
+  [...HOUSEHOLDS_KEY, userId] as const;
+
+export function householdUserIdForQuery(
+  claim: IdentityClaim | null,
+  probe: SessionProbe | null,
+  signedOut: boolean,
+): string | null {
+  if (signedOut) return null;
+  if (probe?.kind === "session") return probe.user.userId;
+  return claim?.kind === "held" ? claim.user.userId : null;
+}
 
 interface LedgerSourceFacts {
   readonly authenticatedUserId: string | null;

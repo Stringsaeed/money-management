@@ -1904,7 +1904,7 @@
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": false,
+          "primaryKey": true,
           "notNull": true
         },
         "name": {
@@ -2045,13 +2045,14 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {
-        "categories_household_id_id_pk": {
-          "name": "categories_household_id_id_pk",
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "categories_household_id_id_unique": {
+          "name": "categories_household_id_id_unique",
+          "nullsNotDistinct": false,
           "columns": ["household_id", "id"]
         }
       },
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
         "categories_lifecycle_valid": {
@@ -2078,7 +2079,7 @@
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": false,
+          "primaryKey": true,
           "notNull": true
         },
         "name": {
@@ -2283,13 +2284,14 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {
-        "accounts_household_id_id_pk": {
-          "name": "accounts_household_id_id_pk",
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "accounts_household_id_id_unique": {
+          "name": "accounts_household_id_id_unique",
+          "nullsNotDistinct": false,
           "columns": ["household_id", "id"]
         }
       },
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
         "accounts_lifecycle_valid": {
@@ -2320,7 +2322,7 @@
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": false,
+          "primaryKey": true,
           "notNull": true
         },
         "type": {
@@ -2537,12 +2539,7 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {
-        "transactions_household_id_id_pk": {
-          "name": "transactions_household_id_id_pk",
-          "columns": ["household_id", "id"]
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {

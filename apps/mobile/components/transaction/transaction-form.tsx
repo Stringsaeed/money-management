@@ -116,7 +116,6 @@ export function TransactionForm({
     }
   }, [firstAccountId, firstExpenseCategoryId, form]);
 
-  // Expose submit to parent via ref for native header integration
   if (formRef) {
     formRef.current = { submit: () => form.handleSubmit() };
   }
@@ -128,7 +127,6 @@ export function TransactionForm({
         className="flex-1"
       >
         {bannerContent}
-        {/* Breadcrumb: Account › Category › Date */}
         <View className="pt-2 pb-3">
           <Animated.ScrollView
             layout={LinearTransition.springify(400)}
@@ -262,7 +260,6 @@ export function TransactionForm({
           </Animated.ScrollView>
         </View>
 
-        {/* Amount */}
         <form.Subscribe selector={(s) => s.values.accountId}>
           {(accountId) => {
             const account = accounts.find((a) => a.id === accountId);
@@ -279,7 +276,6 @@ export function TransactionForm({
           }}
         </form.Subscribe>
 
-        {/* Submission error */}
         <form.Subscribe selector={(s) => (s.submissionAttempts > 0 ? s.errors : [])}>
           {(errors) =>
             errors.length > 0 ? (
@@ -297,7 +293,6 @@ export function TransactionForm({
           }
         </form.Subscribe>
 
-        {/* Note */}
         <form.Subscribe selector={(s) => s.values.description}>
           {(description) => (
             <NoteInput
@@ -308,7 +303,6 @@ export function TransactionForm({
         </form.Subscribe>
       </KeyboardAvoidingView>
 
-      {/* Number pad */}
       <View className="flex-1 px-4 border-t border-ledger-outline">
         <NumberPad
           onClear={numPad.clearAll}

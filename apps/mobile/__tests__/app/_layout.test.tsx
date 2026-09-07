@@ -13,6 +13,7 @@ const mockSeedDatabase = jest.fn();
 const mockUseFonts = jest.requireMock("expo-font").useFonts as jest.Mock;
 const mockHideAsync = jest.requireMock("expo-splash-screen").hideAsync as jest.Mock;
 const mockStackScreen = jest.fn((_: unknown) => null);
+const mockSqliteContext = {};
 let capturedOnInit: ((database: unknown) => Promise<void>) | undefined;
 
 jest.mock("expo-router/react-navigation", () => ({
@@ -39,7 +40,7 @@ jest.mock("expo-router", () => ({
 }));
 
 jest.mock("@/db/sqlite", () => ({
-  useSQLiteContext: () => "sqlite-context",
+  useSQLiteContext: () => mockSqliteContext,
   SQLiteProvider: ({
     children,
     onInit,

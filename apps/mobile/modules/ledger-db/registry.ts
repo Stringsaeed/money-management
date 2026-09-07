@@ -5,6 +5,7 @@ import {
 } from "./ledger";
 
 interface RegistryEntry {
+  readonly dbIdentity: object;
   readonly ledger: SyncedTransactionLedger;
   refs: number;
 }
@@ -21,12 +22,13 @@ export interface AcquiredLedger {
 export const acquireSyncedTransactionLedger = (deps: LedgerDependencies): AcquiredLedger => {
   const key = scopeKey(deps.householdId, deps.userId);
   const existing = entries.get(key);
-  if (existing) {
+  if (existing?.dbIdentity === deps.dbIdentity) {
     existing.refs += 1;
     return { ledger: existing.ledger, release: () => releaseKey(key, existing.ledger) };
   }
+  existing?.ledger.dispose();
   const ledger = createSyncedTransactionLedger(deps);
-  entries.set(key, { ledger, refs: 1 });
+  entries.set(key, { dbIdentity: deps.dbIdentity, ledger, refs: 1 });
   return { ledger, release: () => releaseKey(key, ledger) };
 };
 
