@@ -1,6 +1,7 @@
 {
   "extends": "@trove/typescript-config/bundler.json",
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "noEmit": true
   },
   "include": ["alchemy.run.ts"]

@@ -4,7 +4,7 @@ import { config } from "dotenv";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 
-import { assertProductionCutoverApproved } from "./cutover-gate";
+import { assertProductionCutoverApproved } from "./cutover-gate.ts";
 
 config({ path: "./.env" });
 config({ path: "../../apps/server/.env" });
