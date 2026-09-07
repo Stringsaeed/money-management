@@ -1,0 +1,119 @@
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+psql:/tmp/z2-0007.sql:95: NOTICE:  identifier "category_mappings_household_id_category_id_effective_from_period_pk" will be truncated to "category_mappings_household_id_category_id_effective_from_perio"
+CREATE TABLE
+CREATE TABLE
+psql:/tmp/z2-0007.sql:128: NOTICE:  identifier "funding_memberships_household_id_account_id_effective_from_period_pk" will be truncated to "funding_memberships_household_id_account_id_effective_from_peri"
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+psql:/tmp/z2-0007.sql:168: NOTICE:  identifier "rollover_settings_household_id_envelope_id_effective_from_period_pk" will be truncated to "rollover_settings_household_id_envelope_id_effective_from_perio"
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+psql:/tmp/z2-0007.sql:389: NOTICE:  identifier "transactions_household_id_account_id_accounts_household_id_id_fk" will be truncated to "transactions_household_id_account_id_accounts_household_id_id_f"
+ALTER TABLE
+psql:/tmp/z2-0007.sql:390: NOTICE:  identifier "transactions_household_id_to_account_id_accounts_household_id_id_fk" will be truncated to "transactions_household_id_to_account_id_accounts_household_id_i"
+ALTER TABLE
+psql:/tmp/z2-0007.sql:391: NOTICE:  identifier "transactions_household_id_category_id_categories_household_id_id_fk" will be truncated to "transactions_household_id_category_id_categories_household_id_i"
+ALTER TABLE
+ALTER TABLE
+psql:/tmp/z2-0007.sql:393: NOTICE:  identifier "recurring_occurrences_household_id_rule_id_recurring_rules_household_id_id_fk" will be truncated to "recurring_occurrences_household_id_rule_id_recurring_rules_hous"
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE TRIGGER
+INSERT 0 1
+psql:/tmp/z2-0007.sql:451: ERROR:  permission denied to create role
+DETAIL:  Only roles with the REPLICATION attribute may create roles with the REPLICATION attribute.
+CONTEXT:  SQL statement "CREATE ROLE powersync_role WITH REPLICATION BYPASSRLS LOGIN"
+PL/pgSQL function inline_code_block line 2 at SQL statement

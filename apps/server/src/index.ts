@@ -2,7 +2,7 @@ import { createContext } from "@trove/api/context";
 import { createSettlementIdentity, settleDueRules } from "@trove/api/lib/recurring/scheduler";
 import { handleHouseholdPushUpgrade } from "@trove/api/lib/push/upgrade";
 import { HouseholdPushDO } from "@trove/api/lib/push/household-push-do";
-import { createDb } from "@trove/db";
+import { createDb, withDbScope } from "@trove/db";
 import { appRouter } from "@trove/api/routers/index";
 import { env } from "@trove/env/server";
 import { onError } from "@orpc/server";
@@ -99,6 +99,8 @@ export async function scheduled(controller: ScheduledController) {
 }
 
 export default {
-  fetch: app.fetch,
-  scheduled,
+  fetch: (request: Request, env: {}, ctx: ExecutionContext) =>
+    withDbScope(() => Promise.resolve(app.fetch(request, env, ctx)), ctx),
+  scheduled: (controller: ScheduledController, _env: {}, ctx: ExecutionContext) =>
+    withDbScope(() => scheduled(controller), ctx),
 };

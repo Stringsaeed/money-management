@@ -10,6 +10,7 @@ import type {
   CommandResult,
   ImportBundlePayload,
 } from "@trove/protocol";
+import { MAX_IMPORT_APPLY_ROWS, MAX_IMPORT_CHUNK_ROWS } from "@trove/protocol";
 
 import { applyCommand } from "./pipeline";
 import { createTestDb } from "../../test-support/db";
@@ -259,6 +260,8 @@ describe("import_bundle bind budget", () => {
       id: `acct-bind-${index}`,
       name: `Bind ${index}`,
     }));
+    expect(rows.length).toBeGreaterThan(MAX_IMPORT_CHUNK_ROWS);
+    expect(rows.length).toBeLessThanOrEqual(MAX_IMPORT_APPLY_ROWS);
     expect(rows.length * 19).toBeGreaterThan(100);
     expectApplied(
       await applyAs(

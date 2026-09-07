@@ -30,6 +30,7 @@ export {
 } from "./effects.js";
 export {
   IMPORT_ENTITY_TYPES,
+  MAX_IMPORT_APPLY_ROWS,
   MAX_IMPORT_CHUNK_ROWS,
   manifestsMatch,
   type ImportBundlePayload,

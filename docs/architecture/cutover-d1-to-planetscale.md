@@ -2,24 +2,28 @@
 
 - **Status:** Z2 runbook
 - **Issue:** #177
-- **Freeze:** #173 is still open. Production D1 import waits on that freeze. This runbook uses a PlanetScale development branch and the existing cache-disabled Hyperdrive `trove-ledger-fresh` (`8e9800a6f0ff4d738ccde750c2120dd1`).
+- **Freeze:** #173 is still open. Production D1 import waits on that freeze. This runbook uses a PlanetScale development branch.
 
 ## Binding
 
 Workers reach PlanetScale through Hyperdrive `HYPERDRIVE_FRESH`. Caching stays disabled. PowerSync (Z3) uses the direct `:5432` host as `powersync_role`, never this Hyperdrive host.
 
-Reuse the Z0 config. Do not create a second fresh Hyperdrive unless `wrangler hyperdrive get 8e9800a6f0ff4d738ccde750c2120dd1` fails. Do not run `artifacts/powersync-planetscale-spike/smoke.sh --teardown`. That script deletes this Hyperdrive.
+`alchemy.run.ts` declares `Cloudflare.Hyperdrive.Connection("HYPERDRIVE_FRESH", { name: "trove-ledger-fresh" })`. That is a name match, not a pin of id `8e9800a6f0ff4d738ccde750c2120dd1`. `alchemy dev` creates a **local** Hyperdrive from `PLANETSCALE_*` and does not exercise the remote config. `wrangler hyperdrive get 8e9800a6f0ff4d738ccde750c2120dd1` is a separate check.
+
+Do not put `z2-staging` credentials in a prod Alchemy env. That retargets the shared name at the development branch. Do not run `artifacts/powersync-planetscale-spike/smoke.sh --teardown`. That script deletes this Hyperdrive.
 
 ## Staging first
 
 1. Create a PlanetScale development branch from `trove/main` if one does not exist. Keep `main` write-frozen while #173 is open.
-2. Apply `packages/db/src/migrations/0007_postgres_baseline.sql` on that branch. Confirm `\dRp+ powersync` lists `membership`, `accounts`, `categories`, and `transactions` only. PlanetScale denies `CREATE ROLE ... REPLICATION` from SQL. Create `powersync_role` with `pscale role create ... --inherited-roles postgres --with-replication`, then `GRANT SELECT` to the generated `pscale_api_*` role name.
-3. Point Hyperdrive origin at the staging branch pooled URL (`:6432`) for the proof, or keep the existing origin and write only to objects this runbook creates.
-4. Record row counts before import and after import.
+2. Export staging D1 **before** the first Alchemy deploy of this branch. Replacing `Cloudflare.D1.Database` with Hyperdrive deletes the D1 resource from that Alchemy stage. There is no later export.
+3. Apply `packages/db/src/migrations/0007_postgres_baseline.sql` on the development branch. The file must finish. `CREATE ROLE powersync_role WITH REPLICATION` is swallowed on PlanetScale (`insufficient_privilege`). The publication still lands. Confirm `pg_publication_tables` for `powersync` lists `membership`, `accounts`, `categories`, and `transactions` only.
+4. Create the replication login with `pscale role create trove <branch> powersync_role --inherited-roles postgres --with-replication`. `GRANT SELECT` to the generated `pscale_api_*` name, not `powersync_role`.
+5. Point a **local** Hyperdrive at the staging pooled URL (`:6432`) for proof, or keep the remote origin on `main` and write only objects this runbook creates.
+6. Record row counts before import and after import.
 
 ## Export D1
 
-From the staging Worker account, dump each money table:
+From the staging Worker account, dump each money table **before** the Hyperdrive deploy:
 
 ```
 npx wrangler d1 export database --remote --output artifacts/powersync-planetscale/z2-d1-export.sql
@@ -41,11 +45,11 @@ Apply the transformed SQL against the staging branch with `psql` on the direct `
 
 ## Flip
 
-1. Deploy `packages/infra/alchemy.run.ts` so the Worker binds `HYPERDRIVE_FRESH` with `caching.disabled = true` and targeted placement `aws:us-east-1` (PlanetScale `trove` region).
-2. Confirm `wrangler hyperdrive get 8e9800a6f0ff4d738ccde750c2120dd1` still shows `"disabled": true`.
+1. Deploy `packages/infra/alchemy.run.ts` so the Worker binds `HYPERDRIVE_FRESH` with `caching.disabled = true` and targeted placement `aws:us-east-1` (PlanetScale `trove` region). This step deletes the D1 binding on that stage.
+2. Confirm `wrangler hyperdrive get 8e9800a6f0ff4d738ccde750c2120dd1` still shows `"disabled": true` and that its origin host is the branch you intended.
 3. Apply one `transaction.create` on staging. The result must be `{ kind: "applied" }` and one new `household_changes` row.
-4. Production flip waits on #173. Repeat export, import, count, and deploy against `trove/main` only after that freeze closes.
+4. Production flip waits on #173. Repeat export, import, count, and deploy against `trove/main` only after that freeze closes. Export prod D1 before that deploy.
 
 ## Rollback
 
-Restore the previous Worker deploy that still binds D1. PlanetScale data stays. Do not drop `public` ledger tables or the `powersync` publication during rollback.
+Redeploy the previous Worker **artifact** (the build that still binds D1). Alchemy state after a Hyperdrive deploy no longer has a D1 resource to reattach. PlanetScale data stays. Do not drop `public` ledger tables or the `powersync` publication during rollback.

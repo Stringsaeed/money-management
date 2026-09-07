@@ -11,11 +11,12 @@
  public.transactions
 (4 rows)
 
-         grantee         |  table_name  
--------------------------+--------------
- pscale_api_01dna1q9bk7h | accounts
- pscale_api_01dna1q9bk7h | categories
- pscale_api_01dna1q9bk7h | membership
- pscale_api_01dna1q9bk7h | transactions
-(4 rows)
+         rolname         | rolreplication | rolbypassrls 
+-------------------------+----------------+--------------
+ postgres                | t              | t
+ pscale_admin            | t              | t
+ pscale_api_01dna1q9bk7h | t              | t
+ pscale_replication      | t              | f
+ pscale_superuser        | t              | t
+(5 rows)
 

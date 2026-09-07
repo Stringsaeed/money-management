@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import {
   IMPORT_ENTITY_TYPES,
-  MAX_IMPORT_CHUNK_ROWS,
+  MAX_IMPORT_APPLY_ROWS,
   type EffectTag,
   type ImportBundlePayload,
   type ImportEntityType,
@@ -201,7 +201,7 @@ const importBundleEnvelopeSchema = z
     entityType: z.enum(IMPORT_ENTITY_TYPES),
     chunkIndex: z.number().int().nonnegative(),
     chunkCount: z.number().int().positive(),
-    rows: z.array(z.record(z.string(), z.unknown())).min(1).max(MAX_IMPORT_CHUNK_ROWS),
+    rows: z.array(z.record(z.string(), z.unknown())).min(1).max(MAX_IMPORT_APPLY_ROWS),
   })
   .refine((value) => value.chunkIndex < value.chunkCount, {
     message: "chunkIndex must be less than chunkCount",

@@ -14,8 +14,9 @@ export const IMPORT_ENTITY_TYPES = ["account", "category", "transaction"] as con
 
 export type ImportEntityType = (typeof IMPORT_ENTITY_TYPES)[number];
 
-/** Row cap per `import_bundle` chunk. */
-export const MAX_IMPORT_CHUNK_ROWS = 25;
+export const MAX_IMPORT_CHUNK_ROWS = 5;
+
+export const MAX_IMPORT_APPLY_ROWS = 25;
 
 /** The payload of one `import_bundle` command: one entity type's chunk. */
 export interface ImportBundlePayload {

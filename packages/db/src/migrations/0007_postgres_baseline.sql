@@ -447,10 +447,16 @@ ON CONFLICT ("id") DO NOTHING;
 --> statement-breakpoint
 DO $$ BEGIN
   CREATE ROLE powersync_role WITH REPLICATION BYPASSRLS LOGIN;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+  WHEN insufficient_privilege THEN NULL;
 END $$;
 --> statement-breakpoint
-GRANT SELECT ON TABLE public.membership, public.accounts, public.categories, public.transactions TO powersync_role;
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'powersync_role') THEN
+    GRANT SELECT ON TABLE public.membership, public.accounts, public.categories, public.transactions TO powersync_role;
+  END IF;
+END $$;
 --> statement-breakpoint
 DO $$ BEGIN
   CREATE PUBLICATION powersync FOR TABLE public.membership, public.accounts, public.categories, public.transactions;
