@@ -54,6 +54,20 @@ pnpm --filter @trove/powersync deploy
 
 `validate` validates only `sync-streams.yaml`. `deploy` deploys only the Sync Streams config, not the source connection or client-auth dashboard settings. The operator must configure those settings and run deploy against the intended non-production instance.
 
+## Live verification
+
+The Node harness uses three signed users to prove household tenancy, same-household private-account isolation, and replication latency. It seeds uniquely named rows, runs ten warmups plus twenty measured inserts, and removes only those rows when it exits.
+
+```sh
+export POWERSYNC_URL=https://<instance>.powersync.journeyapps.com
+export POWERSYNC_JWT_KID=<configured-key-id>
+export POWERSYNC_JWT_PRIVATE_KEY_FILE=/secure/path/powersync-private.pem
+export Z3_LIVE_DATABASE_URL='postgresql://<writer>@<direct-host>:5432/postgres'
+pnpm --filter @trove/powersync live:verify
+```
+
+This harness measures direct PlanetScale-to-client replication. The release receipt must separately prove `commands.apply` through the Worker reaches the same connected client under the two-second rule.
+
 ## Self-host fallback
 
 The unlaunched fallback is under `deploy/powersync`. It uses a direct PlanetScale source URI, a separate local Postgres bucket store, the same Sync Streams file, and the Worker's public JWKS endpoint.
