@@ -5,27 +5,29 @@ import { category, ledgerAccount, transaction } from "@trove/db/schema/ledger";
 
 import type { CommandDatabase } from "../commands/types";
 
+type ImportAggregate = number | string;
+
 export async function computeImportManifest(
   db: CommandDatabase,
   householdId: string,
 ): Promise<ImportManifest> {
   const [accountCount, categoryCount, transactionCount, transactionSums] = await Promise.all([
     db
-      .select({ count: sql<number>`COUNT(*)` })
+      .select({ count: sql<ImportAggregate>`COUNT(*)` })
       .from(ledgerAccount)
       .where(eq(ledgerAccount.householdId, householdId)),
     db
-      .select({ count: sql<number>`COUNT(*)` })
+      .select({ count: sql<ImportAggregate>`COUNT(*)` })
       .from(category)
       .where(eq(category.householdId, householdId)),
     db
-      .select({ count: sql<number>`COUNT(*)` })
+      .select({ count: sql<ImportAggregate>`COUNT(*)` })
       .from(transaction)
       .where(eq(transaction.householdId, householdId)),
     db
       .select({
         key: transaction.accountId,
-        total: sql<number>`COALESCE(SUM(${transaction.amountMinor}), 0)`,
+        total: sql<ImportAggregate>`COALESCE(SUM(${transaction.amountMinor}), 0)`,
       })
       .from(transaction)
       .where(eq(transaction.householdId, householdId))
@@ -34,18 +36,26 @@ export async function computeImportManifest(
 
   return {
     rowCounts: {
-      account: accountCount[0]?.count ?? 0,
-      category: categoryCount[0]?.count ?? 0,
-      transaction: transactionCount[0]?.count ?? 0,
+      account: parseImportAggregate(accountCount[0]?.count ?? 0, "account count"),
+      category: parseImportAggregate(categoryCount[0]?.count ?? 0, "category count"),
+      transaction: parseImportAggregate(transactionCount[0]?.count ?? 0, "transaction count"),
     },
     transactionAmountMinorByAccount: sumsByKey(transactionSums),
   };
 }
 
-function sumsByKey(rows: readonly { key: string; total: number }[]) {
+export function parseImportAggregate(value: ImportAggregate, label: string): number {
+  const parsed = typeof value === "number" ? value : Number(value);
+  if (!Number.isSafeInteger(parsed)) {
+    throw new Error(`Invalid ${label} returned by the database.`);
+  }
+  return parsed;
+}
+
+function sumsByKey(rows: readonly { key: string; total: ImportAggregate }[]) {
   const totals: Record<string, number> = {};
   for (const row of rows) {
-    totals[row.key] = row.total;
+    totals[row.key] = parseImportAggregate(row.total, `transaction amount sum for ${row.key}`);
   }
   return totals;
 }
