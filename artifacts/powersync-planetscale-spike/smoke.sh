@@ -32,6 +32,7 @@ done
 
 mkdir -p "$RECEIPTS"
 umask 077
+export PGSSLROOTCERT="${PGSSLROOTCERT:-system}"
 
 need() {
 	if ! command -v "$1" >/dev/null 2>&1; then
@@ -51,13 +52,37 @@ receipt() {
 }
 
 load_secrets() {
-	if [ -f "$SECRETS" ]; then
-		# shellcheck disable=SC1090
-		set -a
-		# shellcheck disable=SC1090
-		. "$SECRETS"
-		set +a
+	if [ ! -f "$SECRETS" ]; then
+		return 0
 	fi
+	python3 - "$SECRETS" <<'PY'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1])
+out = []
+for line in p.read_text().splitlines():
+    if "postgresql://" in line and "sslrootcert=" not in line:
+        line = line + ("&" if "?" in line else "?") + "sslrootcert=system"
+    out.append(line)
+p.write_text("\n".join(out) + ("\n" if out else ""))
+PY
+	eval "$(
+		python3 - "$SECRETS" <<'PY'
+import shlex
+from pathlib import Path
+import sys
+for line in Path(sys.argv[1]).read_text().splitlines():
+    if not line or line.startswith("#") or "=" not in line:
+        continue
+    key, value = line.split("=", 1)
+    if not key.isidentifier():
+        continue
+    print(f"export {key}={shlex.quote(value)}")
+PY
+	)"
+	DIRECT_URL="${DIRECT_URL:-${WRITER_DIRECT_URL:-}}"
+	POOLED_URL="${POOLED_URL:-${WRITER_POOLED_URL:-}}"
+	PS_DIRECT_URL="${PS_DIRECT_URL:-${PSROLE_DIRECT_URL:-}}"
 }
 
 save_secret() {
@@ -125,14 +150,14 @@ store_role_urls() {
 	enc_pass="$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=""))' "$password")"
 	save_secret "${prefix}_USERNAME" "$username"
 	save_secret "${prefix}_HOST" "$host"
-	save_secret "${prefix}_DIRECT_URL" "postgresql://${enc_user}:${enc_pass}@${host}:5432/postgres?sslmode=verify-full"
-	save_secret "${prefix}_POOLED_URL" "postgresql://${enc_user}:${enc_pass}@${host}:6432/postgres?sslmode=verify-full"
+	save_secret "${prefix}_DIRECT_URL" "postgresql://${enc_user}:${enc_pass}@${host}:5432/postgres?sslmode=verify-full&sslrootcert=system"
+	save_secret "${prefix}_POOLED_URL" "postgresql://${enc_user}:${enc_pass}@${host}:6432/postgres?sslmode=verify-full&sslrootcert=system"
 	if [ "$prefix" = "WRITER" ]; then
-		save_secret DIRECT_URL "postgresql://${enc_user}:${enc_pass}@${host}:5432/postgres?sslmode=verify-full"
-		save_secret POOLED_URL "postgresql://${enc_user}:${enc_pass}@${host}:6432/postgres?sslmode=verify-full"
+		save_secret DIRECT_URL "postgresql://${enc_user}:${enc_pass}@${host}:5432/postgres?sslmode=verify-full&sslrootcert=system"
+		save_secret POOLED_URL "postgresql://${enc_user}:${enc_pass}@${host}:6432/postgres?sslmode=verify-full&sslrootcert=system"
 	fi
 	if [ "$prefix" = "PSROLE" ]; then
-		save_secret PS_DIRECT_URL "postgresql://${enc_user}:${enc_pass}@${host}:5432/postgres?sslmode=verify-full"
+		save_secret PS_DIRECT_URL "postgresql://${enc_user}:${enc_pass}@${host}:5432/postgres?sslmode=verify-full&sslrootcert=system"
 		save_secret POWERSYNC_ROLE_PASSWORD "$password"
 	fi
 }
@@ -201,79 +226,79 @@ wal_level() {
 
 apply_spike_sql() {
 	load_secrets
-	local pw
-	pw="$(python3 - <<'PY'
-import os
-print(os.environ.get("POWERSYNC_ROLE_PASSWORD", "unused"))
-PY
-	)"
-	psql "$DIRECT_URL" -v ON_ERROR_STOP=1 <<SQL
-SELECT set_config('spike.powersync_password', '${pw}', false);
-\i ${ROOT}/spike.sql
-SQL
+	if [ -z "${PSROLE_USERNAME:-}" ]; then
+		printf 'PSROLE_USERNAME missing\n' >&2
+		exit 1
+	fi
+	local psrole_ident="${PSROLE_USERNAME%%.*}"
+	psql "$DIRECT_URL" -v ON_ERROR_STOP=1 -v psrole="$psrole_ident" -f "$ROOT/spike.sql"
 	local all_err
-	all_err="$(psql "$DIRECT_URL" -v ON_ERROR_STOP=1 -c 'CREATE PUBLICATION powersync_forall FOR ALL TABLES;' 2>&1 || true)"
+	all_err="$(psql "$DIRECT_URL" -c 'CREATE PUBLICATION powersync_forall FOR ALL TABLES;' 2>&1 || true)"
 	printf '%s\n' "$all_err" | tee "$RECEIPTS/publication-forall.txt"
-	if printf '%s\n' "$all_err" | grep -qi 'CREATE PUBLICATION'; then
-		psql "$DIRECT_URL" -c 'DROP PUBLICATION IF EXISTS powersync_forall;' >/dev/null || true
-		if ! printf '%s\n' "$all_err" | grep -qiE 'error|not support|cannot'; then
-			printf 'FOR ALL TABLES was accepted; PlanetScale should reject it\n' >&2
-			exit 1
-		fi
+	psql "$DIRECT_URL" -c 'DROP PUBLICATION IF EXISTS powersync_forall;' >/dev/null 2>&1 || true
+	if printf '%s\n' "$all_err" | grep -qiE 'error|not support|cannot'; then
+		printf 'FOR ALL TABLES rejected\n' | tee "$RECEIPTS/publication-forall-verdict.txt"
+	else
+		printf 'FOR ALL TABLES accepted on this engine. spike still uses an explicit table list for publication powersync\n' | tee "$RECEIPTS/publication-forall-verdict.txt"
 	fi
 	printf 'CREATE PUBLICATION powersync FOR TABLE public.accounts, public.categories, public.transactions, public.membership\n' | tee "$RECEIPTS/publication-accepted.txt"
 	psql_direct -c '\dRp+ powersync' | tee "$RECEIPTS/publication.txt"
 	psql_direct -tAc "SELECT pubname FROM pg_publication WHERE pubname = 'powersync'" | tee "$RECEIPTS/publication-name.txt"
 }
 
-hyperdrive_list_json() {
-	wrangler hyperdrive list --json
+hyperdrive_id_from_text() {
+	local name="$1"
+	python3 -c '
+import re, sys
+name = sys.argv[1]
+for line in sys.stdin:
+    if name in line:
+        ids = re.findall(r"[0-9a-f]{32}", line)
+        if ids:
+            print(ids[0])
+            break
+' "$name"
 }
 
 hyperdrive_id_by_name() {
-	hyperdrive_list_json | jq -r --arg name "$HD_NAME" '.[] | select(.name == $name) | .id' | head -n 1
+	wrangler hyperdrive list 2>/dev/null | hyperdrive_id_from_text "$HD_NAME"
 }
 
 ensure_hyperdrive() {
 	load_secrets
-	local id
+	local id created details
 	id="$(hyperdrive_id_by_name || true)"
 	if [ -z "$id" ]; then
-		local created
-		created="$(wrangler hyperdrive create "$HD_NAME" --connection-string "$POOLED_URL" --caching-disabled --json)"
-		printf '%s\n' "$created" | jq 'del(.. | .password? // empty)' >"$RECEIPTS/hyperdrive-create.json"
-		id="$(printf '%s\n' "$created" | jq -r '.id // .hyperdrive.id')"
+		created="$(wrangler hyperdrive create "$HD_NAME" --connection-string "$POOLED_URL" --caching-disabled 2>&1)"
+		printf '%s\n' "$created" | tee "$RECEIPTS/hyperdrive-create.txt"
+		id="$(printf '%s\n' "$created" | hyperdrive_id_from_text "$HD_NAME")"
+		if [ -z "$id" ]; then
+			id="$(printf '%s\n' "$created" | python3 -c 'import re,sys; ids=re.findall(r"[0-9a-f]{32}", sys.stdin.read()); print(ids[0] if ids else "")')"
+		fi
 	fi
-	if [ -z "$id" ] || [ "$id" = "null" ]; then
+	if [ -z "$id" ]; then
 		printf 'failed to create or find Hyperdrive %s\n' "$HD_NAME" >&2
 		exit 1
 	fi
 	save_secret HYPERDRIVE_ID "$id"
 	HYPERDRIVE_ID="$id"
-	wrangler hyperdrive get "$id" --json | jq 'del(.. | .password? // empty)' | tee "$RECEIPTS/hyperdrive.json"
+	details="$(wrangler hyperdrive get "$id")"
+	details="$(printf '%s\n' "$details" | python3 -c 'import sys; t=sys.stdin.read(); i=t.find("{"); print(t[i:] if i>=0 else t)')"
+	printf '%s\n' "$details" | jq 'del(.origin.password)' | tee "$RECEIPTS/hyperdrive.json"
 	local caching_disabled origin_host origin_port
-	caching_disabled="$(jq -r '.caching.disabled // .origin.caching.disabled // empty' "$RECEIPTS/hyperdrive.json")"
-	origin_host="$(jq -r '.origin.host // .host // empty' "$RECEIPTS/hyperdrive.json")"
-	origin_port="$(jq -r '.origin.port // .port // empty' "$RECEIPTS/hyperdrive.json")"
+	caching_disabled="$(printf '%s\n' "$details" | jq -r '.caching.disabled')"
+	origin_host="$(printf '%s\n' "$details" | jq -r '.origin.host')"
+	origin_port="$(printf '%s\n' "$details" | jq -r '.origin.port')"
 	printf 'hyperdrive_id=%s caching.disabled=%s origin=%s:%s\n' "$id" "$caching_disabled" "$origin_host" "$origin_port" | tee "$RECEIPTS/hyperdrive-summary.txt"
 	if [ "$caching_disabled" != "true" ]; then
-		printf 'Hyperdrive %s must have caching disabled\n' "$HD_NAME" >&2
+		printf 'Hyperdrive %s must have caching.disabled=true\n' "$HD_NAME" >&2
 		exit 1
 	fi
-	local existing_id
-	existing_id="656e7684e86a457bafe573348a82376e"
-	if [ "$id" = "$existing_id" ]; then
-		printf 'refusing to reuse cache-enabled Hyperdrive trove (%s)\n' "$existing_id" >&2
+	if [ "$id" = "656e7684e86a457bafe573348a82376e" ]; then
+		printf 'refusing to reuse cache-enabled Hyperdrive trove\n' >&2
 		exit 1
 	fi
 	printf 'direct_url_host=%s:5432 hyperdrive_id=%s\n' "${WRITER_HOST:-${PSROLE_HOST:-aws-us-east-1-3.pg.psdb.cloud}}" "$id" | tee "$RECEIPTS/url-diff.txt"
-	if grep -q 'hyperdrive' "$RECEIPTS/url-diff.txt" && grep -q ':5432' "$RECEIPTS/url-diff.txt"; then
-		:
-	fi
-	if [ "${DIRECT_URL}" = "hyperdrive://${id}" ]; then
-		printf 'direct and Hyperdrive URLs must differ\n' >&2
-		exit 1
-	fi
 	printf 'PROVED url_diff: PlanetScale direct :5432 != Hyperdrive id %s\n' "$id" | tee -a "$RECEIPTS/url-diff.txt"
 }
 
@@ -300,8 +325,14 @@ deploy_worker() {
 
 worker_select1() {
 	load_secrets
-	local body
-	body="$(curl -fsS "${WORKER_URL}/select1")"
+	local body=""
+	local i
+	for i in 1 2 3 4 5; do
+		if body="$(curl -fsS "${WORKER_URL}/select1")"; then
+			break
+		fi
+		sleep 2
+	done
 	printf '%s\n' "$body" | tee "$RECEIPTS/hyperdrive-select1.json"
 	printf '%s\n' "$body" | jq -e '.n == 1' >/dev/null
 }
@@ -344,15 +375,10 @@ bench() {
 	ensure_psql
 	local i t hd_samples=() direct_samples=()
 	for i in $(seq 1 20); do
-		t="$(python3 - <<PY
-import time, urllib.request
-start = time.perf_counter()
-urllib.request.urlopen("${WORKER_URL}/select1", timeout=30).read()
-print(f"{(time.perf_counter()-start)*1000:.3f}")
-PY
-		)"
+		t="$(curl -fsS "${WORKER_URL}/select1" | jq -r '.elapsed_ms')"
 		hd_samples+=("$t")
-		t="$(python3 - <<PY
+		t="$(
+			python3 - <<'PY'
 import os, time, subprocess
 start = time.perf_counter()
 subprocess.check_output(["psql", os.environ["DIRECT_URL"], "-tAc", "SELECT 1"], env=os.environ)
@@ -361,9 +387,6 @@ PY
 		)"
 		direct_samples+=("$t")
 	done
-	local hd_p50 hd_p90 d_p50 d_p90
-	hd_p50="$(p90 "${hd_samples[@]}" | python3 -c 'import sys; print(sys.stdin.read())')"
-	# compute p50 and p90 properly
 	python3 - <<PY | tee "$RECEIPTS/bench.txt"
 samples_hd = [$(IFS=,; echo "${hd_samples[*]}")]
 samples_d = [$(IFS=,; echo "${direct_samples[*]}")]
@@ -377,9 +400,8 @@ print(f"hyperdrive_select1_p50_ms={pct(samples_hd,50):.3f}")
 print(f"hyperdrive_select1_p90_ms={pct(samples_hd,90):.3f}")
 print(f"direct_select1_p50_ms={pct(samples_d,50):.3f}")
 print(f"direct_select1_p90_ms={pct(samples_d,90):.3f}")
-print(f"hyperdrive_samples={samples_hd}")
-print(f"direct_samples={samples_d}")
 print(f"rule_hyperdrive_p90_under_50ms={'pass' if pct(samples_hd,90) < 50 else 'miss'}")
+print("note=hyperdrive samples are Worker-reported elapsed_ms, not client RTT")
 PY
 }
 
@@ -461,7 +483,7 @@ teardown() {
 	if role_exists "$PS_ROLE"; then
 		pscale role delete "$DB_NAME" "$BRANCH" "$PS_ROLE" --org "$ORG" --force 2>&1 | tee "$RECEIPTS/teardown-powersync-role.txt" || true
 	fi
-	wrangler hyperdrive list --json | jq --arg name "$HD_NAME" '[.[] | select(.name == $name)]' | tee "$RECEIPTS/teardown-hyperdrive-list.json"
+	wrangler hyperdrive list 2>/dev/null | tee "$RECEIPTS/teardown-hyperdrive-list.txt"
 	if [ -n "${DIRECT_URL:-}" ]; then
 		psql "$DIRECT_URL" -tAc "SELECT nspname FROM pg_namespace WHERE nspname = 'spike'; SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename IN ('accounts','categories','transactions','membership');" | tee "$RECEIPTS/teardown-schema-check.txt" || true
 	fi

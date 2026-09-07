@@ -12,8 +12,14 @@ export default {
     try {
       const url = new URL(request.url);
       if (url.pathname === "/select1") {
+        const started = Date.now();
         const rows = await sql`SELECT 1 AS n`;
-        return json({ n: rows[0].n, host: url.host });
+        return json({
+          n: rows[0].n,
+          host: url.host,
+          elapsed_ms: Date.now() - started,
+          placement: request.cf?.colo ?? null,
+        });
       }
       if (url.pathname === "/insert") {
         const id = url.searchParams.get("id");

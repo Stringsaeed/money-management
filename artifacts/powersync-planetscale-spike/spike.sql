@@ -22,25 +22,7 @@ CREATE TABLE IF NOT EXISTS public.transactions (
   note text NOT NULL
 );
 
-DO $role$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'powersync_role') THEN
-    EXECUTE format(
-      'CREATE ROLE powersync_role WITH REPLICATION BYPASSRLS LOGIN PASSWORD %L',
-      current_setting('spike.powersync_password', true)
-    );
-  ELSE
-    BEGIN
-      EXECUTE 'ALTER ROLE powersync_role WITH REPLICATION BYPASSRLS LOGIN';
-    EXCEPTION
-      WHEN insufficient_privilege THEN
-        NULL;
-    END;
-  END IF;
-END
-$role$;
-
-GRANT SELECT ON TABLE public.accounts, public.categories, public.transactions, public.membership TO powersync_role;
+GRANT SELECT ON TABLE public.accounts, public.categories, public.transactions, public.membership TO :"psrole";
 
 DROP PUBLICATION IF EXISTS powersync;
 CREATE PUBLICATION powersync FOR TABLE public.accounts, public.categories, public.transactions, public.membership;
