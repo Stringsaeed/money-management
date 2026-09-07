@@ -485,7 +485,7 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 - [x] Lane 5. Bucket count. [`../../artifacts/powersync-planetscale/z6-expanded-streams-live.md`](../../artifacts/powersync-planetscale/z6-expanded-streams-live.md) records 10 buckets and no `PSYNC_S2305`. Review screenshot pending.
 - [x] Lane 6. Replication slot health. [`../../artifacts/powersync-planetscale/z6-slot-health.txt`](../../artifacts/powersync-planetscale/z6-slot-health.txt) records one active slot, advancing `confirmed_flush_lsn`, and zero final lag. Review screenshot pending.
 - [x] Lane 7. Hyperdrive still cache-disabled. [`../../artifacts/powersync-planetscale/z6-hyperdrive-final.txt`](../../artifacts/powersync-planetscale/z6-hyperdrive-final.txt) records the cache-disabled binding and final 15-connection cap. Review screenshot pending.
-- [x] Lane 8. Region exception. `powersync-operations.md` records the PlanetScale region, Worker placement, PowerSync EU Development region, and the operator's accepted non-production exception. Review screenshot pending.
+- [x] Lane 8. Region decision. `powersync-operations.md` records the PlanetScale region, Worker placement, PowerSync EU Development and Production regions, the accepted non-production exception, and the operator's explicit European Production choice. Review screenshot pending.
 - [x] Lane 9. D1 gone. [`../../artifacts/powersync-planetscale/z6-no-d1-dry-run.txt`](../../artifacts/powersync-planetscale/z6-no-d1-dry-run.txt) lists no D1 binding or resource. Review screenshot pending.
 - [ ] Lane 10. Certification packet. Save `z6-cert.png`. Pass when `certification.md` links every Z0 to Z6 review artifact and the #98 close comment draft exists.
 

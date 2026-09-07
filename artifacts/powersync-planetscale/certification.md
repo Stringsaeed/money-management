@@ -1,6 +1,6 @@
 # PowerSync + PlanetScale certification packet
 
-Status: **in progress**. Z0-Z3 infrastructure evidence exists; Z6 code/unit, public Worker load, native recurring/budget, and production D1-import gates pass. The frozen D1 snapshot is imported into PlanetScale `trove/main`, while the old Worker remains write-frozen on D1. Remaining review media, the exact Z5 perf comparison, PowerSync/Worker cutover, and operator approval are still required before issue #98 can close.
+Status: **in progress**. Z0-Z3 infrastructure evidence exists; Z6 code/unit, public Worker load, native recurring/budget, production D1-import, and production PowerSync provisioning gates pass. The frozen D1 snapshot is imported into PlanetScale `trove/main`, and the European Production PowerSync instance has completed initial replication with all 13 tables healthy and zero lag. The old Worker remains write-frozen on D1. Remaining review media, the exact Z5 perf comparison, Worker cutover, and operator approval are still required before issue #98 can close.
 
 Verified at the current local Z6 head: mobile 166 suites / 683 tests, API 24 files / 209 tests, PowerSync stream tests, cloud config validation, and no-D1/cutover safety checks.
 
@@ -16,7 +16,7 @@ Verified at the current local Z6 head: mobile 166 suites / 683 tests, API 24 fil
 | Z5 legacy sync retirement      | `feat/z5-retire-delta-outbox` commit `b16b1e7`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | unit complete; live/perf review pending                         |
 | Z6 all domains + certification | [`z6-expanded-streams-live.md`](z6-expanded-streams-live.md): budget + recurring tenancy/private isolation pass, 10 buckets, direct replication p95 278 ms; [`z6-worker-load.md`](z6-worker-load.md): three 50-create public Worker runs pass at 1,771/1,699/1,725 ms p95; [`Z6-review-load.png`](Z6-review-load.png), [`Z6-review-buckets.png`](Z6-review-buckets.png); [`z6-native-review.md`](z6-native-review.md), [`z6-rules.png`](z6-rules.png), [`z6-envelopes.png`](z6-envelopes.png), [`Z6-review.mp4`](Z6-review.mp4); [`z6-hyperdrive-final.txt`](z6-hyperdrive-final.txt) | expanded streams, Worker load, and native domain reads complete |
 
-Production cutover evidence: [`production-d1-cutover.md`](production-d1-cutover.md) and [`production-d1-import.json`](production-d1-import.json) record the freeze, protected backup, disposable dry run, atomic import, per-table digest parity, constraints, publication, and zero final slot lag.
+Production cutover evidence: [`production-d1-cutover.md`](production-d1-cutover.md) and [`production-d1-import.json`](production-d1-import.json) record the freeze, protected backup, disposable dry run, atomic import, per-table digest parity, constraints, publication, and zero final slot lag. [`production-powersync.md`](production-powersync.md) records the dedicated European Production instance, 13-table initial replication, zero lag, health probes, and GitHub/EAS environment wiring.
 
 ## Required Z6 receipts
 
@@ -29,6 +29,7 @@ Production cutover evidence: [`production-d1-cutover.md`](production-d1-cutover.
 - [x] Operator accepted the EU-region exception for the current non-production Development instance on 2026-09-08.
 - [x] Static stack guard, cutover checks, and [`z6-no-d1-dry-run.txt`](z6-no-d1-dry-run.txt) prove no D1 resource or binding.
 - [x] [`production-d1-cutover.md`](production-d1-cutover.md) proves the frozen production D1 export was imported into PlanetScale `trove/main` with exact count and digest parity.
+- [x] [`production-powersync.md`](production-powersync.md) proves the European Production PowerSync instance is provisioned, fully replicated, and ready behind the still-enabled Worker kill switch.
 - [ ] Ten Z6 lane artifacts, review screenshots, and review video.
 - [ ] Exact-head code review and operator approval.
 

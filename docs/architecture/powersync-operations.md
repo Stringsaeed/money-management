@@ -9,8 +9,9 @@ This runbook covers the PlanetScale replication source, PowerSync Sync Streams, 
 | PlanetScale Postgres        | `aws-us-east-1` host family | `PLANETSCALE_HOST` default in `packages/infra/alchemy.run.ts` |
 | Cloudflare Worker           | targeted `aws:us-east-1`    | `packages/infra/alchemy.run.ts`                               |
 | PowerSync Cloud Development | `eu`                        | PowerSync instance `6a9e0dd3a77ca1231d260e01`                 |
+| PowerSync Cloud Production  | `eu`                        | PowerSync instance `6a9e0dd58453e7cf8334ea1f`                 |
 
-The development PowerSync instance is not region-aligned with PlanetScale and the Worker. The expanded 13-table publication and streams were verified on this instance at 278 ms direct replication p95 with 10 active buckets. The operator accepted this non-production EU-region exception on 2026-09-08. Production remains blocked on issue #173 and must make its own placement decision.
+The PowerSync instances are not region-aligned with PlanetScale and the Worker. The expanded 13-table publication and streams were verified on Development at 278 ms direct replication p95 with 10 active buckets. The operator accepted the non-production exception and explicitly chose Europe for Production on 2026-09-08. Production was provisioned with the reviewed streams after the frozen D1 snapshot reached `trove/main`; its initial replication completed with all 13 tables healthy and zero lag. The Worker remains write-frozen until the reviewed PR stack lands and the production deployment passes its smoke checks.
 
 ## Replication slot health
 
