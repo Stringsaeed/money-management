@@ -1,6 +1,6 @@
-import { drizzle } from "drizzle-orm/expo-sqlite";
-import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
-import type { SQLiteDatabase } from "expo-sqlite";
+import { drizzle } from "drizzle-orm/op-sqlite";
+import type { OPSQLiteDatabase } from "drizzle-orm/op-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 import type {
   CommandEnvelope,
   CommandResult,
@@ -43,7 +43,7 @@ async function setupDb(): Promise<LocalDb> {
   await migrateCategoryLifecycle(testDatabase.database);
   const db = drizzle(testDatabase.database, { schema }) as LocalDb & {
     $client: SQLiteDatabase;
-  } & ExpoSQLiteDatabase<typeof schema>;
+  } & OPSQLiteDatabase<typeof schema>;
   await db.insert(accounts).values({
     id: "account-1",
     name: "Checking",

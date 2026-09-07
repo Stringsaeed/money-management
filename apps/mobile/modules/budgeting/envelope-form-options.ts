@@ -1,4 +1,4 @@
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import type { EnvelopeCategoryOption, EnvelopeFormOptionsRequest } from "./types";
 import { requireCurrency, requirePeriod } from "./validation";

@@ -12,7 +12,7 @@ import {
 import { Stack } from "expo-router";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import * as SplashScreen from "expo-splash-screen";
-import { SQLiteProvider, type SQLiteDatabase } from "expo-sqlite";
+import { SQLiteProvider, type SQLiteDatabase } from "@/db/sqlite";
 import { StatusBar } from "expo-status-bar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, useEffect } from "react";

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSQLiteContext } from "expo-sqlite";
+import { useSQLiteContext } from "@/db/sqlite";
 
 import { createBudgetingCoordinator } from "@/modules/budgeting/budgeting";
 import { budgetKeys } from "@/modules/ledger-cache";

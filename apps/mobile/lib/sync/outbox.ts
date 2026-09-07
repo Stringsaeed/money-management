@@ -1,6 +1,6 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
-import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { OPSQLiteDatabase } from "drizzle-orm/op-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import type { CommandEnvelope, CommandKind, CommandResult, Precondition } from "@trove/protocol";
 
@@ -19,7 +19,7 @@ import type * as schema from "@/db/schema";
  * — a "sending" row left behind by a killed app is simply retried.
  */
 
-export type LocalDb = ExpoSQLiteDatabase<typeof schema> & { $client: SQLiteDatabase };
+export type LocalDb = OPSQLiteDatabase<typeof schema> & { $client: SQLiteDatabase };
 
 /** Transport seam so the core stays testable without oRPC. */
 export type SendCommand = (envelope: CommandEnvelope) => Promise<CommandResult>;

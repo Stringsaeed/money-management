@@ -1,6 +1,6 @@
 import { afterEach } from "@jest/globals";
 import { act } from "@testing-library/react-native";
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import { migrateBudgeting } from "@/db/budgeting-migration";
 import { migrateCategoryLifecycle } from "@/db/category-lifecycle-migration";
@@ -13,10 +13,10 @@ const mockCohereLedgerCache = jest.fn();
 const databases: { close: VoidFunction }[] = [];
 
 // The lifecycle hooks read the raw SQLite context (they need transactions and
-// raw SQL for cascade checks), so provide it directly to expo-sqlite's hook.
+// raw SQL for cascade checks), so provide it directly to SQLite hook.
 let mockRawDatabase: SQLiteDatabase | null = null;
 
-jest.mock("expo-sqlite", () => ({
+jest.mock("@/db/sqlite", () => ({
   useSQLiteContext: () => mockRawDatabase,
 }));
 

@@ -36,5 +36,9 @@
     "oxlint": "1.80.0",
     "turbo": "^2.10.11"
   },
-  "packageManager": "pnpm@11.24.0"
+  "packageManager": "pnpm@11.24.0",
+  "op-sqlite": {
+    "performanceMode": true,
+    "iosSqlite": false
+  }
 }

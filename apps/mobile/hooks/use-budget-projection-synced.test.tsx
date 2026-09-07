@@ -5,7 +5,7 @@ import { renderHookWithProviders } from "@/tests/test-utils/render";
 
 const mockGetProjection = jest.fn();
 
-jest.mock("expo-sqlite", () => ({
+jest.mock("@/db/sqlite", () => ({
   useSQLiteContext: () => ({ raw: "poisoned-sqlite" }),
 }));
 

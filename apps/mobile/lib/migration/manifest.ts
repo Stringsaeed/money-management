@@ -1,11 +1,11 @@
 import { sql } from "drizzle-orm";
-import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { OPSQLiteDatabase } from "drizzle-orm/op-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import type { ImportManifest } from "@trove/protocol";
 import { accounts, categories, transactions } from "@/db/schema";
 
-export type LocalDb = ExpoSQLiteDatabase<typeof import("@/db/schema")> & {
+export type LocalDb = OPSQLiteDatabase<typeof import("@/db/schema")> & {
   $client: SQLiteDatabase;
 };
 

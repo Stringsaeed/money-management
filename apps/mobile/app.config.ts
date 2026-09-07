@@ -165,7 +165,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ],
       "expo-image",
       "expo-web-browser",
-      "expo-sqlite",
       "expo-status-bar",
       "@react-native-community/datetimepicker",
       "expo-build-properties",
@@ -173,6 +172,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "./plugins/withRocketSimConnect.js",
       "react-native-nitro-fetch",
       "expo-secure-store",
+      "./plugins/withThirdPartySQLitePod.js",
     ],
     experiments: {
       typedRoutes: true,

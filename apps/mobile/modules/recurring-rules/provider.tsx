@@ -1,6 +1,6 @@
 import { createContext, use, useRef, type PropsWithChildren } from "react";
-import type { SQLiteDatabase } from "expo-sqlite";
-import { useSQLiteContext } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
+import { useSQLiteContext } from "@/db/sqlite";
 
 import { generateId } from "@/utils/id";
 

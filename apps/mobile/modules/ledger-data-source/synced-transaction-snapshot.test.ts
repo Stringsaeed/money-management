@@ -1,6 +1,6 @@
-import { drizzle } from "drizzle-orm/expo-sqlite";
-import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
-import type { SQLiteDatabase } from "expo-sqlite";
+import { drizzle } from "drizzle-orm/op-sqlite";
+import type { OPSQLiteDatabase } from "drizzle-orm/op-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import * as schema from "@/db/schema";
 import { createTestSQLiteDatabase, type TestSQLiteDatabase } from "@/tests/test-utils/sqlite";
@@ -10,7 +10,7 @@ import {
   type SyncedTransactionSnapshot,
 } from "./synced-transaction-snapshot";
 
-type LocalDb = ExpoSQLiteDatabase<typeof schema> & { $client: SQLiteDatabase };
+type LocalDb = OPSQLiteDatabase<typeof schema> & { $client: SQLiteDatabase };
 
 const databases: TestSQLiteDatabase[] = [];
 

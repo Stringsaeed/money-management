@@ -1,6 +1,6 @@
-import { drizzle } from "drizzle-orm/expo-sqlite";
-import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
-import type { SQLiteDatabase } from "expo-sqlite";
+import { drizzle } from "drizzle-orm/op-sqlite";
+import type { OPSQLiteDatabase } from "drizzle-orm/op-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import * as schema from "@/db/schema";
 import { applyLegacyMigrations, createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
@@ -22,7 +22,7 @@ async function setupDb(): Promise<LocalDb> {
   await applyLegacyMigrations(testDatabase.database);
   return drizzle(testDatabase.database, { schema }) as LocalDb & {
     $client: SQLiteDatabase;
-  } & ExpoSQLiteDatabase<typeof schema>;
+  } & OPSQLiteDatabase<typeof schema>;
 }
 
 describe("migration status", () => {

@@ -1,5 +1,5 @@
 import { Directory, File, Paths } from "expo-file-system";
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import { DB_NAME } from "@/db/constants";
 

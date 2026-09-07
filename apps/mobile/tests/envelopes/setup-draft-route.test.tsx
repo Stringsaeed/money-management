@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 import type { TestInstance } from "test-renderer";
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import SetupDraftRoute from "@/app/(tabs)/envelopes/setup";
 import {
@@ -15,7 +15,7 @@ import { createBudgetingCoordinator } from "@/modules/budgeting/budgeting";
 
 let mockDatabase: SQLiteDatabase;
 
-jest.mock("expo-sqlite", () => ({
+jest.mock("@/db/sqlite", () => ({
   useSQLiteContext: () => mockDatabase,
 }));
 

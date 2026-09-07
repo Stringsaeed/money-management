@@ -1,4 +1,4 @@
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import { DATABASE_RESET_VERSION, resetDatabaseIfNeeded } from "./reset";
 

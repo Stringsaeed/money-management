@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useSQLiteContext } from "expo-sqlite";
+import { useSQLiteContext } from "@/db/sqlite";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { ImportManifest } from "@trove/protocol";

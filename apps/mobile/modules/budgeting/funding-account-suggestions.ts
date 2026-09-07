@@ -1,4 +1,4 @@
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import type { FundingAccountSuggestion, FundingAccountSuggestionsRequest } from "./types";
 import { isDefaultFundingAccountType } from "./funding-account-eligibility";

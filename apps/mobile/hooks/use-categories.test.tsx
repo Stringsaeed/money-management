@@ -99,7 +99,7 @@ jest.mock("@/modules/ledger-data-source/synced-transaction-snapshot", () => ({
   writeSyncedTransactionSnapshot: (...args: unknown[]) => mockWriteSnapshot(...args),
 }));
 
-jest.mock("expo-sqlite", () => ({
+jest.mock("@/db/sqlite", () => ({
   useSQLiteContext: () => mockUseSQLiteContext(),
 }));
 

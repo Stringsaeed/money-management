@@ -1,4 +1,4 @@
-import { useSQLiteContext } from "expo-sqlite";
+import { useSQLiteContext } from "@/db/sqlite";
 
 import { useDatabase } from "@/db/client";
 import { useAccountVisibility } from "@/hooks/use-account-visibility";

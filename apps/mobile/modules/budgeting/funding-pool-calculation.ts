@@ -1,5 +1,5 @@
 import { endOfMonth, format, parseISO } from "date-fns";
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import type { BudgetAttentionReason } from "./types";
 import { addMoney, requireMinorUnits } from "./validation";

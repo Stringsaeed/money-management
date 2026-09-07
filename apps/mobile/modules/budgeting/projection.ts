@@ -1,4 +1,4 @@
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import type { BudgetProjection, ProjectionRequest } from "./types";
 import { loadAccountDependencyFacts } from "./account-dependency-read";

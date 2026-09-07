@@ -103,7 +103,7 @@ export function draftFromRule(rule: RecurringRule): RecurringRuleDraft {
 }
 
 export async function lifecycleAfterProspectiveEdit(
-  database: import("expo-sqlite").SQLiteDatabase,
+  database: import("@/db/sqlite").SQLiteDatabase,
   current: RecurringRule,
   draft: RecurringRuleDraft,
   settledLifecycle: RecurringRule["lifecycle"],
