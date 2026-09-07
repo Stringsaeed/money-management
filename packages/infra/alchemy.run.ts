@@ -36,6 +36,7 @@ export const server = Cloudflare.Worker(
     const cutoverApproval = yield* Config.string("PLANETSCALE_CUTOVER_APPROVED").pipe(
       Config.withDefault("blocked"),
     );
+    const devPort = yield* Config.port("ALCHEMY_DEV_PORT").pipe(Config.withDefault(3000));
     assertProductionCutoverApproved(stage, cutoverApproval);
     const routing = isProd ? { domain: AUTH_HOSTNAME, workersDev: false } : { workersDev: true };
     const hd = yield* hyperdrive;
@@ -81,7 +82,7 @@ export const server = Cloudflare.Worker(
         ),
       },
       dev: {
-        port: 3000,
+        port: devPort,
       },
     };
   }),
