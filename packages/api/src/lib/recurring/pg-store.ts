@@ -9,7 +9,7 @@ import { ledgerAccount, transaction } from "@trove/db/schema/ledger";
 import {
   assertionStatement,
   changeLogStatement,
-  executeBatch,
+  executeHouseholdTransaction,
   resultStatement,
   type BatchStatement,
 } from "../commands/statements";
@@ -138,7 +138,7 @@ export class PgRecurringStore implements SettlementStore {
       );
     }
 
-    await executeBatch(this.db, statements, this.scope.householdId);
+    await executeHouseholdTransaction(this.db, statements, this.scope.householdId);
   }
 }
 

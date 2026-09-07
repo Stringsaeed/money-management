@@ -1,6 +1,14 @@
 const base = process.env.Z2_WORKER_URL ?? "http://127.0.0.1:3001";
 const origin = process.env.Z2_ORIGIN ?? "http://localhost:8081";
 
+function parseRpcBody(raw: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return raw;
+  }
+}
+
 async function rpc<T>(
   path: string,
   body: unknown,
@@ -16,12 +24,7 @@ async function rpc<T>(
     body: JSON.stringify({ json: body }),
   });
   const raw = await res.text();
-  let parsed: unknown = raw;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    /* keep raw */
-  }
+  const parsed = parseRpcBody(raw);
   const unwrapped =
     parsed && typeof parsed === "object" && "json" in parsed
       ? (parsed as { json: T }).json
@@ -46,7 +49,11 @@ if (!cookie) {
 }
 
 const health = await rpc<unknown>("healthCheck", {}, cookie);
-const household = await rpc<{ householdId?: string }>("households/create", { name: "Z2 Worker HH" }, cookie);
+const household = await rpc<{ householdId?: string }>(
+  "households/create",
+  { name: "Z2 Worker HH" },
+  cookie,
+);
 if (!household.json.householdId) {
   throw new Error(`household create failed ${household.status} ${household.raw}`);
 }

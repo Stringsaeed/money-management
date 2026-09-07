@@ -48,7 +48,7 @@ export function resultStatement(
   });
 }
 
-export async function executeBatch(
+export async function executeHouseholdTransaction(
   db: CommandDatabase,
   statements: readonly BatchStatement[],
   householdId: string,

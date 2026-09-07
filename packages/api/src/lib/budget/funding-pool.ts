@@ -20,9 +20,6 @@ import { queryRows } from "../sql-rows";
  * Transfers between two Funding Accounts of the same workspace are
  * budget-neutral (CONTEXT.md: Funding Boundary Transfer); transfers crossing the pool
  * boundary move it.
- *
- * All amounts are minor units. Every fragment takes householdId as a bound
- * parameter — D1 has no RLS and callers gate access upstream.
  */
 
 /** "YYYY-MM" Budget Period → exclusive upper bound for ledger dates. */

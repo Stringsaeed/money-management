@@ -17,7 +17,7 @@ import type { CommandPlan, PlanContext } from "./pipeline";
 import {
   assertionStatement,
   changeLogStatement,
-  executeBatch,
+  executeHouseholdTransaction,
   resultStatement,
   type BatchStatement,
 } from "./statements";
@@ -418,9 +418,13 @@ describe("interleaving safety — preconditions replace locks", () => {
     expect(planA.guards).toHaveLength(1);
     expect(planB.guards).toHaveLength(1);
 
-    await executeBatch(db, buildStatements(crypto.randomUUID(), planA), HOUSEHOLD_ID);
+    await executeHouseholdTransaction(
+      db,
+      buildStatements(crypto.randomUUID(), planA),
+      HOUSEHOLD_ID,
+    );
     await expect(
-      executeBatch(db, buildStatements(crypto.randomUUID(), planB), HOUSEHOLD_ID),
+      executeHouseholdTransaction(db, buildStatements(crypto.randomUUID(), planB), HOUSEHOLD_ID),
     ).rejects.toThrow();
 
     // Exactly one 8_000 assignment exists — never both.
@@ -468,7 +472,11 @@ describe("interleaving safety — preconditions replace locks", () => {
         continue; // Typed rejection at plan time — nothing committed.
       }
       try {
-        await executeBatch(db, buildStatements(crypto.randomUUID(), outcome), HOUSEHOLD_ID);
+        await executeHouseholdTransaction(
+          db,
+          buildStatements(crypto.randomUUID(), outcome),
+          HOUSEHOLD_ID,
+        );
         committed += 1;
       } catch {
         // Guard fired: an interleaved writer consumed the money first.

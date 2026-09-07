@@ -403,7 +403,7 @@ describe("refund.link", () => {
 
   it("aborts an interleaved over-refund through the in-batch cap guard", async () => {
     const { refundCreateHandler } = await import("./handlers/refund-create");
-    const { assertionStatement, changeLogStatement, executeBatch, resultStatement } =
+    const { assertionStatement, changeLogStatement, executeHouseholdTransaction, resultStatement } =
       await import("./statements");
 
     const planCtx = {
@@ -443,7 +443,7 @@ describe("refund.link", () => {
         }),
         resultStatement(db as never, { householdId: HOUSEHOLD_ID, commandId, result: {} }),
       ];
-      await executeBatch(db, statements, HOUSEHOLD_ID);
+      await executeHouseholdTransaction(db, statements, HOUSEHOLD_ID);
     };
 
     await commit(planA);

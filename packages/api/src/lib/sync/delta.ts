@@ -41,6 +41,10 @@ export interface SyncDelta {
 export const DEFAULT_DELTA_LIMIT = 500;
 export const MAX_DELTA_LIMIT = 1000;
 
+export function deliveredWatermark(hasMore: boolean, lastDelivered: number, head: number): number {
+  return hasMore ? lastDelivered : head;
+}
+
 export async function getDelta({
   db,
   userId,
@@ -48,8 +52,6 @@ export async function getDelta({
   since,
   limit = DEFAULT_DELTA_LIMIT,
 }: GetDeltaArgs): Promise<SyncDelta> {
-  // Household tenancy is enforced here at the API boundary — D1 has no RLS
-  // equivalent and no DB-level backstop, so this check guards every read.
   const memberRows = await db
     .select({ id: membership.id })
     .from(membership)
@@ -81,13 +83,10 @@ export async function getDelta({
   const hasMore = changeRows.length === boundedLimit;
   const head = headResult[0]?.seq ?? 0;
 
-  // The returned `seq` must never exceed what this response actually
-  // delivered: a truncated page (hasMore) reports its last row so the next
-  // poll re-fetches from there instead of skipping undelivered changes.
   const lastDelivered = changeRows[changeRows.length - 1]?.seq ?? since;
 
   return {
-    seq: hasMore ? lastDelivered : head,
+    seq: deliveredWatermark(hasMore, lastDelivered, head),
     hasMore,
     changes: changeRows.map((row) => ({ seq: row.seq, effects: row.effects })),
   };

@@ -16,5 +16,5 @@ export async function queryRows<T extends Record<string, unknown>>(
   ) {
     return (result as { rows: T[] }).rows;
   }
-  return [];
+  throw new Error("unexpected execute() result shape");
 }

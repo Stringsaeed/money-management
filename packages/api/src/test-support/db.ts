@@ -7,7 +7,8 @@ import { drizzle } from "drizzle-orm/pglite";
 
 import type { createDb } from "@trove/db";
 
-const SKIP_BASELINE = /CREATE ROLE|CREATE PUBLICATION|GRANT |ALTER PUBLICATION|ALTER ROLE/;
+const PGLITE_SKIP_REPLICATION_DDL =
+  /CREATE ROLE|CREATE PUBLICATION|GRANT |ALTER PUBLICATION|ALTER ROLE/;
 
 export async function createTestDb(): Promise<ReturnType<typeof createDb>> {
   const client = new PGlite();
@@ -19,7 +20,7 @@ export async function createTestDb(): Promise<ReturnType<typeof createDb>> {
     const sql = readFileSync(join(migrationsDir, file), "utf8");
     for (const statement of sql.split("--> statement-breakpoint")) {
       const trimmed = statement.trim();
-      if (!trimmed || SKIP_BASELINE.test(trimmed)) {
+      if (!trimmed || PGLITE_SKIP_REPLICATION_DDL.test(trimmed)) {
         continue;
       }
       await client.exec(trimmed);

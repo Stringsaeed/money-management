@@ -19,7 +19,7 @@ import { COMMAND_HANDLERS, type CommandHandler } from "./handlers";
 import {
   assertionStatement,
   changeLogStatement,
-  executeBatch,
+  executeHouseholdTransaction,
   resultStatement,
   type BatchStatement,
 } from "./statements";
@@ -224,7 +224,7 @@ export async function applyCommand({
     }),
   ];
   try {
-    await executeBatch(db, statements, envelope.householdId);
+    await executeHouseholdTransaction(db, statements, envelope.householdId);
   } catch (error) {
     // Concurrent duplicate: another writer committed this exact commandId
     // between our idempotency read and this batch — replay their result.

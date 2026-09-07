@@ -14,7 +14,7 @@ export const IMPORT_ENTITY_TYPES = ["account", "category", "transaction"] as con
 
 export type ImportEntityType = (typeof IMPORT_ENTITY_TYPES)[number];
 
-/** Row cap per `import_bundle` chunk. Postgres has no 100-bind ceiling. */
+/** Row cap per `import_bundle` chunk. */
 export const MAX_IMPORT_CHUNK_ROWS = 25;
 
 /** The payload of one `import_bundle` command: one entity type's chunk. */
