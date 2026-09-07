@@ -7,7 +7,7 @@ import {
   type SettlementIdentity,
 } from "@trove/domain/settlement";
 
-import { D1RecurringStore, listSettleableRules } from "./d1-store";
+import { listSettleableRules, PgRecurringStore } from "./pg-store";
 import type { CommandDatabase } from "../commands/types";
 
 /**
@@ -41,7 +41,7 @@ export async function settleHouseholdRules(
   now: string,
   options: HouseholdSweepOptions = {},
 ): Promise<HouseholdSettlementSummary> {
-  const store = new D1RecurringStore(db, scope, () => identity.next("transaction"));
+  const store = new PgRecurringStore(db, scope, () => identity.next("transaction"));
   const rules = await listSettleableRules(db, scope.householdId);
 
   let generatedCount = 0;

@@ -23,7 +23,7 @@ export function createAuth(deps: { readonly mailer?: Mailer } = {}) {
 
   return betterAuth({
     database: drizzleAdapter(db, {
-      provider: "sqlite",
+      provider: "pg",
 
       schema: schema,
     }),

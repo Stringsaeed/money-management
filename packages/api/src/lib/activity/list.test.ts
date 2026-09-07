@@ -6,7 +6,7 @@ import type { EffectTag } from "@trove/protocol";
 
 import { householdChange } from "@trove/db/schema/commands";
 
-import { createTestDb } from "../commands/test-db";
+import { createTestDb } from "../../test-support/db";
 import { getActivity } from "./list";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;

@@ -5,7 +5,7 @@ import { household, membership } from "@trove/db/schema/household";
 import type { CommandEnvelope } from "@trove/protocol";
 
 import { applyCommand } from "../commands/pipeline";
-import { createTestDb } from "../commands/test-db";
+import { createTestDb } from "../../test-support/db";
 import { getDelta } from "./delta";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;

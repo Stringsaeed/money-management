@@ -12,7 +12,7 @@ import type {
 } from "@trove/protocol";
 
 import { applyCommand } from "./pipeline";
-import { createTestDb } from "./test-db";
+import { createTestDb } from "../../test-support/db";
 import { computeImportManifest } from "../migration/manifest";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
@@ -252,12 +252,30 @@ describe("commands.apply — import_bundle idempotency", () => {
   });
 });
 
-describe("import_bundle D1 bind budget", () => {
-  it("keeps each multi-row insert under D1's 100 bound-parameter ceiling", async () => {
-    const { maxRowsPerInsertStatement } = await import("./handlers/import-bundle");
-    expect(maxRowsPerInsertStatement("account") * 19).toBeLessThanOrEqual(100);
-    expect(maxRowsPerInsertStatement("category") * 15).toBeLessThanOrEqual(100);
-    expect(maxRowsPerInsertStatement("transaction") * 20).toBeLessThanOrEqual(100);
+describe("import_bundle bind budget", () => {
+  it("applies a chunk with more than 100 bound values in one transaction", async () => {
+    const rows = Array.from({ length: 6 }, (_, index) => ({
+      ...ACCOUNT_ROW,
+      id: `acct-bind-${index}`,
+      name: `Bind ${index}`,
+    }));
+    expect(rows.length * 19).toBeGreaterThan(100);
+    expectApplied(
+      await applyAs(
+        OWNER,
+        bundleEnvelope({
+          entityType: "account",
+          chunkIndex: 0,
+          chunkCount: 1,
+          rows,
+        }),
+      ),
+    );
+    const stored = await db
+      .select({ id: ledgerAccount.id })
+      .from(ledgerAccount)
+      .where(eq(ledgerAccount.householdId, HOUSEHOLD_ID));
+    expect(stored.map((row) => row.id).sort()).toEqual(rows.map((row) => row.id).sort());
   });
 });
 

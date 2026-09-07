@@ -1,24 +1,32 @@
-import { relations, sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { relations } from "drizzle-orm";
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 import * as auth from "./auth";
 
-export const household = sqliteTable("household", {
+const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
+
+export const household = pgTable("household", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   createdByUserId: text("created_by_user_id")
     .notNull()
     .references(() => auth.user.id, { onDelete: "cascade" }),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
-    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+  createdAt: timestamptz("created_at").defaultNow().notNull(),
+  updatedAt: timestamptz("updated_at")
+    .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
 
-export const membership = sqliteTable(
+export const membership = pgTable(
   "membership",
   {
     id: text("id").primaryKey(),
@@ -28,13 +36,10 @@ export const membership = sqliteTable(
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
-    role: text("role").notNull().default("member"), // "owner" | "admin" | "member" | "viewer"
-    /** Optimistic-concurrency version, generalized from Rule Revision. */
+    role: text("role").notNull().default("member"),
     version: integer("version").notNull().default(0),
-    isActive: integer("is_active", { mode: "boolean" }).default(true).notNull(),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
   },
   (table) => [
     uniqueIndex("membership_household_user_unique").on(table.householdId, table.userId),
@@ -42,7 +47,7 @@ export const membership = sqliteTable(
   ],
 );
 
-export const inviteCode = sqliteTable(
+export const inviteCode = pgTable(
   "invite_code",
   {
     id: text("id").primaryKey(),
@@ -53,15 +58,13 @@ export const inviteCode = sqliteTable(
     createdByUserId: text("created_by_user_id")
       .notNull()
       .references(() => auth.user.id, { onDelete: "cascade" }),
-    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
-    singleUse: integer("single_use", { mode: "boolean" }).default(true).notNull(),
+    expiresAt: timestamptz("expires_at").notNull(),
+    singleUse: boolean("single_use").default(true).notNull(),
     usedByUserId: text("used_by_user_id").references(() => auth.user.id, {
       onDelete: "set null",
     }),
-    revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
+    revokedAt: timestamptz("revoked_at"),
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
   },
   (table) => [index("invite_code_householdId_idx").on(table.householdId)],
 );

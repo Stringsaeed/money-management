@@ -9,8 +9,19 @@ config({ path: "../../apps/server/.env" });
 
 const AUTH_HOSTNAME = "auth.trove.ing";
 
-export const db = Cloudflare.D1.Database("database", {
-  migrationsDir: "../../packages/db/src/migrations",
+const hyperdrive = Cloudflare.Hyperdrive.Connection("HYPERDRIVE_FRESH", {
+  name: "trove-ledger-fresh",
+  origin: {
+    scheme: "postgresql",
+    host: Config.string("PLANETSCALE_HOST").pipe(
+      Config.withDefault("aws-us-east-1-3.pg.psdb.cloud"),
+    ),
+    port: 6432,
+    database: Config.string("PLANETSCALE_DATABASE").pipe(Config.withDefault("postgres")),
+    user: Config.string("PLANETSCALE_USER"),
+    password: Config.redacted("PLANETSCALE_PASSWORD"),
+  },
+  caching: { disabled: true },
 });
 
 const metrics = Cloudflare.AnalyticsEngine.Dataset("metrics");
@@ -21,12 +32,17 @@ export const server = Cloudflare.Worker(
     const stage = yield* Alchemy.Stage;
     const isProd = stage === "prod";
     const routing = isProd ? { domain: AUTH_HOSTNAME, workersDev: false } : { workersDev: true };
+    const hd = yield* hyperdrive;
 
     return {
       main: "../../apps/server/src/index.ts",
       ...routing,
       compatibility: {
         flags: ["nodejs_compat"],
+      },
+      placement: {
+        mode: "targeted" as const,
+        region: "aws:us-east-1",
       },
       observability: {
         enabled: true,
@@ -40,7 +56,7 @@ export const server = Cloudflare.Worker(
       },
       crons: ["0 * * * *"],
       env: {
-        DB: db,
+        HYPERDRIVE_FRESH: hd,
         PUSH_HOUSEHOLD_DO: Cloudflare.DurableObject("PUSH_HOUSEHOLD_DO", {
           className: "HouseholdPushDO",
         }),
@@ -51,16 +67,9 @@ export const server = Cloudflare.Worker(
         EMAIL: Cloudflare.Email.SendEmail("EMAIL", {
           allowedSenderAddresses: ["noreply@trove.ing"],
         }),
-        // Remote kill switch (#99). Env var over KV on purpose: the stack binds
-        // no KV namespace today and the flag is a single coarse toggle — flip it
-        // with `alchemy deploy` after changing KILL_SWITCH_LOCAL_ONLY in
-        // packages/infra/.env, or edit the Worker variable in the dashboard.
         KILL_SWITCH_LOCAL_ONLY: Config.string("KILL_SWITCH_LOCAL_ONLY").pipe(
           Config.withDefault("off"),
         ),
-        // Comma-separated SHA-256 signing cert fingerprints for Android App Links
-        // (upload key and/or Play App Signing key). Empty = serve an assetlinks
-        // document with no statements; Android then opens /l/* in the browser.
         ANDROID_CERT_FINGERPRINTS: Config.string("ANDROID_CERT_FINGERPRINTS").pipe(
           Config.withDefault(""),
         ),

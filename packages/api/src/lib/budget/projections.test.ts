@@ -15,7 +15,7 @@ import { householdChange, commandResult } from "@trove/db/schema/commands";
 import { household, membership } from "@trove/db/schema/household";
 import { category, ledgerAccount, transaction } from "@trove/db/schema/ledger";
 
-import { createTestDb } from "../commands/test-db";
+import { createTestDb } from "../../test-support/db";
 import { applyCommand } from "../commands/pipeline";
 import { enumeratePeriods, getProjections } from "./projections";
 

@@ -6,6 +6,7 @@ import type { BatchStatement } from "../statements";
 
 import { ledgerAccount, transaction } from "@trove/db/schema/ledger";
 import { getBudgetPoolFacts } from "../../budget/funding-pool";
+import { queryRows } from "../../sql-rows";
 
 import { privateAccountAccessRejection } from "./private-account";
 import { issuesFromZod } from "./shared";
@@ -154,7 +155,8 @@ export const refundCreateHandler = {
     // Cumulative cap at plan time: existing linked refunds plus this one may
     // not exceed the original expense. The same sum is re-read inside the
     // batch as a guard, so an interleaved refund still cannot slip through.
-    const refundedRows = await ctx.db.all(
+    const refundedRows = await queryRows<Record<string, number>>(
+      ctx.db,
       sql`SELECT COALESCE(SUM(r.amount_minor), 0) AS total FROM refund_links r
           WHERE r.household_id = ${ctx.householdId}
             AND r.original_transaction_id = ${input.originalTransactionId}`,

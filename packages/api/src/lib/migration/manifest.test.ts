@@ -4,7 +4,7 @@ import { user } from "@trove/db/schema/auth";
 import { household, membership } from "@trove/db/schema/household";
 import { ledgerAccount, category, transaction } from "@trove/db/schema/ledger";
 
-import { createTestDb } from "../commands/test-db";
+import { createTestDb } from "../../test-support/db";
 import { computeImportManifest } from "./manifest";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;

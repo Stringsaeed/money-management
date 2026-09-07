@@ -1,35 +1,27 @@
 import { relations, sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   foreignKey,
   index,
   integer,
+  pgTable,
   primaryKey,
-  sqliteTable,
   text,
-} from "drizzle-orm/sqlite-core";
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 import * as auth from "./auth";
 import { household } from "./household";
 
-/**
- * Household ledger domain (ADR-0023 local-first → server-authoritative),
- * ported from the client's `apps/mobile/db/schema.ts` with multi-user
- * scoping: every table carries the composite `(household_id, id)` primary
- * key plus `version` and `created_by`/`updated_by` attribution.
- *
- * Tenancy note (D1): there is no row-level security and no DB-level
- * backstop — every read must filter by the session's household id and run
- * behind a membership check (`requireHouseholdMember`); commands are scoped
- * by construction because all writes carry `household_id` from the envelope.
- */
+const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 
 const ACCOUNT_TYPES = ["cash", "bank", "card"] as const;
 const ACCOUNT_VISIBILITIES = ["public", "private"] as const;
 const CATEGORY_TYPES = ["income", "expense"] as const;
 const TRANSACTION_TYPES = ["expense", "income", "transfer"] as const;
 
-export const ledgerAccount = sqliteTable(
+export const ledgerAccount = pgTable(
   "accounts",
   {
     householdId: text("household_id")
@@ -37,23 +29,18 @@ export const ledgerAccount = sqliteTable(
       .references(() => household.id, { onDelete: "cascade" }),
     id: text("id").notNull(),
     name: text("name").notNull(),
-    /** Cash Account, bank, or card (see CONTEXT.md vocabulary). */
     type: text("type", { enum: ACCOUNT_TYPES }).notNull(),
     currency: text("currency").notNull().default("USD"),
     color: text("color").notNull().default("#4A90D9"),
     icon: text("icon").notNull().default("banknote.fill"),
-    /** Opening balance in minor units; sign carries direction. */
     initialBalanceMinor: integer("initial_balance_minor").notNull().default(0),
-    excludeFromTotal: integer("exclude_from_total", { mode: "boolean" }).notNull().default(false),
+    excludeFromTotal: boolean("exclude_from_total").notNull().default(false),
     sortOrder: integer("sort_order").notNull().default(0),
-    /** ADR-0009: accounts carrying financial history archive, never delete. */
     lifecycle: text("lifecycle", { enum: ["active", "archived"] })
       .notNull()
       .default("active"),
-    lifecycleChangedAt: integer("lifecycle_changed_at", { mode: "timestamp_ms" }),
-    /** Private Accounts stay visible only to their owning User through the API surface. */
+    lifecycleChangedAt: timestamptz("lifecycle_changed_at"),
     visibility: text("visibility", { enum: ACCOUNT_VISIBILITIES }).notNull().default("public"),
-    /** The User entitled to read and manage a private Account. */
     ownerUserId: text("owner_user_id").references(() => auth.user.id),
     version: integer("version").notNull().default(0),
     createdBy: text("created_by")
@@ -62,11 +49,9 @@ export const ledgerAccount = sqliteTable(
     updatedBy: text("updated_by")
       .notNull()
       .references(() => auth.user.id),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at")
+      .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
   },
@@ -87,7 +72,7 @@ export const ledgerAccount = sqliteTable(
   ],
 );
 
-export const category = sqliteTable(
+export const category = pgTable(
   "categories",
   {
     householdId: text("household_id")
@@ -98,18 +83,12 @@ export const category = sqliteTable(
     type: text("type", { enum: CATEGORY_TYPES }).notNull(),
     color: text("color").notNull().default("#FF6B6B"),
     icon: text("icon").notNull().default("🏷️"),
-    /**
-     * Parent category within the same household; NULL for top-level
-     * categories. A composite self-FK trips drizzle's circular inference, so
-     * the same-household rule is enforced at the repository layer.
-     */
     parentId: text("parent_id"),
     sortOrder: integer("sort_order").notNull().default(0),
-    /** ADR-0009: categories referenced by history archive, never delete. */
     lifecycle: text("lifecycle", { enum: ["active", "archived"] })
       .notNull()
       .default("active"),
-    lifecycleChangedAt: integer("lifecycle_changed_at", { mode: "timestamp_ms" }),
+    lifecycleChangedAt: timestamptz("lifecycle_changed_at"),
     version: integer("version").notNull().default(0),
     createdBy: text("created_by")
       .notNull()
@@ -117,11 +96,9 @@ export const category = sqliteTable(
     updatedBy: text("updated_by")
       .notNull()
       .references(() => auth.user.id),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at")
+      .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
   },
@@ -133,7 +110,7 @@ export const category = sqliteTable(
   ],
 );
 
-export const transaction = sqliteTable(
+export const transaction = pgTable(
   "transactions",
   {
     householdId: text("household_id")
@@ -141,21 +118,16 @@ export const transaction = sqliteTable(
       .references(() => household.id, { onDelete: "cascade" }),
     id: text("id").notNull(),
     type: text("type", { enum: TRANSACTION_TYPES }).notNull(),
-    /** Minor units in the account's currency; always positive. */
     amountMinor: integer("amount_minor").notNull(),
     currency: text("currency").notNull(),
-    /** Foreign-currency snapshot when the entry was made abroad. */
     originalAmountMinor: integer("original_amount_minor"),
     originalCurrency: text("original_currency"),
-    /** Rate scaled by 1_000_000, mirroring the client. */
     exchangeRate: integer("exchange_rate"),
-    /** ADR-0021: ledger date ("YYYY-MM-DD") anchors Budget Period attribution. */
     date: text("date").notNull(),
     accountId: text("account_id").notNull(),
     toAccountId: text("to_account_id"),
     categoryId: text("category_id"),
-    isRecurring: integer("is_recurring", { mode: "boolean" }).notNull().default(false),
-    /** Recurring rules land with #88/#92; plain id until their server table exists. */
+    isRecurring: boolean("is_recurring").notNull().default(false),
     recurringRuleId: text("recurring_rule_id"),
     description: text("description").notNull().default(""),
     version: integer("version").notNull().default(0),
@@ -165,11 +137,9 @@ export const transaction = sqliteTable(
     updatedBy: text("updated_by")
       .notNull()
       .references(() => auth.user.id),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at")
+      .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
   },
@@ -177,18 +147,12 @@ export const transaction = sqliteTable(
     primaryKey({ columns: [table.householdId, table.id] }),
     check("transactions_type_valid", sql`${table.type} IN ('expense', 'income', 'transfer')`),
     check("transactions_amount_positive", sql`${table.amountMinor} > 0`),
-    check(
-      "transactions_date_shape",
-      sql`${table.date} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'`,
-    ),
-    // Transfers move between two accounts and carry no category; directed
-    // entries have exactly one account side.
+    check("transactions_date_shape", sql`${table.date} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'`),
     check(
       "transactions_transfer_shape",
       sql`(${table.type} = 'transfer' AND ${table.toAccountId} IS NOT NULL AND ${table.categoryId} IS NULL AND ${table.accountId} <> ${table.toAccountId})
         OR (${table.type} <> 'transfer' AND ${table.toAccountId} IS NULL)`,
     ),
-    // Tenant-safe references: accounts/categories must live in the same household.
     foreignKey({
       columns: [table.householdId, table.accountId],
       foreignColumns: [ledgerAccount.householdId, ledgerAccount.id],

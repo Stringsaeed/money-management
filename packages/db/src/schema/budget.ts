@@ -1,51 +1,32 @@
 import { relations, sql, type AnyColumn } from "drizzle-orm";
 import {
+  boolean,
   check,
   index,
   integer,
+  jsonb,
+  pgTable,
   primaryKey,
-  sqliteTable,
   text,
+  timestamp,
   uniqueIndex,
-} from "drizzle-orm/sqlite-core";
+} from "drizzle-orm/pg-core";
 
 import * as auth from "./auth";
 import { household } from "./household";
 
-/** CHECK fragment enforcing the "YYYY-MM" Budget Period shape (ADR-0021). */
+const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
+
 const validPeriod = (name: string, column: AnyColumn) =>
-  check(`${name}_period_format`, sql`${column} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]'`);
+  check(`${name}_period_format`, sql`${column} ~ '^[0-9]{4}-[0-9]{2}$'`);
 
-/**
- * Budget Periods are "YYYY-MM" strings; CHECK constraints (GLOB) keep a
- * malformed period out of LEAD() ordering. Append-only enforcement lives in
- * SQLite triggers defined in the migration SQL — drizzle-kit does not model
- * triggers, so regeneration must preserve them by hand.
- *
- * Envelope budgeting domain, ported from the client's local budgeting schema
- * (apps/mobile/db/budgeting-schema.ts) with household scoping per the
- * multi-user extension:
- *
- * - every table carries `household_id`; entity PKs are composite
- *   `(household_id, id)`
- * - period-effective tables (`category_mappings`, `funding_memberships`,
- *   `rollover_settings`) are INSERT-only — `effective_to_period` is never
- *   stored, it derives from `LEAD(effective_from_period) OVER (...)`;
- *   SQLite triggers reject UPDATE/DELETE
- * - a tombstone row ends an earlier row: an unmapped Category Mapping has a
- *   NULL envelope target; a Funding Membership exit has `active = 0`
- */
-
-/** Per-currency budget workspace: the tenancy root for one currency's budgeting. */
-export const budgetWorkspace = sqliteTable(
+export const budgetWorkspace = pgTable(
   "budget_workspaces",
   {
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
-    /** ISO 4217 code; envelopes and pools are single-currency (ADR-0002). */
     currency: text("currency").notNull(),
-    /** First Budget Period the workspace covers ("YYYY-MM"). */
     activationPeriod: text("activation_period").notNull(),
     version: integer("version").notNull().default(0),
     createdBy: text("created_by")
@@ -54,11 +35,9 @@ export const budgetWorkspace = sqliteTable(
     updatedBy: text("updated_by")
       .notNull()
       .references(() => auth.user.id),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at")
+      .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
   },
@@ -68,7 +47,7 @@ export const budgetWorkspace = sqliteTable(
   ],
 );
 
-export const envelope = sqliteTable(
+export const envelope = pgTable(
   "envelopes",
   {
     id: text("id").notNull(),
@@ -83,7 +62,6 @@ export const envelope = sqliteTable(
       .notNull()
       .default("active"),
     sortOrder: integer("sort_order").notNull().default(0),
-    /** Optimistic-concurrency version for mutable-envelope commands. */
     version: integer("version").notNull().default(0),
     createdBy: text("created_by")
       .notNull()
@@ -91,39 +69,26 @@ export const envelope = sqliteTable(
     updatedBy: text("updated_by")
       .notNull()
       .references(() => auth.user.id),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at")
+      .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.householdId, table.id] }),
     check("envelopes_lifecycle_valid", sql`${table.lifecycle} IN ('active', 'archived')`),
-    // Workspace-scoped single-currency discipline (ADR-0002).
     index("envelopes_household_currency_idx").on(table.householdId, table.currency),
   ],
 );
 
-/**
- * Period-effective Category→Envelope attribution (ADR-0003/0006). INSERT-only;
- * the mapping's end derives from the next row for the same category. A row
- * with a NULL `envelope_id` is a tombstone: the category is unmapped from
- * that period on.
- *
- * The `categories` reference arrives with #86; until then linkage is
- * repository-layer enforced.
- */
-export const categoryMapping = sqliteTable(
+export const categoryMapping = pgTable(
   "category_mappings",
   {
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
     categoryId: text("category_id").notNull(),
-    /** NULL = tombstone: the category is unmapped from this period onward. */
     envelopeId: text("envelope_id"),
     effectiveFromPeriod: text("effective_from_period").notNull(),
     version: integer("version").notNull().default(0),
@@ -133,11 +98,9 @@ export const categoryMapping = sqliteTable(
     updatedBy: text("updated_by")
       .notNull()
       .references(() => auth.user.id),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at")
+      .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
   },
@@ -150,14 +113,7 @@ export const categoryMapping = sqliteTable(
   ],
 );
 
-/**
- * Period-effective Funding Membership (ADR-0012). INSERT-only; a row with
- * `active = 0` is the tombstone ending the account's earlier membership.
- *
- * The `accounts` reference arrives with #86; until then linkage is
- * repository-layer enforced.
- */
-export const fundingMembership = sqliteTable(
+export const fundingMembership = pgTable(
   "funding_memberships",
   {
     householdId: text("household_id")
@@ -165,7 +121,7 @@ export const fundingMembership = sqliteTable(
       .references(() => household.id, { onDelete: "cascade" }),
     accountId: text("account_id").notNull(),
     currency: text("currency").notNull(),
-    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    active: boolean("active").notNull().default(true),
     effectiveFromPeriod: text("effective_from_period").notNull(),
     version: integer("version").notNull().default(0),
     createdBy: text("created_by")
@@ -174,11 +130,9 @@ export const fundingMembership = sqliteTable(
     updatedBy: text("updated_by")
       .notNull()
       .references(() => auth.user.id),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at")
+      .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
   },
@@ -191,15 +145,14 @@ export const fundingMembership = sqliteTable(
   ],
 );
 
-/** Period-effective Rollover setting per envelope (ADR-0016). INSERT-only. */
-export const rolloverSetting = sqliteTable(
+export const rolloverSetting = pgTable(
   "rollover_settings",
   {
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
     envelopeId: text("envelope_id").notNull(),
-    positiveRollover: integer("positive_rollover", { mode: "boolean" }).notNull().default(true),
+    positiveRollover: boolean("positive_rollover").notNull().default(true),
     effectiveFromPeriod: text("effective_from_period").notNull(),
     version: integer("version").notNull().default(0),
     createdBy: text("created_by")
@@ -208,11 +161,9 @@ export const rolloverSetting = sqliteTable(
     updatedBy: text("updated_by")
       .notNull()
       .references(() => auth.user.id),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at")
+      .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
   },
@@ -225,12 +176,7 @@ export const rolloverSetting = sqliteTable(
   ],
 );
 
-/**
- * Append-only Assignment ledger (ADR-0007/0015): a correction records a
- * reversing row plus its replacement via `reverses_assignment_id` — never an
- * edit. Amounts are minor units within one currency's workspace.
- */
-export const assignment = sqliteTable(
+export const assignment = pgTable(
   "assignments",
   {
     id: text("id").notNull(),
@@ -242,7 +188,6 @@ export const assignment = sqliteTable(
     sourceEnvelopeId: text("source_envelope_id"),
     destinationEnvelopeId: text("destination_envelope_id"),
     amountMinor: integer("amount_minor").notNull(),
-    /** Set when this row reverses an earlier assignment (a correction). */
     reversesAssignmentId: text("reverses_assignment_id"),
     version: integer("version").notNull().default(0),
     createdBy: text("created_by")
@@ -251,11 +196,9 @@ export const assignment = sqliteTable(
     updatedBy: text("updated_by")
       .notNull()
       .references(() => auth.user.id),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at")
+      .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
   },
@@ -275,17 +218,7 @@ export const assignment = sqliteTable(
   ],
 );
 
-/**
- * Refund linkage (ADR-0008): one expense may have multiple same-currency
- * partial refunds whose cumulative amount cannot exceed the original expense.
- * The cumulative cap itself is validated at write time by summing this table
- * (#91); each link stores its own amount.
- *
- * Transaction references arrive with #86 — until then they are plain ids
- * validated at the repository layer, so cross-household linkage is guarded by
- * command handlers scoping reads to the caller's household.
- */
-export const refundLink = sqliteTable(
+export const refundLink = pgTable(
   "refund_links",
   {
     id: text("id").notNull(),
@@ -293,7 +226,6 @@ export const refundLink = sqliteTable(
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
     originalTransactionId: text("original_transaction_id").notNull(),
-    /** Each refund links back exactly once. */
     refundTransactionId: text("refund_transaction_id").notNull(),
     currency: text("currency").notNull(),
     amountMinor: integer("amount_minor").notNull(),
@@ -304,11 +236,9 @@ export const refundLink = sqliteTable(
     updatedBy: text("updated_by")
       .notNull()
       .references(() => auth.user.id),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at")
+      .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
   },
@@ -320,16 +250,7 @@ export const refundLink = sqliteTable(
   ],
 );
 
-/**
- * Derived-values cache (Invariant 1 / ADR-0017): exclusively computed from
- * facts, truncable with zero data loss, never written directly by a command.
- * `seqStamped` carries #84's household change watermark the payload was
- * computed from, so staleness is one comparison against sync.getDelta's head.
- *
- * Cache rows are system-computed derived state, not facts — user attribution
- * columns deliberately omitted.
- */
-export const periodProjectionCache = sqliteTable(
+export const periodProjectionCache = pgTable(
   "period_projection_cache",
   {
     householdId: text("household_id")
@@ -337,11 +258,9 @@ export const periodProjectionCache = sqliteTable(
       .references(() => household.id, { onDelete: "cascade" }),
     currency: text("currency").notNull(),
     budgetPeriod: text("budget_period").notNull(),
-    projectionJson: text("projection_json", { mode: "json" }).$type<unknown>().notNull(),
+    projectionJson: jsonb("projection_json").$type<unknown>().notNull(),
     seqStamped: integer("seq_stamped").notNull(),
-    computedAt: integer("computed_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
+    computedAt: timestamptz("computed_at").defaultNow().notNull(),
   },
   (table) => [
     primaryKey({

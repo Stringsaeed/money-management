@@ -3,27 +3,22 @@ import {
   check,
   index,
   integer,
+  jsonb,
+  pgTable,
   primaryKey,
-  sqliteTable,
   text,
+  timestamp,
   uniqueIndex,
-} from "drizzle-orm/sqlite-core";
+} from "drizzle-orm/pg-core";
 
 import type { EffectTag } from "@trove/protocol";
 
 import * as auth from "./auth";
 import { household } from "./household";
 
-/**
- * One row appended per committed command. This is the sync feed, the
- * change-notification watermark unit, and the household activity history —
- * not a compliance-only audit log.
- *
- * `seq` is a per-household monotonic counter allocated at append time inside
- * the same atomic batch as the command's writes (D1 serializes batches, so
- * `MAX(seq) + 1` cannot interleave).
- */
-export const householdChange = sqliteTable(
+const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
+
+export const householdChange = pgTable(
   "household_changes",
   {
     id: text("id").primaryKey(),
@@ -31,20 +26,15 @@ export const householdChange = sqliteTable(
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
     seq: integer("seq").notNull(),
-    /** Authenticated user the command was attributed to. */
     userId: text("user_id")
       .notNull()
       .references(() => auth.user.id, { onDelete: "cascade" }),
-    /** Idempotency key of the command that produced this change. */
     commandId: text("command_id").notNull(),
-    /** Subset of effect tags this command invalidated. */
-    effects: text("effects", { mode: "json" })
+    effects: jsonb("effects")
       .$type<EffectTag[]>()
       .notNull()
-      .default(sql`'[]'`),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
+      .default(sql`'[]'::jsonb`),
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
   },
   (table) => [
     uniqueIndex("household_changes_household_seq_unique").on(table.householdId, table.seq),
@@ -56,35 +46,20 @@ export const householdChange = sqliteTable(
   ],
 );
 
-/**
- * Idempotency store for committed commands. A retry after a timeout replays
- * the stored `applied` payload (joined with the original `household_changes`
- * row for `seq`/`effects`) instead of re-executing.
- */
-export const commandResult = sqliteTable(
+export const commandResult = pgTable(
   "command_results",
   {
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
     commandId: text("command_id").notNull(),
-    /** JSON-serialized `applied` payload returned on replay. */
-    result: text("result", { mode: "json" }).$type<unknown>().notNull(),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
+    result: jsonb("result").$type<unknown>().notNull(),
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
   },
   (table) => [primaryKey({ columns: [table.householdId, table.commandId] })],
 );
 
-/**
- * Internal guard table used to turn precondition failures into statement
- * errors inside an atomic D1 `batch()`. D1 batches roll back entirely when any
- * statement throws, so inserting a row that violates the CHECK constraint is
- * how "stale version / unsatisfied predicate" aborts the whole command —
- * partial application is never observable.
- */
-export const pipelineAssertion = sqliteTable(
+export const pipelineAssertion = pgTable(
   "_pipeline_assertions",
   {
     id: text("id").primaryKey(),

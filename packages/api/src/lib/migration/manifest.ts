@@ -1,25 +1,27 @@
 import { eq, sql } from "drizzle-orm";
-import type { SQLiteColumn, SQLiteTable } from "drizzle-orm/sqlite-core";
 
 import type { ImportManifest } from "@trove/protocol";
 import { category, ledgerAccount, transaction } from "@trove/db/schema/ledger";
 
 import type { CommandDatabase } from "../commands/types";
 
-/**
- * Recomputes the import integrity manifest (#98) from a household's
- * currently-imported rows: row counts per entity type and transaction
- * amounts summed by account. Compared against the client's own pre-import
- * computation.
- */
 export async function computeImportManifest(
   db: CommandDatabase,
   householdId: string,
 ): Promise<ImportManifest> {
-  const [accountCount, categoryCount, transactionCount, transactionSums] = await db.batch([
-    countRows(db, ledgerAccount, householdId),
-    countRows(db, category, householdId),
-    countRows(db, transaction, householdId),
+  const [accountCount, categoryCount, transactionCount, transactionSums] = await Promise.all([
+    db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(ledgerAccount)
+      .where(eq(ledgerAccount.householdId, householdId)),
+    db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(category)
+      .where(eq(category.householdId, householdId)),
+    db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(transaction)
+      .where(eq(transaction.householdId, householdId)),
     db
       .select({
         key: transaction.accountId,
@@ -40,18 +42,7 @@ export async function computeImportManifest(
   };
 }
 
-function countRows<Table extends SQLiteTable & { householdId: SQLiteColumn }>(
-  db: CommandDatabase,
-  table: Table,
-  householdId: string,
-) {
-  return db
-    .select({ count: sql<number>`COUNT(*)` })
-    .from(table)
-    .where(eq(table.householdId, householdId));
-}
-
-function sumsByKey(rows: readonly { key: string; total: number }[]): Record<string, number> {
+function sumsByKey(rows: readonly { key: string; total: number }[]) {
   const totals: Record<string, number> = {};
   for (const row of rows) {
     totals[row.key] = row.total;

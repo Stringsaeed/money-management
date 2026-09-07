@@ -16,11 +16,10 @@
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
-    "@libsql/client": "0.17.4",
     "@trove/env": "workspace:*",
     "@trove/protocol": "workspace:*",
     "drizzle-orm": "^0.45.2",
-    "libsql": "0.5.29",
+    "postgres": "^3.4.7",
     "zod": "catalog:"
   },
   "devDependencies": {

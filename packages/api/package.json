@@ -16,7 +16,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@libsql/client": "0.17.4",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
@@ -30,6 +29,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.3.14",
     "@cloudflare/workers-types": "catalog:",
     "@trove/typescript-config": "workspace:*",
     "@types/node": "catalog:",

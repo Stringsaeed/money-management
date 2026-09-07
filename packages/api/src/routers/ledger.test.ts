@@ -4,7 +4,7 @@ import { user } from "@trove/db/schema/auth";
 import { household, membership } from "@trove/db/schema/household";
 import { category, ledgerAccount, transaction } from "@trove/db/schema/ledger";
 
-import { createTestDb } from "../lib/commands/test-db";
+import { createTestDb } from "../test-support/db";
 import { applyCommand } from "../lib/commands/pipeline";
 import { getDelta } from "../lib/sync/delta";
 import { getTransaction, listAccounts, listTransactions } from "../lib/ledger/read";

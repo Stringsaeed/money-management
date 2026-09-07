@@ -11,7 +11,7 @@ import type { AppliedResult, CommandResult } from "@trove/protocol";
 import { applyCommand } from "./pipeline";
 import type { CommandPlan } from "./pipeline";
 import { getReserveFacts } from "../budget/reserve";
-import { createTestDb } from "./test-db";
+import { createTestDb } from "../../test-support/db";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 
@@ -443,7 +443,7 @@ describe("refund.link", () => {
         }),
         resultStatement(db as never, { householdId: HOUSEHOLD_ID, commandId, result: {} }),
       ];
-      await executeBatch(db, statements);
+      await executeBatch(db, statements, HOUSEHOLD_ID);
     };
 
     await commit(planA);

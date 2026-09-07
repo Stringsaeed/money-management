@@ -7,7 +7,7 @@ import { household, membership } from "@trove/db/schema/household";
 import { recurringOccurrence, recurringRule } from "@trove/db/schema/recurring";
 import { ledgerAccount, transaction } from "@trove/db/schema/ledger";
 
-import { createTestDb } from "../commands/test-db";
+import { createTestDb } from "../../test-support/db";
 import { settleHouseholdRules } from "./settle-household";
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 
@@ -225,13 +225,13 @@ describe("settlement engine — revision & optimistic concurrency", () => {
   });
 
   it("aborts the commit when another writer bumped the revision mid-settlement", async () => {
-    const { D1RecurringStore } = await import("./d1-store");
+    const { PgRecurringStore } = await import("./pg-store");
     const { assertionStatement, executeBatch } = await import("../commands/statements");
 
     const ruleId = await insertRule({ revision: 3 });
 
     // Read the rule, then simulate an interleaved edit landing before commit.
-    const store = new D1RecurringStore(db, { householdId: HOUSEHOLD_ID, userId: OWNER }, (() => {
+    const store = new PgRecurringStore(db, { householdId: HOUSEHOLD_ID, userId: OWNER }, (() => {
       let n = 0;
       return () => `tx-${++n}`;
     }) as never);
@@ -259,7 +259,9 @@ describe("settlement engine — revision & optimistic concurrency", () => {
 
     // The stale settlement's assertion now fails: the batch must abort whole
     // instead of clobbering the concurrent edit.
-    await expect(executeBatch(db, [assertionStatement(db as never, guard)])).rejects.toThrow();
+    await expect(
+      executeBatch(db, [assertionStatement(db as never, guard)], HOUSEHOLD_ID),
+    ).rejects.toThrow();
 
     // The engine's own commit path goes through the identical assertion.
     await expect(store.commitRuleSettlement(staleCommit)).rejects.toThrow();

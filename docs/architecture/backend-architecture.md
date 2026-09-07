@@ -1,7 +1,7 @@
 # Backend Architecture
 
-- **Status:** Revised — Phase 0 shipped on the Better-T Stack; ledger sync is shipped
-- **Recorded:** 2026-08-20 · **Revised:** 2026-09-03 (ledger sync shipped)
+- **Status:** Revised — Phase 0 shipped on the Better-T Stack; ledger sync is shipped; Z2 moves the server store to PlanetScale Postgres
+- **Recorded:** 2026-08-20 · **Revised:** 2026-09-07 (PlanetScale + Hyperdrive)
 - **Decision history:** this document
 - **Domain language:** [Money Management Context](../../CONTEXT.md)
 - **Related:** all 22 files in [`docs/adr/`](../adr/), [Recurring Rules Architecture](./recurring-rules-design.md), [Ledger Cache Coherence Plan](./ledger-cache-coherence-plan.md)
@@ -80,7 +80,7 @@ Every point below is a hard constraint on the D1 schema and the command pipeline
 11. Future Assignments draw only from currently owned Unassigned Money, and are blocked while their currency workspace has any cash Envelope Overspending or Unfunded Card Spending (ADR-0015).
 12. Refunds are linked, cumulative-capped, own-period-attributed, reserve-adjusting, and block unsafe edits/deletes of the transaction they link to (ADR-0008).
 13. Recurring Rule Occurrence identity `(rule_id, scheduled_date)` is a unique constraint; Rule Revision is the optimistic-concurrency version column; Eligibility Floor is the only progress cursor; settlement applies a rule's pre-change state before a same-day pause/archive/edit takes effect.
-14. Every command runs in one atomic D1 `batch()`: idempotency check → authorization → precondition/version check → apply → recompute → append to `household_changes` — partial application is never observable.
+14. Every command runs in one Postgres transaction under `pg_advisory_xact_lock(hashtext(householdId))`: idempotency check → authorization → precondition/version check → apply → recompute → append to `household_changes` — partial application is never observable.
 15. **(Multi-user extension)** No fact table's household-scoping is implicit. Every composite key includes `household_id`, and every foreign key is itself composite `(household_id, other_id)` — a cross-household reference is structurally impossible, not merely policy-blocked.
 16. **(Multi-user extension)** A rejected command never partially applies and never silently merges with another member's concurrent change — it either commits whole or is returned to the client as a typed rejection for the user to re-edit or discard.
 
@@ -90,30 +90,30 @@ Every point below is a hard constraint on the D1 schema and the command pipeline
 
 Phase 0 shipped on the **Better-T Stack**, replacing the original Supabase + standalone-API plan. The original rationale is preserved below where it still holds; the substitutions:
 
-| Original                                            | Shipped / planned                                                                                                                                                         |
-| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Supabase Postgres + RLS as durable store            | **Cloudflare D1 (SQLite)** via drizzle in `packages/db`. Tenancy enforced in oRPC middleware — there is **no DB-level backstop**; this loss is accepted and documented    |
-| `apps/api` standalone containerized Hono service    | **`apps/server`** — Hono entry on Cloudflare Workers; business logic in oRPC routers in `packages/api`                                                                    |
-| `POST /commands` / `GET /sync` REST routes          | Protected oRPC procedures (`commands.apply`, `sync.getDelta`) exposed via RPC + OpenAPI handlers                                                                          |
-| Supabase Auth + JWT verification                    | **better-auth** (`packages/auth`) with the Expo plugin; session-based, household/role resolved from membership tables                                                     |
-| `pg_advisory_xact_lock` per `(household, currency)` | D1's single-writer serialization + one atomic drizzle `batch()` per command containing precondition reads and writes; optimistic version preconditions are the safety net |
-| Supabase Realtime (logical replication)             | Polling-first delta pull (#84/#85); optional Durable Object WebSocket push as a later enhancement (#93) — no drop-in equivalent exists                                    |
-| pgTAP RLS negative tests                            | oRPC authorization audit — integration tests over shipped procedures (#97)                                                                                                |
-| `supabase/` infra-as-code                           | alchemy config in `packages/infra`; drizzle migrations in `packages/db`; orphaned `supabase/` retired (#106)                                                              |
-| Horizontal scaling via stateless replicas           | Workers' automatic horizontal scaling; new constraints: CPU/wall-clock limits per invocation, no held connections or pools                                                |
+| Original                                            | Shipped / planned                                                                                                                                                                    |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Supabase Postgres + RLS as durable store            | **PlanetScale Postgres** via drizzle `postgres-js` over cache-disabled Hyperdrive `HYPERDRIVE_FRESH`. Tenancy stays in oRPC middleware; PowerSync publication lists four tables only |
+| `apps/api` standalone containerized Hono service    | **`apps/server`** — Hono entry on Cloudflare Workers; business logic in oRPC routers in `packages/api`                                                                               |
+| `POST /commands` / `GET /sync` REST routes          | Protected oRPC procedures (`commands.apply`, `sync.getDelta`) exposed via RPC + OpenAPI handlers                                                                                     |
+| Supabase Auth + JWT verification                    | **better-auth** (`packages/auth`) with the Expo plugin; session-based, household/role resolved from membership tables                                                                |
+| `pg_advisory_xact_lock` per `(household, currency)` | One `db.transaction` per command with `pg_advisory_xact_lock(hashtext(householdId))`; optimistic version preconditions stay the safety net                                           |
+| Supabase Realtime (logical replication)             | Polling-first delta pull (#84/#85); optional Durable Object WebSocket push as a later enhancement (#93) — no drop-in equivalent exists                                               |
+| pgTAP RLS negative tests                            | oRPC authorization audit — integration tests over shipped procedures (#97)                                                                                                           |
+| `supabase/` infra-as-code                           | alchemy config in `packages/infra`; drizzle migrations in `packages/db`; orphaned `supabase/` retired (#106)                                                                         |
+| Horizontal scaling via stateless replicas           | Workers' automatic horizontal scaling; new constraints: CPU/wall-clock limits per invocation, no held connections or pools                                                           |
 
 The original "don't run business logic in Edge Functions" concern now applies _to us_ differently: Workers invocations have CPU limits, so ADR-0005 historical-adjustment cascades must be designed bounded/resumable, with queue/Durable-Object fan-out for whole-household sweeps (#88).
 
-### Managed state: Cloudflare D1
+### Managed state: PlanetScale Postgres through Hyperdrive
 
-- **D1 (SQLite)** — the durable store. Accessed via drizzle ORM from `packages/db`; migrations via `drizzle-kit` against d1-http. SQLite gives up RLS, advisory locks, and logical replication; it gains serverless operation co-located with the compute layer.
-- **Authorization at the API boundary** — household tenancy and role capability checks live in oRPC middleware plus household-scoped query filters. Unlike RLS, this protects only through the API surface; direct DB access bypasses it. Accepted trade-off for this product.
-- **Auth** — better-auth on the same D1 database (`packages/auth`), with the Expo client plugin. Households/memberships/invite codes already modeled in `packages/db/src/schema/household.ts`.
+- **PlanetScale Postgres** — the durable store. Workers reach it through cache-disabled Hyperdrive `HYPERDRIVE_FRESH` (`trove-ledger-fresh`). Migrations live in `packages/db` as a Postgres baseline. The `powersync` publication lists `membership`, `accounts`, `categories`, and `transactions` only.
+- **Authorization at the API boundary** — household tenancy and role capability checks live in oRPC middleware plus household-scoped query filters.
+- **Auth** — better-auth on the same Postgres database (`packages/auth`, provider `pg`), with the Expo client plugin. Households/memberships/invite codes already modeled in `packages/db/src/schema/household.ts`.
 - **Change notification** — polling-first: clients pull deltas by seq watermark. Push, if built later, is a Durable Object holding one WebSocket per household, published to by the command procedure after commit.
 
 ### Compute: `apps/server` on Cloudflare Workers
 
-Business logic runs in oRPC routers in `packages/api`, mounted by the Hono entry in `apps/server` (RPC handler at `/rpc`, OpenAPI reference alongside). Workers scale horizontally automatically; the constraints that replace the old container-hosting discussion are per-invocation **CPU/wall-clock limits** and **no held connections** — D1 access goes through d1-http bindings, so long transactions are bounded by batch semantics rather than connection-pool sizing.
+Business logic runs in oRPC routers in `packages/api`, mounted by the Hono entry in `apps/server` (RPC handler at `/rpc`, OpenAPI reference alongside). Workers scale horizontally automatically. Hyperdrive pools the PlanetScale connection; each command still finishes in one transaction.
 
 Business logic lives in a shared TypeScript package, `packages/domain`, imported by `packages/api` through standard pnpm-workspace resolution and **also imported client-side** for optimistic local preview — one implementation, not two that can drift. The cross-runtime constraint this creates is **Hermes compatibility** (React Native's JS engine), not Deno compatibility: `packages/domain` must avoid Node-only built-ins and anything Hermes doesn't support, a bar the existing client code (plain TypeScript, `date-fns`) already clears.
 
@@ -131,14 +131,14 @@ Derived values (Available Money, Funding Pool, Rollover, Card Payment Reserve) s
 
 The client gains two local, never-synced tables: `outbox_commands` (queued commands, keyed by their idempotency-doubling `command_id`) and `sync_state` (per-household watermark). A write is applied optimistically to the local cache immediately on creation, queued in the outbox in the same local transaction, and drained to the `commands.apply` oRPC mutation in order.
 
-The commands pipeline runs in one atomic D1 `batch()` per command:
+The commands pipeline runs in one Postgres transaction per command:
 
 1. **Idempotency** — unique constraint on `command_id`; a retry after a timeout replays the stored result rather than re-executing.
 2. **Authorization** — `can(role, commandKind)` against live membership, checked in oRPC middleware.
 3. **Precondition check** — generalizes the client's existing Rule-Revision pattern: `expectedVersion` for mutable entities, `expectedAsOf` predicates for append-only ones (e.g. "Unassigned Money ≥ X," re-validated inside the same batch so a queued-while-offline assignment that's no longer fundable is rejected, not silently overdrawn).
 4. **Apply and recompute** via `packages/domain`.
 5. **Append** to `household_changes` (seq allocated from the per-household counter row in the same batch).
-6. **Commit** — everything above is one drizzle `batch()`; D1's single-writer model serializes concurrent writers, and optimistic version preconditions — not locks — are the correctness mechanism for interleaved waterfall sections.
+6. **Commit** — everything above is one `db.transaction` under `pg_advisory_xact_lock(hashtext(householdId))`. Optimistic version preconditions still reject stale waterfalls.
 7. **Return** a discriminated result — `applied | stale_version | invalid_intent | preview_required | missing_entity | forbidden | conflict` — mirroring the client's existing `RecurringChangeResult` shape, plus the recomputed rows/projections so the client can write back without a second round trip.
 
 The client pulls the actual delta via `sync.getDelta({ since: <seq> })`; push notification (`{seq, effects[]}`), if built later (#93), is purely a latency optimization telling the client when to pull — never a correctness dependency; polling produces identical results and is the shipped path.
@@ -155,10 +155,10 @@ The repository is a pnpm workspace (`apps/*`, `packages/*`) with `nodeLinker: ho
 - `apps/server` — Hono entry on Cloudflare Workers: better-auth handler, oRPC RPC + OpenAPI routes; deployed via `packages/infra` (alchemy).
 - `packages/domain` — pure business logic (waterfalls, projections, settlement engine, calendar math), no I/O, Hermes- and Node-compatible. Built as a **compiled package**: its own `tsc` build to `dist/`, cacheable by Turborepo, `exports` field with subpath exports rather than one barrel. (Turborepo's own documentation recommends this pattern for anything needing build caching, over "just-in-time" raw-source packages, and explicitly advises against TypeScript project references — "another point of configuration as well as another caching layer" — in favor of per-package `tsconfig.json` extending a shared base.)
 - `packages/protocol` — command/result/effect type contracts shared by `apps/mobile` and the server packages.
-- `packages/db` — Drizzle **D1 (SQLite)** schema/migrations (d1-http), distinct from `apps/mobile`'s existing local SQLite `drizzle.config.ts`, which is untouched — two stores, two configs, never merged.
+- `packages/db` — Drizzle **Postgres** schema/migrations over Hyperdrive, distinct from `apps/mobile`'s local SQLite `drizzle.config.ts`, which is untouched — two stores, two configs, never merged.
 - `packages/typescript-config` — shared `tsconfig` bases.
-- `packages/auth` — better-auth on D1 with the Expo client plugin.
-- `packages/infra` — alchemy stack deploying `apps/server` + D1.
+- `packages/auth` — better-auth on Postgres with the Expo client plugin.
+- `packages/infra` — alchemy stack deploying `apps/server` + cache-disabled Hyperdrive.
 
 _(The original layout's `apps/api` and `supabase/` entries are superseded; see [Stack revision](#stack-revision-2026-08-23-post-104).)_
 

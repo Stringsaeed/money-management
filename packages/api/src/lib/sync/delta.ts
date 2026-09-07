@@ -63,21 +63,19 @@ export async function getDelta({
 
   const boundedLimit = Math.min(limit, MAX_DELTA_LIMIT);
 
-  // Page + head run in one batch so both reads see the same snapshot — a
-  // commit landing mid-poll can never make the watermark outrun the page.
-  const [pageResult, headResult] = await db.batch([
-    db
+  const [pageResult, headResult] = await db.transaction(async (tx) => {
+    const page = await tx
       .select({ seq: householdChange.seq, effects: householdChange.effects })
       .from(householdChange)
       .where(and(eq(householdChange.householdId, householdId), gt(householdChange.seq, since)))
       .orderBy(asc(householdChange.seq))
-      .limit(boundedLimit),
-    // Head watermark: MAX(seq) for the household — 0 for an empty log.
-    db
+      .limit(boundedLimit);
+    const head = await tx
       .select({ seq: sql<number>`COALESCE(MAX(${householdChange.seq}), 0)` })
       .from(householdChange)
-      .where(eq(householdChange.householdId, householdId)),
-  ]);
+      .where(eq(householdChange.householdId, householdId));
+    return [page, head] as const;
+  });
 
   const changeRows = pageResult;
   const hasMore = changeRows.length === boundedLimit;

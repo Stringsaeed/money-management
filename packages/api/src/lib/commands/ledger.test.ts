@@ -10,7 +10,7 @@ import type { AppliedResult, CommandEnvelope, CommandResult } from "@trove/proto
 
 import { getDelta } from "../sync/delta";
 import { applyCommand } from "./pipeline";
-import { createTestDb } from "./test-db";
+import { createTestDb } from "../../test-support/db";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 
