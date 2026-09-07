@@ -61,7 +61,7 @@ async function setupCategoryReferencesDatabase() {
   return testDatabase.database;
 }
 
-jest.mock("expo-sqlite", () => ({
+jest.mock("@/db/sqlite", () => ({
   useSQLiteContext: () => mockUseDatabase(),
 }));
 

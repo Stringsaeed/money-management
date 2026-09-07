@@ -1,4 +1,4 @@
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import type { AccountDependencyFacts } from "./account-dependency-read";
 import { evaluateCardBudgetState } from "./card-dependency-evaluator";

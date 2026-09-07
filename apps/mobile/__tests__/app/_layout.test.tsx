@@ -38,7 +38,7 @@ jest.mock("expo-router", () => ({
   ),
 }));
 
-jest.mock("expo-sqlite", () => ({
+jest.mock("@/db/sqlite", () => ({
   useSQLiteContext: () => "sqlite-context",
   SQLiteProvider: ({
     children,
@@ -52,7 +52,7 @@ jest.mock("expo-sqlite", () => ({
   },
 }));
 
-jest.mock("drizzle-orm/expo-sqlite", () => ({
+jest.mock("drizzle-orm/op-sqlite", () => ({
   drizzle: () => "drizzle-database",
 }));
 

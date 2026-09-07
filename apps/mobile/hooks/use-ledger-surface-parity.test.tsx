@@ -23,7 +23,7 @@ jest.mock("@/db/client", () => ({
   useDatabase: () => mockUseDatabase(),
 }));
 
-jest.mock("expo-sqlite", () => ({
+jest.mock("@/db/sqlite", () => ({
   useSQLiteContext: () => mockUseSQLiteContext(),
 }));
 

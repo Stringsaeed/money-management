@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "@jest/globals";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react-native";
-import type { SQLiteBindValue, SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteBindValue, SQLiteDatabase } from "@/db/sqlite";
 
 import { createBudgetingCoordinator } from "@/modules/budgeting/budgeting";
 

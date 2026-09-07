@@ -1,5 +1,5 @@
 import { addMonths, format, parseISO, subMonths } from "date-fns";
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import type { EnvelopeCategoryRow } from "./envelope-validation";
 

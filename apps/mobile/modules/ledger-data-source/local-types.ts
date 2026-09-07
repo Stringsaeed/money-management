@@ -1,9 +1,9 @@
-import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { OPSQLiteDatabase } from "drizzle-orm/op-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import type { AccountVisibility } from "@/hooks/use-account-visibility";
 
-export type LocalDatabase = ExpoSQLiteDatabase<typeof import("@/db/schema")> & {
+export type LocalDatabase = OPSQLiteDatabase<typeof import("@/db/schema")> & {
   $client: SQLiteDatabase;
 };
 

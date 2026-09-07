@@ -149,7 +149,7 @@ export interface RecurringRulesIdentity {
 }
 
 export interface CreateRecurringRulesOptions {
-  database: import("expo-sqlite").SQLiteDatabase;
+  database: import("@/db/sqlite").SQLiteDatabase;
   clock: RecurringRulesClock;
   identity: RecurringRulesIdentity;
 }

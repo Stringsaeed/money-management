@@ -11,7 +11,7 @@ import type {
   MoveMoneyRequest,
 } from "@/modules/budgeting/budgeting";
 import { nowIso } from "@/utils/date";
-import { useSQLiteContext } from "expo-sqlite";
+import { useSQLiteContext } from "@/db/sqlite";
 
 interface UseMoveMoneySheetOptions {
   currency: string;

@@ -11,7 +11,7 @@ const mockCreateRecurringRules = jest.fn(({ database }) => ({ database }));
 let mockCurrentDatabase: object = firstDatabase;
 let observedModule: unknown;
 
-jest.mock("expo-sqlite", () => ({
+jest.mock("@/db/sqlite", () => ({
   useSQLiteContext: () => mockCurrentDatabase,
 }));
 

@@ -1,4 +1,4 @@
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import { decodeSetupDraft, UnreadableSetupDraftError } from "./setup-draft-codec";
 import {

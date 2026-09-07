@@ -10,7 +10,7 @@
  * Safe to call repeatedly.
  */
 import { eq } from "drizzle-orm";
-import type { drizzle } from "drizzle-orm/expo-sqlite";
+import type { drizzle } from "drizzle-orm/op-sqlite";
 
 import { nowIso } from "@/utils/date";
 

@@ -1,4 +1,4 @@
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import type { CurrencySettingRequest, Workspace, WorkspaceSelection } from "./types";
 import { requireCurrency } from "./validation";

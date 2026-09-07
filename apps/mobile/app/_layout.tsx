@@ -12,7 +12,7 @@ import {
 import { Stack } from "expo-router";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import * as SplashScreen from "expo-splash-screen";
-import { SQLiteProvider, type SQLiteDatabase } from "expo-sqlite";
+import { SQLiteProvider, type SQLiteDatabase } from "@/db/sqlite";
 import { StatusBar } from "expo-status-bar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, useEffect } from "react";
@@ -59,13 +59,7 @@ const queryClient = new QueryClient({
 });
 
 async function onDatabaseInit(db: SQLiteDatabase) {
-  try {
-    console.log("Initializing database...");
-    await initializeDatabase(db);
-  } catch (error) {
-    console.error("Error initializing database:", error);
-    throw error;
-  }
+  await initializeDatabase(db);
 }
 
 function LoadingFallback() {
@@ -103,8 +97,8 @@ export default function RootLayout() {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <PostHogProvider
-        debug={__DEV__}
-        apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY}
+        debug={Boolean(__DEV__ && process.env.EXPO_PUBLIC_POSTHOG_API_KEY)}
+        apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY || "phc_local_disabled"}
         options={{
           host: "https://us.i.posthog.com",
         }}

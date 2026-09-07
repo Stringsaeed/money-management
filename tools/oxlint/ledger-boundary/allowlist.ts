@@ -45,7 +45,7 @@ export const LEDGER_RESTRICTED_IMPORTS = {
       message: RAW_DB_MESSAGE,
     },
     {
-      name: "expo-sqlite",
+      name: "@/db/sqlite",
       importNames: ["useSQLiteContext"],
       message: RAW_DB_MESSAGE,
     },

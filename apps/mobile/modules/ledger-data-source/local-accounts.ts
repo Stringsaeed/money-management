@@ -46,7 +46,9 @@ export const createLocalAccountPort = (
         if (!hasVisibleAccount(visibility, id)) {
           return undefined;
         }
-        return db.select().from(accounts).where(eq(accounts.id, id)).get() as Account | undefined;
+        const row = await db.select().from(accounts).where(eq(accounts.id, id)).get();
+        // SAFETY: accounts columns match Account; drizzle widens enum columns to string.
+        return row as Account | undefined;
       }),
     accountBalances: (includeArchived: boolean) =>
       runner.run("read.account-balances", async () => {

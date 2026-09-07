@@ -1,5 +1,6 @@
-import { drizzle } from "drizzle-orm/expo-sqlite";
-import type { SQLiteDatabase } from "expo-sqlite";
+import { drizzle } from "drizzle-orm/op-sqlite";
+
+import type { SQLiteDatabase } from "./sqlite";
 
 import type { LocalDb } from "@/lib/migration/manifest";
 import { getMigratedHouseholdId } from "@/lib/migration/status";

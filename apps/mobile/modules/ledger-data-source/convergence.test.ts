@@ -1,4 +1,4 @@
-import { drizzle } from "drizzle-orm/expo-sqlite";
+import { drizzle } from "drizzle-orm/op-sqlite";
 
 import * as schema from "@/db/schema";
 import { createTestSQLiteDatabase, type TestSQLiteDatabase } from "@/tests/test-utils/sqlite";

@@ -10,8 +10,9 @@
  * no sync or backup, so a bump throws away the user's real accounts and
  * transactions. Only raise this when a clean baseline is worth that.
  */
-import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { OPSQLiteDatabase } from "drizzle-orm/op-sqlite";
+
+import type { SQLiteDatabase } from "./sqlite";
 
 import { appSettings } from "./schema";
 
@@ -53,7 +54,7 @@ export async function resetDatabaseIfNeeded(
  * in between, the version stays unwritten and the next launch retries the whole
  * sequence rather than leaving a half-built database marked as reset.
  */
-export async function markDatabaseReset(db: ExpoSQLiteDatabase): Promise<void> {
+export async function markDatabaseReset(db: OPSQLiteDatabase): Promise<void> {
   await db
     .insert(appSettings)
     .values({ key: RESET_VERSION_KEY, value: String(DATABASE_RESET_VERSION) })

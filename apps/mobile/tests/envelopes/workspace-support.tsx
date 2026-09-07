@@ -1,7 +1,7 @@
 import { jest } from "@jest/globals";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render } from "@testing-library/react-native";
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import BudgetWorkspaceScreen from "@/app/(tabs)/envelopes/workspace";
 import { migrateAccountLifecycle } from "@/db/account-lifecycle-migration";
@@ -14,7 +14,7 @@ import { applyLegacyMigrations, createTestSQLiteDatabase } from "@/tests/test-ut
 
 let mockDatabase: SQLiteDatabase;
 
-jest.mock("expo-sqlite", () => ({
+jest.mock("@/db/sqlite", () => ({
   useSQLiteContext: () => mockDatabase,
 }));
 

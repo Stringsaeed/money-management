@@ -11,7 +11,7 @@ jest.mock("@/db/client", () => ({
   useDatabase: () => FAKE_DB,
 }));
 
-jest.mock("expo-sqlite", () => ({
+jest.mock("@/db/sqlite", () => ({
   useSQLiteContext: () => FAKE_SQLITE,
 }));
 

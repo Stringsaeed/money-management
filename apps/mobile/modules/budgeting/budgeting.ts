@@ -1,5 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import { cohereBudgetingEffects } from "@/modules/ledger-cache";
 

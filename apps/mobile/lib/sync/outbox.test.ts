@@ -2,9 +2,9 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { eq } from "drizzle-orm";
 import { beforeEach } from "@jest/globals";
-import { drizzle } from "drizzle-orm/expo-sqlite";
-import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
-import type { SQLiteDatabase } from "expo-sqlite";
+import { drizzle } from "drizzle-orm/op-sqlite";
+import type { OPSQLiteDatabase } from "drizzle-orm/op-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 import type { CommandEnvelope, CommandResult } from "@trove/protocol";
 
 import {
@@ -24,7 +24,7 @@ import {
 import * as schema from "@/db/schema";
 import { createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
 
-type LocalDb = ExpoSQLiteDatabase<typeof schema> & { $client: SQLiteDatabase };
+type LocalDb = OPSQLiteDatabase<typeof schema> & { $client: SQLiteDatabase };
 
 type TestSQLiteDatabase = ReturnType<typeof createTestSQLiteDatabase>;
 

@@ -1,4 +1,4 @@
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import { migrateAccountLifecycle } from "@/db/account-lifecycle-migration";
 import { migrateBudgeting } from "@/db/budgeting-migration";

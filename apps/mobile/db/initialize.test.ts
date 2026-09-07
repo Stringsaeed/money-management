@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "@jest/globals";
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import {
   applyLegacyMigrations,
@@ -7,7 +7,7 @@ import {
   markLegacyMigrationsApplied,
 } from "@/tests/test-utils/sqlite";
 
-import { drizzle } from "drizzle-orm/expo-sqlite";
+import { drizzle } from "drizzle-orm/op-sqlite";
 
 import { markMigrationCompleted } from "@/lib/migration/status";
 import { clearSeedVersion } from "./seed";

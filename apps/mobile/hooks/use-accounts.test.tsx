@@ -113,7 +113,7 @@ jest.mock("@/hooks/use-account-visibility", () => ({
   useAccountVisibility: () => mockUseAccountVisibility(),
 }));
 
-jest.mock("expo-sqlite", () => ({
+jest.mock("@/db/sqlite", () => ({
   useSQLiteContext: () => mockUseSQLiteContext(),
 }));
 

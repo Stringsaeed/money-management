@@ -1,5 +1,5 @@
 import { format, isValid, parseISO } from "date-fns";
-import type { SQLiteDatabase } from "expo-sqlite";
+import type { SQLiteDatabase } from "@/db/sqlite";
 
 import { evaluateCardBudgetState } from "./card-dependency-evaluator";
 import { loadAccountDependencyFacts } from "./account-dependency-read";
