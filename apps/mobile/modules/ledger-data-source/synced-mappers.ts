@@ -1,5 +1,10 @@
 import type { orpc } from "@/lib/server/orpc";
 import type { Account, Category, TransactionWithDetails } from "@/types";
+import type {
+  PowerSyncAccountRow,
+  PowerSyncCategoryRow,
+  PowerSyncTransactionRow,
+} from "@/modules/ledger-db/types";
 
 import { unsupportedSyncedOperation, type AccountUpdate, type TransactionUpdate } from "./contract";
 
@@ -100,6 +105,59 @@ export const mapSyncedTransaction = (
       : null,
   };
 };
+
+export const mapPowerSyncAccount = (row: PowerSyncAccountRow): Account => ({
+  id: row.id,
+  name: row.name,
+  type: row.type === "card" ? "credit_card" : row.type === "bank" ? "checking" : "cash",
+  currency: row.currency,
+  color: row.color,
+  icon: row.icon,
+  initialBalance: row.initial_balance_minor,
+  excludeFromTotal: row.exclude_from_total === 1,
+  sortOrder: row.sort_order,
+  lifecycle: row.lifecycle,
+  lifecycleChangedAt: row.lifecycle_changed_at,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+export const mapPowerSyncCategory = (row: PowerSyncCategoryRow): Category => ({
+  id: row.id,
+  name: row.name,
+  type: row.type,
+  color: row.color,
+  icon: row.icon,
+  parentId: row.parent_id,
+  sortOrder: row.sort_order,
+  lifecycle: row.lifecycle,
+  lifecycleChangedAt: row.lifecycle_changed_at,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+export const mapPowerSyncTransaction = (row: PowerSyncTransactionRow): SyncedTransaction => ({
+  id: row.id,
+  householdId: row.household_id,
+  type: row.type,
+  amountMinor: row.amount_minor,
+  currency: row.currency,
+  originalAmountMinor: row.original_amount_minor,
+  originalCurrency: row.original_currency,
+  exchangeRate: row.exchange_rate,
+  date: row.date,
+  accountId: row.account_id,
+  toAccountId: row.to_account_id,
+  categoryId: row.category_id,
+  isRecurring: row.is_recurring === 1,
+  recurringRuleId: row.recurring_rule_id,
+  description: row.description,
+  version: row.version,
+  createdBy: row.created_by,
+  updatedBy: row.updated_by,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
 
 const pickAccount = (account: Account): TransactionWithDetails["account"] => ({
   id: account.id,

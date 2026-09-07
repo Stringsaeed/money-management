@@ -56,7 +56,7 @@ export function RejectedChangeEditScreen({ commandId }: RejectedChangeEditScreen
             Edit &amp; resubmit ✏️
           </Text>
           <Text className="font-body-normal text-xs uppercase tracking-wider text-ink/40">
-            {commandKindLabel(change.kind)}
+            {change.kind === "unknown" ? "Unknown change" : commandKindLabel(change.kind)}
           </Text>
         </View>
 
@@ -65,7 +65,9 @@ export function RejectedChangeEditScreen({ commandId }: RejectedChangeEditScreen
             className="font-heading-medium text-lg italic tracking-tight text-ink"
             numberOfLines={2}
           >
-            {describeIntent(change.kind, change.payload)}
+            {change.kind === "unknown"
+              ? "Unknown change"
+              : describeIntent(change.kind, change.payload)}
           </Text>
           <Text className="font-body-normal text-sm text-terracotta">
             💬 Why it was rejected: {describeRejection(change.rejection)}

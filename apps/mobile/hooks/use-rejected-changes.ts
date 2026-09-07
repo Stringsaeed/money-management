@@ -1,16 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-
-import { useDatabase } from "@/db/client";
+import type { CommandEnvelope } from "@trove/protocol";
 import { useActiveHousehold } from "@/hooks/use-households";
-import { signedInUserId, useAccess } from "@/modules/access";
 import {
-  discardRejectedCommand,
+  discardRejectedChange,
   listRejectedChanges,
-  resubmitRejectedCommand,
+  resubmitRejectedChange,
   type RejectedChange,
-} from "@/lib/sync/outbox";
-import { cohereTransactionSurfaces } from "@/modules/ledger-cache";
+} from "@/modules/powersync/rejected-changes";
+import { useRequiredLedger } from "@/modules/ledger-db/provider";
 import { generateId } from "@/utils/id";
 
 /**
@@ -20,10 +17,8 @@ import { generateId } from "@/utils/id";
  * fresh idempotency key.
  */
 export function useRejectedChanges() {
-  const db = useDatabase();
-  const queryClient = useQueryClient();
+  const ledger = useRequiredLedger();
   const { activeHousehold } = useActiveHousehold();
-  const userId = signedInUserId(useAccess());
   const householdId = activeHousehold?.householdId ?? null;
 
   const [changes, setChanges] = useState<readonly RejectedChange[]>([]);
@@ -31,50 +26,53 @@ export function useRejectedChanges() {
   const [error, setError] = useState<Error | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!householdId || !userId) {
+    if (!householdId) {
       setChanges([]);
       setIsLoading(false);
       return;
     }
     try {
-      setChanges(await listRejectedChanges(db, householdId, userId));
+      setChanges(listRejectedChanges(ledger.collections, householdId));
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Could not load rejected changes."));
     } finally {
       setIsLoading(false);
     }
-  }, [db, householdId, userId]);
+  }, [householdId, ledger]);
 
   useEffect(() => {
     void refresh();
-  }, [refresh]);
+    const subscription = ledger.collections.rejectedChanges.subscribeChanges(() => void refresh());
+    return () => subscription.unsubscribe();
+  }, [ledger, refresh]);
 
   const discard = useCallback(
     async (commandId: string) => {
-      await discardRejectedCommand(db, commandId);
-      await cohereTransactionSurfaces(queryClient);
+      await discardRejectedChange(ledger.collections, commandId);
       await refresh();
     },
-    [db, queryClient, refresh],
+    [ledger, refresh],
   );
 
   const resubmit = useCallback(
-    async (commandId: string, editedPayload?: unknown) => {
+    async (commandId: string, editedPayload?: CommandEnvelope["payload"]) => {
       // A resubmitted command gets a NEW id: the old one is spent as an
       // idempotency key, and the server must treat this as a fresh intent.
       const newCommandId = generateId();
-      await resubmitRejectedCommand(db, {
-        originalCommandId: commandId,
-        newCommandId,
-        ...(editedPayload !== undefined && { payload: editedPayload }),
-      });
-      await cohereTransactionSurfaces(queryClient);
+      const change = getChange(changes, commandId);
+      await resubmitRejectedChange(ledger, change, newCommandId, editedPayload);
       await refresh();
       return newCommandId;
     },
-    [db, queryClient, refresh],
+    [changes, ledger, refresh],
   );
 
   return { changes, isLoading, error, refresh, discard, resubmit };
 }
+
+const getChange = (changes: readonly RejectedChange[], commandId: string): RejectedChange => {
+  const change = changes.find((candidate) => candidate.commandId === commandId);
+  if (!change) throw new Error("This rejected change was already discarded or resubmitted.");
+  return change;
+};

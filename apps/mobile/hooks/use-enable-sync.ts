@@ -9,8 +9,10 @@ import { backupLocalDatabase } from "@/lib/migration/backup";
 import { runImport } from "@/lib/migration/enable-sync";
 import { getMigratedHouseholdId, markMigrationCompleted } from "@/lib/migration/status";
 import { describeRejection, parseRejection } from "@/lib/sync/rejection";
-import { pullDeltas, truncateOutbox } from "@/lib/sync/outbox";
+import { truncateOutbox } from "@/lib/sync/outbox";
 import { orpc } from "@/lib/server/orpc";
+import { signedInUserId, useAccess } from "@/modules/access";
+import { connectPowerSync } from "@/modules/powersync/database";
 import { useSyncModeStore } from "@/stores/sync-mode-store";
 
 export type EnableSyncStatus =
@@ -39,8 +41,8 @@ export interface EnableSyncInput {
  * Drives the "Enable Sync" local-to-cloud migration (#98) end to end:
  * creates the household if needed, backs up the pre-import SQLite file,
  * uploads every local row via {@link runImport}, and — only once the
- * server's recomputed manifest matches — flips this device to synced mode,
- * truncates the outbox, and re-seeds the sync watermark from `since: 0`.
+ * server's recomputed manifest matches — waits for the first PowerSync
+ * household stream, truncates the legacy outbox, and flips this device to synced mode.
  *
  * A rejected chunk or a manifest mismatch leaves the household, the backup,
  * and sync mode untouched: the import is paused, not rolled back, so the
@@ -50,6 +52,7 @@ export function useEnableSync() {
   const db = useDatabase();
   const sqlite = useSQLiteContext();
   const queryClient = useQueryClient();
+  const userId = signedInUserId(useAccess());
   const [status, setStatus] = useState<EnableSyncStatus>("idle");
   const [error, setError] = useState<Error | null>(null);
   const [discrepancy, setDiscrepancy] = useState<ImportDiscrepancy | null>(null);
@@ -81,6 +84,18 @@ export function useEnableSync() {
               preconditions: envelope.preconditions?.map((precondition) => ({ ...precondition })),
             }),
           fetchManifest: (id) => orpc.migration.getManifest({ householdId: id }),
+          connectAndWait: async (id) => {
+            if (!userId) throw new Error("Sign in again before finishing PowerSync migration.");
+            const powerSync = await connectPowerSync(userId);
+            const subscription = await powerSync
+              .syncStream("household_ledger", { household_id: id })
+              .subscribe();
+            try {
+              await subscription.waitForFirstSync();
+            } finally {
+              await subscription.unsubscribe();
+            }
+          },
         });
 
         if (result.status === "rejected") {
@@ -105,7 +120,6 @@ export function useEnableSync() {
 
         setStatus("verifying");
         await truncateOutbox(db, householdId);
-        await pullDeltas(db, (args) => orpc.sync.getDelta(args), householdId);
         await markMigrationCompleted(db, householdId);
         useSyncModeStore.getState().setSynced();
 
@@ -121,7 +135,7 @@ export function useEnableSync() {
         setError(err instanceof Error ? err : new Error("Enable Sync failed."));
       }
     },
-    [db, sqlite, queryClient],
+    [db, queryClient, sqlite, userId],
   );
 
   return { status, error, discrepancy, enableSync };

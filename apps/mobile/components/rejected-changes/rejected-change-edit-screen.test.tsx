@@ -2,22 +2,22 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react-nativ
 import { router } from "expo-router";
 
 import { RejectedChangeEditScreen } from "@/components/rejected-changes/rejected-change-edit-screen";
-import type { RejectedChange } from "@/lib/sync/outbox";
+import type { RejectedChange } from "@/modules/powersync/rejected-changes";
 
 const mockGetRejectedChange = jest.fn();
 const mockResubmit = jest.fn();
-const mockUseAccess = jest.requireMock("@/modules/access").useAccess as jest.Mock;
+const mockLedger = { collections: "collections" };
 
 jest.mock("expo-router", () => ({
   router: { push: jest.fn(), back: jest.fn() },
   useLocalSearchParams: () => ({ commandId: "cmd-1" }),
 }));
 
-jest.mock("@/db/client", () => ({
-  useDatabase: () => "database",
+jest.mock("@/modules/ledger-db/provider", () => ({
+  useRequiredLedger: () => mockLedger,
 }));
 
-jest.mock("@/lib/sync/outbox", () => ({
+jest.mock("@/modules/powersync/rejected-changes", () => ({
   getRejectedChange: (...args: unknown[]) => mockGetRejectedChange(...args),
 }));
 
@@ -53,18 +53,10 @@ describe("RejectedChangeEditScreen", () => {
   beforeEach(() => {
     mockGetRejectedChange.mockReset();
     mockResubmit.mockReset();
-    mockUseAccess.mockReturnValue({
-      kind: "signed_in",
-      user: { userId: "user-1", email: "ada@trove.ing", displayName: "Ada" },
-      household: { kind: "none" },
-      memberships: [],
-      setActiveHousehold: jest.fn(),
-      signOut: jest.fn(),
-    });
   });
 
   it("pre-populates the form with the original payload values and shows the reason", async () => {
-    mockGetRejectedChange.mockResolvedValue(makeChange());
+    mockGetRejectedChange.mockReturnValue(makeChange());
 
     await render(<RejectedChangeEditScreen commandId="cmd-1" />);
 
@@ -74,7 +66,7 @@ describe("RejectedChangeEditScreen", () => {
   });
 
   it("saves edited values as a NEW command and navigates back", async () => {
-    mockGetRejectedChange.mockResolvedValue(makeChange());
+    mockGetRejectedChange.mockReturnValue(makeChange());
     mockResubmit.mockResolvedValue("cmd-new-uuid");
 
     const { getByDisplayValue } = await render(<RejectedChangeEditScreen commandId="cmd-1" />);
@@ -95,7 +87,7 @@ describe("RejectedChangeEditScreen", () => {
   });
 
   it("keeps the user on the form when the resubmit fails", async () => {
-    mockGetRejectedChange.mockResolvedValue(makeChange());
+    mockGetRejectedChange.mockReturnValue(makeChange());
     mockResubmit.mockRejectedValue(new Error("disk full"));
 
     await render(<RejectedChangeEditScreen commandId="cmd-1" />);
@@ -107,7 +99,7 @@ describe("RejectedChangeEditScreen", () => {
   });
 
   it("explains when the rejected change is already gone", async () => {
-    mockGetRejectedChange.mockResolvedValue(null);
+    mockGetRejectedChange.mockReturnValue(null);
 
     await render(<RejectedChangeEditScreen commandId="cmd-1" />);
 

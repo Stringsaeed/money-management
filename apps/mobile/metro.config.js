@@ -5,6 +5,16 @@ const { withNativewind } = require("nativewind/metro");
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
+config.transformer.getTransformOptions = async () => ({
+  transform: {
+    inlineRequires: {
+      blockList: {
+        [require.resolve("@powersync/react-native")]: true,
+      },
+    },
+  },
+});
+
 // Allow Metro to resolve .sql files for drizzle migrations
 config.resolver.sourceExts.push("sql");
 

@@ -1,5 +1,6 @@
-import { useSyncWorker } from "@/hooks/use-sync-worker";
-import { useLedgerSourceSelection } from "@/modules/ledger-data-source/provider";
+import { LegacySyncWorker } from "@/components/sync/legacy-sync-worker";
+import { PowerSyncWorker } from "@/components/sync/powersync-worker";
+import { isPowerSyncEnabled } from "@/modules/powersync/feature";
 
 /**
  * Mounts the background sync worker (#85) inside the provider tree: drains
@@ -7,10 +8,5 @@ import { useLedgerSourceSelection } from "@/modules/ledger-data-source/provider"
  * the active household. Renders nothing.
  */
 export function SyncWorker() {
-  const selection = useLedgerSourceSelection();
-  useSyncWorker(
-    selection.kind === "synced" ? selection.householdId : null,
-    selection.kind === "synced" ? selection.userId : undefined,
-  );
-  return null;
+  return isPowerSyncEnabled() ? <PowerSyncWorker /> : <LegacySyncWorker />;
 }

@@ -1,256 +1,202 @@
-import type { CommandEnvelope, CommandResult } from "@trove/protocol";
-
-import type { ProjectableCommand } from "@/lib/sync/outbox";
-import type { SyncedAccount, SyncedTransaction } from "@/modules/ledger-data-source/synced-mappers";
-import type { SyncedTransactionSnapshot } from "@/modules/ledger-data-source/synced-transaction-snapshot";
-
 import { createSyncedTransactionLedger, type LedgerDependencies } from "./ledger";
-import { resetLedgerRegistryForTests } from "./registry";
+import { createTestLedgerCollections, preloadTestLedgerCollections } from "./test-collections";
+import type { PowerSyncAccountRow, PowerSyncCategoryRow, PowerSyncTransactionRow } from "./types";
 
 const HOUSEHOLD_ID = "household-1";
 const USER_ID = "user-1";
 const TIMESTAMP = "2026-01-01T00:00:00.000Z";
 
-const cash: SyncedAccount = {
-  householdId: HOUSEHOLD_ID,
+const account: PowerSyncAccountRow = {
   id: "cash",
+  household_id: HOUSEHOLD_ID,
   name: "Cash",
   type: "bank",
   currency: "USD",
-  color: "#000",
+  color: "#000000",
   icon: "banknote.fill",
-  initialBalanceMinor: 0,
-  excludeFromTotal: false,
-  sortOrder: 0,
+  initial_balance_minor: 0,
+  exclude_from_total: 0,
+  sort_order: 0,
   lifecycle: "active",
-  lifecycleChangedAt: null,
+  lifecycle_changed_at: null,
   visibility: "public",
-  ownerUserId: USER_ID,
+  owner_user_id: USER_ID,
   version: 0,
-  createdBy: USER_ID,
-  updatedBy: USER_ID,
-  createdAt: TIMESTAMP,
-  updatedAt: TIMESTAMP,
+  created_by: USER_ID,
+  updated_by: USER_ID,
+  created_at: TIMESTAMP,
+  updated_at: TIMESTAMP,
 };
 
-const groceries = {
-  householdId: HOUSEHOLD_ID,
+const category: PowerSyncCategoryRow = {
   id: "groceries",
+  household_id: HOUSEHOLD_ID,
   name: "Groceries",
-  type: "expense" as const,
+  type: "expense",
   color: "#B48A7B",
   icon: "🛒",
-  parentId: null,
-  sortOrder: 0,
-  lifecycle: "active" as const,
-  lifecycleChangedAt: null,
+  parent_id: null,
+  sort_order: 0,
+  lifecycle: "active",
+  lifecycle_changed_at: null,
   version: 0,
-  createdBy: USER_ID,
-  updatedBy: USER_ID,
-  createdAt: TIMESTAMP,
-  updatedAt: TIMESTAMP,
+  created_by: USER_ID,
+  updated_by: USER_ID,
+  created_at: TIMESTAMP,
+  updated_at: TIMESTAMP,
 };
 
-const snapshot = (transactions: readonly SyncedTransaction[] = []): SyncedTransactionSnapshot => ({
-  householdId: HOUSEHOLD_ID,
-  userId: USER_ID,
-  accounts: [cash],
-  categories: [groceries],
-  transactions: [...transactions],
-});
+const transaction: PowerSyncTransactionRow = {
+  id: "transaction-existing",
+  household_id: HOUSEHOLD_ID,
+  type: "expense",
+  amount_minor: 500,
+  currency: "USD",
+  original_amount_minor: null,
+  original_currency: null,
+  exchange_rate: null,
+  date: "2026-01-02",
+  account_id: account.id,
+  to_account_id: null,
+  category_id: category.id,
+  is_recurring: 0,
+  recurring_rule_id: null,
+  description: "Groceries",
+  version: 2,
+  created_by: USER_ID,
+  updated_by: USER_ID,
+  created_at: TIMESTAMP,
+  updated_at: TIMESTAMP,
+};
 
-const createEnvelope = (commandId: string, transactionId: string): CommandEnvelope => ({
-  commandId,
-  householdId: HOUSEHOLD_ID,
-  kind: "transaction.create",
-  issuedAt: TIMESTAMP,
-  payload: {
-    id: transactionId,
-    type: "expense",
-    amountMinor: 1250,
-    date: "2026-03-01",
-    accountId: "cash",
-    categoryId: "groceries",
-    description: "Lunch",
-  },
-});
-
-const projectable = (envelope: CommandEnvelope): ProjectableCommand => ({
-  ...envelope,
-  status: "pending",
-});
-
-const applied = (transactionId: string, seq: number): CommandResult => ({
-  kind: "applied",
-  seq,
-  effects: ["ledger"],
-  applied: { transactionId },
-  replayed: false,
-});
-
-const deferred = <T>() => {
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((next) => {
-    resolve = next;
+const createHarness = async (transactions: PowerSyncTransactionRow[] = []) => {
+  const collections = createTestLedgerCollections({
+    accounts: [account],
+    categories: [category],
+    transactions,
   });
-  return { promise, resolve };
-};
-
-const createDeps = (
-  overrides: Partial<LedgerDependencies> = {},
-): LedgerDependencies & {
-  notify: (change?: { householdId: string; userId?: string }) => void;
-  queued: ProjectableCommand[];
-} => {
-  const listeners = new Set<(change: { householdId: string; userId?: string }) => void>();
-  const queued: ProjectableCommand[] = [];
-  return {
+  await preloadTestLedgerCollections(collections);
+  const ids = [
+    "transaction-new",
+    "command-create",
+    "command-edit",
+    "command-remove",
+    "transaction-refund",
+    "command-refund",
+  ];
+  const dependencies: LedgerDependencies = {
     householdId: HOUSEHOLD_ID,
     userId: USER_ID,
     dbIdentity: {},
-    fetchAuthoritative: async () => snapshot(),
-    readCachedSnapshot: async () => {
-      throw new Error("no cache");
+    collections,
+    newId: () => {
+      const id = ids.shift();
+      if (!id) throw new Error("ledger test exhausted generated ids");
+      return id;
     },
-    writeCachedSnapshot: async () => undefined,
-    readWatermark: async () => 0,
-    listQueuedCommands: async () => [...queued],
-    enqueue: async () => undefined,
-    observeOutbox: (listener) => {
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
-    newId: () => "generated",
     now: () => TIMESTAMP,
-    queued,
-    notify: (change = { householdId: HOUSEHOLD_ID, userId: USER_ID }) => {
-      for (const listener of [...listeners]) listener(change);
-    },
-    ...overrides,
   };
+  return { collections, ledger: createSyncedTransactionLedger(dependencies) };
 };
 
-const waitUntil = async (predicate: () => boolean): Promise<void> => {
-  const started = Date.now();
-  while (!predicate()) {
-    if (Date.now() - started > 2000) throw new Error("Timed out waiting for ledger state.");
-    await new Promise((resolve) => setTimeout(resolve, 0));
-  }
-};
+describe("PowerSync transaction ledger", () => {
+  it("writes create, edit, and delete intents directly through the collection", async () => {
+    const { collections, ledger } = await createHarness();
+    const insert = jest.spyOn(collections.transactions, "insert");
+    const update = jest.spyOn(collections.transactions, "update");
+    const remove = jest.spyOn(collections.transactions, "delete");
 
-const ledgers: { dispose: () => void }[] = [];
+    const id = await ledger.intents.create({
+      type: "expense",
+      amount: 1250,
+      date: "2026-01-03",
+      accountId: account.id,
+      categoryId: category.id,
+      description: "Lunch",
+    });
+    expect(id).toBe("transaction-new");
+    expect(collections.transactions.get(id)).toMatchObject({
+      amount_minor: 1250,
+      currency: "USD",
+      description: "Lunch",
+    });
+    expect(insert.mock.calls[0]?.[1]).toEqual(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          envelope: expect.objectContaining({ kind: "transaction.create" }),
+        }),
+      }),
+    );
 
-afterEach(() => {
-  ledgers.splice(0).forEach((ledger) => ledger.dispose());
-  resetLedgerRegistryForTests();
-});
+    await ledger.intents.edit(id, { amount: 1400, description: "Lunch adjusted" });
+    expect(collections.transactions.get(id)).toMatchObject({
+      amount_minor: 1400,
+      description: "Lunch adjusted",
+      version: 1,
+    });
+    expect(update.mock.calls[0]?.[1]).toEqual(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          envelope: expect.objectContaining({ kind: "transaction.edit" }),
+        }),
+      }),
+    );
 
-describe("SyncedTransactionLedger", () => {
-  it("settles an applied create into the confirmed collection without dropping the row", async () => {
-    const deps = createDeps({ readCachedSnapshot: async () => snapshot() });
-    const envelope = createEnvelope("cmd-create", "txn-new");
-    const ledger = createSyncedTransactionLedger(deps);
-    ledgers.push(ledger);
-    await ledger.refresh();
+    await ledger.intents.remove(id);
+    expect(collections.transactions.get(id)).toBeUndefined();
+    expect(remove.mock.calls[0]?.[1]).toEqual(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          envelope: expect.objectContaining({ kind: "transaction.remove" }),
+        }),
+      }),
+    );
+    ledger.dispose();
+  });
 
-    deps.queued.push(projectable(envelope));
-    deps.notify();
-    await waitUntil(() => ledger.rows().some((row) => row.id === "txn-new"));
-    expect(ledger.rows()[0]?.sync).toEqual({ kind: "pending", commandIds: ["cmd-create"] });
+  it("maps PowerSync rows into the existing ledger view contract", async () => {
+    const { ledger } = await createHarness([transaction]);
 
-    ledger.settle(envelope, applied("txn-new", 4));
-    expect(ledger.rows()[0]?.sync).toEqual({ kind: "confirmed" });
-    expect(ledger.rows()[0]?.amount).toBe(1250);
-
-    deps.queued.splice(0);
-    deps.notify();
-    await waitUntil(() => ledger.rows()[0]?.sync.kind === "confirmed");
-    expect(ledger.rows()).toHaveLength(1);
+    expect(ledger.rows()).toEqual([
+      expect.objectContaining({
+        id: transaction.id,
+        amount: 500,
+        account: expect.objectContaining({ id: account.id }),
+        category: expect.objectContaining({ id: category.id }),
+        version: 2,
+        sync: { kind: "confirmed" },
+      }),
+    ]);
     expect(ledger.status()).toMatchObject({ phase: "ready", queuedCommands: 0 });
+    ledger.dispose();
   });
 
-  it("drops the optimistic overlay on typed rejection and leaves confirmed empty", async () => {
-    const deps = createDeps({ readCachedSnapshot: async () => snapshot() });
-    const envelope = createEnvelope("cmd-reject", "txn-reject");
-    const ledger = createSyncedTransactionLedger(deps);
-    ledgers.push(ledger);
-    await ledger.refresh();
+  it("creates an optimistic refund row linked to the original category", async () => {
+    const { collections, ledger } = await createHarness([transaction]);
+    const insert = jest.spyOn(collections.transactions, "insert");
 
-    deps.queued.push(projectable(envelope));
-    deps.notify();
-    await waitUntil(() => ledger.rows().some((row) => row.id === "txn-reject"));
-
-    ledger.settle(envelope, {
-      kind: "stale_version",
-      entityId: "txn-reject",
-      expectedVersion: 1,
-      actualVersion: 2,
+    const id = await ledger.intents.linkRefund({
+      originalTransactionId: transaction.id,
+      depositAccountId: account.id,
+      currency: "USD",
+      amount: 200,
+      date: "2026-01-04",
     });
-    expect(ledger.rows()[0]?.sync.kind).toBe("pending");
 
-    deps.queued.splice(0);
-    deps.notify();
-    await waitUntil(() => ledger.rows().length === 0);
-    expect(ledger.rows()).toEqual([]);
-    expect(ledger.status()).toMatchObject({ phase: "ready", queuedCommands: 0 });
-  });
-
-  it("publishes cached rows plus pending overlay before the network refresh resolves", async () => {
-    const fetch = deferred<SyncedTransactionSnapshot>();
-    const envelope = createEnvelope("cmd-cold", "txn-cold");
-    const deps = createDeps({
-      readCachedSnapshot: async () => snapshot(),
-      fetchAuthoritative: () => fetch.promise,
-      listQueuedCommands: async () => [projectable(envelope)],
+    expect(id).toBe("transaction-new");
+    expect(collections.transactions.get(id)).toMatchObject({
+      type: "income",
+      amount_minor: 200,
+      category_id: category.id,
+      description: "Refund of transaction-existing",
     });
-    const ledger = createSyncedTransactionLedger(deps);
-    ledgers.push(ledger);
-
-    await waitUntil(() => ledger.rows().some((row) => row.id === "txn-cold"));
-    expect(ledger.rows()[0]?.sync).toEqual({ kind: "pending", commandIds: ["cmd-cold"] });
-    expect(ledger.status().phase).toBe("ready");
-
-    fetch.resolve(snapshot());
-    await ledger.refresh();
-    expect(ledger.rows().some((row) => row.id === "txn-cold")).toBe(true);
-  });
-
-  it("ignores own seq on remote changes and refreshes foreign ledger tags", async () => {
-    const fetches: number[] = [];
-    const deps = createDeps({
-      readCachedSnapshot: async () => snapshot(),
-      fetchAuthoritative: async () => {
-        fetches.push(1);
-        return snapshot();
-      },
-    });
-    const envelope = createEnvelope("cmd-own", "txn-own");
-    const ledger = createSyncedTransactionLedger(deps);
-    ledgers.push(ledger);
-    await ledger.refresh();
-    const afterBoot = fetches.length;
-
-    ledger.settle(envelope, applied("txn-own", 9));
-    ledger.noteRemoteChanges([{ seq: 9, effects: ["ledger"] }]);
-    expect(fetches).toHaveLength(afterBoot);
-
-    ledger.noteRemoteChanges([{ seq: 10, effects: ["ledger"] }]);
-    await waitUntil(() => fetches.length > afterBoot);
-    expect(fetches.length).toBeGreaterThan(afterBoot);
-  });
-
-  it("ignores outbox events for other households", async () => {
-    const deps = createDeps({ readCachedSnapshot: async () => snapshot() });
-    const envelope = createEnvelope("cmd-scoped", "txn-scoped");
-    const ledger = createSyncedTransactionLedger(deps);
-    ledgers.push(ledger);
-    await ledger.refresh();
-
-    deps.queued.push(projectable(envelope));
-    deps.notify({ householdId: "household-2", userId: USER_ID });
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    expect(ledger.rows()).toEqual([]);
+    expect(insert.mock.calls[0]?.[1]).toEqual(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          envelope: expect.objectContaining({ kind: "refund.link" }),
+        }),
+      }),
+    );
+    ledger.dispose();
   });
 });

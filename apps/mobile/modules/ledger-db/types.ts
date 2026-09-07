@@ -1,4 +1,5 @@
 import type { CommandEnvelope } from "@trove/protocol";
+import { z } from "zod";
 
 import type {
   PendingRefundPayload,
@@ -144,3 +145,85 @@ export const transactionIdOf = (command: CommandEnvelope): string | undefined =>
       return undefined;
   }
 };
+
+const sqliteBooleanSchema = z.union([z.literal(0), z.literal(1)]);
+
+export const powerSyncAccountRowSchema = z.object({
+  id: z.string(),
+  household_id: z.string(),
+  name: z.string(),
+  type: z.enum(["cash", "bank", "card"]),
+  currency: z.string(),
+  color: z.string(),
+  icon: z.string(),
+  initial_balance_minor: z.number().int(),
+  exclude_from_total: sqliteBooleanSchema,
+  sort_order: z.number().int(),
+  lifecycle: z.enum(["active", "archived"]),
+  lifecycle_changed_at: z.string().nullable(),
+  visibility: z.enum(["public", "private"]),
+  owner_user_id: z.string().nullable(),
+  version: z.number().int().nonnegative(),
+  created_by: z.string(),
+  updated_by: z.string(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export const powerSyncCategoryRowSchema = z.object({
+  id: z.string(),
+  household_id: z.string(),
+  name: z.string(),
+  type: z.enum(["income", "expense"]),
+  color: z.string(),
+  icon: z.string(),
+  parent_id: z.string().nullable(),
+  sort_order: z.number().int(),
+  lifecycle: z.enum(["active", "archived"]),
+  lifecycle_changed_at: z.string().nullable(),
+  version: z.number().int().nonnegative(),
+  created_by: z.string(),
+  updated_by: z.string(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export const powerSyncTransactionRowSchema = z.object({
+  id: z.string(),
+  household_id: z.string(),
+  type: z.enum(["expense", "income", "transfer"]),
+  amount_minor: z.number().int().positive(),
+  currency: z.string(),
+  original_amount_minor: z.number().int().nullable(),
+  original_currency: z.string().nullable(),
+  exchange_rate: z.number().int().nullable(),
+  date: z.string(),
+  account_id: z.string(),
+  to_account_id: z.string().nullable(),
+  category_id: z.string().nullable(),
+  is_recurring: sqliteBooleanSchema,
+  recurring_rule_id: z.string().nullable(),
+  description: z.string(),
+  version: z.number().int().nonnegative(),
+  created_by: z.string(),
+  updated_by: z.string(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export const powerSyncRejectedChangeRowSchema = z.object({
+  id: z.string(),
+  command_id: z.string(),
+  household_id: z.string(),
+  kind: z.string(),
+  rejection_kind: z.string(),
+  rejection_payload: z.string(),
+  envelope: z.string(),
+  attempts: z.number().int().nonnegative(),
+  created_at: z.string(),
+});
+
+export type PowerSyncAccountRow = z.infer<typeof powerSyncAccountRowSchema>;
+export type PowerSyncCategoryRow = z.infer<typeof powerSyncCategoryRowSchema>;
+export type PowerSyncTransactionRow = z.infer<typeof powerSyncTransactionRowSchema>;
+export type PowerSyncRejectedChangeRow = z.infer<typeof powerSyncRejectedChangeRowSchema>;

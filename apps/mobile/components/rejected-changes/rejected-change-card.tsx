@@ -5,7 +5,7 @@ import Animated, { FadeInDown, FadeOut, LinearTransition } from "react-native-re
 import { RejectionKindBadge } from "@/components/rejected-changes/rejection-kind-badge";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import type { RejectedChange } from "@/lib/sync/outbox";
+import type { RejectedChange } from "@/modules/powersync/rejected-changes";
 import { describeRejection } from "@/lib/sync/rejection";
 import { commandKindLabel, describeIntent } from "@/utils/intent-summary";
 
@@ -40,10 +40,12 @@ export function RejectedChangeCard({ change, onEdit, onDiscard }: RejectedChange
           className="font-heading-medium text-lg italic tracking-tight text-ink"
           numberOfLines={2}
         >
-          {describeIntent(change.kind, change.payload)}
+          {change.kind === "unknown"
+            ? "Unknown change"
+            : describeIntent(change.kind, change.payload)}
         </Text>
         <Text className="font-body-normal text-xs uppercase tracking-wider text-ink/40">
-          {commandKindLabel(change.kind)}
+          {change.kind === "unknown" ? "Unknown change" : commandKindLabel(change.kind)}
         </Text>
       </View>
 

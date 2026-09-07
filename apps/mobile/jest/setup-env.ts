@@ -7,6 +7,15 @@ import { act } from "@testing-library/react-native";
 
 import { useUIStore } from "@/stores/ui-store";
 
+process.env.EXPO_PUBLIC_POWERSYNC_ENABLED = "false";
+
+Object.assign(globalThis.localStorage, {
+  getItem: () => null,
+  setItem: () => undefined,
+  removeItem: () => undefined,
+  clear: () => undefined,
+});
+
 jest.mock("expo-font", () => ({
   useFonts: jest.fn(() => [true, null]),
 }));

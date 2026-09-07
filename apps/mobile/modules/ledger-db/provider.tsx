@@ -1,14 +1,7 @@
-import {
-  createContext,
-  useContext,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useLayoutEffect, useState, type ReactNode } from "react";
 
-import { useDatabase } from "@/db/client";
 import { useLedgerSourceSelection } from "@/modules/ledger-data-source/provider";
+import { openPowerSyncDatabase } from "@/modules/powersync/database";
 
 import { createLedgerDependencies } from "./deps";
 import type { SyncedTransactionLedger } from "./ledger";
@@ -27,29 +20,45 @@ export const SyncedTransactionsProvider = ({
   userId,
   children,
 }: SyncedTransactionsProviderProps) => {
-  const db = useDatabase();
   const selection = useLedgerSourceSelection();
   const offline = selection.kind === "synced" && selection.offlineState?.kind === "offline_cached";
-  const offlineRef = useRef(offline);
-  offlineRef.current = offline;
   const [ledger, setLedger] = useState<SyncedTransactionLedger | null>(null);
+  const [loadError, setLoadError] = useState<Error | null>(null);
 
   useLayoutEffect(() => {
-    const handle = acquireSyncedTransactionLedger(
-      createLedgerDependencies({ householdId, userId, db, offline: offlineRef.current }),
-    );
-    setLedger(handle.ledger);
+    let cancelled = false;
+    let release: (() => void) | undefined;
+    setLedger(null);
+    setLoadError(null);
+    void openPowerSyncDatabase(userId)
+      .then((database) => {
+        if (cancelled) return;
+        const handle = acquireSyncedTransactionLedger(
+          createLedgerDependencies({ householdId, userId, database }),
+        );
+        release = handle.release;
+        setLedger(handle.ledger);
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setLoadError(
+            error instanceof Error ? error : new Error("PowerSync database initialization failed."),
+          );
+        }
+      });
     return () => {
-      handle.release();
+      cancelled = true;
+      release?.();
       setLedger(null);
     };
-  }, [db, householdId, userId]);
+  }, [householdId, userId]);
 
   useLayoutEffect(() => {
     ledger?.setOffline(offline);
   }, [ledger, offline]);
 
-  return <LedgerContext value={ledger}>{children}</LedgerContext>;
+  if (loadError) throw loadError;
+  return <LedgerContext value={ledger}>{ledger ? children : null}</LedgerContext>;
 };
 
 export const useSyncedTransactionLedger = (): SyncedTransactionLedger | null =>

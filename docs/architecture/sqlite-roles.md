@@ -30,10 +30,7 @@ Edit the allowlist, not this file.
 | `migration-backup` | `apps/mobile/lib/migration/manifest.ts` | Reads local A/C/T once to build import_bundle chunks; keeps the #98 backup. | #136 |
 | `migration-backup` | `apps/mobile/hooks/use-enable-sync.ts` | Reads local A/C/T once to build import_bundle chunks; keeps the #98 backup. | #136 |
 | `sync-bookkeeping` | `apps/mobile/modules/ledger-data-source/coordinator.ts` | Passes the raw db handle to snapshot/outbox drain. Touch outbox_commands only. | #136 |
-| `sync-bookkeeping` | `apps/mobile/modules/ledger-db/provider.tsx` | Passes the raw db handle to snapshot/outbox drain. Touch outbox_commands only. | #136 |
-| `sync-bookkeeping` | `apps/mobile/hooks/use-sync-worker.ts` | Passes the raw db handle to snapshot/outbox drain. Touch outbox_commands only. | #136 |
-| `sync-bookkeeping` | `apps/mobile/hooks/use-rejected-changes.ts` | Passes the raw db handle to snapshot/outbox drain. Touch outbox_commands only. | #136 |
-| `sync-bookkeeping` | `apps/mobile/components/rejected-changes/use-rejected-edit-form.ts` | Passes the raw db handle to snapshot/outbox drain. Touch outbox_commands only. | #136 |
+| `sync-bookkeeping` | `apps/mobile/hooks/use-legacy-sync-worker.ts` | Passes the raw db handle to snapshot/outbox drain. Touch outbox_commands only. | #136 |
 | `legacy-local-pending-cutover` | `apps/mobile/modules/recurring-rules/persistence.ts` | Recurring Rules + Envelopes still read local A/C/T. Fail-closed at runtime when selection.kind === "synced". Tracked as #136 leftover until those milestones cut over. | #136 |
 | `legacy-local-pending-cutover` | `apps/mobile/modules/recurring-rules/validation.ts` | Recurring Rules + Envelopes still read local A/C/T. Fail-closed at runtime when selection.kind === "synced". Tracked as #136 leftover until those milestones cut over. | #136 |
 | `legacy-local-pending-cutover` | `apps/mobile/modules/recurring-rules/settlement.ts` | Recurring Rules + Envelopes still read local A/C/T. Fail-closed at runtime when selection.kind === "synced". Tracked as #136 leftover until those milestones cut over. | #136 |

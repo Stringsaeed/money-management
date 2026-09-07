@@ -78,6 +78,7 @@ describe("runImport", () => {
     const db = await setupDb();
     const matchingManifest = await computeLocalManifest(db);
     const sent: CommandEnvelope<ImportBundlePayload>[] = [];
+    const connectAndWait = jest.fn(async () => undefined);
     const result = await runImport({
       db,
       householdId: HOUSEHOLD_ID,
@@ -86,6 +87,7 @@ describe("runImport", () => {
         return APPLIED_RESULT;
       },
       fetchManifest: async () => matchingManifest,
+      connectAndWait,
     });
 
     expect(result.status).toBe("matched");
@@ -93,6 +95,7 @@ describe("runImport", () => {
     expect(sent[0]?.householdId).toBe(HOUSEHOLD_ID);
     expect(sent[0]?.kind).toBe("import_bundle");
     expect(sent[0]?.payload.entityType).toBe("account");
+    expect(connectAndWait).toHaveBeenCalledWith(HOUSEHOLD_ID);
   });
 
   it("stops uploading and reports rejected at the first non-applied result", async () => {
