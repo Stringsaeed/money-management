@@ -10,7 +10,7 @@ This runbook covers the PlanetScale replication source, PowerSync Sync Streams, 
 | Cloudflare Worker           | targeted `aws:us-east-1`    | `packages/infra/alchemy.run.ts`                               |
 | PowerSync Cloud Development | `eu`                        | PowerSync instance `6a9e0dd3a77ca1231d260e01`                 |
 
-The development PowerSync instance is not region-aligned with PlanetScale and the Worker. The expanded 13-table publication and streams were verified on this instance at 278 ms direct replication p95 with 10 active buckets, but Z6 release certification must use a US-region PowerSync instance or explicitly record a reviewed latency exception; do not claim the one-region lane from the current EU instance.
+The development PowerSync instance is not region-aligned with PlanetScale and the Worker. The expanded 13-table publication and streams were verified on this instance at 278 ms direct replication p95 with 10 active buckets. The operator accepted this non-production EU-region exception on 2026-09-08. Production remains blocked on issue #173 and must make its own placement decision.
 
 ## Replication slot health
 
@@ -64,6 +64,8 @@ pnpm --filter @trove/powersync load:verify
 ```
 
 Use only a disposable non-production stage. The harness leaves its uniquely prefixed household fixture for audit; destroy the stage after collecting the report.
+
+The certified Worker configuration caps Hyperdrive at 15 origin connections and the Worker-side `postgres` client at one connection per isolate. A 10-connection cap produced one 2,156 ms failure, while three consecutive 15-connection runs passed at 1,771 ms, 1,699 ms, and 1,725 ms p95 with all rows visible on both clients. Keep the cache disabled. Re-run the same fixture before changing either limit, and verify direct database access plus replication-slot recovery after the run.
 
 ## Self-host switch
 

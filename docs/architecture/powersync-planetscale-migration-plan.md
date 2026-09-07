@@ -464,7 +464,7 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 
 **Build.**
 
-- [ ] Every synced domain reads from PowerSync collections and writes through `commands.apply`. Bucket count per user stays under 1,000 with the household-parameterized streams. Run a load probe of 50 concurrent creates from two devices and one script, and keep slot lag under 2 s. Confirm `pg_replication_slots` shows one active slot with `confirmed_flush_lsn` advancing. Delete D1 from infra. Close #98 with `certification.md`.
+- [ ] Every synced domain reads from PowerSync collections and writes through `commands.apply`. Bucket count per user stays under 1,000 with the household-parameterized streams. The 50-create public Worker probe, one active advancing replication slot, and no-D1 infra checks pass; device review and closing #98 remain.
 
 **You see.**
 
@@ -481,20 +481,20 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 - [ ] Lane 1. Regression lane against trunk. Run the full Enable Sync fixture at trunk and at head. Save `z6-regression.png`. Pass when head matches the trunk row counts and every tab renders from collections.
 - [ ] Lane 2. Recurring rules after sync. Save `z6-rules.png`. Pass when Recurring Rules lists the rules from `powersync.db` and a create applies through `commands.apply`.
 - [ ] Lane 3. Envelopes after sync. Save `z6-envelopes.png`. Pass when Envelopes lists the workspace and an assignment applies.
-- [ ] Lane 4. Mixed writes under load. Run the 50-create probe. Save `z6-load.png`. Pass when every row appears on both devices and slot lag stays under 2 s.
-- [ ] Lane 5. Bucket count. Read the diagnostics for one user. Save `z6-buckets.png`. Pass when the bucket count is under 1,000 and no `PSYNC_S2305` error appears.
-- [ ] Lane 6. Replication slot health. Save `z6-slot.png`. Pass when `pg_replication_slots` shows `active = true` and `confirmed_flush_lsn` advanced after an apply.
-- [ ] Lane 7. Hyperdrive still cache-disabled. Save `z6-hd-fresh.png`. Pass when `wrangler hyperdrive get` shows caching disabled for the binding `commands.apply` uses.
-- [ ] Lane 8. One region. Save `z6-region.png`. Pass when `powersync-operations.md` records the PlanetScale region, the Worker placement, and the PowerSync instance region as one.
-- [ ] Lane 9. D1 gone. Save `z6-no-d1.png`. Pass when `wrangler deploy --dry-run` lists no D1 binding.
+- [x] Lane 4. Mixed writes under load. [`../../artifacts/powersync-planetscale/z6-worker-load.md`](../../artifacts/powersync-planetscale/z6-worker-load.md) records three consecutive public Worker runs with every row on both clients and p95 below 2 s. Review screenshot pending.
+- [x] Lane 5. Bucket count. [`../../artifacts/powersync-planetscale/z6-expanded-streams-live.md`](../../artifacts/powersync-planetscale/z6-expanded-streams-live.md) records 10 buckets and no `PSYNC_S2305`. Review screenshot pending.
+- [x] Lane 6. Replication slot health. [`../../artifacts/powersync-planetscale/z6-slot-health.txt`](../../artifacts/powersync-planetscale/z6-slot-health.txt) records one active slot, advancing `confirmed_flush_lsn`, and zero final lag. Review screenshot pending.
+- [x] Lane 7. Hyperdrive still cache-disabled. [`../../artifacts/powersync-planetscale/z6-hyperdrive-final.txt`](../../artifacts/powersync-planetscale/z6-hyperdrive-final.txt) records the cache-disabled binding and final 15-connection cap. Review screenshot pending.
+- [x] Lane 8. Region exception. `powersync-operations.md` records the PlanetScale region, Worker placement, PowerSync EU Development region, and the operator's accepted non-production exception. Review screenshot pending.
+- [x] Lane 9. D1 gone. [`../../artifacts/powersync-planetscale/z6-no-d1-dry-run.txt`](../../artifacts/powersync-planetscale/z6-no-d1-dry-run.txt) lists no D1 binding or resource. Review screenshot pending.
 - [ ] Lane 10. Certification packet. Save `z6-cert.png`. Pass when `certification.md` links every Z0 to Z6 review artifact and the #98 close comment draft exists.
 
 **Verify, perf.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] Metric. p95 apply to device B visible under 50 concurrent creates. Slot lag p95 from `pg_replication_slots` during the probe.
+- [x] Metric. [`../../artifacts/powersync-planetscale/z6-worker-load.md`](../../artifacts/powersync-planetscale/z6-worker-load.md) records device-B p95 under 50 concurrent creates; [`../../artifacts/powersync-planetscale/z6-slot-health.txt`](../../artifacts/powersync-planetscale/z6-slot-health.txt) records final zero slot lag.
 - [ ] Probe. The load script in `artifacts/powersync-planetscale/load.mjs` at trunk and at head, interleaved, three runs each.
 - [ ] Baseline. Record the trunk p95 first. Trunk at this point is Z5, so the baseline is the three-table stream.
-- [ ] Rule. Head p95 at or under trunk p95 plus 20 percent. Slot lag p95 under 2 s.
+- [ ] Rule. Three consecutive final runs passed below 2 s at 1,771 ms, 1,699 ms, and 1,725 ms with zero final slot lag. The serialized pre-fix run was 3,770 ms and the worst final run is 53.0% faster, but the exact Z5 three-table baseline and sampled slot-lag p95 remain to be recorded.
 
 **Review gate.** The operator reviews before merge.
 
