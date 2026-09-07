@@ -26,11 +26,12 @@
     "@trove/env": "workspace:*",
     "@trove/protocol": "workspace:*",
     "dotenv": "catalog:",
+    "jose": "6.2.9",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.3.14",
     "@cloudflare/workers-types": "catalog:",
+    "@electric-sql/pglite": "^0.3.14",
     "@trove/typescript-config": "workspace:*",
     "@types/node": "catalog:",
     "hono": "catalog:",

@@ -6,6 +6,7 @@ import { commandsRouter } from "./commands";
 import { householdsRouter } from "./households";
 import { ledgerRouter } from "./ledger";
 import { migrationRouter } from "./migration";
+import { powersyncRouter } from "./powersync";
 import { syncRouter } from "./sync";
 
 export const appRouter = {
@@ -18,6 +19,7 @@ export const appRouter = {
   activity: activityRouter,
   ledger: ledgerRouter,
   migration: migrationRouter,
+  powersync: powersyncRouter,
 };
 export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;

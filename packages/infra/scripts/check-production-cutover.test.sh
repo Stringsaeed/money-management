@@ -13,6 +13,9 @@ common=(
   PLANETSCALE_DATABASE=postgres
   PLANETSCALE_USER=test
   PLANETSCALE_PASSWORD=test
+  POWERSYNC_URL=https://powersync.example.test
+  POWERSYNC_JWT_PRIVATE_KEY=test
+  POWERSYNC_JWT_KID=test
 )
 
 env "${common[@]}" ALCHEMY_STAGE=dev bash "$check" >/dev/null

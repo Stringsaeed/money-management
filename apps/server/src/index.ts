@@ -1,10 +1,11 @@
 import { createContext } from "@trove/api/context";
 import { createSettlementIdentity, settleDueRules } from "@trove/api/lib/recurring/scheduler";
+import { createPowerSyncJwksResponse } from "@trove/api/lib/powersync/jwks";
 import { handleHouseholdPushUpgrade } from "@trove/api/lib/push/upgrade";
 import { HouseholdPushDO } from "@trove/api/lib/push/household-push-do";
 import { createDb, withDbScope } from "@trove/db";
 import { appRouter } from "@trove/api/routers/index";
-import { env } from "@trove/env/server";
+import { env, getPowerSyncServerConfig } from "@trove/env/server";
 import { onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { Hono } from "hono";
@@ -30,6 +31,8 @@ app.use(
 app.route("/", appLinks);
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => createServerAuth().handler(c.req.raw));
+
+app.get("/api/powersync/jwks.json", () => createPowerSyncJwksResponse(getPowerSyncServerConfig()));
 
 export const rpcHandler = new RPCHandler(appRouter, {
   interceptors: [
