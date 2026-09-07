@@ -1,0 +1,9 @@
+{
+  "name": "powersync-planetscale-spike",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@powersync/node": "^0.11.0",
+    "postgres": "^3.4.7"
+  }
+}

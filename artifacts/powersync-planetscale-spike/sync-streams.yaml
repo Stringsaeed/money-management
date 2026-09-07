@@ -1,0 +1,11 @@
+config:
+  edition: 3
+
+streams:
+  spike_transactions:
+    auto_subscribe: true
+    query: |
+      SELECT * FROM transactions
+      WHERE household_id IN (
+        SELECT household_id FROM membership WHERE user_id = auth.user_id()
+      )
