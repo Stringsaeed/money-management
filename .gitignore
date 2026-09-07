@@ -61,3 +61,5 @@ graphify-out
 
 # verify-trove proof dumps (skill keeps path; do not commit screenshots)
 .cursor/skills/verify-trove/artifacts/
+.audit/
+.local/
