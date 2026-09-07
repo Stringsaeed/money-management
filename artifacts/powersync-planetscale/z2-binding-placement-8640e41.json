@@ -1,0 +1,23 @@
+{
+  "head": "8640e41398a3bbc5edc3c0708017d4986dba15d0",
+  "stage": "z2_verify_8640e41",
+  "worker": {
+    "name": "money-management-server-z2-verqilo6ovhbkbjppve6bu7ocdm",
+    "url": "https://money-management-server-z2-verqilo6ovhbkbjppve6bu7ocdm.stringsaeed.workers.dev",
+    "version": "89e816b6-2c0d-4cbe-9cea-6c40bda8c3ea",
+    "placement": {
+      "mode": "targeted",
+      "region": "aws:us-east-1"
+    }
+  },
+  "binding": {
+    "name": "HYPERDRIVE_FRESH",
+    "id": "0f36f986f6634e42a03c89f302a22bfb",
+    "resourceName": "trove-ledger-fresh-z2-verify-8640e41",
+    "originBranchId": "9qidn3sxfivq",
+    "originBranch": "z2-staging",
+    "originProduction": false,
+    "originPort": 6432,
+    "cachingDisabled": true
+  }
+}

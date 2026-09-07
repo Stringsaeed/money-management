@@ -1,0 +1,25 @@
+head=8640e41398a3bbc5edc3c0708017d4986dba15d0
+alchemy_stage=z2_verify_8640e41
+stage_production=false
+
+destroy_dry_run:
+plan=2 delete
+delete=HYPERDRIVE_FRESH
+delete=server
+d1_targeted=false
+shared_hyperdrive_targeted=false
+production_worker_targeted=false
+
+destroy=pass
+server_deleted=true
+stage_hyperdrive_deleted=true
+disposed_worker_http=404
+
+deleted_worker=money-management-server-z2-verqilo6ovhbkbjppve6bu7ocdm
+deleted_hyperdrive_id=0f36f986f6634e42a03c89f302a22bfb
+deleted_hyperdrive_name=trove-ledger-fresh-z2-verify-8640e41
+
+shared_hyperdrive_remaining_id=8e9800a6f0ff4d738ccde750c2120dd1
+shared_hyperdrive_remaining_name=trove-ledger-fresh
+production_d1_touched=false
+cutover_approval_touched=false
