@@ -224,10 +224,24 @@ wal_level() {
 	fi
 }
 
+assert_no_public_ledger_names() {
+	local file="$1"
+	if /usr/bin/grep -E 'public\.(accounts|categories|transactions|membership)' "$file" >/dev/null; then
+		printf '%s must not name public ledger tables\n' "$file" >&2
+		exit 1
+	fi
+}
+
 apply_spike_sql() {
 	load_secrets
 	if [ -z "${PSROLE_USERNAME:-}" ]; then
 		printf 'PSROLE_USERNAME missing\n' >&2
+		exit 1
+	fi
+	assert_no_public_ledger_names "$ROOT/spike.sql"
+	assert_no_public_ledger_names "$ROOT/teardown.sql"
+	if /usr/bin/grep -E 'DROP TABLE' "$ROOT/teardown.sql" >/dev/null; then
+		printf 'teardown.sql must drop only publication powersync and schema spike\n' >&2
 		exit 1
 	fi
 	local psrole_ident="${PSROLE_USERNAME%%.*}"
@@ -241,7 +255,7 @@ apply_spike_sql() {
 	else
 		printf 'FOR ALL TABLES accepted on this engine. spike still uses an explicit table list for publication powersync\n' | tee "$RECEIPTS/publication-forall-verdict.txt"
 	fi
-	printf 'CREATE PUBLICATION powersync FOR TABLE public.accounts, public.categories, public.transactions, public.membership\n' | tee "$RECEIPTS/publication-accepted.txt"
+	printf 'CREATE PUBLICATION powersync FOR TABLE spike.accounts, spike.categories, spike.transactions, spike.membership\n' | tee "$RECEIPTS/publication-accepted.txt"
 	psql_direct -c '\dRp+ powersync' | tee "$RECEIPTS/publication.txt"
 	psql_direct -tAc "SELECT pubname FROM pg_publication WHERE pubname = 'powersync'" | tee "$RECEIPTS/publication-name.txt"
 }
@@ -341,7 +355,7 @@ seed_membership() {
 	load_secrets
 	local user_id="${SPIKE_USER_ID:-spike-user}"
 	local household_id="${SPIKE_HOUSEHOLD_ID:-spike-house}"
-	psql_direct -c "INSERT INTO membership (id, user_id, household_id) VALUES ('mem-spike', '${user_id}', '${household_id}') ON CONFLICT (id) DO NOTHING;"
+	psql_direct -c "INSERT INTO spike.membership (id, user_id, household_id) VALUES ('mem-spike', '${user_id}', '${household_id}') ON CONFLICT (id) DO NOTHING;"
 	save_secret SPIKE_USER_ID "$user_id"
 	save_secret SPIKE_HOUSEHOLD_ID "$household_id"
 }
@@ -454,7 +468,7 @@ roundtrip() {
 		if [ ! -d node_modules/@powersync/node ]; then
 			npm install --omit=dev
 		fi
-		SPIKE_CLIENT_DB="$CLIENT_DB" SPIKE_ROW_ID="$SPIKE_ROW_ID" POWERSYNC_URL="$POWERSYNC_URL" POWERSYNC_TOKEN="$POWERSYNC_TOKEN" node roundtrip.mjs
+		SPIKE_CLIENT_DB="$CLIENT_DB" SPIKE_ROW_ID="$SPIKE_ROW_ID" POWERSYNC_URL="$POWERSYNC_URL" POWERSYNC_TOKEN="$POWERSYNC_TOKEN" npm run roundtrip
 	) | tee "$RECEIPTS/roundtrip.json"
 }
 
@@ -485,7 +499,7 @@ teardown() {
 	fi
 	wrangler hyperdrive list 2>/dev/null | tee "$RECEIPTS/teardown-hyperdrive-list.txt"
 	if [ -n "${DIRECT_URL:-}" ]; then
-		psql "$DIRECT_URL" -tAc "SELECT nspname FROM pg_namespace WHERE nspname = 'spike'; SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename IN ('accounts','categories','transactions','membership');" | tee "$RECEIPTS/teardown-schema-check.txt" || true
+		psql "$DIRECT_URL" -tAc "SELECT nspname FROM pg_namespace WHERE nspname = 'spike'; SELECT pubname FROM pg_publication WHERE pubname IN ('powersync','powersync_forall');" | tee "$RECEIPTS/teardown-schema-check.txt" || true
 	fi
 }
 

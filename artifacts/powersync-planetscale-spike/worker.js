@@ -29,7 +29,7 @@ export default {
           return json({ error: "id and household_id are required" }, 400);
         }
         const rows = await sql`
-          INSERT INTO transactions (id, household_id, note)
+          INSERT INTO spike.transactions (id, household_id, note)
           VALUES (${id}, ${householdId}, ${note})
           RETURNING id
         `;
