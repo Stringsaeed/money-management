@@ -5,3 +5,4 @@ wrangler.jsonc
 *.sqlite
 dist/
 .wrangler/
+artifacts/powersync-planetscale-spike/lib/

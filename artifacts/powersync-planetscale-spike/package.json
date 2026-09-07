@@ -6,7 +6,8 @@
     "node": ">=22 <23"
   },
   "scripts": {
-    "roundtrip": "node ./check-node.mjs && node ./roundtrip.mjs"
+    "roundtrip": "node ./check-node.mjs && node ./roundtrip.mjs",
+    "postinstall": "node ./node_modules/@powersync/node/download_core.js"
   },
   "dependencies": {
     "@powersync/common": "^2.2.0",
