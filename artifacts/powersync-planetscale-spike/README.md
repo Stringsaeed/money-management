@@ -1,6 +1,6 @@
 # How to rerun the Z0 PlanetScale and PowerSync spike
 
-This directory is the Z0 proof. It does not change `apps/`, `packages/`, or `tools/`. The operator database is PlanetScale Postgres `trove` in org `stringsaeed`. Workers use a cache-disabled Hyperdrive named `trove-ledger-fresh`. PowerSync replicates over the direct `:5432` host as the replication role, never through Hyperdrive. Local Open Edition is enough for smoke to exit 0. Cloud still needs a PAT.
+This directory is the Z0 proof. It does not change `apps/`, `packages/`, or `tools/`. The operator database is PlanetScale Postgres `trove` in org `stringsaeed`. Workers use a cache-disabled Hyperdrive named `trove-ledger-fresh`. PowerSync replicates over the direct `:5432` host as the replication role, never through Hyperdrive. Local Open Edition is enough for `smoke.sh` to exit 0. Cloud is now proven on instance `Development` in region `eu`. A new `us` instance hit `PLAN_LIMIT_REACHED`.
 
 Spike tables live only in schema `spike` (`spike.accounts`, `spike.categories`, `spike.transactions`, `spike.membership`). They never use `public` ledger names. Teardown drops publication `powersync` and `DROP SCHEMA spike CASCADE` only.
 
@@ -11,7 +11,7 @@ Spike tables live only in schema `spike` (`spike.accounts`, `spike.categories`, 
 - `psql` from libpq (`brew install libpq` if it is missing)
 - `jq`, `python3`, `curl`, `npm`
 - Node 22 LTS for the client round trip (`engines.node` is `>=22 <23`). Node 26 fails `@powersync/node` / `better-sqlite3` native compile. Use `nvm use` with `.nvmrc`.
-- `POWERSYNC_URL` and `POWERSYNC_TOKEN` for a PowerSync instance. Local Open Edition at `http://127.0.0.1:8080` is enough for `smoke.sh` to exit 0. `PS_ADMIN_TOKEN` is only for Cloud. Without URL and token, smoke stops after the Hyperdrive insert and does not exit 0.
+- `POWERSYNC_URL` and `POWERSYNC_TOKEN` for a PowerSync instance. Prefer the Cloud URL in `/tmp/z0-spike.env`. Local Open Edition at `http://127.0.0.1:8080` still works. `PS_ADMIN_TOKEN` is the Cloud PAT used to deploy and mint tokens. Without URL and token, smoke stops after the Hyperdrive insert and does not exit 0. Unset leftover `SPIKE_ROW_ID` before a fresh smoke so the Worker insert is a new id.
 
 Do not put passwords in this directory. `smoke.sh` writes them to `/tmp/z0-spike.env` with mode `600`. Direct URLs use `sslmode=verify-full&sslrootcert=system`.
 
