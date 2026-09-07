@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // oxlint-disable typescript/no-require-imports
+// oxlint-disable anti-slop/no-module-mocking -- Jest setup owns native dependency boundaries.
 import { notifyManager } from "@tanstack/query-core";
 import { act } from "@testing-library/react-native";
 
@@ -7,6 +8,11 @@ import { useUIStore } from "@/stores/ui-store";
 
 jest.mock("expo-font", () => ({
   useFonts: jest.fn(() => [true, null]),
+}));
+
+jest.mock("@op-engineering/op-sqlite", () => ({
+  open: jest.fn(),
+  openAsync: jest.fn(),
 }));
 
 // better-auth's Expo client ships untranspiled ESM and talks to the network —
