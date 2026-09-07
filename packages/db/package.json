@@ -13,6 +13,8 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit",
+    "cutover:import": "node scripts/import-d1-cutover.mjs",
+    "cutover:test": "node --test scripts/d1-cutover-lib.test.mjs",
     "db:generate": "drizzle-kit generate",
     "apply:z6-publication": "node scripts/apply-z6-publication.mjs",
     "inspect:powersync-slots": "node scripts/inspect-powersync-slots.mjs"
@@ -28,6 +30,7 @@
     "@cloudflare/workers-types": "catalog:",
     "@trove/typescript-config": "workspace:*",
     "@types/node": "catalog:",
+    "better-sqlite3": "12.11.1",
     "drizzle-kit": "^0.31.10",
     "typescript": "~7.0.2"
   }
