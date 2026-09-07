@@ -8,7 +8,7 @@ import { household, membership } from "@trove/db/schema/household";
 import { recurringOccurrence, recurringRule } from "@trove/db/schema/recurring";
 import { ledgerAccount } from "@trove/db/schema/ledger";
 
-import { createTestDb } from "../commands/test-db";
+import { createTestDb } from "../../test-support/db";
 import { createSettlementIdentity, settleDueRules } from "./scheduler";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;

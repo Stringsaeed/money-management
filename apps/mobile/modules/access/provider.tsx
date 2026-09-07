@@ -3,7 +3,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { orpc } from "@/lib/server/orpc";
 
-import { resolveAccess, nextClaim } from "./access";
+import {
+  householdReadFromQuery,
+  householdUserIdForQuery,
+  householdsQueryKeyForUser,
+  nextClaim,
+  resolveAccess,
+} from "./access";
 import { AuthSheetHost } from "./auth-sheet-host";
 import {
   AUTH_SHEET_CLOSED,
@@ -26,8 +32,9 @@ export function AccessProvider({ children }: { readonly children: ReactNode }) {
   const probe = useSessionProbe();
   const [signedOut, setSignedOut] = useState(false);
   const [sheetSession, setSheetSession] = useState<AuthSheetSession>(AUTH_SHEET_CLOSED);
-  const households = useHouseholdRead(probe?.kind === "session" && !signedOut);
   const persistClaim = usePersistedClaim(claim.value, signedOut ? { kind: "no_session" } : probe);
+  const householdUserId = householdUserIdForQuery(persistClaim, probe, signedOut);
+  const households = useHouseholdRead(householdUserId, probe?.kind === "session" && !signedOut);
   const core = resolveAccess({
     claim: signedOut ? { kind: "none" } : (persistClaim ?? { kind: "none" }),
     probe: claim.ready ? (signedOut ? { kind: "no_session" } : probe) : null,
@@ -89,19 +96,19 @@ function usePersistedClaim(
   return held ?? claim;
 }
 
-function useHouseholdRead(enabled: boolean): HouseholdRead {
+function useHouseholdRead(userId: string | null, enabled: boolean): HouseholdRead {
   const query = useQuery({
-    queryKey: HOUSEHOLDS_KEY,
+    queryKey: householdsQueryKeyForUser(userId),
     queryFn: () => orpc.households.listMine(),
     enabled,
   });
-  if (!enabled) return { kind: "loaded", memberships: [] };
-  if (query.isPending) return { kind: "pending" };
-  if (query.isError) return { kind: "failed" };
-  return {
-    kind: "loaded",
-    memberships: (query.data ?? []).map(toMembershipSummary),
-  };
+  const memberships = query.data?.map(toMembershipSummary);
+  return householdReadFromQuery({
+    enabled,
+    isPending: query.isPending,
+    isError: query.isError,
+    memberships,
+  });
 }
 
 function useAccessActions(

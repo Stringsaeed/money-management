@@ -1,5 +1,7 @@
 import { sql, type SQL } from "drizzle-orm";
 
+import { queryRows } from "../sql-rows";
+
 /**
  * Funding Pool & Unassigned Money arithmetic over server facts (#90),
  * expressed as composable scalar-SQL fragments.
@@ -18,9 +20,6 @@ import { sql, type SQL } from "drizzle-orm";
  * Transfers between two Funding Accounts of the same workspace are
  * budget-neutral (CONTEXT.md: Funding Boundary Transfer); transfers crossing the pool
  * boundary move it.
- *
- * All amounts are minor units. Every fragment takes householdId as a bound
- * parameter — D1 has no RLS and callers gate access upstream.
  */
 
 /** "YYYY-MM" Budget Period → exclusive upper bound for ledger dates. */
@@ -38,11 +37,11 @@ export function periodCeiling(period: string): string {
  */
 function activeMemberIdsSql(householdId: string, currency: string, period: string): SQL {
   return sql`(
-    SELECT COALESCE(json_group_array(m.account_id), '[]')
+    SELECT COALESCE(json_agg(m.account_id), '[]'::json)
     FROM funding_memberships m
     WHERE m.household_id = ${householdId}
       AND m.currency = ${currency}
-      AND m.active = 1
+      AND m.active IS TRUE
       AND m.effective_from_period = (
         SELECT MAX(x.effective_from_period)
         FROM funding_memberships x
@@ -100,7 +99,7 @@ export function fundingPoolSql(householdId: string, currency: string, period: st
       WHERE a.household_id = ${householdId}
         AND a.currency = ${currency}
         AND a.visibility = 'public'
-        AND a.id IN (SELECT value FROM json_each(${members}))
+        AND a.id IN (SELECT jsonb_array_elements_text((${members})::jsonb))
     )
   )`;
 }
@@ -145,7 +144,7 @@ export interface BudgetPoolFacts {
 
 /** Executes the pool facts for real (plan-time read of the same SQL the guard asserts). */
 export async function getBudgetPoolFacts(
-  db: { all: (query: SQL) => Promise<Record<string, unknown>[]> },
+  db: { execute: (query: SQL) => Promise<unknown> },
   householdId: string,
   currency: string,
   period: string,
@@ -154,7 +153,7 @@ export async function getBudgetPoolFacts(
     ${fundingPoolSql(householdId, currency, period)} AS funding_pool,
     ${assignedThroughPeriodSql(householdId, currency, period)} AS assigned,
     ${unassignedMoneySql(householdId, currency, period)} AS unassigned`;
-  const rows = await db.all(query);
+  const rows = await queryRows<Record<string, number>>(db, query);
   const row = (rows[0] ?? {}) as Record<string, number>;
   const fundingPoolMinor = Number(row.funding_pool ?? 0);
   const assignedMinor = Number(row.assigned ?? 0);

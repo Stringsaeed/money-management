@@ -2,7 +2,7 @@ import { createContext } from "@trove/api/context";
 import { createSettlementIdentity, settleDueRules } from "@trove/api/lib/recurring/scheduler";
 import { handleHouseholdPushUpgrade } from "@trove/api/lib/push/upgrade";
 import { HouseholdPushDO } from "@trove/api/lib/push/household-push-do";
-import { createDb } from "@trove/db";
+import { createDb, withDbScope } from "@trove/db";
 import { appRouter } from "@trove/api/routers/index";
 import { env } from "@trove/env/server";
 import { onError } from "@orpc/server";
@@ -12,7 +12,7 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
 import { appLinks } from "./app-links";
-import { auth } from "./auth";
+import { createServerAuth } from "./auth";
 
 const app = new Hono();
 
@@ -29,7 +29,7 @@ app.use(
 
 app.route("/", appLinks);
 
-app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+app.on(["POST", "GET"], "/api/auth/*", (c) => createServerAuth().handler(c.req.raw));
 
 export const rpcHandler = new RPCHandler(appRouter, {
   interceptors: [
@@ -40,6 +40,7 @@ export const rpcHandler = new RPCHandler(appRouter, {
 });
 
 app.use("/*", async (c, next) => {
+  const auth = createServerAuth();
   const context = await createContext({ context: c, auth });
 
   const rpcResult = await rpcHandler.handle(c.req.raw, {
@@ -64,13 +65,14 @@ app.get("/", (c) => {
  * which holds that household's WebSocket subscriptions. Best-effort channel —
  * clients fall back to polling when this is unavailable.
  */
-app.get("/api/push/household/:householdId", (c) =>
-  handleHouseholdPushUpgrade(
+app.get("/api/push/household/:householdId", (c) => {
+  const auth = createServerAuth();
+  return handleHouseholdPushUpgrade(
     { getSession: auth.api.getSession, db: createDb(), namespace: env.PUSH_HOUSEHOLD_DO },
     c.req.raw,
     c.req.param("householdId"),
-  ),
-);
+  );
+});
 
 /**
  * The per-household push Durable Object (#93). Exported from the worker entry
@@ -97,6 +99,8 @@ export async function scheduled(controller: ScheduledController) {
 }
 
 export default {
-  fetch: app.fetch,
-  scheduled,
+  fetch: (request: Request, env: {}, ctx: ExecutionContext) =>
+    withDbScope(() => Promise.resolve(app.fetch(request, env, ctx)), ctx),
+  scheduled: (controller: ScheduledController, _env: {}, ctx: ExecutionContext) =>
+    withDbScope(() => scheduled(controller), ctx),
 };

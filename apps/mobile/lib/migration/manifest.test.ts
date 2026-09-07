@@ -128,6 +128,7 @@ describe("computeLocalManifest", () => {
       "account-2": 2_000,
       "account-3": 300,
     });
+    expect(manifest.contentDigest).toMatch(/^[a-f0-9]{64}$/);
   });
 
   it("returns zeroed counts and empty sums for an empty install", async () => {
@@ -135,5 +136,6 @@ describe("computeLocalManifest", () => {
     const manifest = await computeLocalManifest(db);
     expect(Object.values(manifest.rowCounts).every((count) => count === 0)).toBe(true);
     expect(manifest.transactionAmountMinorByAccount).toEqual({});
+    expect(manifest.contentDigest).toMatch(/^[a-f0-9]{64}$/);
   });
 });

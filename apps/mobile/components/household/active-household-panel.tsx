@@ -2,6 +2,7 @@ import { Alert, View } from "react-native";
 
 import { EnableSyncCard } from "@/components/household/enable-sync-card";
 import { HouseholdMembers, type HouseholdMember } from "@/components/household/household-members";
+import { SyncStatusCard } from "@/components/household/sync-status-card";
 import { Card } from "@/components/settings/card";
 import { SectionHeader } from "@/components/settings/section-header";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,9 @@ export function ActiveHouseholdPanel({
         <Card>
           <EnableSyncCard activeHouseholdId={householdId} />
         </Card>
-      ) : null}
+      ) : (
+        <SyncStatusCard />
+      )}
       <Card>
         <View className="flex-row items-center justify-between p-4">
           <View className="gap-1">

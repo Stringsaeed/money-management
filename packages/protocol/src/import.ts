@@ -14,12 +14,9 @@ export const IMPORT_ENTITY_TYPES = ["account", "category", "transaction"] as con
 
 export type ImportEntityType = (typeof IMPORT_ENTITY_TYPES)[number];
 
-/**
- * Row cap per `import_bundle` chunk.
- * D1 allows at most 100 bound parameters per query. Account inserts bind ~19
- * columns per row, so 5 rows stay under that ceiling (5 × 19 = 95).
- */
 export const MAX_IMPORT_CHUNK_ROWS = 5;
+
+export const MAX_IMPORT_APPLY_ROWS = 25;
 
 /** The payload of one `import_bundle` command: one entity type's chunk. */
 export interface ImportBundlePayload {
@@ -39,14 +36,60 @@ export interface ImportManifest {
   readonly rowCounts: Readonly<Record<ImportEntityType, number>>;
   /** Sum of every transaction's `amountMinor`, grouped by account id. */
   readonly transactionAmountMinorByAccount: Readonly<Record<string, number>>;
+  /** SHA-256 of every imported row in canonical entity/id order. */
+  readonly contentDigest: string;
 }
 
-/** True when every count/sum in `a` and `b` agrees (missing keys read as 0). */
+/** True when the aggregate checks and canonical row digest agree. */
 export function manifestsMatch(a: ImportManifest, b: ImportManifest): boolean {
   return (
     numberRecordsEqual(a.rowCounts, b.rowCounts) &&
-    numberRecordsEqual(a.transactionAmountMinorByAccount, b.transactionAmountMinorByAccount)
+    numberRecordsEqual(a.transactionAmountMinorByAccount, b.transactionAmountMinorByAccount) &&
+    a.contentDigest === b.contentDigest
   );
+}
+
+export type ImportContentValue = string | number | boolean | null;
+
+export interface ImportContentRow {
+  readonly entityType: ImportEntityType;
+  readonly row: Readonly<Record<string, ImportContentValue>>;
+}
+
+/** Stable input for the client/server SHA-256 import integrity digest. */
+export function canonicalizeImportContent(rows: readonly ImportContentRow[]): string {
+  return JSON.stringify(
+    [...rows]
+      .map(({ entityType, row }) => ({ entityType, row: sortRecord(row) }))
+      .sort((left, right) => {
+        const entityOrder =
+          IMPORT_ENTITY_TYPES.indexOf(left.entityType) -
+          IMPORT_ENTITY_TYPES.indexOf(right.entityType);
+        if (entityOrder !== 0) return entityOrder;
+        return String(left.row.id ?? "").localeCompare(String(right.row.id ?? ""));
+      }),
+  );
+}
+
+function sortRecord(
+  value: Readonly<Record<string, ImportContentValue>>,
+): Readonly<Record<string, ImportContentValue>> {
+  return Object.fromEntries(
+    Object.entries(value)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, entry]) => [key, normalizeCanonicalValue(entry, key)]),
+  );
+}
+
+function normalizeCanonicalValue(value: ImportContentValue, key?: string): ImportContentValue {
+  if (
+    value !== null &&
+    (key === "createdAt" || key === "updatedAt" || key === "lifecycleChangedAt")
+  ) {
+    const parsed = new Date(String(value));
+    return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toISOString();
+  }
+  return value;
 }
 
 function numberRecordsEqual(

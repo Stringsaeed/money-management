@@ -6,6 +6,7 @@ import { householdChange } from "@trove/db/schema/commands";
 import type { CommandDatabase } from "../commands/types";
 import type { HouseholdCaller } from "../require-member";
 import { requireHouseholdMember } from "../require-member";
+import { queryRows } from "../sql-rows";
 import { getBudgetPoolFacts, periodCeiling, type BudgetPoolFacts } from "./funding-pool";
 import { getReserveFacts } from "./reserve";
 
@@ -152,12 +153,14 @@ async function getEnvelopeMonthDeltas(
   // transaction's own date, net of linked Refunds (#91 parity), split by
   // account class because card spending routes through the reserve instead
   // of driving availability negative.
-  const spendRows = await db.all<{
+  const spendRows = await queryRows<{
     envelope_id: string;
     month: string;
-    is_card: number;
+    is_card: number | boolean;
     spent_minor: number;
-  }>(sql`SELECT cm.envelope_id AS envelope_id,
+  }>(
+    db,
+    sql`SELECT cm.envelope_id AS envelope_id,
         substr(t.date, 1, 7) AS month,
         ca.type = 'card' AS is_card,
         SUM(
@@ -190,13 +193,16 @@ async function getEnvelopeMonthDeltas(
         AND ca.visibility = 'public'
         AND t.date >= ${floor}
         AND t.date < ${ceiling}
-      GROUP BY cm.envelope_id, month, is_card`);
+      GROUP BY cm.envelope_id, substr(t.date, 1, 7), (ca.type = 'card')`,
+  );
 
-  const assignmentRows = await db.all<{
+  const assignmentRows = await queryRows<{
     envelope_id: string;
     month: string;
     delta_minor: number;
-  }>(sql`SELECT envelope_id, budget_period AS month, SUM(delta_minor) AS delta_minor
+  }>(
+    db,
+    sql`SELECT envelope_id, budget_period AS month, SUM(delta_minor) AS delta_minor
       FROM (
         SELECT g.budget_period, g.destination_envelope_id AS envelope_id, g.amount_minor AS delta_minor
         FROM assignments g
@@ -210,7 +216,8 @@ async function getEnvelopeMonthDeltas(
           AND g.currency = ${currency}
           AND g.budget_period BETWEEN ${startPeriod} AND ${endPeriod}
       )
-      GROUP BY envelope_id, budget_period`);
+      GROUP BY envelope_id, budget_period`,
+  );
 
   const byEnvelope = new Map<string, Map<string, EnvelopeMonthDelta>>();
   const ensure = (envelopeId: string, month: string): EnvelopeMonthDelta => {
@@ -245,7 +252,9 @@ async function getPositiveRolloverMap(
   currency: string,
   period: string,
 ): Promise<Map<string, boolean>> {
-  const rows = await db.all<{ envelope_id: string; positive_rollover: number }>(sql`
+  const rows = await queryRows<{ envelope_id: string; positive_rollover: number | boolean }>(
+    db,
+    sql`
     SELECT r.envelope_id, r.positive_rollover
     FROM rollover_settings r
     JOIN envelopes e ON e.household_id = r.household_id AND e.id = r.envelope_id
@@ -257,7 +266,8 @@ async function getPositiveRolloverMap(
         WHERE x.household_id = r.household_id
           AND x.envelope_id = r.envelope_id
           AND x.effective_from_period <= ${period}
-      )`);
+      )`,
+  );
   return new Map(rows.map((r) => [r.envelope_id, Number(r.positive_rollover) !== 0]));
 }
 
@@ -269,7 +279,9 @@ async function getActiveExpenseCategoriesMap(
 ): Promise<Map<string, Set<string>>> {
   // #89 timeline semantics: effective_to_period is DERIVED (LEAD), never
   // stored — "effective at period" means the latest row at or before it.
-  const rows = await db.all<{ envelope_id: string; category_id: string }>(sql`
+  const rows = await queryRows<{ envelope_id: string; category_id: string }>(
+    db,
+    sql`
     SELECT c.envelope_id, c.category_id
     FROM category_mappings c
     INNER JOIN categories cat ON cat.household_id = c.household_id AND cat.id = c.category_id
@@ -282,7 +294,8 @@ async function getActiveExpenseCategoriesMap(
           AND x.effective_from_period <= ${period}
       )
       AND cat.lifecycle = 'active'
-      AND cat.type = 'expense'`);
+      AND cat.type = 'expense'`,
+  );
   const map = new Map<string, Set<string>>();
   for (const row of rows) {
     const set = map.get(row.envelope_id) ?? new Set<string>();

@@ -18,7 +18,7 @@ import {
   getFundingMembershipTimeline,
   getRolloverSettingTimeline,
 } from "./period-effective";
-import { createTestDb } from "../commands/test-db";
+import { createTestDb } from "../../test-support/db";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 

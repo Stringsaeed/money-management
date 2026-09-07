@@ -1,0 +1,20 @@
+head=d1661b9ffcba65414168251eccc8e6bb8744b1a9
+alchemy_stage=z1_baseline_d1661b9
+stage_production=false
+
+initial_dry_run:
+plan=2 create, 0 update, 0 delete
+create=database
+create=server
+
+deploy=pass
+post_deploy_dry_run=2 noop
+worker_name=money-management-server-z1-basu6j62pdcb632c5rdxgadrtsj
+worker_url=https://money-management-server-z1-basu6j62pdcb632c5rdxgadrtsj.stringsaeed.workers.dev
+worker_version=bd2f6260-f8b8-4c3c-9f7c-2c3fb73821e5
+d1_id=c9bd2159-62e1-4df2-9521-d3672b3bf0c3
+d1_name=money-management-database-z1-baseline-d1661b9-wovhkp7z34ym4jpw
+
+production_d1_updated=false
+production_worker_touched=false
+shared_hyperdrive_touched=false

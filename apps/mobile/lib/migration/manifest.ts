@@ -1,9 +1,14 @@
-import { sql } from "drizzle-orm";
 import type { OPSQLiteDatabase } from "drizzle-orm/op-sqlite";
+import { CryptoDigestAlgorithm, digestStringAsync } from "expo-crypto";
 import type { SQLiteDatabase } from "@/db/sqlite";
 
-import type { ImportManifest } from "@trove/protocol";
-import { accounts, categories, transactions } from "@/db/schema";
+import {
+  canonicalizeImportContent,
+  type ImportBundlePayload,
+  type ImportContentValue,
+  type ImportManifest,
+} from "@trove/protocol";
+import { buildImportChunks } from "./chunks";
 
 export type LocalDb = OPSQLiteDatabase<typeof import("@/db/schema")> & {
   $client: SQLiteDatabase;
@@ -15,33 +20,38 @@ export type LocalDb = OPSQLiteDatabase<typeof import("@/db/schema")> & {
  * account. Compared against the server's post-import recompute.
  */
 export async function computeLocalManifest(db: LocalDb): Promise<ImportManifest> {
-  const [accountRows, categoryRows, transactionRows, transactionSums] = await Promise.all([
-    db.select({ count: sql<number>`COUNT(*)` }).from(accounts),
-    db.select({ count: sql<number>`COUNT(*)` }).from(categories),
-    db.select({ count: sql<number>`COUNT(*)` }).from(transactions),
-    db
-      .select({
-        key: transactions.accountId,
-        total: sql<number>`COALESCE(SUM(${transactions.amount}), 0)`,
-      })
-      .from(transactions)
-      .groupBy(transactions.accountId),
-  ]);
+  return computeLocalManifestFromChunks(await buildImportChunks(db));
+}
+
+export async function computeLocalManifestFromChunks(
+  chunks: readonly ImportBundlePayload[],
+): Promise<ImportManifest> {
+  const rowCounts = { account: 0, category: 0, transaction: 0 };
+  const transactionAmountMinorByAccount: Record<string, number> = {};
+  const contentRows = chunks.flatMap((chunk) =>
+    chunk.rows.map((row) => {
+      const content = importContentValues(row);
+      rowCounts[chunk.entityType] += 1;
+      if (chunk.entityType === "transaction") {
+        const accountId = String(content.accountId);
+        transactionAmountMinorByAccount[accountId] =
+          (transactionAmountMinorByAccount[accountId] ?? 0) + Number(content.amountMinor);
+      }
+      return { entityType: chunk.entityType, row: content };
+    }),
+  );
+  const canonicalContent = canonicalizeImportContent(contentRows);
 
   return {
-    rowCounts: {
-      account: accountRows[0]?.count ?? 0,
-      category: categoryRows[0]?.count ?? 0,
-      transaction: transactionRows[0]?.count ?? 0,
-    },
-    transactionAmountMinorByAccount: sumsByKey(transactionSums),
+    rowCounts,
+    transactionAmountMinorByAccount,
+    contentDigest: await digestStringAsync(CryptoDigestAlgorithm.SHA256, canonicalContent),
   };
 }
 
-function sumsByKey(rows: readonly { key: string; total: number }[]): Record<string, number> {
-  const totals: Record<string, number> = {};
-  for (const row of rows) {
-    totals[row.key] = row.total;
-  }
-  return totals;
+function importContentValues(
+  row: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, ImportContentValue>> {
+  // SAFETY: buildImportChunks emits only validated flat scalar wire fields.
+  return row as Readonly<Record<string, ImportContentValue>>;
 }

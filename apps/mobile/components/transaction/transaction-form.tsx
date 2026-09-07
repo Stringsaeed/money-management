@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { KeyboardAvoidingView, Platform, View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { useForm } from "@tanstack/react-form";
@@ -45,6 +46,9 @@ export function TransactionForm({
 
   const firstAccountId = accounts[0]?.id ?? "";
   const firstAccountCurrency = accounts[0]?.currency ?? "USD";
+  const firstExpenseCategoryId =
+    categories.find((category) => category.type === "expense" && category.lifecycle !== "archived")
+      ?.id ?? "";
 
   const numPad = useNumPadNumber((initialData?.amount ?? 0) / 100);
 
@@ -103,7 +107,15 @@ export function TransactionForm({
     },
   });
 
-  // Expose submit to parent via ref for native header integration
+  useEffect(() => {
+    if (firstAccountId && !form.state.values.accountId) {
+      form.setFieldValue("accountId", firstAccountId);
+    }
+    if (firstExpenseCategoryId && !form.state.values.categoryId) {
+      form.setFieldValue("categoryId", firstExpenseCategoryId);
+    }
+  }, [firstAccountId, firstExpenseCategoryId, form]);
+
   if (formRef) {
     formRef.current = { submit: () => form.handleSubmit() };
   }
@@ -115,7 +127,6 @@ export function TransactionForm({
         className="flex-1"
       >
         {bannerContent}
-        {/* Breadcrumb: Account › Category › Date */}
         <View className="pt-2 pb-3">
           <Animated.ScrollView
             layout={LinearTransition.springify(400)}
@@ -249,7 +260,6 @@ export function TransactionForm({
           </Animated.ScrollView>
         </View>
 
-        {/* Amount */}
         <form.Subscribe selector={(s) => s.values.accountId}>
           {(accountId) => {
             const account = accounts.find((a) => a.id === accountId);
@@ -266,7 +276,6 @@ export function TransactionForm({
           }}
         </form.Subscribe>
 
-        {/* Submission error */}
         <form.Subscribe selector={(s) => (s.submissionAttempts > 0 ? s.errors : [])}>
           {(errors) =>
             errors.length > 0 ? (
@@ -284,7 +293,6 @@ export function TransactionForm({
           }
         </form.Subscribe>
 
-        {/* Note */}
         <form.Subscribe selector={(s) => s.values.description}>
           {(description) => (
             <NoteInput
@@ -295,7 +303,6 @@ export function TransactionForm({
         </form.Subscribe>
       </KeyboardAvoidingView>
 
-      {/* Number pad */}
       <View className="flex-1 px-4 border-t border-ledger-outline">
         <NumberPad
           onClear={numPad.clearAll}

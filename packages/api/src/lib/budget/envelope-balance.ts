@@ -1,5 +1,7 @@
 import { sql, type SQL } from "drizzle-orm";
 
+import { queryRows } from "../sql-rows";
+
 /** Net assigned balance of one envelope: in − out through `period` (minor units). */
 export function envelopeAssignedBalanceSql(
   householdId: string,
@@ -24,12 +26,12 @@ export function envelopeAssignedBalanceSql(
  * the waterfall itself only needs the assignment-sourced component.
  */
 export async function getEnvelopeAssignedBalance(
-  db: { all: (query: SQL) => Promise<Record<string, unknown>[]> },
+  db: { execute: (query: SQL) => Promise<unknown> },
   householdId: string,
   envelopeId: string,
   period: string,
 ): Promise<number> {
   const query = sql`SELECT ${envelopeAssignedBalanceSql(householdId, envelopeId, period)} AS balance`;
-  const rows = await db.all(query);
+  const rows = await queryRows<Record<string, number>>(db, query);
   return Number((rows[0] as Record<string, number> | undefined)?.balance ?? 0);
 }

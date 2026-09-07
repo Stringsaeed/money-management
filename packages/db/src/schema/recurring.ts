@@ -4,28 +4,19 @@ import {
   foreignKey,
   index,
   integer,
+  pgTable,
   primaryKey,
-  sqliteTable,
   text,
+  timestamp,
   uniqueIndex,
-} from "drizzle-orm/sqlite-core";
+} from "drizzle-orm/pg-core";
 
 import * as auth from "./auth";
 import { household } from "./household";
 
-/**
- * Recurring Rules & Occurrences (#87), ported from the client's local tables
- * (`apps/mobile/db/schema.ts`) with household scoping per the multi-user
- * extension.
- *
- * - Occurrence identity `(rule_id, scheduled_date)` is a unique constraint —
- *   the multi-writer double-settlement guard (architecture doc invariant 13).
- * - Rule Revision is the optimistic-concurrency version column.
- * - Eligibility Floor is the only progress cursor: settlement applies a
- *   rule's pre-change state before a same-day pause/edit takes effect.
- */
+const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 
-export const recurringRule = sqliteTable(
+export const recurringRule = pgTable(
   "recurring_rules",
   {
     householdId: text("household_id")
@@ -34,14 +25,8 @@ export const recurringRule = sqliteTable(
     id: text("id").notNull(),
     name: text("name").notNull(),
     type: text("type", { enum: ["expense", "income", "transfer"] }).notNull(),
-    /** Minor units; NULL while the rule awaits its first valid amount. */
     amountMinor: integer("amount_minor"),
     currency: text("currency").notNull(),
-    /**
-     * Plain ids: the referenced ledger tables use composite (household_id, id)
-     * PKs, so single-column references would be FK mismatches. Same-household
-     * validity is enforced at the repository layer (see #89 pattern).
-     */
     accountId: text("account_id"),
     toAccountId: text("to_account_id"),
     categoryId: text("category_id"),
@@ -60,13 +45,11 @@ export const recurringRule = sqliteTable(
       .default("ready"),
     attentionReasons: text("attention_reasons").notNull().default("[]"),
     attentionDetails: text("attention_details"),
-    /** The only progress cursor: occurrences settle on/after this date. */
     eligibilityFloor: text("eligibility_floor").notNull(),
-    /** Optimistic-concurrency version column (Rule Revision pattern). */
     revision: integer("revision").notNull().default(1),
-    lifecycleChangedAt: integer("lifecycle_changed_at", { mode: "timestamp_ms" }),
-    healthChangedAt: integer("health_changed_at", { mode: "timestamp_ms" }),
-    lastSettlementAttemptAt: integer("last_settlement_attempt_at", { mode: "timestamp_ms" }),
+    lifecycleChangedAt: timestamptz("lifecycle_changed_at"),
+    healthChangedAt: timestamptz("health_changed_at"),
+    lastSettlementAttemptAt: timestamptz("last_settlement_attempt_at"),
     lastSettlementError: text("last_settlement_error"),
     createdBy: text("created_by")
       .notNull()
@@ -74,11 +57,9 @@ export const recurringRule = sqliteTable(
     updatedBy: text("updated_by")
       .notNull()
       .references(() => auth.user.id),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at")
+      .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
   },
@@ -93,7 +74,7 @@ export const recurringRule = sqliteTable(
   ],
 );
 
-export const recurringOccurrence = sqliteTable(
+export const recurringOccurrence = pgTable(
   "recurring_occurrences",
   {
     householdId: text("household_id")
@@ -101,30 +82,16 @@ export const recurringOccurrence = sqliteTable(
       .references(() => household.id, { onDelete: "cascade" }),
     ruleId: text("rule_id").notNull(),
     scheduledDate: text("scheduled_date").notNull(),
-    /**
-     * Nullable plain id, deliberately WITHOUT a foreign key: the golden
-     * behaviour deletes a generated Transaction while the Occurrence must
-     * survive with a dangling reference (settlement counts occurrences, so
-     * each still settles exactly once). A composite FK could not express
-     * that without nulling household_id.
-     */
     transactionId: text("transaction_id"),
-    settledAt: integer("settled_at", { mode: "timestamp_ms" }).notNull(),
+    settledAt: timestamptz("settled_at").notNull(),
   },
   (table) => [
-    // Occurrence identity — the double-settlement guard across writers.
     primaryKey({ columns: [table.householdId, table.ruleId, table.scheduledDate] }),
     uniqueIndex("uq_recurring_occurrence_transaction").on(table.transactionId),
     index("recurring_occurrences_rule_idx").on(table.householdId, table.ruleId),
-    // Tenant-safe composite FKs: both parents use composite (household_id, id)
-    // primary keys, so single-column references would be FK mismatches.
     foreignKey({
       columns: [table.householdId, table.ruleId],
       foreignColumns: [recurringRule.householdId, recurringRule.id],
     }).onDelete("cascade"),
-    // NOTE: transaction_id intentionally carries NO FK. A composite parent
-    // key would force ON DELETE SET NULL to null household_id too (NOT NULL),
-    // and the golden behaviour requires an Occurrence to survive its
-    // generated Transaction being deleted with a dangling reference.
   ],
 );

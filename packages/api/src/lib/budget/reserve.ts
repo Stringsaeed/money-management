@@ -19,6 +19,7 @@ import { sql, type SQL } from "drizzle-orm";
  * the in-batch guard are the same expression evaluated twice (#90 pattern).
  */
 
+import { queryRows } from "../sql-rows";
 import { periodCeiling } from "./funding-pool";
 
 /** Last calendar day of the Budget Period ("YYYY-MM-DD"), for payment dates. */
@@ -109,8 +110,8 @@ export function cardPaymentReserveSql(
   period: string,
 ): SQL<number> {
   return sql<number>`(
-    SELECT MAX(
-      (SELECT COALESCE(SUM(MIN(s.spent_minor, s.available_minor)), 0)
+    SELECT GREATEST(
+      (SELECT COALESCE(SUM(LEAST(s.spent_minor, s.available_minor)), 0)
        FROM (${spendingPerEnvelopeSql(householdId, currency, periodCeiling(period), period)}) s)
       - ${paymentsIntoCardsSql(householdId, currency, periodCeiling(period))}
     , 0)
@@ -129,7 +130,7 @@ export function unfundedCardSpendingSql(
   period: string,
 ): SQL<number> {
   return sql<number>`(
-    SELECT COALESCE(SUM(MAX(s.spent_minor - s.available_minor, 0)), 0)
+    SELECT COALESCE(SUM(GREATEST(s.spent_minor - s.available_minor, 0)), 0)
     FROM (${spendingPerEnvelopeSql(householdId, currency, periodCeiling(period), period)}) s
   )`;
 }
@@ -140,12 +141,12 @@ export interface ReserveFacts {
 
 /** Executes the reserve computation for real (plan-time read). */
 export async function getReserveFacts(
-  db: { all: (query: SQL) => Promise<Record<string, unknown>[]> },
+  db: { execute: (query: SQL) => Promise<unknown> },
   householdId: string,
   currency: string,
   period: string,
 ): Promise<ReserveFacts> {
   const query = sql`SELECT ${cardPaymentReserveSql(householdId, currency, period)} AS reserve`;
-  const rows = await db.all(query);
+  const rows = await queryRows<Record<string, number>>(db, query);
   return { reserveMinor: Number((rows[0] as Record<string, number> | undefined)?.reserve ?? 0) };
 }

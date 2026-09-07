@@ -385,9 +385,6 @@ importers:
 
   packages/api:
     dependencies:
-      '@libsql/client':
-        specifier: 0.17.4
-        version: 0.17.4
       '@orpc/client':
         specifier: 'catalog:'
         version: 1.15.0
@@ -425,6 +422,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: 'catalog:'
         version: 5.20260821.1
+      '@electric-sql/pglite':
+        specifier: ^0.3.14
+        version: 0.3.15
       '@trove/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -480,9 +480,6 @@ importers:
 
   packages/db:
     dependencies:
-      '@libsql/client':
-        specifier: 0.17.4
-        version: 0.17.4
       '@trove/env':
         specifier: workspace:*
         version: link:../env
@@ -492,9 +489,9 @@ importers:
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@cloudflare/workers-types@5.20260821.1)(@electric-sql/pglite@0.3.15)(@libsql/client@0.17.4)(@op-engineering/op-sqlite@18.2.0(react-native@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/jest-preset@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.3)(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3))(expo-sqlite@57.0.2(expo@57.0.20)(react-native@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/jest-preset@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.3)(supports-color@8.1.1))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.17)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3))(kysely@0.29.5)(postgres@3.4.9)
-      libsql:
-        specifier: 0.5.29
-        version: 0.5.29
+      postgres:
+        specifier: ^3.4.7
+        version: 3.4.9
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -17754,8 +17751,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postgres@3.4.9:
-    optional: true
+  postgres@3.4.9: {}
 
   posthog-react-native@4.63.0(3aae7bfd723a7f93bd5e1038fee8c427):
     dependencies:

@@ -1,0 +1,25 @@
+head=d1661b9ffcba65414168251eccc8e6bb8744b1a9
+alchemy_stage=z1_baseline_d1661b9
+stage_production=false
+
+destroy_dry_run:
+plan=2 delete
+delete=database
+delete=server
+shared_hyperdrive_targeted=false
+production_d1_targeted=false
+production_worker_targeted=false
+
+destroy=pass
+server_deleted=true
+stage_d1_deleted=true
+disposed_worker_http=404
+
+deleted_worker=money-management-server-z1-basu6j62pdcb632c5rdxgadrtsj
+deleted_d1_id=c9bd2159-62e1-4df2-9521-d3672b3bf0c3
+deleted_d1_name=money-management-database-z1-baseline-d1661b9-wovhkp7z34ym4jpw
+
+production_d1_remaining_id=2e0fddb7-fb8e-40cd-86b2-aa7caa800ec3
+shared_hyperdrive_remaining_id=8e9800a6f0ff4d738ccde750c2120dd1
+production_d1_touched=false
+shared_hyperdrive_touched=false

@@ -1,0 +1,18 @@
+{
+  "id": "8e9800a6f0ff4d738ccde750c2120dd1",
+  "name": "trove-ledger-fresh",
+  "origin": {
+    "host": "aws-us-east-1-3.pg.psdb.cloud",
+    "port": 6432,
+    "database": "postgres",
+    "scheme": "postgresql",
+    "user": "pscale_api_e383qczhi8ln.v32o69jnbc29"
+  },
+  "origin_connection_limit": 60,
+  "caching": {
+    "disabled": true
+  },
+  "mtls": {},
+  "created_on": "2026-09-07T00:41:22.561899Z",
+  "modified_on": "2026-09-07T00:41:22.561899Z"
+}

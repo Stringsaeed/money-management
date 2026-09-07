@@ -17,12 +17,12 @@ import type { CommandPlan, PlanContext } from "./pipeline";
 import {
   assertionStatement,
   changeLogStatement,
-  executeBatch,
+  executeHouseholdTransaction,
   resultStatement,
   type BatchStatement,
 } from "./statements";
 import { getBudgetPoolFacts } from "../budget/funding-pool";
-import { createTestDb } from "./test-db";
+import { createTestDb } from "../../test-support/db";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 
@@ -418,9 +418,14 @@ describe("interleaving safety — preconditions replace locks", () => {
     expect(planA.guards).toHaveLength(1);
     expect(planB.guards).toHaveLength(1);
 
-    await executeBatch(db, buildStatements(crypto.randomUUID(), planA));
-    // Client B's stale batch hits the guard: the CHECK aborts everything.
-    await expect(executeBatch(db, buildStatements(crypto.randomUUID(), planB))).rejects.toThrow();
+    await executeHouseholdTransaction(
+      db,
+      buildStatements(crypto.randomUUID(), planA),
+      HOUSEHOLD_ID,
+    );
+    await expect(
+      executeHouseholdTransaction(db, buildStatements(crypto.randomUUID(), planB), HOUSEHOLD_ID),
+    ).rejects.toThrow();
 
     // Exactly one 8_000 assignment exists — never both.
     const rows = await assignments();
@@ -467,7 +472,11 @@ describe("interleaving safety — preconditions replace locks", () => {
         continue; // Typed rejection at plan time — nothing committed.
       }
       try {
-        await executeBatch(db, buildStatements(crypto.randomUUID(), outcome));
+        await executeHouseholdTransaction(
+          db,
+          buildStatements(crypto.randomUUID(), outcome),
+          HOUSEHOLD_ID,
+        );
         committed += 1;
       } catch {
         // Guard fired: an interleaved writer consumed the money first.

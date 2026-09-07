@@ -5,8 +5,8 @@ import { household, membership } from "@trove/db/schema/household";
 import type { CommandEnvelope } from "@trove/protocol";
 
 import { applyCommand } from "../commands/pipeline";
-import { createTestDb } from "../commands/test-db";
-import { getDelta } from "./delta";
+import { createTestDb } from "../../test-support/db";
+import { deliveredWatermark, getDelta } from "./delta";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 
@@ -203,5 +203,15 @@ describe("sync.getDelta", () => {
     });
     expect(delta.changes.length).toBeLessThanOrEqual(1000);
     expect(delta.changes.map((c) => c.seq)).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+});
+
+describe("deliveredWatermark", () => {
+  it("stays on the last delivered seq while a page is truncated", () => {
+    expect(deliveredWatermark(true, 2, 4)).toBe(2);
+  });
+
+  it("advances to head when the page is complete", () => {
+    expect(deliveredWatermark(false, 4, 4)).toBe(4);
   });
 });

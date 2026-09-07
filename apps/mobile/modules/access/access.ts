@@ -2,6 +2,7 @@ import type { LedgerSourceSelection } from "@/modules/ledger-data-source/provide
 import { selectLedgerSource } from "@/modules/ledger-data-source/provider";
 import type { LocalOnlyReason, SyncMode } from "@/stores/sync-mode-store";
 
+import { HOUSEHOLDS_KEY } from "./households-key";
 import { PROFILE_HOUSEHOLD_HREF } from "./return-to";
 import type {
   AccessCore,
@@ -18,6 +19,19 @@ import type {
 
 export type { AccessCore, HouseholdRead, ResolveAccessInput };
 
+export const householdsQueryKeyForUser = (userId: string | null) =>
+  [...HOUSEHOLDS_KEY, userId] as const;
+
+export function householdUserIdForQuery(
+  claim: IdentityClaim | null,
+  probe: SessionProbe | null,
+  signedOut: boolean,
+): string | null {
+  if (signedOut) return null;
+  if (probe?.kind === "session") return probe.user.userId;
+  return claim?.kind === "held" ? claim.user.userId : null;
+}
+
 interface LedgerSourceFacts {
   readonly authenticatedUserId: string | null;
   readonly activeHouseholdId: string | null;
@@ -26,8 +40,26 @@ interface LedgerSourceFacts {
 }
 
 export function resolveAccess(input: ResolveAccessInput): AccessCore {
-  if (input.probe === null) return { kind: "resolving" };
+  if (input.probe === null) {
+    if (input.claim.kind === "held") {
+      return signedInFromSession(input.claim.user, input.households);
+    }
+    return { kind: "resolving" };
+  }
   return mergeClaimAndProbe(input.claim, input.probe, input.households);
+}
+
+export function householdReadFromQuery(input: {
+  readonly enabled: boolean;
+  readonly isPending: boolean;
+  readonly isError: boolean;
+  readonly memberships?: readonly MembershipSummary[];
+}): HouseholdRead {
+  if (input.memberships) return { kind: "loaded", memberships: input.memberships };
+  if (!input.enabled) return { kind: "loaded", memberships: [] };
+  if (input.isPending) return { kind: "pending" };
+  if (input.isError) return { kind: "failed" };
+  return { kind: "loaded", memberships: [] };
 }
 
 export function nextClaim(current: IdentityClaim, probe: SessionProbe, now: Date): IdentityClaim {

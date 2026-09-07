@@ -10,9 +10,10 @@ import type {
   CommandResult,
   ImportBundlePayload,
 } from "@trove/protocol";
+import { MAX_IMPORT_APPLY_ROWS, MAX_IMPORT_CHUNK_ROWS } from "@trove/protocol";
 
 import { applyCommand } from "./pipeline";
-import { createTestDb } from "./test-db";
+import { createTestDb } from "../../test-support/db";
 import { computeImportManifest } from "../migration/manifest";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
@@ -250,14 +251,142 @@ describe("commands.apply — import_bundle idempotency", () => {
       );
     expect(rows).toHaveLength(1);
   });
+
+  it("rejects a fresh command when an existing id has different content", async () => {
+    const original: ImportBundlePayload = {
+      entityType: "account",
+      chunkIndex: 0,
+      chunkCount: 1,
+      rows: [ACCOUNT_ROW],
+    };
+    expectApplied(await applyAs(OWNER, bundleEnvelope(original)));
+
+    const result = await applyAs(
+      OWNER,
+      bundleEnvelope({ ...original, rows: [{ ...ACCOUNT_ROW, name: "Collision" }] }),
+    );
+
+    expect(result).toEqual({
+      kind: "conflict",
+      reason: "import_row_conflict",
+      current: { entityType: "account", rowId: ACCOUNT_ROW.id },
+    });
+    const stored = await db
+      .select()
+      .from(ledgerAccount)
+      .where(eq(ledgerAccount.id, ACCOUNT_ROW.id));
+    expect(stored).toHaveLength(1);
+    expect(stored[0]?.name).toBe(ACCOUNT_ROW.name);
+  });
+
+  it("returns a typed conflict for the same content under another household", async () => {
+    await db.insert(household).values({
+      id: "household-other",
+      name: "Other",
+      createdByUserId: OWNER,
+    });
+    await db.insert(ledgerAccount).values({
+      householdId: "household-other",
+      ...ACCOUNT_ROW,
+      initialBalanceMinor: ACCOUNT_ROW.initialBalanceMinor,
+      visibility: "public",
+      ownerUserId: null,
+      version: 0,
+      createdBy: OWNER,
+      updatedBy: OWNER,
+      createdAt: new Date(ACCOUNT_ROW.createdAt),
+      updatedAt: new Date(ACCOUNT_ROW.updatedAt),
+    });
+
+    const result = await applyAs(
+      OWNER,
+      bundleEnvelope({
+        entityType: "account",
+        chunkIndex: 0,
+        chunkCount: 1,
+        rows: [ACCOUNT_ROW],
+      }),
+    );
+
+    expect(result).toEqual({
+      kind: "conflict",
+      reason: "import_row_conflict",
+      current: { entityType: "account", rowId: ACCOUNT_ROW.id },
+    });
+  });
+
+  it("accepts an exact transaction retry under a fresh commandId", async () => {
+    expectApplied(
+      await applyAs(
+        OWNER,
+        bundleEnvelope({
+          entityType: "account",
+          chunkIndex: 0,
+          chunkCount: 1,
+          rows: [ACCOUNT_ROW],
+        }),
+      ),
+    );
+    const transactionChunk: ImportBundlePayload = {
+      entityType: "transaction",
+      chunkIndex: 0,
+      chunkCount: 1,
+      rows: [
+        {
+          id: "txn-retry",
+          type: "expense",
+          amountMinor: 500,
+          currency: "USD",
+          originalAmountMinor: null,
+          originalCurrency: null,
+          exchangeRate: null,
+          date: "2026-01-05",
+          accountId: ACCOUNT_ROW.id,
+          toAccountId: null,
+          categoryId: null,
+          isRecurring: false,
+          recurringRuleId: null,
+          description: "Coffee",
+          createdAt: "2026-01-05T00:00:00.000Z",
+          updatedAt: "2026-01-05T00:00:00.000Z",
+        },
+      ],
+    };
+
+    expectApplied(await applyAs(OWNER, bundleEnvelope(transactionChunk)));
+    expectApplied(await applyAs(OWNER, bundleEnvelope(transactionChunk)));
+    expect(await db.select().from(transaction).where(eq(transaction.id, "txn-retry"))).toHaveLength(
+      1,
+    );
+  });
 });
 
-describe("import_bundle D1 bind budget", () => {
-  it("keeps each multi-row insert under D1's 100 bound-parameter ceiling", async () => {
-    const { maxRowsPerInsertStatement } = await import("./handlers/import-bundle");
-    expect(maxRowsPerInsertStatement("account") * 19).toBeLessThanOrEqual(100);
-    expect(maxRowsPerInsertStatement("category") * 15).toBeLessThanOrEqual(100);
-    expect(maxRowsPerInsertStatement("transaction") * 20).toBeLessThanOrEqual(100);
+describe("import_bundle bind budget", () => {
+  it("applies a chunk with more than 100 bound values in one transaction", async () => {
+    const rows = Array.from({ length: 6 }, (_, index) => ({
+      ...ACCOUNT_ROW,
+      id: `acct-bind-${index}`,
+      name: `Bind ${index}`,
+    }));
+    expect(rows.length).toBeGreaterThan(MAX_IMPORT_CHUNK_ROWS);
+    expect(rows.length).toBeLessThanOrEqual(MAX_IMPORT_APPLY_ROWS);
+    expect(rows.length * 19).toBeGreaterThan(100);
+    expectApplied(
+      await applyAs(
+        OWNER,
+        bundleEnvelope({
+          entityType: "account",
+          chunkIndex: 0,
+          chunkCount: 1,
+          rows,
+        }),
+      ),
+    );
+    const stored = await db
+      .select({ id: ledgerAccount.id })
+      .from(ledgerAccount)
+      .where(eq(ledgerAccount.householdId, HOUSEHOLD_ID));
+    expect(stored.map((row) => row.id).sort()).toEqual(rows.map((row) => row.id).sort());
   });
 });
 

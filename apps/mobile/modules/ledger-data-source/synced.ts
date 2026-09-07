@@ -132,21 +132,16 @@ export const createSyncedLedgerDataSource = ({
   };
   const readProjectedSnapshot = (operation: LedgerDataSourceOperation = "read.transactions") =>
     runner.run(operation, async () => {
-      if (offlineState.kind === "offline_cached") {
-        return readCachedProjectedSnapshot(operation);
-      }
-      let snapshot: SyncedTransactionSnapshot;
       try {
-        snapshot = await refreshSnapshot();
+        return await readCachedProjectedSnapshot(operation);
       } catch (cause) {
-        try {
-          snapshot = await readSyncedTransactionSnapshot(db, householdId, userId);
-        } catch {
+        if (offlineState.kind === "offline_cached") {
           throw cause;
         }
+        const snapshot = await refreshSnapshot();
+        const commands = await listProjectableCommands(db, householdId, userId);
+        return projectPendingTransactions(snapshot, commands);
       }
-      const commands = await listProjectableCommands(db, householdId, userId);
-      return projectPendingTransactions(snapshot, commands);
     });
   const enqueueTransactionIntent = (
     operation: LedgerDataSourceOperation,

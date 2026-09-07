@@ -1,10 +1,14 @@
+import { inArray, sql, type SQL, type SQLWrapper } from "drizzle-orm";
 import { z } from "zod";
 
 import {
   IMPORT_ENTITY_TYPES,
-  MAX_IMPORT_CHUNK_ROWS,
+  MAX_IMPORT_APPLY_ROWS,
+  canonicalizeImportContent,
   type EffectTag,
   type ImportBundlePayload,
+  type ImportContentRow,
+  type ImportContentValue,
   type ImportEntityType,
   type ValidationIssue,
 } from "@trove/protocol";
@@ -12,6 +16,11 @@ import { category, ledgerAccount, transaction } from "@trove/db/schema/ledger";
 
 import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
+import {
+  accountContentRow,
+  categoryContentRow,
+  transactionContentRow,
+} from "../../migration/import-content";
 import { issuesFromZod } from "./shared";
 
 /**
@@ -26,7 +35,7 @@ import { issuesFromZod } from "./shared";
  * (the importing owner) are stamped here — the client never sends them.
  */
 
-const isoDateTime = z.string().min(1);
+const isoDateTime = z.iso.datetime();
 
 const LEDGER_EFFECTS: readonly EffectTag[] = ["ledger", "balances", "summaries", "projections"];
 
@@ -103,27 +112,176 @@ function buildInsertStatements(
   entityType: ImportEntityType,
   rows: readonly Record<string, unknown>[],
 ): BatchStatement[] {
-  const maxRowsPerStatement = maxRowsPerInsertStatement(entityType);
-  const statements: BatchStatement[] = [];
-  for (let start = 0; start < rows.length; start += maxRowsPerStatement) {
-    statements.push(
-      buildInsertStatement(ctx, entityType, rows.slice(start, start + maxRowsPerStatement)),
-    );
-  }
-  return statements;
+  return [buildInsertStatement(ctx, entityType, rows)];
 }
 
-/** D1 rejects queries with more than 100 bound parameters. */
-const D1_MAX_BOUND_PARAMS = 100;
+async function findImportConflict(
+  ctx: PlanContext,
+  entityType: ImportEntityType,
+  rows: readonly Record<string, unknown>[],
+): Promise<string | null> {
+  const ids = rows.map((row) => String(row.id));
+  const incomingById = new Map(
+    rows.map((row) => {
+      const content = incomingContentRow(entityType, row);
+      return [String(row.id), canonicalizeImportContent([content])] as const;
+    }),
+  );
+  const existing = await loadExistingContentRows(ctx, entityType, ids);
+  for (const { householdId, content } of existing) {
+    const rowId = String(content.row.id);
+    if (
+      householdId !== ctx.householdId ||
+      incomingById.get(rowId) !== canonicalizeImportContent([content])
+    ) {
+      return rowId;
+    }
+  }
+  return null;
+}
 
-const INSERT_COLUMNS_BY_ENTITY = {
-  account: 19,
-  category: 15,
-  transaction: 20,
-} as const satisfies Record<ImportEntityType, number>;
+interface ExistingImportContentRow {
+  readonly householdId: string;
+  readonly content: ImportContentRow;
+}
 
-export function maxRowsPerInsertStatement(entityType: ImportEntityType): number {
-  return Math.max(1, Math.floor(D1_MAX_BOUND_PARAMS / INSERT_COLUMNS_BY_ENTITY[entityType]));
+async function loadExistingContentRows(
+  ctx: PlanContext,
+  entityType: ImportEntityType,
+  ids: readonly string[],
+): Promise<readonly ExistingImportContentRow[]> {
+  switch (entityType) {
+    case "account":
+      return (await ctx.db.select().from(ledgerAccount).where(inArray(ledgerAccount.id, ids))).map(
+        (row) => ({ householdId: row.householdId, content: accountContentRow(row) }),
+      );
+    case "category":
+      return (await ctx.db.select().from(category).where(inArray(category.id, ids))).map((row) => ({
+        householdId: row.householdId,
+        content: categoryContentRow(row),
+      }));
+    case "transaction":
+      return (await ctx.db.select().from(transaction).where(inArray(transaction.id, ids))).map(
+        (row) => ({ householdId: row.householdId, content: transactionContentRow(row) }),
+      );
+  }
+}
+
+function incomingContentRow(
+  entityType: ImportEntityType,
+  row: Readonly<Record<string, unknown>>,
+): ImportContentRow {
+  // SAFETY: parseRows accepts only the three flat scalar import row schemas above.
+  const contentValues = row as Readonly<Record<string, ImportContentValue>>;
+  const timestamps = {
+    createdAt: new Date(String(row.createdAt)).toISOString(),
+    updatedAt: new Date(String(row.updatedAt)).toISOString(),
+  };
+  if (entityType === "transaction") {
+    return { entityType, row: { ...contentValues, ...timestamps } };
+  }
+  return {
+    entityType,
+    row: {
+      ...contentValues,
+      ...timestamps,
+      lifecycleChangedAt:
+        row.lifecycleChangedAt == null
+          ? null
+          : new Date(String(row.lifecycleChangedAt)).toISOString(),
+    },
+  };
+}
+
+function buildConflictGuards(
+  ctx: PlanContext,
+  entityType: ImportEntityType,
+  rows: readonly Record<string, unknown>[],
+): SQL[] {
+  return rows.map((row) => {
+    switch (entityType) {
+      case "account":
+        return noDifferentAccount(ctx, row as z.infer<typeof accountRowSchema>);
+      case "category":
+        return noDifferentCategory(ctx, row as z.infer<typeof categoryRowSchema>);
+      case "transaction":
+        return noDifferentTransaction(ctx, row as z.infer<typeof transactionRowSchema>);
+    }
+  });
+}
+
+function noDifferentAccount(ctx: PlanContext, row: z.infer<typeof accountRowSchema>): SQL {
+  return noDifferentRow(ledgerAccount, ledgerAccount.id, row.id, [
+    same(ledgerAccount.householdId, ctx.householdId),
+    same(ledgerAccount.name, row.name),
+    same(ledgerAccount.type, row.type),
+    same(ledgerAccount.currency, row.currency),
+    same(ledgerAccount.color, row.color),
+    same(ledgerAccount.icon, row.icon),
+    same(ledgerAccount.initialBalanceMinor, row.initialBalanceMinor),
+    same(ledgerAccount.excludeFromTotal, row.excludeFromTotal),
+    same(ledgerAccount.sortOrder, row.sortOrder),
+    same(ledgerAccount.lifecycle, row.lifecycle),
+    sameTimestamp(ledgerAccount.lifecycleChangedAt, row.lifecycleChangedAt),
+    sameTimestamp(ledgerAccount.createdAt, row.createdAt),
+    sameTimestamp(ledgerAccount.updatedAt, row.updatedAt),
+  ]);
+}
+
+function noDifferentCategory(ctx: PlanContext, row: z.infer<typeof categoryRowSchema>): SQL {
+  return noDifferentRow(category, category.id, row.id, [
+    same(category.householdId, ctx.householdId),
+    same(category.name, row.name),
+    same(category.type, row.type),
+    same(category.color, row.color),
+    same(category.icon, row.icon),
+    same(category.parentId, row.parentId),
+    same(category.sortOrder, row.sortOrder),
+    same(category.lifecycle, row.lifecycle),
+    sameTimestamp(category.lifecycleChangedAt, row.lifecycleChangedAt),
+    sameTimestamp(category.createdAt, row.createdAt),
+    sameTimestamp(category.updatedAt, row.updatedAt),
+  ]);
+}
+
+function noDifferentTransaction(ctx: PlanContext, row: z.infer<typeof transactionRowSchema>): SQL {
+  return noDifferentRow(transaction, transaction.id, row.id, [
+    same(transaction.householdId, ctx.householdId),
+    same(transaction.type, row.type),
+    same(transaction.amountMinor, row.amountMinor),
+    same(transaction.currency, row.currency),
+    same(transaction.originalAmountMinor, row.originalAmountMinor),
+    same(transaction.originalCurrency, row.originalCurrency),
+    same(transaction.exchangeRate, row.exchangeRate),
+    same(transaction.date, row.date),
+    same(transaction.accountId, row.accountId),
+    same(transaction.toAccountId, row.toAccountId),
+    same(transaction.categoryId, row.categoryId),
+    same(transaction.isRecurring, row.isRecurring),
+    same(transaction.recurringRuleId, row.recurringRuleId),
+    same(transaction.description, row.description),
+    sameTimestamp(transaction.createdAt, row.createdAt),
+    sameTimestamp(transaction.updatedAt, row.updatedAt),
+  ]);
+}
+
+function same(column: SQLWrapper, value: unknown): SQL {
+  return sql`${column} IS NOT DISTINCT FROM ${value}`;
+}
+
+function sameTimestamp(column: SQLWrapper, value: string | null): SQL {
+  return value === null
+    ? sql`${column} IS NULL`
+    : sql`${column} IS NOT DISTINCT FROM ${value}::timestamptz`;
+}
+
+function noDifferentRow(
+  table: SQLWrapper,
+  idColumn: SQLWrapper,
+  id: string,
+  matches: readonly SQL[],
+): SQL {
+  return sql`NOT EXISTS (SELECT 1 FROM ${table} WHERE ${idColumn} = ${id} AND NOT (${sql.join([...matches], sql` AND `)}))`;
 }
 
 function buildInsertStatement(
@@ -221,7 +379,7 @@ const importBundleEnvelopeSchema = z
     entityType: z.enum(IMPORT_ENTITY_TYPES),
     chunkIndex: z.number().int().nonnegative(),
     chunkCount: z.number().int().positive(),
-    rows: z.array(z.record(z.string(), z.unknown())).min(1).max(MAX_IMPORT_CHUNK_ROWS),
+    rows: z.array(z.record(z.string(), z.unknown())).min(1).max(MAX_IMPORT_APPLY_ROWS),
   })
   .refine((value) => value.chunkIndex < value.chunkCount, {
     message: "chunkIndex must be less than chunkCount",
@@ -242,6 +400,14 @@ export const importBundleHandler = {
     if (!parsedRows.ok) {
       return { kind: "invalid_intent", issues: parsedRows.issues };
     }
+    const conflictingRowId = await findImportConflict(ctx, input.entityType, parsedRows.value);
+    if (conflictingRowId) {
+      return {
+        kind: "conflict",
+        reason: "import_row_conflict",
+        current: { entityType: input.entityType, rowId: conflictingRowId },
+      };
+    }
 
     return {
       effects: [...LEDGER_EFFECTS],
@@ -251,7 +417,7 @@ export const importBundleHandler = {
         chunkCount: input.chunkCount,
         inserted: parsedRows.value.length,
       },
-      guards: [],
+      guards: buildConflictGuards(ctx, input.entityType, parsedRows.value),
       statements: buildInsertStatements(ctx, input.entityType, parsedRows.value),
     };
   },

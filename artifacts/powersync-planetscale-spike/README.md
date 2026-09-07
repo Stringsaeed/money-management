@@ -47,7 +47,7 @@ The probe runs twenty `SELECT 1` calls on Hyperdrive and twenty on the direct `:
 bash artifacts/powersync-planetscale-spike/smoke.sh --teardown
 ```
 
-This deletes Worker `trove-z0-spike`, Hyperdrive `trove-ledger-fresh`, publication `powersync`, schema `spike`, and the spike roles. It does not touch Hyperdrive `trove` (`656e7684e86a457bafe573348a82376e`). Run teardown before Z2 creates real ledger tables on this database.
+This deletes Worker `trove-z0-spike`, Hyperdrive `trove-ledger-fresh`, publication `powersync`, schema `spike`, and the spike roles only while those resources are still spike-only. It does not touch Hyperdrive `trove` (`656e7684e86a457bafe573348a82376e`). The command fails closed before deleting anything when `powersync` contains a non-`spike` table or when `packages/infra` has adopted `trove-ledger-fresh`. Run teardown before Z2 creates real ledger tables on this database; after adoption, retire only explicitly verified spike resources through the active migration runbook.
 
 ## Files
 

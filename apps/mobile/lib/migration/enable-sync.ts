@@ -9,7 +9,7 @@ import {
 import { generateId } from "@/utils/id";
 
 import { buildImportChunks } from "./chunks";
-import { computeLocalManifest, type LocalDb } from "./manifest";
+import { computeLocalManifest, computeLocalManifestFromChunks, type LocalDb } from "./manifest";
 
 /** Transport seam so the core stays testable without oRPC. */
 export type SendImportCommand = (
@@ -48,8 +48,8 @@ export interface RunImportArgs {
  */
 export async function runImport(args: RunImportArgs): Promise<ImportResult> {
   const { db, householdId, sendCommand, fetchManifest } = args;
-  const localManifest = await computeLocalManifest(db);
   const chunks = await buildImportChunks(db);
+  const uploadManifest = await computeLocalManifestFromChunks(chunks);
 
   for (const chunk of chunks) {
     try {
@@ -75,8 +75,12 @@ export async function runImport(args: RunImportArgs): Promise<ImportResult> {
     }
   }
 
-  const serverManifest = await fetchManifest(householdId);
-  return manifestsMatch(localManifest, serverManifest)
-    ? { status: "matched", localManifest, serverManifest }
-    : { status: "mismatched", localManifest, serverManifest };
+  const [serverManifest, currentLocalManifest] = await Promise.all([
+    fetchManifest(householdId),
+    computeLocalManifest(db),
+  ]);
+  return manifestsMatch(uploadManifest, serverManifest) &&
+    manifestsMatch(uploadManifest, currentLocalManifest)
+    ? { status: "matched", localManifest: currentLocalManifest, serverManifest }
+    : { status: "mismatched", localManifest: currentLocalManifest, serverManifest };
 }

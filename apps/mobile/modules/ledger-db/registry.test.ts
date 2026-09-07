@@ -35,7 +35,7 @@ afterEach(() => {
 });
 
 describe("ledger registry", () => {
-  it("reuses one instance per household, user, and db identity", () => {
+  it("reuses one instance per household and user", () => {
     const db = { label: "one" };
     const first = acquireSyncedTransactionLedger(deps(db));
     const second = acquireSyncedTransactionLedger(deps(db));
@@ -47,11 +47,16 @@ describe("ledger registry", () => {
     expect(peekSyncedTransactionLedger("household-1", "user-1")).toBeNull();
   });
 
-  it("replaces the instance when the db identity changes", () => {
-    const first = acquireSyncedTransactionLedger(deps({ label: "a" }));
-    const disposed = first.ledger;
-    const second = acquireSyncedTransactionLedger(deps({ label: "b" }));
-    expect(second.ledger).not.toBe(disposed);
+  it("does not reuse a ledger backed by a different database identity", () => {
+    const firstDb = { label: "a" };
+    const secondDb = { label: "b" };
+    const first = acquireSyncedTransactionLedger(deps(firstDb));
+    const second = acquireSyncedTransactionLedger(deps(secondDb));
+
+    expect(second.ledger).not.toBe(first.ledger);
+    expect(peekSyncedTransactionLedger("household-1", "user-1")).toBe(second.ledger);
+
+    first.release();
     expect(peekSyncedTransactionLedger("household-1", "user-1")).toBe(second.ledger);
     second.release();
   });

@@ -1,4 +1,11 @@
-import { createContext, useContext, useLayoutEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { useDatabase } from "@/db/client";
 import { useLedgerSourceSelection } from "@/modules/ledger-data-source/provider";
@@ -23,19 +30,24 @@ export const SyncedTransactionsProvider = ({
   const db = useDatabase();
   const selection = useLedgerSourceSelection();
   const offline = selection.kind === "synced" && selection.offlineState?.kind === "offline_cached";
+  const offlineRef = useRef(offline);
+  offlineRef.current = offline;
   const [ledger, setLedger] = useState<SyncedTransactionLedger | null>(null);
 
   useLayoutEffect(() => {
     const handle = acquireSyncedTransactionLedger(
-      createLedgerDependencies({ householdId, userId, db, offline }),
+      createLedgerDependencies({ householdId, userId, db, offline: offlineRef.current }),
     );
-    handle.ledger.setOffline(offline);
     setLedger(handle.ledger);
     return () => {
       handle.release();
       setLedger(null);
     };
-  }, [db, householdId, offline, userId]);
+  }, [db, householdId, userId]);
+
+  useLayoutEffect(() => {
+    ledger?.setOffline(offline);
+  }, [ledger, offline]);
 
   return <LedgerContext value={ledger}>{children}</LedgerContext>;
 };
