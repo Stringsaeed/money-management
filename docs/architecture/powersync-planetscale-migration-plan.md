@@ -479,8 +479,8 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `grok-4.6-fast-xhigh` at the PR head, per the boot recipe.
 
 - [ ] Lane 1. Regression lane against trunk. Run the full Enable Sync fixture at trunk and at head. Save `z6-regression.png`. Pass when head matches the trunk row counts and every tab renders from collections.
-- [ ] Lane 2. Recurring rules after sync. Save `z6-rules.png`. Pass when Recurring Rules lists the rules from `powersync.db` and a create applies through `commands.apply`.
-- [ ] Lane 3. Envelopes after sync. Save `z6-envelopes.png`. Pass when Envelopes lists the workspace and an assignment applies.
+- [x] Lane 2. Recurring rules after sync. [`../../artifacts/powersync-planetscale/z6-rules.png`](../../artifacts/powersync-planetscale/z6-rules.png) and [`../../artifacts/powersync-planetscale/z6-native-review.md`](../../artifacts/powersync-planetscale/z6-native-review.md) show `Monthly Rent` replicated through `commands.apply` and rendered from `powersync.db`.
+- [x] Lane 3. Envelopes after sync. [`../../artifacts/powersync-planetscale/z6-envelopes.png`](../../artifacts/powersync-planetscale/z6-envelopes.png) and the native receipt show the USD workspace and `Home Essentials` rendered from the budget collections.
 - [x] Lane 4. Mixed writes under load. [`../../artifacts/powersync-planetscale/z6-worker-load.md`](../../artifacts/powersync-planetscale/z6-worker-load.md) records three consecutive public Worker runs with every row on both clients and p95 below 2 s. Review screenshot pending.
 - [x] Lane 5. Bucket count. [`../../artifacts/powersync-planetscale/z6-expanded-streams-live.md`](../../artifacts/powersync-planetscale/z6-expanded-streams-live.md) records 10 buckets and no `PSYNC_S2305`. Review screenshot pending.
 - [x] Lane 6. Replication slot health. [`../../artifacts/powersync-planetscale/z6-slot-health.txt`](../../artifacts/powersync-planetscale/z6-slot-health.txt) records one active slot, advancing `confirmed_flush_lsn`, and zero final lag. Review screenshot pending.
@@ -499,7 +499,7 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 **Review gate.** The operator reviews before merge.
 
 - [ ] Copy lane 4 and lane 5 screenshots into `artifacts/powersync-planetscale/Z6-review-load.png` and `artifacts/powersync-planetscale/Z6-review-buckets.png`.
-- [ ] Record a 30 to 60 second video of the load probe converging on two devices. Save it as `artifacts/powersync-planetscale/Z6-review.mp4`.
+- [ ] [`../../artifacts/powersync-planetscale/Z6-review.mp4`](../../artifacts/powersync-planetscale/Z6-review.mp4) records the native Envelopes, Home, and Recurring Rules collection reads. A dedicated two-device load-convergence video is still required.
 - [ ] Post the screenshots, the video, and `certification.md` in chat. Stop at merge-ready. Wait for the operator's click.
 
 **Merge.**
