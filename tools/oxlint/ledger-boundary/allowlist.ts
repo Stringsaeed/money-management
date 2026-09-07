@@ -116,10 +116,7 @@ export const LEDGER_SQLITE_ALLOWLIST: SqliteRoleEntry[] = [
     role: "sync-bookkeeping",
     files: [
       "apps/mobile/modules/ledger-data-source/coordinator.ts",
-      "apps/mobile/modules/ledger-db/provider.tsx",
-      "apps/mobile/hooks/use-sync-worker.ts",
-      "apps/mobile/hooks/use-rejected-changes.ts",
-      "apps/mobile/components/rejected-changes/use-rejected-edit-form.ts",
+      "apps/mobile/hooks/use-legacy-sync-worker.ts",
     ],
     reason: "Passes the raw db handle to snapshot/outbox drain. Touch outbox_commands only.",
     issue: 136,

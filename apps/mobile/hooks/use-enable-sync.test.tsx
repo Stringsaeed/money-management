@@ -33,10 +33,12 @@ jest.mock("@/lib/migration/status", () => ({
 }));
 
 const mockTruncateOutbox = jest.fn();
-const mockPullDeltas = jest.fn();
 jest.mock("@/lib/sync/outbox", () => ({
   truncateOutbox: (...args: unknown[]) => mockTruncateOutbox(...args),
-  pullDeltas: (...args: unknown[]) => mockPullDeltas(...args),
+}));
+
+jest.mock("@/modules/powersync/database", () => ({
+  connectPowerSync: jest.fn(),
 }));
 
 const mockHouseholdsCreate = jest.fn();
@@ -57,7 +59,6 @@ const MATCHED_RESULT = { status: "matched" as const, localManifest: {}, serverMa
 beforeEach(() => {
   jest.clearAllMocks();
   mockBackupLocalDatabase.mockResolvedValue("file:///backup.db");
-  mockPullDeltas.mockResolvedValue({ seq: 0, hasMore: false, changes: [] });
   mockTruncateOutbox.mockResolvedValue(undefined);
   mockMarkMigrationCompleted.mockResolvedValue(undefined);
   useSyncModeStore.setState({ mode: "local_only", reason: "delta_unavailable" });
@@ -79,7 +80,6 @@ describe("useEnableSync", () => {
       expect.objectContaining({ db: FAKE_DB, householdId: "household-new" }),
     );
     expect(mockTruncateOutbox).toHaveBeenCalledWith(FAKE_DB, "household-new");
-    expect(mockPullDeltas).toHaveBeenCalled();
     expect(mockMarkMigrationCompleted).toHaveBeenCalledWith(FAKE_DB, "household-new");
     await waitFor(() => expect(result.current.status).toBe("matched"));
     expect(useSyncModeStore.getState().mode).toBe("synced");

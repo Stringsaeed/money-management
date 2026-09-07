@@ -6,11 +6,9 @@ import {
   fieldsToPayload,
   type EditableField,
 } from "@/components/rejected-changes/payload-fields";
-import { useDatabase } from "@/db/client";
 import { useRejectedChanges } from "@/hooks/use-rejected-changes";
-import { signedInUserId, useAccess } from "@/modules/access";
-import type { RejectedChange } from "@/lib/sync/outbox";
-import { getRejectedChange } from "@/lib/sync/outbox";
+import { useRequiredLedger } from "@/modules/ledger-db/provider";
+import { getRejectedChange, type RejectedChange } from "@/modules/powersync/rejected-changes";
 
 /**
  * Drives the re-edit flow (#94): loads the rejected change by id, derives the
@@ -18,9 +16,8 @@ import { getRejectedChange } from "@/lib/sync/outbox";
  * it under a NEW commandId before navigating back.
  */
 export function useRejectedEditForm(commandId: string | null) {
-  const db = useDatabase();
+  const ledger = useRequiredLedger();
   const { resubmit } = useRejectedChanges();
-  const userId = signedInUserId(useAccess());
 
   const [change, setChange] = useState<RejectedChange | null>(null);
   const [fields, setFields] = useState<readonly EditableField[]>([]);
@@ -30,35 +27,25 @@ export function useRejectedEditForm(commandId: string | null) {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!commandId || !userId) {
+    if (!commandId) {
       setNotFound(true);
       setIsLoading(false);
       return;
     }
-    let cancelled = false;
-    void getRejectedChange(db, commandId, userId)
-      .then((loaded) => {
-        if (cancelled) {
-          return;
-        }
-        if (!loaded) {
-          setNotFound(true);
-        } else {
-          setChange(loaded);
-          setFields(buildEditableFields(loaded.payload));
-        }
-        setIsLoading(false);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setSaveError("Could not load this rejected change. Go back and try again.");
-          setIsLoading(false);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [commandId, db, userId]);
+    try {
+      const loaded = getRejectedChange(ledger.collections, commandId);
+      if (!loaded) {
+        setNotFound(true);
+      } else {
+        setChange(loaded);
+        setFields(buildEditableFields(loaded.payload));
+      }
+      setIsLoading(false);
+    } catch {
+      setSaveError("Could not load this rejected change. Go back and try again.");
+      setIsLoading(false);
+    }
+  }, [commandId, ledger]);
 
   const setFieldValue = useCallback((key: string, value: string) => {
     setFields((current) =>

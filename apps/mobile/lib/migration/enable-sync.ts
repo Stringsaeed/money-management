@@ -32,6 +32,7 @@ export interface RunImportArgs {
   householdId: string;
   sendCommand: SendImportCommand;
   fetchManifest: FetchManifest;
+  connectAndWait?: (householdId: string) => Promise<void>;
 }
 
 /**
@@ -74,6 +75,8 @@ export async function runImport(args: RunImportArgs): Promise<ImportResult> {
       );
     }
   }
+
+  await args.connectAndWait?.(householdId);
 
   const [serverManifest, currentLocalManifest] = await Promise.all([
     fetchManifest(householdId),

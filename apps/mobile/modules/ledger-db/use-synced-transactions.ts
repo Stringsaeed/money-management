@@ -1,4 +1,3 @@
-import { useLiveQuery } from "@tanstack/react-db";
 import { useSyncExternalStore } from "react";
 
 import { applyLedgerFilters, dateRangeOf, summarizeTransactions } from "./filters";
@@ -28,19 +27,17 @@ export interface TransactionDateRangeView {
 
 export const useSyncedTransactions = (filters?: TransactionFilters): TransactionListView => {
   const ledger = useRequiredLedger();
-  const { data } = useLiveQuery((q) => q.from({ row: ledger.collection }));
   useLedgerRevision(ledger);
   return {
-    rows: applyLedgerFilters(data ?? ledger.rows(), filters),
+    rows: applyLedgerFilters(ledger.rows(), filters),
     status: ledger.status(),
   };
 };
 
 export const useSyncedTransaction = (id: string | undefined): TransactionDetailView => {
   const ledger = useRequiredLedger();
-  const { data } = useLiveQuery((q) => q.from({ row: ledger.collection }));
   useLedgerRevision(ledger);
-  const rows = data ?? ledger.rows();
+  const rows = ledger.rows();
   return {
     row: id ? rows.find((row) => row.id === id) : undefined,
     status: ledger.status(),

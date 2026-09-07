@@ -5,6 +5,7 @@ import type {
   LedgerTransaction,
   NewTransactionInput,
   RefundInput,
+  PowerSyncTransactionRow,
   TransactionEdit,
 } from "./types";
 
@@ -96,6 +97,126 @@ export const mintRefund = (ctx: MintContext, input: RefundInput): MintedCreate =
         amountMinor: input.amount,
         date: input.date,
       },
+    },
+  };
+};
+
+export interface PowerSyncMintContext extends MintContext {
+  readonly userId: string;
+  readonly accountCurrency: (accountId: string) => string;
+}
+
+export interface MintedPowerSyncCreate extends MintedCreate {
+  readonly row: PowerSyncTransactionRow;
+}
+
+export interface MintedPowerSyncUpdate {
+  readonly command: CommandEnvelope;
+  readonly changes: Partial<PowerSyncTransactionRow>;
+}
+
+export interface MintedPowerSyncDelete {
+  readonly command: CommandEnvelope;
+  readonly id: string;
+}
+
+export const mintPowerSyncCreate = (
+  ctx: PowerSyncMintContext,
+  input: NewTransactionInput,
+): MintedPowerSyncCreate => {
+  const minted = mintCreate(ctx, input);
+  const timestamp = minted.command.issuedAt ?? ctx.now();
+  return {
+    ...minted,
+    row: {
+      id: minted.receipt.id,
+      household_id: ctx.householdId,
+      type: input.type,
+      amount_minor: input.amount,
+      currency: ctx.accountCurrency(input.accountId),
+      original_amount_minor: input.originalAmount ?? null,
+      original_currency: input.originalCurrency ?? null,
+      exchange_rate: input.exchangeRate ?? null,
+      date: input.date,
+      account_id: input.accountId,
+      to_account_id: input.toAccountId ?? null,
+      category_id: input.categoryId ?? null,
+      is_recurring: input.isRecurring ? 1 : 0,
+      recurring_rule_id: null,
+      description: input.description ?? "",
+      version: 0,
+      created_by: ctx.userId,
+      updated_by: ctx.userId,
+      created_at: timestamp,
+      updated_at: timestamp,
+    },
+  };
+};
+
+export const mintPowerSyncEdit = (
+  ctx: PowerSyncMintContext,
+  row: LedgerTransaction,
+  changes: TransactionEdit,
+): MintedPowerSyncUpdate => {
+  const command = mintEdit(ctx, row, changes);
+  return {
+    command,
+    changes: {
+      ...(changes.type !== undefined && { type: changes.type }),
+      ...(changes.amount !== undefined && { amount_minor: changes.amount }),
+      ...(changes.date !== undefined && { date: changes.date }),
+      ...(changes.accountId !== undefined && {
+        account_id: changes.accountId,
+        currency: ctx.accountCurrency(changes.accountId),
+      }),
+      ...(changes.toAccountId !== undefined && { to_account_id: changes.toAccountId }),
+      ...(changes.categoryId !== undefined && { category_id: changes.categoryId }),
+      ...(changes.description !== undefined && { description: changes.description }),
+      version: row.version + 1,
+      updated_by: ctx.userId,
+      updated_at: command.issuedAt ?? ctx.now(),
+    },
+  };
+};
+
+export const mintPowerSyncRemove = (
+  ctx: PowerSyncMintContext,
+  row: LedgerTransaction,
+): MintedPowerSyncDelete => ({
+  command: mintRemove(ctx, row),
+  id: row.id,
+});
+
+export const mintPowerSyncRefund = (
+  ctx: PowerSyncMintContext,
+  input: RefundInput,
+  original: PowerSyncTransactionRow,
+): MintedPowerSyncCreate => {
+  const minted = mintRefund(ctx, input);
+  const timestamp = minted.command.issuedAt ?? ctx.now();
+  return {
+    ...minted,
+    row: {
+      id: minted.receipt.id,
+      household_id: ctx.householdId,
+      type: "income",
+      amount_minor: input.amount,
+      currency: input.currency,
+      original_amount_minor: null,
+      original_currency: null,
+      exchange_rate: null,
+      date: input.date,
+      account_id: input.depositAccountId,
+      to_account_id: null,
+      category_id: original.category_id,
+      is_recurring: 0,
+      recurring_rule_id: null,
+      description: `Refund of ${input.originalTransactionId}`,
+      version: 0,
+      created_by: ctx.userId,
+      updated_by: ctx.userId,
+      created_at: timestamp,
+      updated_at: timestamp,
     },
   };
 };
