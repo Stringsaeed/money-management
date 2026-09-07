@@ -18,9 +18,7 @@ describe("LEDGER_SQLITE_ALLOWLIST", () => {
   it("gives every entry a role, reason, issue, and at least one file", () => {
     expect(LEDGER_SQLITE_ALLOWLIST.length).toBeGreaterThan(0);
     for (const entry of LEDGER_SQLITE_ALLOWLIST) {
-      expect(entry.role).toMatch(
-        /^(authority-local|powersync-store|migration-backup|legacy-local-pending-cutover|erase)$/,
-      );
+      expect(entry.role).toMatch(/^(authority-local|powersync-store|migration-backup|erase)$/);
       expect(entry.reason.trim().length).toBeGreaterThan(0);
       expect(entry.issue).toBeGreaterThan(0);
       expect(entry.files.length).toBeGreaterThan(0);

@@ -46,3 +46,106 @@ streams:
                 AND (visibility = 'public' OR owner_user_id = auth.user_id())
             )
           )
+
+  household_budget:
+    accept_potentially_dangerous_queries: true
+    queries:
+      - |
+        SELECT * FROM budget_workspaces
+        WHERE household_id = subscription.parameter('household_id')
+          AND household_id IN (
+            SELECT household_id FROM membership
+            WHERE user_id = auth.user_id()
+          )
+      - |
+        SELECT * FROM envelopes
+        WHERE household_id = subscription.parameter('household_id')
+          AND household_id IN (
+            SELECT household_id FROM membership
+            WHERE user_id = auth.user_id()
+          )
+      - |
+        SELECT * FROM category_mappings
+        WHERE household_id = subscription.parameter('household_id')
+          AND household_id IN (
+            SELECT household_id FROM membership
+            WHERE user_id = auth.user_id()
+          )
+      - |
+        SELECT * FROM funding_memberships
+        WHERE household_id = subscription.parameter('household_id')
+          AND household_id IN (
+            SELECT household_id FROM membership
+            WHERE user_id = auth.user_id()
+          )
+      - |
+        SELECT * FROM rollover_settings
+        WHERE household_id = subscription.parameter('household_id')
+          AND household_id IN (
+            SELECT household_id FROM membership
+            WHERE user_id = auth.user_id()
+          )
+      - |
+        SELECT * FROM assignments
+        WHERE household_id = subscription.parameter('household_id')
+          AND household_id IN (
+            SELECT household_id FROM membership
+            WHERE user_id = auth.user_id()
+          )
+      - |
+        SELECT * FROM refund_links
+        WHERE household_id = subscription.parameter('household_id')
+          AND household_id IN (
+            SELECT household_id FROM membership
+            WHERE user_id = auth.user_id()
+          )
+
+  household_recurring:
+    accept_potentially_dangerous_queries: true
+    queries:
+      - |
+        SELECT * FROM recurring_rules
+        WHERE household_id = subscription.parameter('household_id')
+          AND household_id IN (
+            SELECT household_id FROM membership
+            WHERE user_id = auth.user_id()
+          )
+          AND (
+            account_id IS NULL OR account_id IN (
+              SELECT id FROM accounts
+              WHERE household_id = subscription.parameter('household_id')
+                AND (visibility = 'public' OR owner_user_id = auth.user_id())
+            )
+          )
+          AND (
+            to_account_id IS NULL OR to_account_id IN (
+              SELECT id FROM accounts
+              WHERE household_id = subscription.parameter('household_id')
+                AND (visibility = 'public' OR owner_user_id = auth.user_id())
+            )
+          )
+      - |
+        SELECT * FROM recurring_occurrences
+        WHERE household_id = subscription.parameter('household_id')
+          AND household_id IN (
+            SELECT household_id FROM membership
+            WHERE user_id = auth.user_id()
+          )
+          AND rule_id IN (
+            SELECT id FROM recurring_rules
+            WHERE household_id = subscription.parameter('household_id')
+              AND (
+                account_id IS NULL OR account_id IN (
+                  SELECT id FROM accounts
+                  WHERE household_id = subscription.parameter('household_id')
+                    AND (visibility = 'public' OR owner_user_id = auth.user_id())
+                )
+              )
+              AND (
+                to_account_id IS NULL OR to_account_id IN (
+                  SELECT id FROM accounts
+                  WHERE household_id = subscription.parameter('household_id')
+                    AND (visibility = 'public' OR owner_user_id = auth.user_id())
+                )
+              )
+          )

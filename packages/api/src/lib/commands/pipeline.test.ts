@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { user } from "@trove/db/schema/auth";
 import { commandResult, householdChange } from "@trove/db/schema/commands";

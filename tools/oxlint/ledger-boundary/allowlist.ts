@@ -1,9 +1,4 @@
-export type SqliteRole =
-  | "authority-local"
-  | "powersync-store"
-  | "migration-backup"
-  | "legacy-local-pending-cutover"
-  | "erase";
+export type SqliteRole = "authority-local" | "powersync-store" | "migration-backup" | "erase";
 
 export type SqliteRoleEntry = {
   role: SqliteRole;
@@ -84,9 +79,30 @@ export const LEDGER_SQLITE_ALLOWLIST: SqliteRoleEntry[] = [
       "apps/mobile/db/account-lifecycle-migration.ts",
       "apps/mobile/db/category-lifecycle-migration.ts",
       "apps/mobile/db/recurring-rules-migration.ts",
+      "apps/mobile/modules/recurring-rules/persistence.ts",
+      "apps/mobile/modules/recurring-rules/validation.ts",
+      "apps/mobile/modules/recurring-rules/settlement.ts",
+      "apps/mobile/modules/recurring-rules/provider.tsx",
+      "apps/mobile/modules/budgeting/activation.ts",
+      "apps/mobile/modules/budgeting/account-dependencies.ts",
+      "apps/mobile/modules/budgeting/account-dependency-read.ts",
+      "apps/mobile/modules/budgeting/envelope-form-options.ts",
+      "apps/mobile/modules/budgeting/envelope-mappings.ts",
+      "apps/mobile/modules/budgeting/envelope-projection.ts",
+      "apps/mobile/modules/budgeting/envelope-resources.ts",
+      "apps/mobile/modules/budgeting/envelope-validation.ts",
+      "apps/mobile/modules/budgeting/funding-account-suggestions.ts",
+      "apps/mobile/modules/budgeting/funding-membership.ts",
+      "apps/mobile/modules/budgeting/funding-pool-calculation.ts",
+      "apps/mobile/modules/budgeting/projection.ts",
+      "apps/mobile/modules/budgeting/setup-draft-suggestions.ts",
+      "apps/mobile/modules/budgeting/setup-draft-validation.ts",
+      "apps/mobile/hooks/use-budgeting-coordinator.ts",
+      "apps/mobile/hooks/use-setup-draft.ts",
     ],
-    reason: "Anonymous / unmigrated ledger. The only writers of A/C/T rows as truth.",
-    issue: 136,
+    reason:
+      "Anonymous / unmigrated ledger and local-only domain implementation. Synced callers route through PowerSync-aware adapters.",
+    issue: 181,
   },
   {
     role: "powersync-store",
@@ -107,36 +123,6 @@ export const LEDGER_SQLITE_ALLOWLIST: SqliteRoleEntry[] = [
       "apps/mobile/hooks/use-enable-sync.ts",
     ],
     reason: "Reads local A/C/T once to build import_bundle chunks; keeps the #98 backup.",
-    issue: 136,
-  },
-  {
-    role: "legacy-local-pending-cutover",
-    files: [
-      "apps/mobile/modules/recurring-rules/persistence.ts",
-      "apps/mobile/modules/recurring-rules/validation.ts",
-      "apps/mobile/modules/recurring-rules/settlement.ts",
-      "apps/mobile/modules/recurring-rules/provider.tsx",
-      "apps/mobile/modules/budgeting/activation.ts",
-      "apps/mobile/modules/budgeting/account-dependencies.ts",
-      "apps/mobile/modules/budgeting/account-dependency-read.ts",
-      "apps/mobile/modules/budgeting/envelope-form-options.ts",
-      "apps/mobile/modules/budgeting/envelope-mappings.ts",
-      "apps/mobile/modules/budgeting/envelope-projection.ts",
-      "apps/mobile/modules/budgeting/envelope-resources.ts",
-      "apps/mobile/modules/budgeting/envelope-validation.ts",
-      "apps/mobile/modules/budgeting/funding-account-suggestions.ts",
-      "apps/mobile/modules/budgeting/funding-membership.ts",
-      "apps/mobile/modules/budgeting/funding-pool-calculation.ts",
-      "apps/mobile/modules/budgeting/projection.ts",
-      "apps/mobile/modules/budgeting/setup-draft-suggestions.ts",
-      "apps/mobile/modules/budgeting/setup-draft-validation.ts",
-      "apps/mobile/hooks/use-budget-workspaces.ts",
-      "apps/mobile/hooks/use-move-money.ts",
-      "apps/mobile/hooks/use-setup-draft.ts",
-      "apps/mobile/components/envelopes/use-move-money-sheet.ts",
-    ],
-    reason:
-      'Recurring Rules + Envelopes still read local A/C/T. Fail-closed at runtime when selection.kind === "synced". Tracked as #136 leftover until those milestones cut over.',
     issue: 136,
   },
   {

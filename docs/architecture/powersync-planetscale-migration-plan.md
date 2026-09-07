@@ -451,16 +451,16 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 
 **Files.**
 
-- [ ] Edit `packages/powersync/sync-streams.yaml`. Add `household_budget` with `queries` for `budget_workspaces`, `envelopes`, `category_mappings`, `funding_memberships`, `rollover_settings`, `assignments`, and `refund_links`, and `household_recurring` for `recurring_rules` and `recurring_occurrences`.
-- [ ] Edit `packages/db/src/migrations/` with a migration that adds those tables to the `powersync` publication with `ALTER PUBLICATION powersync ADD TABLE ...`.
-- [ ] Edit `apps/mobile/modules/powersync/schema.ts` with the new tables, `trackMetadata: true`.
-- [ ] Edit `apps/mobile/modules/recurring-rules/persistence.ts`, `validation.ts`, `settlement.ts`, and `provider.tsx`. Read from collections in synced mode.
-- [ ] Edit `apps/mobile/modules/budgeting/**` synced readers to collections.
-- [ ] Edit `tools/oxlint/ledger-boundary/allowlist.ts`. Delete every `legacy-local-pending-cutover` entry.
-- [ ] Edit `packages/infra/alchemy.run.ts`. Delete any remaining D1 binding and the `migrationsDir` for D1.
-- [ ] Create `docs/architecture/powersync-operations.md`. Slot lag monitoring, `pg_replication_slots` checks, instance sizing, bucket count, and the self-host switch.
-- [ ] Create `artifacts/powersync-planetscale/certification.md`. The #98 close packet with links to every review artifact.
-- [ ] Edit `docs/architecture/backend-architecture.md` and `CONTEXT.md` for the final shape.
+- [x] Edit `packages/powersync/sync-streams.yaml`. Add `household_budget` with `queries` for `budget_workspaces`, `envelopes`, `category_mappings`, `funding_memberships`, `rollover_settings`, `assignments`, and `refund_links`, and `household_recurring` for `recurring_rules` and `recurring_occurrences`.
+- [x] Edit `packages/db/src/migrations/` with a migration that adds those tables to the `powersync` publication.
+- [x] Edit `apps/mobile/modules/powersync/schema.ts` with the new tables, `trackMetadata: true`.
+- [x] Route Recurring Rules through a PowerSync collection adapter in synced mode and keep settlement server-owned.
+- [x] Route synced budget workspaces, envelopes, mappings, rollover settings, assignments, and form/history readers through the PowerSync-aware coordinator.
+- [x] Edit `tools/oxlint/ledger-boundary/allowlist.ts`. Delete every `legacy-local-pending-cutover` entry.
+- [x] Confirm `packages/infra/alchemy.run.ts` exports no D1 resource, binding, or D1 migration directory; enforce it with `no-d1-money.test.mjs`.
+- [x] Create `docs/architecture/powersync-operations.md`. Slot lag monitoring, `pg_replication_slots` checks, instance sizing, bucket count, and the self-host switch.
+- [x] Create `artifacts/powersync-planetscale/certification.md`. The #98 close packet with links to every available review artifact and explicit pending receipts.
+- [x] Edit `docs/architecture/backend-architecture.md` and `CONTEXT.md` for the final shape.
 
 **Build.**
 
@@ -473,6 +473,8 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 **Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
 - [ ] `tools/oxlint/ledger-boundary` fixtures assert no `legacy-local-pending-cutover` role. `packages/powersync/sync-streams.test.ts` validates the extended YAML. `packages/infra` has a test that the stack exports no D1 resource. Run `pnpm test:ci && pnpm --filter @trove/powersync validate`.
+
+  Local status: mobile 165 suites / 679 tests pass, API 24 files / 198 tests pass, Sync Streams tests pass, and the no-D1 guard passes. Cloud validation is intentionally still open because the safety gate did not authorize adding the nine tables to the non-production publication.
 
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `grok-4.6-fast-xhigh` at the PR head, per the boot recipe.
 

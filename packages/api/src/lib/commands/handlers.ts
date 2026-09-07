@@ -3,11 +3,14 @@ import { HOUSEHOLD_ROLES, type CommandKind, type ValidationIssue } from "@trove/
 import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "./pipeline";
 
 import { assignmentCommitHandler } from "./handlers/assignment-commit";
+import { assignmentCorrectHandler } from "./handlers/assignment-correct";
+import { budgetConfigureHandler } from "./handlers/budget-configure";
 import { accountHandlers } from "./handlers/account";
 import { categoryHandlers } from "./handlers/category";
 import { importBundleHandler } from "./handlers/import-bundle";
 import { memberRoleChangeHandler } from "./handlers/member-role";
 import { refundCreateHandler } from "./handlers/refund-create";
+import { recurringChangeHandler } from "./handlers/recurring-change";
 import { transactionHandlers } from "./handlers/transaction";
 
 export interface CommandHandler<TPayload = unknown> {
@@ -28,7 +31,10 @@ export const COMMAND_HANDLERS: Partial<Record<CommandKind, CommandHandler>> = {
   ...accountHandlers,
   ...categoryHandlers,
   ...transactionHandlers,
+  "recurring.change": recurringChangeHandler,
+  "budget.configure": budgetConfigureHandler,
   "assignment.commit": assignmentCommitHandler,
+  "assignment.correct": assignmentCorrectHandler,
   "refund.link": refundCreateHandler,
   import_bundle: importBundleHandler,
 };

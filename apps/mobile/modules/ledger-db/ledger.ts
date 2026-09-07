@@ -72,18 +72,27 @@ export const createSyncedTransactionLedger = (
     for (const listener of [...listeners]) listener();
   };
 
-  const changeSubscriptions = [
-    collections.accounts.subscribeChanges(emit),
-    collections.categories.subscribeChanges(emit),
-    collections.transactions.subscribeChanges(emit),
-    collections.rejectedChanges.subscribeChanges(emit),
-  ];
-  const statusSubscriptions = [
-    collections.accounts.on("status:change", emit),
-    collections.categories.on("status:change", emit),
-    collections.transactions.on("status:change", emit),
-    collections.rejectedChanges.on("status:change", emit),
-  ];
+  const observedCollections = [
+    collections.accounts,
+    collections.assignments,
+    collections.budgetWorkspaces,
+    collections.categories,
+    collections.categoryMappings,
+    collections.envelopes,
+    collections.fundingMemberships,
+    collections.recurringOccurrences,
+    collections.recurringRules,
+    collections.refundLinks,
+    collections.rejectedChanges,
+    collections.rolloverSettings,
+    collections.transactions,
+  ] as const;
+  const changeSubscriptions = observedCollections.map((collection) =>
+    collection.subscribeChanges(emit),
+  );
+  const statusSubscriptions = observedCollections.map((collection) =>
+    collection.on("status:change", emit),
+  );
 
   const accountCurrency = (accountId: string): string => {
     const account = collections.accounts.get(accountId);
@@ -164,12 +173,7 @@ export const createSyncedTransactionLedger = (
     intents,
     rows,
     status: () => {
-      const statuses = [
-        collections.accounts.status,
-        collections.categories.status,
-        collections.transactions.status,
-        collections.rejectedChanges.status,
-      ];
+      const statuses = observedCollections.map((collection) => collection.status);
       if (statuses.includes("error")) {
         return {
           phase: "unavailable",
@@ -178,10 +182,10 @@ export const createSyncedTransactionLedger = (
         };
       }
       if (!statuses.every((status) => status === "ready")) return { phase: "hydrating" };
-      const queuedCommands =
-        collections.accounts.toArray.filter((row) => !row.$synced).length +
-        collections.categories.toArray.filter((row) => !row.$synced).length +
-        collections.transactions.toArray.filter((row) => !row.$synced).length;
+      const queuedCommands = observedCollections.reduce(
+        (total, collection) => total + collection.toArray.filter((row) => !row.$synced).length,
+        0,
+      );
       return {
         phase: "ready",
         queuedCommands,
@@ -194,12 +198,7 @@ export const createSyncedTransactionLedger = (
       return () => listeners.delete(listener);
     },
     refresh: async () => {
-      await Promise.all([
-        collections.accounts.preload(),
-        collections.categories.preload(),
-        collections.transactions.preload(),
-        collections.rejectedChanges.preload(),
-      ]);
+      await Promise.all(observedCollections.map((collection) => collection.preload()));
     },
     setOffline: (nextOffline) => {
       if (offline === nextOffline) return;
@@ -212,12 +211,7 @@ export const createSyncedTransactionLedger = (
       for (const subscription of changeSubscriptions) subscription.unsubscribe();
       for (const unsubscribe of statusSubscriptions) unsubscribe();
       listeners.clear();
-      void Promise.all([
-        collections.accounts.cleanup(),
-        collections.categories.cleanup(),
-        collections.transactions.cleanup(),
-        collections.rejectedChanges.cleanup(),
-      ]);
+      void Promise.all(observedCollections.map((collection) => collection.cleanup()));
     },
   };
 };

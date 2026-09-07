@@ -1,4 +1,5 @@
 import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSyncExternalStore } from "react";
 
 import {
   RecurringSettlementError,
@@ -9,6 +10,7 @@ import {
 import { useRecurringRulesModule } from "@/modules/recurring-rules/provider";
 import { assertLocalLedgerAuthority } from "@/modules/ledger-data-source/contract";
 import { useLedgerSourceSelection } from "@/modules/ledger-data-source/provider";
+import { useSyncedTransactionLedger } from "@/modules/ledger-db/provider";
 import { cohereRecurringEffects, recurringRuleKeys } from "@/modules/ledger-cache";
 
 type ChangeOfKind<Kind extends RecurringChange["kind"]> = Extract<RecurringChange, { kind: Kind }>;
@@ -18,8 +20,9 @@ export function useRecurringRulesList(
   filter: "current" | "archived" | "needs_attention" = "current",
 ) {
   const recurringRules = useRecurringRulesModule();
+  const revision = useRecurringCollectionRevision();
   return useQuery({
-    queryKey: recurringRuleKeys.list(filter),
+    queryKey: [...recurringRuleKeys.list(filter), revision],
     queryFn: async () => {
       const result = await recurringRules.read({ kind: "list", filter });
       if (result.kind !== "list")
@@ -31,8 +34,9 @@ export function useRecurringRulesList(
 
 export function useRecurringRule(ruleId: string | undefined) {
   const recurringRules = useRecurringRulesModule();
+  const revision = useRecurringCollectionRevision();
   return useQuery({
-    queryKey: recurringRuleKeys.detail(ruleId ?? ""),
+    queryKey: [...recurringRuleKeys.detail(ruleId ?? ""), revision],
     enabled: !!ruleId,
     queryFn: async () => {
       const result = await recurringRules.read({ kind: "detail", ruleId: ruleId! });
@@ -46,8 +50,9 @@ export function useRecurringRule(ruleId: string | undefined) {
 
 export function useUpcomingRecurringRules(limit = 3) {
   const recurringRules = useRecurringRulesModule();
+  const revision = useRecurringCollectionRevision();
   return useQuery({
-    queryKey: recurringRuleKeys.upcoming(limit),
+    queryKey: [...recurringRuleKeys.upcoming(limit), revision],
     queryFn: async () => {
       const result = await recurringRules.read({ kind: "upcoming", limit });
       if (result.kind !== "upcoming") {
@@ -90,7 +95,10 @@ function useRecurringChange<Kind extends RecurringChange["kind"]>(kind: Kind) {
   const queryClient = useQueryClient();
   return useMutation<RecurringChangeResult, Error, ChangeVariables<Kind>>({
     mutationFn: (variables) => {
-      if (kind === "create" || kind === "edit" || kind === "repair") {
+      if (
+        selection.kind === "local" &&
+        (kind === "create" || kind === "edit" || kind === "repair")
+      ) {
         assertLocalLedgerAuthority(selection, `recurring.${kind}`);
       }
       return recurringRules.change({ kind, ...variables } as ChangeOfKind<Kind>);
@@ -102,6 +110,19 @@ function useRecurringChange<Kind extends RecurringChange["kind"]>(kind: Kind) {
       }
     },
   });
+}
+
+const ignoreListener = () => undefined;
+const emptySubscribe = () => ignoreListener;
+const zeroRevision = () => 0;
+
+function useRecurringCollectionRevision(): number {
+  const ledger = useSyncedTransactionLedger();
+  return useSyncExternalStore(
+    ledger ? ledger.subscribe : emptySubscribe,
+    ledger ? ledger.revision : zeroRevision,
+    ledger ? ledger.revision : zeroRevision,
+  );
 }
 
 const lifecycleByChange: Partial<Record<RecurringChange["kind"], RecurringRule["lifecycle"]>> = {
@@ -119,7 +140,8 @@ function updateRecurringRuleLifecycle(
   const lifecycle = lifecycleByChange[kind];
   if (!lifecycle) return;
 
-  queryClient.setQueryData<RecurringRule | null>(recurringRuleKeys.detail(result.ruleId), (rule) =>
-    rule ? { ...rule, lifecycle, revision: result.revision } : rule,
+  queryClient.setQueriesData<RecurringRule | null>(
+    { queryKey: recurringRuleKeys.detail(result.ruleId) },
+    (rule) => (rule ? { ...rule, lifecycle, revision: result.revision } : rule),
   );
 }
