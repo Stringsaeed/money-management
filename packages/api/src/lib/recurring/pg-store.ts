@@ -86,6 +86,7 @@ export class PgRecurringStore implements SettlementStore {
       );
       statements.push(
         this.db.insert(recurringOccurrence).values({
+          id: this.nextTransactionId(),
           householdId: this.scope.householdId,
           ruleId: commit.ruleId,
           scheduledDate: generated.date,

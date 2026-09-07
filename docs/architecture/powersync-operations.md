@@ -10,7 +10,7 @@ This runbook covers the PlanetScale replication source, PowerSync Sync Streams, 
 | Cloudflare Worker           | targeted `aws:us-east-1`    | `packages/infra/alchemy.run.ts`                               |
 | PowerSync Cloud Development | `eu`                        | PowerSync instance `6a9e0dd3a77ca1231d260e01`                 |
 
-The development PowerSync instance is not region-aligned with PlanetScale and the Worker. Z6 release certification must use a US-region PowerSync instance or explicitly record a reviewed latency exception; do not claim the one-region lane from the current EU instance.
+The development PowerSync instance is not region-aligned with PlanetScale and the Worker. The expanded 13-table publication and streams were verified on this instance at 292 ms direct replication p95, but Z6 release certification must use a US-region PowerSync instance or explicitly record a reviewed latency exception; do not claim the one-region lane from the current EU instance.
 
 ## Replication slot health
 

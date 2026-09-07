@@ -23,6 +23,9 @@ const validPeriod = (name: string, column: AnyColumn) =>
 export const budgetWorkspace = pgTable(
   "budget_workspaces",
   {
+    id: text("id")
+      .primaryKey()
+      .default(sql`md5(random()::text || clock_timestamp()::text)`),
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
@@ -42,7 +45,10 @@ export const budgetWorkspace = pgTable(
       .notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.householdId, table.currency] }),
+    uniqueIndex("budget_workspaces_household_currency_unique").on(
+      table.householdId,
+      table.currency,
+    ),
     validPeriod("budget_workspaces_activation", table.activationPeriod),
   ],
 );
@@ -50,7 +56,7 @@ export const budgetWorkspace = pgTable(
 export const envelope = pgTable(
   "envelopes",
   {
-    id: text("id").notNull(),
+    id: text("id").primaryKey(),
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
@@ -76,7 +82,7 @@ export const envelope = pgTable(
       .notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.householdId, table.id] }),
+    uniqueIndex("envelopes_household_id_unique").on(table.householdId, table.id),
     check("envelopes_lifecycle_valid", sql`${table.lifecycle} IN ('active', 'archived')`),
     index("envelopes_household_currency_idx").on(table.householdId, table.currency),
   ],
@@ -85,6 +91,9 @@ export const envelope = pgTable(
 export const categoryMapping = pgTable(
   "category_mappings",
   {
+    id: text("id")
+      .primaryKey()
+      .default(sql`md5(random()::text || clock_timestamp()::text)`),
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
@@ -105,9 +114,11 @@ export const categoryMapping = pgTable(
       .notNull(),
   },
   (table) => [
-    primaryKey({
-      columns: [table.householdId, table.categoryId, table.effectiveFromPeriod],
-    }),
+    uniqueIndex("category_mappings_household_category_period_unique").on(
+      table.householdId,
+      table.categoryId,
+      table.effectiveFromPeriod,
+    ),
     index("category_mappings_household_category_idx").on(table.householdId, table.categoryId),
     validPeriod("period_effective_from", table.effectiveFromPeriod),
   ],
@@ -116,6 +127,9 @@ export const categoryMapping = pgTable(
 export const fundingMembership = pgTable(
   "funding_memberships",
   {
+    id: text("id")
+      .primaryKey()
+      .default(sql`md5(random()::text || clock_timestamp()::text)`),
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
@@ -137,9 +151,11 @@ export const fundingMembership = pgTable(
       .notNull(),
   },
   (table) => [
-    primaryKey({
-      columns: [table.householdId, table.accountId, table.effectiveFromPeriod],
-    }),
+    uniqueIndex("funding_memberships_household_account_period_unique").on(
+      table.householdId,
+      table.accountId,
+      table.effectiveFromPeriod,
+    ),
     index("funding_memberships_household_currency_idx").on(table.householdId, table.currency),
     validPeriod("period_effective_from", table.effectiveFromPeriod),
   ],
@@ -148,6 +164,9 @@ export const fundingMembership = pgTable(
 export const rolloverSetting = pgTable(
   "rollover_settings",
   {
+    id: text("id")
+      .primaryKey()
+      .default(sql`md5(random()::text || clock_timestamp()::text)`),
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
@@ -168,9 +187,11 @@ export const rolloverSetting = pgTable(
       .notNull(),
   },
   (table) => [
-    primaryKey({
-      columns: [table.householdId, table.envelopeId, table.effectiveFromPeriod],
-    }),
+    uniqueIndex("rollover_settings_household_envelope_period_unique").on(
+      table.householdId,
+      table.envelopeId,
+      table.effectiveFromPeriod,
+    ),
     index("rollover_settings_household_envelope_idx").on(table.householdId, table.envelopeId),
     validPeriod("period_effective_from", table.effectiveFromPeriod),
   ],
@@ -179,7 +200,7 @@ export const rolloverSetting = pgTable(
 export const assignment = pgTable(
   "assignments",
   {
-    id: text("id").notNull(),
+    id: text("id").primaryKey(),
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
@@ -203,7 +224,7 @@ export const assignment = pgTable(
       .notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.householdId, table.id] }),
+    uniqueIndex("assignments_household_id_unique").on(table.householdId, table.id),
     check("assignments_amount_positive", sql`${table.amountMinor} > 0`),
     check(
       "assignments_has_endpoint",
@@ -221,7 +242,7 @@ export const assignment = pgTable(
 export const refundLink = pgTable(
   "refund_links",
   {
-    id: text("id").notNull(),
+    id: text("id").primaryKey(),
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
@@ -243,7 +264,7 @@ export const refundLink = pgTable(
       .notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.householdId, table.id] }),
+    uniqueIndex("refund_links_household_id_unique").on(table.householdId, table.id),
     uniqueIndex("refund_links_refund_once").on(table.refundTransactionId),
     check("refund_links_amount_positive", sql`${table.amountMinor} > 0`),
     index("refund_links_original_idx").on(table.originalTransactionId),

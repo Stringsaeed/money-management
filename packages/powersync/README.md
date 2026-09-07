@@ -10,6 +10,7 @@ This package is the reviewed source for Trove's PowerSync Sync Streams. The mobi
 - Source database: PlanetScale Postgres over its direct TLS connection on port `5432` using the replication role.
 - Never use Hyperdrive as the PowerSync replication source. Hyperdrive remains the Worker path for `commands.apply`.
 - Publication: `powersync` contains membership, ledger, budget, refund-link, and recurring fact tables. `packages/api/src/lib/powersync-publication.test.ts` locks the exact list.
+- Every published source table has one text primary key named `id`; migration 0009 backfills and converts the expanded domain tables before adding them to the publication.
 
 ## Sync Streams
 

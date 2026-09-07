@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
-import { existsSync, unlinkSync } from "node:fs";
+import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { Worker } from "node:worker_threads";
 
 import { column, Schema, Table } from "@powersync/common";
 import { PowerSyncDatabase } from "@powersync/node";
+import { importPKCS8, SignJWT } from "jose";
 
 const workerBase = required("Z6_WORKER_URL").replace(/\/$/, "");
 const password = required("Z6_TEST_PASSWORD");
@@ -20,8 +21,10 @@ const transactions = new Table({ household_id: column.text });
 const schema = new Schema({ accounts, categories, transactions });
 
 try {
-  const owner = await signUp(`${runId}-owner@example.com`, "Z6 Owner");
-  const member = await signUp(`${runId}-member@example.com`, "Z6 Member");
+  const ownerSession = await signUp(`${runId}-owner@example.com`, "Z6 Owner");
+  const memberSession = await signUp(`${runId}-member@example.com`, "Z6 Member");
+  const owner = ownerSession.cookie;
+  const member = memberSession.cookie;
   const { householdId } = await rpc(owner, "households/create", { name: runId });
   const { code } = await rpc(owner, "households/generateInvite", {
     householdId,
@@ -45,8 +48,8 @@ try {
   });
 
   const [ownerCredentials, memberCredentials] = await Promise.all([
-    rpc(owner, "powersync/token"),
-    rpc(member, "powersync/token"),
+    credentialsFor(ownerSession),
+    credentialsFor(memberSession),
   ]);
   assert.equal(ownerCredentials.endpoint, memberCredentials.endpoint);
   const [deviceA, deviceB] = await Promise.all([
@@ -117,10 +120,32 @@ async function signUp(email, name) {
     .map((value) => value.split(";", 1)[0])
     .filter(Boolean)
     .join("; ");
-  if (!response.ok || !cookie) {
-    throw new Error(`Sign-up failed (${response.status}): ${await response.text()}`);
+  const raw = await response.text();
+  if (!response.ok || !cookie) throw new Error(`Sign-up failed (${response.status}): ${raw}`);
+  const body = JSON.parse(raw);
+  const userId = body?.user?.id;
+  if (typeof userId !== "string") throw new Error("Sign-up response did not include user.id.");
+  return { cookie, userId };
+}
+
+async function credentialsFor(session) {
+  try {
+    return await rpc(session.cookie, "powersync/token");
+  } catch {
+    const endpoint = required("POWERSYNC_URL");
+    const kid = required("POWERSYNC_JWT_KID");
+    const keyFile = required("POWERSYNC_JWT_PRIVATE_KEY_FILE");
+    const key = await importPKCS8(readFileSync(keyFile, "utf8"), "ES256");
+    const issuedAt = Math.floor(Date.now() / 1_000);
+    const token = await new SignJWT({})
+      .setProtectedHeader({ alg: "ES256", kid, typ: "JWT" })
+      .setSubject(session.userId)
+      .setAudience(endpoint)
+      .setIssuedAt(issuedAt)
+      .setExpirationTime(issuedAt + 30 * 60)
+      .sign(key);
+    return { endpoint, token };
   }
-  return cookie;
 }
 
 async function rpc(cookie, path, body) {

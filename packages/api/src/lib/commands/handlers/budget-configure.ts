@@ -98,6 +98,7 @@ async function planWorkspace(
   if (accountRejection) return accountRejection;
   const statements: BatchStatement[] = [
     ctx.db.insert(budgetWorkspace).values({
+      id: crypto.randomUUID(),
       householdId: ctx.householdId,
       currency: input.currency,
       activationPeriod: input.activationPeriod,
@@ -108,6 +109,7 @@ async function planWorkspace(
   for (const accountId of input.fundingAccountIds) {
     statements.push(
       ctx.db.insert(fundingMembership).values({
+        id: crypto.randomUUID(),
         householdId: ctx.householdId,
         accountId,
         currency: input.currency,
@@ -144,6 +146,7 @@ async function planFundingMembership(
       ctx.db
         .insert(fundingMembership)
         .values({
+          id: crypto.randomUUID(),
           householdId: ctx.householdId,
           accountId: input.accountId,
           currency: input.currency,
@@ -264,6 +267,7 @@ function configurationStatements(
       ctx.db
         .insert(categoryMapping)
         .values({
+          id: crypto.randomUUID(),
           householdId: ctx.householdId,
           categoryId,
           envelopeId: selected.has(categoryId) ? envelopeId : null,
@@ -277,6 +281,7 @@ function configurationStatements(
     ctx.db
       .insert(rolloverSetting)
       .values({
+        id: crypto.randomUUID(),
         householdId: ctx.householdId,
         envelopeId,
         positiveRollover: input.positiveRollover,

@@ -9,8 +9,10 @@ if (process.env.Z6_APPLY_PUBLICATION_APPROVED !== "non-production") {
 }
 const databaseUrl = process.env.Z6_DATABASE_URL?.trim();
 if (!databaseUrl) throw new Error("Z6_DATABASE_URL is required.");
+const connectionUrl = new URL(databaseUrl);
+connectionUrl.searchParams.delete("sslrootcert");
 
-const sql = postgres(databaseUrl, { max: 1, ssl: "prefer" });
+const sql = postgres(connectionUrl.toString(), { max: 1, ssl: "prefer" });
 const migration = readFileSync(
   new URL("../src/migrations/0009_expand_powersync_publication.sql", import.meta.url),
   "utf8",

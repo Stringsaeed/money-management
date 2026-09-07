@@ -10,11 +10,16 @@ import type {
   CommandResult,
   ImportBundlePayload,
 } from "@trove/protocol";
-import { MAX_IMPORT_APPLY_ROWS, MAX_IMPORT_CHUNK_ROWS } from "@trove/protocol";
+import {
+  MAX_IMPORT_APPLY_ROWS,
+  MAX_IMPORT_CHUNK_ROWS,
+  canonicalizeImportContent,
+} from "@trove/protocol";
 
 import { applyCommand } from "./pipeline";
 import { createTestDb } from "../../test-support/db";
 import { computeImportManifest } from "../migration/manifest";
+import { sha256Hex } from "../migration/import-content";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 
@@ -454,9 +459,208 @@ describe("commands.apply — import_bundle end-to-end + manifest recompute", () 
     const manifest = await computeImportManifest(db, HOUSEHOLD_ID);
     expect(manifest.rowCounts).toEqual({
       account: 1,
+      assignment: 0,
+      budget_workspace: 0,
       category: 0,
+      category_mapping: 0,
+      envelope: 0,
+      funding_membership: 0,
+      recurring_occurrence: 0,
+      recurring_rule: 0,
+      rollover_setting: 0,
       transaction: 2,
     });
     expect(manifest.transactionAmountMinorByAccount).toEqual({ [ACCOUNT_ROW.id]: 1_500 });
+  });
+
+  it("imports recurring and budget facts in dependency order", async () => {
+    const timestamp = "2026-01-01T00:00:00.000Z";
+    const rows: {
+      entityType: ImportBundlePayload["entityType"];
+      row: Readonly<Record<string, unknown>>;
+    }[] = [
+      { entityType: "account", row: ACCOUNT_ROW },
+      {
+        entityType: "category",
+        row: {
+          id: "category-1",
+          name: "Housing",
+          type: "expense",
+          color: "#8B9D83",
+          icon: "house",
+          parentId: null,
+          sortOrder: 0,
+          lifecycle: "active",
+          lifecycleChangedAt: null,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      },
+      {
+        entityType: "recurring_rule",
+        row: {
+          id: "rule-1",
+          name: "Rent",
+          type: "expense",
+          amountMinor: 100,
+          currency: "USD",
+          accountId: "account-1",
+          toAccountId: null,
+          categoryId: "category-1",
+          description: "",
+          frequency: "month",
+          intervalCount: 1,
+          startDate: "2026-01-01",
+          endDate: null,
+          endCount: null,
+          timeZone: "Asia/Dubai",
+          lifecycle: "active",
+          health: "ready",
+          attentionReasons: "[]",
+          attentionDetails: null,
+          eligibilityFloor: "2026-01-01",
+          revision: 1,
+          lifecycleChangedAt: null,
+          healthChangedAt: null,
+          lastSettlementAttemptAt: null,
+          lastSettlementError: null,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      },
+      {
+        entityType: "budget_workspace",
+        row: {
+          id: "workspace-1",
+          currency: "USD",
+          activationPeriod: "2026-01",
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      },
+      {
+        entityType: "envelope",
+        row: {
+          id: "envelope-1",
+          currency: "USD",
+          name: "Needs",
+          icon: "box",
+          color: "#8B9D83",
+          lifecycle: "active",
+          sortOrder: 0,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      },
+      {
+        entityType: "category_mapping",
+        row: {
+          id: "mapping-1",
+          categoryId: "category-1",
+          envelopeId: "envelope-1",
+          effectiveFromPeriod: "2026-01",
+          createdAt: timestamp,
+        },
+      },
+      {
+        entityType: "funding_membership",
+        row: {
+          id: "funding-1",
+          accountId: "account-1",
+          currency: "USD",
+          active: true,
+          effectiveFromPeriod: "2026-01",
+          createdAt: timestamp,
+        },
+      },
+      {
+        entityType: "rollover_setting",
+        row: {
+          id: "rollover-1",
+          envelopeId: "envelope-1",
+          effectiveFromPeriod: "2026-01",
+          positiveRollover: true,
+          createdAt: timestamp,
+        },
+      },
+      {
+        entityType: "assignment",
+        row: {
+          id: "assignment-1",
+          currency: "USD",
+          budgetPeriod: "2026-01",
+          sourceEnvelopeId: null,
+          destinationEnvelopeId: "envelope-1",
+          amountMinor: 50,
+          reversesAssignmentId: null,
+          createdAt: timestamp,
+        },
+      },
+      {
+        entityType: "transaction",
+        row: {
+          id: "transaction-1",
+          type: "expense",
+          amountMinor: 25,
+          currency: "USD",
+          originalAmountMinor: null,
+          originalCurrency: null,
+          exchangeRate: null,
+          date: "2026-01-01",
+          accountId: "account-1",
+          toAccountId: null,
+          categoryId: "category-1",
+          isRecurring: true,
+          recurringRuleId: "rule-1",
+          description: "Rent",
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      },
+      {
+        entityType: "recurring_occurrence",
+        row: {
+          id: "occurrence-1",
+          ruleId: "rule-1",
+          scheduledDate: "2026-01-01",
+          transactionId: "transaction-1",
+          settledAt: timestamp,
+        },
+      },
+    ];
+
+    for (const { entityType, row } of rows) {
+      expectApplied(
+        await applyAs(
+          OWNER,
+          bundleEnvelope({ entityType, chunkIndex: 0, chunkCount: 1, rows: [row] }),
+        ),
+      );
+    }
+
+    const manifest = await computeImportManifest(db, HOUSEHOLD_ID);
+    expect(manifest.rowCounts).toEqual({
+      account: 1,
+      assignment: 1,
+      budget_workspace: 1,
+      category: 1,
+      category_mapping: 1,
+      envelope: 1,
+      funding_membership: 1,
+      recurring_occurrence: 1,
+      recurring_rule: 1,
+      rollover_setting: 1,
+      transaction: 1,
+    });
+    expect(manifest.contentDigest).toBe(
+      await sha256Hex(
+        canonicalizeImportContent(
+          rows.map(({ entityType, row }) => ({
+            entityType,
+            row: row as Readonly<Record<string, string | number | boolean | null>>,
+          })),
+        ),
+      ),
+    );
   });
 });

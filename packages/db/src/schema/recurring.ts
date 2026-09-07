@@ -5,7 +5,6 @@ import {
   index,
   integer,
   pgTable,
-  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -22,7 +21,7 @@ export const recurringRule = pgTable(
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
-    id: text("id").notNull(),
+    id: text("id").primaryKey(),
     name: text("name").notNull(),
     type: text("type", { enum: ["expense", "income", "transfer"] }).notNull(),
     amountMinor: integer("amount_minor"),
@@ -64,7 +63,7 @@ export const recurringRule = pgTable(
       .notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.householdId, table.id] }),
+    uniqueIndex("recurring_rules_household_id_unique").on(table.householdId, table.id),
     check(
       "recurring_rules_lifecycle_valid",
       sql`${table.lifecycle} IN ('active', 'paused', 'completed', 'archived')`,
@@ -77,6 +76,9 @@ export const recurringRule = pgTable(
 export const recurringOccurrence = pgTable(
   "recurring_occurrences",
   {
+    id: text("id")
+      .primaryKey()
+      .default(sql`md5(random()::text || clock_timestamp()::text)`),
     householdId: text("household_id")
       .notNull()
       .references(() => household.id, { onDelete: "cascade" }),
@@ -86,7 +88,11 @@ export const recurringOccurrence = pgTable(
     settledAt: timestamptz("settled_at").notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.householdId, table.ruleId, table.scheduledDate] }),
+    uniqueIndex("recurring_occurrences_household_rule_date_unique").on(
+      table.householdId,
+      table.ruleId,
+      table.scheduledDate,
+    ),
     uniqueIndex("uq_recurring_occurrence_transaction").on(table.transactionId),
     index("recurring_occurrences_rule_idx").on(table.householdId, table.ruleId),
     foreignKey({

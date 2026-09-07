@@ -23,6 +23,17 @@ const privateAccountId = `${runId}-private-account`;
 const categoryId = `${runId}-category`;
 const publicTransactionId = `${runId}-public-transaction`;
 const privateTransactionId = `${runId}-private-transaction`;
+const workspaceId = `${runId}-workspace`;
+const envelopeId = `${runId}-envelope`;
+const mappingId = `${runId}-mapping`;
+const fundingId = `${runId}-funding`;
+const rolloverId = `${runId}-rollover`;
+const assignmentId = `${runId}-assignment`;
+const refundLinkId = `${runId}-refund-link`;
+const publicRuleId = `${runId}-public-rule`;
+const privateRuleId = `${runId}-private-rule`;
+const publicOccurrenceId = `${runId}-public-occurrence`;
+const privateOccurrenceId = `${runId}-private-occurrence`;
 const sql = postgres(databaseUrl.toString(), { max: 1 });
 const clients = [];
 
@@ -41,7 +52,34 @@ const transactions = new Table({
   household_id: column.text,
   to_account_id: column.text,
 });
-const schema = new Schema({ accounts, categories, membership, transactions });
+const budgetWorkspaces = new Table({ household_id: column.text, currency: column.text });
+const envelopes = new Table({ household_id: column.text, currency: column.text });
+const categoryMappings = new Table({ household_id: column.text, envelope_id: column.text });
+const fundingMemberships = new Table({ household_id: column.text, account_id: column.text });
+const rolloverSettings = new Table({ household_id: column.text, envelope_id: column.text });
+const assignments = new Table({ household_id: column.text, destination_envelope_id: column.text });
+const refundLinks = new Table({ household_id: column.text, original_transaction_id: column.text });
+const recurringRules = new Table({
+  household_id: column.text,
+  account_id: column.text,
+  to_account_id: column.text,
+});
+const recurringOccurrences = new Table({ household_id: column.text, rule_id: column.text });
+const schema = new Schema({
+  accounts,
+  assignments,
+  budget_workspaces: budgetWorkspaces,
+  categories,
+  category_mappings: categoryMappings,
+  envelopes,
+  funding_memberships: fundingMemberships,
+  membership,
+  recurring_occurrences: recurringOccurrences,
+  recurring_rules: recurringRules,
+  refund_links: refundLinks,
+  rollover_settings: rolloverSettings,
+  transactions,
+});
 const workerUrl = new URL("./powersync.worker.mjs", import.meta.url);
 
 try {
@@ -72,6 +110,28 @@ try {
   );
   assert.deepEqual(await ids(clientB.db, "transactions"), [publicTransactionId]);
   assert.deepEqual(await ids(clientC.db, "transactions"), []);
+  for (const table of [
+    "budget_workspaces",
+    "envelopes",
+    "category_mappings",
+    "funding_memberships",
+    "rollover_settings",
+    "assignments",
+    "refund_links",
+  ]) {
+    assert.equal((await ids(clientA.db, table)).length, 1, `${table} missing for owner`);
+    assert.equal((await ids(clientB.db, table)).length, 1, `${table} missing for member`);
+    assert.deepEqual(await ids(clientC.db, table), [], `${table} leaked to non-member`);
+  }
+  assert.deepEqual(await ids(clientA.db, "recurring_rules"), [privateRuleId, publicRuleId].sort());
+  assert.deepEqual(await ids(clientB.db, "recurring_rules"), [publicRuleId]);
+  assert.deepEqual(await ids(clientC.db, "recurring_rules"), []);
+  assert.deepEqual(
+    await ids(clientA.db, "recurring_occurrences"),
+    [privateOccurrenceId, publicOccurrenceId].sort(),
+  );
+  assert.deepEqual(await ids(clientB.db, "recurring_occurrences"), [publicOccurrenceId]);
+  assert.deepEqual(await ids(clientC.db, "recurring_occurrences"), []);
 
   const warmup = await measureLag(clientA.db, 10, "warmup");
   const samples = await measureLag(clientA.db, 20, "sample");
@@ -86,12 +146,15 @@ try {
         auth: "ES256",
         tenancy: "pass",
         privateAccountIsolation: "pass",
+        budgetDomains: "pass",
+        recurringDomains: "pass",
         warmupMs: warmup,
         samplesMs: samples,
         p95Ms: p95,
         rule: "p95 < 2000ms",
         result: p95 < 2_000 ? "pass" : "fail",
         writePath: "direct PlanetScale verification seed; Worker commands.apply pending",
+        fixtureRetained: true,
       },
       null,
       2,
@@ -100,12 +163,12 @@ try {
   assert.ok(p95 < 2_000, `PowerSync replication p95 ${p95}ms exceeds 2000ms`);
 } finally {
   for (const client of clients) {
-    await client.subscription.unsubscribe();
+    for (const subscription of client.subscriptions) await subscription.unsubscribe();
     await client.db.disconnect();
     await client.db.close();
     if (existsSync(client.dbPath)) unlinkSync(client.dbPath);
   }
-  await cleanup();
+  console.log(`Retained append-only verification fixture ${runId} for audit.`);
   await sql.end();
 }
 
@@ -142,11 +205,13 @@ async function connectClient(label, token) {
       throw new Error("The Z3 verification client must not upload local writes.");
     },
   });
-  const subscription = await db
-    .syncStream("household_ledger", { household_id: householdId })
-    .subscribe();
-  await subscription.waitForFirstSync();
-  const client = { db, dbPath, subscription };
+  const subscriptions = await Promise.all(
+    ["household_ledger", "household_budget", "household_recurring"].map((stream) =>
+      db.syncStream(stream, { household_id: householdId }).subscribe(),
+    ),
+  );
+  await Promise.all(subscriptions.map((subscription) => subscription.waitForFirstSync()));
+  const client = { db, dbPath, subscriptions };
   clients.push(client);
   return client;
 }
@@ -210,6 +275,71 @@ async function seed() {
   `;
   await insertTransaction(publicTransactionId, publicAccountId);
   await insertTransaction(privateTransactionId, privateAccountId);
+  await sql`
+    INSERT INTO budget_workspaces (
+      id, household_id, currency, activation_period, version,
+      created_by, updated_by, created_at, updated_at
+    ) VALUES (${workspaceId}, ${householdId}, 'USD', '2026-09', 0, ${userA}, ${userA}, now(), now())
+  `;
+  await sql`
+    INSERT INTO envelopes (
+      id, household_id, currency, name, icon, color, lifecycle, sort_order, version,
+      created_by, updated_by, created_at, updated_at
+    ) VALUES (${envelopeId}, ${householdId}, 'USD', 'Z3 envelope', 'box', '#8B9D83', 'active', 0, 0, ${userA}, ${userA}, now(), now())
+  `;
+  await sql`
+    INSERT INTO category_mappings (
+      id, household_id, category_id, envelope_id, effective_from_period, version,
+      created_by, updated_by, created_at, updated_at
+    ) VALUES (${mappingId}, ${householdId}, ${categoryId}, ${envelopeId}, '2026-09', 0, ${userA}, ${userA}, now(), now())
+  `;
+  await sql`
+    INSERT INTO funding_memberships (
+      id, household_id, account_id, currency, active, effective_from_period, version,
+      created_by, updated_by, created_at, updated_at
+    ) VALUES (${fundingId}, ${householdId}, ${publicAccountId}, 'USD', true, '2026-09', 0, ${userA}, ${userA}, now(), now())
+  `;
+  await sql`
+    INSERT INTO rollover_settings (
+      id, household_id, envelope_id, positive_rollover, effective_from_period, version,
+      created_by, updated_by, created_at, updated_at
+    ) VALUES (${rolloverId}, ${householdId}, ${envelopeId}, true, '2026-09', 0, ${userA}, ${userA}, now(), now())
+  `;
+  await sql`
+    INSERT INTO assignments (
+      id, household_id, currency, budget_period, destination_envelope_id, amount_minor, version,
+      created_by, updated_by, created_at, updated_at
+    ) VALUES (${assignmentId}, ${householdId}, 'USD', '2026-09', ${envelopeId}, 100, 0, ${userA}, ${userA}, now(), now())
+  `;
+  await sql`
+    INSERT INTO refund_links (
+      id, household_id, original_transaction_id, refund_transaction_id, currency, amount_minor,
+      version, created_by, updated_by, created_at, updated_at
+    ) VALUES (${refundLinkId}, ${householdId}, ${publicTransactionId}, ${privateTransactionId}, 'USD', 10, 0, ${userA}, ${userA}, now(), now())
+  `;
+  await insertRule(publicRuleId, publicAccountId);
+  await insertRule(privateRuleId, privateAccountId);
+  await sql`
+    INSERT INTO recurring_occurrences (
+      id, household_id, rule_id, scheduled_date, transaction_id, settled_at
+    ) VALUES
+      (${publicOccurrenceId}, ${householdId}, ${publicRuleId}, '2026-09-07', ${publicTransactionId}, now()),
+      (${privateOccurrenceId}, ${householdId}, ${privateRuleId}, '2026-09-08', ${privateTransactionId}, now())
+  `;
+}
+
+async function insertRule(id, accountId) {
+  await sql`
+    INSERT INTO recurring_rules (
+      id, household_id, name, type, amount_minor, currency, account_id, description,
+      frequency, interval_count, start_date, time_zone, lifecycle, health,
+      attention_reasons, eligibility_floor, revision, created_by, updated_by, created_at, updated_at
+    ) VALUES (
+      ${id}, ${householdId}, ${id}, 'expense', 100, 'USD', ${accountId}, 'verification',
+      'month', 1, '2026-09-07', 'Asia/Dubai', 'active', 'ready', '[]', '2026-09-07', 1,
+      ${userA}, ${userA}, now(), now()
+    )
+  `;
 }
 
 async function insertTransaction(id, accountId = publicAccountId) {
@@ -222,13 +352,4 @@ async function insertTransaction(id, accountId = publicAccountId) {
       false, 'Z3 verification', 0, ${userA}, ${userA}, now(), now()
     )
   `;
-}
-
-async function cleanup() {
-  await sql`DELETE FROM transactions WHERE household_id = ${householdId}`;
-  await sql`DELETE FROM categories WHERE household_id = ${householdId}`;
-  await sql`DELETE FROM accounts WHERE household_id = ${householdId}`;
-  await sql`DELETE FROM membership WHERE household_id = ${householdId}`;
-  await sql`DELETE FROM household WHERE id = ${householdId}`;
-  await sql`DELETE FROM "user" WHERE id IN (${userA}, ${userB}, ${userC})`;
 }

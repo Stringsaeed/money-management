@@ -472,9 +472,9 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 
 **Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] `tools/oxlint/ledger-boundary` fixtures assert no `legacy-local-pending-cutover` role. `packages/powersync/sync-streams.test.ts` validates the extended YAML. `packages/infra` has a test that the stack exports no D1 resource. Run `pnpm test:ci && pnpm --filter @trove/powersync validate`.
+- [x] `tools/oxlint/ledger-boundary` fixtures assert no `legacy-local-pending-cutover` role. `packages/powersync/sync-streams.test.ts` validates the extended YAML. `packages/infra` has a test that the stack exports no D1 resource. Run `pnpm test:ci && pnpm --filter @trove/powersync validate`.
 
-  Local status: mobile 165 suites / 679 tests pass, API 24 files / 198 tests pass, Sync Streams tests pass, and the no-D1 guard passes. Cloud validation is intentionally still open because the safety gate did not authorize adding the nine tables to the non-production publication.
+  Current status: mobile 165 suites / 680 tests pass, API 24 files / 208 tests pass, Sync Streams tests and cloud validation pass, the no-D1 guard passes, and the publication migration is replay-safe on the non-production database.
 
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `grok-4.6-fast-xhigh` at the PR head, per the boot recipe.
 
