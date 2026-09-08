@@ -178,10 +178,6 @@ describe("app/accounts", () => {
     expect(screen.queryByRole("button", { name: "Delete Everyday" })).not.toBeOnTheScreen();
   });
 
-  // Regression for #201: a blocker "Review" action must dismiss the Edit
-  // Account sheet before navigating, and it must land on the destination via
-  // dismissTo (pop-to-existing/replace) rather than router.push — pushing
-  // stacked a duplicate destination on top of the still-presented sheet.
   it.each([
     ["Review Everyday balance", "/(tabs)/ledger"],
     ["Review blocking Recurring Rules", "/recurring"],
@@ -204,18 +200,12 @@ describe("app/accounts", () => {
 
       await fireEvent.press(screen.getByRole("button", { name: buttonName }));
 
-      // The sheet is gone — its content is unmounted, not merely obscured —
-      // so no orphaned sheet is left behind the destination screen.
       expect(screen.queryByRole("alert")).not.toBeOnTheScreen();
       expect(screen.queryByRole("button", { name: buttonName })).not.toBeOnTheScreen();
 
-      // Navigation replaces/dismisses to the destination instead of pushing
-      // a duplicate route on top of it.
       expect(mockDismissTo).toHaveBeenCalledWith(destination);
       expect(mockPush).not.toHaveBeenCalledWith(destination);
 
-      // Ledger-bound reviews carry the account into the existing filter so
-      // the relevant balance is easy to find on arrival.
       if (destination === "/(tabs)/ledger") {
         expect(useUIStore.getState().activeAccountId).toBe("account-blocked");
       }

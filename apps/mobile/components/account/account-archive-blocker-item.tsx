@@ -11,12 +11,6 @@ import type { AccountWithBalance } from "@/types";
 interface AccountArchiveBlockerItemProps {
   account: AccountWithBalance;
   blocker: AccountArchiveBlocker;
-  /**
-   * Dismisses the owning Edit Account sheet and then navigates to the given
-   * destination using replacement/tab-reset semantics. Callers must not
-   * navigate directly — routing through this callback keeps the sheet from
-   * being left orphaned behind the destination screen.
-   */
   onReview: (href: Href) => void;
 }
 
@@ -36,8 +30,6 @@ export function AccountArchiveBlockerItem({
   const setActiveAccountId = useUIStore((state) => state.setActiveAccountId);
 
   function reviewBalance() {
-    // Carry the account into the Ledger's existing filter so the relevant
-    // balance is easy to find instead of landing on the unfiltered feed.
     setActiveAccountId(account.id);
     onReview("/(tabs)/ledger");
   }

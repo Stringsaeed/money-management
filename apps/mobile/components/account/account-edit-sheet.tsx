@@ -47,10 +47,6 @@ export function AccountEditSheet({ account, onDismiss, onUpdated }: AccountEditS
     form.setFieldValue("icon", nextIcon);
   }
 
-  // Explicit dismiss-before-navigate contract for blocker "Review" actions:
-  // close this sheet first, then land on the destination tab/root by
-  // dismissing to it (or replacing in place) rather than pushing a
-  // duplicate route on top of the still-presented sheet.
   function handleReview(href: Href) {
     onDismiss();
     router.dismissTo(href);
