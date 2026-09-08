@@ -37,13 +37,6 @@ export interface TransactionTextFieldProps {
   readonly testID?: string;
 }
 
-/**
- * Paper Ledger text field: a single `Host` boundary around the native
- * `@expo/ui` `TextInput`, matching the control-recipe approach in
- * `components/auth/ui/auth-field.tsx`. Used for transaction free-text entry
- * (note/description). Recurring custom interval entry uses a stepper, not
- * a text field, so it is intentionally out of scope here.
- */
 export function TransactionTextField({
   value,
   onChangeText,
