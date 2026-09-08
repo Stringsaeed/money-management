@@ -36,6 +36,7 @@ describe("AccountLifecycleActions", () => {
       <AccountLifecycleActions
         account={createAccountWithBalance({ name: "Everyday" })}
         onCompleted={jest.fn()}
+        onReview={jest.fn()}
       />,
     );
 
@@ -61,6 +62,7 @@ describe("AccountLifecycleActions", () => {
       <AccountLifecycleActions
         account={createAccountWithBalance({ name: "Everyday", lifecycle: "archived" })}
         onCompleted={jest.fn()}
+        onReview={jest.fn()}
       />,
     );
 
@@ -85,6 +87,7 @@ describe("AccountLifecycleActions", () => {
       <AccountLifecycleActions
         account={createAccountWithBalance({ name: "Wallet" })}
         onCompleted={jest.fn()}
+        onReview={jest.fn()}
       />,
     );
 

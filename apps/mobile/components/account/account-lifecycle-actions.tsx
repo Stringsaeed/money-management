@@ -1,3 +1,4 @@
+import type { Href } from "expo-router";
 import { View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
@@ -12,9 +13,14 @@ import { useAccountLifecycleActions } from "./use-account-lifecycle-actions";
 interface AccountLifecycleActionsProps {
   account: AccountWithBalance;
   onCompleted: VoidFunction;
+  onReview: (href: Href) => void;
 }
 
-export function AccountLifecycleActions({ account, onCompleted }: AccountLifecycleActionsProps) {
+export function AccountLifecycleActions({
+  account,
+  onCompleted,
+  onReview,
+}: AccountLifecycleActionsProps) {
   const actions = useAccountLifecycleActions(account, onCompleted);
   const synced = actions.archivalPreview.source === "synced";
   const blockers = actions.archivalPreview.data?.blockers ?? [];
@@ -53,7 +59,7 @@ export function AccountLifecycleActions({ account, onCompleted }: AccountLifecyc
           className="gap-3"
         >
           {blockers.length > 0 ? (
-            <AccountArchiveBlockers account={account} blockers={blockers} />
+            <AccountArchiveBlockers account={account} blockers={blockers} onReview={onReview} />
           ) : null}
           <Button
             aria-label={`Archive ${account.name}`}
