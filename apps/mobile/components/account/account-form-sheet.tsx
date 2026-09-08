@@ -22,14 +22,12 @@ export function AccountFormBottomSheet({
 }: AccountFormBottomSheetProps) {
   const [hasCustomColor, setHasCustomColor] = useState(false);
   const [hasCustomIcon, setHasCustomIcon] = useState(false);
-  const [currencyExpanded, setCurrencyExpanded] = useState(false);
 
   const form = useAccountForm({
     onCreated: () => {
       form.reset();
       setHasCustomColor(false);
       setHasCustomIcon(false);
-      setCurrencyExpanded(false);
       onCreated?.();
     },
   });
@@ -55,11 +53,8 @@ export function AccountFormBottomSheet({
       autoPresent={autoPresent}
       content={
         <AccountFormContent
-          currencyExpanded={currencyExpanded}
           form={form}
           onColorChange={handleColorChange}
-          onCurrencyCollapse={() => setCurrencyExpanded(false)}
-          onCurrencyExpandToggle={() => setCurrencyExpanded((expanded) => !expanded)}
           onIconChange={handleIconChange}
           onTypeChange={handleTypeChange}
         />

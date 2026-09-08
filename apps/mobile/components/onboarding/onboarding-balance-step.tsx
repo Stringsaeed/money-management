@@ -64,17 +64,11 @@ export function OnboardingBalanceStep({ form }: OnboardingBalanceStepProps) {
 
       <Animated.View className="gap-2.5" entering={stepItemEntering(3)} layout={layoutTransition}>
         <Text className="font-body-medium text-sm text-ink/50">Currency</Text>
-        <View className="-mx-6">
-          <form.Field name="currency">
-            {(field) => (
-              <AccountCurrencyPicker
-                contentContainerClassName="gap-2 px-6"
-                onChange={field.handleChange}
-                value={field.state.value}
-              />
-            )}
-          </form.Field>
-        </View>
+        <form.Field name="currency">
+          {(field) => (
+            <AccountCurrencyPicker onChange={field.handleChange} value={field.state.value} />
+          )}
+        </form.Field>
       </Animated.View>
     </View>
   );

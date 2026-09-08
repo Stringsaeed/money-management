@@ -1,10 +1,8 @@
 import type { ComponentProps, ComponentType } from "react";
 import { TextInput, View } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
 
 import { AccountCurrencyPicker } from "@/components/account/account-currency-picker";
 import { inputTextStyle, resourceInputClassName } from "@/components/resource/resource-form-field";
-import { layoutTransition } from "@/components/transaction/constants";
 import { MoneyText } from "@/components/ui/money-text";
 import { Text } from "@/components/ui/text";
 
@@ -17,22 +15,16 @@ type SheetTextInputProps = ComponentProps<typeof TextInput>;
 interface AccountFormBalanceSectionProps {
   amountEditable: boolean;
   currencyEditable?: boolean;
-  currencyExpanded: boolean;
   form: AccountFormApi;
   lockedBalanceCents?: number;
-  onCurrencyCollapse: VoidFunction;
-  onCurrencyExpandToggle: VoidFunction;
   TextInputComponent?: ComponentType<SheetTextInputProps>;
 }
 
 export function AccountFormBalanceSection({
   amountEditable,
   currencyEditable = true,
-  currencyExpanded,
   form,
   lockedBalanceCents,
-  onCurrencyCollapse,
-  onCurrencyExpandToggle,
   TextInputComponent = TextInput,
 }: AccountFormBalanceSectionProps) {
   if (!amountEditable) {
@@ -62,13 +54,7 @@ export function AccountFormBalanceSection({
             <View className="gap-2">
               <Text className="font-body-medium text-sm text-ink/60">Currency</Text>
               {currencyEditable ? (
-                <View className="-mx-5">
-                  <AccountCurrencyPicker
-                    contentContainerClassName="gap-2 px-5"
-                    onChange={field.handleChange}
-                    value={field.state.value}
-                  />
-                </View>
+                <AccountCurrencyPicker onChange={field.handleChange} value={field.state.value} />
               ) : (
                 <View className="rounded-2xl border border-ledger-outline bg-surface-container px-4 py-3">
                   <Text className="font-body-medium text-base text-ink">{field.state.value}</Text>
@@ -124,33 +110,11 @@ export function AccountFormBalanceSection({
             <AccountCurrencyPicker
               compact
               onChange={field.handleChange}
-              onCompactPress={onCurrencyExpandToggle}
               value={field.state.value}
             />
           )}
         </form.Field>
       </View>
-
-      {currencyExpanded ? (
-        <Animated.View
-          entering={FadeIn.duration(200)}
-          layout={layoutTransition}
-          className="-mx-5 pt-2"
-        >
-          <form.Field name="currency">
-            {(field) => (
-              <AccountCurrencyPicker
-                contentContainerClassName="gap-2 px-5"
-                onChange={(currency) => {
-                  field.handleChange(currency);
-                  onCurrencyCollapse();
-                }}
-                value={field.state.value}
-              />
-            )}
-          </form.Field>
-        </Animated.View>
-      ) : null}
     </View>
   );
 }
