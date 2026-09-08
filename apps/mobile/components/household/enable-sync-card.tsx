@@ -19,13 +19,6 @@ const RUNNING_STATUSES: readonly EnableSyncStatus[] = [
   "verifying",
 ];
 
-/**
- * The local-to-cloud migration CTA (#98). Uploads this device's existing
- * accounts, categories, transactions, recurring rules, and budgeting facts
- * into a household, then flips to synced mode only once the server's
- * recomputed manifest matches what was sent. Never forced — solo local-only
- * mode stays fully supported until the user taps this.
- */
 export function EnableSyncCard({ activeHouseholdId }: { activeHouseholdId: string | null }) {
   const [name, setName] = useState("");
   const { status, error, discrepancy, enableSync } = useEnableSync();

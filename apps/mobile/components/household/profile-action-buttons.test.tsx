@@ -2,6 +2,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
 
+import type { EnableSyncStatus } from "@/hooks/use-enable-sync";
+
 import { CreateHouseholdForm } from "./create-household-form";
 import { JoinHouseholdForm } from "./join-household-form";
 import { EnableSyncCard } from "./enable-sync-card";
@@ -11,6 +13,16 @@ import { ActiveHouseholdPanel } from "./active-household-panel";
 const mockCreateMutateAsync = jest.fn();
 const mockAcceptMutateAsync = jest.fn();
 const mockEnableSync = jest.fn();
+type EnableSyncMockState = {
+  status: EnableSyncStatus;
+  error: Error | null;
+  discrepancy: { localManifest: object; serverManifest: object } | null;
+};
+const mockEnableSyncState: EnableSyncMockState = {
+  status: "idle",
+  error: null,
+  discrepancy: null,
+};
 const mockTransferMutate = jest.fn();
 const mockGenerateInviteMutate = jest.fn();
 const mockLeaveMutate = jest.fn();
@@ -39,9 +51,9 @@ jest.mock("@/hooks/use-households", () => ({
 
 jest.mock("@/hooks/use-enable-sync", () => ({
   useEnableSync: () => ({
-    status: "idle",
-    error: null,
-    discrepancy: null,
+    status: mockEnableSyncState.status,
+    error: mockEnableSyncState.error,
+    discrepancy: mockEnableSyncState.discrepancy,
     enableSync: mockEnableSync,
   }),
 }));
@@ -90,12 +102,44 @@ describe("JoinHouseholdForm", () => {
 describe("EnableSyncCard", () => {
   beforeEach(() => {
     mockEnableSync.mockReset().mockResolvedValue(undefined);
+    mockEnableSyncState.status = "idle";
+    mockEnableSyncState.error = null;
+    mockEnableSyncState.discrepancy = null;
   });
 
   it("starts sync for an active household", async () => {
     await render(<EnableSyncCard activeHouseholdId="hh-1" />);
-    await fireEvent.press(screen.getByText("Enable Sync"));
+    await fireEvent.press(screen.getByTestId("enable-sync"));
     expect(mockEnableSync).toHaveBeenCalledWith({ householdId: "hh-1" });
+  });
+
+  it("shows the concise idle description instead of sharing filler", async () => {
+    await render(<EnableSyncCard activeHouseholdId="hh-1" />);
+    expect(
+      screen.getByText("Back up your data and keep it in sync across devices."),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText(/Move your existing accounts/)).toBeNull();
+    expect(screen.queryByText(/ready to share/i)).toBeNull();
+  });
+
+  it("announces a concise mismatch as an alert", async () => {
+    mockEnableSyncState.status = "mismatched";
+    mockEnableSyncState.discrepancy = { localManifest: {}, serverManifest: {} };
+    await render(<EnableSyncCard activeHouseholdId="hh-1" />);
+    expect(
+      screen.getByText("The upload didn't reconcile — your local data is unchanged. Try again."),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("alert")).toBeOnTheScreen();
+    expect(screen.getByText("Try again")).toBeOnTheScreen();
+    expect(screen.queryByText(/pre-import backup/)).toBeNull();
+  });
+
+  it("shows the concise matched description, not household sharing", async () => {
+    mockEnableSyncState.status = "matched";
+    await render(<EnableSyncCard activeHouseholdId="hh-1" />);
+    expect(screen.getByText("Your data stays synced across devices.")).toBeOnTheScreen();
+    expect(screen.queryByText(/shared with your household/)).toBeNull();
+    expect(screen.queryByText("Enable Sync")).toBeNull();
   });
 });
 
