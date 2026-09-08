@@ -43,6 +43,21 @@ describe("app/recurring/index", () => {
     });
   });
 
+  it("opens the new Rule form from the accessible FAB", async () => {
+    mockUseRecurringRulesList.mockReturnValue({
+      data: [createRecurringRule({ id: "rent", name: "Rent" })],
+      isLoading: false,
+    });
+
+    await render(<RecurringListScreen />);
+    fireEvent.press(screen.getByRole("button", { name: "Add recurring rule" }));
+
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: "/transaction/[id]",
+      params: { id: "new", recurring: "true" },
+    });
+  });
+
   it("loads each filter and opens a Rule editor", async () => {
     mockUseRecurringRulesList.mockImplementation((filter: string) => ({
       data:

@@ -1,3 +1,5 @@
+import type { Href } from "expo-router";
+import { router } from "expo-router";
 import { useState } from "react";
 
 import { AccountFormContent } from "@/components/account/account-form-content";
@@ -45,6 +47,11 @@ export function AccountEditSheet({ account, onDismiss, onUpdated }: AccountEditS
     form.setFieldValue("icon", nextIcon);
   }
 
+  function handleReview(href: Href) {
+    onDismiss();
+    router.dismissTo(href);
+  }
+
   const isArchived = account.lifecycle === "archived";
 
   return (
@@ -57,19 +64,20 @@ export function AccountEditSheet({ account, onDismiss, onUpdated }: AccountEditS
           ) : (
             <AccountFormContent
               amountEditable={false}
-              currencyExpanded={false}
               form={form}
               lockedBalanceCents={account.balance}
               onColorChange={handleColorChange}
-              onCurrencyCollapse={() => undefined}
-              onCurrencyExpandToggle={() => undefined}
               onIconChange={handleIconChange}
               onTypeChange={handleTypeChange}
               typeEditable={local}
               currencyEditable={local}
             />
           )}
-          <AccountLifecycleActions account={account} onCompleted={onUpdated} />
+          <AccountLifecycleActions
+            account={account}
+            onCompleted={onUpdated}
+            onReview={handleReview}
+          />
         </>
       }
       footer={

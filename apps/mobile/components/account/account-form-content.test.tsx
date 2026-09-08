@@ -22,7 +22,6 @@ function AccountFormContentHarness({
 }) {
   const [error, setError] = useState("");
   const [hasCustomColor, setHasCustomColor] = useState(false);
-  const [currencyExpanded, setCurrencyExpanded] = useState(false);
 
   const form = useForm({
     ...accountFormOptions,
@@ -43,15 +42,12 @@ function AccountFormContentHarness({
     <>
       <AccountFormContent
         amountEditable={amountEditable}
-        currencyExpanded={currencyExpanded}
         form={form}
         lockedBalanceCents={lockedBalanceCents}
         onColorChange={(color) => {
           setHasCustomColor(true);
           form.setFieldValue("color", color);
         }}
-        onCurrencyCollapse={() => setCurrencyExpanded(false)}
-        onCurrencyExpandToggle={() => setCurrencyExpanded((expanded) => !expanded)}
         onIconChange={(icon) => {
           form.setFieldValue("icon", icon);
         }}
