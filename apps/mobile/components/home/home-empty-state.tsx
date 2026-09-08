@@ -6,9 +6,14 @@ import { Text } from "@/components/ui/text";
 
 import type { HomeEmptyStateProps } from "./types";
 
-export function HomeEmptyState({ activeFilterCount, onResetFilters }: HomeEmptyStateProps) {
+export function HomeEmptyState({
+  activeFilterCount,
+  onResetFilters,
+  compact,
+}: HomeEmptyStateProps) {
   return (
     <EmptyState
+      compact={compact}
       illustration={<SproutLedgerGraphic />}
       title="No transactions"
       message={

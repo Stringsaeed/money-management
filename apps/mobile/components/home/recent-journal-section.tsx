@@ -56,14 +56,14 @@ export function RecentJournalSection({
         </Animated.View>
       ) : items.length === 0 ? (
         <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)}>
-          <HomeEmptyState activeFilterCount={activeFilterCount} onResetFilters={onResetFilters} />
+          <HomeEmptyState
+            activeFilterCount={activeFilterCount}
+            compact
+            onResetFilters={onResetFilters}
+          />
         </Animated.View>
       ) : (
-        <Animated.View
-          entering={FadeIn.duration(200)}
-          exiting={FadeOut.duration(150)}
-          layout={layoutTransition}
-        >
+        <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)}>
           {items.map((item) => (
             <JournalListItemRow
               key={item.type === "section-header" ? `header-${item.date}` : item.data.id}

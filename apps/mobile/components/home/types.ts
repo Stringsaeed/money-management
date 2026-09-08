@@ -17,6 +17,7 @@ export interface HomeJournalListProps {
 export interface HomeEmptyStateProps {
   activeFilterCount: number;
   onResetFilters: () => void;
+  compact?: boolean;
 }
 
 export interface RecentJournalSectionProps {
