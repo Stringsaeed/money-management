@@ -30,6 +30,24 @@ describe("Envelope workspace route status and selection", () => {
     expect(await screen.findByText("No currency workspace yet")).toBeOnTheScreen();
   });
 
+  it("gives users with no workspace a primary entry point into Envelopes setup", async () => {
+    await setupRouteDatabase();
+    await renderWorkspaceRoute();
+
+    expect(await screen.findByText("No currency workspace yet")).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Set up Envelopes" })).toBeOnTheScreen();
+  });
+
+  it("routes straight to the currency overview once a workspace is active", async () => {
+    const { database } = await setupRouteDatabase();
+    await activateRouteWorkspace(database, "USD", 100_00);
+    await renderWorkspaceRoute();
+
+    expect(await screen.findByRole("radio", { name: "USD currency workspace" })).toBeOnTheScreen();
+    expect(screen.queryByText("No currency workspace yet")).not.toBeOnTheScreen();
+    expect(screen.queryByRole("button", { name: "Set up Envelopes" })).not.toBeOnTheScreen();
+  });
+
   it("shows actionable workspace and projection errors instead of zero values", async () => {
     useRouteDatabase({
       getAllAsync: async () => {

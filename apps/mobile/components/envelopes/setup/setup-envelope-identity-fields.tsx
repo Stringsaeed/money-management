@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { TextInput, View } from "react-native";
+import { View } from "react-native";
 
 import type { SetupDraftEnvelope } from "@/modules/budgeting/budgeting";
+import { Input } from "@/components/ui/input";
+import { useForm } from "@tanstack/react-form";
 
 interface SetupEnvelopeIdentityFieldsProps {
   envelope: SetupDraftEnvelope;
@@ -12,37 +13,54 @@ export const SetupEnvelopeIdentityFields = ({
   envelope,
   onChange,
 }: SetupEnvelopeIdentityFieldsProps) => {
-  const [name, setName] = useState(envelope.name);
-  const [icon, setIcon] = useState(envelope.icon);
-  const [color, setColor] = useState(envelope.color);
-  const handleNameEndEditing = () => onChange({ name });
-  const handleIconEndEditing = () => onChange({ icon });
-  const handleColorEndEditing = () => onChange({ color });
+  const form = useForm({
+    defaultValues: {
+      name: envelope.name,
+      icon: envelope.icon,
+      color: envelope.color,
+    },
+  });
+
+  const handleFieldEndEditing = (field: keyof typeof form.state.values) => () => {
+    const value = form.getFieldValue(field);
+    onChange({ [field]: value });
+  };
+
   return (
     <View className="gap-2">
-      <TextInput
-        accessibilityLabel={`${envelope.currency} Envelope name`}
-        className="h-11 rounded-xl bg-surface-container px-3 font-heading-normal text-lg italic text-ink"
-        onChangeText={setName}
-        onEndEditing={handleNameEndEditing}
-        value={name}
-      />
+      <form.Field name="name">
+        {({ handleChange, state }) => (
+          <Input
+            onChangeText={handleChange}
+            onEndEditing={handleFieldEndEditing("name")}
+            value={state.value}
+          />
+        )}
+      </form.Field>
       <View className="flex-row gap-2">
-        <TextInput
-          accessibilityLabel={`${name} Envelope emoji`}
-          className="h-11 w-16 rounded-xl bg-surface-container px-3 text-center text-lg text-ink"
-          onChangeText={setIcon}
-          onEndEditing={handleIconEndEditing}
-          value={icon}
-        />
-        <TextInput
-          accessibilityLabel={`${name} Envelope color`}
-          autoCapitalize="characters"
-          className="h-11 flex-1 rounded-xl bg-surface-container px-3 font-body-normal text-ink"
-          onChangeText={setColor}
-          onEndEditing={handleColorEndEditing}
-          value={color}
-        />
+        <View className="flex-1">
+          <form.Field name="icon">
+            {(field) => (
+              <Input
+                onChangeText={field.handleChange}
+                onEndEditing={handleFieldEndEditing("icon")}
+                value={field.state.value}
+              />
+            )}
+          </form.Field>
+        </View>
+        <View className="flex-1">
+          <form.Field name="color">
+            {(field) => (
+              <Input
+                autoCapitalize="characters"
+                onChangeText={field.handleChange}
+                onEndEditing={handleFieldEndEditing("color")}
+                value={field.state.value}
+              />
+            )}
+          </form.Field>
+        </View>
       </View>
     </View>
   );

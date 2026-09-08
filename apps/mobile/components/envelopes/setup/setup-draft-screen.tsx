@@ -1,4 +1,4 @@
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 
 import { SetupDraftPlan } from "@/components/envelopes/setup/setup-draft-plan";
@@ -29,28 +29,26 @@ export const SetupDraftScreen = () => {
 
   return (
     <View className="flex-1 bg-surface safe-top safe-bottom">
-      <ScrollView
+      <Animated.ScrollView
         className="flex-1"
         contentInsetAdjustmentBehavior="automatic"
         contentContainerClassName="gap-4 px-5 pb-safe-offset-8 pt-4"
       >
         {setup.data.draft ? (
-          <Animated.View key="plan" entering={FadeIn} exiting={FadeOut} layout={LinearTransition}>
-            <SetupDraftPlan
-              categories={setup.data.prerequisites.categories}
-              draft={setup.data.draft}
-              fundingAccounts={setup.data.prerequisites.fundingAccounts}
-              isSaving={setup.isSaving}
-              onAddEnvelope={setup.addEnvelope}
-              onDiscard={setup.discard}
-              onMerge={setup.mergeSuggestions}
-              onMoveCategory={setup.moveCategory}
-              onRemoveCategory={setup.removeCategory}
-              onToggleFundingAccount={setup.toggleFundingAccount}
-              onToggleRollover={setup.toggleRollover}
-              onUpdateEnvelope={setup.updateEnvelope}
-            />
-          </Animated.View>
+          <SetupDraftPlan
+            categories={setup.data.prerequisites.categories}
+            draft={setup.data.draft}
+            fundingAccounts={setup.data.prerequisites.fundingAccounts}
+            isSaving={setup.isSaving}
+            onAddEnvelope={setup.addEnvelope}
+            onDiscard={setup.discard}
+            onMerge={setup.mergeSuggestions}
+            onMoveCategory={setup.moveCategory}
+            onRemoveCategory={setup.removeCategory}
+            onToggleFundingAccount={setup.toggleFundingAccount}
+            onToggleRollover={setup.toggleRollover}
+            onUpdateEnvelope={setup.updateEnvelope}
+          />
         ) : (
           <Animated.View
             key="introduction"
@@ -73,7 +71,7 @@ export const SetupDraftScreen = () => {
             </Text>
           </Animated.View>
         ) : null}
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 };

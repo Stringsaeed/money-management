@@ -1,3 +1,5 @@
+import { Link } from "expo-router";
+
 import { BudgetOverviewScreen } from "@/components/envelopes/budget-overview-screen";
 import { WorkspaceRouteStatus } from "@/components/envelopes/workspace-route-status";
 import { Button } from "@/components/ui/button";
@@ -33,8 +35,15 @@ export const BudgetWorkspaceScreen = () => {
   if (!workspaceSelection || workspaceSelection.workspaces.length === 0) {
     return (
       <WorkspaceRouteStatus
+        action={
+          <Link href="/envelopes/setup" asChild>
+            <Button accessibilityLabel="Set up Envelopes">
+              <Text>Set up Envelopes</Text>
+            </Button>
+          </Link>
+        }
         title="No currency workspace yet"
-        message="Confirm Envelopes setup before choosing a Funding Pool."
+        message="Set up Envelopes to choose a Funding Pool and start budgeting."
       />
     );
   }

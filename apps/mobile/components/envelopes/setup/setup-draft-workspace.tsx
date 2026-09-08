@@ -62,7 +62,7 @@ export const SetupDraftWorkspaceSection = ({
   const mergeTarget = workspace.envelopes.find(({ id }) => id === selectedEnvelopeIds[0]);
 
   return (
-    <Animated.View entering={FadeIn} layout={LinearTransition} className="gap-3">
+    <>
       <View className="gap-1">
         <Text className="font-heading-medium text-xl italic text-ink">
           {workspace.currency} workspace
@@ -117,6 +117,6 @@ export const SetupDraftWorkspaceSection = ({
           onUpdateEnvelope={onUpdateEnvelope}
         />
       ))}
-    </Animated.View>
+    </>
   );
 };

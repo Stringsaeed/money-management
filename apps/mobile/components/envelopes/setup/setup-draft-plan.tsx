@@ -43,7 +43,7 @@ export const SetupDraftPlan = ({
   onToggleRollover,
   onUpdateEnvelope,
 }: SetupDraftPlanProps) => (
-  <Animated.View entering={FadeIn} layout={LinearTransition} className="gap-5">
+  <>
     <Animated.View entering={FadeIn} layout={LinearTransition} className="gap-1">
       <Text className="font-heading-normal text-2xl italic text-ink">Setup Draft resumed ✍️</Text>
       <Text selectable className="font-body-normal text-sm leading-5 text-ink/60">
@@ -75,5 +75,5 @@ export const SetupDraftPlan = ({
     >
       <Text>Discard Setup Draft</Text>
     </Button>
-  </Animated.View>
+  </>
 );
