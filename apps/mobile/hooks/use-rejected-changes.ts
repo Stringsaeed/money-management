@@ -7,7 +7,7 @@ import {
   resubmitRejectedChange,
   type RejectedChange,
 } from "@/modules/powersync/rejected-changes";
-import { useRequiredLedger } from "@/modules/ledger-db/provider";
+import { useSyncedTransactionLedger } from "@/modules/ledger-db/provider";
 import { generateId } from "@/utils/id";
 
 /**
@@ -15,9 +15,14 @@ import { generateId } from "@/utils/id";
  * for the active household and exposes the re-edit/resubmit and discard
  * flows. Resubmission always mints a NEW commandId so the edited intent is a
  * fresh idempotency key.
+ *
+ * The ledger is null before PowerSync connects, while the household stays
+ * local-only, and mid-migration (#193) — those states show an empty inbox
+ * instead of throwing, since a command can only be rejected once it has been
+ * submitted against an active, synced household.
  */
 export function useRejectedChanges() {
-  const ledger = useRequiredLedger();
+  const ledger = useSyncedTransactionLedger();
   const { activeHousehold } = useActiveHousehold();
   const householdId = activeHousehold?.householdId ?? null;
 
@@ -26,8 +31,9 @@ export function useRejectedChanges() {
   const [error, setError] = useState<Error | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!householdId) {
+    if (!ledger || !householdId) {
       setChanges([]);
+      setError(null);
       setIsLoading(false);
       return;
     }
@@ -43,12 +49,14 @@ export function useRejectedChanges() {
 
   useEffect(() => {
     void refresh();
+    if (!ledger) return;
     const subscription = ledger.collections.rejectedChanges.subscribeChanges(() => void refresh());
     return () => subscription.unsubscribe();
   }, [ledger, refresh]);
 
   const discard = useCallback(
     async (commandId: string) => {
+      if (!ledger) throw new Error("The inbox isn't connected yet. Try again in a moment.");
       await discardRejectedChange(ledger.collections, commandId);
       await refresh();
     },
@@ -57,6 +65,7 @@ export function useRejectedChanges() {
 
   const resubmit = useCallback(
     async (commandId: string, editedPayload?: CommandEnvelope["payload"]) => {
+      if (!ledger) throw new Error("The inbox isn't connected yet. Try again in a moment.");
       // A resubmitted command gets a NEW id: the old one is spent as an
       // idempotency key, and the server must treat this as a fresh intent.
       const newCommandId = generateId();
