@@ -19,8 +19,11 @@ export type LocalDb = OPSQLiteDatabase<typeof import("@/db/schema")> & {
  * counts per imported entity type and transaction amounts summed by
  * account. Compared against the server's post-import recompute.
  */
-export async function computeLocalManifest(db: LocalDb): Promise<ImportManifest> {
-  return computeLocalManifestFromChunks(await buildImportChunks(db));
+export async function computeLocalManifest(
+  db: LocalDb,
+  householdId: string,
+): Promise<ImportManifest> {
+  return computeLocalManifestFromChunks(await buildImportChunks(db, householdId));
 }
 
 export async function computeLocalManifestFromChunks(

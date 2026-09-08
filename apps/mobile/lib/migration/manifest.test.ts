@@ -116,7 +116,7 @@ describe("computeLocalManifest", () => {
         updatedAt: "2026-01-08T00:00:00.000Z",
       },
     ]);
-    const manifest = await computeLocalManifest(db);
+    const manifest = await computeLocalManifest(db, "household-1");
 
     expect(manifest.rowCounts).toEqual({
       account: 3,
@@ -141,7 +141,7 @@ describe("computeLocalManifest", () => {
 
   it("returns zeroed counts and empty sums for an empty install", async () => {
     const db = await setupDb();
-    const manifest = await computeLocalManifest(db);
+    const manifest = await computeLocalManifest(db, "household-1");
     expect(Object.values(manifest.rowCounts).every((count) => count === 0)).toBe(true);
     expect(manifest.transactionAmountMinorByAccount).toEqual({});
     expect(manifest.contentDigest).toMatch(/^[a-f0-9]{64}$/);

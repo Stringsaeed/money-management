@@ -84,7 +84,7 @@ const APPLIED_RESULT: CommandResult = {
 describe("runImport", () => {
   it("uploads every chunk in order and reports a match when manifests agree", async () => {
     const db = await setupDb();
-    const matchingManifest = await computeLocalManifest(db);
+    const matchingManifest = await computeLocalManifest(db, HOUSEHOLD_ID);
     const sent: CommandEnvelope<ImportBundlePayload>[] = [];
     const connectAndWait = jest.fn(async () => undefined);
     const result = await runImport({
@@ -151,7 +151,7 @@ describe("runImport", () => {
 
   it("does not certify when the local ledger changes during upload", async () => {
     const db = await setupDb();
-    const uploadedSnapshot = await computeLocalManifest(db);
+    const uploadedSnapshot = await computeLocalManifest(db, HOUSEHOLD_ID);
     const result = await runImport({
       db,
       householdId: HOUSEHOLD_ID,

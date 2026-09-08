@@ -49,7 +49,7 @@ export interface RunImportArgs {
  */
 export async function runImport(args: RunImportArgs): Promise<ImportResult> {
   const { db, householdId, sendCommand, fetchManifest } = args;
-  const chunks = await buildImportChunks(db);
+  const chunks = await buildImportChunks(db, householdId);
   const uploadManifest = await computeLocalManifestFromChunks(chunks);
 
   for (const chunk of chunks) {
@@ -80,7 +80,7 @@ export async function runImport(args: RunImportArgs): Promise<ImportResult> {
 
   const [serverManifest, currentLocalManifest] = await Promise.all([
     fetchManifest(householdId),
-    computeLocalManifest(db),
+    computeLocalManifest(db, householdId),
   ]);
   return manifestsMatch(uploadManifest, serverManifest) &&
     manifestsMatch(uploadManifest, currentLocalManifest)

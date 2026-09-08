@@ -64,7 +64,7 @@ function entityTypesInOrder(chunks: readonly ImportBundlePayload[]): readonly st
 describe("buildImportChunks", () => {
   it("skips entity types with no local rows", async () => {
     const db = await setupDb();
-    const chunks = await buildImportChunks(db);
+    const chunks = await buildImportChunks(db, "household-1");
     expect(chunks).toEqual([]);
   });
 
@@ -92,7 +92,7 @@ describe("buildImportChunks", () => {
       updatedAt: "2026-01-05T00:00:00.000Z",
     });
 
-    const chunks = await buildImportChunks(db);
+    const chunks = await buildImportChunks(db, "household-1");
     const accountChunk = chunks.find((chunk) => chunk.entityType === "account");
     const transactionChunk = chunks.find((chunk) => chunk.entityType === "transaction");
 
@@ -159,7 +159,7 @@ describe("buildImportChunks", () => {
       },
     ]);
 
-    const accountChunks = (await buildImportChunks(db)).filter(
+    const accountChunks = (await buildImportChunks(db, "household-1")).filter(
       (chunk) => chunk.entityType === "account",
     );
     const byId = new Map(
@@ -187,12 +187,101 @@ describe("buildImportChunks", () => {
       })),
     );
 
-    const chunks = (await buildImportChunks(db)).filter((chunk) => chunk.entityType === "category");
+    const chunks = (await buildImportChunks(db, "household-1")).filter(
+      (chunk) => chunk.entityType === "category",
+    );
     expect(chunks.length).toBeGreaterThan(1);
     for (const chunk of chunks) {
       expect(chunk.rows.length).toBeLessThanOrEqual(MAX_IMPORT_CHUNK_ROWS);
     }
     expect(chunks.flatMap((chunk) => chunk.rows)).toHaveLength(total);
+  });
+
+  it("namespaces a seeded category id by household so two households never collide (#194)", async () => {
+    // Every fresh install seeds identical fixed category ids (see db/seed.ts,
+    // e.g. "seed_cat_food") but the server's categories table has one global id
+    // column — remap by household so a second household's import never collides
+    // with the first household to have claimed that id.
+    const db = await setupDb();
+    await db.insert(categories).values({
+      id: "seed_cat_food",
+      name: "Food & Dining",
+      type: "expense",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+
+    const chunksA = (await buildImportChunks(db, "household-a")).filter(
+      (chunk) => chunk.entityType === "category",
+    );
+    const chunksB = (await buildImportChunks(db, "household-b")).filter(
+      (chunk) => chunk.entityType === "category",
+    );
+
+    const idA = chunksA[0]?.rows[0]?.id;
+    const idB = chunksB[0]?.rows[0]?.id;
+    expect(idA).not.toBe("seed_cat_food");
+    expect(idA).not.toBe(idB);
+
+    // Deterministic: rebuilding chunks for the same household (a retry) reproduces
+    // the exact same wire id, so a retry stays idempotent instead of duplicating.
+    const chunksARetry = (await buildImportChunks(db, "household-a")).filter(
+      (chunk) => chunk.entityType === "category",
+    );
+    expect(chunksARetry[0]?.rows[0]?.id).toBe(idA);
+  });
+
+  it("remaps categoryId/parentId references to match the category's namespaced id (#194)", async () => {
+    const db = await setupDb();
+    await db.insert(accounts).values({
+      id: "account-1",
+      name: "Checking",
+      type: "bank",
+      currency: "USD",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+    await db.insert(categories).values([
+      {
+        id: "seed_cat_food",
+        name: "Food & Dining",
+        type: "expense",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+      {
+        id: "seed_cat_groceries",
+        name: "Groceries",
+        type: "expense",
+        parentId: "seed_cat_food",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+    ]);
+    await db.insert(transactions).values({
+      id: "txn-1",
+      type: "expense",
+      amount: 1_200,
+      currency: "USD",
+      date: "2026-01-05",
+      accountId: "account-1",
+      categoryId: "seed_cat_groceries",
+      createdAt: "2026-01-05T00:00:00.000Z",
+      updatedAt: "2026-01-05T00:00:00.000Z",
+    });
+
+    const chunks = await buildImportChunks(db, "household-a");
+    const categoryRows = chunks
+      .filter((chunk) => chunk.entityType === "category")
+      .flatMap((chunk) => chunk.rows);
+    const transactionRow = chunks
+      .filter((chunk) => chunk.entityType === "transaction")
+      .flatMap((chunk) => chunk.rows)[0];
+
+    const food = categoryRows.find((row) => row.name === "Food & Dining");
+    const groceries = categoryRows.find((row) => row.name === "Groceries");
+    expect(groceries?.parentId).toBe(food?.id);
+    expect(transactionRow?.categoryId).toBe(groceries?.id);
   });
 
   it("orders chunks account -> category -> transaction", async () => {
@@ -223,7 +312,7 @@ describe("buildImportChunks", () => {
       createdAt: "2026-01-05T00:00:00.000Z",
       updatedAt: "2026-01-05T00:00:00.000Z",
     });
-    const chunks = await buildImportChunks(db);
+    const chunks = await buildImportChunks(db, "household-1");
     expect(entityTypesInOrder(chunks)).toEqual(["account", "category", "transaction"]);
   });
 
@@ -331,7 +420,7 @@ describe("buildImportChunks", () => {
       settledAt: createdAt,
     });
 
-    const chunks = await buildImportChunks(db);
+    const chunks = await buildImportChunks(db, "household-1");
     expect(entityTypesInOrder(chunks)).toEqual([
       "account",
       "category",
@@ -373,7 +462,9 @@ describe("buildImportChunks", () => {
       })),
     );
 
-    const chunks = (await buildImportChunks(db)).filter((chunk) => chunk.entityType === "account");
+    const chunks = (await buildImportChunks(db, "household-1")).filter(
+      (chunk) => chunk.entityType === "account",
+    );
     expect(chunks).toHaveLength(2);
     expect(chunks[0]).toMatchObject({ chunkIndex: 0, chunkCount: 2 });
     expect(chunks[1]).toMatchObject({ chunkIndex: 1, chunkCount: 2 });
