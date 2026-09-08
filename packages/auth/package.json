@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:",
+    "@electric-sql/pglite": "^0.3.14",
     "@trove/typescript-config": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "~7.0.2",

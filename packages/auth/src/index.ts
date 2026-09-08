@@ -7,6 +7,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { magicLink } from "better-auth/plugins";
 
 import { invalidatePriorMagicLinks, invalidatePriorResetLinks } from "./invalidate-links";
+import { rethrowInvalidationError } from "./invalidation-error";
 import { AUTH_PUBLIC_URL, LINK_TTL_SECONDS } from "./link-policy";
 import { buildEmailLink } from "./links";
 import { consoleMailer, type Mailer } from "./mailer";
@@ -38,7 +39,14 @@ export function createAuth(deps: { readonly mailer?: Mailer } = {}) {
       enabled: true,
       resetPasswordTokenExpiresIn: LINK_TTL_SECONDS,
       sendResetPassword: async ({ user, token }) => {
-        await invalidatePriorResetLinks(db, user.id, `reset-password:${token}`);
+        try {
+          await invalidatePriorResetLinks(db, user.id, `reset-password:${token}`);
+        } catch (error) {
+          rethrowInvalidationError(
+            "reset",
+            error instanceof Error ? error : new Error("Unknown reset-link invalidation failure"),
+          );
+        }
         await mailer.send(user.email, "reset", buildEmailLink("reset", token, AUTH_PUBLIC_URL));
       },
     },
@@ -72,7 +80,14 @@ export function createAuth(deps: { readonly mailer?: Mailer } = {}) {
         disableSignUp: true,
         expiresIn: LINK_TTL_SECONDS,
         sendMagicLink: async ({ email, token }) => {
-          await invalidatePriorMagicLinks(db, email, token);
+          try {
+            await invalidatePriorMagicLinks(db, email, token);
+          } catch (error) {
+            rethrowInvalidationError(
+              "magic",
+              error instanceof Error ? error : new Error("Unknown magic-link invalidation failure"),
+            );
+          }
           await mailer.send(email, "magic", buildEmailLink("magic", token, AUTH_PUBLIC_URL));
         },
       }),

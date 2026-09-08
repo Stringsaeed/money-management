@@ -9,9 +9,12 @@ export interface VerificationRow {
   readonly value: string;
 }
 
-const magicVerificationValueSchema = z.object({
-  email: z.string(),
-});
+const magicVerificationValueSchema = z
+  .object({
+    email: z.string(),
+    name: z.string().optional(),
+  })
+  .strict();
 
 export function emailFromMagicVerificationValue(value: string): string | null {
   try {
