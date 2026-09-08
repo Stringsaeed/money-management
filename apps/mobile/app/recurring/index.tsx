@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { PlusIcon } from "phosphor-react-native";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
@@ -8,6 +9,7 @@ import { WateringCanGraphic } from "@/components/graphics/watering-can";
 import { RecurringRuleRow } from "@/components/recurring/recurring-rule-row";
 import { layoutTransition } from "@/components/transaction/constants";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { useRecurringRulesList } from "@/hooks/use-recurring-rules";
 import { cn } from "@/lib/utils";
@@ -31,7 +33,7 @@ export default function RecurringListScreen() {
   const { data: rules = [], isLoading } = useRecurringRulesList(filter);
 
   return (
-    <View className="flex-1 bg-surface pt-safe-offset-20">
+    <View className="flex-1 bg-surface pt-safe-offset-20 safe-bottom">
       <View className="flex-row gap-2 px-5 py-3">
         {filters.map((item) => (
           <Pressable
@@ -96,8 +98,12 @@ export default function RecurringListScreen() {
         </ScrollView>
       )}
 
-      <Button onPress={() => router.push(newRecurringRoute)} size="fab">
-        <Text className="text-3xl">+</Text>
+      <Button
+        accessibilityLabel="Add recurring rule"
+        onPress={() => router.push(newRecurringRoute)}
+        size="fab"
+      >
+        <Icon as={PlusIcon} size={24} />
       </Button>
     </View>
   );
