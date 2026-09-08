@@ -31,37 +31,44 @@ export const SetupEnvelopeIdentityFields = ({
       <form.Field name="name">
         {({ handleChange, state }) => (
           <Input
+            accessibilityLabel={`${envelope.currency} Envelope name`}
             onChangeText={handleChange}
             onEndEditing={handleFieldEndEditing("name")}
             value={state.value}
           />
         )}
       </form.Field>
-      <View className="flex-row gap-2">
-        <View className="flex-1">
-          <form.Field name="icon">
-            {(field) => (
-              <Input
-                onChangeText={field.handleChange}
-                onEndEditing={handleFieldEndEditing("icon")}
-                value={field.state.value}
-              />
-            )}
-          </form.Field>
-        </View>
-        <View className="flex-1">
-          <form.Field name="color">
-            {(field) => (
-              <Input
-                autoCapitalize="characters"
-                onChangeText={field.handleChange}
-                onEndEditing={handleFieldEndEditing("color")}
-                value={field.state.value}
-              />
-            )}
-          </form.Field>
-        </View>
-      </View>
+      <form.Subscribe selector={(state) => state.values.name}>
+        {(name) => (
+          <View className="flex-row gap-2">
+            <View className="flex-1">
+              <form.Field name="icon">
+                {(field) => (
+                  <Input
+                    accessibilityLabel={`${name} Envelope emoji`}
+                    onChangeText={field.handleChange}
+                    onEndEditing={handleFieldEndEditing("icon")}
+                    value={field.state.value}
+                  />
+                )}
+              </form.Field>
+            </View>
+            <View className="flex-1">
+              <form.Field name="color">
+                {(field) => (
+                  <Input
+                    accessibilityLabel={`${name} Envelope color`}
+                    autoCapitalize="characters"
+                    onChangeText={field.handleChange}
+                    onEndEditing={handleFieldEndEditing("color")}
+                    value={field.state.value}
+                  />
+                )}
+              </form.Field>
+            </View>
+          </View>
+        )}
+      </form.Subscribe>
     </View>
   );
 };
