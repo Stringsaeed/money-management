@@ -62,5 +62,9 @@ graphify-out
 
 # verify-trove proof dumps (skill keeps path; do not commit screenshots)
 .cursor/skills/verify-trove/artifacts/
+
+# ephemeral agent/autopilot/stim proof dumps — never commit
+.scratch/
+
 .audit/
 .local/
