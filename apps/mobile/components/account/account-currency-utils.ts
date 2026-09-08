@@ -3,7 +3,6 @@ import { ACCOUNT_CURRENCIES } from "@/components/account/account-form-options";
 export interface AccountCurrencyOption {
   code: string;
   name: string;
-  /** Localized symbol when it is short and distinct from the ISO code; otherwise null. */
   symbol: string | null;
 }
 
@@ -19,10 +18,6 @@ export function getCurrencyDisplayName(code: string, locale?: string): string {
   }
 }
 
-/**
- * Returns a currency symbol only when Intl produces a short, unambiguous glyph
- * that is not just the ISO code itself (e.g. "$" for USD, not "AED" for AED).
- */
 export function getReliableCurrencySymbol(code: string, locale?: string): string | null {
   try {
     const parts = new Intl.NumberFormat(locale, {

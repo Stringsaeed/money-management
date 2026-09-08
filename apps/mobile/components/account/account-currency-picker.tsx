@@ -118,7 +118,7 @@ export function AccountCurrencyPicker({
             ListEmptyComponent={
               <View className="items-center px-4 py-10">
                 <Text className="font-body-medium text-base text-ink/50">
-                  No currencies match "{query.trim()}". 🔍
+                  {`No currencies match "${query.trim()}". 🔍`}
                 </Text>
               </View>
             }
