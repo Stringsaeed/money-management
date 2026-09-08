@@ -1,0 +1,35 @@
+appId: com.stringsaeed.moneymanagement
+---
+# Visit each glass tab and return Home via deep link.
+# Preconditions: past onboarding (run 01-onboarding first). Session already open.
+- extendedWaitUntil:
+    timeout: 30000
+    visible: "Create transaction"
+- takeScreenshot: tabs-home
+- tapOn:
+    text: "Ledger"
+    index: 1
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Ledger"
+- takeScreenshot: tabs-ledger
+- tapOn: "Inbox"
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Inbox"
+- takeScreenshot: tabs-inbox
+- tapOn: "Envelopes"
+- extendedWaitUntil:
+    timeout: 20000
+    visible: "No currency workspace yet"
+- takeScreenshot: tabs-envelopes
+- tapOn: "Settings"
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Profile & household"
+- takeScreenshot: tabs-settings
+- openLink: trove:///
+- extendedWaitUntil:
+    timeout: 30000
+    visible: "Create transaction"
+- takeScreenshot: tabs-home-return

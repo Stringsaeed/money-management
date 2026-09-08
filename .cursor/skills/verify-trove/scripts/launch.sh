@@ -1,128 +1,156 @@
 #!/usr/bin/env bash
-# Boot simulator, ensure Metro (dev-client), install/launch Trove for verification.
+# Boot stim-owned simulator, start Metro, install/launch Trove for verification.
 set -euo pipefail
 # shellcheck source=lib.sh
 source "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 
-STARTED_METRO=0
-BOOTED_SIM=0
-METRO_PID=""
-DEV_CLIENT_URL="trove://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081"
+require_cmd stim
+require_cmd agent-device
+require_cmd python3
 
-echo "verify-trove launch"
-echo "  udid=$VERIFY_TROVE_UDID"
+STARTED_METRO=0
+STARTED_IOS=0
+
+echo "verify-trove launch (stim + agent-device)"
+echo "  mobile=$MOBILE_APP"
 echo "  artifacts=$VERIFY_TROVE_ARTIFACTS"
 
-if ! xcrun simctl list devices | rg -q "${VERIFY_TROVE_UDID}.*Booted"; then
-  echo "booting simulator $VERIFY_TROVE_UDID"
-  argent_run boot-device --udid "$VERIFY_TROVE_UDID"
-  BOOTED_SIM=1
-else
-  echo "simulator already booted"
-fi
+cd "$MOBILE_APP"
 
-wait_for_metro() {
-  local i
-  for i in $(seq 1 120); do
-    if curl -sf "http://127.0.0.1:8081/status" >/dev/null 2>&1; then
-      return 0
-    fi
-    sleep 1
-  done
-  return 1
-}
-
-if curl -sf "http://127.0.0.1:8081/status" >/dev/null 2>&1; then
-  echo "Metro already healthy on :8081 — reusing"
-else
-  echo "ensuring workspace packages built"
-  (
-    cd "$ROOT"
-    pnpm exec turbo run build --filter=mobile...
-  ) >"$VERIFY_TROVE_ARTIFACTS/turbo-build.log" 2>&1
-
-  echo "starting Metro (expo start --dev-client) via nohup"
-  # Never use bare `exp://` — that opens Expo Go. This app requires the custom dev client.
-  nohup bash -lc "cd \"$ROOT/apps/mobile\" && pnpm exec expo start --dev-client --port 8081" \
-    >"$VERIFY_TROVE_ARTIFACTS/metro.log" 2>&1 &
-  METRO_PID=$!
-  disown "$METRO_PID" 2>/dev/null || true
+echo "stim start --json"
+START_JSON="$(stim start --json 2>"$VERIFY_TROVE_ARTIFACTS/stim-start.stderr.log")"
+printf '%s\n' "$START_JSON" | tee "$VERIFY_TROVE_ARTIFACTS/stim-start.json"
+ALREADY_RUNNING="$(python3 -c "import json,sys;print(json.load(sys.stdin).get('alreadyRunning',False))" <<<"$START_JSON")"
+METRO_PORT="$(python3 -c "import json,sys;print(json.load(sys.stdin).get('port') or 8081)" <<<"$START_JSON")"
+if [[ "$ALREADY_RUNNING" == "False" || "$ALREADY_RUNNING" == "false" ]]; then
   STARTED_METRO=1
-  if ! wait_for_metro; then
-    echo "Metro did not become healthy on :8081 — see $VERIFY_TROVE_ARTIFACTS/metro.log" >&2
-    exit 1
-  fi
-  echo "Metro healthy (wrapper_pid=$METRO_PID)"
+fi
+VERIFY_TROVE_METRO_PORT="$METRO_PORT"
+export VERIFY_TROVE_METRO_PORT
+
+IOS_ARGS=(ios --json)
+if [[ "${VERIFY_TROVE_FORCE_BUILD:-0}" == "1" ]]; then
+  IOS_ARGS+=(--no-build-cache)
+  echo "VERIFY_TROVE_FORCE_BUILD=1 — stim ios --no-build-cache"
 fi
 
-APP_INSTALLED=0
-if xcrun simctl get_app_container "$VERIFY_TROVE_UDID" "$VERIFY_TROVE_BUNDLE_ID" data >/dev/null 2>&1; then
-  APP_INSTALLED=1
+echo "stim ${IOS_ARGS[*]}"
+# Native builds can outlive a short shell block; allow a long wait.
+IOS_JSON="$(stim "${IOS_ARGS[@]}" 2>"$VERIFY_TROVE_ARTIFACTS/stim-ios.stderr.log")"
+printf '%s\n' "$IOS_JSON" | tee "$VERIFY_TROVE_ARTIFACTS/stim-ios.json"
+STARTED_IOS=1
+
+UDID="$(python3 -c "import json,sys;print(json.load(sys.stdin)['udid'])" <<<"$IOS_JSON")"
+BUNDLE_ID="$(python3 -c "import json,sys;print(json.load(sys.stdin).get('bundleId') or '')" <<<"$IOS_JSON")"
+LAUNCHED="$(python3 -c "import json,sys;print(json.load(sys.stdin).get('launched'))" <<<"$IOS_JSON")"
+METRO_PORT="$(python3 -c "import json,sys;print(json.load(sys.stdin).get('metroPort') or $METRO_PORT)" <<<"$IOS_JSON")"
+DEVICE_NAME="$(python3 -c "import json,sys;print(json.load(sys.stdin).get('deviceName') or '')" <<<"$IOS_JSON")"
+
+VERIFY_TROVE_UDID="$UDID"
+VERIFY_TROVE_METRO_PORT="$METRO_PORT"
+export VERIFY_TROVE_UDID VERIFY_TROVE_METRO_PORT
+
+if [[ -n "$BUNDLE_ID" && "$BUNDLE_ID" != "$VERIFY_TROVE_BUNDLE_ID" ]]; then
+  echo "WARN: stim reported bundleId=$BUNDLE_ID (expected $VERIFY_TROVE_BUNDLE_ID)" >&2
 fi
 
-if [[ "${VERIFY_TROVE_FORCE_BUILD:-0}" == "1" || "$APP_INSTALLED" -eq 0 ]]; then
-  echo "building/installing app onto $VERIFY_TROVE_UDID (force=${VERIFY_TROVE_FORCE_BUILD:-0} installed=$APP_INSTALLED)"
-  # EAS buildCacheProvider downloads fingerprint-matched remotes and ignores --no-build-cache.
-  # Stash eas.json for this compile only so resolveBuildCache returns null (local Xcode build).
-  EAS_JSON="$ROOT/apps/mobile/eas.json"
-  EAS_BAK="$VERIFY_TROVE_ARTIFACTS/eas.json.verify-bak"
-  RESTORED_EAS=0
-  if [[ -f "$EAS_JSON" ]]; then
-    cp "$EAS_JSON" "$EAS_BAK"
-    mv "$EAS_JSON" "${EAS_JSON}.verify-stashed"
-    echo "stashed apps/mobile/eas.json to force a local native compile"
-  fi
-  restore_eas() {
-    if [[ -f "${EAS_JSON}.verify-stashed" ]]; then
-      mv "${EAS_JSON}.verify-stashed" "$EAS_JSON"
-      RESTORED_EAS=1
-      echo "restored apps/mobile/eas.json"
-    fi
-  }
-  trap restore_eas EXIT
-  (
-    cd "$ROOT/apps/mobile"
-    pnpm exec expo run:ios --device "$VERIFY_TROVE_UDID" --no-build-cache --no-bundler
-  ) 2>&1 | tee "$VERIFY_TROVE_ARTIFACTS/ios-build.log"
-  restore_eas
-  trap - EXIT
-  argent_run open-url --udid "$VERIFY_TROVE_UDID" --url "$DEV_CLIENT_URL" >/dev/null 2>&1 || true
-else
-  echo "app installed — launch native client + open packager deep link"
-  argent_run launch-app --udid "$VERIFY_TROVE_UDID" --bundleId "$VERIFY_TROVE_BUNDLE_ID"
-  # Custom scheme deep link into the installed Trove (Dev) client — not Expo Go.
-  argent_run open-url --udid "$VERIFY_TROVE_UDID" --url "$DEV_CLIENT_URL"
-fi
+echo "waiting for Trove JS chrome via agent-device (launched=$LAUNCHED)"
+agent_device open "$VERIFY_TROVE_BUNDLE_ID" \
+  --platform ios \
+  --udid "$UDID" \
+  --session "$VERIFY_TROVE_SESSION" \
+  --metro-host 127.0.0.1 \
+  --metro-port "$METRO_PORT" \
+  --launch-url "trove://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A${METRO_PORT}" \
+  --relaunch \
+  >"$VERIFY_TROVE_ARTIFACTS/agent-device-open.txt" 2>&1 || true
 
-echo "waiting for Trove JS app chrome (not Expo launcher / Expo Go)"
-for _ in $(seq 1 90); do
-  desc="$(argent_run describe --udid "$VERIFY_TROVE_UDID" --bundleId "$VERIFY_TROVE_BUNDLE_ID" 2>/dev/null || true)"
-  if printf '%s' "$desc" | rg -qi 'Searching for development servers|DEVELOPMENT SERVERS|Enter URL manually|Expo Go|incompatible with this version'; then
-    # Re-assert the deep link periodically while Metro finishes bundling.
-    argent_run open-url --udid "$VERIFY_TROVE_UDID" --url "$DEV_CLIENT_URL" >/dev/null 2>&1 || true
+# System alert "Open in Trove (Dev)?" appears for custom-scheme deep links.
+agent_device alert accept --session "$VERIFY_TROVE_SESSION" \
+  >"$VERIFY_TROVE_ARTIFACTS/agent-device-alert.txt" 2>&1 || true
+
+CHROME_OK=0
+for _ in $(seq 1 60); do
+  SNAP="$(agent_device snapshot -i --session "$VERIFY_TROVE_SESSION" 2>/dev/null || true)"
+  printf '%s\n' "$SNAP" >"$VERIFY_TROVE_ARTIFACTS/launch-snapshot.txt"
+  if printf '%s' "$SNAP" | rg -qi 'Open in .Trove|Open in “Trove'; then
+    agent_device alert accept --session "$VERIFY_TROVE_SESSION" >/dev/null 2>&1 \
+      || agent_device press 'label="Open"' --settle --session "$VERIFY_TROVE_SESSION" >/dev/null 2>&1 \
+      || true
     sleep 2
     continue
   fi
-  if printf '%s' "$desc" | rg -qi 'Plant your first seed|Create transaction|Name your first plot|Open Trove|Erase All Data|Your garden is planted|Budget envelopes are coming soon'; then
+  if printf '%s' "$SNAP" | rg -qi 'Searching for development servers|DEVELOPMENT SERVERS|Enter URL manually|Expo Go|incompatible with this version'; then
+    # Prefer the workspace Metro row, then fall back to launch-url reopen.
+    if printf '%s' "$SNAP" | rg -q "127.0.0.1:${METRO_PORT}|localhost:${METRO_PORT}|192\\.[0-9.]*:${METRO_PORT}"; then
+      agent_device press "text=\"Trove (Dev), http://127.0.0.1:${METRO_PORT}\"" --settle --session "$VERIFY_TROVE_SESSION" >/dev/null 2>&1 \
+        || agent_device press "@e13" --settle --session "$VERIFY_TROVE_SESSION" >/dev/null 2>&1 \
+        || true
+    fi
+    agent_device open "$VERIFY_TROVE_BUNDLE_ID" \
+      --platform ios \
+      --udid "$UDID" \
+      --session "$VERIFY_TROVE_SESSION" \
+      --metro-host 127.0.0.1 \
+      --metro-port "$METRO_PORT" \
+      --launch-url "trove://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A${METRO_PORT}" \
+      --relaunch \
+      >"$VERIFY_TROVE_ARTIFACTS/agent-device-reopen.txt" 2>&1 || true
+    agent_device alert accept --session "$VERIFY_TROVE_SESSION" >/dev/null 2>&1 || true
+    sleep 3
+    continue
+  fi
+  if printf '%s' "$SNAP" | rg -qi 'Plant your first seed|Create transaction|Name your first plot|Open Trove|Erase local data from this device|Your garden is planted|No currency workspace yet|Set up Envelopes|Recent Journal'; then
+    CHROME_OK=1
     echo "app chrome visible"
-    printf '%s\n' "$desc" >"$VERIFY_TROVE_ARTIFACTS/launch-describe.txt"
     break
   fi
   sleep 2
 done
 
-cat >"$VERIFY_TROVE_ARTIFACTS/launch.json" <<EOF
-{
-  "run_id": "$VERIFY_TROVE_RUN_ID",
-  "udid": "$VERIFY_TROVE_UDID",
-  "bundle_id": "$VERIFY_TROVE_BUNDLE_ID",
-  "started_metro": $STARTED_METRO,
-  "metro_pid": ${METRO_PID:-null},
-  "booted_sim": $BOOTED_SIM,
-  "force_build": ${VERIFY_TROVE_FORCE_BUILD:-0},
-  "dev_client_url": "$DEV_CLIENT_URL"
-}
-EOF
+if [[ "$CHROME_OK" -ne 1 ]]; then
+  echo "WARN: chrome not confirmed yet — run doctor.sh; see launch-snapshot.txt" >&2
+fi
 
-echo "launch: ready (artifacts=$VERIFY_TROVE_ARTIFACTS)"
+VERIFY_TROVE_UDID="$UDID" \
+VERIFY_TROVE_METRO_PORT="$METRO_PORT" \
+VERIFY_TROVE_DEVICE_NAME="$DEVICE_NAME" \
+VERIFY_TROVE_STARTED_METRO="$STARTED_METRO" \
+VERIFY_TROVE_STARTED_IOS="$STARTED_IOS" \
+VERIFY_TROVE_STIM_LAUNCHED="$LAUNCHED" \
+python3 - "$VERIFY_TROVE_ARTIFACTS/launch.json" <<'PY'
+import json, os, sys
+
+launched_raw = os.environ.get("VERIFY_TROVE_STIM_LAUNCHED", "")
+if launched_raw in ("true", "True"):
+    launched = True
+elif launched_raw in ("false", "False"):
+    launched = False
+elif launched_raw == "":
+    launched = None
+else:
+    launched = launched_raw
+
+payload = {
+    "run_id": os.environ["VERIFY_TROVE_RUN_ID"],
+    "udid": os.environ["VERIFY_TROVE_UDID"],
+    "device_name": os.environ.get("VERIFY_TROVE_DEVICE_NAME", ""),
+    "bundle_id": os.environ["VERIFY_TROVE_BUNDLE_ID"],
+    "metro_port": int(os.environ["VERIFY_TROVE_METRO_PORT"]),
+    "started_metro": int(os.environ.get("VERIFY_TROVE_STARTED_METRO", "0")),
+    "started_ios": int(os.environ.get("VERIFY_TROVE_STARTED_IOS", "0")),
+    "stim_launched": launched,
+    "session": os.environ["VERIFY_TROVE_SESSION"],
+    "force_build": int(os.environ.get("VERIFY_TROVE_FORCE_BUILD", "0")),
+    "harness": "stim+agent-device",
+}
+with open(sys.argv[1], "w", encoding="utf-8") as fh:
+    json.dump(payload, fh, indent=2)
+    fh.write("\n")
+PY
+
+echo "launch: ready"
+echo "  udid=$UDID"
+echo "  metro_port=$METRO_PORT"
+echo "  artifacts=$VERIFY_TROVE_ARTIFACTS"
 echo "next: .cursor/skills/verify-trove/scripts/doctor.sh"

@@ -1,0 +1,19 @@
+appId: com.stringsaeed.moneymanagement
+---
+# Envelopes empty workspace → setup intro.
+# Preconditions: past onboarding; no activated budget workspace. Session already open.
+- tapOn: "Envelopes"
+- extendedWaitUntil:
+    timeout: 20000
+    visible: "No currency workspace yet"
+- assertVisible: "Set up Envelopes"
+- takeScreenshot: envelopes-empty
+- tapOn: "Set up Envelopes"
+- extendedWaitUntil:
+    timeout: 20000
+    visible: "Give your Money a job"
+- takeScreenshot: envelopes-setup
+- openLink: trove:///
+- extendedWaitUntil:
+    timeout: 30000
+    visible: "Create transaction"

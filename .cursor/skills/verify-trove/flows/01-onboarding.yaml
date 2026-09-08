@@ -1,0 +1,51 @@
+appId: com.stringsaeed.moneymanagement
+---
+# Fresh ledger → plant first account → Home.
+# clearState wipes the verify simulator app data so welcome is reachable.
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    timeout: 45000
+    visible:
+      id: "onboarding-start"
+- takeScreenshot: onboarding-welcome
+- tapOn:
+    id: "onboarding-start"
+- extendedWaitUntil:
+    timeout: 20000
+    visible:
+      id: "onboarding-name-input"
+- tapOn:
+    id: "onboarding-name-input"
+- eraseText
+- inputText: "Verify Checking"
+- tapOn:
+    id: "onboarding-continue"
+- extendedWaitUntil:
+    timeout: 20000
+    visible:
+      id: "onboarding-amount-input"
+- tapOn:
+    id: "onboarding-amount-input"
+- eraseText
+- inputText: "100"
+- tapOn:
+    id: "onboarding-continue"
+- extendedWaitUntil:
+    timeout: 20000
+    visible: "Make it yours"
+- tapOn:
+    id: "onboarding-continue"
+- extendedWaitUntil:
+    timeout: 30000
+    visible:
+      id: "onboarding-finish"
+- takeScreenshot: onboarding-planted
+- tapOn:
+    id: "onboarding-finish"
+- extendedWaitUntil:
+    timeout: 45000
+    visible: "Create transaction"
+- takeScreenshot: onboarding-home
+- assertVisible: "Create transaction"
+- assertVisible: "Settings"
