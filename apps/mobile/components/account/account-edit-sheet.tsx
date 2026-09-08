@@ -57,12 +57,9 @@ export function AccountEditSheet({ account, onDismiss, onUpdated }: AccountEditS
           ) : (
             <AccountFormContent
               amountEditable={false}
-              currencyExpanded={false}
               form={form}
               lockedBalanceCents={account.balance}
               onColorChange={handleColorChange}
-              onCurrencyCollapse={() => undefined}
-              onCurrencyExpandToggle={() => undefined}
               onIconChange={handleIconChange}
               onTypeChange={handleTypeChange}
               typeEditable={local}

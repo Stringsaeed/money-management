@@ -14,12 +14,27 @@ export const RNHostView = Box;
 export function BottomSheet({
   isPresented,
   children,
+  onDismiss,
+  testID,
 }: {
   isPresented?: boolean;
   children?: ReactNode;
+  onDismiss?: () => void;
+  testID?: string;
 }) {
   if (!isPresented) return null;
-  return <View>{children}</View>;
+  return (
+    <View testID={testID}>
+      {children}
+      {onDismiss ? (
+        <Pressable
+          accessibilityLabel="Dismiss sheet"
+          accessibilityRole="button"
+          onPress={onDismiss}
+        />
+      ) : null}
+    </View>
+  );
 }
 
 export function Text({ children }: { children?: string }) {

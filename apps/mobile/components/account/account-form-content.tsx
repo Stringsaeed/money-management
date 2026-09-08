@@ -21,12 +21,9 @@ type SheetTextInputProps = ComponentProps<typeof TextInput>;
 
 interface AccountFormContentProps {
   amountEditable?: boolean;
-  currencyExpanded: boolean;
   form: AccountFormApi;
   lockedBalanceCents?: number;
   onColorChange: (color: string) => void;
-  onCurrencyCollapse: VoidFunction;
-  onCurrencyExpandToggle: VoidFunction;
   onIconChange: (icon: string) => void;
   onTypeChange: (type: AccountType) => void;
   TextInputComponent?: ComponentType<SheetTextInputProps>;
@@ -36,12 +33,9 @@ interface AccountFormContentProps {
 
 export function AccountFormContent({
   amountEditable = true,
-  currencyExpanded,
   form,
   lockedBalanceCents,
   onColorChange,
-  onCurrencyCollapse,
-  onCurrencyExpandToggle,
   onIconChange,
   onTypeChange,
   TextInputComponent = TextInput,
@@ -90,11 +84,8 @@ export function AccountFormContent({
         <AccountFormBalanceSection
           amountEditable={amountEditable}
           currencyEditable={currencyEditable}
-          currencyExpanded={currencyExpanded}
           form={form}
           lockedBalanceCents={lockedBalanceCents}
-          onCurrencyCollapse={onCurrencyCollapse}
-          onCurrencyExpandToggle={onCurrencyExpandToggle}
           TextInputComponent={TextInputComponent}
         />
 
