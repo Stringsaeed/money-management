@@ -1,15 +1,23 @@
-import { router } from "expo-router";
+import type { Href } from "expo-router";
 import { View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { MoneyText } from "@/components/ui/money-text";
 import { Text } from "@/components/ui/text";
 import type { AccountArchiveBlocker } from "@/modules/accounts/account-lifecycle";
+import { useUIStore } from "@/stores/ui-store";
 import type { AccountWithBalance } from "@/types";
 
 interface AccountArchiveBlockerItemProps {
   account: AccountWithBalance;
   blocker: AccountArchiveBlocker;
+  /**
+   * Dismisses the owning Edit Account sheet and then navigates to the given
+   * destination using replacement/tab-reset semantics. Callers must not
+   * navigate directly — routing through this callback keeps the sheet from
+   * being left orphaned behind the destination screen.
+   */
+  onReview: (href: Href) => void;
 }
 
 const BUDGET_DEPENDENCY_LABELS = {
@@ -20,17 +28,26 @@ const BUDGET_DEPENDENCY_LABELS = {
   "unsupported-cross-currency-transfer": "Unsupported Cross-currency Transfer",
 } as const;
 
-export function AccountArchiveBlockerItem({ account, blocker }: AccountArchiveBlockerItemProps) {
+export function AccountArchiveBlockerItem({
+  account,
+  blocker,
+  onReview,
+}: AccountArchiveBlockerItemProps) {
+  const setActiveAccountId = useUIStore((state) => state.setActiveAccountId);
+
   function reviewBalance() {
-    router.push("/(tabs)/ledger");
+    // Carry the account into the Ledger's existing filter so the relevant
+    // balance is easy to find instead of landing on the unfiltered feed.
+    setActiveAccountId(account.id);
+    onReview("/(tabs)/ledger");
   }
 
   function reviewBudget() {
-    router.push("/(tabs)/envelopes");
+    onReview("/(tabs)/envelopes");
   }
 
   function reviewRules() {
-    router.push("/recurring");
+    onReview("/recurring");
   }
 
   if (blocker.kind === "non-zero-balance") {

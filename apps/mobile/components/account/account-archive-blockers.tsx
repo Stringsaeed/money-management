@@ -1,3 +1,4 @@
+import type { Href } from "expo-router";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { layoutTransition } from "@/components/transaction/constants";
@@ -10,9 +11,14 @@ import { AccountArchiveBlockerItem } from "./account-archive-blocker-item";
 interface AccountArchiveBlockersProps {
   account: AccountWithBalance;
   blockers: AccountArchiveBlocker[];
+  onReview: (href: Href) => void;
 }
 
-export function AccountArchiveBlockers({ account, blockers }: AccountArchiveBlockersProps) {
+export function AccountArchiveBlockers({
+  account,
+  blockers,
+  onReview,
+}: AccountArchiveBlockersProps) {
   return (
     <Animated.View
       className="gap-3 rounded-xl border border-terracotta/30 bg-terracotta/10 p-4"
@@ -24,7 +30,12 @@ export function AccountArchiveBlockers({ account, blockers }: AccountArchiveBloc
         Resolve every prerequisite before archiving
       </Text>
       {blockers.map((blocker) => (
-        <AccountArchiveBlockerItem account={account} blocker={blocker} key={blocker.kind} />
+        <AccountArchiveBlockerItem
+          account={account}
+          blocker={blocker}
+          key={blocker.kind}
+          onReview={onReview}
+        />
       ))}
     </Animated.View>
   );

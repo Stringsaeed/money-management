@@ -3,6 +3,7 @@ import { Alert } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import AccountsScreen from "@/app/accounts";
+import { useUIStore } from "@/stores/ui-store";
 import { createAccountWithBalance } from "@/tests/test-utils/factories";
 
 const mockBlockedAccount = createAccountWithBalance({
@@ -30,10 +31,14 @@ const mockDeleteAccount = jest.fn();
 const mockRestoreAccount = jest.fn();
 const mockUpdateAccount = jest.fn();
 const mockPush = jest.fn();
+const mockDismissTo = jest.fn();
 let mockArchivedLifecycle: "active" | "archived" = "archived";
 
 jest.mock("expo-router", () => ({
-  router: { push: (...args: unknown[]) => mockPush(...args) },
+  router: {
+    push: (...args: unknown[]) => mockPush(...args),
+    dismissTo: (...args: unknown[]) => mockDismissTo(...args),
+  },
 }));
 
 jest.mock("@/hooks/use-accounts", () => ({
@@ -171,14 +176,51 @@ describe("app/accounts", () => {
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Archive Everyday" })).toBeDisabled();
     expect(screen.queryByRole("button", { name: "Delete Everyday" })).not.toBeOnTheScreen();
-
-    await fireEvent.press(screen.getByRole("button", { name: "Review blocking Recurring Rules" }));
-    expect(mockPush).toHaveBeenCalledWith("/recurring");
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Review blocking budget dependencies" }),
-    );
-    expect(mockPush).toHaveBeenCalledWith("/(tabs)/envelopes");
   });
+
+  // Regression for #201: a blocker "Review" action must dismiss the Edit
+  // Account sheet before navigating, and it must land on the destination via
+  // dismissTo (pop-to-existing/replace) rather than router.push — pushing
+  // stacked a duplicate destination on top of the still-presented sheet.
+  it.each([
+    ["Review Everyday balance", "/(tabs)/ledger"],
+    ["Review blocking Recurring Rules", "/recurring"],
+    ["Review blocking budget dependencies", "/(tabs)/envelopes"],
+    ["Review blocking card activity", "/(tabs)/ledger"],
+    ["Review unsupported cross-currency Transfers", "/(tabs)/ledger"],
+  ] as const)(
+    "dismisses the Edit Account sheet and dismissTo's the destination for %s",
+    async (buttonName, destination) => {
+      await render(
+        <GestureHandlerRootView>
+          <AccountsScreen />
+        </GestureHandlerRootView>,
+      );
+
+      await fireEvent.press(screen.getByRole("button", { name: "Everyday" }));
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Resolve every prerequisite before archiving",
+      );
+
+      await fireEvent.press(screen.getByRole("button", { name: buttonName }));
+
+      // The sheet is gone — its content is unmounted, not merely obscured —
+      // so no orphaned sheet is left behind the destination screen.
+      expect(screen.queryByRole("alert")).not.toBeOnTheScreen();
+      expect(screen.queryByRole("button", { name: buttonName })).not.toBeOnTheScreen();
+
+      // Navigation replaces/dismisses to the destination instead of pushing
+      // a duplicate route on top of it.
+      expect(mockDismissTo).toHaveBeenCalledWith(destination);
+      expect(mockPush).not.toHaveBeenCalledWith(destination);
+
+      // Ledger-bound reviews carry the account into the existing filter so
+      // the relevant balance is easy to find on arrival.
+      if (destination === "/(tabs)/ledger") {
+        expect(useUIStore.getState().activeAccountId).toBe("account-blocked");
+      }
+    },
+  );
 
   it("labels archived Accounts and restores without promising Funding Membership", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
