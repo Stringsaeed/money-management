@@ -14,14 +14,9 @@ const hostFill = StyleSheet.create({
 
 export interface NativeHostProps {
   readonly children: ReactNode;
-  /** Stretch to the parent width (form CTAs). Default true. */
   readonly fillWidth?: boolean;
 }
 
-/**
- * Host boundary for Paper Ledger native buttons inside RN layout trees
- * (cards, ScrollView). Uses matchContents so the host hugs control height.
- */
 export function NativeHost({ children, fillWidth = true }: NativeHostProps): ReactElement {
   const palette = useAuthPalette();
   return (

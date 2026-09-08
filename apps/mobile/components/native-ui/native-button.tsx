@@ -12,10 +12,6 @@ export interface NativeButtonProps extends NativeSealedChrome {
   readonly testID?: string;
 }
 
-/**
- * iOS: string `label` + chrome modifiers on the button (custom Text children hug width).
- * Android/web: Text child keeps CVA-equivalent textStyle from the recipe.
- */
 function NativeButton({
   role,
   label,
