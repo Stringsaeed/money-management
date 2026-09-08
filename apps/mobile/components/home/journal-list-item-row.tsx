@@ -1,8 +1,6 @@
 import { View } from "react-native";
-import Animated from "react-native-reanimated";
 
 import { JournalDayHeader } from "@/components/home/journal-day-header";
-import { layoutTransition } from "@/components/transaction/constants";
 import { TransactionRow } from "@/components/transaction/transaction-row";
 import type { JournalListItem } from "@/utils/journal-list";
 
@@ -16,9 +14,9 @@ export function JournalListItemRow({ item }: JournalListItemRowProps) {
   }
 
   return (
-    <Animated.View layout={layoutTransition}>
+    <View>
       <TransactionRow transaction={item.data} showAccount={item.showAccount} />
       {!item.isLast ? <View className="ml-16 h-px bg-ledger-outline" /> : null}
-    </Animated.View>
+    </View>
   );
 }
