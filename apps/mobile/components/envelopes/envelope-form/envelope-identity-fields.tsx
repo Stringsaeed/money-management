@@ -26,6 +26,7 @@ export function EnvelopeIdentityFields({ currency, form }: EnvelopeIdentityField
         {(field) => (
           <ResourceFormField label="Name" error={field.state.meta.errors[0]}>
             <TextInput
+              accessibilityLabel={`${currency} Envelope name`}
               className={resourceInputClassName}
               onChangeText={field.handleChange}
               placeholder="e.g. Groceries"

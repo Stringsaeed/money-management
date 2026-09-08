@@ -42,6 +42,7 @@ export const SetupDraftEnvelopeItem = ({
   return (
     <SetupEnvelopeCard
       categories={categories}
+      currency={currency}
       envelope={envelope}
       mergeSelected={mergeSelected}
       onChange={handleChange}

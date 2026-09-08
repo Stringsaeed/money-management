@@ -5,11 +5,13 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "@tanstack/react-form";
 
 interface SetupEnvelopeIdentityFieldsProps {
+  currency: string;
   envelope: SetupDraftEnvelope;
   onChange: (changes: Partial<SetupDraftEnvelope>) => void;
 }
 
 export const SetupEnvelopeIdentityFields = ({
+  currency,
   envelope,
   onChange,
 }: SetupEnvelopeIdentityFieldsProps) => {
@@ -31,6 +33,7 @@ export const SetupEnvelopeIdentityFields = ({
       <form.Field name="name">
         {({ handleChange, state }) => (
           <Input
+            accessibilityLabel={`${currency} Envelope name`}
             onChangeText={handleChange}
             onEndEditing={handleFieldEndEditing("name")}
             value={state.value}
@@ -42,6 +45,7 @@ export const SetupEnvelopeIdentityFields = ({
           <form.Field name="icon">
             {(field) => (
               <Input
+                accessibilityLabel={`${envelope.name} Envelope emoji`}
                 onChangeText={field.handleChange}
                 onEndEditing={handleFieldEndEditing("icon")}
                 value={field.state.value}
