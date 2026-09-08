@@ -1,5 +1,6 @@
 import { View } from "react-native";
 
+import { ENABLE_SYNC_MATCHED_DESCRIPTION } from "@/components/household/enable-sync-copy";
 import { Card } from "@/components/settings/card";
 import { Text } from "@/components/ui/text";
 
@@ -9,7 +10,7 @@ export function SyncStatusCard() {
       <View className="gap-1 px-4 py-4">
         <Text className="font-body-semibold text-sm text-sage">☁️ Synced to the cloud</Text>
         <Text className="font-body-normal text-xs text-ink/40">
-          Your budget backs up automatically and is ready to share.
+          {ENABLE_SYNC_MATCHED_DESCRIPTION}
         </Text>
       </View>
     </Card>
