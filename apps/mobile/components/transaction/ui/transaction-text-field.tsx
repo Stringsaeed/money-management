@@ -13,10 +13,6 @@ import { cn } from "@/lib/utils";
 
 import { fieldBorderClassName, fieldPlaceholderColor, fieldTextStyle } from "./field-style";
 
-// Host is not an RN view — NativeWind className never reaches it, so the
-// field's border/background/opacity chrome is painted by the plain RN View
-// wrapper, and only typography/placeholder color are passed to the native
-// control via its own textStyle/placeholderTextColor props.
 const hostFill = StyleSheet.create({
   fill: { flex: 1 },
 });

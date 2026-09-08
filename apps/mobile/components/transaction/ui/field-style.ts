@@ -12,12 +12,16 @@ export function fieldBorderClassName({ focused, error }: FieldBorderState): stri
   return "border-transparent";
 }
 
+/** Platform PostScript / loaded-face names for body medium. */
 const BODY_MEDIUM_FACE = {
   ios: "Nunito-Medium",
   android: "Nunito_500Medium",
   web: "Nunito_500Medium",
 } as const;
 
+/**
+ * `@expo/ui` TextInput takes typography via textStyle. Host cannot take NativeWind classNames.
+ */
 export function fieldTextStyle(ink: string): UniversalTextStyle {
   return {
     fontFamily:
