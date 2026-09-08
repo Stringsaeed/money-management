@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { FlatList, Keyboard, Pressable, View } from "react-native";
 import { useNativeVariable } from "react-native-css/native";
 
+import { recoverAccountCurrencyListScroll } from "@/components/account/account-currency-list-scroll";
 import { AccountCurrencyOptionRow } from "@/components/account/account-currency-option-row";
 import {
   filterAccountCurrencyOptions,
@@ -20,7 +21,6 @@ interface AccountCurrencyPickerProps {
 }
 
 const CURRENCY_OPTIONS = listAccountCurrencyOptions();
-const ROW_HEIGHT = 56;
 
 export function AccountCurrencyPicker({
   value,
@@ -124,15 +124,13 @@ export function AccountCurrencyPicker({
             }
             contentContainerClassName="pb-safe gap-2 pt-3"
             data={results}
-            getItemLayout={(_data, index) => ({
-              length: ROW_HEIGHT,
-              offset: ROW_HEIGHT * index,
-              index,
-            })}
+            initialNumToRender={CURRENCY_OPTIONS.length}
             keyExtractor={(item) => item.code}
             keyboardDismissMode="on-drag"
             keyboardShouldPersistTaps="handled"
-            onScrollToIndexFailed={() => undefined}
+            onScrollToIndexFailed={(info) =>
+              recoverAccountCurrencyListScroll(listRef.current, info)
+            }
             ref={listRef}
             renderItem={({ item }) => (
               <AccountCurrencyOptionRow

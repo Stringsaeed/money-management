@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { useState } from "react";
+import { FlatList } from "react-native";
 
 import { AccountCurrencyPicker } from "@/components/account/account-currency-picker";
 
@@ -84,5 +85,24 @@ describe("AccountCurrencyPicker", () => {
     const selected = screen.getByTestId("account-currency-option-GBP");
     expect(selected.props.accessibilityState?.selected).toBe(true);
     expect(selected.props.accessibilityLabel).toMatch(/GBP,/i);
+  });
+
+  it("reveals the selected tail currency when the sheet reopens", async () => {
+    const scrollToIndex = jest.spyOn(FlatList.prototype, "scrollToIndex");
+
+    try {
+      await render(<CurrencyPickerHarness initialValue="MXN" />);
+      await fireEvent.press(screen.getByTestId("account-currency-trigger"));
+
+      const selected = screen.getByTestId("account-currency-option-MXN");
+      expect(selected.props.accessibilityState?.selected).toBe(true);
+      await waitFor(() => {
+        expect(scrollToIndex).toHaveBeenCalledWith(
+          expect.objectContaining({ animated: false, index: 12 }),
+        );
+      });
+    } finally {
+      scrollToIndex.mockRestore();
+    }
   });
 });
