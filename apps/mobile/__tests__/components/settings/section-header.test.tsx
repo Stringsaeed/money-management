@@ -18,11 +18,9 @@ describe("SectionHeader", () => {
     const header = screen.getByTestId("section-header");
     expect(header.props.className).not.toContain("pt-8");
     expect(header.props.className).not.toContain("mx-5");
-    // Aligns horizontally with the card's own p-4 content instead.
     expect(header.props.className).toContain("px-4");
     expect(header.props.className).toContain("pt-4");
     expect(header.props.className).toContain("pb-3");
-    // The divider above the first row is still useful inside the card.
     expect(header.props.className).toContain("border-b");
   });
 

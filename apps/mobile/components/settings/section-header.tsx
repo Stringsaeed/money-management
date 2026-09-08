@@ -5,13 +5,6 @@ import { cn } from "@/lib/utils";
 
 interface SectionHeaderProps {
   readonly title: string;
-  /**
-   * "page" (default) is for a section header sitting directly on the screen
-   * background — it carries its own top margin and outer horizontal margin.
-   * "card" is for a header composed inside a `Card`, which already provides its
-   * own outer margin and spacing from the previous card, so it drops the
-   * duplicated `pt-8`/`mx-5` and aligns horizontally with the card's content.
-   */
   readonly variant?: "page" | "card";
 }
 
