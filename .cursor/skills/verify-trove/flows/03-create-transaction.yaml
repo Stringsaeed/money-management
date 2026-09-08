@@ -1,0 +1,33 @@
+appId: com.stringsaeed.moneymanagement
+---
+# Open composer from FAB, enter amount + note, save, assert on Home.
+# Preconditions: past onboarding (run 01-onboarding first). Session already open.
+- extendedWaitUntil:
+    timeout: 30000
+    visible: "Create transaction"
+- tapOn: "Create transaction"
+- extendedWaitUntil:
+    timeout: 20000
+    visible:
+      id: "transaction-note-field"
+- takeScreenshot: tx-open
+- tapOn: "1"
+- tapOn: "2"
+- tapOn: "5"
+- tapOn:
+    id: "transaction-note-field"
+- eraseText
+- inputText: "Verify coffee 4821"
+- tapOn: "save"
+- extendedWaitUntil:
+    timeout: 25000
+    visible: "Verify coffee 4821"
+- takeScreenshot: tx-home
+- assertVisible: "Verify coffee 4821"
+- tapOn: "Verify coffee 4821"
+- extendedWaitUntil:
+    timeout: 15000
+    visible:
+      id: "transaction-note-field"
+- takeScreenshot: tx-detail
+- assertVisible: "Verify coffee 4821"

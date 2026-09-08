@@ -1,0 +1,35 @@
+appId: com.stringsaeed.moneymanagement
+---
+# Settings → Accounts (seeded name) → erase alert Cancel only.
+# Preconditions: past onboarding with account "Verify Checking". Session already open.
+- openLink: trove://settings
+- extendedWaitUntil:
+    timeout: 20000
+    visible: "Profile & household"
+- assertVisible: "Accounts"
+- takeScreenshot: settings-open
+- tapOn: "Accounts"
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Verify Checking"
+- takeScreenshot: settings-accounts
+- tapOn:
+    text: "(tabs)"
+    index: 0
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Profile & household"
+- scrollUntilVisible:
+    element: "Erase local data from this device"
+    direction: DOWN
+    timeout: 15000
+- tapOn: "Erase local data from this device"
+- extendedWaitUntil:
+    timeout: 10000
+    visible: "Erase Everything"
+- takeScreenshot: settings-erase-alert
+- tapOn: "Cancel"
+- extendedWaitUntil:
+    timeout: 10000
+    visible: "Erase local data from this device"
+- takeScreenshot: settings-erase-cancel
