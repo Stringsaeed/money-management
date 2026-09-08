@@ -3,9 +3,9 @@ import { Alert, View } from "react-native";
 import { EnableSyncCard } from "@/components/household/enable-sync-card";
 import { HouseholdMembers, type HouseholdMember } from "@/components/household/household-members";
 import { SyncStatusCard } from "@/components/household/sync-status-card";
+import { NativeDestructiveButton, NativeHost, NativePrimaryButton } from "@/components/native-ui";
 import { Card } from "@/components/settings/card";
 import { SectionHeader } from "@/components/settings/section-header";
-import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useDeleteHousehold, useGenerateInvite, useLeaveHousehold } from "@/hooks/use-households";
 import { formatInviteExpiry } from "@/utils/invite-code";
@@ -48,9 +48,13 @@ export function ActiveHouseholdPanel({
             </Text>
             <Text className="font-heading-normal text-xl italic text-ink">{name}</Text>
           </View>
-          <Button size="sm" onPress={() => invite(householdId, generateInvite)}>
-            <Text className="font-body-semibold text-white">Invite 🎟️</Text>
-          </Button>
+          <NativeHost fillWidth={false}>
+            <NativePrimaryButton
+              label="Invite 🎟️"
+              onPress={() => invite(householdId, generateInvite)}
+              testID="invite-household"
+            />
+          </NativeHost>
         </View>
       </Card>
       <Card>
@@ -66,21 +70,21 @@ export function ActiveHouseholdPanel({
         <View className="gap-2 p-4">
           <Text className="font-body-semibold text-xs uppercase text-destructive">Danger Zone</Text>
           {isOwner ? (
-            <Button
-              variant="destructive"
-              size="sm"
-              onPress={() => confirmDelete(householdId, deleteHousehold.mutate)}
-            >
-              <Text className="font-body-semibold text-white">Delete household</Text>
-            </Button>
+            <NativeHost>
+              <NativeDestructiveButton
+                label="Delete household"
+                onPress={() => confirmDelete(householdId, deleteHousehold.mutate)}
+                testID="delete-household"
+              />
+            </NativeHost>
           ) : (
-            <Button
-              variant="destructive"
-              size="sm"
-              onPress={() => confirmLeave(householdId, leaveHousehold.mutate)}
-            >
-              <Text className="font-body-semibold text-white">Leave household</Text>
-            </Button>
+            <NativeHost>
+              <NativeDestructiveButton
+                label="Leave household"
+                onPress={() => confirmLeave(householdId, leaveHousehold.mutate)}
+                testID="leave-household"
+              />
+            </NativeHost>
           )}
         </View>
       </Card>

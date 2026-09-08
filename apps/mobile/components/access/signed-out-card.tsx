@@ -1,7 +1,7 @@
 import { View } from "react-native";
 
 import { Card } from "@/components/settings/card";
-import { Button } from "@/components/ui/button";
+import { NativeHost, NativePrimaryButton } from "@/components/native-ui";
 import { Text } from "@/components/ui/text";
 
 export function SignedOutCard({ onSignIn }: { readonly onSignIn: () => void }) {
@@ -14,9 +14,13 @@ export function SignedOutCard({ onSignIn }: { readonly onSignIn: () => void }) {
           Sign in to create a household, invite family members, and plan money together. Your ledger
           always stays on this device.
         </Text>
-        <Button size="lg" onPress={onSignIn}>
-          <Text className="font-body-semibold text-white">Sign in or create profile</Text>
-        </Button>
+        <NativeHost>
+          <NativePrimaryButton
+            label="Sign in or create profile"
+            onPress={onSignIn}
+            testID="profile-sign-in"
+          />
+        </NativeHost>
       </View>
     </Card>
   );

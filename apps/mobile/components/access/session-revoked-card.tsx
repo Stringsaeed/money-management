@@ -1,7 +1,7 @@
 import { View } from "react-native";
 
 import { Card } from "@/components/settings/card";
-import { Button } from "@/components/ui/button";
+import { NativeHost, NativePrimaryButton, NativeSecondaryButton } from "@/components/native-ui";
 import { Text } from "@/components/ui/text";
 
 interface SessionRevokedCardProps {
@@ -22,12 +22,20 @@ export function SessionRevokedCard({
         <Text className="text-xs text-ink/70">
           {email} is no longer signed in here. Your local ledger is fully usable.
         </Text>
-        <Button size="sm" onPress={onReauthenticate}>
-          <Text className="font-body-semibold text-white">Sign in again</Text>
-        </Button>
-        <Button variant="outline" size="sm" onPress={onSignOut}>
-          <Text className="font-body-semibold text-destructive">Forget this profile</Text>
-        </Button>
+        <NativeHost>
+          <NativePrimaryButton
+            label="Sign in again"
+            onPress={onReauthenticate}
+            testID="profile-reauthenticate"
+          />
+        </NativeHost>
+        <NativeHost>
+          <NativeSecondaryButton
+            label="Forget this profile"
+            onPress={onSignOut}
+            testID="profile-forget"
+          />
+        </NativeHost>
       </View>
     </Card>
   );
