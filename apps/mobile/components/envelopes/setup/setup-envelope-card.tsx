@@ -14,7 +14,6 @@ import type {
 
 interface SetupEnvelopeCardProps {
   categories: readonly SetupDraftCategorySuggestion[];
-  currency: string;
   envelope: SetupDraftEnvelope;
   mergeSelected: boolean;
   onChange: (changes: Partial<SetupDraftEnvelope>) => void;
@@ -26,7 +25,6 @@ interface SetupEnvelopeCardProps {
 
 export const SetupEnvelopeCard = ({
   categories,
-  currency,
   envelope,
   mergeSelected,
   onChange,
@@ -43,7 +41,7 @@ export const SetupEnvelopeCard = ({
       layout={LinearTransition}
       className="gap-3 rounded-2xl border border-ledger-outline bg-surface p-4"
     >
-      <SetupEnvelopeIdentityFields currency={currency} envelope={envelope} onChange={onChange} />
+      <SetupEnvelopeIdentityFields envelope={envelope} onChange={onChange} />
       <Button
         accessibilityLabel={`${mergeSelected ? "Unselect" : "Select"} ${envelope.name} for merge`}
         onPress={onToggleMergeSelection}
