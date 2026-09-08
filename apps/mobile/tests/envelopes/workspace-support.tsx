@@ -1,6 +1,7 @@
 import { jest } from "@jest/globals";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render } from "@testing-library/react-native";
+import type { ReactNode } from "react";
 import type { SQLiteDatabase } from "@/db/sqlite";
 
 import BudgetWorkspaceScreen from "@/app/(tabs)/envelopes/workspace";
@@ -17,6 +18,14 @@ let mockDatabase: SQLiteDatabase;
 jest.mock("@/db/sqlite", () => ({
   useSQLiteContext: () => mockDatabase,
 }));
+
+jest.mock("expo-router", () => {
+  const React = jest.requireActual<typeof import("react")>("react");
+  return {
+    Link: ({ children }: { children: ReactNode }) =>
+      React.isValidElement(children) ? React.cloneElement(children) : children,
+  };
+});
 
 jest.mock("@/utils/id", () => ({
   generateId: () => "generated-envelope-id",
