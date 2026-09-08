@@ -7,16 +7,20 @@ import {
   type EditableField,
 } from "@/components/rejected-changes/payload-fields";
 import { useRejectedChanges } from "@/hooks/use-rejected-changes";
-import { useRequiredLedger } from "@/modules/ledger-db/provider";
+import { useSyncedTransactionLedger } from "@/modules/ledger-db/provider";
 import { getRejectedChange, type RejectedChange } from "@/modules/powersync/rejected-changes";
 
 /**
  * Drives the re-edit flow (#94): loads the rejected change by id, derives the
  * pre-populated form fields from its original payload, and on save resubmits
  * it under a NEW commandId before navigating back.
+ *
+ * A deep link can land here while the household is local-only (#193) — with
+ * no ledger, the change can't have been rejected, so this reports "not
+ * found" instead of throwing.
  */
 export function useRejectedEditForm(commandId: string | null) {
-  const ledger = useRequiredLedger();
+  const ledger = useSyncedTransactionLedger();
   const { resubmit } = useRejectedChanges();
 
   const [change, setChange] = useState<RejectedChange | null>(null);
@@ -27,7 +31,7 @@ export function useRejectedEditForm(commandId: string | null) {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!commandId) {
+    if (!commandId || !ledger) {
       setNotFound(true);
       setIsLoading(false);
       return;

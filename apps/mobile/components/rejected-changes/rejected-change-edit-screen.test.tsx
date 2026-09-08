@@ -14,7 +14,7 @@ jest.mock("expo-router", () => ({
 }));
 
 jest.mock("@/modules/ledger-db/provider", () => ({
-  useRequiredLedger: () => mockLedger,
+  useSyncedTransactionLedger: () => mockLedger,
 }));
 
 jest.mock("@/modules/powersync/rejected-changes", () => ({
