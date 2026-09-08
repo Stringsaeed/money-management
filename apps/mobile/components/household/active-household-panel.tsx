@@ -54,7 +54,7 @@ export function ActiveHouseholdPanel({
         </View>
       </Card>
       <Card>
-        <SectionHeader title="Members 👥" />
+        <SectionHeader title="Members 👥" variant="card" />
         <HouseholdMembers
           householdId={householdId}
           isOwner={isOwner}
