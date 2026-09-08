@@ -3,12 +3,11 @@ import { View } from "react-native";
 import { ActiveHouseholdPanel } from "@/components/household/active-household-panel";
 import { CreateHouseholdForm } from "@/components/household/create-household-form";
 import { JoinHouseholdForm } from "@/components/household/join-household-form";
+import { NativeHost, NativePrimaryButton, NativeSecondaryButton } from "@/components/native-ui";
 import { Card } from "@/components/settings/card";
-import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useMigratedHouseholdId } from "@/hooks/use-enable-sync";
 import { useHouseholdDetail } from "@/hooks/use-households";
-import { cn } from "@/lib/utils";
 import type { AccessState } from "@/modules/access";
 
 type SignedInAccess = Extract<AccessState, { kind: "signed_in" }>;
@@ -35,9 +34,13 @@ export function SignedInHousehold({ access }: { readonly access: SignedInAccess 
               </Text>
               <Text className="text-xs text-ink/50">{access.user.email}</Text>
             </View>
-            <Button variant="outline" size="sm" onPress={access.signOut}>
-              <Text className="font-body-semibold text-destructive">Sign out</Text>
-            </Button>
+            <NativeHost fillWidth={false}>
+              <NativeSecondaryButton
+                label="Sign out"
+                onPress={access.signOut}
+                testID="profile-sign-out"
+              />
+            </NativeHost>
           </View>
         </View>
       </Card>
@@ -47,9 +50,13 @@ export function SignedInHousehold({ access }: { readonly access: SignedInAccess 
           <View className="gap-2 p-4">
             <Text className="font-body-semibold text-sm text-ink">Household sync is paused</Text>
             <Text className="text-xs text-ink/60">Your ledger on this device is still usable.</Text>
-            <Button size="sm" onPress={access.household.retry}>
-              <Text className="font-body-semibold text-white">Try again</Text>
-            </Button>
+            <NativeHost>
+              <NativePrimaryButton
+                label="Try again"
+                onPress={access.household.retry}
+                testID="household-retry"
+              />
+            </NativeHost>
           </View>
         </Card>
       ) : null}
@@ -64,20 +71,21 @@ export function SignedInHousehold({ access }: { readonly access: SignedInAccess 
               {access.memberships.map((household) => {
                 const selected = household.householdId === active?.householdId;
                 return (
-                  <Button
-                    key={household.householdId}
-                    variant={selected ? "default" : "outline"}
-                    size="sm"
-                    onPress={() => access.setActiveHousehold(household.householdId)}
-                  >
-                    <Text
-                      className={cn(
-                        selected ? "font-body-semibold text-white" : "font-body-medium text-ink",
-                      )}
-                    >
-                      {household.name} {selected ? "✓" : ""}
-                    </Text>
-                  </Button>
+                  <NativeHost key={household.householdId}>
+                    {selected ? (
+                      <NativePrimaryButton
+                        label={`${household.name} ✓`}
+                        onPress={() => access.setActiveHousehold(household.householdId)}
+                        testID={`select-household-${household.householdId}`}
+                      />
+                    ) : (
+                      <NativeSecondaryButton
+                        label={household.name}
+                        onPress={() => access.setActiveHousehold(household.householdId)}
+                        testID={`select-household-${household.householdId}`}
+                      />
+                    )}
+                  </NativeHost>
                 );
               })}
             </View>

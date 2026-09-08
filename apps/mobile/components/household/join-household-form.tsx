@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Alert, TextInput, View } from "react-native";
 
-import { Button } from "@/components/ui/button";
+import { NativeHost, NativePrimaryButton } from "@/components/native-ui";
 import { inputTextStyle } from "@/components/ui/input-style";
 import { Text } from "@/components/ui/text";
 import { useAcceptInvite } from "@/hooks/use-households";
@@ -13,6 +13,7 @@ export function JoinHouseholdForm() {
   const acceptInvite = useAcceptInvite();
   const normalized = normalizeInviteCode(code);
   const formatValid = isValidInviteCodeFormat(normalized);
+  const disabled = !formatValid || acceptInvite.isPending;
 
   async function handleJoin() {
     try {
@@ -39,11 +40,14 @@ export function JoinHouseholdForm() {
         className="border border-input rounded-[10px] p-3.5 text-base leading-5 tracking-widest uppercase text-foreground"
         style={inputTextStyle}
       />
-      <Button onPress={handleJoin} disabled={!formatValid || acceptInvite.isPending}>
-        <Text className="font-body-semibold text-white">
-          {acceptInvite.isPending ? "Joining…" : "🤝 Join household"}
-        </Text>
-      </Button>
+      <NativeHost>
+        <NativePrimaryButton
+          label={acceptInvite.isPending ? "Joining…" : "🤝 Join household"}
+          onPress={handleJoin}
+          disabled={disabled}
+          testID="join-household"
+        />
+      </NativeHost>
       {acceptInvite.isError ? (
         <Text className="text-destructive text-xs">
           That code didn’t work — check for typos or ask for a fresh one.

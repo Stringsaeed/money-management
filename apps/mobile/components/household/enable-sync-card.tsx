@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ActivityIndicator, TextInput, View } from "react-native";
+import { TextInput, View } from "react-native";
 
 import {
   ENABLE_SYNC_IDLE_DESCRIPTION,
@@ -7,7 +7,7 @@ import {
   ENABLE_SYNC_MISMATCH_DESCRIPTION,
   ENABLE_SYNC_STATUS_LABEL,
 } from "@/components/household/enable-sync-copy";
-import { Button } from "@/components/ui/button";
+import { NativeHost, NativePrimaryButton } from "@/components/native-ui";
 import { inputTextStyle } from "@/components/ui/input-style";
 import { Text } from "@/components/ui/text";
 import { useEnableSync, type EnableSyncStatus } from "@/hooks/use-enable-sync";
@@ -50,6 +50,12 @@ export function EnableSyncCard({ activeHouseholdId }: { activeHouseholdId: strin
     );
   }
 
+  const buttonLabel = isRunning
+    ? ENABLE_SYNC_STATUS_LABEL[status]
+    : status === "mismatched" || status === "error"
+      ? "Try again"
+      : "Enable Sync";
+
   return (
     <View className="gap-3 px-4 py-4">
       <Text className="font-heading-normal italic text-lg text-ink">Enable Sync ☁️</Text>
@@ -65,20 +71,14 @@ export function EnableSyncCard({ activeHouseholdId }: { activeHouseholdId: strin
           style={inputTextStyle}
         />
       ) : null}
-      <Button onPress={handlePress} disabled={isRunning}>
-        {isRunning ? (
-          <View className="flex-row items-center gap-2">
-            <ActivityIndicator color="#fff" size="small" />
-            <Text className="font-body-semibold text-white">
-              {ENABLE_SYNC_STATUS_LABEL[status]}
-            </Text>
-          </View>
-        ) : (
-          <Text className="font-body-semibold text-white">
-            {status === "mismatched" || status === "error" ? "Try again" : "Enable Sync"}
-          </Text>
-        )}
-      </Button>
+      <NativeHost>
+        <NativePrimaryButton
+          label={buttonLabel}
+          onPress={handlePress}
+          disabled={isRunning}
+          testID="enable-sync"
+        />
+      </NativeHost>
       {status === "error" && error ? (
         <Text
           accessibilityLiveRegion="assertive"

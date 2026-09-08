@@ -1,6 +1,6 @@
 import { Alert, View } from "react-native";
 
-import { Button } from "@/components/ui/button";
+import { NativeHost, NativeTertiaryButton } from "@/components/native-ui";
 import { Text } from "@/components/ui/text";
 import { useTransferOwnership } from "@/hooks/use-households";
 
@@ -62,14 +62,14 @@ export function HouseholdMembers({
               👑 Owner
             </Text>
           ) : isOwner ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onPress={() => handleTransfer(member)}
-              disabled={transferOwnership.isPending}
-            >
-              <Text className="text-ink/60 font-body-semibold">Make owner</Text>
-            </Button>
+            <NativeHost fillWidth={false}>
+              <NativeTertiaryButton
+                label="Make owner"
+                onPress={() => handleTransfer(member)}
+                disabled={transferOwnership.isPending}
+                testID={`make-owner-${member.userId}`}
+              />
+            </NativeHost>
           ) : null}
         </View>
       ))}
