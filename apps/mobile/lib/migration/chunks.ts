@@ -29,10 +29,19 @@ import type { LocalDb } from "./manifest";
  * before transaction) already exist server-side by the time it lands.
  * Entity types with no local rows are skipped entirely.
  */
-export async function buildImportChunks(db: LocalDb): Promise<readonly ImportBundlePayload[]> {
+export async function buildImportChunks(
+  db: LocalDb,
+  householdId: string,
+): Promise<readonly ImportBundlePayload[]> {
   const chunks: ImportBundlePayload[] = [];
+  // Categories keep a single global server id (no per-household scoping — required
+  // by PowerSync's row-identity contract), but every fresh install seeds identical
+  // fixed ids (see apps/mobile/db/seed.ts, e.g. "seed_cat_food"). "category" is
+  // processed before anything that references it, so this map is fully populated
+  // by the time later entity types need to remap their categoryId (#194).
+  const categoryIdMap = new Map<string, string>();
   for (const entityType of IMPORT_ENTITY_TYPES) {
-    const rows = await loadWireRows(db, entityType);
+    const rows = await loadWireRows(db, entityType, householdId, categoryIdMap);
     if (rows.length === 0) {
       continue;
     }
@@ -50,9 +59,20 @@ export async function buildImportChunks(db: LocalDb): Promise<readonly ImportBun
   return chunks;
 }
 
+/**
+ * Namespaces a locally seeded/created category id by household so two
+ * households' categories never collide on the server's single global id
+ * column. Deterministic, so a retry recomputes the same id (#194).
+ */
+function remapCategoryId(householdId: string, localCategoryId: string): string {
+  return `${householdId}::${localCategoryId}`;
+}
+
 async function loadWireRows(
   db: LocalDb,
   entityType: ImportEntityType,
+  householdId: string,
+  categoryIdMap: Map<string, string>,
 ): Promise<readonly Record<string, unknown>[]> {
   switch (entityType) {
     case "account": {
@@ -75,13 +95,18 @@ async function loadWireRows(
     }
     case "category": {
       const rows = await db.select().from(categories);
+      for (const row of rows) {
+        categoryIdMap.set(row.id, remapCategoryId(householdId, row.id));
+      }
       return rows.map((row) => ({
-        id: row.id,
+        id: categoryIdMap.get(row.id) ?? remapCategoryId(householdId, row.id),
         name: row.name,
         type: row.type,
         color: row.color,
         icon: row.icon,
-        parentId: row.parentId,
+        parentId: row.parentId
+          ? (categoryIdMap.get(row.parentId) ?? remapCategoryId(householdId, row.parentId))
+          : null,
         sortOrder: row.sortOrder,
         lifecycle: row.lifecycle,
         lifecycleChangedAt: row.lifecycleChangedAt,
@@ -99,7 +124,7 @@ async function loadWireRows(
         currency: row.currency,
         accountId: row.accountId,
         toAccountId: row.toAccountId,
-        categoryId: row.categoryId,
+        categoryId: row.categoryId ? (categoryIdMap.get(row.categoryId) ?? row.categoryId) : null,
         description: row.description,
         frequency: row.frequency,
         intervalCount: row.intervalCount,
@@ -148,27 +173,30 @@ async function loadWireRows(
     case "category_mapping": {
       const rows = await db.select().from(categoryMappings);
       const starts = new Set(rows.map((row) => `${row.categoryId}\0${row.effectiveFromPeriod}`));
-      return rows.flatMap((row) => [
-        {
-          id: `migration:mapping:${row.categoryId}:${row.effectiveFromPeriod}`,
-          categoryId: row.categoryId,
-          envelopeId: row.envelopeId,
-          effectiveFromPeriod: row.effectiveFromPeriod,
-          createdAt: row.createdAt,
-        },
-        ...(row.effectiveToPeriod &&
-        !starts.has(`${row.categoryId}\0${nextPeriod(row.effectiveToPeriod)}`)
-          ? [
-              {
-                id: `migration:mapping:${row.categoryId}:${nextPeriod(row.effectiveToPeriod)}`,
-                categoryId: row.categoryId,
-                envelopeId: null,
-                effectiveFromPeriod: nextPeriod(row.effectiveToPeriod),
-                createdAt: row.createdAt,
-              },
-            ]
-          : []),
-      ]);
+      return rows.flatMap((row) => {
+        const categoryId = categoryIdMap.get(row.categoryId) ?? row.categoryId;
+        return [
+          {
+            id: `migration:mapping:${categoryId}:${row.effectiveFromPeriod}`,
+            categoryId,
+            envelopeId: row.envelopeId,
+            effectiveFromPeriod: row.effectiveFromPeriod,
+            createdAt: row.createdAt,
+          },
+          ...(row.effectiveToPeriod &&
+          !starts.has(`${row.categoryId}\0${nextPeriod(row.effectiveToPeriod)}`)
+            ? [
+                {
+                  id: `migration:mapping:${categoryId}:${nextPeriod(row.effectiveToPeriod)}`,
+                  categoryId,
+                  envelopeId: null,
+                  effectiveFromPeriod: nextPeriod(row.effectiveToPeriod),
+                  createdAt: row.createdAt,
+                },
+              ]
+            : []),
+        ];
+      });
     }
     case "funding_membership": {
       const rows = await db.select().from(fundingMemberships);
@@ -235,7 +263,7 @@ async function loadWireRows(
         date: row.date,
         accountId: row.accountId,
         toAccountId: row.toAccountId,
-        categoryId: row.categoryId,
+        categoryId: row.categoryId ? (categoryIdMap.get(row.categoryId) ?? row.categoryId) : null,
         isRecurring: row.isRecurring,
         recurringRuleId: row.recurringRuleId,
         description: row.description,

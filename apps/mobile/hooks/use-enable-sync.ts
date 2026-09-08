@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useSQLiteContext } from "@/db/sqlite";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -55,19 +55,23 @@ export function useEnableSync() {
   const [status, setStatus] = useState<EnableSyncStatus>("idle");
   const [error, setError] = useState<Error | null>(null);
   const [discrepancy, setDiscrepancy] = useState<ImportDiscrepancy | null>(null);
+  // Retrying (a rejected chunk or a manifest mismatch) must reuse the household
+  // created on the first attempt instead of creating another one every tap.
+  const createdHouseholdIdRef = useRef<string | null>(null);
 
   const enableSync = useCallback(
     async (input: EnableSyncInput) => {
       setError(null);
       setDiscrepancy(null);
       try {
-        let householdId = input.householdId ?? null;
+        let householdId = input.householdId ?? createdHouseholdIdRef.current;
         if (!householdId) {
           setStatus("creating_household");
           const created = await orpc.households.create({
             name: input.householdName?.trim() || "My Household",
           });
           householdId = created.householdId;
+          createdHouseholdIdRef.current = householdId;
         }
 
         setStatus("backing_up");

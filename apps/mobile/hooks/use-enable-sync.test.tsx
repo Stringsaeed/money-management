@@ -91,6 +91,34 @@ describe("useEnableSync", () => {
     await waitFor(() => expect(result.current.status).toBe("matched"));
   });
 
+  it("retries a rejected chunk against the same household instead of creating a new one (#194)", async () => {
+    mockHouseholdsCreate.mockResolvedValue({ householdId: "household-new" });
+    mockRunImport.mockResolvedValueOnce({
+      status: "rejected",
+      entityType: "category",
+      chunkIndex: 0,
+      result: { kind: "conflict", reason: "import_row_conflict", current: {} },
+    });
+    mockRunImport.mockResolvedValueOnce(MATCHED_RESULT);
+
+    const { result } = await renderHookWithProviders(() => useEnableSync());
+    await act(async () => {
+      await result.current.enableSync({ householdName: "The Saeeds" });
+    });
+    await waitFor(() => expect(result.current.status).toBe("error"));
+
+    await act(async () => {
+      await result.current.enableSync({ householdName: "The Saeeds" });
+    });
+
+    expect(mockHouseholdsCreate).toHaveBeenCalledTimes(1);
+    expect(mockRunImport).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ householdId: "household-new" }),
+    );
+    await waitFor(() => expect(result.current.status).toBe("matched"));
+  });
+
   it("surfaces a rejected chunk as an error without truncating the outbox or flipping sync mode", async () => {
     mockHouseholdsCreate.mockResolvedValue({ householdId: "household-new" });
     mockRunImport.mockResolvedValue({
