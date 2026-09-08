@@ -1,4 +1,10 @@
 import { useRef, useState, type ReactNode } from "react";
+import type {
+  KeyboardTypeOptions,
+  NativeSyntheticEvent,
+  ReturnKeyTypeOptions,
+  TextInputSubmitEditingEventData,
+} from "react-native";
 import { Pressable, Text as RNText, TextInput as RNTextInput, View } from "react-native";
 
 function Box({ children }: { children?: ReactNode }) {
@@ -50,25 +56,57 @@ export function TextInput({
   value,
   onChangeText,
   placeholder,
+  placeholderTextColor,
   secureTextEntry,
   editable,
   testID,
+  onFocus,
+  onBlur,
+  keyboardType,
+  autoCapitalize,
+  multiline,
+  maxLength,
+  returnKeyType,
+  onSubmitEditing,
 }: {
   value?: { value: string };
   onChangeText?: (text: string) => void;
   placeholder?: string;
+  placeholderTextColor?: string;
   secureTextEntry?: boolean;
   editable?: boolean;
   testID?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  keyboardType?: KeyboardTypeOptions;
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
+  multiline?: boolean;
+  maxLength?: number;
+  returnKeyType?: ReturnKeyTypeOptions;
+  onSubmitEditing?: (text: string) => void;
 }) {
+  const handleSubmitEditing = onSubmitEditing
+    ? (event: NativeSyntheticEvent<TextInputSubmitEditingEventData>) =>
+        onSubmitEditing(event.nativeEvent.text)
+    : undefined;
+
   return (
     <RNTextInput
       value={value?.value}
       onChangeText={onChangeText}
       placeholder={placeholder}
+      placeholderTextColor={placeholderTextColor}
       secureTextEntry={secureTextEntry}
       editable={editable}
       testID={testID}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      keyboardType={keyboardType}
+      autoCapitalize={autoCapitalize}
+      multiline={multiline}
+      maxLength={maxLength}
+      returnKeyType={returnKeyType}
+      onSubmitEditing={handleSubmitEditing}
     />
   );
 }
