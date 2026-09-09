@@ -1,6 +1,8 @@
 import type { createDb } from "@trove/db";
 import { verification } from "@trove/db/schema/auth";
-import { and, eq, like, ne, sql } from "drizzle-orm";
+import { and, eq, inArray, like, ne } from "drizzle-orm";
+
+import { isPriorMagicVerification } from "./link-policy";
 
 type TroveDb = ReturnType<typeof createDb>;
 
@@ -9,14 +11,20 @@ export async function invalidatePriorMagicLinks(
   email: string,
   keepIdentifier: string,
 ): Promise<void> {
-  await db
-    .delete(verification)
-    .where(
-      and(
-        sql`lower(json_extract(${verification.value}, '$.email')) = ${email.toLowerCase()}`,
-        ne(verification.identifier, keepIdentifier),
-      ),
-    );
+  const candidates = await db
+    .select({
+      id: verification.id,
+      identifier: verification.identifier,
+      value: verification.value,
+    })
+    .from(verification);
+  const priorIds = candidates
+    .filter((row) => isPriorMagicVerification(row, email, keepIdentifier))
+    .map(({ id }) => id);
+
+  if (priorIds.length > 0) {
+    await db.delete(verification).where(inArray(verification.id, priorIds));
+  }
 }
 
 export async function invalidatePriorResetLinks(

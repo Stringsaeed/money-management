@@ -486,6 +486,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: 'catalog:'
         version: 5.20260821.1
+      '@electric-sql/pglite':
+        specifier: ^0.3.14
+        version: 0.3.15
       '@trove/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
