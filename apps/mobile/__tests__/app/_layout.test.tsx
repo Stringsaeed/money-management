@@ -140,6 +140,11 @@ jest.mock("@/components/recurring/recurring-settlement-banner", () => ({
   RecurringSettlementBanner: () => null,
 }));
 
+// oxlint-disable-next-line anti-slop/no-module-mocking -- layout test stubs the toast host
+jest.mock("@/components/banner/ledger-toaster", () => ({
+  LedgerToaster: () => null,
+}));
+
 describe("app/_layout", () => {
   beforeEach(() => {
     mockMarkDatabaseReset.mockReset();
