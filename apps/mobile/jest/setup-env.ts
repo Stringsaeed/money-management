@@ -6,6 +6,8 @@ import { notifyManager } from "@tanstack/query-core";
 import { act } from "@testing-library/react-native";
 
 import { useUIStore } from "@/stores/ui-store";
+import { useBannerDismissStore } from "@/stores/banner-dismiss-store";
+import { useSyncModeStore } from "@/stores/sync-mode-store";
 
 Object.assign(globalThis.localStorage, {
   getItem: () => null,
@@ -168,6 +170,27 @@ jest.mock("@swmansion/react-native-bottom-sheet", () => {
   };
 });
 
+jest.mock("@/lib/sonner", () => {
+  const toast = Object.assign(
+    jest.fn(() => "toast-id"),
+    {
+      success: jest.fn(() => "toast-id"),
+      info: jest.fn(() => "toast-id"),
+      error: jest.fn(() => "toast-id"),
+      warning: jest.fn(() => "toast-id"),
+      custom: jest.fn(() => "toast-id"),
+      promise: jest.fn(() => "toast-id"),
+      loading: jest.fn(() => "toast-id"),
+      dismiss: jest.fn(),
+      wiggle: jest.fn(),
+    },
+  );
+  return { toast, Toaster: () => null };
+});
+
+jest.mock("sonner-native", () => jest.requireMock("@/lib/sonner"));
+jest.mock("sonner", () => jest.requireMock("@/lib/sonner"));
+
 // Reanimated 4 runs its own JS implementation under Jest, so we use the real
 // module and let setUpTests() register matchers, as recommended in the docs:
 // https://docs.swmansion.com/react-native-reanimated/docs/guides/testing/
@@ -189,10 +212,14 @@ notifyManager.setScheduler((callback) => {
 });
 
 const initialUIStoreState = useUIStore.getState();
+const initialBannerDismissState = useBannerDismissStore.getState();
+const initialSyncModeState = useSyncModeStore.getState();
 
 afterEach(async () => {
   await act(() => {
     useUIStore.setState(initialUIStoreState, true);
+    useBannerDismissStore.setState(initialBannerDismissState, true);
+    useSyncModeStore.setState(initialSyncModeState, true);
   });
   jest.clearAllMocks();
   jest.useRealTimers();

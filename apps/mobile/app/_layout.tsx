@@ -33,6 +33,7 @@ import { PressablesConfig } from "pressto";
 import * as Haptics from "expo-haptics";
 
 import { AccessBanner } from "@/components/access/access-banner";
+import { LedgerToaster } from "@/components/banner/ledger-toaster";
 import { SyncWorker } from "@/components/sync/sync-worker";
 import { SyncModeBanner } from "@/components/sync/sync-mode-banner";
 import { AppUpdateProvider } from "@/components/updates/app-update-provider";
@@ -177,6 +178,7 @@ export default function RootLayout() {
                                 <RecurringSettlementBanner />
                                 <SyncModeBanner />
                                 <AccessBanner />
+                                <LedgerToaster />
                                 <AuthLinkGate />
                                 <PortalHost />
                               </AppUpdateProvider>
