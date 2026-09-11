@@ -23,7 +23,7 @@ import {
 } from "@trove/db/schema/budget";
 import { recurringOccurrence, recurringRule } from "@trove/db/schema/recurring";
 
-import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
+import type { CommandPlan, HouseholdPlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
 import {
   accountContentRow,
@@ -219,7 +219,7 @@ const ROW_SCHEMA_BY_ENTITY = {
 } satisfies Record<ImportEntityType, z.ZodType>;
 
 function buildInsertStatements(
-  ctx: PlanContext,
+  ctx: HouseholdPlanContext,
   entityType: ImportEntityType,
   rows: readonly Record<string, unknown>[],
 ): BatchStatement[] {
@@ -227,7 +227,7 @@ function buildInsertStatements(
 }
 
 async function findImportConflict(
-  ctx: PlanContext,
+  ctx: HouseholdPlanContext,
   entityType: ImportEntityType,
   rows: readonly Record<string, unknown>[],
 ): Promise<string | null> {
@@ -239,10 +239,10 @@ async function findImportConflict(
     }),
   );
   const existing = await loadExistingContentRows(ctx, entityType, ids);
-  for (const { householdId, content } of existing) {
+  for (const { ledgerId, content } of existing) {
     const rowId = String(content.row.id);
     if (
-      householdId !== ctx.householdId ||
+      ledgerId !== ctx.ledgerId ||
       incomingById.get(rowId) !== canonicalizeImportContent([content])
     ) {
       return rowId;
@@ -252,28 +252,29 @@ async function findImportConflict(
 }
 
 interface ExistingImportContentRow {
-  readonly householdId: string;
+  /** Ledger the stored row already belongs to — an import may not cross scopes. */
+  readonly ledgerId: string;
   readonly content: ImportContentRow;
 }
 
 async function loadExistingContentRows(
-  ctx: PlanContext,
+  ctx: HouseholdPlanContext,
   entityType: ImportEntityType,
   ids: readonly string[],
 ): Promise<readonly ExistingImportContentRow[]> {
   switch (entityType) {
     case "account":
       return (await ctx.db.select().from(ledgerAccount).where(inArray(ledgerAccount.id, ids))).map(
-        (row) => ({ householdId: row.householdId, content: accountContentRow(row) }),
+        (row) => ({ ledgerId: row.ledgerId, content: accountContentRow(row) }),
       );
     case "category":
       return (await ctx.db.select().from(category).where(inArray(category.id, ids))).map((row) => ({
-        householdId: row.householdId,
+        ledgerId: row.ledgerId,
         content: categoryContentRow(row),
       }));
     case "transaction":
       return (await ctx.db.select().from(transaction).where(inArray(transaction.id, ids))).map(
-        (row) => ({ householdId: row.householdId, content: transactionContentRow(row) }),
+        (row) => ({ ledgerId: row.ledgerId, content: transactionContentRow(row) }),
       );
     default:
       return [];
@@ -310,7 +311,7 @@ function incomingContentRow(
 }
 
 function buildConflictGuards(
-  ctx: PlanContext,
+  ctx: HouseholdPlanContext,
   entityType: ImportEntityType,
   rows: readonly Record<string, unknown>[],
 ): SQL[] {
@@ -328,7 +329,7 @@ function buildConflictGuards(
   });
 }
 
-function noDifferentAccount(ctx: PlanContext, row: z.infer<typeof accountRowSchema>): SQL {
+function noDifferentAccount(ctx: HouseholdPlanContext, row: z.infer<typeof accountRowSchema>): SQL {
   return noDifferentRow(ledgerAccount, ledgerAccount.id, row.id, [
     same(ledgerAccount.householdId, ctx.householdId),
     same(ledgerAccount.name, row.name),
@@ -346,7 +347,10 @@ function noDifferentAccount(ctx: PlanContext, row: z.infer<typeof accountRowSche
   ]);
 }
 
-function noDifferentCategory(ctx: PlanContext, row: z.infer<typeof categoryRowSchema>): SQL {
+function noDifferentCategory(
+  ctx: HouseholdPlanContext,
+  row: z.infer<typeof categoryRowSchema>,
+): SQL {
   return noDifferentRow(category, category.id, row.id, [
     same(category.householdId, ctx.householdId),
     same(category.name, row.name),
@@ -362,7 +366,10 @@ function noDifferentCategory(ctx: PlanContext, row: z.infer<typeof categoryRowSc
   ]);
 }
 
-function noDifferentTransaction(ctx: PlanContext, row: z.infer<typeof transactionRowSchema>): SQL {
+function noDifferentTransaction(
+  ctx: HouseholdPlanContext,
+  row: z.infer<typeof transactionRowSchema>,
+): SQL {
   return noDifferentRow(transaction, transaction.id, row.id, [
     same(transaction.householdId, ctx.householdId),
     same(transaction.type, row.type),
@@ -403,16 +410,18 @@ function noDifferentRow(
 }
 
 function buildInsertStatement(
-  ctx: PlanContext,
+  ctx: HouseholdPlanContext,
   entityType: ImportEntityType,
   rows: readonly Record<string, unknown>[],
 ): BatchStatement {
   const householdId = ctx.householdId;
+  const ledgerId = ctx.ledgerId;
   const actorUserId = ctx.actorUserId;
 
   switch (entityType) {
     case "account": {
       const values = (rows as z.infer<typeof accountRowSchema>[]).map((row) => ({
+        ledgerId,
         householdId,
         id: row.id,
         name: row.name,
@@ -440,6 +449,7 @@ function buildInsertStatement(
     }
     case "category": {
       const values = (rows as z.infer<typeof categoryRowSchema>[]).map((row) => ({
+        ledgerId,
         householdId,
         id: row.id,
         name: row.name,
@@ -463,6 +473,7 @@ function buildInsertStatement(
     }
     case "transaction": {
       const values = (rows as z.infer<typeof transactionRowSchema>[]).map((row) => ({
+        ledgerId,
         householdId,
         id: row.id,
         type: row.type,
@@ -674,7 +685,10 @@ export const importBundleHandler = {
       : { ok: false as const, issues: issuesFromZod(result.error) };
   },
 
-  async plan(ctx: PlanContext, { payload }: PlanRequest): Promise<CommandPlan | PlanRejection> {
+  async plan(
+    ctx: HouseholdPlanContext,
+    { payload }: PlanRequest,
+  ): Promise<CommandPlan | PlanRejection> {
     const input = payload as ImportBundlePayload;
     const parsedRows = parseRows(input.entityType, input.rows);
     if (!parsedRows.ok) {

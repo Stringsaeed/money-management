@@ -4,7 +4,7 @@ import { z } from "zod";
 import { recurringRule } from "@trove/db/schema/recurring";
 import { category, ledgerAccount } from "@trove/db/schema/ledger";
 
-import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
+import type { CommandPlan, HouseholdPlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
 import { issuesFromZod } from "./shared";
 import { privateAccountAccessRejection } from "./private-account";
@@ -95,7 +95,10 @@ export const recurringChangeHandler = {
       : { ok: false as const, issues: issuesFromZod(result.error) };
   },
 
-  async plan(ctx: PlanContext, { payload }: PlanRequest): Promise<CommandPlan | PlanRejection> {
+  async plan(
+    ctx: HouseholdPlanContext,
+    { payload }: PlanRequest,
+  ): Promise<CommandPlan | PlanRejection> {
     const input = payload as RecurringChangePayload;
     if (input.action === "create") return planCreate(ctx, input);
 
@@ -137,7 +140,7 @@ export const recurringChangeHandler = {
 };
 
 async function planCreate(
-  ctx: PlanContext,
+  ctx: HouseholdPlanContext,
   input: Extract<RecurringChangePayload, { action: "create" }>,
 ): Promise<CommandPlan | PlanRejection> {
   if (await loadRule(ctx, input.ruleId)) {
@@ -170,7 +173,10 @@ async function planCreate(
   };
 }
 
-async function loadRule(ctx: PlanContext, ruleId: string): Promise<RecurringRuleRow | null> {
+async function loadRule(
+  ctx: HouseholdPlanContext,
+  ruleId: string,
+): Promise<RecurringRuleRow | null> {
   const rows = await ctx.db
     .select()
     .from(recurringRule)
@@ -179,7 +185,7 @@ async function loadRule(ctx: PlanContext, ruleId: string): Promise<RecurringRule
   return rows[0] ?? null;
 }
 
-function revisionGuard(ctx: PlanContext, ruleId: string, revision: number) {
+function revisionGuard(ctx: HouseholdPlanContext, ruleId: string, revision: number) {
   return sql`(SELECT COUNT(*) FROM ${recurringRule}
       WHERE ${recurringRule.householdId} = ${ctx.householdId}
         AND ${recurringRule.id} = ${ruleId}
@@ -278,7 +284,7 @@ function draftValues(rule: z.infer<typeof recurringDraftSchema>) {
 }
 
 async function validateDependencies(
-  ctx: PlanContext,
+  ctx: HouseholdPlanContext,
   rule: z.infer<typeof recurringDraftSchema>,
 ): Promise<PlanRejection | null> {
   for (const accountId of [rule.accountId, rule.toAccountId]) {

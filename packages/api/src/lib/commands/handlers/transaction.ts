@@ -61,7 +61,7 @@ async function loadTransaction(ctx: PlanContext, id: string): Promise<Transactio
   const rows = await ctx.db
     .select()
     .from(transaction)
-    .where(and(eq(transaction.householdId, ctx.householdId), eq(transaction.id, id)))
+    .where(and(eq(transaction.ledgerId, ctx.ledgerId), eq(transaction.id, id)))
     .limit(1);
   return rows[0] ?? null;
 }
@@ -76,7 +76,7 @@ async function loadAccount(
   const rows = await ctx.db
     .select()
     .from(ledgerAccount)
-    .where(and(eq(ledgerAccount.householdId, ctx.householdId), eq(ledgerAccount.id, accountId)))
+    .where(and(eq(ledgerAccount.ledgerId, ctx.ledgerId), eq(ledgerAccount.id, accountId)))
     .limit(1);
   return rows[0] ?? null;
 }
@@ -104,7 +104,10 @@ async function validateExistingAccountAccess(
  * at or after the earliest affected period is dropped and recomputed on next
  * read, stamped with the change's seq.
  */
-function invalidateProjectionsFrom(ctx: PlanContext, period: string): BatchStatement {
+function invalidateProjectionsFrom(ctx: PlanContext, period: string): BatchStatement | null {
+  // Projections are Household facts; a Personal Ledger has no cache to drop
+  // until budgeting learns Ledger Scope (#227).
+  if (ctx.householdId === null) return null;
   return ctx.db.delete(periodProjectionCache).where(
     and(
       eq(periodProjectionCache.householdId, ctx.householdId),
@@ -113,6 +116,9 @@ function invalidateProjectionsFrom(ctx: PlanContext, period: string): BatchState
     ),
   ) as unknown as BatchStatement;
 }
+
+const optional = (statement: BatchStatement | null): readonly BatchStatement[] =>
+  statement ? [statement] : [];
 
 /** Budget Period ("YYYY-MM") of a ledger date — ADR-0021 attribution anchor. */
 export const budgetPeriodOf = (ledgerDate: string): string => ledgerDate.slice(0, 7);
@@ -208,7 +214,7 @@ async function validateShape(
     const categoryRows = await ctx.db
       .select()
       .from(category)
-      .where(and(eq(category.householdId, ctx.householdId), eq(category.id, shape.categoryId)))
+      .where(and(eq(category.ledgerId, ctx.ledgerId), eq(category.id, shape.categoryId)))
       .limit(1);
     const txCategory = categoryRows[0];
     if (!txCategory) {
@@ -232,7 +238,7 @@ async function validateShape(
 
 function versionGuard(ctx: PlanContext, id: string, expectedVersion: number) {
   return and(
-    eq(transaction.householdId, ctx.householdId),
+    eq(transaction.ledgerId, ctx.ledgerId),
     eq(transaction.id, id),
     eq(transaction.version, expectedVersion),
   );
@@ -240,6 +246,7 @@ function versionGuard(ctx: PlanContext, id: string, expectedVersion: number) {
 
 export const transactionHandlers = {
   "transaction.create": {
+    supportsPersonalScope: true,
     parsePayload(payload: unknown) {
       const result = createTransactionPayloadSchema.safeParse(payload);
       return result.success
@@ -283,6 +290,7 @@ export const transactionHandlers = {
           ctx.db
             .insert(transaction)
             .values({
+              ledgerId: ctx.ledgerId,
               householdId: ctx.householdId,
               id: transactionId,
               type: input.type,
@@ -301,13 +309,14 @@ export const transactionHandlers = {
               updatedBy: ctx.actorUserId,
             })
             .onConflictDoNothing() as unknown as BatchStatement,
-          invalidateProjectionsFrom(ctx, budgetPeriodOf(input.date)),
+          ...optional(invalidateProjectionsFrom(ctx, budgetPeriodOf(input.date))),
         ],
       };
     },
   },
 
   "transaction.edit": {
+    supportsPersonalScope: true,
     parsePayload(payload: unknown) {
       const result = editTransactionPayloadSchema.safeParse(payload);
       return result.success
@@ -377,13 +386,14 @@ export const transactionHandlers = {
               version: sql`${transaction.version} + 1`,
             })
             .where(rowGuard) as unknown as BatchStatement,
-          invalidateProjectionsFrom(ctx, affectedPeriod),
+          ...optional(invalidateProjectionsFrom(ctx, affectedPeriod)),
         ],
       };
     },
   },
 
   "transaction.remove": {
+    supportsPersonalScope: true,
     parsePayload(payload: unknown) {
       const result = removeTransactionPayloadSchema.safeParse(payload);
       return result.success
@@ -444,7 +454,7 @@ export const transactionHandlers = {
         guards: [sql`(SELECT COUNT(*) FROM ${transaction} WHERE ${rowGuard}) = 1`],
         statements: [
           ctx.db.delete(transaction).where(rowGuard) as unknown as BatchStatement,
-          invalidateProjectionsFrom(ctx, budgetPeriodOf(existing.date)),
+          ...optional(invalidateProjectionsFrom(ctx, budgetPeriodOf(existing.date))),
         ],
       };
     },

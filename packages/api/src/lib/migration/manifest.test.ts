@@ -87,6 +87,7 @@ describe("computeImportManifest", () => {
   it("counts ledger facts and sums transactions by account, scoped to the household", async () => {
     await db.insert(ledgerAccount).values([
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         id: "account-1",
         name: "Checking",
@@ -97,6 +98,7 @@ describe("computeImportManifest", () => {
         updatedBy: OWNER,
       },
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         id: "account-2",
         name: "Euro account",
@@ -107,6 +109,7 @@ describe("computeImportManifest", () => {
         updatedBy: OWNER,
       },
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         id: "account-3",
         name: "Savings",
@@ -118,6 +121,7 @@ describe("computeImportManifest", () => {
       },
     ]);
     await db.insert(category).values({
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       id: "category-1",
       name: "Groceries",
@@ -128,6 +132,7 @@ describe("computeImportManifest", () => {
     });
     await db.insert(transaction).values([
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         id: "txn-1",
         type: "expense",
@@ -140,6 +145,7 @@ describe("computeImportManifest", () => {
         updatedBy: OWNER,
       },
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         id: "txn-2",
         type: "expense",
@@ -152,6 +158,7 @@ describe("computeImportManifest", () => {
         updatedBy: OWNER,
       },
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         id: "txn-3",
         type: "expense",
@@ -164,6 +171,7 @@ describe("computeImportManifest", () => {
         updatedBy: OWNER,
       },
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         id: "txn-4",
         type: "expense",
@@ -177,6 +185,7 @@ describe("computeImportManifest", () => {
       },
     ]);
     await db.insert(ledgerAccount).values({
+      ledgerId: OTHER_HOUSEHOLD_ID,
       householdId: OTHER_HOUSEHOLD_ID,
       id: "account-other",
       name: "Not this household",

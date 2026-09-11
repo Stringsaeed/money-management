@@ -38,6 +38,7 @@ beforeEach(async () => {
   ]);
   await db.insert(ledgerAccount).values([
     {
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       id: "account-public",
       name: "Shared checking",
@@ -50,6 +51,7 @@ beforeEach(async () => {
       visibility: "public",
     },
     {
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       id: "account-private",
       name: "Personal checking",
@@ -64,6 +66,7 @@ beforeEach(async () => {
   ]);
   await db.insert(transaction).values([
     {
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       id: "transaction-public",
       type: "income",
@@ -76,6 +79,7 @@ beforeEach(async () => {
       updatedBy: OWNER,
     },
     {
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       id: "transaction-private",
       type: "income",
@@ -127,6 +131,7 @@ describe("transaction pagination", () => {
   it("does not skip rows that share the cursor date", async () => {
     await db.insert(transaction).values([
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         id: "transaction-same-c",
         type: "income",
@@ -139,6 +144,7 @@ describe("transaction pagination", () => {
         updatedBy: OWNER,
       },
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         id: "transaction-same-b",
         type: "income",
@@ -151,6 +157,7 @@ describe("transaction pagination", () => {
         updatedBy: OWNER,
       },
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         id: "transaction-same-a",
         type: "income",

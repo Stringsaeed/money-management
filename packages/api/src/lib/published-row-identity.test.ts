@@ -130,6 +130,7 @@ describe("PowerSync published row identity", () => {
     ]);
     await db.insert(ledgerAccount).values([
       {
+        ledgerId: "identity-house-1",
         householdId: "identity-house-1",
         id: "identity-account-1",
         name: "One",
@@ -138,6 +139,7 @@ describe("PowerSync published row identity", () => {
         updatedBy: "identity-user-1",
       },
       {
+        ledgerId: "identity-house-2",
         householdId: "identity-house-2",
         id: "identity-account-2",
         name: "Two",
@@ -147,6 +149,7 @@ describe("PowerSync published row identity", () => {
       },
     ]);
     await db.insert(category).values({
+      ledgerId: "identity-house-1",
       householdId: "identity-house-1",
       id: "identity-category-1",
       name: "One",
@@ -156,6 +159,7 @@ describe("PowerSync published row identity", () => {
     });
 
     const transactionBase = {
+      ledgerId: "identity-house-2",
       householdId: "identity-house-2",
       type: "expense" as const,
       amountMinor: 100,

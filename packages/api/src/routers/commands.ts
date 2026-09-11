@@ -27,11 +27,13 @@ export const commandsRouter = {
       return LOCAL_ONLY_RESULT;
     }
     const db = createDb();
+    const actor = context.session?.user;
     return instrumentCommandApply(requestMetrics(), () =>
       applyCommand({
         db,
         userId,
         envelope: input,
+        ...(actor && { actor: { id: actor.id, email: actor.email, name: actor.name } }),
       }),
     );
   }),

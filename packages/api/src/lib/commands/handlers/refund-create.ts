@@ -1,7 +1,7 @@
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
+import type { CommandPlan, HouseholdPlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
 
 import { ledgerAccount, transaction } from "@trove/db/schema/ledger";
@@ -47,7 +47,10 @@ export const refundCreateHandler = {
       : { ok: false as const, issues: issuesFromZod(result.error) };
   },
 
-  async plan(ctx: PlanContext, { payload }: PlanRequest): Promise<CommandPlan | PlanRejection> {
+  async plan(
+    ctx: HouseholdPlanContext,
+    { payload }: PlanRequest,
+  ): Promise<CommandPlan | PlanRejection> {
     const input = payload as RefundPayload;
 
     // The original must exist in this household, be an expense, and share the
@@ -197,6 +200,7 @@ export const refundCreateHandler = {
       ctx.db
         .insert(transaction)
         .values({
+          ledgerId: ctx.ledgerId,
           householdId: ctx.householdId,
           id: refundTransactionId,
           type: "income",

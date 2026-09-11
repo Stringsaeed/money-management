@@ -46,6 +46,7 @@ beforeEach(async () => {
   });
   await db.insert(ledgerAccount).values({
     id: ACCOUNT,
+    ledgerId: HOUSEHOLD,
     householdId: HOUSEHOLD,
     name: "Checking",
     type: "bank",
@@ -55,6 +56,7 @@ beforeEach(async () => {
   });
   await db.insert(category).values({
     id: CATEGORY,
+    ledgerId: HOUSEHOLD,
     householdId: HOUSEHOLD,
     name: "Housing",
     type: "expense",

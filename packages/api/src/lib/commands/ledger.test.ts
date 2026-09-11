@@ -101,6 +101,7 @@ function expectApplied(result: CommandResult): AppliedResult {
 /** Seeds one active account directly (bypassing commands) for edit targets. */
 async function seedAccount(overrides: Partial<typeof ledgerAccount.$inferInsert> = {}) {
   const row = {
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id: overrides.id ?? "acc-1",
     name: "Checking",
@@ -118,6 +119,7 @@ async function seedAccount(overrides: Partial<typeof ledgerAccount.$inferInsert>
 
 async function seedCategory(overrides: Partial<typeof category.$inferInsert> = {}) {
   const row = {
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id: overrides.id ?? "cat-1",
     name: "Groceries",
@@ -133,6 +135,7 @@ async function seedCategory(overrides: Partial<typeof category.$inferInsert> = {
 
 async function seedTransaction(overrides: Partial<typeof transaction.$inferInsert> = {}) {
   const row = {
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id: overrides.id ?? "tx-1",
     type: "expense" as const,
@@ -311,6 +314,7 @@ describe("ledger commands — categories", () => {
 
   it("rejects a parent from outside the household via missing_entity", async () => {
     await db.insert(category).values({
+      ledgerId: OTHER_HOUSEHOLD_ID,
       householdId: OTHER_HOUSEHOLD_ID,
       id: "cat-foreign",
       name: "Foreign Parent",
@@ -618,6 +622,7 @@ describe("ledger commands — transactions", () => {
 
   it("scopes every write by the envelope's household — cross-household ids are invisible", async () => {
     await db.insert(ledgerAccount).values({
+      ledgerId: OTHER_HOUSEHOLD_ID,
       householdId: OTHER_HOUSEHOLD_ID,
       id: "acc-foreign",
       name: "Foreign Account",

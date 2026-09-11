@@ -5,7 +5,7 @@ import { validateMemberRoleChange } from "@trove/domain/member-role-change";
 import { membership } from "@trove/db/schema/household";
 import { HOUSEHOLD_ROLES, type HouseholdRole } from "@trove/protocol";
 
-import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
+import type { CommandPlan, HouseholdPlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
 
 import { issuesFromZod } from "./shared";
@@ -24,7 +24,7 @@ export const memberRoleChangeHandler = {
   },
 
   async plan(
-    ctx: PlanContext,
+    ctx: HouseholdPlanContext,
     { payload, preconditions }: PlanRequest,
   ): Promise<CommandPlan | PlanRejection> {
     const input = payload as { userId: string; role: HouseholdRole };

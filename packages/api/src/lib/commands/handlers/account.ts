@@ -51,26 +51,29 @@ async function loadAccount(
   const rows = await ctx.db
     .select()
     .from(ledgerAccount)
-    .where(and(eq(ledgerAccount.householdId, ctx.householdId), eq(ledgerAccount.id, accountId)))
+    .where(and(eq(ledgerAccount.ledgerId, ctx.ledgerId), eq(ledgerAccount.id, accountId)))
     .limit(1);
   return rows[0] ?? null;
 }
 
 /** A private Account may not contribute to any current or planned Funding Pool. */
 async function hasActiveFundingMembership(ctx: PlanContext, accountId: string): Promise<boolean> {
+  // Funding Pools are Household facts; a Personal Ledger has none to guard.
+  if (ctx.householdId === null) return false;
+  const householdId = ctx.householdId;
   const rows = await ctx.db
     .select({ active: fundingMembership.active })
     .from(fundingMembership)
     .where(
       and(
-        eq(fundingMembership.householdId, ctx.householdId),
+        eq(fundingMembership.householdId, householdId),
         eq(fundingMembership.accountId, accountId),
         eq(
           fundingMembership.effectiveFromPeriod,
           sql`(
             SELECT MAX(latest.effective_from_period)
             FROM funding_memberships latest
-            WHERE latest.household_id = ${ctx.householdId}
+            WHERE latest.household_id = ${householdId}
               AND latest.account_id = ${accountId}
           )`,
         ),
@@ -87,7 +90,7 @@ function versionGuard(
   expectedVersion: number,
 ): ReturnType<typeof and> {
   return and(
-    eq(ledgerAccount.householdId, ctx.householdId),
+    eq(ledgerAccount.ledgerId, ctx.ledgerId),
     eq(ledgerAccount.id, accountId),
     eq(ledgerAccount.version, expectedVersion),
   );
@@ -95,6 +98,7 @@ function versionGuard(
 
 export const accountHandlers = {
   "account.create": {
+    supportsPersonalScope: true,
     parsePayload(payload: unknown) {
       const result = createAccountPayloadSchema.safeParse(payload);
       return result.success
@@ -118,6 +122,7 @@ export const accountHandlers = {
           ctx.db
             .insert(ledgerAccount)
             .values({
+              ledgerId: ctx.ledgerId,
               householdId: ctx.householdId,
               id: accountId,
               name: input.name,
@@ -140,6 +145,7 @@ export const accountHandlers = {
   },
 
   "account.update": {
+    supportsPersonalScope: true,
     parsePayload(payload: unknown) {
       const result = updateAccountPayloadSchema.safeParse(payload);
       return result.success
@@ -227,6 +233,7 @@ export const accountHandlers = {
   },
 
   "account.archive": {
+    supportsPersonalScope: true,
     parsePayload(payload: unknown) {
       const result = archiveAccountPayloadSchema.safeParse(payload);
       return result.success

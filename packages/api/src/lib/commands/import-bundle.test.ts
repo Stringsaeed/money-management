@@ -291,6 +291,7 @@ describe("commands.apply — import_bundle idempotency", () => {
       createdByUserId: OWNER,
     });
     await db.insert(ledgerAccount).values({
+      ledgerId: "household-other",
       householdId: "household-other",
       ...ACCOUNT_ROW,
       initialBalanceMinor: ACCOUNT_ROW.initialBalanceMinor,

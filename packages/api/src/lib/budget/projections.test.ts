@@ -66,6 +66,7 @@ async function appendChange(effects: string[] = ["ledger"]): Promise<void> {
   const commandId = `cmd-${seqCounter}`;
   await db.insert(householdChange).values({
     id: `change-${seqCounter}`,
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     seq: seqCounter,
     userId: OWNER,
@@ -73,6 +74,7 @@ async function appendChange(effects: string[] = ["ledger"]): Promise<void> {
     effects: effects as never,
   });
   await db.insert(commandResult).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     commandId,
     result: { ok: true },
@@ -81,6 +83,7 @@ async function appendChange(effects: string[] = ["ledger"]): Promise<void> {
 
 async function seedAccount(id: string, initialBalanceMinor = 0, type = "bank", poolMember = true) {
   await db.insert(ledgerAccount).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id,
     name: `Account ${id}`,
@@ -128,6 +131,7 @@ async function seedEnvelope(id: string, overrides: Partial<typeof envelope.$infe
 
 async function seedCategory(id: string) {
   await db.insert(category).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id,
     name: `Category ${id}`,
@@ -181,6 +185,7 @@ async function spendExpense(
   categoryId?: string,
 ) {
   await db.insert(transaction).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id: crypto.randomUUID(),
     type: "expense",
@@ -258,6 +263,7 @@ describe("period projections", () => {
     await mapCategory("cat-groceries", "env-groceries");
     await assign("2026-01", "env-groceries", 30000);
     await db.insert(transaction).values({
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       id: "expense-correction",
       type: "expense",
@@ -316,6 +322,7 @@ describe("period projections", () => {
     await assign("2026-01", "env-groceries", 2000);
     await spendExpense("2026-01-15", 500, "acc-private", "cat-groceries");
     await db.insert(transaction).values({
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       id: "private-transfer",
       type: "transfer",

@@ -26,7 +26,10 @@ export function assertionStatement(db: CommandDatabase, guard: SQL): BatchStatem
 export function changeLogStatement(
   _db: CommandDatabase,
   input: {
-    householdId: string;
+    /** Ledger whose `seq` watermark advances; the scope of record. */
+    ledgerId: string;
+    /** Household backing an organization Ledger; null for personal ones. */
+    householdId?: string | null;
     userId: string;
     commandId: string;
     effects: readonly EffectTag[];
@@ -34,17 +37,18 @@ export function changeLogStatement(
 ): BatchStatement {
   const changeId = crypto.randomUUID();
   const effects = JSON.stringify(input.effects);
+  const householdId = input.householdId ?? null;
   return {
     getSQL: () => sql`
       WITH next_sequence AS (
-        INSERT INTO ${householdChangeSequence} (household_id, seq)
-        VALUES (${input.householdId}, 1)
-        ON CONFLICT (household_id) DO UPDATE
+        INSERT INTO ${householdChangeSequence} (ledger_id, household_id, seq)
+        VALUES (${input.ledgerId}, ${householdId}, 1)
+        ON CONFLICT (ledger_id) DO UPDATE
         SET seq = ${householdChangeSequence.seq} + 1
         RETURNING seq
       )
-      INSERT INTO ${householdChange} (id, household_id, seq, user_id, command_id, effects)
-      SELECT ${changeId}, ${input.householdId}, next_sequence.seq, ${input.userId}, ${input.commandId}, ${effects}::jsonb
+      INSERT INTO ${householdChange} (id, ledger_id, household_id, seq, user_id, command_id, effects)
+      SELECT ${changeId}, ${input.ledgerId}, ${householdId}, next_sequence.seq, ${input.userId}, ${input.commandId}, ${effects}::jsonb
       FROM next_sequence
     `,
   };
@@ -52,24 +56,30 @@ export function changeLogStatement(
 
 export function resultStatement(
   db: CommandDatabase,
-  input: { householdId: string; commandId: string; result: unknown },
+  input: {
+    ledgerId: string;
+    householdId?: string | null;
+    commandId: string;
+    result: unknown;
+  },
 ): BatchStatement {
   return db.insert(commandResult).values({
-    householdId: input.householdId,
+    ledgerId: input.ledgerId,
+    householdId: input.householdId ?? null,
     commandId: input.commandId,
     result: input.result,
   });
 }
 
-export async function executeHouseholdTransaction(
+export async function executeLedgerTransaction(
   db: CommandDatabase,
   statements: readonly BatchStatement[],
-  householdId: string,
-  options: { readonly lockHousehold?: boolean } = {},
+  ledgerId: string,
+  options: { readonly lockLedger?: boolean } = {},
 ): Promise<void> {
   await db.transaction(async (tx) => {
-    if (options.lockHousehold !== false) {
-      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${householdId}))`);
+    if (options.lockLedger !== false) {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${ledgerId}))`);
     }
     for (const statement of statements) {
       await tx.execute(statement.getSQL());

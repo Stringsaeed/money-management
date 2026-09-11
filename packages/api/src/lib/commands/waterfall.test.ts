@@ -13,11 +13,11 @@ import type { AppliedResult, CommandResult } from "@trove/protocol";
 
 import { assignmentCommitHandler } from "./handlers/assignment-commit";
 import { applyCommand } from "./pipeline";
-import type { CommandPlan, PlanContext } from "./pipeline";
+import type { CommandPlan, HouseholdPlanContext } from "./pipeline";
 import {
   assertionStatement,
   changeLogStatement,
-  executeHouseholdTransaction,
+  executeLedgerTransaction,
   resultStatement,
   type BatchStatement,
 } from "./statements";
@@ -56,6 +56,7 @@ async function setupHousehold(): Promise<TestDb> {
 
 async function seedFundingAccount(id: string, initialBalanceMinor = 0) {
   await db.insert(ledgerAccount).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id,
     name: `Account ${id}`,
@@ -99,6 +100,7 @@ async function seedEnvelope(id: string) {
 
 async function seedTransaction(input: Partial<typeof transaction.$inferInsert>) {
   await db.insert(transaction).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id: input.id ?? crypto.randomUUID(),
     type: "expense",
@@ -152,8 +154,10 @@ function expectApplied(result: CommandResult): AppliedResult & { applied: Applie
   return result as AppliedResult & { applied: AppliedPayload };
 }
 
-const planContext = (): PlanContext => ({
+const planContext = (): HouseholdPlanContext => ({
   db,
+  ledgerId: HOUSEHOLD_ID,
+  scope: { type: "organization", organizationId: HOUSEHOLD_ID },
   householdId: HOUSEHOLD_ID,
   actorUserId: OWNER,
   actorRole: "owner",
@@ -183,12 +187,14 @@ function buildStatements(commandId: string, plan: CommandPlan): BatchStatement[]
     ...plan.guards.map((guard) => assertionStatement(db as never, guard)),
     ...plan.statements,
     changeLogStatement(db as never, {
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       userId: OWNER,
       commandId,
       effects: plan.effects,
     }),
     resultStatement(db as never, {
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       commandId,
       result: plan.applied,
@@ -418,13 +424,9 @@ describe("interleaving safety — preconditions replace locks", () => {
     expect(planA.guards).toHaveLength(1);
     expect(planB.guards).toHaveLength(1);
 
-    await executeHouseholdTransaction(
-      db,
-      buildStatements(crypto.randomUUID(), planA),
-      HOUSEHOLD_ID,
-    );
+    await executeLedgerTransaction(db, buildStatements(crypto.randomUUID(), planA), HOUSEHOLD_ID);
     await expect(
-      executeHouseholdTransaction(db, buildStatements(crypto.randomUUID(), planB), HOUSEHOLD_ID),
+      executeLedgerTransaction(db, buildStatements(crypto.randomUUID(), planB), HOUSEHOLD_ID),
     ).rejects.toThrow();
 
     // Exactly one 8_000 assignment exists — never both.
@@ -472,7 +474,7 @@ describe("interleaving safety — preconditions replace locks", () => {
         continue; // Typed rejection at plan time — nothing committed.
       }
       try {
-        await executeHouseholdTransaction(
+        await executeLedgerTransaction(
           db,
           buildStatements(crypto.randomUUID(), outcome),
           HOUSEHOLD_ID,

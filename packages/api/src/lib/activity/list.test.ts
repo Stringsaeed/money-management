@@ -70,6 +70,7 @@ async function seedChanges(changes: readonly SeedChange[]): Promise<void> {
     seq += 1;
     await db.insert(householdChange).values({
       id: crypto.randomUUID(),
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       seq,
       userId: change.userId,
@@ -206,6 +207,7 @@ describe("getActivity", () => {
     await seedChanges([{ userId: OWNER }, { userId: MEMBER }]);
     await db.insert(householdChange).values({
       id: crypto.randomUUID(),
+      ledgerId: OTHER_HOUSEHOLD_ID,
       householdId: OTHER_HOUSEHOLD_ID,
       seq: 1,
       userId: "user-other",

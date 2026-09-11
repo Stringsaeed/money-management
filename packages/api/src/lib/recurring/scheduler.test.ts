@@ -37,6 +37,7 @@ async function seedHousehold(id: string) {
 
 async function seedAccount(householdId: string, id: string, currency = "USD") {
   await db.insert(ledgerAccount).values({
+    ledgerId: householdId,
     householdId,
     id,
     name: `Account ${id}`,

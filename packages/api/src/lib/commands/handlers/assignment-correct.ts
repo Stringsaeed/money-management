@@ -4,7 +4,7 @@ import { z } from "zod";
 import { assignment, envelope } from "@trove/db/schema/budget";
 
 import { getBudgetPoolFacts } from "../../budget/funding-pool";
-import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
+import type { CommandPlan, HouseholdPlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
 import { issuesFromZod } from "./shared";
 
@@ -35,7 +35,10 @@ export const assignmentCorrectHandler = {
       : { ok: false as const, issues: issuesFromZod(result.error) };
   },
 
-  async plan(ctx: PlanContext, { payload }: PlanRequest): Promise<CommandPlan | PlanRejection> {
+  async plan(
+    ctx: HouseholdPlanContext,
+    { payload }: PlanRequest,
+  ): Promise<CommandPlan | PlanRejection> {
     const input = payload as AssignmentCorrectPayload;
     const originalRows = await ctx.db
       .select()
@@ -151,7 +154,7 @@ export const assignmentCorrectHandler = {
 };
 
 async function validateEndpoints(
-  ctx: PlanContext,
+  ctx: HouseholdPlanContext,
   input: AssignmentCorrectPayload,
 ): Promise<PlanRejection | null> {
   for (const envelopeId of [input.sourceEnvelopeId, input.destinationEnvelopeId]) {

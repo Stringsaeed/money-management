@@ -48,7 +48,7 @@ async function loadCategory(
   const rows = await ctx.db
     .select()
     .from(category)
-    .where(and(eq(category.householdId, ctx.householdId), eq(category.id, categoryId)))
+    .where(and(eq(category.ledgerId, ctx.ledgerId), eq(category.id, categoryId)))
     .limit(1);
   return rows[0] ?? null;
 }
@@ -80,7 +80,7 @@ async function validateParent(
 
 function versionGuard(ctx: PlanContext, categoryId: string, expectedVersion: number) {
   return and(
-    eq(category.householdId, ctx.householdId),
+    eq(category.ledgerId, ctx.ledgerId),
     eq(category.id, categoryId),
     eq(category.version, expectedVersion),
   );
@@ -88,6 +88,7 @@ function versionGuard(ctx: PlanContext, categoryId: string, expectedVersion: num
 
 export const categoryHandlers = {
   "category.create": {
+    supportsPersonalScope: true,
     parsePayload(payload: unknown) {
       const result = createCategoryPayloadSchema.safeParse(payload);
       return result.success
@@ -115,6 +116,7 @@ export const categoryHandlers = {
           ctx.db
             .insert(category)
             .values({
+              ledgerId: ctx.ledgerId,
               householdId: ctx.householdId,
               id: categoryId,
               name: input.name,
@@ -133,6 +135,7 @@ export const categoryHandlers = {
   },
 
   "category.update": {
+    supportsPersonalScope: true,
     parsePayload(payload: unknown) {
       const result = updateCategoryPayloadSchema.safeParse(payload);
       return result.success
@@ -194,6 +197,7 @@ export const categoryHandlers = {
   },
 
   "category.archive": {
+    supportsPersonalScope: true,
     parsePayload(payload: unknown) {
       const result = archiveCategoryPayloadSchema.safeParse(payload);
       return result.success
