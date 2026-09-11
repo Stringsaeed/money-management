@@ -297,18 +297,19 @@ export async function leaveHousehold(
 /**
  * Deletes the Organization and every row it owns. The organization Ledger
  * goes with it, so shared Accounts, Categories, and Transactions are removed;
- * members' Personal Ledgers are untouched.
+ * members' Personal Ledgers are untouched. `confirmName` must match the
+ * Household name so the caller acknowledges the blast radius (#230).
  */
 export async function deleteHousehold(
   deps: HouseholdDeps,
-  input: { readonly userId: string; readonly householdId: string },
+  input: {
+    readonly userId: string;
+    readonly householdId: string;
+    readonly confirmName: string;
+  },
 ): Promise<void> {
-  await requireAdmin(deps, input.userId, input.householdId);
-  await deps.directory.deleteOrganization(input.householdId);
-  await deps.db.transaction(async (tx) => {
-    await tx.delete(household).where(eq(household.id, input.householdId));
-    await tx.delete(ledger).where(eq(ledger.id, input.householdId));
-  });
+  const { requestHouseholdDeletion } = await import("../deletion/service");
+  await requestHouseholdDeletion(deps, input);
 }
 
 /**

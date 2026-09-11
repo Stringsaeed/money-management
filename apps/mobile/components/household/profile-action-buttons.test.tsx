@@ -210,10 +210,16 @@ describe("ActiveHouseholdPanel", () => {
   });
 
   it("confirms delete for admins", async () => {
-    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation((_title, _message, buttons) => {
-      const del = buttons?.find((button) => button.text === "Delete");
-      del?.onPress?.();
-    });
+    const promptSpy = jest
+      .spyOn(Alert, "prompt")
+      .mockImplementation((_title, _message, buttons) => {
+        if (!Array.isArray(buttons)) {
+          return;
+        }
+        const del = buttons.find((button) => button.text === "Delete");
+        const onPress = del?.onPress as ((value?: string) => void) | undefined;
+        onPress?.("The Saeeds");
+      });
     await render(
       <ActiveHouseholdPanel
         householdId="hh-1"
@@ -225,7 +231,10 @@ describe("ActiveHouseholdPanel", () => {
       />,
     );
     await fireEvent.press(screen.getByTestId("delete-household"));
-    expect(mockDeleteMutate).toHaveBeenCalledWith("hh-1");
-    alertSpy.mockRestore();
+    expect(mockDeleteMutate).toHaveBeenCalledWith({
+      householdId: "hh-1",
+      confirmName: "The Saeeds",
+    });
+    promptSpy.mockRestore();
   });
 });
