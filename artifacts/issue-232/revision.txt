@@ -1,4 +1,4 @@
-revision=PENDING_AFTER_REBASE
+revision=d06face15941f7e2b101ca49f501cd0571ba51ed
 branch=cursor/workos-certify-migration-b3d1
 base_main=44fde92b62cd29ff3e290106510f31a48362063f
 note=AuthKit row2 Mac evidence; client_id mismatch blocks post-login API; Relates to #232 only; #224 open; no Closes
