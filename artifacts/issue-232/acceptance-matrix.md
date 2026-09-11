@@ -50,6 +50,13 @@ Do not merge. No production deploy. Parent #224 stays open. Do not close #232.
 - Env BLOCKED names for reset/webhook/local PowerSync mint: `WORKOS_WEBHOOK_SECRET`, `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`).
 - Parent #224 stays open. Do not merge. No production deploy.
 
+## Rebase onto main + #242 (2026-09-11T20:45Z)
+
+- Rebased `cursor/workos-certify-migration-b3d1` onto `origin/main` @ `44fde92` (merge of [#242](https://github.com/Stringsaeed/money-management/pull/242)).
+- Live API `https://auth.trove.ing` already has #242 (Deploy Worker succeeded for `44fde92`).
+- Row 2 still needs live AuthKit device evidence; do not treat hosted deploy as certification.
+- Parent #224 stays open. **Relates to #232** only — do not close #232. Do not merge as certified. No production deploy.
+
 ## Status legend
 
 | Status | Meaning |
