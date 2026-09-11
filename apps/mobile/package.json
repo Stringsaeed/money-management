@@ -15,7 +15,8 @@
     "test:ci": "jest --runInBand --coverage --ci --watchman=false --forceExit",
     "ts:check": "npx tsc --noEmit",
     "check-loose-end": "knip",
-    "prebuild": "expo prebuild"
+    "prebuild": "expo prebuild",
+    "postinstall": "node ../../scripts/ensure-expo-sqlite-ios-vendor.mjs"
   },
   "dependencies": {
     "@azure/core-asynciterator-polyfill": "1.0.2",

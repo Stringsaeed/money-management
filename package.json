@@ -24,7 +24,8 @@
     "dev:server": "pnpm --filter @trove/infra dev",
     "db:generate": "turbo run db:generate -F @trove/db --",
     "deploy": "turbo run deploy -F @trove/infra --",
-    "destroy": "turbo run destroy -F @trove/infra --"
+    "destroy": "turbo run destroy -F @trove/infra --",
+    "postinstall": "node ./scripts/ensure-expo-sqlite-ios-vendor.mjs"
   },
   "devDependencies": {
     "@oxlint/plugins": "1.80.0",
