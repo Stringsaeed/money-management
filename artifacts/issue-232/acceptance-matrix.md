@@ -55,7 +55,14 @@ Do not merge. No production deploy. Parent #224 stays open. Do not close #232.
 - Rebased `cursor/workos-certify-migration-b3d1` onto `origin/main` @ `44fde92` (merge of [#242](https://github.com/Stringsaeed/money-management/pull/242)).
 - Live API `https://auth.trove.ing` already has #242 (Deploy Worker succeeded for `44fde92`).
 - Row 2 still needs live AuthKit device evidence; do not treat hosted deploy as certification.
+- Mac AuthKit agent reported **names only**: `WORKOS_CLIENT_ID` ≠ `EXPO_PUBLIC_WORKOS_CLIENT_ID`. Until those two env names match, **post-login API retest remains BLOCKED** (even with #242 live). Leave room for Mac screenshots / a dedicated mismatch row when that agent lands artifacts.
 - Parent #224 stays open. **Relates to #232** only — do not close #232. Do not merge as certified. No production deploy.
+
+### Client-id mismatch (placeholder for Mac evidence)
+
+| Sub-criterion | Status | Evidence |
+| --- | --- | --- |
+| Mobile public client id matches API `WORKOS_CLIENT_ID` | `BLOCKED` | Names only: `WORKOS_CLIENT_ID` ≠ `EXPO_PUBLIC_WORKOS_CLIENT_ID` (Mac AuthKit agent). Post-login protected API retest cannot pass until aligned. Screenshots / mismatch proof: *pending Mac push — reconcile on next fetch.* |
 
 ## Status legend
 
@@ -103,7 +110,7 @@ A row is complete only when every required sub-criterion is `PASS` (or an explic
 | iOS development build | `FAIL` then retry | First `stim ios` → `STIM_BUILD_FAILED` (`stim-ios.json`): ExpoSQLite missing vendored `sqlite3.c`/`sqlite3.h` under `node_modules/expo-sqlite/ios` (`exsqlite3_*` unresolved). Remediation: copy vendor sources + `pod install` (`pod-install.txt`); retry log `stim-ios-retry.json`. Follow-ups on this PR: ExpoSQLite postinstall + Metro `.rnrepo-cache` blockList. |
 | Android development build | not started | No Android doctor / stim / agent-device artifacts. **Do not claim Android pass.** |
 
-**Row status: `IN PROGRESS` (iOS harness) + not evidenced (required flows).** `#242` is on `main` and included here; **row 2 still needs live AuthKit evidence.** Local WorkOS client env names are present, so this row is not env-blocked; it lacks runtime proof.
+**Row status: `IN PROGRESS` (iOS harness) + not evidenced (required flows) + post-login API retest `BLOCKED` on client-id mismatch.** `#242` is on `main`, included here, and live on `auth.trove.ing`; **row 2 still needs live AuthKit evidence.** Mac agent: `WORKOS_CLIENT_ID` ≠ `EXPO_PUBLIC_WORKOS_CLIENT_ID` (names only) blocks post-login API retest until those env names match. Local WorkOS client env *names* are present for AuthKit UI, but the mismatch means bearer verify against the hosted API can still fail for the wrong client.
 
 Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_REDIRECT_URI`, `WORKOS_CLAIM_TOKEN`, `WORKOS_COOKIE_PASSWORD`, `EXPO_PUBLIC_WORKOS_CLIENT_ID`, `EXPO_PUBLIC_WORKOS_REDIRECT_URI`, `EXPO_PUBLIC_SERVER_URL`.
 
@@ -244,6 +251,12 @@ iOS/Android email-code, cancel, restart, refresh, expiry, network recovery, anon
 | `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID` | Local worker mint; live PowerSync removal-bound measure from this machine. |
 | `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`) | Local disposable DB reset / mint. |
 | `EXPO_PUBLIC_POWERSYNC_URL` | Not required if the client takes the endpoint from the API token response against `auth.trove.ing`. Still not two-device proof. |
+
+### Present but mismatched (names only; Mac AuthKit agent)
+
+| Names | Blocks |
+| --- | --- |
+| `WORKOS_CLIENT_ID` ≠ `EXPO_PUBLIC_WORKOS_CLIENT_ID` | Post-login protected API retest / AuthKit bearer acceptance against live `auth.trove.ing`, even with #242 deployed. Align the two names before treating row 2 API follow-up as runnable. |
 
 GitHub Actions secrets include `POWERSYNC_*`, `PLANETSCALE_*`, and `WORKOS_*`, and do **not** include `WORKOS_WEBHOOK_SECRET`. Do not claim values.
 
