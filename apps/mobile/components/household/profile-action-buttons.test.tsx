@@ -213,11 +213,12 @@ describe("ActiveHouseholdPanel", () => {
     const promptSpy = jest
       .spyOn(Alert, "prompt")
       .mockImplementation((_title, _message, buttons) => {
-        const del =
-          typeof buttons === "object"
-            ? buttons?.find((button) => button.text === "Delete")
-            : undefined;
-        del?.onPress?.("The Saeeds");
+        if (!Array.isArray(buttons)) {
+          return;
+        }
+        const del = buttons.find((button) => button.text === "Delete");
+        const onPress = del?.onPress as ((value?: string) => void) | undefined;
+        onPress?.("The Saeeds");
       });
     await render(
       <ActiveHouseholdPanel
