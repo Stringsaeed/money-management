@@ -9,6 +9,10 @@ import { useUIStore } from "@/stores/ui-store";
 import { useBannerDismissStore } from "@/stores/banner-dismiss-store";
 import { useSyncModeStore } from "@/stores/sync-mode-store";
 
+process.env.EXPO_PUBLIC_SERVER_URL ??= "http://localhost:3000";
+process.env.EXPO_PUBLIC_WORKOS_CLIENT_ID ??= "client_test_jest";
+process.env.EXPO_PUBLIC_WORKOS_REDIRECT_URI ??= "trove://callback";
+
 Object.assign(globalThis.localStorage, {
   getItem: () => null,
   setItem: () => undefined,
@@ -36,12 +40,16 @@ jest.mock("expo-crypto", () => ({
   randomUUID: jest.fn(() => crypto.randomUUID()),
 }));
 
-// better-auth's Expo client ships untranspiled ESM and talks to the network —
-// tests get an inert signed-out client instead.
+// WorkOS AuthKit uses SecureStore + WebBrowser; tests get an inert signed-out client.
 jest.mock("expo-secure-store", () => ({
   getItemAsync: jest.fn(async () => null),
   setItemAsync: jest.fn(async () => undefined),
   deleteItemAsync: jest.fn(async () => undefined),
+}));
+
+jest.mock("expo-web-browser", () => ({
+  maybeCompleteAuthSession: jest.fn(),
+  openAuthSessionAsync: jest.fn(async () => ({ type: "cancel" })),
 }));
 
 jest.mock("@/lib/auth-client", () => ({
@@ -50,12 +58,15 @@ jest.mock("@/lib/auth-client", () => ({
     getSession: jest.fn(async () => ({ data: null })),
     signOut: jest.fn(async () => undefined),
     getCookie: jest.fn(() => ""),
-    magicLink: { verify: jest.fn() },
-    signIn: { magicLink: jest.fn(), email: jest.fn() },
-    signUp: { email: jest.fn() },
-    resetPassword: jest.fn(),
-    requestPasswordReset: jest.fn(),
+    getAccessToken: jest.fn(async () => null),
+    signInWithAuthKit: jest.fn(async () => ({ kind: "cancelled" })),
   },
+  useSession: jest.fn(() => ({ data: null, isPending: true })),
+  getSession: jest.fn(async () => ({ data: null })),
+  signOut: jest.fn(async () => undefined),
+  getCookie: jest.fn(() => ""),
+  getAccessToken: jest.fn(async () => null),
+  signInWithAuthKit: jest.fn(async () => ({ kind: "cancelled" })),
 }));
 
 jest.mock("@/modules/access", () => ({

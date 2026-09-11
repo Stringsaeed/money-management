@@ -11,7 +11,7 @@
     "@trove/auth": "workspace:*",
     "@trove/db": "workspace:*",
     "@trove/env": "workspace:*",
-    "better-auth": "catalog:",
+    "@workos-inc/node": "10.13.0",
     "dotenv": "catalog:",
     "hono": "catalog:",
     "zod": "catalog:"

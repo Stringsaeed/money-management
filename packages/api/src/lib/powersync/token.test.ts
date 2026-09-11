@@ -67,7 +67,7 @@ describe("PowerSync JWT", () => {
     });
 
     expect(response.headers.get("Cache-Control")).toBe("public, max-age=300");
-    const body = await response.json();
+    const body = (await response.json()) as { keys: Record<string, unknown>[] };
     expect(body).toMatchObject({ keys: [{ kid: KID, kty: "EC", use: "sig" }] });
     expect(body.keys[0]).not.toHaveProperty("d");
   });

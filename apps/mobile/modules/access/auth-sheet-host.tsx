@@ -1,10 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { router } from "expo-router";
 
 import { AuthBottomSheet } from "@/components/auth/auth-bottom-sheet";
-import { ChoosePasswordStep } from "@/components/auth/choose-password-step";
-import { SignInStep } from "@/components/auth/sign-in-step";
-import { AuthNote, AuthScreenShell } from "@/components/auth/ui";
-import { useAuthJourney } from "@/modules/auth-journey";
+import { AuthLinkButton, AuthNote, AuthPrimaryButton, AuthScreenShell } from "@/components/auth/ui";
+import { beginHostedSignIn } from "@/modules/access/actions";
+import { resolveReturnDestination } from "@/modules/access/access";
+import { coreFromAccess } from "@/modules/access/core-from-state";
+import { hrefForInternal } from "@/modules/access/return-to";
+import { useAccess } from "@/modules/access/use-access";
 
 import type { AuthSheetSession } from "./auth-sheet-session";
 
@@ -18,58 +21,60 @@ export function AuthSheetHost({
   return (
     <AuthBottomSheet isPresented={session.kind === "open"} onDismiss={onDismiss}>
       {session.kind === "open" ? (
-        <AuthSheetContents
-          key={authSheetContentsKey(session)}
-          session={session}
-          onDismiss={onDismiss}
-        />
+        <AuthKitSignInPanel session={session} onDismiss={onDismiss} />
       ) : null}
     </AuthBottomSheet>
   );
 }
 
-function AuthSheetContents({
+function AuthKitSignInPanel({
   session,
   onDismiss,
 }: {
   readonly session: Extract<AuthSheetSession, { kind: "open" }>;
   readonly onDismiss: () => void;
 }) {
-  const journey = useAuthJourney(
-    session.target,
-    session.grant ? { grant: session.grant } : undefined,
-  );
+  const access = useAccess();
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    if (journey.state.step === "established") onDismiss();
-  }, [journey.state.step, onDismiss]);
-
-  if (journey.state.step === "established") return null;
-
-  if (session.grant) {
-    if (journey.state.step !== "choose_password") {
-      return (
-        <AuthScreenShell
-          title="This reset link isn't usable"
-          subtitle="Request a new password reset from sign-in."
-        >
-          <AuthNote>The link may have expired or already been used.</AuthNote>
-        </AuthScreenShell>
-      );
-    }
-    return (
-      <ChoosePasswordStep
-        state={journey.state}
-        onEmailChange={(email) => journey.send({ type: "email_changed", email })}
-        onSubmit={(password) => journey.send({ type: "submitted_new_password", password })}
-      />
+    if (access.kind !== "signed_in") return;
+    onDismiss();
+    router.replace(
+      hrefForInternal(resolveReturnDestination(coreFromAccess(access), session.target)),
     );
+  }, [access, onDismiss, session.target]);
+
+  async function onContinue() {
+    setBusy(true);
+    setFailed(false);
+    const result = await beginHostedSignIn();
+    setBusy(false);
+    if (result.kind === "cancelled") {
+      onDismiss();
+      return;
+    }
+    if (result.kind === "fail") setFailed(true);
   }
 
-  return <SignInStep journey={journey} />;
-}
-
-function authSheetContentsKey(session: Extract<AuthSheetSession, { kind: "open" }>): string {
-  const target = session.target.kind === "screen" ? session.target.href : session.target.kind;
-  return `${target}:${session.grant?.token ?? ""}`;
+  return (
+    <AuthScreenShell
+      title="Sign in with email code"
+      subtitle="We open WorkOS AuthKit. No password. Your local ledger stays on this device."
+    >
+      <AuthNote>
+        Signing in does not create a Household and does not upload device records.
+      </AuthNote>
+      {failed ? (
+        <AuthNote>Could not finish sign-in. Check your connection and try again.</AuthNote>
+      ) : null}
+      <AuthPrimaryButton
+        label={busy ? "Opening AuthKit…" : "Continue with email code"}
+        onPress={onContinue}
+        disabled={busy}
+      />
+      <AuthLinkButton label="Cancel" onPress={onDismiss} disabled={busy} />
+    </AuthScreenShell>
+  );
 }

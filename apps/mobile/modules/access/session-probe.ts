@@ -5,7 +5,8 @@ import { identityFromUser } from "./identity";
 import type { SessionProbe } from "./types";
 
 export function useSessionProbe(): SessionProbe | null {
-  return mapSessionSnapshot(authClient.useSession());
+  const session = authClient.useSession();
+  return mapSessionSnapshot(session);
 }
 
 export async function probeSession(): Promise<SessionProbe> {
@@ -29,6 +30,11 @@ export async function tryRemoteSignOut(): Promise<"ok" | "unreachable"> {
   }
 }
 
+export async function getAuthAccessToken(): Promise<string | null> {
+  return authClient.getAccessToken();
+}
+
+/** @deprecated Cookie auth retired; returns empty string. Prefer getAuthAccessToken. */
 export function getAuthCookie(): string {
   return authClient.getCookie();
 }

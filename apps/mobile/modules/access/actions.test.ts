@@ -1,155 +1,37 @@
-// oxlint-disable anti-slop/no-unknown-returns, anti-slop/no-unknown-parameters -- jest mocks for opaque better-auth client payloads
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it } from "@jest/globals";
 
-import { redeemMagicToken, sendAuthLink, signInWithPassword } from "./actions";
+import { beginHostedSignIn } from "./actions";
 
-type VerifyInput = {
-  fetchOptions?: {
-    onResponse?: (context: { response: { url: string } }) => void;
-  };
+jest.mock("@/lib/auth-client", () => ({
+  signInWithAuthKit: jest.fn(),
+}));
+
+const { signInWithAuthKit } = jest.requireMock("@/lib/auth-client") as {
+  signInWithAuthKit: jest.Mock;
 };
 
-type VerifyResult = {
-  readonly data: unknown;
-  readonly error: unknown;
-};
-
-type EmailInput = { readonly email: string };
-type PasswordInput = { readonly email: string; readonly password: string };
-
-// SAFETY: jest/setup-env.ts installs this mock shape for the access module.
-const authClient = (
-  jest.requireMock("@/lib/auth-client") as {
-    authClient: {
-      magicLink: { verify: jest.Mock<(input?: VerifyInput) => Promise<VerifyResult>> };
-      getSession: jest.Mock<() => Promise<VerifyResult>>;
-      signIn: {
-        magicLink: jest.Mock<(input: EmailInput) => Promise<VerifyResult>>;
-        email: jest.Mock<(input: PasswordInput) => Promise<VerifyResult>>;
-      };
-    };
-  }
-).authClient;
-
-const user = { id: "user-1", email: "ada@trove.ing", name: "Ada" };
-const identity = { userId: "user-1", email: "ada@trove.ing", displayName: "Ada" };
-
-function mockVerifyRedirect(url: string) {
-  authClient.magicLink.verify.mockImplementation(async (input) => {
-    input?.fetchOptions?.onResponse?.({ response: { url } });
-    return { data: "OK", error: null };
-  });
-}
-
-describe("redeemMagicToken", () => {
-  beforeEach(() => {
-    authClient.magicLink.verify.mockReset();
-    authClient.getSession.mockReset();
-  });
-
-  it("treats verify body OK as signed_in when a session cookie landed", async () => {
-    mockVerifyRedirect("https://auth.trove.ing/");
-    // SAFETY: mock session payload only needs id/email/name for identityFromUser.
-    authClient.getSession.mockResolvedValue({ data: { user }, error: null });
-
-    await expect(redeemMagicToken("tok")).resolves.toEqual({
+describe("beginHostedSignIn", () => {
+  it("maps a successful AuthKit session to identity", async () => {
+    signInWithAuthKit.mockResolvedValue({
       kind: "signed_in",
-      user: identity,
+      user: { id: "user_1", email: "ada@trove.ing", name: "Ada" },
     });
-  });
-
-  it("treats verify body OK as offline when the session probe cannot reach the server", async () => {
-    mockVerifyRedirect("https://auth.trove.ing/");
-    authClient.getSession.mockRejectedValue(new TypeError("Network request failed"));
-
-    await expect(redeemMagicToken("tok")).resolves.toEqual({ kind: "offline" });
-  });
-
-  it("treats verify body OK as unusable when no session exists", async () => {
-    mockVerifyRedirect("https://auth.trove.ing/?error=INVALID_TOKEN");
-    // SAFETY: empty session probe shape matches authClient.getSession when signed out.
-    authClient.getSession.mockResolvedValue({ data: null, error: null });
-
-    await expect(redeemMagicToken("tok")).resolves.toEqual({
-      kind: "unusable",
-      operation: "sign_in",
-    });
-  });
-
-  it("maps new_user_signup_disabled redirect to no_account", async () => {
-    mockVerifyRedirect("https://auth.trove.ing/?error=new_user_signup_disabled");
-
-    await expect(redeemMagicToken("tok")).resolves.toEqual({ kind: "no_account" });
-    expect(authClient.getSession).not.toHaveBeenCalled();
-  });
-
-  it("returns signed_in from verify JSON without probing the session", async () => {
-    // SAFETY: mock mirrors better-auth success JSON when callbackURL is omitted.
-    authClient.magicLink.verify.mockResolvedValue({
-      data: { token: "session-token", user, session: { id: "s1" } },
-      error: null,
-    });
-
-    await expect(redeemMagicToken("tok")).resolves.toEqual({
-      kind: "signed_in",
-      user: identity,
-    });
-    expect(authClient.getSession).not.toHaveBeenCalled();
-  });
-
-  it("maps verify transport errors without probing the session", async () => {
-    // SAFETY: mock error object only needs status for isUnreachableFailure.
-    authClient.magicLink.verify.mockResolvedValue({
-      data: null,
-      error: { status: 0, message: "failed" },
-    });
-
-    await expect(redeemMagicToken("tok")).resolves.toEqual({ kind: "offline" });
-    expect(authClient.getSession).not.toHaveBeenCalled();
-  });
-
-  it("maps verify client errors without probing the session", async () => {
-    // SAFETY: mock error object only needs status/code for failure mapping.
-    authClient.magicLink.verify.mockResolvedValue({
-      data: null,
-      error: { status: 400, code: "INVALID_TOKEN", message: "INVALID_TOKEN" },
-    });
-
-    await expect(redeemMagicToken("tok")).resolves.toEqual({
-      kind: "unusable",
-      operation: "sign_in",
-    });
-    expect(authClient.getSession).not.toHaveBeenCalled();
-  });
-});
-
-describe("password and link auth actions", () => {
-  beforeEach(() => {
-    authClient.signIn.magicLink.mockReset();
-    authClient.signIn.email.mockReset();
-  });
-
-  it("normalizes email without changing the password sent to sign in", async () => {
-    // SAFETY: mock success payload only needs id/email/name for identityFromUser.
-    authClient.signIn.email.mockResolvedValue({ data: { user }, error: null });
-
-    await expect(signInWithPassword("  Ada@Trove.ING  ", "password with spaces")).resolves.toEqual({
+    await expect(beginHostedSignIn()).resolves.toEqual({
       kind: "ok",
-      value: identity,
-    });
-    expect(authClient.signIn.email).toHaveBeenCalledWith({
-      email: "ada@trove.ing",
-      password: "password with spaces",
+      value: { userId: "user_1", email: "ada@trove.ing", displayName: "Ada" },
     });
   });
 
-  it("normalizes email before requesting a magic link", async () => {
-    authClient.signIn.magicLink.mockResolvedValue({ data: null, error: null });
+  it("maps cancellation without treating it as failure", async () => {
+    signInWithAuthKit.mockResolvedValue({ kind: "cancelled" });
+    await expect(beginHostedSignIn()).resolves.toEqual({ kind: "cancelled" });
+  });
 
-    await expect(sendAuthLink("  Ada@Trove.ING  ", "sign_in")).resolves.toEqual({
-      kind: "ok",
-      value: null,
+  it("maps AuthKit failures through the client error boundary", async () => {
+    signInWithAuthKit.mockResolvedValue({ kind: "failed", message: "boom" });
+    await expect(beginHostedSignIn()).resolves.toEqual({
+      kind: "fail",
+      failure: { kind: "server" },
     });
-    expect(authClient.signIn.magicLink).toHaveBeenCalledWith({ email: "ada@trove.ing" });
   });
 });
