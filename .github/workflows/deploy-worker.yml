@@ -94,6 +94,11 @@ jobs:
           CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
           WORKOS_API_KEY: ${{ secrets.WORKOS_API_KEY }}
           WORKOS_CLIENT_ID: ${{ secrets.WORKOS_CLIENT_ID }}
+          # Optional. Empty clears sticky custom audiences from older Alchemy/CF
+          # binds so no-aud AuthKit session tokens are not rejected as claim_aud.
+          # Set the GH secret only when a JWT template requires a custom aud.
+          WORKOS_TOKEN_AUDIENCE: ${{ secrets.WORKOS_TOKEN_AUDIENCE }}
+          WORKOS_TOKEN_ISSUER: ${{ secrets.WORKOS_TOKEN_ISSUER }}
           PLANETSCALE_HOST: ${{ secrets.PLANETSCALE_HOST }}
           PLANETSCALE_DATABASE: ${{ secrets.PLANETSCALE_DATABASE }}
           PLANETSCALE_USER: ${{ secrets.PLANETSCALE_USER }}
@@ -114,6 +119,20 @@ jobs:
           echo "Deploying Alchemy stage: $STAGE"
           if [ -z "$KILL_SWITCH_LOCAL_ONLY" ]; then
             export KILL_SWITCH_LOCAL_ONLY=off
+          fi
+          # Always export so Alchemy writes plain_text "" / default issuer and
+          # overwrites sticky custom WORKOS_TOKEN_* from older deploys.
+          export WORKOS_TOKEN_AUDIENCE="${WORKOS_TOKEN_AUDIENCE:-}"
+          export WORKOS_TOKEN_ISSUER="${WORKOS_TOKEN_ISSUER:-https://api.workos.com}"
+          if [ -n "$WORKOS_TOKEN_AUDIENCE" ]; then
+            echo "workos_token_audience_set=yes"
+          else
+            echo "workos_token_audience_set=empty"
+          fi
+          if [ "$WORKOS_TOKEN_ISSUER" = "https://api.workos.com" ]; then
+            echo "workos_token_issuer_custom=default"
+          else
+            echo "workos_token_issuer_custom=yes"
           fi
           # Strip UI paste newlines so Alchemy sees the same bytes as curl.
           export CLOUDFLARE_API_TOKEN=$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '\r\n')

@@ -1,11 +1,14 @@
 import type { Context as HonoContext } from "hono";
 import {
+  TokenVerifyError,
   readBearerToken,
   resolveWorkOSVerifyEnv,
   verifyAccessToken,
   type AuthSession,
 } from "@trove/auth";
 import { env } from "@trove/env/server";
+
+import { logTokenVerifyFailure, tokenVerifyFailureDiag } from "./token-verify-diagnostics";
 
 export type CreateContextOptions = {
   context: HonoContext;
@@ -43,7 +46,11 @@ async function resolveSession(authorization: string | null): Promise<AuthSession
       audience: resolved.audience,
       issuer: resolved.issuer,
     });
-  } catch {
+  } catch (error) {
+    // Console only: protectedProcedure UNAUTHORIZED has no data/header channel today.
+    const code =
+      error instanceof TokenVerifyError ? error.code : ("verification_unavailable" as const);
+    logTokenVerifyFailure(tokenVerifyFailureDiag(code, token));
     return null;
   }
 }

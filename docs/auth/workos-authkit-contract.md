@@ -17,9 +17,10 @@ Personal authentication must succeed without an organization.
 - JWKS: live `https://api.workos.com/sso/jwks/{WORKOS_CLIENT_ID}` (never hardcode JWKS JSON in production)
 - Issuer: `WORKOS_TOKEN_ISSUER` or `https://api.workos.com`
 - Binding (AuthKit session tokens omit `aud` by default):
-  - Default: require JWT `client_id` === `WORKOS_CLIENT_ID` when `aud` is absent
+  - Default (no `aud`): mismatched `client_id` fails; missing `client_id` is OK because jose already verified against JWKS for `WORKOS_CLIENT_ID`
   - If `aud` is present: require it to match `WORKOS_TOKEN_AUDIENCE` or `WORKOS_CLIENT_ID`
   - Custom `WORKOS_TOKEN_AUDIENCE` (≠ client id) requires a WorkOS JWT template that sets `aud`
+  - Deploy Worker always exports `WORKOS_TOKEN_AUDIENCE` (empty unless GH secret set) so sticky custom audiences cannot linger
 - Fail closed on missing/forged/expired/wrong-claim tokens
 
 ## Mobile AuthKit

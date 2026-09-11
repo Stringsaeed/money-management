@@ -122,10 +122,13 @@ export async function verifyAccessToken(
 
 /**
  * Bind the token to this WorkOS application.
- * - If `aud` is present (JWT template / Connect): it must include `config.audience`.
- * - If `aud` is absent (default AuthKit session token): `client_id` must equal `config.clientId`.
+ * - If `aud` is present (JWT template / Connect / multi-app): it must include `config.audience`.
+ * - If `aud` is absent (default AuthKit session token):
+ *   - mismatched `client_id` fails closed
+ *   - missing `client_id` is OK when `audience === clientId` — jose already verified
+ *     the signature against JWKS for this `WORKOS_CLIENT_ID`
  * - If ops configured a custom audience (`audience !== clientId`) but the token
- *   has no `aud`, fail closed — a JWT template is required for that mode.
+ *   has no `aud`, fail closed — clear sticky `WORKOS_TOKEN_AUDIENCE` or add a JWT template.
  */
 export function assertTokenBinding(payload: JWTPayload, config: WorkOSTokenVerifyConfig): void {
   if (payload.aud !== undefined) {
@@ -144,7 +147,10 @@ export function assertTokenBinding(payload: JWTPayload, config: WorkOSTokenVerif
   }
 
   const clientId = z.string().min(1).safeParse(payload.client_id);
-  if (!clientId.success || clientId.data !== config.clientId) {
+  // Official AuthKit session tokens include `client_id`. Some live tokens omit it
+  // while still signing with this client's JWKS — accept after signature/iss/exp.
+  if (!clientId.success) return;
+  if (clientId.data !== config.clientId) {
     throw new TokenVerifyError("claim_client_id", "Access token client_id does not match.");
   }
 }

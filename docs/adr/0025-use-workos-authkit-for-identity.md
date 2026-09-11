@@ -18,7 +18,7 @@ Trove is still in development and is replacing Better Auth plus custom Household
 1. WorkOS AuthKit is the only active identity provider. Better Auth is removed from the active mobile and API path.
 2. Hosted AuthKit uses email codes with PKCE, validated callback `state`, cancellation, and return-to-context. Password and social methods stay disabled in the WorkOS dashboard for this app.
 3. Mobile stores access and refresh tokens in SecureStore, serializes refresh-token rotation, and recovers the session after restart. Transient refresh failures keep local access; terminal failures clear credentials.
-4. The API authenticates via `Authorization: Bearer` and verifies signature, issuer, expiry, and application binding (`client_id`, or `aud` when a JWT template sets it) against WorkOS JWKS. Client-supplied User or organization identifiers are never proof of access.
+4. The API authenticates via `Authorization: Bearer` and verifies signature, issuer, expiry, and application binding (`aud` when present; otherwise JWKS-scoped to `WORKOS_CLIENT_ID`, with optional matching `client_id`) against WorkOS JWKS. Client-supplied User or organization identifiers are never proof of access.
 5. Canonical identity keys are the WorkOS User id (`sub`) and optional `org_id`. Personal authentication works with `organizationId: null`.
 6. Signing in creates neither a Household nor an automatic upload of local records.
 7. The WorkOS User Management widget is feasible as a narrow admin-only web surface. Trove keeps an app-owned sole-admin User-deletion guard. Post-event webhooks are not prevention.
