@@ -29,6 +29,19 @@ describe("resolveIssuerCandidates", () => {
     );
   });
 
+  it("adds User Management client issuers seen by AuthKit integrations", () => {
+    const issuers = resolveIssuerCandidates({
+      issuer: DEFAULT_WORKOS_TOKEN_ISSUER,
+      clientId: "client_test_123",
+    });
+    expect(issuers).toEqual(
+      expect.arrayContaining([
+        "https://api.workos.com/user_management/client_test_123",
+        "https://api.workos.com/user_management/client_test_123/",
+      ]),
+    );
+  });
+
   it("strips scheme from authHostname if pasted as a URL", () => {
     expect(
       resolveIssuerCandidates({

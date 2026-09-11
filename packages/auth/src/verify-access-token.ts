@@ -101,6 +101,7 @@ export async function verifyAccessToken(
 
   const issuer = resolveIssuerCandidates({
     issuer: config.issuer,
+    clientId: config.clientId,
     authHostname: config.authHostname,
   });
 

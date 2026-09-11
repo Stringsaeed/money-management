@@ -347,6 +347,29 @@ describe("verifyAccessToken", () => {
     ).rejects.toMatchObject({ code: "claim_iss" });
   });
 
+  it("accepts User Management client issuers", async () => {
+    const { privateKey, jwks } = await testKeys();
+    const umIss = `https://api.workos.com/user_management/${CLIENT_ID}`;
+    const token = await sign(
+      privateKey,
+      {
+        sub: "user_01UMISS",
+        email: "um-iss@trove.ing",
+        client_id: CLIENT_ID,
+      },
+      { audience: false, issuer: umIss },
+    );
+
+    await expect(
+      verifyAccessToken(token, {
+        clientId: CLIENT_ID,
+        audience: CLIENT_ID,
+        issuer: ISSUER,
+        jwks,
+      }),
+    ).resolves.toMatchObject({ user: { id: "user_01UMISS" } });
+  });
+
   it("parses bearer headers and publishes the live JWKS URL shape", () => {
     expect(readBearerToken("Bearer abc.def")).toBe("abc.def");
     expect(readBearerToken(null)).toBeNull();

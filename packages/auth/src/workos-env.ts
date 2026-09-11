@@ -28,17 +28,28 @@ export function issuerVariants(issuer: string): string[] {
 }
 
 /**
- * Accept configured issuer, the WorkOS API default, and optional custom auth domain.
- * Live Sync 401 `claim_iss` happened when deploy verified only `https://api.workos.com`
- * while AuthKit minted `iss` from the custom auth hostname (`auth.trove.ing`).
+ * Accept configured issuer, WorkOS API defaults, User Management client issuer, and
+ * optional custom auth domain. Live Sync 401 `claim_iss` happened when deploy verified
+ * only `https://api.workos.com` while AuthKit minted `iss` from the custom auth hostname
+ * (`auth.trove.ing`) or `https://api.workos.com/user_management/{clientId}`.
  */
 export function resolveIssuerCandidates(input: {
   readonly issuer: string;
+  readonly clientId?: string | null;
   readonly authHostname?: string | null;
 }): string[] {
   const out = new Set<string>();
   for (const value of issuerVariants(input.issuer)) out.add(value);
   for (const value of issuerVariants(DEFAULT_WORKOS_TOKEN_ISSUER)) out.add(value);
+
+  const clientId = input.clientId?.trim() ?? "";
+  if (clientId) {
+    for (const value of issuerVariants(
+      `${DEFAULT_WORKOS_TOKEN_ISSUER}/user_management/${clientId}`,
+    )) {
+      out.add(value);
+    }
+  }
 
   const rawHost = input.authHostname?.trim() ?? "";
   if (rawHost) {
