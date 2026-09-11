@@ -1,5 +1,22 @@
-2026-09-11T20:46:07Z
+date_utc=2026-09-11T21:05:00Z
 branch=cursor/workos-certify-migration-b3d1
-head=d44857f7e3727d4e4033d5db675d3989d1d2033b
-api=#242 live on auth.trove.ing (44fde92)
-otp=BLOCKED agent-device AX-unavailable on AuthKit ASWebAuthenticationSession code boxes
+api=https://auth.trove.ing
+api_note=#242 live (aud/client_id verify)
+client_id_compare=EQUAL
+WORKOS_WEBHOOK_SECRET_present=true
+POWERSYNC_URL_present=false
+POWERSYNC_JWT_PRIVATE_KEY_present=false
+POWERSYNC_JWT_KID_present=false
+PLANETSCALE_HOST_present=false
+PLANETSCALE_DATABASE_present=false
+PLANETSCALE_USER_present=false
+PLANETSCALE_PASSWORD_present=false
+DATABASE_URL_present=false
+
+row2_cancel=PASS (authkit-04-cancel.png)
+row2_email_challenge=PARTIAL (authkit-07..09 code challenge reached; OTP digit boxes AX-unavailable in ASWebAuthenticationSession)
+row2_post_login_orpc=NOT_RETESTED_THIS_PASS
+evidence_earlier_same_session=authkit-30/31 showed signed-in Profile (email visible, Sign out, Household sync paused / Try again, Sync just for me) after AuthKit; later simulator session returned to signed-out Sign-in sheet (authkit-41/43/46) so Try again / Sync just for me could not be re-driven for HTTP outcome capture
+hard_stop=signed_out_before_retry_controls; OTP AX blocks re-auth
+http_outcome=no fresh protected /rpc status captured this pass (no bearer session on active sim)
+screenshots=artifacts/issue-232/authkit-01..46*.png

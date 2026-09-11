@@ -36,7 +36,7 @@ Recorded in `revision.txt` / `authkit-live-write.txt` (`date=2026-09-11T20:46:07
 - Repo-wide `pnpm lint` and `pnpm format:check` **fail** on pre-existing findings.
 - Full `pnpm test:ci` **passed** previously: mobile Jest **742/742** + `@trove/db` cutover **3/3**.
 - **Row 2 iOS AuthKit UI (partial):** cancel PASS; hosted AuthKit email page + email-code challenge PARTIAL; OTP entry hard-stopped (agent-device AX unavailable inside ASWebAuthenticationSession). Still signed out afterward (`authkit-21-signed-out-final.png`).
-- **Post-login protected API:** **BLOCKED** — local `WORKOS_CLIENT_ID` ≠ `EXPO_PUBLIC_WORKOS_CLIENT_ID` (names only; see `client-id-compare.txt`). Even with #242 live, mismatched client ids can 401 the new check.
+- **Post-login protected API:** **BLOCKED** — local `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) (names only; see `client-id-compare.txt`). Even with #242 live, mismatched client ids can 401 the new check.
 - Android runtime **not started**. Disposable clean-setup after reset **blocked**.
 
 Do not merge as certified. No production deploy. Parent #224 stays open. **Do not use Closes #232.**
@@ -55,14 +55,24 @@ Do not merge as certified. No production deploy. Parent #224 stays open. **Do no
 - Rebased `cursor/workos-certify-migration-b3d1` onto `origin/main` @ `44fde92` (merge of [#242](https://github.com/Stringsaeed/money-management/pull/242)).
 - Live API `https://auth.trove.ing` already has #242 (Deploy Worker succeeded for `44fde92`).
 - Mac AuthKit evidence landed: cancel PASS; email/code challenge PARTIAL; OTP hard-stopped (AX unavailable).
-- Post-login protected API **BLOCKED**: `WORKOS_CLIENT_ID` ≠ `EXPO_PUBLIC_WORKOS_CLIENT_ID` (`client-id-compare.txt`, values omitted).
+- Post-login protected API **BLOCKED**: `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) (`client-id-compare.txt`, values omitted).
 - Parent #224 stays open. **Relates to #232** only — do not close #232. Do not merge as certified. No production deploy.
 
 ### Client-id mismatch (Mac evidence)
 
 | Sub-criterion | Status | Evidence |
 | --- | --- | --- |
-| Mobile public client id matches API `WORKOS_CLIENT_ID` | `BLOCKED` | Names only: `WORKOS_CLIENT_ID` ≠ `EXPO_PUBLIC_WORKOS_CLIENT_ID` (`client-id-compare.txt`). |
+| Mobile public client id matches API `WORKOS_CLIENT_ID` | `BLOCKED` | Names only: `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) (`client-id-compare.txt`). |
+
+
+## AuthKit Mac finish pass (2026-09-11T21:05Z)
+
+- `client_id_compare=EQUAL` (`client-id-compare.txt`).
+- `WORKOS_WEBHOOK_SECRET_present=true` (value omitted). PowerSync/PlanetScale mint env names still absent.
+- #242 live on `https://auth.trove.ing`.
+- Cancel PASS; email/code challenge PARTIAL (OTP AX hard-stop).
+- Earlier same session: signed-in Profile UI observed (`authkit-30`/`authkit-31` era). Finish pass found signed-out Sign-in sheet (`authkit-41`/`authkit-43`/`authkit-46`) — **no fresh protected `/rpc` HTTP status**.
+- Do not merge as certified. Relates to #232 only. Parent #224 stays open.
 
 ## Status legend
 
@@ -107,13 +117,13 @@ A row is complete only when every required sub-criterion is `PASS` (or an explic
 | Refresh rotation | not evidenced | No signed-in session. |
 | Session expiry | not evidenced on device | Automated expired-token coverage in `@trove/auth` only. |
 | Transient network recovery | not evidenced | No runtime artifact. |
-| Post-login protected oRPC / bearer | `BLOCKED` | Local `WORKOS_CLIENT_ID` ≠ `EXPO_PUBLIC_WORKOS_CLIENT_ID` (`client-id-compare.txt`, values omitted). Hard-stop even though #242 is live on `auth.trove.ing`. |
+| Post-login protected oRPC / bearer | `BLOCKED` | Local `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) (`client-id-compare.txt`, values omitted). Hard-stop even though #242 is live on `auth.trove.ing`. |
 | iOS development build | prior FAIL then recovered | ExpoSQLite vendor + Metro `.rnrepo-cache` blockList on this branch; live AuthKit driven without `stim ios` rebuild this session. |
 | Android development build | not started | No Android agent-device artifacts. **Do not claim Android pass.** |
 
 **Row status: `PARTIAL` (cancel PASS; email challenge PARTIAL; OTP/callback/post-login API BLOCKED).**
 
-Blockers (names only): `WORKOS_CLIENT_ID` / `EXPO_PUBLIC_WORKOS_CLIENT_ID` mismatch for protected API after AuthKit. OTP automation blocked by AuthKit webview AX (not an env-name blocker).
+Blockers (names only): OTP automation blocked by AuthKit webview AX (not an env-name blocker). Client ids now **EQUAL**. Post-login protected oRPC **not re-captured** this pass (active sim signed out before Try again / Sync just for me). Still BLOCKED for live PowerSync/PlanetScale mint: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`). `WORKOS_WEBHOOK_SECRET` **present** locally (value omitted).
 
 Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_REDIRECT_URI`, `WORKOS_CLAIM_TOKEN`, `WORKOS_COOKIE_PASSWORD`, `EXPO_PUBLIC_WORKOS_CLIENT_ID`, `EXPO_PUBLIC_WORKOS_REDIRECT_URI`, `EXPO_PUBLIC_SERVER_URL`.
 
@@ -228,8 +238,8 @@ API focused files in the 97: `powersync/token.test.ts` (4), `personal-budget-rec
 | `stim start` | Metro **200** on **8083** | `stim-start.json` / `metro-health-*.txt` |
 | `stim ios` | Prior build recovery on branch; **this AuthKit session did not rebuild** (`simctl launch` only). | `stim-ios-*.json` |
 | agent-device (iOS AuthKit) | **PARTIAL** — cancel PASS; email + code challenge reached; OTP hard-stopped (AX unavailable). | `authkit-01-launch.png` … `authkit-21-signed-out-final.png`, `authkit-live-write.txt` |
-| Client id equality | **MISMATCH** (names only) | `client-id-compare.txt` — `WORKOS_CLIENT_ID` ≠ `EXPO_PUBLIC_WORKOS_CLIENT_ID` |
-| Post-login protected API | **BLOCKED** | Same client-id mismatch; #242 already live on `auth.trove.ing` |
+| Client id equality | **EQUAL** (names only) | `client-id-compare.txt` — `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) |
+| Post-login protected API | **BLOCKED** | Same client-id previously mismatched; now EQUAL; #242 already live on `auth.trove.ing` |
 | `stim doctor android` / `stim android` / agent-device (Android) | not started | — |
 | Maestro / verify-trove flows | not started | — |
 
@@ -249,7 +259,7 @@ iOS email-code OTP completion, callback, restart, refresh, expiry, network recov
 
 | Check | Result |
 | --- | --- |
-| `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` | **MISMATCH** (`client-id-compare.txt`) — blocks post-login protected API even with #242 live |
+| `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` | **EQUAL** (`client-id-compare.txt`) (`client-id-compare.txt`) — blocks post-login protected API even with #242 live |
 
 ### Absent locally (block the named capability)
 
