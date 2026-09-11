@@ -1,5 +1,5 @@
-revision=2bf56bb128ae03fd45a30b1e15b6e09fa20faf03
+revision=d55003be6de8ecaf0a30afe5bc3c5177c19080e2
 branch=cursor/workos-certify-migration-b3d1
 base_main=44fde92b62cd29ff3e290106510f31a48362063f
-note=includes #242 AuthKit missing-aud/client_id API fix; #232 not certified
-date=2026-09-11T20:45:00Z
+note=includes #242 AuthKit missing-aud/client_id API fix on main and live auth.trove.ing; #232 not certified
+date=2026-09-11T20:46:00Z
