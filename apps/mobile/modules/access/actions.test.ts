@@ -1,7 +1,7 @@
 // oxlint-disable anti-slop/no-unknown-returns, anti-slop/no-unknown-parameters -- jest mocks for opaque better-auth client payloads
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
-import { redeemMagicToken } from "./actions";
+import { redeemMagicToken, sendAuthLink, signInWithPassword } from "./actions";
 
 type VerifyInput = {
   fetchOptions?: {
@@ -14,12 +14,19 @@ type VerifyResult = {
   readonly error: unknown;
 };
 
+type EmailInput = { readonly email: string };
+type PasswordInput = { readonly email: string; readonly password: string };
+
 // SAFETY: jest/setup-env.ts installs this mock shape for the access module.
 const authClient = (
   jest.requireMock("@/lib/auth-client") as {
     authClient: {
       magicLink: { verify: jest.Mock<(input?: VerifyInput) => Promise<VerifyResult>> };
       getSession: jest.Mock<() => Promise<VerifyResult>>;
+      signIn: {
+        magicLink: jest.Mock<(input: EmailInput) => Promise<VerifyResult>>;
+        email: jest.Mock<(input: PasswordInput) => Promise<VerifyResult>>;
+      };
     };
   }
 ).authClient;
@@ -113,5 +120,36 @@ describe("redeemMagicToken", () => {
       operation: "sign_in",
     });
     expect(authClient.getSession).not.toHaveBeenCalled();
+  });
+});
+
+describe("password and link auth actions", () => {
+  beforeEach(() => {
+    authClient.signIn.magicLink.mockReset();
+    authClient.signIn.email.mockReset();
+  });
+
+  it("normalizes email without changing the password sent to sign in", async () => {
+    // SAFETY: mock success payload only needs id/email/name for identityFromUser.
+    authClient.signIn.email.mockResolvedValue({ data: { user }, error: null });
+
+    await expect(signInWithPassword("  Ada@Trove.ING  ", "password with spaces")).resolves.toEqual({
+      kind: "ok",
+      value: identity,
+    });
+    expect(authClient.signIn.email).toHaveBeenCalledWith({
+      email: "ada@trove.ing",
+      password: "password with spaces",
+    });
+  });
+
+  it("normalizes email before requesting a magic link", async () => {
+    authClient.signIn.magicLink.mockResolvedValue({ data: null, error: null });
+
+    await expect(sendAuthLink("  Ada@Trove.ING  ", "sign_in")).resolves.toEqual({
+      kind: "ok",
+      value: null,
+    });
+    expect(authClient.signIn.magicLink).toHaveBeenCalledWith({ email: "ada@trove.ing" });
   });
 });

@@ -12,6 +12,13 @@ const identify: Extract<JourneyState, { step: "identify" }> = {
   notice: null,
 };
 
+const password: Extract<JourneyState, { step: "password" }> = {
+  step: "password",
+  email: "ada@trove.ing",
+  busy: false,
+  notice: null,
+};
+
 describe("SignInStep", () => {
   beforeEach(() => {
     mockSend.mockReset();
@@ -30,5 +37,11 @@ describe("SignInStep", () => {
     await render(<SignInStep journey={{ state: identify, send: mockSend }} />);
     await fireEvent.press(screen.getByText("Create profile with password"));
     expect(mockSend).toHaveBeenCalledWith({ type: "chose_create_profile" });
+  });
+
+  it("opens password recovery from password sign-in", async () => {
+    await render(<SignInStep journey={{ state: password, send: mockSend }} />);
+    await fireEvent.press(screen.getByText("Forgot password?"));
+    expect(mockSend).toHaveBeenCalledWith({ type: "chose_recovery" });
   });
 });

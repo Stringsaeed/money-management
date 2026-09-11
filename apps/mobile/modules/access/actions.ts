@@ -7,6 +7,7 @@ import {
   summarizeVerifyData,
 } from "./auth-link-debug";
 import { authFailureFromClient, isUnreachableFailure } from "./client-error";
+import { normalizeAuthEmail } from "./email";
 import { identityFromUser } from "./identity";
 import { parseAuthVerifyError } from "./links";
 import { probeSession } from "./session-probe";
@@ -24,11 +25,12 @@ export async function sendAuthLink(
   email: string,
   operation: LinkOperation,
 ): Promise<AuthActionResult<null>> {
+  const normalizedEmail = normalizeAuthEmail(email);
   try {
     const result =
       operation === "sign_in"
-        ? await authClient.signIn.magicLink({ email })
-        : await authClient.requestPasswordReset({ email });
+        ? await authClient.signIn.magicLink({ email: normalizedEmail })
+        : await authClient.requestPasswordReset({ email: normalizedEmail });
     if (result.error) return { kind: "fail", failure: authFailureFromClient(result.error) };
     return { kind: "ok", value: null };
   } catch (error) {
@@ -43,8 +45,9 @@ export async function signInWithPassword(
   email: string,
   password: string,
 ): Promise<AuthActionResult<Identity>> {
+  const normalizedEmail = normalizeAuthEmail(email);
   try {
-    const result = await authClient.signIn.email({ email, password });
+    const result = await authClient.signIn.email({ email: normalizedEmail, password });
     if (result.error) return { kind: "fail", failure: authFailureFromClient(result.error) };
     const user = result.data?.user;
     if (!user) return { kind: "fail", failure: { kind: "server" } };
@@ -62,6 +65,7 @@ export async function createProfile(input: {
   readonly password: string;
   readonly displayName: string;
 }): Promise<AuthActionResult<Identity>> {
+  const normalizedEmail = normalizeAuthEmail(input.email);
   logAuthLink("signup.start", {
     email: input.email,
     nameLen: String(input.displayName.trim().length),
@@ -69,9 +73,9 @@ export async function createProfile(input: {
   });
   try {
     const result = await authClient.signUp.email({
-      email: input.email,
+      email: normalizedEmail,
       password: input.password,
-      name: input.displayName.trim() || input.email,
+      name: input.displayName.trim() || normalizedEmail,
     });
     logAuthLink("signup.result", {
       error: result.error ? summarizeClientError(result.error) : "null",
