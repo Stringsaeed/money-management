@@ -40,10 +40,10 @@ async function setupHousehold(): Promise<TestDb> {
     { id: HOUSEHOLD_ID, name: "Test Household", createdByUserId: OWNER },
     { id: OTHER_HOUSEHOLD_ID, name: "Other Household", createdByUserId: "user-other" },
   ]);
-  const memberships: readonly (readonly [string, string, string, "owner" | "member"])[] = [
-    [`membership-${HOUSEHOLD_ID}-${OWNER}`, OWNER, HOUSEHOLD_ID, "owner"],
+  const memberships: readonly (readonly [string, string, string, "admin" | "member"])[] = [
+    [`membership-${HOUSEHOLD_ID}-${OWNER}`, OWNER, HOUSEHOLD_ID, "admin"],
     [`membership-${HOUSEHOLD_ID}-${MEMBER}`, MEMBER, HOUSEHOLD_ID, "member"],
-    [`membership-${OTHER_HOUSEHOLD_ID}-other`, "user-other", OTHER_HOUSEHOLD_ID, "owner"],
+    [`membership-${OTHER_HOUSEHOLD_ID}-other`, "user-other", OTHER_HOUSEHOLD_ID, "admin"],
   ];
   for (const [id, userId, householdId, role] of memberships) {
     await database.insert(membership).values({
@@ -51,7 +51,6 @@ async function setupHousehold(): Promise<TestDb> {
       userId,
       householdId,
       role,
-      version: 0,
     });
   }
   return database;

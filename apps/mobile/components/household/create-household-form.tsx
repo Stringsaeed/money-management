@@ -6,7 +6,7 @@ import { inputTextStyle } from "@/components/ui/input-style";
 import { Text } from "@/components/ui/text";
 import { useCreateHousehold } from "@/hooks/use-households";
 
-/** Names and creates a new shared household; the creator becomes its owner. */
+/** Names and creates a new shared household; the creator becomes its admin. */
 export function CreateHouseholdForm({ onCreated }: { onCreated?: () => void }) {
   const [name, setName] = useState("");
   const createHousehold = useCreateHousehold();

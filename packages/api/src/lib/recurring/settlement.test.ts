@@ -34,8 +34,7 @@ async function setupHousehold(): Promise<TestDb> {
     id: `membership-${OWNER}`,
     userId: OWNER,
     householdId: HOUSEHOLD_ID,
-    role: "owner",
-    version: 0,
+    role: "admin",
   });
   return database;
 }
@@ -337,8 +336,7 @@ describe("settlement engine — order, sync effects, attention handling", () => 
       id: "membership-other",
       userId: "user-other",
       householdId: OTHER,
-      role: "owner",
-      version: 0,
+      role: "admin",
     });
 
     await insertRule({ eligibilityFloor: "2026-01-31" });

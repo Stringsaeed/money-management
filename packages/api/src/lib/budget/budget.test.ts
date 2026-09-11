@@ -49,7 +49,7 @@ async function setupBudget(): Promise<TestDb> {
     createdByUserId: OWNER,
   });
   for (const [userId, role] of [
-    [OWNER, "owner"],
+    [OWNER, "admin"],
     [VIEWER, "viewer"],
   ] as const) {
     await database.insert(membership).values({
@@ -57,7 +57,6 @@ async function setupBudget(): Promise<TestDb> {
       userId,
       householdId: HOUSEHOLD_ID,
       role,
-      version: 0,
     });
   }
   await database.insert(budgetWorkspace).values({

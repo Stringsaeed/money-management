@@ -43,6 +43,13 @@
       "when": 1788830000000,
       "tag": "0012_budget_recurring_ledger_scope",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788840000000,
+      "tag": "0013_workos_households",
+      "breakpoints": true
     }
   ]
 }

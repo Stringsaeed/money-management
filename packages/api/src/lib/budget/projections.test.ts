@@ -46,8 +46,7 @@ async function setupBudget(): Promise<TestDb> {
     id: `membership-${OWNER}`,
     userId: OWNER,
     householdId: HOUSEHOLD_ID,
-    role: "owner",
-    version: 0,
+    role: "admin",
   });
   await database.insert(budgetWorkspace).values({
     ledgerId: HOUSEHOLD_ID,

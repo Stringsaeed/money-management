@@ -1,3 +1,6 @@
+import { Fragment } from "react";
+
+import { MembershipRevocationCleanup } from "@/components/sync/membership-revocation-cleanup";
 import { PowerSyncWorker } from "@/components/sync/powersync-worker";
 
 /**
@@ -6,5 +9,10 @@ import { PowerSyncWorker } from "@/components/sync/powersync-worker";
  * the active household. Renders nothing.
  */
 export function SyncWorker() {
-  return <PowerSyncWorker />;
+  return (
+    <Fragment>
+      <PowerSyncWorker />
+      <MembershipRevocationCleanup />
+    </Fragment>
+  );
 }

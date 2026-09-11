@@ -8,6 +8,7 @@ export function coreFromAccess(access: AccessState): AccessCore {
       household:
         access.household.kind === "unavailable" ? { kind: "unavailable" } : access.household,
       memberships: access.memberships,
+      selection: access.selection,
     };
   }
   if (access.kind === "session_revoked") {

@@ -1,48 +1,27 @@
-import { Alert, View } from "react-native";
+import type { HouseholdRole } from "@trove/protocol";
+import { View } from "react-native";
 
-import { NativeHost, NativeTertiaryButton } from "@/components/native-ui";
+import { roleLabel } from "@/modules/access/memberships";
 import { Text } from "@/components/ui/text";
-import { useTransferOwnership } from "@/hooks/use-households";
 
 export type HouseholdMember = {
   userId: string;
   userName: string;
   userEmail: string;
-  role: "owner" | "member";
+  role: HouseholdRole;
 };
 
-/** Lists household members; owners can hand ownership to another member. */
+/** Read-only Membership list. Role changes and invitations go through the WorkOS widget. */
 export function HouseholdMembers({
   members,
   currentUserId,
-  isOwner,
-  householdId,
 }: {
   members: readonly HouseholdMember[];
   currentUserId: string;
-  isOwner: boolean;
-  householdId: string;
+  /** @deprecated Ownership transfer removed; kept optional for call-site churn. */
+  isOwner?: boolean;
+  householdId?: string;
 }) {
-  const transferOwnership = useTransferOwnership();
-
-  function handleTransfer(member: HouseholdMember) {
-    if (member.role === "owner") return;
-    Alert.alert(
-      "Transfer ownership",
-      `${member.userName} will become the owner and you'll become a member. This cannot be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Transfer",
-          style: "destructive",
-          onPress: () => {
-            transferOwnership.mutate({ householdId, userId: member.userId });
-          },
-        },
-      ],
-    );
-  }
-
   return (
     <View>
       {members.map((member) => (
@@ -57,26 +36,14 @@ export function HouseholdMembers({
             </Text>
             <Text className="font-body-normal text-xs text-ink/40">{member.userEmail}</Text>
           </View>
-          {member.role === "owner" ? (
-            <Text className="font-body-semibold text-xs uppercase tracking-wide text-ink/40">
-              👑 Owner
-            </Text>
-          ) : isOwner ? (
-            <NativeHost fillWidth={false}>
-              <NativeTertiaryButton
-                label="Make owner"
-                onPress={() => handleTransfer(member)}
-                disabled={transferOwnership.isPending}
-                testID={`make-owner-${member.userId}`}
-              />
-            </NativeHost>
-          ) : null}
+          <Text className="font-body-semibold text-xs uppercase tracking-wide text-ink/40">
+            {member.role === "admin" ? "👑 " : ""}
+            {roleLabel(member.role)}
+          </Text>
         </View>
       ))}
-      {transferOwnership.isError ? (
-        <Text className="text-destructive px-4 pb-3 text-xs">
-          Couldn’t transfer ownership. Try again in a moment.
-        </Text>
+      {members.length === 0 ? (
+        <Text className="px-4 py-3 text-xs text-ink/40">No members yet.</Text>
       ) : null}
     </View>
   );

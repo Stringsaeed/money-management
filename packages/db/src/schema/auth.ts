@@ -9,6 +9,8 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
+  /** Last time this User's Memberships were bootstrapped from WorkOS. */
+  membershipsReconciledAt: timestamptz("memberships_reconciled_at"),
   createdAt: timestamptz("created_at").defaultNow().notNull(),
   updatedAt: timestamptz("updated_at")
     .defaultNow()

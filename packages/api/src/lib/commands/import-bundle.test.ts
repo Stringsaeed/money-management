@@ -51,21 +51,19 @@ async function setupHousehold(): Promise<TestDb> {
     createdByUserId: OWNER,
   });
   await database.insert(membership).values([
-    { id: "membership-owner", userId: OWNER, householdId: HOUSEHOLD_ID, role: "owner", version: 0 },
-    { id: "membership-admin", userId: ADMIN, householdId: HOUSEHOLD_ID, role: "admin", version: 0 },
+    { id: "membership-owner", userId: OWNER, householdId: HOUSEHOLD_ID, role: "admin" },
+    { id: "membership-admin", userId: ADMIN, householdId: HOUSEHOLD_ID, role: "admin" },
     {
       id: "membership-member",
       userId: MEMBER,
       householdId: HOUSEHOLD_ID,
       role: "member",
-      version: 0,
     },
     {
       id: "membership-viewer",
       userId: VIEWER,
       householdId: HOUSEHOLD_ID,
       role: "viewer",
-      version: 0,
     },
   ]);
   return database;
@@ -104,8 +102,8 @@ const ACCOUNT_ROW = {
 };
 
 describe("commands.apply — import_bundle authorization", () => {
-  it.each([ADMIN, MEMBER, VIEWER])(
-    "rejects a %s — only the owner may bulk-import",
+  it.each([MEMBER, VIEWER])(
+    "rejects a %s — only a Household admin may bulk-import",
     async (userId) => {
       const result = await applyAs(
         userId,
@@ -120,9 +118,9 @@ describe("commands.apply — import_bundle authorization", () => {
     },
   );
 
-  it("allows the owner", async () => {
+  it.each([OWNER, ADMIN])("allows every admin (%s)", async (userId) => {
     const result = await applyAs(
-      OWNER,
+      userId,
       bundleEnvelope({ entityType: "account", chunkIndex: 0, chunkCount: 1, rows: [ACCOUNT_ROW] }),
     );
     expectApplied(result);

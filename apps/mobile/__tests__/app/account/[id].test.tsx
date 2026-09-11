@@ -69,6 +69,7 @@ describe("app/account/[id]", () => {
       user: { userId: "user-owner", email: "ada@trove.ing", displayName: "Ada" },
       household: { kind: "none" },
       memberships: [],
+      selection: { kind: "personal" },
       setActiveHousehold: jest.fn(),
       signOut: jest.fn(),
     });

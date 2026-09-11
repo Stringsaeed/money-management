@@ -21,11 +21,18 @@ import {
 import { attachCapabilities } from "./capabilities";
 import { clearClaim, readClaim, writeClaim } from "./claim-store";
 import { HOUSEHOLDS_KEY } from "./households-key";
+import {
+  clearLedgerSelection,
+  readLedgerSelection,
+  writeLedgerSelection,
+} from "./ledger-selection-store";
 import { toMembershipSummary } from "./memberships";
 import { tryRemoteSignOut, useSessionProbe } from "./session-probe";
-import type { AccessCore, HouseholdRead, IdentityClaim, ReturnTo } from "./types";
+import type { AccessCore, HouseholdRead, IdentityClaim, LedgerSelection, ReturnTo } from "./types";
 import { AuthSheetContext } from "./use-auth-sheet";
 import { AccessContext } from "./use-access";
+
+const PERSONAL: LedgerSelection = { kind: "personal" };
 
 export function AccessProvider({ children }: { readonly children: ReactNode }) {
   const claim = useIdentityClaim();
@@ -34,13 +41,21 @@ export function AccessProvider({ children }: { readonly children: ReactNode }) {
   const [sheetSession, setSheetSession] = useState<AuthSheetSession>(AUTH_SHEET_CLOSED);
   const persistClaim = usePersistedClaim(claim.value, signedOut ? { kind: "no_session" } : probe);
   const householdUserId = householdUserIdForQuery(persistClaim, probe, signedOut);
+  const selection = useLedgerSelection(householdUserId);
   const households = useHouseholdRead(householdUserId, probe?.kind === "session" && !signedOut);
   const core = resolveAccess({
     claim: signedOut ? { kind: "none" } : (persistClaim ?? { kind: "none" }),
     probe: claim.ready ? (signedOut ? { kind: "no_session" } : probe) : null,
     households,
+    selection: selection.value,
   });
-  const actions = useAccessActions(claim.setValue, setSignedOut, core, setSheetSession);
+  const actions = useAccessActions(
+    claim.setValue,
+    setSignedOut,
+    core,
+    setSheetSession,
+    selection.setValue,
+  );
   const access = attachCapabilities(core, actions);
 
   useEffect(() => {
@@ -76,6 +91,26 @@ function useIdentityClaim() {
   return { value, setValue, ready: value !== null };
 }
 
+function useLedgerSelection(userId: string | null) {
+  const [value, setValue] = useState<LedgerSelection>(PERSONAL);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId) {
+      setValue(PERSONAL);
+      return;
+    }
+    void readLedgerSelection(userId).then((next) => {
+      if (!cancelled) setValue(next);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  return { value, setValue };
+}
+
 function usePersistedClaim(
   claim: IdentityClaim | null,
   probe: ReturnType<typeof useSessionProbe>,
@@ -102,7 +137,9 @@ function useHouseholdRead(userId: string | null, enabled: boolean): HouseholdRea
     queryFn: () => orpc.households.listMine(),
     enabled,
   });
-  const memberships = query.data?.map(toMembershipSummary);
+  const memberships = query.data
+    ?.map(toMembershipSummary)
+    .filter((row): row is NonNullable<typeof row> => row !== null);
   return householdReadFromQuery({
     enabled,
     isPending: query.isPending,
@@ -116,6 +153,7 @@ function useAccessActions(
   setSignedOut: (value: boolean) => void,
   core: AccessCore,
   setSheetSession: (session: AuthSheetSession) => void,
+  setSelection: (selection: LedgerSelection) => void,
 ) {
   const queryClient = useQueryClient();
 
@@ -129,14 +167,25 @@ function useAccessActions(
   }
 
   async function signOut() {
+    const userId = core.kind === "signed_in" ? core.user.userId : null;
     setSignedOut(true);
     await tryRemoteSignOut();
+    if (userId) await clearLedgerSelection(userId);
+    setSelection(PERSONAL);
     await clearClaim();
     setClaim({ kind: "none" });
   }
 
-  async function setActiveHousehold(householdId: string) {
-    await orpc.households.setActive({ householdId });
+  async function setActiveHousehold(householdId: string | null) {
+    if (core.kind !== "signed_in") return;
+    const next: LedgerSelection =
+      householdId === null ? PERSONAL : { kind: "household", householdId };
+    if (next.kind === "household") {
+      const allowed = core.memberships.some((row) => row.householdId === next.householdId);
+      if (!allowed) return;
+    }
+    setSelection(next);
+    await writeLedgerSelection(core.user.userId, next);
     await queryClient.invalidateQueries({ queryKey: HOUSEHOLDS_KEY });
   }
 

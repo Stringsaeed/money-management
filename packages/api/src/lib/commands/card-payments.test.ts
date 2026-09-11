@@ -42,15 +42,13 @@ async function setupHousehold(): Promise<TestDb> {
       id: `membership-${OWNER}`,
       userId: OWNER,
       householdId: HOUSEHOLD_ID,
-      role: "owner",
-      version: 0,
+      role: "admin",
     },
     {
       id: `membership-${MEMBER}`,
       userId: MEMBER,
       householdId: HOUSEHOLD_ID,
       role: "member",
-      version: 0,
     },
   ]);
   return database;
@@ -418,7 +416,7 @@ describe("refund.link", () => {
       scope: { type: "organization", organizationId: HOUSEHOLD_ID } as const,
       householdId: HOUSEHOLD_ID,
       actorUserId: OWNER,
-      actorRole: "owner" as const,
+      actorRole: "admin" as const,
     };
     const makePlan = () =>
       refundCreateHandler.plan(planCtx, {

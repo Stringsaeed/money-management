@@ -28,8 +28,7 @@ beforeEach(async () => {
     id: "membership-owner",
     userId: OWNER,
     householdId: HOUSEHOLD_ID,
-    role: "owner",
-    version: 0,
+    role: "admin",
   });
 });
 

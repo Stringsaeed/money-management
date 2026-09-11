@@ -1,58 +1,18 @@
-import { useState } from "react";
-import { Alert, TextInput, View } from "react-native";
+import { View } from "react-native";
 
-import { NativeHost, NativePrimaryButton } from "@/components/native-ui";
-import { inputTextStyle } from "@/components/ui/input-style";
 import { Text } from "@/components/ui/text";
-import { useAcceptInvite } from "@/hooks/use-households";
-import { isValidInviteCodeFormat, normalizeInviteCode } from "@/utils/invite-code";
 
-/** Joins an existing household by typing the owner's invite code. */
+/**
+ * Custom Invite Codes are retired. Joining happens through WorkOS invitation
+ * emails and AuthKit; this card explains that so Settings does not look broken.
+ */
 export function JoinHouseholdForm() {
-  const [code, setCode] = useState("");
-  const acceptInvite = useAcceptInvite();
-  const normalized = normalizeInviteCode(code);
-  const formatValid = isValidInviteCodeFormat(normalized);
-  const disabled = !formatValid || acceptInvite.isPending;
-
-  async function handleJoin() {
-    try {
-      await acceptInvite.mutateAsync(normalized);
-      setCode("");
-      Alert.alert("Welcome! 🎉", "You've joined the household.");
-    } catch {
-      // Rejection reasons are surfaced below.
-    }
-  }
-
   return (
-    <View className="gap-3 px-4 py-4">
-      <Text className="font-body-normal text-xs text-ink/40">
-        Got a code from a family member? Enter it to join their household.
+    <View className="gap-2 px-4 py-4">
+      <Text className="font-body-normal text-xs text-ink/50">
+        Ask an admin to invite you from Manage members. Open the invitation link, sign in with an
+        email code, and your Personal ledger stays private.
       </Text>
-      <TextInput
-        placeholder="Invite code (e.g. ABCD2345)"
-        value={code}
-        onChangeText={setCode}
-        autoCapitalize="characters"
-        autoCorrect={false}
-        placeholderTextColor="#9a9896"
-        className="border border-input rounded-[10px] p-3.5 text-base leading-5 tracking-widest uppercase text-foreground"
-        style={inputTextStyle}
-      />
-      <NativeHost>
-        <NativePrimaryButton
-          label={acceptInvite.isPending ? "Joining…" : "🤝 Join household"}
-          onPress={handleJoin}
-          disabled={disabled}
-          testID="join-household"
-        />
-      </NativeHost>
-      {acceptInvite.isError ? (
-        <Text className="text-destructive text-xs">
-          That code didn’t work — check for typos or ask for a fresh one.
-        </Text>
-      ) : null}
     </View>
   );
 }

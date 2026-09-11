@@ -3,6 +3,7 @@ export {
   HOUSEHOLD_ROLES,
   commandLedgerId,
   isCommandKind,
+  isHouseholdRole,
   resolveCommandScope,
   type AppliedResult,
   type CommandEnvelope,

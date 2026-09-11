@@ -62,6 +62,15 @@ export async function markPersonalSyncEnabled(db: LocalDb, userId: string): Prom
     .onConflictDoUpdate({ target: appSettings.key, set: { value: userId } });
 }
 
+/**
+ * Clears Household sync enrollment after confirmed leave/removal. Personal
+ * sync opt-in is left alone — only the shared ledger flag is wiped.
+ */
+export async function clearHouseholdSyncEnrollment(db: LocalDb): Promise<void> {
+  await db.delete(appSettings).where(eq(appSettings.key, COMPLETED_HOUSEHOLD_ID_KEY));
+  await db.delete(appSettings).where(eq(appSettings.key, COMPLETED_AT_KEY));
+}
+
 /** Reads both sync opt-ins in one pass so the gate renders from one query. */
 export async function getSyncEnrollment(
   db: LocalDb,

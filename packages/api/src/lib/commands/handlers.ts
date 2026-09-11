@@ -8,7 +8,6 @@ import { budgetConfigureHandler } from "./handlers/budget-configure";
 import { accountHandlers } from "./handlers/account";
 import { categoryHandlers } from "./handlers/category";
 import { importBundleHandler } from "./handlers/import-bundle";
-import { memberRoleChangeHandler } from "./handlers/member-role";
 import { refundCreateHandler } from "./handlers/refund-create";
 import { recurringChangeHandler } from "./handlers/recurring-change";
 import { transactionHandlers } from "./handlers/transaction";
@@ -34,7 +33,6 @@ export interface CommandHandler<TPayload = unknown> {
 }
 
 export const COMMAND_HANDLERS: Partial<Record<CommandKind, CommandHandler>> = {
-  "member.role.change": memberRoleChangeHandler,
   ...accountHandlers,
   ...categoryHandlers,
   ...transactionHandlers,

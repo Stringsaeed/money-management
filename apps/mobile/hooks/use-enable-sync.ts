@@ -18,6 +18,7 @@ import { orpc } from "@/lib/server/orpc";
 import { signedInUserId, useAccess } from "@/modules/access";
 import { connectPowerSync } from "@/modules/powersync/database";
 import { useSyncModeStore } from "@/stores/sync-mode-store";
+import { generateId } from "@/utils/id";
 
 export type EnableSyncStatus =
   | "idle"
@@ -74,6 +75,7 @@ export function useEnableSync() {
           setStatus("creating_household");
           const created = await orpc.households.create({
             name: input.householdName?.trim() || "My Household",
+            requestId: generateId(),
           });
           householdId = created.householdId;
           createdHouseholdIdRef.current = householdId;

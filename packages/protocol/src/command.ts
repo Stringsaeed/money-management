@@ -13,10 +13,11 @@ import { type LedgerScope, ledgerIdForScope } from "./ledger-scope.js";
 /**
  * The vocabulary of domain intents, grown phase by phase as the backend
  * lands. `CommandKind` values are stable wire identifiers — never rename one,
- * only add.
+ * only add. A retired kind is removed from the list and rejected by the server
+ * as `unknown_kind`; `member.role.change` retired when Household roles moved
+ * to WorkOS organization memberships (ADR 0027).
  */
 export const COMMAND_KINDS = [
-  "member.role.change",
   "account.create",
   "account.update",
   "account.archive",
@@ -46,10 +47,19 @@ export function isCommandKind(value: string): value is CommandKind {
   return false;
 }
 
-/** Household roles resolved through the capability map, `can(role, kind)`. */
-export type HouseholdRole = "owner" | "admin" | "member" | "viewer";
+/**
+ * Household roles are the WorkOS organization membership role slugs, resolved
+ * through the capability map `can(role, kind)`. A role slug outside this list
+ * is unknown and grants nothing.
+ */
+export type HouseholdRole = "admin" | "member" | "viewer";
 
-export const HOUSEHOLD_ROLES: readonly HouseholdRole[] = ["owner", "admin", "member", "viewer"];
+export const HOUSEHOLD_ROLES: readonly HouseholdRole[] = ["admin", "member", "viewer"];
+
+/** True when a WorkOS role slug is one Trove knows how to authorize. */
+export function isHouseholdRole(value: string): value is HouseholdRole {
+  return HOUSEHOLD_ROLES.some((role) => role === value);
+}
 
 /**
  * Optimistic-concurrency preconditions, generalizing the existing Rule

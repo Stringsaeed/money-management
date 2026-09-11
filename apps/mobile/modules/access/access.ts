@@ -11,6 +11,7 @@ import type {
   Identity,
   IdentityClaim,
   InternalHref,
+  LedgerSelection,
   MembershipSummary,
   ResolveAccessInput,
   ReturnTo,
@@ -54,11 +55,11 @@ export const NO_SYNC_ENROLLMENT: SyncEnrollment = {
 export function resolveAccess(input: ResolveAccessInput): AccessCore {
   if (input.probe === null) {
     if (input.claim.kind === "held") {
-      return signedInFromSession(input.claim.user, input.households);
+      return signedInFromSession(input.claim.user, input.households, input.selection);
     }
     return { kind: "resolving" };
   }
-  return mergeClaimAndProbe(input.claim, input.probe, input.households);
+  return mergeClaimAndProbe(input.claim, input.probe, input.households, input.selection);
 }
 
 export function householdReadFromQuery(input: {
@@ -80,18 +81,34 @@ export function nextClaim(current: IdentityClaim, probe: SessionProbe, now: Date
   return { kind: "held", user: probe.user, establishedAt: now.toISOString() };
 }
 
+/**
+ * Resolves the selected Household only when the Membership is still active.
+ * Personal selection (or a stale Household id) yields null — selection never
+ * invents Membership.
+ */
 export function pickActiveHousehold(
   memberships: readonly MembershipSummary[],
+  selection: LedgerSelection,
 ): Extract<HouseholdAccessCore, { kind: "active" }> | null {
-  const active = memberships.filter((row) => row.isActive);
-  if (active.length === 0) return null;
-  const picked = active.reduce(newerMembership);
+  if (selection.kind !== "household") return null;
+  const picked = memberships.find((row) => row.householdId === selection.householdId);
+  if (!picked) return null;
   return {
     kind: "active",
     householdId: picked.householdId,
     name: picked.name,
     role: picked.role,
   };
+}
+
+export function normalizeLedgerSelection(
+  memberships: readonly MembershipSummary[],
+  selection: LedgerSelection,
+): LedgerSelection {
+  if (selection.kind === "personal") return selection;
+  return memberships.some((row) => row.householdId === selection.householdId)
+    ? selection
+    : { kind: "personal" };
 }
 
 export function resolveReturnDestination(access: AccessCore, target: ReturnTo): InternalHref {
@@ -118,6 +135,7 @@ function mergeClaimAndProbe(
   claim: IdentityClaim,
   probe: SessionProbe,
   households: HouseholdRead,
+  selection: LedgerSelection,
 ): AccessCore {
   if (probe.kind === "no_session") {
     return claim.kind === "held"
@@ -127,18 +145,24 @@ function mergeClaimAndProbe(
   if (probe.kind === "unreachable") {
     return claim.kind === "held" ? signedInUnavailable(claim.user) : { kind: "anonymous" };
   }
-  return signedInFromSession(probe.user, households);
+  return signedInFromSession(probe.user, households, selection);
 }
 
-function signedInFromSession(user: Identity, households: HouseholdRead): AccessCore {
+function signedInFromSession(
+  user: Identity,
+  households: HouseholdRead,
+  selection: LedgerSelection,
+): AccessCore {
   if (households.kind === "pending") return { kind: "resolving" };
   if (households.kind === "failed") return signedInUnavailable(user);
-  const active = pickActiveHousehold(households.memberships);
+  const normalized = normalizeLedgerSelection(households.memberships, selection);
+  const active = pickActiveHousehold(households.memberships, normalized);
   return {
     kind: "signed_in",
     user,
     household: active ?? { kind: "none" },
     memberships: households.memberships,
+    selection: normalized,
   };
 }
 
@@ -148,6 +172,7 @@ function signedInUnavailable(user: Identity): AccessCore {
     user,
     household: { kind: "unavailable" },
     memberships: [],
+    selection: { kind: "personal" },
   };
 }
 
@@ -157,10 +182,6 @@ function sameIdentity(left: Identity, right: Identity): boolean {
     left.email === right.email &&
     left.displayName === right.displayName
   );
-}
-
-function newerMembership(left: MembershipSummary, right: MembershipSummary): MembershipSummary {
-  return right.createdAt > left.createdAt ? right : left;
 }
 
 function ledgerFactsForAccess(

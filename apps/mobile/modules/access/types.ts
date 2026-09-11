@@ -1,3 +1,5 @@
+import type { HouseholdRole } from "@trove/protocol";
+
 export interface Identity {
   readonly userId: string;
   readonly email: string;
@@ -13,13 +15,18 @@ export type SessionProbe =
   | { readonly kind: "no_session" }
   | { readonly kind: "unreachable" };
 
+/** Client-side ledger selection; independent of whether a Membership is active. */
+export type LedgerSelection =
+  | { readonly kind: "personal" }
+  | { readonly kind: "household"; readonly householdId: string };
+
 export type HouseholdAccessCore =
   | { readonly kind: "none" }
   | {
       readonly kind: "active";
       readonly householdId: string;
       readonly name: string;
-      readonly role: "owner" | "member";
+      readonly role: HouseholdRole;
     }
   | { readonly kind: "unavailable" };
 
@@ -30,9 +37,8 @@ export type HouseholdAccess =
 export interface MembershipSummary {
   readonly householdId: string;
   readonly name: string;
-  readonly role: "owner" | "member";
-  readonly isActive: boolean;
-  readonly createdAt: string;
+  readonly role: HouseholdRole;
+  readonly joinedAt: string;
 }
 
 export type HouseholdRead =
@@ -48,6 +54,7 @@ export type AccessCore =
       readonly user: Identity;
       readonly household: HouseholdAccessCore;
       readonly memberships: readonly MembershipSummary[];
+      readonly selection: LedgerSelection;
     }
   | { readonly kind: "session_revoked"; readonly lastKnown: Identity };
 
@@ -68,7 +75,9 @@ export type AccessState =
       readonly user: Identity;
       readonly household: HouseholdAccess;
       readonly memberships: readonly MembershipSummary[];
-      readonly setActiveHousehold: (householdId: string) => Promise<void>;
+      readonly selection: LedgerSelection;
+      /** Pass null to select the Personal Ledger. */
+      readonly setActiveHousehold: (householdId: string | null) => Promise<void>;
       readonly signOut: () => Promise<void>;
     }
   | {
@@ -97,4 +106,5 @@ export interface ResolveAccessInput {
   readonly claim: IdentityClaim;
   readonly probe: SessionProbe | null;
   readonly households: HouseholdRead;
+  readonly selection: LedgerSelection;
 }

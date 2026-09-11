@@ -161,10 +161,7 @@ describe("personal ledger commands — no Household required", () => {
   });
 
   it("rejects Household-only intents with a typed invalid_intent", async () => {
-    const result = await applyAs(
-      ALICE,
-      personalEnvelope("member.role.change", { userId: BOB, role: "admin" }),
-    );
+    const result = await applyAs(ALICE, personalEnvelope("import_bundle", { entities: [] }));
 
     expect(result).toMatchObject({
       kind: "invalid_intent",
@@ -309,8 +306,7 @@ describe("organization scope — the Household path is unchanged", () => {
       id: "membership-alice",
       userId: ALICE,
       householdId: HOUSEHOLD_ID,
-      role: "owner",
-      version: 0,
+      role: "admin",
     });
   });
 

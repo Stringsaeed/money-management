@@ -12,10 +12,11 @@ const LEDGER_KINDS = ["personal", "organization"] as const;
  *
  * A personal Ledger is owned by one User and its id is `personal:${userId}`;
  * an organization Ledger is owned by one WorkOS organization and its id is
- * the organization id. Until Household administration migrates to WorkOS
- * (#228) every existing Household is projected here as an organization Ledger
- * whose id and `organization_id` are the Household id — so `ledger_id` and
- * `household_id` carry the same value on Household-owned rows.
+ * the organization id. A Household is that same organization, so the
+ * Household id, the organization id, and the organization Ledger id are one
+ * value; `ledger_id` and `household_id` carry it together on Household-owned
+ * rows. Household creation writes both the `household` and the `ledger` row in
+ * one transaction (ADR 0027).
  */
 export const ledger = pgTable(
   "ledger",

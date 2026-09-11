@@ -12,4 +12,32 @@ export { resolveWorkOSVerifyEnv } from "./workos-env";
 export type { ResolvedWorkOSVerifyEnv, WorkOSServerEnv } from "./workos-env";
 export { WIDGET_SAFEGUARD_FINDINGS, decideWidgetToken } from "./widget-contract";
 export type { WidgetTokenDecision, WidgetTokenRequest } from "./widget-contract";
+export { createWorkOSHouseholdDirectory, toDirectoryMembership } from "./household-directory";
+export type {
+  CreateMembershipInput,
+  CreateOrganizationInput,
+  DirectoryInvitation,
+  DirectoryMembership,
+  DirectoryMembershipStatus,
+  DirectoryOrganization,
+  DirectoryUser,
+  HouseholdDirectory,
+  SendInvitationInput,
+} from "./household-directory";
+export {
+  HOUSEHOLD_WEBHOOK_EVENTS,
+  WebhookVerifyError,
+  parseHouseholdEvent,
+  verifyWorkOSWebhook,
+} from "./household-events";
+export type { HouseholdEvent } from "./household-events";
+export {
+  WIDGET_PAGE_PATH,
+  WIDGET_RETURN_LINK,
+  WIDGET_SESSION_PATH,
+  buildWidgetPageUrl,
+  parseWidgetFragment,
+  renderMemberWidgetPage,
+  widgetPageSecurityHeaders,
+} from "./member-widget-page";
 export { AUTH_LINK_PATHS, TROVE_APP_IDENTITY, buildSchemeLink } from "./app-association";
