@@ -1,7 +1,4 @@
-revision=3d5c482b1aaa2e331973e32238ff52bc002a90ec
+revision=ebfdad0394c050cb202370f7133cd9c3b0ca0f85
 branch=cursor/workos-certify-migration-b3d1
-api=https://auth.trove.ing
-client_id_compare=EQUAL
-WORKOS_WEBHOOK_SECRET_present=true
-note=Relates to #232 only; #224 open; not certified
-date_utc=2026-09-11T21:05:21Z
+note=matrix honesty pass; Relates to #232; #224 open
+date=2026-09-11T21:09:28Z
