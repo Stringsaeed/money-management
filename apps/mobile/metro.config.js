@@ -18,6 +18,10 @@ config.transformer.getTransformOptions = async () => ({
 // Allow Metro to resolve .sql files for drizzle migrations
 config.resolver.sourceExts.push("sql");
 
+// react-native-screens may drop a .rnrepo-cache tree that Metro/Watchman
+// tries to hash, crashing the bundler mid-cert. Keep it out of the graph.
+config.resolver.blockList = [/(.*\/)?\.rnrepo-cache\/.*/];
+
 const opSqliteRoot = path.dirname(require.resolve("@op-engineering/op-sqlite/package.json"));
 const previousResolveRequest = config.resolver.resolveRequest;
 
