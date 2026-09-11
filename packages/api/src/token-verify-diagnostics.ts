@@ -31,8 +31,21 @@ export function tokenVerifyFailureDiag(
   };
 }
 
+/**
+ * Single-string Worker log line. Cloudflare Observability often surfaces only
+ * the first console argument's text for Errors/objects — keep code in the string.
+ */
+export function formatTokenVerifyFailureLog(diag: TokenVerifyFailureDiag): string {
+  return (
+    `access_token_verify_failed code=${diag.code}` +
+    ` hasAud=${diag.hasAud}` +
+    ` hasClientId=${diag.hasClientId}` +
+    ` payloadDecoded=${diag.payloadDecoded}`
+  );
+}
+
 export function logTokenVerifyFailure(diag: TokenVerifyFailureDiag): void {
-  console.error("access_token_verify_failed", diag);
+  console.error(formatTokenVerifyFailureLog(diag));
 }
 
 export function claimPresenceFlags(token: string): ClaimPresenceFlags {

@@ -314,6 +314,12 @@ describe("verifyAccessToken", () => {
       `https://api.workos.com/sso/jwks/${CLIENT_ID}`,
     );
   });
+
+  it("never constructs TokenVerifyError with an empty message", () => {
+    expect(new TokenVerifyError("invalid_token", "").message).toBe("invalid_token");
+    expect(new TokenVerifyError("claim_iss", "   ").message).toBe("claim_iss");
+    expect(new TokenVerifyError("expired", "jwt expired").message).toBe("jwt expired");
+  });
 });
 
 describe("decideWidgetToken", () => {
