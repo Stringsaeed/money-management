@@ -297,7 +297,7 @@ async function exchangeCode(input: {
   if (!response.ok) {
     throw new Error(`AuthKit token exchange failed (${response.status}).`);
   }
-  return sessionFromAuthResponse(await response.json());
+  return sessionFromAuthResponse(authResponseSchema.parse(await response.json()));
 }
 
 async function authenticateRefresh(input: {
@@ -316,11 +316,10 @@ async function authenticateRefresh(input: {
   if (!response.ok) {
     throw new Error(`AuthKit refresh failed (${response.status}).`);
   }
-  return sessionFromAuthResponse(await response.json());
+  return sessionFromAuthResponse(authResponseSchema.parse(await response.json()));
 }
 
-function sessionFromAuthResponse(body: unknown): StoredAuthSession {
-  const record = authResponseSchema.parse(body);
+function sessionFromAuthResponse(record: z.infer<typeof authResponseSchema>): StoredAuthSession {
   const first = record.user.first_name ?? "";
   const last = record.user.last_name ?? "";
   const name = [first, last].filter(Boolean).join(" ").trim() || record.user.email;

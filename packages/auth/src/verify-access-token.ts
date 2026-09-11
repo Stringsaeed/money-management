@@ -109,10 +109,10 @@ export async function verifyAccessToken(
     return sessionFromClaims(payload);
   } catch (error) {
     if (error instanceof TokenVerifyError) throw error;
-    throw new TokenVerifyError(
-      mapJoseError(error),
-      error instanceof Error ? error.message : undefined,
-    );
+    if (error instanceof Error) {
+      throw new TokenVerifyError(mapJoseError(error), error.message);
+    }
+    throw new TokenVerifyError("invalid_token");
   }
 }
 
@@ -125,7 +125,7 @@ function readOrganizationId(payload: JWTPayload): string | null {
   return orgObject.success ? orgObject.data.id : null;
 }
 
-function mapJoseError(error: unknown): TokenVerifyFailureCode {
+function mapJoseError(error: Error): TokenVerifyFailureCode {
   if (error instanceof errors.JWTExpired) return "expired";
   if (error instanceof errors.JWSSignatureVerificationFailed) return "bad_signature";
   if (error instanceof errors.JWKSNoMatchingKey) return "unknown_kid";
@@ -141,7 +141,6 @@ function claimFailure(claim: string): TokenVerifyFailureCode {
   return "invalid_token";
 }
 
-function isJwksTimeout(error: unknown): boolean {
-  const parsed = z.object({ code: z.literal("ERR_JWKS_TIMEOUT") }).safeParse(error);
-  return parsed.success;
+function isJwksTimeout(error: Error): boolean {
+  return z.object({ code: z.literal("ERR_JWKS_TIMEOUT") }).safeParse(error).success;
 }
