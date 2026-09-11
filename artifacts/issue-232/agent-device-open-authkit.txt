@@ -1,0 +1,22 @@
+Opened: com.stringsaeed.moneymanagement
+Session state: /Users/saeed/.agent-device/sessions/cwd_faab16f54d8210c4_default
+Page: com.stringsaeed.moneymanagement
+App: com.stringsaeed.moneymanagement
+Snapshot: 16 visible nodes
+@e1 [application] "Trove (Dev)"
+@e2 [other] "Tab Bar"
+@e3 [other] "Trove (Dev)"
+@e4 [text] "Development Build"
+@e5 [button] "user-icon"
+@e6 [scroll-area] "DEVELOPMENT SERVERS" [scrollable]
+  [content below scroll-area hidden]
+@e7 [other] "DEVELOPMENT SERVERS"
+@e8 [button] "INFO"
+@e9 [cell] "Trove (Dev), http://192.168.1.123:8083"
+@e10 [button] [same label as parent]
+@e11 [button] "Enter URL manually"
+@e12 [tab-bar] "Tab Bar"
+@e13 [other] "Home"
+@e14 [button] "Home" [selected]
+@e15 [button] "Updates"
+@e16 [button] "Settings"

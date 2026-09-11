@@ -1,0 +1,5 @@
+2026-09-11T20:46:07Z
+branch=cursor/workos-certify-migration-b3d1
+head=d44857f7e3727d4e4033d5db675d3989d1d2033b
+api=#242 live on auth.trove.ing (44fde92)
+otp=BLOCKED agent-device AX-unavailable on AuthKit ASWebAuthenticationSession code boxes

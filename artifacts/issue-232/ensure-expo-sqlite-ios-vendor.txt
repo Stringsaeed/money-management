@@ -1,0 +1,1 @@
+[ensure-expo-sqlite-ios-vendor] synced vendor/sqlite3 → ios/sqlite3.{c,h}

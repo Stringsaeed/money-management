@@ -1,0 +1,30 @@
+00:04:20.060 info  metro  Logs: /Users/saeed/Work/money-management-wt-232/apps/mobile/.expo/dev/logs/start.log
+00:04:20.471 info  metro  (node:29748) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time
+00:04:20.472 info  metro  (Use `node --trace-warnings ...` to show where the warning was created)
+00:04:20.770 debug metro  sharing Metro transforms through /Users/saeed/.stim/metro-cache/mobile (the dev server process confirmed the store is in the config Metro loaded)
+00:04:20.770 info  metro  React Compiler enabled
+00:04:20.770 info  metro  Expo Autolinking module resolution enabled
+00:04:21.408 info  metro  Starting Metro Bundler
+00:04:22.164 info  metro  Waiting on http://localhost:8083
+00:04:22.164 info  metro  An update for expo is available: 57.0.20 → ~57.0.22
+00:04:22.164 info  metro  24 other packages may need updating. Run npx expo install --check for details.
+00:04:22.164 info  metro  Logs for your project will appear below.
+00:06:23.681 info  metro  metro-file-map: watch error:
+00:06:23.682 info  metro    Invariant Violation: Detected addition or modification of file ../../node_modules/react-native-screens/.rnrepo-cache/Current, but it is tracked as a non-empty directory
+00:06:23.682 info  metro      at invariant (/Users/saeed/Work/money-management-wt-232/node_modules/invariant/invariant.js:40:15)
+00:06:23.682 info  metro      at TreeFS.addOrModify (/Users/saeed/Work/money-management-wt-232/node_modules/@expo/metro-file-map/build/lib/TreeFS.js:386:41)
+00:06:23.682 info  metro      at emitChange (/Users/saeed/Work/money-management-wt-232/node_modules/@expo/metro-file-map/build/index.js:580:32)
+00:06:23.682 info  metro      at /Users/saeed/Work/money-management-wt-232/node_modules/@expo/metro-file-map/build/index.js:713:21
+00:06:23.706 info  metro  /Users/saeed/Work/money-management-wt-232/node_modules/@expo/cli/build/src/utils/errors.js:130
+00:06:23.706 info  metro      throw error;
+00:06:23.706 info  metro      ^
+00:06:23.706 info  metro  Invariant Violation: Detected addition or modification of file ../../node_modules/react-native-screens/.rnrepo-cache/Current, but it is tracked as a non-empty directory
+00:06:23.706 info  metro      at invariant (/Users/saeed/Work/money-management-wt-232/node_modules/invariant/invariant.js:40:15)
+00:06:23.706 info  metro      at TreeFS.addOrModify (/Users/saeed/Work/money-management-wt-232/node_modules/@expo/metro-file-map/build/lib/TreeFS.js:386:41)
+00:06:23.706 info  metro      at Timeout.emitChange [as _onTimeout] (/Users/saeed/Work/money-management-wt-232/node_modules/@expo/metro-file-map/build/index.js:580:32)
+00:06:23.706 info  metro      at listOnTimeout (node:internal/timers:635:17)
+00:06:23.706 info  metro      at process.processTimers (node:internal/timers:571:7) {
+00:06:23.706 info  metro    framesToPop: 1
+00:06:23.706 info  metro  }
+00:06:23.706 info  metro  Node.js v24.19.0
+00:06:23.740 error metro  the expo-child dev server exited unexpectedly (exit code 7); shutting the supervisor down

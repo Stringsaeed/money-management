@@ -1,0 +1,4 @@
+Error (COMMAND_FAILED): Ref @e9 has no parent-owned touch point outside its interactive descendants
+Hint: Tap the specific interactive child you intend, or use a more specific selector. Every safely tappable region of the parent belongs to one of its child controls.
+Diagnostic ID: mtxel2cv-302cf05a
+Diagnostics Log: /Users/saeed/.agent-device/sessions/cwd_faab16f54d8210c4_default/requests/7dd95b76ecf9a83e.ndjson

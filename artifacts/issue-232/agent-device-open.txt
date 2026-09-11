@@ -1,0 +1,4 @@
+Error (INVALID_ARGS): Flag -s is not supported for command open.
+Hint: Check command arguments and run --help for usage examples.
+Diagnostic ID: mtxek2y6-b987472e
+Diagnostics Log: /Users/saeed/.agent-device/logs/default/2026-09-11/2026-09-11T20-22-13-232Z-mtxek2y6-b987472e.ndjson

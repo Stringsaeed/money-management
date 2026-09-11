@@ -1,0 +1,5 @@
+WORKOS_CLIENT_ID_present=True
+EXPO_PUBLIC_WORKOS_CLIENT_ID_present=True
+client_id_compare=MISMATCH
+date_utc=2026-09-11T20:46:05Z
+note=values intentionally omitted

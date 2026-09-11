@@ -1,0 +1,12 @@
+  fingerprint e68651.. miss (16.5s) -- 6 sources changed: ../../node_modules/react-native-gesture-handler, ../../node_modules/react-native-reanimated, ../../node_modules/react-native-safe-area-context
+› Searching builds with matching fingerprint on EAS servers
+  cache       remote miss (eas) (27s)
+  build       compiling Debug with xcodebuild
+  cache       compilation cache on (CAS at /Users/saeed/.stim/compilation-cache)
+  build       FAILED after 14.6s
+  error       /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/Pods/../../../../node_modules/react-native-screens/.rnrepo-cache/Current/RNScreens.xcframework/ios-arm64_x86_64-simulator/*: (l)stat: No such file or directory
+  error       `xcodebuild` failed (exit code 65) with 1 diagnostic.
+  remedy      See /Users/saeed/.stim/workspaces/mobile--f32c8e64f19c5328/logs/build-ios.ndjson for the transcript.
+  log         /Users/saeed/.stim/workspaces/mobile--f32c8e64f19c5328/logs/build-ios.ndjson
+  failed      STIM_BUILD_FAILED
+{"code":"STIM_BUILD_FAILED","message":"`xcodebuild` failed (exit code 65) with 1 diagnostic.","remedy":"See /Users/saeed/.stim/workspaces/mobile--f32c8e64f19c5328/logs/build-ios.ndjson for the transcript."}

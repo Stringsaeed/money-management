@@ -1,0 +1,627 @@
+Using Expo modules
+[Expo] Enabling modular headers for pod ExpoModulesCore
+[Expo] Enabling modular headers for pod ExpoModulesWorklets
+[Expo] Enabling modular headers for pod React-RCTFabric
+[Expo] Enabling modular headers for pod ExpoModulesJSI
+[Expo] Enabling modular headers for pod React-RCTAppDelegate
+[Expo] Enabling modular headers for pod ReactAppDependencyProvider
+[Expo] Enabling modular headers for pod React-Core
+[Expo] Enabling modular headers for pod ReactCodegen
+[Expo] Enabling modular headers for pod RCTRequired
+[Expo] Enabling modular headers for pod RCTTypeSafety
+[Expo] Enabling modular headers for pod ReactCommon
+[Expo] Enabling modular headers for pod React-NativeModulesApple
+[Expo] Enabling modular headers for pod Yoga
+[Expo] Enabling modular headers for pod React-Fabric
+[Expo] Enabling modular headers for pod React-graphics
+[Expo] Enabling modular headers for pod React-utils
+[Expo] Enabling modular headers for pod React-featureflags
+[Expo] Enabling modular headers for pod React-debug
+[Expo] Enabling modular headers for pod React-ImageManager
+[Expo] Enabling modular headers for pod React-rendererdebug
+[Expo] Enabling modular headers for pod React-jsi
+[Expo] Enabling modular headers for pod React-renderercss
+[Expo] Enabling modular headers for pod hermes-engine
+[Expo] Enabling modular headers for pod glog
+[Expo] Enabling modular headers for pod boost
+[Expo] Enabling modular headers for pod DoubleConversion
+[Expo] Enabling modular headers for pod fast_float
+[Expo] Enabling modular headers for pod fmt
+[Expo] Enabling modular headers for pod RCT-Folly
+[Expo] Enabling modular headers for pod SocketRocket
+[Expo] Enabling modular headers for pod expo-dev-menu-interface
+[Expo] Enabling modular headers for pod EXManifests
+[Expo] Enabling modular headers for pod EXUpdatesInterface
+[Expo] Enabling modular headers for pod expo-dev-menu
+[Expo] Enabling modular headers for pod React-jsinspector
+[Expo] Enabling modular headers for pod expo-dev-launcher
+[Expo] Enabling modular headers for pod SDWebImage
+[Expo] Enabling modular headers for pod SDWebImageAVIFCoder
+[Expo] Enabling modular headers for pod SDWebImageSVGCoder
+[Expo] Enabling modular headers for pod SDWebImageWebPCoder
+[Expo] Enabling modular headers for pod libavif
+[Expo] Enabling modular headers for pod RNScreens
+[Expo] Enabling modular headers for pod EXStructuredHeaders
+[Expo] Enabling modular headers for pod EASClient
+[Expo] Enabling modular headers for pod ReachabilitySwift
+[Expo-precompiled] RNReanimated: building from source (prebuilt tarball not found)
+[Expo-precompiled]   Expected tarball: /Users/saeed/Work/money-management-wt-232/apps/mobile/packages/precompile/.build/react-native-reanimated/output/4.5.1/0.86.3/250829098.0.17/debug/xcframeworks/RNReanimated.tar.gz
+[Expo-precompiled] react-native-safe-area-context: building from source (prebuilt tarball not found)
+[Expo-precompiled]   Expected tarball: /Users/saeed/Work/money-management-wt-232/apps/mobile/packages/precompile/.build/react-native-safe-area-context/output/5.7.0/0.86.3/250829098.0.17/debug/xcframeworks/RNCSafeAreaContext.tar.gz
+[Expo-precompiled] RNScreens: building from source (prebuilt tarball not found)
+[Expo-precompiled]   Expected tarball: /Users/saeed/Work/money-management-wt-232/apps/mobile/packages/precompile/.build/react-native-screens/output/4.26.2/0.86.3/250829098.0.17/debug/xcframeworks/RNScreens.tar.gz
+[Expo-precompiled] RNSVG: building from source (prebuilt tarball not found)
+[Expo-precompiled]   Expected tarball: /Users/saeed/Work/money-management-wt-232/apps/mobile/packages/precompile/.build/react-native-svg/output/15.15.4/0.86.3/250829098.0.17/debug/xcframeworks/RNSVG.tar.gz
+[Expo-precompiled] RNWorklets: building from source (prebuilt tarball not found)
+[Expo-precompiled]   Expected tarball: /Users/saeed/Work/money-management-wt-232/apps/mobile/packages/precompile/.build/react-native-worklets/output/0.10.1/0.86.3/250829098.0.17/debug/xcframeworks/RNWorklets.tar.gz
+[34m[OP-SQLITE] Configuration found at /Users/saeed/Work/money-management-wt-232/package.json[0m
+[34m[OP-SQLITE] using pure SQLite[0m
+[34m[OP-SQLITE] Performance mode enabled[0m
+[NitroModules] 🔥 NitroFetch is boosted by nitro!
+[NitroModules] 🔥 Your app is boosted by nitro modules!
+[NitroModules] Found react-native 0.86.3 (86) in /Users/saeed/Work/money-management-wt-232/node_modules/react-native!
+[RNScreens] Gamma project enabled. Including source files.
+Found 15 modules for target `TroveDev`
+link_native_modules! {:ios_packages=>[{:configurations=>[], :name=>"@op-engineering/op-sqlite", :root=>"/Users/saeed/Work/money-management-wt-232/node_modules/@op-engineering/op-sqlite", :path=>"../../../node_modules/@op-engineering/op-sqlite", :podspec_path=>"/Users/saeed/Work/money-management-wt-232/node_modules/@op-engineering/op-sqlite/op-sqlite.podspec", :script_phases=>[]}, {:configurations=>[], :name=>"@powersync/react-native", :root=>"/Users/saeed/Work/money-management-wt-232/node_modules/@powersync/react-native", :path=>"../../../node_modules/@powersync/react-native", :podspec_path=>"/Users/saeed/Work/money-management-wt-232/node_modules/@powersync/react-native/powersync-react-native.podspec", :script_phases=>[]}, {:configurations=>[], :name=>"@react-native-community/datetimepicker", :root=>"/Users/saeed/Work/money-management-wt-232/node_modules/@react-native-community/datetimepicker", :path=>"../../../node_modules/@react-native-community/datetimepicker", :podspec_path=>"/Users/saeed/Work/money-management-wt-232/node_modules/@react-native-community/datetimepicker/RNDateTimePicker.podspec", :script_phases=>[]}, {:configurations=>[], :name=>"@react-native-masked-view/masked-view", :root=>"/Users/saeed/Work/money-management-wt-232/node_modules/@react-native-masked-view/masked-view", :path=>"../../../node_modules/@react-native-masked-view/masked-view", :podspec_path=>"/Users/saeed/Work/money-management-wt-232/node_modules/@react-native-masked-view/masked-view/RNCMaskedView.podspec", :script_phases=>[]}, {:configurations=>[], :name=>"@swmansion/react-native-bottom-sheet", :root=>"/Users/saeed/Work/money-management-wt-232/node_modules/@swmansion/react-native-bottom-sheet", :path=>"../../../node_modules/@swmansion/react-native-bottom-sheet", :podspec_path=>"/Users/saeed/Work/money-management-wt-232/node_modules/@swmansion/react-native-bottom-sheet/ReactNativeBottomSheet.podspec", :script_phases=>[]}, {:configurations=>[], :name=>"expo", :root=>"/Users/saeed/Work/money-management-wt-232/node_modules/expo", :path=>"../../../node_modules/expo", :podspec_path=>"/Users/saeed/Work/money-management-wt-232/node_modules/expo/Expo.podspec", :script_phases=>[]}, {:configurations=>[], :name=>"react-native-gesture-handler", :root=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-gesture-handler", :path=>"../../../node_modules/react-native-gesture-handler", :podspec_path=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-gesture-handler/RNGestureHandler.podspec", :script_phases=>[]}, {:configurations=>[], :name=>"react-native-keyboard-controller", :root=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-keyboard-controller", :path=>"../../../node_modules/react-native-keyboard-controller", :podspec_path=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-keyboard-controller/react-native-keyboard-controller.podspec", :script_phases=>[]}, {:configurations=>[], :name=>"react-native-nitro-fetch", :root=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-nitro-fetch", :path=>"../../../node_modules/react-native-nitro-fetch", :podspec_path=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-nitro-fetch/NitroFetch.podspec", :script_phases=>[]}, {:configurations=>[], :name=>"react-native-nitro-modules", :root=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-nitro-modules", :path=>"../../../node_modules/react-native-nitro-modules", :podspec_path=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-nitro-modules/NitroModules.podspec", :script_phases=>[]}, {:configurations=>[], :name=>"react-native-reanimated", :root=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-reanimated", :path=>"../../../node_modules/react-native-reanimated", :podspec_path=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-reanimated/RNReanimated.podspec", :script_phases=>[]}, {:configurations=>[], :name=>"react-native-safe-area-context", :root=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-safe-area-context", :path=>"../../../node_modules/react-native-safe-area-context", :podspec_path=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-safe-area-context/react-native-safe-area-context.podspec", :script_phases=>[]}, {:configurations=>[], :name=>"react-native-screens", :root=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-screens", :path=>"../../../node_modules/react-native-screens", :podspec_path=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-screens/RNScreens.podspec", :script_phases=>[]}, {:configurations=>[], :name=>"react-native-svg", :root=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-svg", :path=>"../../../node_modules/react-native-svg", :podspec_path=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-svg/RNSVG.podspec", :script_phases=>[]}, {:configurations=>[], :name=>"react-native-worklets", :root=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-worklets", :path=>"../../../node_modules/react-native-worklets", :podspec_path=>"/Users/saeed/Work/money-management-wt-232/node_modules/react-native-worklets/RNWorklets.podspec", :script_phases=>[]}], :ios_project_root_path=>"/Users/saeed/Work/money-management-wt-232/apps/mobile/ios", :react_native_path=>"../../../node_modules/react-native"}
+[34m[OP-SQLITE] Configuration found at /Users/saeed/Work/money-management-wt-232/package.json[0m
+[34m[OP-SQLITE] using pure SQLite[0m
+[34m[OP-SQLITE] Performance mode enabled[0m
+[NitroModules] 🔥 NitroFetch is boosted by nitro!
+[NitroModules] 🔥 Your app is boosted by nitro modules!
+[NitroModules] Found react-native 0.86.3 (86) in /Users/saeed/Work/money-management-wt-232/node_modules/react-native!
+[RNScreens] Gamma project enabled. Including source files.
+Auto-linking React Native modules for target `TroveDev`: NitroFetch, NitroModules, RNCMaskedView, RNDateTimePicker, RNGestureHandler, RNReanimated, RNSVG, RNScreens, RNWorklets, ReactNativeBottomSheet, op-sqlite, powersync-react-native, react-native-keyboard-controller, and react-native-safe-area-context
+Framework build type is static library
+[ReactNativeDependencies] Setting up ReactNativeDependencies...
+[ReactNativeDependencies] Building from source: false
+[ReactNativeDependencies] Using tarball from URL: https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/0.86.3/react-native-artifacts-0.86.3-reactnative-dependencies-debug.tar.gz
+[ReactNativeDependencies] Tarball reactnative-dependencies-0.86.3-debug.tar.gz already exists in Pods. Skipping download.
+[ReactNativeDependencies] Tarball reactnative-dependencies-0.86.3-release.tar.gz already exists in Pods. Skipping download.
+[ReactNativeDependencies] Source: {:http=>"https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/0.86.3/react-native-artifacts-0.86.3-reactnative-dependencies-debug.tar.gz"}
+[ReactNativeCore] Setting up ReactNativeCore...
+[ReactNativeCore] Building from source: false
+Configuring the target with the New Architecture
+[ReactNativeCore] Using React Native Core and React Native Dependencies prebuilt versions.
+[36m[1m[Codegen][0m Analyzing /Users/saeed/Work/money-management-wt-232/apps/mobile/package.json[0m
+[36m[1m[Codegen][0m [33mSearching for codegen-enabled libraries in the app.[0m
+[36m[1m[Codegen][0m [33mThe "codegenConfig" field is not defined in package.json. Assuming there is nothing to generate at the app level.[0m
+[36m[1m[Codegen][0m [33mSearching for codegen-enabled libraries in react-native.config.js[0m
+[36m[1m[Codegen][0m Found @op-engineering/op-sqlite[0m
+[36m[1m[Codegen][0m Found @react-native-community/datetimepicker[0m
+[36m[1m[Codegen][0m Found @swmansion/react-native-bottom-sheet[0m
+[36m[1m[Codegen][0m Found react-native-gesture-handler[0m
+[36m[1m[Codegen][0m Found react-native-keyboard-controller[0m
+[36m[1m[Codegen][0m Found react-native-nitro-modules[0m
+[36m[1m[Codegen][0m Found react-native-reanimated[0m
+[36m[1m[Codegen][0m Found react-native-safe-area-context[0m
+[36m[1m[Codegen][0m Found react-native-screens[0m
+[36m[1m[Codegen][0m Found react-native-svg[0m
+[36m[1m[Codegen][0m Found react-native-worklets[0m
+[36m[1m[Codegen][0m Processing OPSQLiteSpec[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, macos, tvos, visionos for OPSQLiteSpec[0m
+[36m[1m[Codegen][0m Processing RNDateTimePickerCGen[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, visionos for RNDateTimePickerCGen[0m
+[36m[1m[Codegen][0m Processing ReactNativeBottomSheetSpec[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios for ReactNativeBottomSheetSpec[0m
+[36m[1m[Codegen][0m Processing rngesturehandler_codegen[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, macos, tvos, visionos for rngesturehandler_codegen[0m
+[36m[1m[Codegen][0m Processing RNKC[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios for RNKC[0m
+[36m[1m[Codegen][0m Processing NitroModulesSpec[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Processing rnreanimated[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, macos, tvos, visionos for rnreanimated[0m
+[36m[1m[Codegen][0m Processing safeareacontext[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, macos, tvos, visionos for safeareacontext[0m
+[36m[1m[Codegen][0m Processing rnscreens[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, tvos, visionos for rnscreens[0m
+[36m[1m[Codegen][0m Processing rnsvg[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, macos, tvos, visionos for rnsvg[0m
+[36m[1m[Codegen][0m Processing rnworklets[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, macos, tvos, visionos for rnworklets[0m
+[36m[1m[Codegen][0m Generating Native Code for OPSQLiteSpec - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for RNDateTimePickerCGen - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for ReactNativeBottomSheetSpec - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for rngesturehandler_codegen - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for RNKC - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for NitroModulesSpec - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for rnreanimated - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for safeareacontext - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for rnscreens - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for rnsvg - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for rnworklets - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating RCTThirdPartyComponentsProvider.h[0m
+[36m[1m[Codegen][0m Generated artifact: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen/RCTThirdPartyComponentsProvider.h[0m
+[36m[1m[Codegen][0m Generating RCTThirdPartyComponentsProvider.mm[0m
+[36m[1m[Codegen][0m Generated artifact: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen/RCTThirdPartyComponentsProvider.mm[0m
+[36m[1m[Codegen][0m Generating RCTModulesProvider.h[0m
+[36m[1m[Codegen][0m Generated artifact: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen/RCTModuleProviders.h[0m
+[36m[1m[Codegen][0m Generating RCTModuleProviders.mm[0m
+[36m[1m[Codegen][0m Generated artifact: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen/RCTModuleProviders.mm[0m
+[36m[1m[Codegen][0m Generating RCTAppDependencyProvider[0m
+[36m[1m[Codegen][0m Generated artifact: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactAppDependencyProvider/RCTAppDependencyProvider.h[0m
+[36m[1m[Codegen][0m Generated artifact: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactAppDependencyProvider/RCTAppDependencyProvider.mm[0m
+[36m[1m[Codegen][0m Generated podspec: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactAppDependencyProvider/ReactAppDependencyProvider.podspec[0m
+[36m[1m[Codegen][0m Generated podspec: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/ReactCodegen/ReactCodegen.podspec[0m
+[36m[1m[Codegen][0m Generating Package.swift[0m
+[36m[1m[Codegen][0m Generated artifact: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/build/generated/ios/Package.swift[0m
+[36m[1m[Codegen][0m [33mDone.[0m
+[ReactNativeDependencies] Using tarball from URL: https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/0.86.3/react-native-artifacts-0.86.3-reactnative-dependencies-debug.tar.gz
+[ReactNativeDependencies] Tarball reactnative-dependencies-0.86.3-debug.tar.gz already exists in Pods. Skipping download.
+[ReactNativeDependencies] Tarball reactnative-dependencies-0.86.3-release.tar.gz already exists in Pods. Skipping download.
+[📦 RNRepo] 🚀 Scanning for React Native dependencies to replace with pre-builds...
+[📦 RNRepo] Detecting React Native version using Node.js from: /Users/saeed/Work/money-management-wt-232/node_modules/@expo/log-box
+[📦 RNRepo]   ✓ Found React Native version: 0.86.3
+[📦 RNRepo] Detected React Native version: 0.86.3
+[📦 RNRepo]   Found: ExpoLogBox v57.0.4
+[📦 RNRepo]   Found: Expo v57.0.20
+[📦 RNRepo]   Found: expo-dev-launcher v57.0.19
+[📦 RNRepo]   Found: expo-dev-menu v57.0.18
+[📦 RNRepo]   Found: ExpoModulesWorkletsAdapter v57.0.16
+[📦 RNRepo]   Found: op-sqlite v18.2.0
+[📦 RNRepo]   Found: powersync-react-native v2.2.0
+[📦 RNRepo]   Found: RNDateTimePicker v9.1.0
+[📦 RNRepo]   Found: RNCMaskedView v0.3.2
+[📦 RNRepo]   Found: ReactNativeBottomSheet v0.16.2
+[📦 RNRepo]   Found: RNGestureHandler v3.1.0
+[📦 RNRepo]   Found: react-native-keyboard-controller v1.21.9
+[📦 RNRepo]   Found: NitroFetch v1.6.0
+[📦 RNRepo]   Found: NitroModules v0.36.5
+[📦 RNRepo]   Found: RNReanimated v4.5.1
+[📦 RNRepo]   Found: react-native-safe-area-context v5.7.0
+[📦 RNRepo]   Found: RNScreens v4.26.2
+[📦 RNRepo]   Found: RNSVG v15.15.4
+[📦 RNRepo]   Found: RNWorklets v0.10.1
+[📦 RNRepo] Found 19 React Native pod(s) to process
+[📦 RNRepo] Loading rnrepo.config.json from /Users/saeed/Work/money-management-wt-232/rnrepo.config.json
+[📦 RNRepo] Loading rnrepo.config.json from /Users/saeed/Work/money-management-wt-232/rnrepo.config.json
+[📦 RNRepo] Loading rnrepo.config.json from /Users/saeed/Work/money-management-wt-232/rnrepo.config.json
+[📦 RNRepo] Processing: ExpoLogBox v57.0.4
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/@expo/log-box
+[📦 RNRepo] Processing: Expo v57.0.20
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/expo
+[📦 RNRepo] Processing: expo-dev-launcher v57.0.19
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/expo-dev-launcher
+[📦 RNRepo] Processing: expo-dev-menu v57.0.18
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/expo-dev-menu
+[📦 RNRepo] Processing: ExpoModulesWorkletsAdapter v57.0.16
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/expo-modules-core
+[📦 RNRepo] Processing: op-sqlite v18.2.0
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/@op-engineering/op-sqlite
+[📦 RNRepo] Processing: powersync-react-native v2.2.0
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/@powersync/react-native
+[📦 RNRepo] Processing: RNDateTimePicker v9.1.0
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/@react-native-community/datetimepicker
+[📦 RNRepo] Processing: RNCMaskedView v0.3.2
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/@react-native-masked-view/masked-view
+[📦 RNRepo] Processing: ReactNativeBottomSheet v0.16.2
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/@swmansion/react-native-bottom-sheet
+[📦 RNRepo] Processing: RNGestureHandler v3.1.0
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-gesture-handler
+[📦 RNRepo] Processing: react-native-keyboard-controller v1.21.9
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-keyboard-controller
+[📦 RNRepo] Processing: NitroFetch v1.6.0
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-nitro-fetch
+[📦 RNRepo] Processing: NitroModules v0.36.5
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-nitro-modules
+[📦 RNRepo] Processing: RNReanimated v4.5.1
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-reanimated
+[📦 RNRepo] Processing: react-native-safe-area-context v5.7.0
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-safe-area-context
+[📦 RNRepo] Processing: RNScreens v4.26.2
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-screens
+[📦 RNRepo] Processing: RNSVG v15.15.4
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-svg
+[📦 RNRepo] Processing: RNWorklets v0.10.1
+[📦 RNRepo] Package directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-worklets
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/@expo/log-box/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/expo/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/expo-dev-launcher/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/expo-dev-menu/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/expo-modules-core/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/@op-engineering/op-sqlite/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/@powersync/react-native/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/@react-native-community/datetimepicker/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/@react-native-masked-view/masked-view/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/@swmansion/react-native-bottom-sheet/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-gesture-handler/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-keyboard-controller/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-nitro-modules/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-reanimated/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-safe-area-context/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-screens/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-svg/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-worklets/.rnrepo-cache
+[📦 RNRepo] Cache directory: /Users/saeed/Work/money-management-wt-232/node_modules/react-native-nitro-fetch/.rnrepo-cache
+[📦 RNRepo] Downloading Debug configuration...
+[📦 RNRepo] Preparing to download: ExpoLogBox@57.0.4
+[📦 RNRepo] Downloading Debug configuration...
+[📦 RNRepo] Preparing to download: Expo@57.0.20
+[📦 RNRepo] Downloading Debug configuration...
+[📦 RNRepo] Preparing to download: expo-dev-menu@57.0.18
+[📦 RNRepo] Downloading Debug configuration...
+[📦 RNRepo] Preparing to download: expo-dev-launcher@57.0.19
+[📦 RNRepo] Downloading Debug configuration...
+[📦 RNRepo] Preparing to download: ExpoModulesWorkletsAdapter@57.0.16
+[📦 RNRepo] Downloading Debug configuration...
+[📦 RNRepo] Preparing to download: op-sqlite@18.2.0
+[📦 RNRepo] Downloading Debug configuration...
+[📦 RNRepo] Preparing to download: powersync-react-native@2.2.0
+[📦 RNRepo] Downloading Debug configuration...
+[📦 RNRepo] Preparing to download: RNDateTimePicker@9.1.0
+[📦 RNRepo] Downloading Debug configuration...
+[📦 RNRepo] Preparing to download: RNCMaskedView@0.3.2
+[📦 RNRepo] Downloading Debug configuration...
+[📦 RNRepo] Preparing to download: ReactNativeBottomSheet@0.16.2
+[📦 RNRepo] Downloading Debug configuration...
+[📦 RNRepo] Preparing to download: react-native-keyboard-controller@1.21.9
+[📦 RNRepo] Downloading Debug configuration...
+[📦 RNRepo] Preparing to download: NitroModules@0.36.5
+[📦 RNRepo] Downloading Debug configuration...
+[📦 RNRepo] Preparing to download: NitroFetch@1.6.0
+[📦 RNRepo] Pre-built frameworks already exist (Debug & Release)
+[📦 RNRepo] Pre-built frameworks already exist (Debug & Release)
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/expo/57.0.20/expo-57.0.20-rn0.86.3-debug.xcframework.zip....0-rn0.86.3-debug.xcframework.zip...
+[📦 RNRepo] Pre-built frameworks already exist (Debug & Release)
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/expo/57.0.20/expo-57.0.20-rn0.86.3-debug.xcframework.zip...o] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/expo/57.0.20/expo-57.0.20-rn0.86.3-debug.xcframework.zip...[📦 RNRepo] Pre-built frameworks already exist (Debug & Release)
+
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/expo-dev-menu/57.0.18/expo-dev-menu-57.0.18-rn0.86.3-debug.xcframework.zip...
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/expo-modules-core/57.0.16/expo-modules-core-57.0.16-rn0.86.3-debug.xcframework.zip...
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/swmansion_react-native-bottom-sheet/0.16.2/swmansion_react-native-bottom-sheet-0.16.2-rn0.86.3-debug.xcframework.zip...
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/powersync_react-native/2.2.0/powersync_react-native-2.2.0-rn0.86.3-debug.xcframework.zip...
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-masked-view_masked-view/0.3.2/react-native-masked-view_masked-view-0.3.2-rn0.86.3-debug.xcframework.zip...
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/expo-dev-launcher/57.0.19/expo-dev-launcher-57.0.19-rn0.86.3-debug.xcframework.zip...
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-nitro-modules/0.36.5/react-native-nitro-modules-0.36.5-rn0.86.3-debug.xcframework.zip...
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/op-engineering_op-sqlite/18.2.0/op-engineering_op-sqlite-18.2.0-rn0.86.3-debug.xcframework.zip...
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/expo_log-box/57.0.4/expo_log-box-57.0.4-rn0.86.3-debug.xcframework.zip...
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-keyboard-controller/1.21.9/react-native-keyboard-controller-1.21.9-rn0.86.3-debug.xcframework.zip...
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-community_datetimepicker/9.1.0/react-native-community_datetimepicker-9.1.0-rn0.86.3-debug.xcframework.zip...
+curl: (56) The requested URL returned error: 404
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/swmansion_react-native-bottom-sheet/0.16.2/swmansion_react-native-bottom-sheet-0.16.2-rn0.86.3-debug.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Debug configuration not available
+[📦 RNRepo] Downloading Release configuration...
+[📦 RNRepo] Preparing to download: ReactNativeBottomSheet@0.16.2
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/swmansion_react-native-bottom-sheet/0.16.2/swmansion_react-native-bottom-sheet-0.16.2-rn0.86.3-release.xcframework.zip...
+curl: (56) The requested URL returned error: 404
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/expo-dev-launcher/57.0.19/expo-dev-launcher-57.0.19-rn0.86.3-debug.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Debug configuration not available
+[📦 RNRepo] Downloading Release configuration...
+[📦 RNRepo] Preparing to download: expo-dev-launcher@57.0.19
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/expo-dev-launcher/57.0.19/expo-dev-launcher-57.0.19-rn0.86.3-release.xcframework.zip...
+curl: (56) The requested URL returned error: 404
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-nitro-fetch/1.6.0/react-native-nitro-fetch-1.6.0-rn0.86.3-debug.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Debug configuration not available
+[📦 RNRepo] Downloading Release configuration...
+[📦 RNRepo] Preparing to download: NitroFetch@1.6.0
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-nitro-fetch/1.6.0/react-native-nitro-fetch-1.6.0-rn0.86.3-release.xcframework.zip...
+curl: (56) The requested URL returned error: 404
+curl: (56) The requested URL returned error: 404
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-keyboard-controller/1.21.9/react-native-keyboard-controller-1.21.9-rn0.86.3-debug.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Debug configuration not available
+[📦 RNRepo] Downloading Release configuration...
+[📦 RNRepo] Preparing to download: react-native-keyboard-controller@1.21.9
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-keyboard-controller/1.21.9/react-native-keyboard-controller-1.21.9-rn0.86.3-release.xcframework.zip...
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/expo/57.0.20/expo-57.0.20-rn0.86.3-debug.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Debug configuration not available
+[📦 RNRepo] Downloading Release configuration...
+[📦 RNRepo] Preparing to download: Expo@57.0.20
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/expo/57.0.20/expo-57.0.20-rn0.86.3-release.xcframework.zip...
+curl: (56) The requested URL returned error: 404
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-masked-view_masked-view/0.3.2/react-native-masked-view_masked-view-0.3.2-rn0.86.3-debug.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Debug configuration not available
+[📦 RNRepo] Downloading Release configuration...
+[📦 RNRepo] Preparing to download: RNCMaskedView@0.3.2
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-masked-view_masked-view/0.3.2/react-native-masked-view_masked-view-0.3.2-rn0.86.3-release.xcframework.zip...
+curl: (56) The requested URL returned error: 404
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/op-engineering_op-sqlite/18.2.0/op-engineering_op-sqlite-18.2.0-rn0.86.3-debug.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Debug configuration not available
+[📦 RNRepo] Downloading Release configuration...
+[📦 RNRepo] Preparing to download: op-sqlite@18.2.0
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/op-engineering_op-sqlite/18.2.0/op-engineering_op-sqlite-18.2.0-rn0.86.3-release.xcframework.zip...
+curl: (56) The requested URL returned error: 404
+curl: (56) The requested URL returned error: 404
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-community_datetimepicker/9.1.0/react-native-community_datetimepicker-9.1.0-rn0.86.3-debug.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Debug configuration not available
+[📦 RNRepo] Downloading Release configuration...
+[📦 RNRepo] Preparing to download: RNDateTimePicker@9.1.0
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-nitro-modules/0.36.5/react-native-nitro-modules-0.36.5-rn0.86.3-debug.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Debug configuration not available
+[📦 RNRepo] Downloading Release configuration...
+[📦 RNRepo] Preparing to download: NitroModules@0.36.5
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-community_datetimepicker/9.1.0/react-native-community_datetimepicker-9.1.0-rn0.86.3-release.xcframework.zip...
+curl: (56) The requested URL returned error: 404
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-nitro-modules/0.36.5/react-native-nitro-modules-0.36.5-rn0.86.3-release.xcframework.zip...
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/expo-dev-menu/57.0.18/expo-dev-menu-57.0.18-rn0.86.3-debug.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Debug configuration not available
+[📦 RNRepo] Downloading Release configuration...
+[📦 RNRepo] Preparing to download: expo-dev-menu@57.0.18
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/expo-dev-menu/57.0.18/expo-dev-menu-57.0.18-rn0.86.3-release.xcframework.zip...
+curl: (56) The requested URL returned error: 404
+curl: (56) The requested URL returned error: 404
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/expo-modules-core/57.0.16/expo-modules-core-57.0.16-rn0.86.3-debug.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Debug configuration not available
+[📦 RNRepo] Downloading Release configuration...
+[📦 RNRepo] Preparing to download: ExpoModulesWorkletsAdapter@57.0.16
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/expo-modules-core/57.0.16/expo-modules-core-57.0.16-rn0.86.3-release.xcframework.zip...
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/powersync_react-native/2.2.0/powersync_react-native-2.2.0-rn0.86.3-debug.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Debug configuration not available
+[📦 RNRepo] Downloading Release configuration...
+[📦 RNRepo] Preparing to download: powersync-react-native@2.2.0
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/powersync_react-native/2.2.0/powersync_react-native-2.2.0-rn0.86.3-release.xcframework.zip...
+curl: (56) The requested URL returned error: 404
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/expo_log-box/57.0.4/expo_log-box-57.0.4-rn0.86.3-debug.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Debug configuration not available
+[📦 RNRepo] Downloading Release configuration...
+[📦 RNRepo] Preparing to download: ExpoLogBox@57.0.4
+[📦 RNRepo] Downloading from https://packages.rnrepo.org/releases/org/rnrepo/public/expo_log-box/57.0.4/expo_log-box-57.0.4-rn0.86.3-release.xcframework.zip...
+curl: (56) The requested URL returned error: 404
+curl: (56) The requested URL returned error: 404
+curl: (56) The requested URL returned error: 404
+curl: (56) The requested URL returned error: 404
+curl: (56) The requested URL returned error: 404
+curl: (56) The requested URL returned error: 404
+curl: (56) The requested URL returned error: 404
+curl: (56) The requested URL returned error: 404
+curl: (5curl:6 )( 5T6h)e  Trheeq ureesqtueeds tUeRdL  UrReLt urrenteudr neerdr oerr:r o4r0:4 
+404
+curl: (56) The requested URL returned error: 404
+curl: (56) The requested URL returned error: 404
+curl: (56) The requested URL returned error: 404
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/swmansion_react-native-bottom-sheet/0.16.2/swmansion_react-native-bottom-sheet-0.16.2-rn0.86.3-release.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Release configuration not available
+[📦 RNRepo] ⚠️  Not all configurations are available. Available: none
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-community_datetimepicker/9.1.0/react-native-community_datetimepicker-9.1.0-rn0.86.3-release.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Release configuration not available
+[📦 RNRepo] ⚠️  Not all configurations are available. Available: none
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/expo-dev-launcher/57.0.19/expo-dev-launcher-57.0.19-rn0.86.3-release.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Release configuration not available
+[📦 RNRepo] ⚠️  Not all configurations are available. Available: none
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-nitro-fetch/1.6.0/react-native-nitro-fetch-1.6.0-rn0.86.3-release.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Release configuration not available
+[📦 RNRepo] ⚠️  Not all configurations are available. Available: none
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-nitro-modules/0.36.5/react-native-nitro-modules-0.36.5-rn0.86.3-release.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Release configuration not available
+[📦 RNRepo] ⚠️  Not all configurations are available. Available: none
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-keyboard-controller/1.21.9/react-native-keyboard-controller-1.21.9-rn0.86.3-release.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Release configuration not available
+[📦 RNRepo] ⚠️  Not all configurations are available. Available: none
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/react-native-masked-view_masked-view/0.3.2/react-native-masked-view_masked-view-0.3.2-rn0.86.3-release.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Release configuration not available
+[📦 RNRepo] ⚠️  Not all configurations are available. Available: none
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/expo-dev-menu/57.0.18/expo-dev-menu-57.0.18-rn0.86.3-release.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Release configuration not available
+[📦 RNRepo] ⚠️  Not all configurations are available. Available: none
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/op-engineering_op-sqlite/18.2.0/op-engineering_op-sqlite-18.2.0-rn0.86.3-release.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Release configuration not available
+[📦 RNRepo] ⚠️  Not all configurations are available. Available: none
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/expo/57.0.20/expo-57.0.20-rn0.86.3-release.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Release configuration not available
+[📦 RNRepo] ⚠️  Not all configurations are available. Available: none
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/expo-modules-core/57.0.16/expo-modules-core-57.0.16-rn0.86.3-release.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Release configuration not available
+[📦 RNRepo] ⚠️  Not all configurations are available. Available: none
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/powersync_react-native/2.2.0/powersync_react-native-2.2.0-rn0.86.3-release.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Release configuration not available
+[📦 RNRepo] ⚠️  Not all configurations are available. Available: none
+[📦 RNRepo] Failed to download https://packages.rnrepo.org/releases/org/rnrepo/public/expo_log-box/57.0.4/expo_log-box-57.0.4-rn0.86.3-release.xcframework.zip
+[📦 RNRepo] Not available on Maven repository
+[📦 RNRepo] Will build from source instead
+[📦 RNRepo] ⚠️  Release configuration not available
+[📦 RNRepo] ⚠️  Not all configurations are available. Available: none
+[📦 RNRepo] Total React Native dependencies detected: 19
+[📦 RNRepo] ✓ Already Cached (6):
+[📦 RNRepo]   • react-native-safe-area-context
+[📦 RNRepo]   • RNGestureHandler
+[📦 RNRepo]   • RNReanimated
+[📦 RNRepo]   • RNScreens
+[📦 RNRepo]   • RNWorklets
+[📦 RNRepo]   • RNSVG
+[📦 RNRepo] ⚠ Not Available on Maven (13):
+[📦 RNRepo]   These will be built from source:
+[📦 RNRepo]   • ReactNativeBottomSheet
+[📦 RNRepo]   • RNDateTimePicker
+[📦 RNRepo]   • expo-dev-launcher
+[📦 RNRepo]   • NitroFetch
+[📦 RNRepo]   • NitroModules
+[📦 RNRepo]   • react-native-keyboard-controller
+[📦 RNRepo]   • RNCMaskedView
+[📦 RNRepo]   • expo-dev-menu
+[📦 RNRepo]   • op-sqlite
+[📦 RNRepo]   • Expo
+[📦 RNRepo]   • ExpoModulesWorkletsAdapter
+[📦 RNRepo]   • powersync-react-native
+[📦 RNRepo]   • ExpoLogBox
+[📦 RNRepo] 6/19 dependencies (31.6%) using pre-built frameworks! 🎉
+[📦 RNRepo] 13/19 dependencies will be built from source
+Analyzing dependencies
+[Expo-precompiled] Bundled SPM frameworks: SDWebImage, SDWebImageAVIFCoder, SDWebImageSVGCoder, SDWebImageWebPCoder, libavif
+Fetching podspec for `ExpoFileSystem` from `../../../node_modules/expo-file-system/ios/ExpoFileSystem.podspec`
+Fetching podspec for `ExpoFont` from `../../../node_modules/expo-font/ios/ExpoFont.podspec`
+Fetching podspec for `ExpoImage` from `../../../node_modules/expo-image/ios/ExpoImage.podspec`
+[Expo-precompiled] Stripping bundled dependency 'SDWebImage' from ExpoImage
+[Expo-precompiled] Stripping bundled dependency 'SDWebImageAVIFCoder' from ExpoImage
+[Expo-precompiled] Stripping bundled dependency 'SDWebImageSVGCoder' from ExpoImage
+[Expo-precompiled] Stripping bundled dependency 'SDWebImageWebPCoder' from ExpoImage
+[Expo-precompiled] Stripping bundled dependency 'libavif/libdav1d' from ExpoImage
+Fetching podspec for `ExpoModulesCore` from `../../../node_modules/expo-modules-core/ExpoModulesCore.podspec`
+Fetching podspec for `ExpoModulesWorklets` from `../../../node_modules/expo-modules-core/ExpoModulesWorklets.podspec`
+[NitroModules] 🔥 NitroFetch is boosted by nitro!
+[NitroModules] 🔥 Your app is boosted by nitro modules!
+[NitroModules] Found react-native 0.86.3 (86) in /Users/saeed/Work/money-management-wt-232/node_modules/react-native!
+[RNScreens] Gamma project enabled. Including source files.
+[34m[OP-SQLITE] Configuration found at /Users/saeed/Work/money-management-wt-232/package.json[0m
+[34m[OP-SQLITE] using pure SQLite[0m
+[34m[OP-SQLITE] Performance mode enabled[0m
+[📦 RNRepo] 
+[📦 RNRepo] 🔄 Configuring pre-built frameworks...
+[📦 RNRepo]   Copied to Current directory from Debug
+[📦 RNRepo]   Configuring react-native-safe-area-context (3 spec(s)) at /Users/saeed/Work/money-management-wt-232/node_modules/react-native-safe-area-context
+[📦 RNRepo]     Verified static xcframework (Debug)
+[📦 RNRepo]     Verified static xcframework (Release)
+[📦 RNRepo]     Modified spec: react-native-safe-area-context
+[📦 RNRepo]     Modified spec: react-native-safe-area-context/common
+[📦 RNRepo]     Modified spec: react-native-safe-area-context/fabric
+[📦 RNRepo]   Copied to Current directory from Debug
+[📦 RNRepo]   Configuring RNGestureHandler (1 spec(s)) at /Users/saeed/Work/money-management-wt-232/node_modules/react-native-gesture-handler
+[📦 RNRepo]     Verified static xcframework (Debug)
+[📦 RNRepo]     Verified static xcframework (Release)
+[📦 RNRepo]     Modified spec: RNGestureHandler
+[📦 RNRepo]   Copied to Current directory from Debug
+[📦 RNRepo]   Configuring RNReanimated (4 spec(s)) at /Users/saeed/Work/money-management-wt-232/node_modules/react-native-reanimated
+[📦 RNRepo]     Verified static xcframework (Debug)
+[📦 RNRepo]     Verified static xcframework (Release)
+[📦 RNRepo]     Modified spec: RNReanimated
+[📦 RNRepo]     Modified spec: RNReanimated/apple
+[📦 RNRepo]     Modified spec: RNReanimated/common
+[📦 RNRepo]     Modified spec: RNReanimated/view
+[📦 RNRepo]   Copied to Current directory from Debug
+[📦 RNRepo]   Configuring RNScreens (2 spec(s)) at /Users/saeed/Work/money-management-wt-232/node_modules/react-native-screens
+[📦 RNRepo]     Verified static xcframework (Debug)
+[📦 RNRepo]     Verified static xcframework (Release)
+[📦 RNRepo]     Modified spec: RNScreens
+[📦 RNRepo]     Modified spec: RNScreens/common
+[📦 RNRepo]   Copied to Current directory from Debug
+[📦 RNRepo]   Configuring RNWorklets (3 spec(s)) at /Users/saeed/Work/money-management-wt-232/node_modules/react-native-worklets
+[📦 RNRepo]     Verified static xcframework (Debug)
+[📦 RNRepo]     Verified static xcframework (Release)
+[📦 RNRepo]     Modified spec: RNWorklets
+[📦 RNRepo]     Modified spec: RNWorklets/apple
+[📦 RNRepo]     Modified spec: RNWorklets/common
+[📦 RNRepo]   Copied to Current directory from Debug
+[📦 RNRepo]   Configuring RNSVG (2 spec(s)) at /Users/saeed/Work/money-management-wt-232/node_modules/react-native-svg
+[📦 RNRepo]     Verified static xcframework (Debug)
+[📦 RNRepo]     Verified static xcframework (Release)
+[📦 RNRepo]     Modified spec: RNSVG
+[📦 RNRepo]     Modified spec: RNSVG/common
+[📦 RNRepo] ✓ Successfully configured 6 pre-built framework(s)
+[📦 RNRepo] 
+Downloading dependencies
+[Expo] Ensuring required slices in ExpoModulesJSI.xcframework
+[Expo] Staged 5/5 shared SPM xcframework(s) (debug)
+Generating Pods project
+[📦 RNRepo] 🔧 Adding build phase scripts for configuration selection...
+[📦 RNRepo]   Added build phase to RNGestureHandler
+[📦 RNRepo]   Added build phase to RNReanimated
+[📦 RNRepo]   Added build phase to RNSVG
+[📦 RNRepo]   Added build phase to RNSVG-RNSVGFilters
+[📦 RNRepo]   Added build phase to RNScreens
+[📦 RNRepo]   Added build phase to RNWorklets
+[📦 RNRepo]   Added build phase to react-native-safe-area-context
+[📦 RNRepo] ✓ Build phase scripts configured
+[📦 RNRepo] 
+Setting USE_HERMES build settings
+Setting REACT_NATIVE_PATH build settings
+Setting SWIFT_ACTIVE_COMPILATION_CONDITIONS build settings
+[Ccache]: Removing Ccache from CC, LD, CXX & LDPLUSPLUS build settings
+Setting SWIFT_ENABLE_EXPLICIT_MODULES build settings
+[ReactNativeCore] Processing VFS overlay file...
+[ReactNativeCore]   Created VFS overlay at /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/Pods/React-Core-prebuilt/React-VFS.yaml
+[ReactNativeCore] VFS overlay setup complete
+[ReactNativeCore] Configuring xcconfig for prebuilt React Native Core...
+[ReactNativeCore] Prebuilt xcconfig configuration complete
+[SPM] Cleaning old SPM dependencies from Pods project
+[SPM] Adding SPM dependencies to Pods project
+[Privacy Manifest Aggregation] Appending aggregated reasons to existing PrivacyInfo.xcprivacy file.
+[Privacy Manifest Aggregation] Reading .xcprivacy files to aggregate all used Required Reason APIs.
+Setting CLANG_CXX_LANGUAGE_STANDARD to c++20 on /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/TroveDev.xcodeproj
+
+==================== DEPRECATION NOTICE =====================
+Calling `pod install` directly is deprecated in React Native
+because we are moving away from Cocoapods toward alternative
+solutions to build the project.
+* If you are using Expo, please run:
+`npx expo run:ios`
+* If you are using the Community CLI, please run:
+`yarn ios`
+=============================================================
+
+Pod install took 24 [s] to run
+Integrating client project
+Pod installation complete! There are 130 dependencies from the Podfile and 131 total pods installed.
+[Expo-precompiled] Precompiled modules:
+[Expo-precompiled]   📦 ExpoFileSystem (57.0.6)
+[Expo-precompiled]   📦 ExpoFont (57.0.3)
+[Expo-precompiled]   📦 ExpoImage (57.0.4)
+[Expo-precompiled]       ∟ SDWebImage.xcframework (5.21.6)
+[Expo-precompiled]       ∟ SDWebImageAVIFCoder.xcframework (0.12.0)
+[Expo-precompiled]       ∟ SDWebImageSVGCoder.xcframework (1.8.0)
+[Expo-precompiled]       ∟ SDWebImageWebPCoder.xcframework (0.15.0)
+[Expo-precompiled]       ∟ libavif.xcframework (1.0.0)
+[Expo-precompiled]   📦 ExpoModulesCore (57.0.16)
+[Expo-precompiled]   📦 ExpoModulesWorklets (57.0.16)
+[Expo] Disabling SWIFT_EMIT_MODULE_INTERFACE for pod targets (prebuilt React compatibility)
+[Expo-precompiled] Looking for ExpoModulesCore.xcframework at: /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/Pods/ExpoModulesCore/ExpoModulesCore.xcframework
+[Expo-precompiled] Adding ExpoModulesJSI header search paths to all targets
+[Expo] Adding '[Expo] Remove duplicate codegen output' build phase to ReactCodegen
+[Expo] Raised resource bundle deployment targets to match their pods: RNSVG-RNSVGFilters, ReachabilitySwift-ReachabilitySwift

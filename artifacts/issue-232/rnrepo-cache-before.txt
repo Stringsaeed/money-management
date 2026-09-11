@@ -1,0 +1,4 @@
+lrwxr-xr-x@ - saeed 12 Sep 00:06 Current -> Debug
+drwxr-xr-x@ - saeed 11 Sep 23:49 Debug
+drwxr-xr-x@ - saeed 11 Sep 23:49 Release
+removed node_modules/react-native-screens/.rnrepo-cache

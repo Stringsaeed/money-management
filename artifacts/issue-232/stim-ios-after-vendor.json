@@ -1,0 +1,22 @@
+  fingerprint f31454.. miss (28.4s) -- 1 source changed: packageJson:scripts
+  cache       eas did not answer within 30s; building instead
+  build       compiling Debug with xcodebuild
+  cache       compilation cache on (CAS at /Users/saeed/.stim/compilation-cache)
+› Searching builds with matching fingerprint on EAS servers
+  cache       compilation cache 79/79 hits (100%)
+  build       ok (26.4s)
+  device      stim-mobile (iPhone 17 26.5) (F324..) booted (140ms)
+  install     TroveDev.app -> stim-mobile (iPhone 17 26.5) (F324..) (1.5s)
+  install     dev client prepared (1.5s)
+  launch      com.stringsaeed.moneymanagement (759ms)
+  verify      UNVERIFIED: no bundle request reached this workspace's Metro
+              The app was started, but nothing fetched a bundle from this workspace's Metro (port 8083) within 20s.
+              The app is launched; what is unproven is that it is talking to THIS dev server. Do this, in order:
+                1. If expo-dev-launcher's DEVELOPMENT SERVERS picker is showing, tap the entry for localhost:8083 -- NOT another workspace's, which would load a different project's bundle onto this device.
+                2. Retry the deep link: xcrun simctl openurl F324175E-BCA2-4F20-857E-C2D9678D44F5 'exp+money-management://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8083%2F%3FdisableOnboarding%3D1&disableFab=1'
+              Then check `stim logs --source metro` (expo-child) for a bundle request.
+› Uploading build to EAS
+› Build successfully uploaded: https://expo.dev/accounts/stringsaeed/projects/money-management/builds/77761f82-3987-4bc7-99e7-e2180400180b
+cache       uploading to https://expo.dev/accounts/stringsaeed/projects/money-management/builds/77761f82-3987-4bc7-99e7-e2180400180b
+  cache       uploaded (eas)
+{"platform":"ios","udid":"F324175E-BCA2-4F20-857E-C2D9678D44F5","deviceName":"stim-mobile (iPhone 17 26.5)","deviceType":"iPhone 17","runtime":"26.5","fingerprint":"f314541a075d012346721de9d27dcceb8b3c393e","configuration":null,"cacheKey":"f314541a075d012346721de9d27dcceb8b3c393e-debug-sim","cacheHit":false,"cacheSkipped":false,"compilationCache":{"status":"reported","hits":79,"cacheableTasks":79,"hitRatePercent":100},"waitedForBuild":null,"appPath":"/Users/saeed/.stim/workspaces/mobile--f32c8e64f19c5328/derived-data/Build/Products/Debug-iphonesimulator/TroveDev.app","bundleId":"com.stringsaeed.moneymanagement","installSkipped":false,"launched":"unverified","metroPort":8083,"logs":{"dir":"/Users/saeed/.stim/workspaces/mobile--f32c8e64f19c5328/logs"},"durationMs":137389}

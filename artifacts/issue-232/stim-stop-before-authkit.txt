@@ -1,0 +1,6 @@
+  stop        no supervisor recorded
+  stop        no collectors recorded
+  metro       nothing listening on port 8083
+  device      shut down stim-mobile (iPhone 17 26.5)
+  port        released 8083
+Stopped: ios stim-mobile (iPhone 17 26.5) shut down, port 8083 freed (/Users/saeed/Work/money-management-wt-232/apps/mobile)
