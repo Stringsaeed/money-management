@@ -8,24 +8,24 @@ Relates to #232 only. Does **not** certify. Does **not** close #232. Parent #224
 
 ## Confirmed on `origin/main`
 
-| Check | Result |
-| --- | --- |
-| Tip | `44fde92` — `fix(auth): stop API 401 on AuthKit tokens missing aud` |
-| `verifyAccessToken` | Omits jose `audience`; `assertTokenBinding` requires `client_id === WORKOS_CLIENT_ID` when `aud` absent |
-| Live Worker | Deploy run for `44fde92` succeeded; root `GET /` → 200 OK |
-| Client ids (Mac cert) | `client_id_compare=EQUAL` (`artifacts/issue-232/client-id-compare.txt` on #241 branch) |
+| Check                 | Result                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------- |
+| Tip                   | `44fde92` — `fix(auth): stop API 401 on AuthKit tokens missing aud`                                     |
+| `verifyAccessToken`   | Omits jose `audience`; `assertTokenBinding` requires `client_id === WORKOS_CLIENT_ID` when `aud` absent |
+| Live Worker           | Deploy run for `44fde92` succeeded; root `GET /` → 200 OK                                               |
+| Client ids (Mac cert) | `client_id_compare=EQUAL` (`artifacts/issue-232/client-id-compare.txt` on #241 branch)                  |
 
 ## Device residual (post-#242)
 
 Source: #241 tip `8420b9ee8352` · `artifacts/issue-232/authkit-live-write.txt` · UI snaps `agent-device-after-sync*.txt` · `cfnetwork-401-summaries.txt`
 
-| Fact | Evidence |
-| --- | --- |
-| Signed-in UI | `stringsaeed@gmail.com`, Sign out (`authkit-56-*`, profile snaps) |
-| Households path failed | "Household sync is paused" + Try again = `access.household.kind === "unavailable"` |
-| Sync path failed | Sync just for me → UI text `Unauthorized` (`agent-device-sync-final.txt`) |
-| Transport | CFNetwork HTTP 401 on `auth.trove.ing` `/rpc` (18 summary lines, all status 401) |
-| Unauthenticated shape | Live `POST /rpc/migration/getManifest` and `/rpc/households/listMine` without bearer → `{"code":"UNAUTHORIZED","status":401}` |
+| Fact                   | Evidence                                                                                                                      |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Signed-in UI           | `stringsaeed@gmail.com`, Sign out (`authkit-56-*`, profile snaps)                                                             |
+| Households path failed | "Household sync is paused" + Try again = `access.household.kind === "unavailable"`                                            |
+| Sync path failed       | Sync just for me → UI text `Unauthorized` (`agent-device-sync-final.txt`)                                                     |
+| Transport              | CFNetwork HTTP 401 on `auth.trove.ing` `/rpc` (18 summary lines, all status 401)                                              |
+| Unauthenticated shape  | Live `POST /rpc/migration/getManifest` and `/rpc/households/listMine` without bearer → `{"code":"UNAUTHORIZED","status":401}` |
 
 ## Ruled out for this repro
 
@@ -62,17 +62,18 @@ Ranked. None proven without Worker verify-code logs or a redacted JWT claim dump
 5. **Ops: Alchemy-persisted custom `WORKOS_TOKEN_AUDIENCE`**  
    Not listed in Actions deploy `env:`; if Cloudflare/Alchemy state retained a non-empty audience from an older deploy, default session tokens (no `aud`) fail closed in `assertTokenBinding`. **Secret/env name only:** `WORKOS_TOKEN_AUDIENCE`. Value not readable from this agent (GH secrets API 403; Cloudflare observability MCP needsAuth).
 
-## Why no code change
+## Diagnostics (this PR follow-up)
 
-No second binding bug is proven against a real AuthKit access-token claim set from this device. Shipping another permissive verify path without `TokenVerifyError.code` or claim-key evidence would be guesswork on top of #242.
+No second binding fix. `packages/api` now logs a redacted Worker console line on verify failure:
 
-Silent swallow in `packages/api/src/context.ts` (`catch { return null }`) collapses every verify failure into the same 401 — that is why residual diagnosis stalls.
+`access_token_verify_failed { code, payloadDecoded, hasAud, hasClientId }`
+
+No token, claim values, or env values. Protected `UNAUTHORIZED` body/headers unchanged (oRPC shape has no safe slot today).
 
 ## Next evidence (names only / redacted)
 
-1. Worker log line with `TokenVerifyError.code` only (`claim_aud` | `claim_client_id` | `claim_iss` | `expired` | `bad_signature` | …) for one Sync tap — **or** temporarily log that code (never the token).
-2. Redacted JWT payload **keys**: `aud` present? `client_id` present? `iss` string (no `sub`/email needed).
-3. Confirm live Worker binding for `WORKOS_TOKEN_AUDIENCE` is empty or equals `WORKOS_CLIENT_ID` (name + equality only).
+1. After this branch deploys (or in wrangler/dev), one Sync tap should emit Worker console `access_token_verify_failed` with `{ code, payloadDecoded, hasAud, hasClientId }` only.
+2. Confirm live Worker binding for `WORKOS_TOKEN_AUDIENCE` is empty or equals `WORKOS_CLIENT_ID` (name + equality only).
 
 ## Out of scope / hard-stop env names (unchanged)
 
@@ -82,9 +83,9 @@ Absent locally for PowerSync mint / PlanetScale (not required to fix bearer veri
 
 ## Revision
 
-| Field | Value |
-| --- | --- |
-| Investigation branch | `cursor/sync-rpc-401-residual-b3d1` |
-| Base | `origin/main` @ `44fde92` |
-| Cert evidence tip | `8420b9ee8352` (#241) |
-| Skills | poteto-mode (laziness / fix-root-causes / prove-it-works): no speculative second binding patch |
+| Field                | Value                                                                                          |
+| -------------------- | ---------------------------------------------------------------------------------------------- |
+| Investigation branch | `cursor/sync-rpc-401-residual-b3d1`                                                            |
+| Base                 | `origin/main` @ `44fde92`                                                                      |
+| Cert evidence tip    | `8420b9ee8352` (#241)                                                                          |
+| Skills               | poteto-mode (laziness / fix-root-causes / prove-it-works): no speculative second binding patch |
