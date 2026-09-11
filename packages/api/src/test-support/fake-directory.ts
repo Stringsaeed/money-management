@@ -155,6 +155,13 @@ export function createFakeDirectory(start = new Date("2026-09-01T00:00:00.000Z")
       guard("getUser");
       return directory.users.get(userId) ?? null;
     },
+    async deleteUser(userId) {
+      guard("deleteUser");
+      directory.users.delete(userId);
+      for (const [id, row] of directory.memberships) {
+        if (row.userId === userId) directory.memberships.delete(id);
+      }
+    },
     async mintWidgetToken(input) {
       guard("mintWidgetToken");
       return { token: `widget-token:${input.userId}:${input.organizationId}` };

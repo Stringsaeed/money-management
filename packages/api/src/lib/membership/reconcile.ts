@@ -52,6 +52,8 @@ export function observationFromDirectory(
 
 /** Projects a User Trove has not seen yet, from the directory, so a membership row can reference it. */
 async function projectUnknownUser(deps: MembershipDeps, userId: string): Promise<boolean> {
+  const { isDeletedIdentity } = await import("../deletion/service");
+  if (await isDeletedIdentity(deps.db, userId, "user")) return false;
   const found = await deps.directory.getUser(userId);
   if (!found) return false;
   await ensureUserProjection(deps.db, {
@@ -156,15 +158,23 @@ export async function reconcileHouseholdMembersIfStale(
   await reconcileHouseholdMembers(deps, householdId);
 }
 
-export type EventOutcome = ProjectionOutcome | "tombstoned";
+export type EventOutcome = ProjectionOutcome | "tombstoned" | "ignored";
 
 /** Applies one verified WorkOS event to the projection. Safe to call for duplicates and out of order. */
 export async function applyHouseholdEvent(
   deps: MembershipDeps,
   event: HouseholdEvent,
 ): Promise<EventOutcome> {
+  const { isDeletedIdentity } = await import("../deletion/service");
   switch (event.kind) {
     case "membership": {
+      if (
+        !event.deleted &&
+        ((await isDeletedIdentity(deps.db, event.membership.userId, "user")) ||
+          (await isDeletedIdentity(deps.db, event.membership.organizationId, "organization")))
+      ) {
+        return "ignored";
+      }
       const observation = observationFromDirectory(event.membership, {
         status: event.deleted ? "inactive" : event.membership.status,
         observedAt: event.observedAt,

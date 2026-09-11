@@ -2,10 +2,10 @@ import type { HouseholdRole } from "@trove/protocol";
 import { z } from "zod";
 
 import { protectedProcedure } from "../index";
+import { requestHouseholdDeletion } from "../lib/deletion/service";
 import { createHouseholdDeps } from "../lib/households/deps";
 import {
   createHousehold,
-  deleteHousehold,
   getHousehold,
   inviteMember,
   leaveHousehold,
@@ -106,13 +106,16 @@ export const householdsRouter = {
     return { ok: true } as const;
   }),
 
-  delete: protectedProcedure.input(householdInput).handler(async ({ context, input }) => {
-    await deleteHousehold(createHouseholdDeps(), {
-      userId: requireUserId(context),
-      householdId: input.householdId,
-    });
-    return { ok: true } as const;
-  }),
+  delete: protectedProcedure
+    .input(householdInput.extend({ confirmName: z.string().min(1) }))
+    .handler(async ({ context, input }) => {
+      await requestHouseholdDeletion(createHouseholdDeps(), {
+        userId: requireUserId(context),
+        householdId: input.householdId,
+        confirmName: input.confirmName,
+      });
+      return { ok: true } as const;
+    }),
 
   /** Admin-only: a single-use code the app hands to the member-management web page. */
   widgetHandoff: protectedProcedure.input(householdInput).handler(({ context, input }) =>

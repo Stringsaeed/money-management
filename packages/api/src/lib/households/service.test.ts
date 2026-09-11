@@ -359,7 +359,11 @@ describe("deleteHousehold", () => {
       },
     ]);
 
-    await deleteHousehold(deps, { userId: ALICE.id, householdId: home.householdId });
+    await deleteHousehold(deps, {
+      userId: ALICE.id,
+      householdId: home.householdId,
+      confirmName: "Home",
+    });
 
     expect(directory.organizations.get(home.householdId)?.deleted).toBe(true);
     expect(await db.select().from(household)).toHaveLength(0);
@@ -372,7 +376,11 @@ describe("deleteHousehold", () => {
     bobJoins(home.householdId);
     await listMyHouseholds(deps, BOB);
     await expect(
-      deleteHousehold(deps, { userId: BOB.id, householdId: home.householdId }),
+      deleteHousehold(deps, {
+        userId: BOB.id,
+        householdId: home.householdId,
+        confirmName: "Home",
+      }),
     ).rejects.toThrow(/admin/);
   });
 });

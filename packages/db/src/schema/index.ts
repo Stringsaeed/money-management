@@ -6,4 +6,5 @@ export * from "./ledger-scope";
 export * from "./recurring";
 export * from "./commands";
 export * from "./household";
+export * from "./deletion";
 export {};

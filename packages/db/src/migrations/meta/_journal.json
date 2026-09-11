@@ -50,6 +50,13 @@
       "when": 1788840000000,
       "tag": "0013_workos_households",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788843600000,
+      "tag": "0014_deletion_ops",
+      "breakpoints": true
     }
   ]
 }

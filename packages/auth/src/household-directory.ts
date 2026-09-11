@@ -69,6 +69,8 @@ export interface HouseholdDirectory {
   deleteMembership(membershipId: string): Promise<void>;
   sendInvitation(input: SendInvitationInput): Promise<DirectoryInvitation>;
   getUser(userId: string): Promise<DirectoryUser | null>;
+  /** Idempotent: a missing User is success (already deleted). */
+  deleteUser(userId: string): Promise<void>;
   mintWidgetToken(input: {
     readonly userId: string;
     readonly organizationId: string;
@@ -185,6 +187,14 @@ export function createWorkOSHouseholdDirectory(apiKey: string): HouseholdDirecto
         const parsed = sdkFailureSchema.safeParse(error);
         if (parsed.success && parsed.data.status === 404) return null;
         throw error;
+      }
+    },
+    async deleteUser(userId) {
+      try {
+        await workos.userManagement.deleteUser(userId);
+      } catch (error) {
+        const parsed = sdkFailureSchema.safeParse(error);
+        if (!(parsed.success && parsed.data.status === 404)) throw error;
       }
     },
     async mintWidgetToken(input) {
