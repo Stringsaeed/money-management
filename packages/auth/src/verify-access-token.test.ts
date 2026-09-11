@@ -307,6 +307,46 @@ describe("verifyAccessToken", () => {
     ).rejects.toMatchObject({ code: "claim_sub" });
   });
 
+  it("accepts AuthKit tokens whose iss is the custom auth hostname", async () => {
+    const { privateKey, jwks } = await testKeys();
+    const customIss = "https://auth.trove.ing";
+    const token = await sign(
+      privateKey,
+      {
+        sub: "user_01CUSTOMISS",
+        email: "custom-iss@trove.ing",
+        client_id: CLIENT_ID,
+      },
+      { audience: false, issuer: customIss },
+    );
+
+    await expect(
+      verifyAccessToken(token, {
+        clientId: CLIENT_ID,
+        audience: CLIENT_ID,
+        issuer: ISSUER,
+        authHostname: "auth.trove.ing",
+        jwks,
+      }),
+    ).resolves.toMatchObject({ user: { id: "user_01CUSTOMISS" } });
+
+    // Still reject unrelated issuers even when authHostname is set.
+    const evil = await sign(
+      privateKey,
+      { sub: "user_01EVILISS", email: "evil@trove.ing", client_id: CLIENT_ID },
+      { audience: false, issuer: "https://evil.example" },
+    );
+    await expect(
+      verifyAccessToken(evil, {
+        clientId: CLIENT_ID,
+        audience: CLIENT_ID,
+        issuer: ISSUER,
+        authHostname: "auth.trove.ing",
+        jwks,
+      }),
+    ).rejects.toMatchObject({ code: "claim_iss" });
+  });
+
   it("parses bearer headers and publishes the live JWKS URL shape", () => {
     expect(readBearerToken("Bearer abc.def")).toBe("abc.def");
     expect(readBearerToken(null)).toBeNull();

@@ -80,6 +80,11 @@ export const server = Cloudflare.Worker(
         WORKOS_TOKEN_ISSUER: Config.string("WORKOS_TOKEN_ISSUER").pipe(
           Config.withDefault("https://api.workos.com"),
         ),
+        // Custom AuthKit auth domain hostname → access-token `iss` is https://{host}.
+        // Without this, jose rejects live tokens with claim_iss while defaulting to api.workos.com.
+        WORKOS_AUTH_HOSTNAME: Config.string("WORKOS_AUTH_HOSTNAME").pipe(
+          Config.withDefault(AUTH_HOSTNAME),
+        ),
         // Signing secret of the WorkOS webhook endpoint that feeds the Membership
         // projection. Empty disables the route (503) rather than accepting
         // unsigned events.

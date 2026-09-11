@@ -2,6 +2,7 @@ import { createRemoteJWKSet, errors, jwtVerify, type JWTPayload, type JWTVerifyG
 import { z } from "zod";
 
 import type { AuthSession, AuthUser, WorkOSTokenVerifyConfig } from "./session";
+import { resolveIssuerCandidates } from "./workos-env";
 
 export type TokenVerifyFailureCode =
   | "missing_token"
@@ -98,9 +99,10 @@ export async function verifyAccessToken(
     throw new TokenVerifyError("verification_unavailable", "WorkOS issuer is not configured.");
   }
 
-  const issuer = config.issuer.endsWith("/")
-    ? [config.issuer, config.issuer.slice(0, -1)]
-    : [config.issuer, `${config.issuer}/`];
+  const issuer = resolveIssuerCandidates({
+    issuer: config.issuer,
+    authHostname: config.authHostname,
+  });
 
   try {
     // WorkOS AuthKit session tokens carry `client_id` and omit `aud` unless a
