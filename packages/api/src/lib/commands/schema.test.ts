@@ -61,18 +61,17 @@ describe("commandEnvelopeSchema", () => {
 });
 
 describe("resolveCommandScope", () => {
-  const envelope = { commandId: base.commandId, kind: "account.create", payload: {} };
-
   it("binds a personal scope to the authenticated user, never the payload", () => {
-    const scope = resolveCommandScope({ ...envelope, scope: { type: "personal" } }, "user-alice");
-    expect(scope).toEqual({ type: "personal", userId: "user-alice" });
-    expect(commandLedgerId({ ...envelope, scope: { type: "personal" } }, "user-alice")).toBe(
-      personalLedgerId("user-alice"),
-    );
+    const envelope = { scope: { type: "personal" } } as const;
+    expect(resolveCommandScope(envelope, "user-alice")).toEqual({
+      type: "personal",
+      userId: "user-alice",
+    });
+    expect(commandLedgerId(envelope, "user-alice")).toBe(personalLedgerId("user-alice"));
   });
 
   it("reads a bare householdId as an organization scope", () => {
-    expect(resolveCommandScope({ ...envelope, householdId: "household-1" }, "user-alice")).toEqual({
+    expect(resolveCommandScope({ householdId: "household-1" }, "user-alice")).toEqual({
       type: "organization",
       organizationId: "household-1",
     });
@@ -80,14 +79,14 @@ describe("resolveCommandScope", () => {
 
   it("lets an explicit scope win over a legacy householdId", () => {
     const scope = resolveCommandScope(
-      { ...envelope, householdId: "household-1", scope: { type: "personal" } },
+      { householdId: "household-1", scope: { type: "personal" } },
       "user-alice",
     );
     expect(scope).toEqual({ type: "personal", userId: "user-alice" });
   });
 
   it("returns null when the envelope names no ledger", () => {
-    expect(resolveCommandScope(envelope, "user-alice")).toBeNull();
-    expect(commandLedgerId(envelope, "user-alice")).toBeNull();
+    expect(resolveCommandScope({}, "user-alice")).toBeNull();
+    expect(commandLedgerId({}, "user-alice")).toBeNull();
   });
 });
