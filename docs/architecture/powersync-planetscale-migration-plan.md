@@ -211,7 +211,7 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 - [ ] Edit `packages/env/src/server.ts`. Replace `DB` with `HYPERDRIVE_FRESH`.
 - [ ] Edit `packages/api/src/lib/commands/pipeline.ts`, `statements.ts`, and `packages/api/src/lib/commands/import-bundle.ts`. Remove the D1 `batch()` path and its 100-bind chunking. Use one `db.transaction` per command with `pg_advisory_xact_lock(hashtext(householdId))` where the pipeline serialized before.
 - [ ] Edit `packages/api/src/lib/recurring/d1-store.ts`. Rename to `pg-store.ts`. Replace `unixepoch`, `GLOB`, and `json_each` with Postgres equivalents.
-- [ ] Edit `packages/auth/src/index.ts`. Switch the better-auth drizzle adapter provider to `pg`.
+- [x] Auth uses WorkOS JWT verification in `packages/auth` (Better Auth removed in #231).
 - [ ] Edit `packages/api/**/*.test.ts` from libsql memory to `pglite` or a Postgres testcontainer. One helper in `packages/api/src/test-support/db.ts`.
 - [ ] Create `docs/architecture/cutover-d1-to-planetscale.md`. The runbook to export D1, import into PlanetScale, and flip the binding.
 - [ ] Edit `docs/architecture/backend-architecture.md`. Replace D1 with PlanetScale Postgres and Hyperdrive.

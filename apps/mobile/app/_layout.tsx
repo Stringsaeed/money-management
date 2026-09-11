@@ -40,7 +40,7 @@ import { AppUpdateProvider } from "@/components/updates/app-update-provider";
 import { MandatoryUpdateGate } from "@/components/updates/mandatory-update-gate";
 import { RecurringSettlementBanner } from "@/components/recurring/recurring-settlement-banner";
 import { RecurringSettlementProvider } from "@/components/recurring/recurring-settlement-provider";
-import { AccessProvider, AuthLinkGate } from "@/modules/access";
+import { AccessProvider } from "@/modules/access";
 import { RecurringRulesProvider } from "@/modules/recurring-rules/provider";
 import { LedgerDataSourceGate } from "@/modules/ledger-data-source/ledger-data-source-gate";
 
@@ -179,7 +179,6 @@ export default function RootLayout() {
                                 <SyncModeBanner />
                                 <AccessBanner />
                                 <LedgerToaster />
-                                <AuthLinkGate />
                                 <PortalHost />
                               </AppUpdateProvider>
                             </ThemeProvider>

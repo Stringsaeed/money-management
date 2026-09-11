@@ -57,6 +57,13 @@
       "when": 1788843600000,
       "tag": "0014_deletion_ops",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788847200000,
+      "tag": "0015_remove_legacy_auth_and_private_accounts",
+      "breakpoints": true
     }
   ]
 }

@@ -86,15 +86,9 @@ export const server = Cloudflare.Worker(
         WORKOS_WEBHOOK_SECRET: Config.redacted("WORKOS_WEBHOOK_SECRET").pipe(
           Config.withDefault(Redacted.make("")),
         ),
-        // Retained until #231 removes Better Auth cutover checks; unused on the active auth path.
-        BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
-        BETTER_AUTH_URL: Cloudflare.Worker.URL,
         POWERSYNC_URL: Config.string("POWERSYNC_URL"),
         POWERSYNC_JWT_PRIVATE_KEY: Config.redacted("POWERSYNC_JWT_PRIVATE_KEY"),
         POWERSYNC_JWT_KID: Config.string("POWERSYNC_JWT_KID"),
-        EMAIL: Cloudflare.Email.SendEmail("EMAIL", {
-          allowedSenderAddresses: ["noreply@trove.ing"],
-        }),
         KILL_SWITCH_LOCAL_ONLY: Config.string("KILL_SWITCH_LOCAL_ONLY").pipe(
           Config.withDefault("off"),
         ),

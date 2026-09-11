@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { ORPCError } from "@orpc/server";
 import { and, eq } from "drizzle-orm";
 
-import { account, session, user } from "@trove/db/schema/auth";
+import { user } from "@trove/db/schema/auth";
 import { deletedIdentity, deletionOperation } from "@trove/db/schema/deletion";
 import { household, membership } from "@trove/db/schema/household";
 import { ledger } from "@trove/db/schema/ledger-scope";
@@ -108,8 +108,7 @@ export async function advanceDeletionOperation(
     .set({ status: "running", attempts: operation.attempts + 1, lastError: null })
     .where(eq(deletionOperation.id, operation.id));
 
-  const stepCount =
-    operation.kind === "household" ? HOUSEHOLD_STEPS.length : USER_STEPS.length;
+  const stepCount = operation.kind === "household" ? HOUSEHOLD_STEPS.length : USER_STEPS.length;
   let cursor = operation.cursor;
 
   try {
@@ -207,8 +206,7 @@ async function runUserStep(
       return;
     }
     case "clear_credentials":
-      await deps.db.delete(session).where(eq(session.userId, userId));
-      await deps.db.delete(account).where(eq(account.userId, userId));
+      // Better Auth session/account tables removed (#231); step kept for in-flight ops.
       return;
     case "delete_workos_user":
       await deps.directory.deleteUser(userId);

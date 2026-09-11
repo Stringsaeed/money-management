@@ -68,8 +68,7 @@ export const createSyncedBudgetingCoordinator = (
           (row) =>
             row.ledger_id === options.binding.ledgerId &&
             row.currency === currency &&
-            row.lifecycle === "active" &&
-            row.visibility === "public",
+            row.lifecycle === "active",
         )
         .map((row) => ({
           id: row.id,

@@ -79,7 +79,7 @@ export const createLocalAccountPort = (
       }),
     updateAccount: (id: string, data: AccountUpdate) =>
       runner.run("mutation.account-update", () => {
-        const { visibility: _ignored, ...changes } = data;
+        const changes = data;
         return updateAccountWithRecurringRules(sqlite, {
           accountId: id,
           changes,

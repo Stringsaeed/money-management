@@ -45,12 +45,12 @@ test("streams the Personal Ledger eagerly, scoped by the ledger's owner", () => 
   }
 });
 
-test("keeps private-account filters on personal recurring the same as household", () => {
+test("scopes personal recurring rules to ledger-owned accounts without visibility gating", () => {
   const [rules, occurrences] = config.streams.personal_ledger.queries.slice(-2);
   assert.match(rules, /FROM recurring_rules/);
   assert.match(occurrences, /FROM recurring_occurrences/);
   for (const query of [rules, occurrences]) {
-    assert.match(query, /visibility = 'public' OR owner_user_id = auth\.user_id\(\)/);
+    assert.doesNotMatch(query, /visibility/);
     assert.match(query, /account_id IS NULL OR account_id IN/);
     assert.match(query, /to_account_id IS NULL OR to_account_id IN/);
   }
@@ -92,15 +92,15 @@ test("guards every household query by the subscription and signed-in membership"
   }
 });
 
-test("keeps private accounts and their transactions visible only to their owner", () => {
+test("streams all household accounts and transactions to active members", () => {
   const [accounts, categories, transactions] = config.streams.household_ledger.queries;
   assert.match(accounts, /FROM accounts/);
-  assert.match(accounts, /visibility = 'public' OR owner_user_id = auth\.user_id\(\)/);
+  assert.doesNotMatch(accounts, /visibility/);
   assert.match(categories, /FROM categories/);
   assert.match(transactions, /FROM transactions/);
   assert.match(transactions, /account_id IN/);
   assert.match(transactions, /to_account_id IS NULL OR to_account_id IN/);
-  assert.match(transactions, /visibility = 'public' OR owner_user_id = auth\.user_id\(\)/g);
+  assert.doesNotMatch(transactions, /visibility/);
 });
 
 test("publishes every budget table through a membership-guarded household stream", () => {
@@ -125,7 +125,7 @@ test("publishes every budget table through a membership-guarded household stream
   }
 });
 
-test("publishes recurring rules and occurrences without leaking private-account schedules", () => {
+test("publishes household recurring rules and occurrences to active members", () => {
   const stream = config.streams.household_recurring;
   assert.equal(stream.accept_potentially_dangerous_queries, true);
   assert.equal(stream.queries.length, 2);
@@ -133,7 +133,7 @@ test("publishes recurring rules and occurrences without leaking private-account 
     assert.match(query, /household_id = subscription\.parameter\('household_id'\)/);
     assert.match(query, /SELECT household_id\s+FROM membership/);
     assert.match(query, /user_id = auth\.user_id\(\)/);
-    assert.match(query, /visibility = 'public' OR owner_user_id = auth\.user_id\(\)/);
+    assert.doesNotMatch(query, /visibility/);
   }
   assert.match(stream.queries[0], /FROM recurring_rules/);
   assert.match(stream.queries[1], /FROM recurring_occurrences/);

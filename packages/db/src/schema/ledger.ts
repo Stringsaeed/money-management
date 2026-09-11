@@ -18,7 +18,6 @@ import { ledger } from "./ledger-scope";
 const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 
 const ACCOUNT_TYPES = ["cash", "bank", "card"] as const;
-const ACCOUNT_VISIBILITIES = ["public", "private"] as const;
 const CATEGORY_TYPES = ["income", "expense"] as const;
 const TRANSACTION_TYPES = ["expense", "income", "transfer"] as const;
 
@@ -44,7 +43,7 @@ export const ledgerAccount = pgTable(
       .notNull()
       .default("active"),
     lifecycleChangedAt: timestamptz("lifecycle_changed_at"),
-    visibility: text("visibility", { enum: ACCOUNT_VISIBILITIES }).notNull().default("public"),
+    /** Attribution for anonymization on deletion; all Household Accounts are shared. */
     ownerUserId: text("owner_user_id").references(() => auth.user.id),
     version: integer("version").notNull().default(0),
     createdBy: text("created_by")
@@ -65,20 +64,12 @@ export const ledgerAccount = pgTable(
     check("accounts_lifecycle_valid", sql`${table.lifecycle} IN ('active', 'archived')`),
     check("accounts_type_valid", sql`${table.type} IN ('cash', 'bank', 'card')`),
     check(
-      "accounts_private_owner_required",
-      sql`${table.visibility} = 'public' OR ${table.ownerUserId} IS NOT NULL`,
-    ),
-    check(
       "accounts_household_required_for_organization",
       sql`${table.householdId} IS NOT NULL OR ${table.ledgerId} LIKE 'personal:%'`,
     ),
     index("accounts_household_lifecycle_idx").on(table.householdId, table.lifecycle),
     index("accounts_ledger_lifecycle_idx").on(table.ledgerId, table.lifecycle),
-    index("accounts_household_visibility_owner_idx").on(
-      table.householdId,
-      table.visibility,
-      table.ownerUserId,
-    ),
+    index("accounts_household_owner_idx").on(table.householdId, table.ownerUserId),
   ],
 );
 

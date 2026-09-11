@@ -21,7 +21,6 @@ const account: PowerSyncAccountRow = {
   sort_order: 0,
   lifecycle: "active",
   lifecycle_changed_at: null,
-  visibility: "public",
   owner_user_id: USER_ID,
   version: 0,
   created_by: USER_ID,

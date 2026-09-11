@@ -23,7 +23,7 @@ beforeEach(async () => {
   ]);
   await db.insert(household).values({
     id: HOUSEHOLD_ID,
-    name: "Privacy Household",
+    name: "Shared Household",
     createdByUserId: OWNER,
   });
   await db.insert(membership).values([
@@ -39,7 +39,7 @@ beforeEach(async () => {
     {
       ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
-      id: "account-public",
+      id: "account-a",
       name: "Shared checking",
       type: "bank",
       currency: "USD",
@@ -47,32 +47,30 @@ beforeEach(async () => {
       createdBy: OWNER,
       updatedBy: OWNER,
       ownerUserId: OWNER,
-      visibility: "public",
     },
     {
       ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
-      id: "account-private",
-      name: "Personal checking",
+      id: "account-b",
+      name: "Joint savings",
       type: "bank",
       currency: "USD",
       version: 0,
       createdBy: OWNER,
       updatedBy: OWNER,
       ownerUserId: OWNER,
-      visibility: "private",
     },
   ]);
   await db.insert(transaction).values([
     {
       ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
-      id: "transaction-public",
+      id: "transaction-a",
       type: "income",
       amountMinor: 1000,
       currency: "USD",
       date: "2026-02-01",
-      accountId: "account-public",
+      accountId: "account-a",
       version: 0,
       createdBy: OWNER,
       updatedBy: OWNER,
@@ -80,12 +78,12 @@ beforeEach(async () => {
     {
       ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
-      id: "transaction-private",
+      id: "transaction-b",
       type: "income",
       amountMinor: 1000,
       currency: "USD",
       date: "2026-02-02",
-      accountId: "account-private",
+      accountId: "account-b",
       version: 0,
       createdBy: OWNER,
       updatedBy: OWNER,
@@ -93,36 +91,28 @@ beforeEach(async () => {
   ]);
 });
 
-describe("ledger privacy reads", () => {
-  it("returns private accounts and transactions only to their owner", async () => {
+describe("ledger reads", () => {
+  it("returns all household accounts and transactions to every member", async () => {
     await expect(
       listAccounts(db, { userId: OWNER, householdId: HOUSEHOLD_ID }),
     ).resolves.toHaveLength(2);
     await expect(
-      listTransactions(db, { userId: OWNER, householdId: HOUSEHOLD_ID }, 10),
-    ).resolves.toMatchObject({
-      transactions: [{ id: "transaction-private" }, { id: "transaction-public" }],
-    });
-
-    await expect(
       listAccounts(db, { userId: MEMBER, householdId: HOUSEHOLD_ID }),
-    ).resolves.toMatchObject([{ id: "account-public" }]);
+    ).resolves.toHaveLength(2);
+
     await expect(
       listTransactions(db, { userId: MEMBER, householdId: HOUSEHOLD_ID }, 10),
     ).resolves.toMatchObject({
-      transactions: [{ id: "transaction-public" }],
+      transactions: [{ id: "transaction-b" }, { id: "transaction-a" }],
     });
   });
 });
 
 describe("transaction detail", () => {
-  it("applies the same private visibility predicate to detail reads", async () => {
+  it("allows any member to read transactions on shared accounts", async () => {
     await expect(
-      getTransaction(db, { userId: OWNER, householdId: HOUSEHOLD_ID }, "transaction-private"),
-    ).resolves.toMatchObject({ id: "transaction-private" });
-    await expect(
-      getTransaction(db, { userId: MEMBER, householdId: HOUSEHOLD_ID }, "transaction-private"),
-    ).resolves.toBeNull();
+      getTransaction(db, { userId: MEMBER, householdId: HOUSEHOLD_ID }, "transaction-b"),
+    ).resolves.toMatchObject({ id: "transaction-b" });
   });
 });
 
@@ -137,7 +127,7 @@ describe("transaction pagination", () => {
         amountMinor: 100,
         currency: "USD",
         date: "2026-03-01",
-        accountId: "account-public",
+        accountId: "account-a",
         version: 0,
         createdBy: OWNER,
         updatedBy: OWNER,
@@ -150,7 +140,7 @@ describe("transaction pagination", () => {
         amountMinor: 100,
         currency: "USD",
         date: "2026-03-01",
-        accountId: "account-public",
+        accountId: "account-a",
         version: 0,
         createdBy: OWNER,
         updatedBy: OWNER,
@@ -163,7 +153,7 @@ describe("transaction pagination", () => {
         amountMinor: 100,
         currency: "USD",
         date: "2026-03-01",
-        accountId: "account-public",
+        accountId: "account-a",
         version: 0,
         createdBy: OWNER,
         updatedBy: OWNER,
@@ -182,7 +172,7 @@ describe("transaction pagination", () => {
       "transaction-same-c",
       "transaction-same-b",
       "transaction-same-a",
-      "transaction-public",
+      "transaction-b",
     ]);
   });
 });

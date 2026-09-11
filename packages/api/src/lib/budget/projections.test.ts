@@ -313,12 +313,12 @@ describe("period projections", () => {
     ).toEqual([10000, 10000, 10000]);
   });
 
-  it("excludes private accounts and their spending from shared projections", async () => {
+  it("includes every household account in shared funding projections", async () => {
     await seedFundingAccount("acc-shared", 10000);
     await seedFundingAccount("acc-private", 50000);
     await db
       .update(ledgerAccount)
-      .set({ ownerUserId: OWNER, visibility: "private" })
+      .set({ ownerUserId: OWNER })
       .where(eq(ledgerAccount.id, "acc-private"));
     await seedEnvelope("env-groceries");
     await seedCategory("cat-groceries");
@@ -343,10 +343,10 @@ describe("period projections", () => {
 
     const { projections } = await read();
     const january = projections[0];
-    expect(january.fundingPoolMinor).toBe(10000);
+    expect(january.fundingPoolMinor).toBe(59500);
     expect(
       january.envelopes.find((item) => item.envelopeId === "env-groceries")?.availableMinor,
-    ).toBe(2000);
+    ).toBe(1500);
   });
 
   it("routes card spending through availability without going negative, reporting Unfunded Card Spending", async () => {

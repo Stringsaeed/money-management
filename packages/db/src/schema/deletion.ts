@@ -31,10 +31,7 @@ export const deletionOperation = pgTable(
       .notNull(),
   },
   (table) => [
-    check(
-      "deletion_operation_kind_valid",
-      sql`${table.kind} IN ('user', 'household')`,
-    ),
+    check("deletion_operation_kind_valid", sql`${table.kind} IN ('user', 'household')`),
     check(
       "deletion_operation_status_valid",
       sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed')`,
@@ -56,10 +53,5 @@ export const deletedIdentity = pgTable(
     deletedAt: timestamptz("deleted_at").defaultNow().notNull(),
     reason: text("reason").notNull().default("user_request"),
   },
-  (table) => [
-    check(
-      "deleted_identity_kind_valid",
-      sql`${table.kind} IN ('user', 'organization')`,
-    ),
-  ],
+  (table) => [check("deleted_identity_kind_valid", sql`${table.kind} IN ('user', 'organization')`)],
 );

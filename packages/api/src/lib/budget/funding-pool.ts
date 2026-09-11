@@ -84,13 +84,11 @@ export function fundingPoolSql(ledgerId: string, currency: string, period: strin
                   SELECT 1 FROM accounts source
                   WHERE source.ledger_id = t.ledger_id
                     AND source.id = t.account_id
-                    AND source.visibility = 'public'
                 )
                 AND EXISTS (
                   SELECT 1 FROM accounts destination
                   WHERE destination.ledger_id = t.ledger_id
                     AND destination.id = t.to_account_id
-                    AND destination.visibility = 'public'
                 )
               )
             )
@@ -98,7 +96,7 @@ export function fundingPoolSql(ledgerId: string, currency: string, period: strin
       FROM accounts a
       WHERE a.ledger_id = ${ledgerId}
         AND a.currency = ${currency}
-        AND a.visibility = 'public'
+       
         AND a.id IN (SELECT jsonb_array_elements_text((${members})::jsonb))
     )
   )`;

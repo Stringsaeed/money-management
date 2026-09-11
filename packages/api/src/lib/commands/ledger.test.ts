@@ -171,7 +171,7 @@ describe("ledger commands — accounts", () => {
     expectApplied(
       await applyAs(OWNER, {
         ...makeEnvelope("account.update"),
-        payload: { accountId: "acc-1", name: "Everyday", visibility: "private" },
+        payload: { accountId: "acc-1", name: "Everyday" },
       }),
     );
 
@@ -179,48 +179,7 @@ describe("ledger commands — accounts", () => {
     expect(rows[0].name).toBe("Everyday");
     expect(rows[0].version).toBe(1);
     expect(rows[0].updatedBy).toBe(OWNER);
-    expect(rows[0].visibility).toBe("private");
     expect(rows[0].ownerUserId).toBe(OWNER);
-  });
-
-  it("keeps private accounts writable only by their owner", async () => {
-    await seedAccount({ ownerUserId: OWNER, visibility: "private" });
-
-    await expect(
-      applyAs(ADMIN, {
-        ...makeEnvelope("account.update"),
-        payload: { accountId: "acc-1", name: "Not yours" },
-      }),
-    ).resolves.toMatchObject({ kind: "forbidden", requiredCapability: "accounts:private.owner" });
-
-    await expect(
-      applyAs(ADMIN, {
-        ...makeEnvelope("account.archive"),
-        payload: { accountId: "acc-1" },
-      }),
-    ).resolves.toMatchObject({ kind: "forbidden", requiredCapability: "accounts:private.owner" });
-  });
-
-  it("refuses to privatize an account with active Funding Membership", async () => {
-    await seedAccount();
-    await db.insert(fundingMembership).values({
-      ledgerId: HOUSEHOLD_ID,
-      householdId: HOUSEHOLD_ID,
-      accountId: "acc-1",
-      currency: "USD",
-      active: true,
-      effectiveFromPeriod: "2026-01",
-      version: 0,
-      createdBy: OWNER,
-      updatedBy: OWNER,
-    });
-
-    await expect(
-      applyAs(OWNER, {
-        ...makeEnvelope("account.update"),
-        payload: { accountId: "acc-1", visibility: "private" },
-      }),
-    ).resolves.toMatchObject({ kind: "invalid_intent" });
   });
 
   it("archives instead of deleting (ADR-0009) and stamps lifecycleChangedAt", async () => {
@@ -401,42 +360,6 @@ describe("ledger commands — transactions", () => {
     expect(changes.map(({ seq }) => seq)).toEqual(
       Array.from({ length: 20 }, (_, index) => index + 1),
     );
-  });
-
-  it("rejects a household member writing a private account transaction", async () => {
-    await db
-      .update(ledgerAccount)
-      .set({ ownerUserId: OWNER, visibility: "private" })
-      .where(eq(ledgerAccount.id, "acc-1"));
-    await seedTransaction({ id: "private-transaction" });
-    await seedAccount({ id: "acc-public", name: "Shared Account" });
-
-    await expect(
-      applyAs(MEMBER, {
-        ...makeEnvelope("transaction.create"),
-        payload: {
-          type: "expense",
-          amountMinor: 4200,
-          date: "2026-02-10",
-          accountId: "acc-1",
-          categoryId: "cat-1",
-        },
-      }),
-    ).resolves.toMatchObject({ kind: "forbidden", requiredCapability: "accounts:private.owner" });
-
-    await expect(
-      applyAs(MEMBER, {
-        ...makeEnvelope("transaction.remove"),
-        payload: { transactionId: "private-transaction" },
-      }),
-    ).resolves.toMatchObject({ kind: "forbidden", requiredCapability: "accounts:private.owner" });
-
-    await expect(
-      applyAs(MEMBER, {
-        ...makeEnvelope("transaction.edit"),
-        payload: { transactionId: "private-transaction", accountId: "acc-public" },
-      }),
-    ).resolves.toMatchObject({ kind: "forbidden", requiredCapability: "accounts:private.owner" });
   });
 
   it("validates transfer shape with typed rejections", async () => {
