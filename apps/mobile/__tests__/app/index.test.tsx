@@ -54,7 +54,7 @@ jest.mock("@/components/home/home-list-header", () => ({
 }));
 
 describe("app/index", () => {
-  it("redirects to onboarding when there are no accounts", async () => {
+  it("renders home when there are no accounts while onboarding is disabled", async () => {
     mockUseHomeScreen.mockReturnValue({
       accounts: [],
       hasAnyAccounts: false,
@@ -70,7 +70,7 @@ describe("app/index", () => {
 
     await render(<HomeScreen />);
 
-    expect(screen.getByText("redirect:/onboarding")).toBeOnTheScreen();
+    expect(screen.getByText("header")).toBeOnTheScreen();
   });
 
   it("renders loading state", async () => {

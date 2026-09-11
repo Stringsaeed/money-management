@@ -4,6 +4,7 @@ import { Alert, Pressable } from "react-native";
 
 import { useEraseLocalData } from "@/components/settings/use-erase-local-data";
 import { Text } from "@/components/ui/text";
+import { ONBOARDING_ENABLED } from "@/constants/onboarding";
 
 export function EraseLocalDataControl() {
   const erase = useEraseLocalData();
@@ -25,7 +26,7 @@ export function EraseLocalDataControl() {
             setErasing(true);
             try {
               await run();
-              router.replace("/onboarding");
+              router.replace(ONBOARDING_ENABLED ? "/onboarding" : "/");
             } catch {
               Alert.alert("Error", "Failed to erase data — please try again.");
             } finally {

@@ -305,7 +305,7 @@ describe("app/settings", () => {
       await erasePromise;
     });
 
-    expect(mockReplace).toHaveBeenCalledWith("/onboarding");
+    expect(mockReplace).toHaveBeenCalledWith("/");
   });
 
   it("disables erase while synced, including offline_cached", async () => {
