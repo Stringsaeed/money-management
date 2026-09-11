@@ -1,23 +1,34 @@
 import { View } from "react-native";
 
-import { NativeHost, NativePrimaryButton } from "@/components/native-ui";
+import { NativeHost, NativePrimaryButton, NativeSecondaryButton } from "@/components/native-ui";
 import { Text } from "@/components/ui/text";
 import { useEnablePersonalSync } from "@/hooks/use-enable-sync";
 
 const BUTTON_LABEL = {
   idle: "Sync just for me",
+  probing: "Checking cloud…",
+  confirm_upload: "Upload once to cloud",
+  backing_up: "Backing up…",
+  uploading: "Uploading…",
+  verifying: "Verifying…",
   connecting: "Connecting…",
   enabled: "Synced",
   error: "Try again",
 } as const;
 
 /**
- * Turns on a Personal Ledger (#226): cloud sync for a signed-in User who has
- * no Household. The cloud ledger starts empty and this device's local rows are
- * left untouched, so nothing is uploaded and nothing is lost.
+ * Personal Ledger sync (#226 / #229): empty cloud with local rows needs a
+ * one-time confirm upload; a populated cloud opens without touching device SQLite.
  */
 export function PersonalSyncCard({ alreadyEnabled }: { readonly alreadyEnabled: boolean }) {
-  const { status, error, enablePersonalSync } = useEnablePersonalSync();
+  const {
+    status,
+    cloudMode,
+    error,
+    enablePersonalSync,
+    confirmPersonalUpload,
+    cancelPersonalUpload,
+  } = useEnablePersonalSync();
 
   if (alreadyEnabled || status === "enabled") {
     return (
@@ -30,20 +41,55 @@ export function PersonalSyncCard({ alreadyEnabled }: { readonly alreadyEnabled: 
     );
   }
 
+  if (status === "confirm_upload") {
+    return (
+      <View className="gap-3 px-4 py-4">
+        <Text className="font-heading-normal text-lg italic text-ink">
+          Upload to your cloud? ☁️
+        </Text>
+        <Text className="font-body-normal text-xs text-ink/40">
+          Your personal cloud is empty and this device has local accounts and transactions. Confirm
+          once to copy them up — sign-in alone never uploads. Your on-device ledger stays here for
+          local-only use anytime.
+        </Text>
+        <NativeHost>
+          <NativePrimaryButton
+            label={BUTTON_LABEL.confirm_upload}
+            onPress={confirmPersonalUpload}
+            testID="confirm-personal-upload"
+          />
+          <NativeSecondaryButton
+            label="Not now"
+            onPress={cancelPersonalUpload}
+            testID="cancel-personal-upload"
+          />
+        </NativeHost>
+      </View>
+    );
+  }
+
+  const busy =
+    status === "probing" ||
+    status === "backing_up" ||
+    status === "uploading" ||
+    status === "verifying" ||
+    status === "connecting";
+
   return (
     <View className="gap-3 px-4 py-4">
       <Text className="font-heading-normal text-lg italic text-ink">
         Sync without a Household 🪪
       </Text>
       <Text className="font-body-normal text-xs text-ink/40">
-        Keep a personal ledger in the cloud on your own. It starts empty — everything already on
-        this device stays here — and you can still create or join a Household later.
+        {cloudMode === "populated"
+          ? "Your personal cloud already has data. Opening sync reads that ledger — everything on this device stays on this device, with no merge step."
+          : "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."}
       </Text>
       <NativeHost>
         <NativePrimaryButton
           label={BUTTON_LABEL[status]}
           onPress={enablePersonalSync}
-          disabled={status === "connecting"}
+          disabled={busy}
           testID="enable-personal-sync"
         />
       </NativeHost>

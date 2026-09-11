@@ -9,13 +9,14 @@ import {
 import { generateId } from "@/utils/id";
 
 import { buildImportChunks } from "./chunks";
+import type { ImportLedgerBinding } from "./import-binding";
 import { computeLocalManifest, computeLocalManifestFromChunks, type LocalDb } from "./manifest";
 
 /** Transport seam so the core stays testable without oRPC. */
 export type SendImportCommand = (
   envelope: CommandEnvelope<ImportBundlePayload>,
 ) => Promise<CommandResult>;
-export type FetchManifest = (householdId: string) => Promise<ImportManifest>;
+export type FetchManifest = () => Promise<ImportManifest>;
 
 export type ImportResult =
   | { status: "matched"; localManifest: ImportManifest; serverManifest: ImportManifest }
@@ -29,37 +30,38 @@ export type ImportResult =
 
 export interface RunImportArgs {
   db: LocalDb;
-  householdId: string;
+  binding: ImportLedgerBinding;
   sendCommand: SendImportCommand;
   fetchManifest: FetchManifest;
-  connectAndWait?: (householdId: string) => Promise<void>;
+  connectAndWait?: () => Promise<void>;
+}
+
+function importEnvelope(
+  binding: ImportLedgerBinding,
+  chunk: ImportBundlePayload,
+): CommandEnvelope<ImportBundlePayload> {
+  const base = { commandId: generateId(), kind: "import_bundle" as const, payload: chunk };
+  if (binding.kind === "personal") {
+    return { ...base, scope: { type: "personal" as const } };
+  }
+  return { ...base, householdId: binding.householdId };
 }
 
 /**
- * The local-to-cloud migration's upload + verification core (#98): computes
+ * The local-to-cloud migration's upload + verification core (#98 / #229): computes
  * the client's manifest, uploads every local row as dependency-ordered
  * `import_bundle` chunks, then compares against the server's post-import
  * recompute. Stops at the first rejected chunk instead of sending the rest.
- *
- * Callers own everything outside the upload itself: creating the household,
- * the pre-import SQLite backup, and — only on a `"matched"` result —
- * flipping sync mode, truncating the outbox, and re-seeding the sync
- * watermark. A `"mismatched"`/`"rejected"` result leaves all of that alone
- * so the backup and the paused state stay intact for the user to inspect.
  */
 export async function runImport(args: RunImportArgs): Promise<ImportResult> {
-  const { db, householdId, sendCommand, fetchManifest } = args;
-  const chunks = await buildImportChunks(db, householdId);
+  const { db, binding, sendCommand, fetchManifest } = args;
+  const { ledgerId } = binding;
+  const chunks = await buildImportChunks(db, ledgerId);
   const uploadManifest = await computeLocalManifestFromChunks(chunks);
 
   for (const chunk of chunks) {
     try {
-      const result = await sendCommand({
-        commandId: generateId(),
-        householdId,
-        kind: "import_bundle",
-        payload: chunk,
-      });
+      const result = await sendCommand(importEnvelope(binding, chunk));
       if (result.kind !== "applied") {
         return {
           status: "rejected",
@@ -76,11 +78,11 @@ export async function runImport(args: RunImportArgs): Promise<ImportResult> {
     }
   }
 
-  await args.connectAndWait?.(householdId);
+  await args.connectAndWait?.();
 
   const [serverManifest, currentLocalManifest] = await Promise.all([
-    fetchManifest(householdId),
-    computeLocalManifest(db, householdId),
+    fetchManifest(),
+    computeLocalManifest(db, ledgerId),
   ]);
   return manifestsMatch(uploadManifest, serverManifest) &&
     manifestsMatch(uploadManifest, currentLocalManifest)

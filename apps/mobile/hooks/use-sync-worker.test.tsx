@@ -99,6 +99,22 @@ describe("reconcilePowerSyncStatus", () => {
     expect(harness.connect).toHaveBeenCalledWith("user-1");
   });
 
+  it("connects when personal ledger sync is enrolled without an active household", async () => {
+    const harness = createDependencies();
+
+    await reconcilePowerSyncStatus(
+      {
+        householdId: null,
+        userId: "user-1",
+        syncPersonalLedger: true,
+        killSwitchLocalOnly: false,
+      },
+      harness.dependencies,
+    );
+
+    expect(harness.connect).toHaveBeenCalledWith("user-1");
+  });
+
   it("disconnects without constructing a database for an ineligible local-only selection", async () => {
     const harness = createDependencies();
 
@@ -157,7 +173,9 @@ describe("useSyncWorker availability", () => {
     mockConnectPowerSync.mockResolvedValue(database);
     mockPeekPowerSyncDatabase.mockReturnValue(database);
 
-    const { unmount } = await renderHook(() => useSyncWorker("household-1", "user-1"));
+    const { unmount } = await renderHook(() =>
+      useSyncWorker({ householdId: "household-1", userId: "user-1" }),
+    );
     await act(async () => {
       await Promise.resolve();
     });

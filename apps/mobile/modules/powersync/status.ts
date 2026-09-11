@@ -11,12 +11,14 @@ export const reconcilePowerSyncStatus = async (
   input: {
     readonly householdId: string | null;
     readonly userId?: string;
+    readonly syncPersonalLedger?: boolean;
     readonly killSwitchLocalOnly?: boolean;
     readonly preserveWhenIneligible?: boolean;
   },
   dependencies: PowerSyncStatusDependencies,
 ): Promise<void> => {
-  if (!input.householdId || !input.userId) {
+  const userId = input.userId;
+  if (!userId || !(input.householdId || input.syncPersonalLedger)) {
     if (input.preserveWhenIneligible) {
       await dependencies.disconnect();
     } else {
@@ -31,5 +33,5 @@ export const reconcilePowerSyncStatus = async (
     return;
   }
   if (dependencies.reason() !== null) dependencies.setSynced();
-  await dependencies.connect(input.userId);
+  await dependencies.connect(userId);
 };

@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { useDatabase } from "@/db/client";
 import { orpc } from "@/lib/server/orpc";
 
 import {
@@ -19,15 +20,12 @@ import {
   type PresentAuthSheetInput,
 } from "./auth-sheet-session";
 import { attachCapabilities } from "./capabilities";
-import { clearClaim, readClaim, writeClaim } from "./claim-store";
+import { readClaim, writeClaim } from "./claim-store";
 import { HOUSEHOLDS_KEY } from "./households-key";
-import {
-  clearLedgerSelection,
-  readLedgerSelection,
-  writeLedgerSelection,
-} from "./ledger-selection-store";
+import { readLedgerSelection, writeLedgerSelection } from "./ledger-selection-store";
 import { toMembershipSummary } from "./memberships";
-import { tryRemoteSignOut, useSessionProbe } from "./session-probe";
+import { runSignedOutSessionCleanup } from "./sign-out-session";
+import { useSessionProbe } from "./session-probe";
 import type { AccessCore, HouseholdRead, IdentityClaim, LedgerSelection, ReturnTo } from "./types";
 import { AuthSheetContext } from "./use-auth-sheet";
 import { AccessContext } from "./use-access";
@@ -35,6 +33,7 @@ import { AccessContext } from "./use-access";
 const PERSONAL: LedgerSelection = { kind: "personal" };
 
 export function AccessProvider({ children }: { readonly children: ReactNode }) {
+  const db = useDatabase();
   const claim = useIdentityClaim();
   const probe = useSessionProbe();
   const [signedOut, setSignedOut] = useState(false);
@@ -50,6 +49,7 @@ export function AccessProvider({ children }: { readonly children: ReactNode }) {
     selection: selection.value,
   });
   const actions = useAccessActions(
+    db,
     claim.setValue,
     setSignedOut,
     core,
@@ -149,6 +149,7 @@ function useHouseholdRead(userId: string | null, enabled: boolean): HouseholdRea
 }
 
 function useAccessActions(
+  db: ReturnType<typeof useDatabase>,
   setClaim: (claim: IdentityClaim) => void,
   setSignedOut: (value: boolean) => void,
   core: AccessCore,
@@ -169,11 +170,9 @@ function useAccessActions(
   async function signOut() {
     const userId = core.kind === "signed_in" ? core.user.userId : null;
     setSignedOut(true);
-    await tryRemoteSignOut();
-    if (userId) await clearLedgerSelection(userId);
     setSelection(PERSONAL);
-    await clearClaim();
     setClaim({ kind: "none" });
+    await runSignedOutSessionCleanup({ db, queryClient, userId });
   }
 
   async function setActiveHousehold(householdId: string | null) {
