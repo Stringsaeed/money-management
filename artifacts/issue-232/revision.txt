@@ -1,4 +1,4 @@
-revision=386a3a890fa321f9ff5ced6fbf36752813bd8d23
+revision=c3f0cb2c460dfaf73a49c5299ddc4ef77df5e444
 branch=cursor/workos-certify-migration-b3d1
 base_main=44fde92b62cd29ff3e290106510f31a48362063f
 note=includes #242 on main+live; client_id mismatch blocks post-login API retest; Relates to #232 only; #232 not certified
