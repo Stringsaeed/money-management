@@ -1,3 +1,5 @@
-revision=ebcbe358c644d4d692e3c16ecbbfc70508326131
+revision=rebased-on-44fde92-pr242
 branch=cursor/workos-certify-migration-b3d1
-date=2026-09-11T19:34:39Z
+base_main=44fde92b62cd29ff3e290106510f31a48362063f
+note=includes #242 AuthKit missing-aud/client_id API fix; #232 not certified
+date=2026-09-11T20:45:00Z

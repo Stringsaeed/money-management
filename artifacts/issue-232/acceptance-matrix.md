@@ -20,25 +20,26 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | `ebcbe358c644d4d692e3c16ecbbfc70508326131` |
-| Provenance | Squash merge of #240 / closes #231 on `main`. No product code changed on this certification branch yet. |
-| Worktree | `/Users/saeed/Work/money-management-wt-232` |
-| Live API | `https://auth.trove.ing` — health **200 OK** |
+| HEAD | rebased onto `origin/main` @ `44fde92` (#242) — see tip commit after docs update |
+| Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242) (`44fde92`) merged on `main` — AuthKit tokens missing `aud` no longer 401 when `client_id` matches. Certification branch rebased onto that `main`. |
+| Worktree | `/Users/saeed/Work/money-management-wt-232` (plus cloud agent worktree for this rebase) |
+| Live API | `https://auth.trove.ing` — health **200 OK**; Deploy Worker succeeded for `44fde92` (#242) — live API already serves the missing-`aud` / `client_id` verify fix |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that those runs passed. |
 
-Recorded in `revision.txt` (`date=2026-09-11T19:34:39Z`).
+Recorded in `revision.txt` (updated after rebase onto #242).
 
 ## Verdict (this write)
 
 **Incomplete / not certifiable yet.**
 
-- Automated typecheck and focused package tests on this HEAD **pass**.
-- Repo-wide `pnpm lint` and `pnpm format:check` **fail** on pre-existing findings. Not treated as a #232 regression (no product code changed yet).
+- `#242` is **merged on `main`** and included on this branch via rebase; live `https://auth.trove.ing` already runs `44fde92` (Deploy Worker succeeded). API missing-`aud` AuthKit 401s are fixed in code and on the hosted worker. That is **not** live AuthKit device certification for row 2.
+- Automated typecheck and focused package tests on the prior certification HEAD **pass**.
+- Repo-wide `pnpm lint` and `pnpm format:check` **fail** on pre-existing findings. Not treated as a #232 regression.
 - Full `pnpm test:ci` **passed**: mobile Jest **742/742** + `@trove/db` cutover **3/3** (`test-ci.txt`).
-- Required iOS/Android runtime cases are **not passed**. Stim doctor ran; `stim start` has started Metro. `stim ios` / agent-device / Android have **no pass artifacts**.
+- Required iOS/Android runtime cases are **not passed**. Stim doctor ran; `stim start` has started Metro. `stim ios` / agent-device / Android have **no pass artifacts**. Row 2 still needs live AuthKit evidence.
 - Disposable clean-setup after reset is **blocked**.
 
-Do not merge. No production deploy. Parent #224 stays open.
+Do not merge. No production deploy. Parent #224 stays open. Do not close #232.
 
 
 ## Immediate draft-PR snapshot (2026-09-11T19:50Z)
@@ -84,18 +85,18 @@ A row is complete only when every required sub-criterion is `PASS` (or an explic
 
 | Sub-criterion | Status | Evidence |
 | --- | --- | --- |
-| Access-token verify (issuer / audience / expiry / bearer) | `PARTIAL` (automated only) | `@trove/auth` vitest **14/14** in `test-auth.txt` (`verify-access-token.test.ts` 5 tests, plus widget page / app-association / household-events). Does **not** prove hosted AuthKit, PKCE return, or refresh rotation on device. |
-| Email-code sign-in (live) | `IN PROGRESS` (iOS harness) / not started (Android) | Mailbox available. No device screenshot, snapshot, or Maestro artifact. |
+| Access-token verify (issuer / audience / expiry / bearer) | `PARTIAL` (automated only) | Prior `@trove/auth` vitest in `test-auth.txt`. [#242](https://github.com/Stringsaeed/money-management/pull/242) merged on `main` (`44fde92`) and **deployed** to `https://auth.trove.ing` (Deploy Worker succeeded) — hosted API no longer 401s AuthKit tokens that omit `aud` when `client_id` matches. Automated coverage alone still **does not** prove hosted AuthKit UI, PKCE return, or refresh rotation on device. |
+| Email-code sign-in (live) | `IN PROGRESS` (iOS harness) / not started (Android) | Mailbox available. **Still needs live AuthKit evidence** (device screenshot, snapshot, or Maestro artifact). None present on this branch at rebase time. |
 | Cancel abandoned sign-in | not evidenced | No runtime artifact. |
-| Callback / state validation on return | not evidenced on device | Automated token tests only. |
+| Callback / state validation on return | not evidenced on device | Automated token tests only. `#242` unblocks bearer verify for missing-`aud` tokens; live callback still unproven. |
 | Restart survives session | not evidenced | No runtime artifact. |
 | Refresh rotation | not evidenced | No runtime artifact. |
 | Session expiry | not evidenced on device | Automated expired-token coverage in `@trove/auth` only. |
 | Transient network recovery | not evidenced | No runtime artifact. |
-| iOS development build | `FAIL` then retry | First `stim ios` → `STIM_BUILD_FAILED` (`stim-ios.json`): ExpoSQLite missing vendored `sqlite3.c`/`sqlite3.h` under `node_modules/expo-sqlite/ios` (`exsqlite3_*` unresolved). Remediation: copy vendor sources + `pod install` (`pod-install.txt`); retry log `stim-ios-retry.json`. |
+| iOS development build | `FAIL` then retry | First `stim ios` → `STIM_BUILD_FAILED` (`stim-ios.json`): ExpoSQLite missing vendored `sqlite3.c`/`sqlite3.h` under `node_modules/expo-sqlite/ios` (`exsqlite3_*` unresolved). Remediation: copy vendor sources + `pod install` (`pod-install.txt`); retry log `stim-ios-retry.json`. Follow-ups on this PR: ExpoSQLite postinstall + Metro `.rnrepo-cache` blockList. |
 | Android development build | not started | No Android doctor / stim / agent-device artifacts. **Do not claim Android pass.** |
 
-**Row status: `IN PROGRESS` (iOS harness) + not evidenced (required flows).** Local WorkOS client env names are present, so this row is not env-blocked; it lacks runtime proof.
+**Row status: `IN PROGRESS` (iOS harness) + not evidenced (required flows).** `#242` is on `main` and included here; **row 2 still needs live AuthKit evidence.** Local WorkOS client env names are present, so this row is not env-blocked; it lacks runtime proof.
 
 Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_REDIRECT_URI`, `WORKOS_CLAIM_TOKEN`, `WORKOS_COOKIE_PASSWORD`, `EXPO_PUBLIC_WORKOS_CLIENT_ID`, `EXPO_PUBLIC_WORKOS_REDIRECT_URI`, `EXPO_PUBLIC_SERVER_URL`.
 
