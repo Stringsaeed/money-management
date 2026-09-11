@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   claimPresenceFlags,
+  formatTokenVerifyFailureLog,
   logTokenVerifyFailure,
   tokenVerifyFailureDiag,
 } from "./token-verify-diagnostics";
@@ -52,12 +53,26 @@ describe("tokenVerifyFailureDiag", () => {
     logTokenVerifyFailure(diag);
 
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith("access_token_verify_failed", diag);
+    expect(spy).toHaveBeenCalledWith(
+      "access_token_verify_failed code=claim_aud hasAud=false hasClientId=true payloadDecoded=true",
+    );
 
     const serialized = JSON.stringify(spy.mock.calls);
     expect(serialized).not.toContain(token);
     expect(serialized).not.toContain("user_diag");
     expect(serialized).not.toContain("client_test");
+  });
+
+  it("puts the stable code in the first (and only) console argument string", () => {
+    const line = formatTokenVerifyFailureLog({
+      code: "missing_token",
+      payloadDecoded: false,
+      hasAud: false,
+      hasClientId: false,
+    });
+    expect(line).toBe(
+      "access_token_verify_failed code=missing_token hasAud=false hasClientId=false payloadDecoded=false",
+    );
   });
 
   it("marks aud present when the unverified payload includes aud", () => {

@@ -19,7 +19,9 @@ export class TokenVerifyError extends Error {
   readonly code: TokenVerifyFailureCode;
 
   constructor(code: TokenVerifyFailureCode, message?: string) {
-    super(message ?? code);
+    // Never allow empty message: CF / oRPC may log Error.message alone.
+    const text = message?.trim() ? message : code;
+    super(text);
     this.name = "TokenVerifyError";
     this.code = code;
   }
