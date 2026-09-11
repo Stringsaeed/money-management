@@ -20,13 +20,13 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip after Mac AuthKit evidence commit (rebased onto `origin/main` @ `44fde92` / #242) |
-| Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242) (`44fde92`) on `main` and live on `auth.trove.ing`. This write adds AuthKit screenshots + matrix only. |
+| HEAD | tip after post-#245 `claim_iss` + token `iss` evidence (docs on certify branch; live API tip `cb3c90c` / #245) |
+| Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242) and [#245](https://github.com/Stringsaeed/money-management/pull/245) (`cb3c90c`) on `main` and live on `auth.trove.ing`. |
 | Worktree | `/Users/saeed/Work/money-management-wt-232` |
-| Live API | `https://auth.trove.ing` — root **200 OK**; Deploy Worker succeeded for `44fde92` (#242) |
+| Live API | `https://auth.trove.ing` — root **200 OK**; Deploy Worker **34657777870** success for `cb3c90c` (#245 CF-readable codes) after #242 |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
-Recorded in `revision.txt` / `authkit-live-write.txt` (`date=2026-09-11T20:46:07Z` for this AuthKit write).
+Recorded in `revision.txt` / `authkit-live-write.txt` / `post-245-claim-iss.txt`.
 
 ## Verdict (this write)
 
@@ -36,7 +36,7 @@ Recorded in `revision.txt` / `authkit-live-write.txt` (`date=2026-09-11T20:46:07
 - Repo-wide `pnpm lint` and `pnpm format:check` **fail** on pre-existing findings.
 - Full `pnpm test:ci` **passed** previously: mobile Jest **742/742** + `@trove/db` cutover **3/3**.
 - **Row 2 iOS AuthKit UI (partial):** cancel PASS; hosted AuthKit email page + email-code challenge PARTIAL; OTP entry hard-stopped (agent-device AX unavailable inside ASWebAuthenticationSession). Still signed out afterward (`authkit-21-signed-out-final.png`).
-- **Post-login protected API:** **FAIL** — owner-signed-in sim (`stringsaeed@gmail.com`, Sign out). Sync just for me → UI Unauthorized + CFNetwork HTTP 401 on `https://auth.trove.ing/rpc` (`authkit-56`…`58`, `cfnetwork-401-summaries.txt`). Client ids EQUAL; #242 live. Do not treat as certified.
+- **Post-login protected API:** **FAIL** — Sync / `households.listMine` still **401**. After #245 on tip `cb3c90c`, owner CF log root code is **`claim_iss`** (`Unauthorized (claim_iss)`). Stored access-token `iss` = `https://api.workos.com/user_management/client_01M11FD9X26FA35C5Y9YCK2KG9` (`aud_present=false`, `client_id_present=true`, `sub_present=true`; raw JWT not logged) — see `post-245-claim-iss.txt`. Client ids EQUAL; #242+#245 live. Do not treat as certified.
 - Android runtime **not started**. Disposable clean-setup after reset **blocked**.
 
 Do not merge as certified. No production deploy. Parent #224 stays open. **Do not use Closes #232.**
@@ -124,7 +124,7 @@ A row is complete only when every required sub-criterion is `PASS` (or an explic
 | Refresh rotation | not evidenced | No signed-in session. |
 | Session expiry | not evidenced on device | Automated expired-token coverage in `@trove/auth` only. |
 | Transient network recovery | not evidenced | No runtime artifact. |
-| Post-login protected oRPC / bearer | `FAIL` | Signed-in `stringsaeed@gmail.com` + Sign out (`authkit-56-*.png`). Sync just for me → UI **Unauthorized** (`authkit-58-after-sync-just-for-me.png`); CFNetwork `response_status=401` on protected `/rpc` (`cfnetwork-401-summaries.txt`, `authkit-live-write.txt`). Client ids EQUAL; #242 live. Not a successful bearer call. |
+| Post-login protected oRPC / bearer | `FAIL` | Signed-in Sync just for me → UI **Unauthorized** + HTTP 401 (`authkit-58`, `cfnetwork-401-summaries.txt`). Post-#245 CF-readable code **`claim_iss`** on `POST /rpc/households/listMine`. Token `iss`=`https://api.workos.com/user_management/client_01M11FD9X26FA35C5Y9YCK2KG9`; `aud_present=false`; `client_id_present=true`; `sub_present=true` (`post-245-claim-iss.txt`; raw JWT not logged). Client ids EQUAL; #245 live (`cb3c90c`). |
 | iOS development build | prior FAIL then recovered | ExpoSQLite vendor + Metro `.rnrepo-cache` blockList on this branch; live AuthKit driven without `stim ios` rebuild this session. |
 | Android development build | not started | No Android agent-device artifacts. **Do not claim Android pass.** |
 
@@ -246,7 +246,7 @@ API focused files in the 97: `powersync/token.test.ts` (4), `personal-budget-rec
 | `stim ios` | Prior build recovery on branch; **this AuthKit session did not rebuild** (`simctl launch` only). | `stim-ios-*.json` |
 | agent-device (iOS AuthKit) | **PARTIAL** — cancel PASS; email + code challenge reached; OTP hard-stopped (AX unavailable). | `authkit-01-launch.png` … `authkit-21-signed-out-final.png`, `authkit-live-write.txt` |
 | Client id equality | **EQUAL** (names only) | `client-id-compare.txt` — `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) |
-| Post-login protected API | **FAIL** | Signed-in + Sync just for me → Unauthorized; CFNetwork 401 (`authkit-56`…`58`, `cfnetwork-401-summaries.txt`, `authkit-live-write.txt`). |
+| Post-login protected API | **FAIL** | Sync / listMine 401; CF code **`claim_iss`** post-#245; token `iss` recorded in `post-245-claim-iss.txt` (prior UI `authkit-56`…`58`). |
 | `stim doctor android` / `stim android` / agent-device (Android) | not started | — |
 | Maestro / verify-trove flows | not started | — |
 
@@ -368,4 +368,17 @@ stim start --json  # -> stim-start.json (port 8083)
 - Env hard-stop names **absent** (names only): `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`) — see `env-hard-stop.txt`.
 - Screenshots: `authkit-56`…`authkit-60-unauthorized-final.png`.
 - **Not certified.** Relates to #232 only. Parent #224 stays open. No Closes.
+
+## Post-#245 Sync retest (2026-09-11T23:34Z)
+
+- Deploy Worker [34657777870](https://github.com/Stringsaeed/money-management/actions/runs/34657777870) **success** on `cb3c90c` (#245 CF-readable auth/orpc codes) live on `auth.trove.ing`.
+- Owner CF log for Sync / `POST /rpc/households/listMine`: **`Unauthorized (claim_iss)`** → root code **`claim_iss`** (not `missing_token`).
+- Stored access-token middle-segment metadata only (`post-245-claim-iss.txt`):
+  - `iss=https://api.workos.com/user_management/client_01M11FD9X26FA35C5Y9YCK2KG9`
+  - `aud_present=false`
+  - `client_id_present=true`
+  - `sub_present=true`
+  - raw JWT / signature / other PII **not** logged
+- Implication: configure `WORKOS_TOKEN_ISSUER` to that `iss` (default `https://api.workos.com` mismatches). Optional Sync retest after issuer fix deploys.
+- **Still FAIL / not certified.** Relates to #232 only. Parent #224 stays open. No Closes.
 

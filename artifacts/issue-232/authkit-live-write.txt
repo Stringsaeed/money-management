@@ -33,3 +33,15 @@ DATABASE_URL=absent
 
 row2_cancel=PASS (authkit-04-cancel.png)
 row2_email_challenge=PARTIAL (authkit-07..09 code challenge reached; OTP digit boxes AX-unavailable in ASWebAuthenticationSession)
+
+# --- post-#245 (2026-09-11T23:34Z) ---
+deploy_worker_run=34657777870
+deploy_sha=cb3c90c1852556ec51af9223cf3b52dd434a4eee
+cf_readable_code=claim_iss
+cf_log_phrase=Unauthorized (claim_iss)
+iss=https://api.workos.com/user_management/client_01M11FD9X26FA35C5Y9YCK2KG9
+aud_present=false
+client_id_present=true
+sub_present=true
+evidence=post-245-claim-iss.txt
+raw_jwt_logged=false

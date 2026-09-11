@@ -1,4 +1,5 @@
-revision=ebfdad0394c050cb202370f7133cd9c3b0ca0f85
+revision=post-245-claim-iss
 branch=cursor/workos-certify-migration-b3d1
-note=matrix honesty pass; Relates to #232; #224 open
-date=2026-09-11T21:09:28Z
+note=post-#245 Sync retest: CF code=claim_iss; token iss recorded; Relates to #232; #224 open
+deploy_sha=cb3c90c1852556ec51af9223cf3b52dd434a4eee
+date=2026-09-11T23:34:00Z
