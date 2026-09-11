@@ -28,17 +28,26 @@ async function testKeys() {
 async function sign(
   privateKey: CryptoKey,
   claims: Record<string, unknown>,
-  options?: { readonly audience?: string; readonly issuer?: string; readonly expired?: boolean },
+  options?: {
+    readonly audience?: string | false;
+    readonly issuer?: string;
+    readonly expired?: boolean;
+  },
 ) {
   const now = Math.floor(Date.now() / 1000);
-  return new SignJWT(claims)
+  let builder = new SignJWT(claims)
     .setProtectedHeader({ alg: "RS256", kid: KID, typ: "JWT" })
     .setIssuer(options?.issuer ?? ISSUER)
-    .setAudience(options?.audience ?? CLIENT_ID)
     .setSubject(String(claims.sub))
     .setIssuedAt(now - 5)
-    .setExpirationTime(options?.expired ? now - 60 : now + 300)
-    .sign(privateKey);
+    .setExpirationTime(options?.expired ? now - 60 : now + 300);
+
+  // WorkOS AuthKit session tokens omit `aud` by default. Only set it when asked.
+  if (options?.audience !== false) {
+    builder = builder.setAudience(options?.audience ?? CLIENT_ID);
+  }
+
+  return builder.sign(privateKey);
 }
 
 describe("verifyAccessToken", () => {
@@ -48,6 +57,7 @@ describe("verifyAccessToken", () => {
       sub: "user_01PERSONAL",
       email: "ada@trove.ing",
       name: "Ada",
+      client_id: CLIENT_ID,
     });
 
     await expect(
@@ -64,12 +74,41 @@ describe("verifyAccessToken", () => {
     });
   });
 
+  it("accepts WorkOS-shaped session tokens that omit aud and bind via client_id", async () => {
+    const { privateKey, jwks } = await testKeys();
+    const token = await sign(
+      privateKey,
+      {
+        sub: "user_01SESSION",
+        email: "session@trove.ing",
+        name: "Session",
+        client_id: CLIENT_ID,
+        sid: "session_01TEST",
+      },
+      { audience: false },
+    );
+
+    await expect(
+      verifyAccessToken(token, {
+        clientId: CLIENT_ID,
+        audience: CLIENT_ID,
+        issuer: ISSUER,
+        jwks,
+      }),
+    ).resolves.toEqual({
+      user: { id: "user_01SESSION", email: "session@trove.ing", name: "Session" },
+      organizationId: null,
+      sessionId: "session_01TEST",
+    });
+  });
+
   it("rejects forged signatures and wrong audiences", async () => {
     const good = await testKeys();
     const other = await testKeys();
     const token = await sign(good.privateKey, {
       sub: "user_01FORGED",
       email: "forged@trove.ing",
+      client_id: CLIENT_ID,
     });
 
     await expect(
@@ -83,7 +122,7 @@ describe("verifyAccessToken", () => {
 
     const wrongAud = await sign(
       good.privateKey,
-      { sub: "user_01AUD", email: "aud@trove.ing" },
+      { sub: "user_01AUD", email: "aud@trove.ing", client_id: CLIENT_ID },
       { audience: "not-the-client" },
     );
     await expect(
@@ -96,12 +135,89 @@ describe("verifyAccessToken", () => {
     ).rejects.toMatchObject({ code: "claim_aud" });
   });
 
+  it("rejects missing or mismatched client_id on no-aud session tokens", async () => {
+    const { privateKey, jwks } = await testKeys();
+
+    const missingClient = await sign(
+      privateKey,
+      { sub: "user_01NOCLIENT", email: "noclient@trove.ing" },
+      { audience: false },
+    );
+    await expect(
+      verifyAccessToken(missingClient, {
+        clientId: CLIENT_ID,
+        audience: CLIENT_ID,
+        issuer: ISSUER,
+        jwks,
+      }),
+    ).rejects.toMatchObject({ code: "claim_client_id" });
+
+    const wrongClient = await sign(
+      privateKey,
+      {
+        sub: "user_01WRONGCLIENT",
+        email: "wrong@trove.ing",
+        client_id: "client_other",
+      },
+      { audience: false },
+    );
+    await expect(
+      verifyAccessToken(wrongClient, {
+        clientId: CLIENT_ID,
+        audience: CLIENT_ID,
+        issuer: ISSUER,
+        jwks,
+      }),
+    ).rejects.toMatchObject({ code: "claim_client_id" });
+  });
+
+  it("requires aud when a custom WORKOS_TOKEN_AUDIENCE is configured", async () => {
+    const { privateKey, jwks } = await testKeys();
+    const apiAudience = "https://api.trove.ing";
+
+    const noAud = await sign(
+      privateKey,
+      {
+        sub: "user_01CUSTOMAUD",
+        email: "custom@trove.ing",
+        client_id: CLIENT_ID,
+      },
+      { audience: false },
+    );
+    await expect(
+      verifyAccessToken(noAud, {
+        clientId: CLIENT_ID,
+        audience: apiAudience,
+        issuer: ISSUER,
+        jwks,
+      }),
+    ).rejects.toMatchObject({ code: "claim_aud" });
+
+    const withAud = await sign(
+      privateKey,
+      {
+        sub: "user_01CUSTOMAUD",
+        email: "custom@trove.ing",
+        client_id: CLIENT_ID,
+      },
+      { audience: apiAudience },
+    );
+    await expect(
+      verifyAccessToken(withAud, {
+        clientId: CLIENT_ID,
+        audience: apiAudience,
+        issuer: ISSUER,
+        jwks,
+      }),
+    ).resolves.toMatchObject({ user: { id: "user_01CUSTOMAUD" } });
+  });
+
   it("rejects wrong issuer, expiry, and missing subject", async () => {
     const { privateKey, jwks } = await testKeys();
 
     const wrongIss = await sign(
       privateKey,
-      { sub: "user_01ISS", email: "iss@trove.ing" },
+      { sub: "user_01ISS", email: "iss@trove.ing", client_id: CLIENT_ID },
       { issuer: "https://evil.example" },
     );
     await expect(
@@ -115,7 +231,7 @@ describe("verifyAccessToken", () => {
 
     const expired = await sign(
       privateKey,
-      { sub: "user_01EXP", email: "exp@trove.ing" },
+      { sub: "user_01EXP", email: "exp@trove.ing", client_id: CLIENT_ID },
       { expired: true },
     );
     // clockTolerance is 5s; expire far enough in the past.
@@ -129,7 +245,7 @@ describe("verifyAccessToken", () => {
     ).rejects.toMatchObject({ code: "expired" });
 
     const now = Math.floor(Date.now() / 1000);
-    const noSub = await new SignJWT({ email: "nosub@trove.ing" })
+    const noSub = await new SignJWT({ email: "nosub@trove.ing", client_id: CLIENT_ID })
       .setProtectedHeader({ alg: "RS256", kid: KID, typ: "JWT" })
       .setIssuer(ISSUER)
       .setAudience(CLIENT_ID)

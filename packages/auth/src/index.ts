@@ -1,6 +1,7 @@
 export type { AuthSession, AuthUser, WorkOSTokenVerifyConfig } from "./session";
 export {
   TokenVerifyError,
+  assertTokenBinding,
   getRemoteJwks,
   jwksUrlForClient,
   readBearerToken,

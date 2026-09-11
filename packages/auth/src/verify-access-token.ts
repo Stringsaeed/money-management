@@ -9,6 +9,7 @@ export type TokenVerifyFailureCode =
   | "bad_signature"
   | "unknown_kid"
   | "claim_aud"
+  | "claim_client_id"
   | "claim_iss"
   | "claim_sub"
   | "invalid_token"
@@ -100,12 +101,15 @@ export async function verifyAccessToken(
     : [config.issuer, `${config.issuer}/`];
 
   try {
+    // WorkOS AuthKit session tokens carry `client_id` and omit `aud` unless a
+    // JWT template adds one. Passing `audience` to jose rejects every default
+    // session token (`missing required "aud" claim`) → API-wide 401.
     const { payload } = await jwtVerify(token, config.jwks ?? getRemoteJwks(config.clientId), {
       issuer,
-      audience: config.audience,
       algorithms: ["RS256"],
       clockTolerance: 5,
     });
+    assertTokenBinding(payload, config);
     return sessionFromClaims(payload);
   } catch (error) {
     if (error instanceof TokenVerifyError) throw error;
@@ -113,6 +117,35 @@ export async function verifyAccessToken(
       throw new TokenVerifyError(mapJoseError(error), error.message);
     }
     throw new TokenVerifyError("invalid_token");
+  }
+}
+
+/**
+ * Bind the token to this WorkOS application.
+ * - If `aud` is present (JWT template / Connect): it must include `config.audience`.
+ * - If `aud` is absent (default AuthKit session token): `client_id` must equal `config.clientId`.
+ * - If ops configured a custom audience (`audience !== clientId`) but the token
+ *   has no `aud`, fail closed — a JWT template is required for that mode.
+ */
+export function assertTokenBinding(payload: JWTPayload, config: WorkOSTokenVerifyConfig): void {
+  if (payload.aud !== undefined) {
+    const audiences = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+    if (!audiences.includes(config.audience)) {
+      throw new TokenVerifyError("claim_aud", "Access token audience does not match.");
+    }
+    return;
+  }
+
+  if (config.audience !== config.clientId) {
+    throw new TokenVerifyError(
+      "claim_aud",
+      "Access token is missing audience; configure a WorkOS JWT template or clear WORKOS_TOKEN_AUDIENCE.",
+    );
+  }
+
+  const clientId = z.string().min(1).safeParse(payload.client_id);
+  if (!clientId.success || clientId.data !== config.clientId) {
+    throw new TokenVerifyError("claim_client_id", "Access token client_id does not match.");
   }
 }
 
@@ -138,6 +171,7 @@ function claimFailure(claim: string): TokenVerifyFailureCode {
   if (claim === "aud") return "claim_aud";
   if (claim === "iss") return "claim_iss";
   if (claim === "sub") return "claim_sub";
+  if (claim === "client_id") return "claim_client_id";
   return "invalid_token";
 }
 
