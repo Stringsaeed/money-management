@@ -11,6 +11,7 @@ import {
 } from "@trove/db/schema/budget";
 import { user } from "@trove/db/schema/auth";
 import { household, membership } from "@trove/db/schema/household";
+import { category, ledgerAccount } from "@trove/db/schema/ledger";
 
 import { listEnvelopes } from "./envelopes";
 import {
@@ -89,6 +90,36 @@ async function insertEnvelope(id: string, overrides: Partial<typeof envelope.$in
   });
 }
 
+async function insertAccount(id: string, overrides: Partial<typeof ledgerAccount.$inferInsert> = {}) {
+  await db.insert(ledgerAccount).values({
+    id,
+    ledgerId: HOUSEHOLD_ID,
+    householdId: HOUSEHOLD_ID,
+    name: `Account ${id}`,
+    type: "bank",
+    currency: "USD",
+    version: 0,
+    createdBy: OWNER,
+    updatedBy: OWNER,
+    ...overrides,
+  });
+}
+
+async function insertCategory(id: string, overrides: Partial<typeof category.$inferInsert> = {}) {
+  await db.insert(category).values({
+    id,
+    ledgerId: HOUSEHOLD_ID,
+    householdId: HOUSEHOLD_ID,
+    name: `Category ${id}`,
+    type: "expense",
+    lifecycle: "active",
+    version: 0,
+    createdBy: OWNER,
+    updatedBy: OWNER,
+    ...overrides,
+  });
+}
+
 describe("budget schema — append-only enforcement", () => {
   /** Drizzle wraps driver errors; the trigger's RAISE text lives in `cause`. */
   async function expectAppendOnlyRejection(promise: Promise<unknown>): Promise<void> {
@@ -99,6 +130,8 @@ describe("budget schema — append-only enforcement", () => {
   }
 
   it("rejects UPDATE and DELETE on category_mappings", async () => {
+    await insertEnvelope("env-1");
+    await insertCategory("cat-1");
     await db.insert(categoryMapping).values({
       ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
@@ -123,6 +156,7 @@ describe("budget schema — append-only enforcement", () => {
   });
 
   it("rejects UPDATE and DELETE on funding_memberships", async () => {
+    await insertAccount("acc-1");
     await db.insert(fundingMembership).values({
       ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
@@ -188,6 +222,7 @@ describe("budget schema — append-only enforcement", () => {
   });
 
   it("rejects malformed Budget Periods at the schema level", async () => {
+    await insertCategory("cat-bad");
     await expect(
       db.insert(categoryMapping).values({
         ledgerId: HOUSEHOLD_ID,
@@ -239,6 +274,8 @@ describe("period-effective timelines — derived effective_to_period", () => {
   it("derives category mapping spans via LEAD and treats NULL targets as unmapped tombstones", async () => {
     await insertEnvelope("env-a");
     await insertEnvelope("env-b");
+    await insertCategory("cat-1");
+    await insertCategory("cat-2");
     const rows = [
       { categoryId: "cat-1", envelopeId: "env-a", period: "2026-01" },
       // Remap…
@@ -293,6 +330,8 @@ describe("period-effective timelines — derived effective_to_period", () => {
   });
 
   it("derives funding membership spans with exit tombstones", async () => {
+    await insertAccount("acc-1");
+    await insertAccount("acc-2");
     const rows = [
       { accountId: "acc-1", active: true, period: "2026-01" },
       { accountId: "acc-1", active: false, period: "2026-04" }, // leaves the pool
