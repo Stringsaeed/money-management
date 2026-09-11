@@ -1,5 +1,7 @@
-revision=d06face15941f7e2b101ca49f501cd0571ba51ed
+revision=3d5c482b1aaa2e331973e32238ff52bc002a90ec
 branch=cursor/workos-certify-migration-b3d1
-base_main=44fde92b62cd29ff3e290106510f31a48362063f
-note=AuthKit row2 Mac evidence; client_id mismatch blocks post-login API; Relates to #232 only; #224 open; no Closes
-date=2026-09-11T20:50:34Z
+api=https://auth.trove.ing
+client_id_compare=EQUAL
+WORKOS_WEBHOOK_SECRET_present=true
+note=Relates to #232 only; #224 open; not certified
+date_utc=2026-09-11T21:05:21Z
