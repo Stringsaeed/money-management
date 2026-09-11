@@ -1,12 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { user } from "@trove/db/schema/auth";
-import {
-  assignment,
-  budgetWorkspace,
-  envelope,
-  refundLink,
-} from "@trove/db/schema/budget";
+import { assignment, budgetWorkspace, envelope, refundLink } from "@trove/db/schema/budget";
 import { transaction } from "@trove/db/schema/ledger";
 import { recurringOccurrence, recurringRule } from "@trove/db/schema/recurring";
 import type { AppliedResult, CommandEnvelope, CommandResult } from "@trove/protocol";

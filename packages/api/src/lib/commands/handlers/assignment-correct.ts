@@ -37,19 +37,13 @@ export const assignmentCorrectHandler = {
       : { ok: false as const, issues: issuesFromZod(result.error) };
   },
 
-  async plan(
-    ctx: PlanContext,
-    { payload }: PlanRequest,
-  ): Promise<CommandPlan | PlanRejection> {
+  async plan(ctx: PlanContext, { payload }: PlanRequest): Promise<CommandPlan | PlanRejection> {
     const input = payload as AssignmentCorrectPayload;
     const originalRows = await ctx.db
       .select()
       .from(assignment)
       .where(
-        and(
-            eq(assignment.ledgerId, ctx.ledgerId),
-            eq(assignment.id, input.originalAssignmentId),
-        ),
+        and(eq(assignment.ledgerId, ctx.ledgerId), eq(assignment.id, input.originalAssignmentId)),
       )
       .limit(1);
     const original = originalRows[0];
@@ -80,8 +74,8 @@ export const assignmentCorrectHandler = {
       .from(assignment)
       .where(
         and(
-            eq(assignment.ledgerId, ctx.ledgerId),
-            eq(assignment.reversesAssignmentId, original.id),
+          eq(assignment.ledgerId, ctx.ledgerId),
+          eq(assignment.reversesAssignmentId, original.id),
         ),
       )
       .limit(1);

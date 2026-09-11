@@ -68,10 +68,7 @@ export const budgetConfigureHandler = {
       : { ok: false as const, issues: issuesFromZod(result.error) };
   },
 
-  async plan(
-    ctx: PlanContext,
-    { payload }: PlanRequest,
-  ): Promise<CommandPlan | PlanRejection> {
+  async plan(ctx: PlanContext, { payload }: PlanRequest): Promise<CommandPlan | PlanRejection> {
     const input = payload as BudgetConfigurePayload;
     if (input.action === "workspace.activate") return planWorkspace(ctx, input);
     if (input.action === "funding_membership.set") return planFundingMembership(ctx, input);
@@ -88,10 +85,7 @@ async function planWorkspace(
     .select()
     .from(budgetWorkspace)
     .where(
-      and(
-        eq(budgetWorkspace.ledgerId, ctx.ledgerId),
-        eq(budgetWorkspace.currency, input.currency),
-      ),
+      and(eq(budgetWorkspace.ledgerId, ctx.ledgerId), eq(budgetWorkspace.currency, input.currency)),
     )
     .limit(1);
   if (existing[0]) return { kind: "conflict", reason: "budget_workspace_already_exists" };
@@ -308,16 +302,11 @@ async function loadEnvelope(ctx: PlanContext, envelopeId: string) {
   return rows[0] ?? null;
 }
 
-async function requireWorkspace(
-  ctx: PlanContext,
-  currency: string,
-): Promise<PlanRejection | null> {
+async function requireWorkspace(ctx: PlanContext, currency: string): Promise<PlanRejection | null> {
   const rows = await ctx.db
     .select()
     .from(budgetWorkspace)
-    .where(
-      and(eq(budgetWorkspace.ledgerId, ctx.ledgerId), eq(budgetWorkspace.currency, currency)),
-    )
+    .where(and(eq(budgetWorkspace.ledgerId, ctx.ledgerId), eq(budgetWorkspace.currency, currency)))
     .limit(1);
   return rows[0]
     ? null

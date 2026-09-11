@@ -90,7 +90,10 @@ async function insertEnvelope(id: string, overrides: Partial<typeof envelope.$in
   });
 }
 
-async function insertAccount(id: string, overrides: Partial<typeof ledgerAccount.$inferInsert> = {}) {
+async function insertAccount(
+  id: string,
+  overrides: Partial<typeof ledgerAccount.$inferInsert> = {},
+) {
   await db.insert(ledgerAccount).values({
     id,
     ledgerId: HOUSEHOLD_ID,
@@ -422,9 +425,9 @@ describe("budget reads — authorization", () => {
   });
 
   it("rejects a non-member before any read", async () => {
-    await expect(
-      listEnvelopes(db, { userId: OUTSIDER, ledgerId: HOUSEHOLD_ID }),
-    ).rejects.toThrow(/not a member/);
+    await expect(listEnvelopes(db, { userId: OUTSIDER, ledgerId: HOUSEHOLD_ID })).rejects.toThrow(
+      /not a member/,
+    );
     await expect(
       getCategoryMappingTimeline(db, { userId: OUTSIDER, ledgerId: HOUSEHOLD_ID }),
     ).rejects.toThrow(/not a member/);

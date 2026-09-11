@@ -115,10 +115,7 @@ export const assignmentCommitHandler = {
         .select()
         .from(assignment)
         .where(
-          and(
-            eq(assignment.ledgerId, ctx.ledgerId),
-            eq(assignment.id, input.reversesAssignmentId),
-          ),
+          and(eq(assignment.ledgerId, ctx.ledgerId), eq(assignment.id, input.reversesAssignmentId)),
         )
         .limit(1);
       const original = originalRows[0];

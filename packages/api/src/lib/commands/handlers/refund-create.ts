@@ -49,10 +49,7 @@ export const refundCreateHandler = {
       : { ok: false as const, issues: issuesFromZod(result.error) };
   },
 
-  async plan(
-    ctx: PlanContext,
-    { payload }: PlanRequest,
-  ): Promise<CommandPlan | PlanRejection> {
+  async plan(ctx: PlanContext, { payload }: PlanRequest): Promise<CommandPlan | PlanRejection> {
     const input = payload as RefundPayload;
 
     // The original must exist in this ledger, be an expense, and share the
@@ -61,7 +58,10 @@ export const refundCreateHandler = {
       .select()
       .from(transaction)
       .where(
-        and(eq(transaction.ledgerId, ctx.ledgerId), eq(transaction.id, input.originalTransactionId)),
+        and(
+          eq(transaction.ledgerId, ctx.ledgerId),
+          eq(transaction.id, input.originalTransactionId),
+        ),
       )
       .limit(1);
     const original = originalRows[0];

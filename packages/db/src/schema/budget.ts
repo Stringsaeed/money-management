@@ -24,7 +24,11 @@ const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode
 const validPeriod = (name: string, column: AnyColumn) =>
   check(`${name}_period_format`, sql`${column} ~ '^[0-9]{4}-[0-9]{2}$'`);
 
-const householdRequiredForOrganization = (tableName: string, householdId: AnyColumn, ledgerId: AnyColumn) =>
+const householdRequiredForOrganization = (
+  tableName: string,
+  householdId: AnyColumn,
+  ledgerId: AnyColumn,
+) =>
   check(
     `${tableName}_household_required_for_organization`,
     sql`${householdId} IS NOT NULL OR ${ledgerId} LIKE 'personal:%'`,
@@ -56,7 +60,10 @@ export const budgetWorkspace = pgTable(
       .notNull(),
   },
   (table) => [
-    uniqueIndex("budget_workspaces_household_currency_unique").on(table.householdId, table.currency),
+    uniqueIndex("budget_workspaces_household_currency_unique").on(
+      table.householdId,
+      table.currency,
+    ),
     uniqueIndex("budget_workspaces_ledger_currency_unique").on(table.ledgerId, table.currency),
     householdRequiredForOrganization("budget_workspaces", table.householdId, table.ledgerId),
     validPeriod("budget_workspaces_activation", table.activationPeriod),

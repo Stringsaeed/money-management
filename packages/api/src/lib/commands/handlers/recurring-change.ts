@@ -97,10 +97,7 @@ export const recurringChangeHandler = {
       : { ok: false as const, issues: issuesFromZod(result.error) };
   },
 
-  async plan(
-    ctx: PlanContext,
-    { payload }: PlanRequest,
-  ): Promise<CommandPlan | PlanRejection> {
+  async plan(ctx: PlanContext, { payload }: PlanRequest): Promise<CommandPlan | PlanRejection> {
     const input = payload as RecurringChangePayload;
     if (input.action === "create") return planCreate(ctx, input);
 
@@ -175,10 +172,7 @@ async function planCreate(
   };
 }
 
-async function loadRule(
-  ctx: PlanContext,
-  ruleId: string,
-): Promise<RecurringRuleRow | null> {
+async function loadRule(ctx: PlanContext, ruleId: string): Promise<RecurringRuleRow | null> {
   const rows = await ctx.db
     .select()
     .from(recurringRule)

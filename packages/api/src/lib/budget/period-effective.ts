@@ -20,9 +20,7 @@ export type { LedgerCaller };
  * tenant-safe even if a caller forgets the ledger WHERE filter.
  */
 const leadPeriod = (ledgerId: AnyColumn, entity: AnyColumn, column: AnyColumn) =>
-  sql<
-    string | null
-  >`LEAD(${column}) OVER (PARTITION BY ${ledgerId}, ${entity} ORDER BY ${column})`;
+  sql<string | null>`LEAD(${column}) OVER (PARTITION BY ${ledgerId}, ${entity} ORDER BY ${column})`;
 
 export interface PeriodEffectiveRow {
   readonly effectiveFromPeriod: string;

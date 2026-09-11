@@ -116,10 +116,7 @@ export class PgRecurringStore implements SettlementStore {
           updatedBy: this.scope.userId,
         })
         .where(
-          and(
-            eq(recurringRule.ledgerId, this.scope.ledgerId),
-            eq(recurringRule.id, commit.ruleId),
-          ),
+          and(eq(recurringRule.ledgerId, this.scope.ledgerId), eq(recurringRule.id, commit.ruleId)),
         ),
     );
 
