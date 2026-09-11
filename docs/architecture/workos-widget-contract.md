@@ -26,7 +26,7 @@ Bounded feasibility record for hosting the WorkOS User Management widget from Tr
 - WorkOS environment with AuthKit email codes enabled; password/social disabled
 - Redirect URI `trove://callback` registered
 - `EXPO_PUBLIC_WORKOS_CLIENT_ID`, `WORKOS_CLIENT_ID`, `WORKOS_API_KEY`
-- JWT template that sets `aud` to `WORKOS_TOKEN_AUDIENCE` (defaults to client id)
+- JWT template that sets `aud` only when using a custom `WORKOS_TOKEN_AUDIENCE`; default AuthKit session tokens bind via `client_id` instead of `aud`
 - `WORKOS_TOKEN_ISSUER` matching issued tokens (default `https://api.workos.com`)
 - Disposable organization plus admin / member / viewer Users for role checks
 
