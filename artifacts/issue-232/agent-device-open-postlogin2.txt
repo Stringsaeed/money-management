@@ -1,0 +1,6 @@
+Error (DEVICE_IN_USE): Device is already in use by session "issue-232".
+Hint: Run agent-device session list to inspect active sessions. To reuse this device, rerun the command with --session issue-232. To open a new session on this device, first run agent-device close --session issue-232.
+Diagnostic ID: mtxhcyvr-3aa74e31
+Diagnostics Log: /Users/saeed/.agent-device/sessions/cwd_faab16f54d8210c4_default/requests/5da26de9e04ce270.ndjson
+open_exit=1
+agent-device open failed/timed out; using simctl screenshot

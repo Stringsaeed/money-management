@@ -1,0 +1,4 @@
+Error (INVALID_ARGS): Unknown flag: --grep
+Hint: Check command arguments and run --help for usage examples.
+Diagnostic ID: mtxhegfp-f52f1ea5
+Diagnostics Log: /Users/saeed/.agent-device/logs/issue-232/2026-09-11/2026-09-11T21-41-49-623Z-mtxhegfp-f52f1ea5.ndjson

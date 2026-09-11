@@ -1,0 +1,7 @@
+Opened: com.stringsaeed.moneymanagement
+Session state: /Users/saeed/.agent-device/sessions/issue-232
+Page: com.stringsaeed.moneymanagement
+App: com.stringsaeed.moneymanagement
+Snapshot: 2 nodes
+@e1 [application] "Trove (Dev)"
+@e2 [image] "SplashScreenLogo"

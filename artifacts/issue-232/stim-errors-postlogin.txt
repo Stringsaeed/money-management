@@ -1,0 +1,1 @@
+00:20:11.444 error build  /Users/saeed/Work/money-management-wt-232/apps/mobile/ios/Pods/../../../../node_modules/react-native-screens/.rnrepo-cache/Current/RNScreens.xcframework/ios-arm64_x86_64-simulator/*: (l)stat: No such file or directory

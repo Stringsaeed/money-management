@@ -1,0 +1,35 @@
+Page: com.stringsaeed.moneymanagement
+App: com.stringsaeed.moneymanagement
+Snapshot: 31 visible nodes (33 total)
+@e1 [application] "Trove (Dev)"
+@e2 [navigation-bar] "Settings"
+@e3 [button] "Settings"
+@e4 [text] "Profile"
+@e5 [scroll-area] "stringsaeed@gmail.com" [scrollable]
+  [content below scroll-area hidden]
+@e6 [other] "stringsaeed@gmail.com"
+@e7 [other] "Sign out"
+@e8 [button] "Sign out"
+@e9 [text] "Household sync is paused"
+@e10 [text] "Your ledger on this device is still usable."
+@e11 [other] "Try again"
+@e12 [button] "Try again"
+@e13 [text] "LEDGER"
+@e14 [other] "Personal ✓"
+@e15 [button] "Personal ✓"
+@e16 [text] "Sync without a Household 🪪"
+@e17 [text] "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."
+@e18 [other] "Try again"
+@e19 [button] "Try again"
+@e20 [text] "Unauthorized"
+@e21 [text] "Create a Household"
+@e22 [text] "Start a shared space — family accounts, budgets, and reports in one place."
+@e23 [text-field] [editable]
+@e26 [other] "Ledger"
+@e27 [button]
+@e28 [button] "Ledger"
+@e29 [button] "Money Movement"
+@e30 [button] "Inbox"
+@e31 [button] "Envelopes"
+@e32 [button] "Settings" [selected]
+@e33 [button] "Create account"

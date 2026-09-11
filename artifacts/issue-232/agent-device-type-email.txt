@@ -1,0 +1,4 @@
+Error (TEXT_INPUT_NOT_FOCUSED): No focused text input was available for typing.
+Hint: Focus a visible text input, then retry type or fill. If the input is not exposed by accessibility, use a coordinate focus command before typing.
+Diagnostic ID: mtxgelaa-4e2620b4
+Diagnostics Log: /Users/saeed/.agent-device/sessions/issue-232/runner.log

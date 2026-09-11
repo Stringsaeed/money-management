@@ -1,0 +1,15 @@
+Page: com.stringsaeed.moneymanagement
+App: com.stringsaeed.moneymanagement
+Snapshot: 11 visible nodes
+@e1 [application] "Trove (Dev)"
+@e2 [window] "dismiss popup"
+@e3 [other] "dismiss popup"
+@e4 [other] "Sheet Grabber"
+@e5 [button] "Sheet Grabber"
+@e6 [scroll-area] "Sign in with email code" [scrollable]
+  [content below scroll-area hidden]
+@e7 [other] "Sign in with email code"
+@e8 [text] "We open WorkOS AuthKit. No password. Your local ledger stays on this device."
+@e9 [text] "Signing in does not create a Household and does not upload device records."
+@e10 [button] "Continue with email code"
+@e11 [button] "Cancel"

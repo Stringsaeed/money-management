@@ -1,0 +1,38 @@
+Tapped @e12 (201, 303)
+settled after 1784ms: +2 -21 (~12 unchanged)
+- @e5 [scroll-area] "stringsaeed@gmail.com"
+- @e6 [other] "stringsaeed@gmail.com"
+- @e7 [other] "Sign out"
+- @e8 [button] "Sign out"
+- @e9 [text] "Household sync is paused"
+- @e10 [text] "Your ledger on this device is still usable."
+- @e11 [other] "Try again"
+- @e12 [button] "Try again"
+- @e13 [text] "LEDGER"
+- @e14 [other] "Personal ✓"
+- @e15 [button] "Personal ✓"
+- @e16 [text] "Sync without a Household 🪪"
+- @e17 [text] "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."
+- @e18 [other] "Try again"
+- @e19 [button] "Try again"
+- @e20 [text] "Unauthorized"
+- @e21 [text] "Create a Household"
+- @e22 [text] "Start a shared space — family accounts, budgets, and reports in one place."
+- @e23 [text-field]
+- @e24 [other] "🏠 Create household"
+- @e25 [button] "🏠 Create household" [disabled]
++ @e5~s244175 [scroll-area] "Loading…"
++ @e6~s244175 [other] "Loading…"
+unchanged interactive (11):
+= @e2~s244175 [navigation-bar] "Settings"
+= @e3~s244175 [button] "Settings"
+= @e4~s244175 [text] "Profile"
+= @e7~s244175 [other] "Ledger"
+= @e8~s244175 [button]
+= @e9~s244175 [button] "Ledger"
+= @e10~s244175 [button] "Money Movement"
+= @e11~s244175 [button] "Inbox"
+= @e12~s244175 [button] "Envelopes"
+= @e13~s244175 [button] "Settings"
+= @e14~s244175 [button] "Create account"
+try_again_hh_exit=0

@@ -1,0 +1,10 @@
+date_utc=2026-09-11T21:45:03Z
+note=names only; values never recorded
+POWERSYNC_URL=absent
+POWERSYNC_JWT_PRIVATE_KEY=absent
+POWERSYNC_JWT_KID=absent
+PLANETSCALE_HOST=absent
+PLANETSCALE_DATABASE=absent
+PLANETSCALE_USER=absent
+PLANETSCALE_PASSWORD=absent
+DATABASE_URL=absent

@@ -1,0 +1,7 @@
+Tapped @e19 (201, 602)
+settled after 1387ms: +3 -2 (~30 unchanged)
+- @e18 [other] "Sync just for me"
+- @e19 [button] "Sync just for me"
++ @e18~s244168 [other] "Try again"
++ @e19~s244168 [button] "Try again"
++ @e20~s244168 [text] "Unauthorized"

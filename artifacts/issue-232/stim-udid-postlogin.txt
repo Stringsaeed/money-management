@@ -1,0 +1,3 @@
+udid=F324175E-BCA2-4F20-857E-C2D9678D44F5
+name=stim-mobile (iPhone 17 26.5)
+2026-09-11T21:40:39Z

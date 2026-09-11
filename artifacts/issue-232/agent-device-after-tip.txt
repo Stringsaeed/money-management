@@ -1,0 +1,6 @@
+Page: com.stringsaeed.moneymanagement
+App: com.stringsaeed.moneymanagement
+Snapshot: 1 nodes (truncated)
+No snapshot backend could read this screen (XCTest-backed snapshot tiers were deferred after recent slow accessibility work on this screen). Its refs and selectors are invalid. Use screenshot as visual truth and coordinate taps; retry snapshot after navigating.
+Captured a screenshot of this screen automatically as visual truth: /var/folders/4k/mlnwxj1d47x28dl1j4f57z900000gn/T/agent-device-screenshot-Jorm5Z/screenshot.png
+@e1 [application] "Trove (Dev)"

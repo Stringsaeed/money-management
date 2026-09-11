@@ -1,0 +1,200 @@
+2026-09-12 01:42:11.335 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Preferring automation type 48 instead of legacy element type OTHER derived from class/trait: UILabel:UILabel 8590000128
+2026-09-12 01:42:11.336 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Other is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.336 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.336 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.336 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.336 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.336 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.336 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Button, Selected is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.336 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Other is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.336 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] App orientation is 0 (not portrait) and UITextEffectsWindow window Window is not main window
+2026-09-12 01:42:11.336 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Leaving frame unchanged for Window: either already correct or we can't detect it.
+2026-09-12 01:42:11.336 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Query  found matching snapshots: {(
+    Application, pid: 24480
+)} (error: (null))
+2026-09-12 01:42:11.336 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Replying to query  with results: <XCTElementQueryResults: 0x1613fa400> (error: (null))
+2026-09-12 01:42:11.337 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Received attributes request for element: App element pid: 24480. Attributes: (
+    "XC_kAXXCAttributeFrame",
+    "XC_kAXXCAttributeWindowDisplayId",
+    "XC_kAXXCAttributeWindowContextId"
+)
+2026-09-12 01:42:11.337 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: about to CFRunLoopPerform
+2026-09-12 01:42:11.337 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting with 30.00s responsiveness timeout
+2026-09-12 01:42:11.337 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: inside CFRunLoopPerform
+2026-09-12 01:42:11.337 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: MT responded in time (won the race to the busy flag)
+2026-09-12 01:42:11.338 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting 60.00s for work to complete
+2026-09-12 01:42:11.338 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeFrame, XC_kAXXCAttributeWindowDisplayId, XC_kAXXCAttributeWindowContextId for App element pid: 24480
+2026-09-12 01:42:11.338 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-09-12 01:42:11.338 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Replying with attribute values: {
+    "XC_kAXXCAttributeFrame" =     {
+        Height = 874;
+        Width = 402;
+        X = 0;
+        Y = 0;
+    };
+    "XC_kAXXCAttributeWindowContextId" = 295566479;
+    "XC_kAXXCAttributeWindowDisplayId" = 0;
+}
+2026-09-12 01:42:11.339 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Received request to fetch matches for query:
+2026-09-12 01:42:11.339 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Evaluating query:
+2026-09-12 01:42:11.339 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Getting root element snapshot
+2026-09-12 01:42:11.339 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Getting snapshot for App element pid: 24480 for query
+2026-09-12 01:42:11.339 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Query requires iOS snapshot attributes .
+2026-09-12 01:42:11.339 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: about to CFRunLoopPerform
+2026-09-12 01:42:11.339 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting with 30.00s responsiveness timeout
+2026-09-12 01:42:11.339 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: inside CFRunLoopPerform
+2026-09-12 01:42:11.339 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: MT responded in time (won the race to the busy flag)
+2026-09-12 01:42:11.339 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting 60.00s for work to complete
+2026-09-12 01:42:11.339 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Got main window <AXUIElementRef 0x161873a80> {pid=24480} {uid=[ID:4 hash:0x106dc4400]}
+2026-09-12 01:42:11.339 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Capturing hierarchy with attributes XC_kAXXCAttributeElementType, XC_kAXXCAttributeElementBaseType, XC_kAXXCAttributeParent, XC_kAXXCAttributeIdentifier, XC_kAXXCAttributeAutomationType, XC_kAXXCAttributeTraits
+2026-09-12 01:42:11.339 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Capturing hierarchy with parameters {
+    attributes =     (
+        5003,
+        5004,
+        5002,
+        5019,
+        5058,
+        2004
+    );
+    maxArrayCount = 2147483647;
+    maxChildren = 2147483647;
+    maxDepth = 2147483647;
+    snapshotKeyHonorModalViews = 0;
+    traverseFromParentsToChildren = 1;
+}
+2026-09-12 01:42:11.339 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Snapshot attributes 5003, 5004, 5002, 5019, 5058, 2004
+2026-09-12 01:42:11.365 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Got snapshot for <AXUIElementRef 0x161b1ad60> {pid=24480} {uid=[ID:1 hash:0x0]}
+2026-09-12 01:42:11.365 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Got app orientation 0
+2026-09-12 01:42:11.365 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Captured accessibility snapshot data in 0.03s
+2026-09-12 01:42:11.365 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Found main window: Window
+2026-09-12 01:42:11.365 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Preferring automation type 48 instead of legacy element type OTHER derived from class/trait: UILabel:UILabel 8590000128
+2026-09-12 01:42:11.366 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Other is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.366 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.366 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.366 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.366 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.366 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.366 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Button, Selected is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.366 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Other is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:11.366 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] App orientation is 0 (not portrait) and UITextEffectsWindow window Window is not main window
+2026-09-12 01:42:11.366 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Leaving frame unchanged for Window: either already correct or we can't detect it.
+2026-09-12 01:42:11.366 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Query  found matching snapshots: {(
+    Application, pid: 24480
+)} (error: (null))
+2026-09-12 01:42:11.366 Df TroveDev[24480:17d210c] [com.apple.dt.xctest:Default] Replying to query  with results: <XCTElementQueryResults: 0x1613f8fc0> (error: (null))
+2026-09-12 01:42:13.853 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Received request to fetch matches for query:
+2026-09-12 01:42:13.853 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Evaluating query:
+2026-09-12 01:42:13.853 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Getting root element snapshot
+2026-09-12 01:42:13.853 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Getting snapshot for App element pid: 24480 for query
+2026-09-12 01:42:13.853 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Query requires iOS snapshot attributes .
+2026-09-12 01:42:13.853 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: about to CFRunLoopPerform
+2026-09-12 01:42:13.853 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting with 30.00s responsiveness timeout
+2026-09-12 01:42:13.853 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: inside CFRunLoopPerform
+2026-09-12 01:42:13.853 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: MT responded in time (won the race to the busy flag)
+2026-09-12 01:42:13.853 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting 60.00s for work to complete
+2026-09-12 01:42:13.853 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Got main window <AXUIElementRef 0x16255d410> {pid=24480} {uid=[ID:4 hash:0x106dc4400]}
+2026-09-12 01:42:13.853 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Capturing hierarchy with attributes XC_kAXXCAttributeElementType, XC_kAXXCAttributeElementBaseType, XC_kAXXCAttributeParent, XC_kAXXCAttributeIdentifier, XC_kAXXCAttributeAutomationType, XC_kAXXCAttributeTraits
+2026-09-12 01:42:13.853 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Capturing hierarchy with parameters {
+    attributes =     (
+        5003,
+        5004,
+        5002,
+        5019,
+        5058,
+        2004
+    );
+    maxArrayCount = 2147483647;
+    maxChildren = 2147483647;
+    maxDepth = 2147483647;
+    snapshotKeyHonorModalViews = 0;
+    traverseFromParentsToChildren = 1;
+}
+2026-09-12 01:42:13.853 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Snapshot attributes 5003, 5004, 5002, 5019, 5058, 2004
+2026-09-12 01:42:13.883 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Got snapshot for <AXUIElementRef 0x161b18a50> {pid=24480} {uid=[ID:1 hash:0x0]}
+2026-09-12 01:42:13.884 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Got app orientation 0
+2026-09-12 01:42:13.884 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Captured accessibility snapshot data in 0.03s
+2026-09-12 01:42:13.884 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Found main window: Window
+2026-09-12 01:42:13.884 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Preferring automation type 48 instead of legacy element type OTHER derived from class/trait: UILabel:UILabel 8590000128
+2026-09-12 01:42:13.884 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Other is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.884 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.884 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.884 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.884 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.884 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.884 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Button, Selected is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.884 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Other is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.885 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] App orientation is 0 (not portrait) and UITextEffectsWindow window Window is not main window
+2026-09-12 01:42:13.885 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Leaving frame unchanged for Window: either already correct or we can't detect it.
+2026-09-12 01:42:13.885 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Query  found matching snapshots: {(
+    Application, pid: 24480
+)} (error: (null))
+2026-09-12 01:42:13.885 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Replying to query  with results: <XCTElementQueryResults: 0x1613fb3c0> (error: (null))
+2026-09-12 01:42:13.886 Df TroveDev[24480:17d7794] [com.apple.dt.xctest:Default] Received attributes request for element: App element pid: 24480. Attributes: (
+    "XC_kAXXCAttributeFrame",
+    "XC_kAXXCAttributeWindowDisplayId",
+    "XC_kAXXCAttributeWindowContextId"
+)
+2026-09-12 01:42:13.886 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: about to CFRunLoopPerform
+2026-09-12 01:42:13.886 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting with 30.00s responsiveness timeout
+2026-09-12 01:42:13.886 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: inside CFRunLoopPerform
+2026-09-12 01:42:13.886 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: MT responded in time (won the race to the busy flag)
+2026-09-12 01:42:13.886 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting 60.00s for work to complete
+2026-09-12 01:42:13.886 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeFrame, XC_kAXXCAttributeWindowDisplayId, XC_kAXXCAttributeWindowContextId for App element pid: 24480
+2026-09-12 01:42:13.886 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-09-12 01:42:13.886 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Replying with attribute values: {
+    "XC_kAXXCAttributeFrame" =     {
+        Height = 874;
+        Width = 402;
+        X = 0;
+        Y = 0;
+    };
+    "XC_kAXXCAttributeWindowContextId" = 295566479;
+    "XC_kAXXCAttributeWindowDisplayId" = 0;
+}
+2026-09-12 01:42:13.887 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Received request to fetch matches for query:
+2026-09-12 01:42:13.887 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Evaluating query:
+2026-09-12 01:42:13.887 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Getting root element snapshot
+2026-09-12 01:42:13.887 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Getting snapshot for App element pid: 24480 for query
+2026-09-12 01:42:13.887 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Query requires iOS snapshot attributes .
+2026-09-12 01:42:13.887 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: about to CFRunLoopPerform
+2026-09-12 01:42:13.887 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting with 30.00s responsiveness timeout
+2026-09-12 01:42:13.887 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: inside CFRunLoopPerform
+2026-09-12 01:42:13.888 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: MT responded in time (won the race to the busy flag)
+2026-09-12 01:42:13.888 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting 60.00s for work to complete
+2026-09-12 01:42:13.888 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Got main window <AXUIElementRef 0x1618ecc30> {pid=24480} {uid=[ID:4 hash:0x106dc4400]}
+2026-09-12 01:42:13.888 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Capturing hierarchy with attributes XC_kAXXCAttributeElementType, XC_kAXXCAttributeElementBaseType, XC_kAXXCAttributeParent, XC_kAXXCAttributeIdentifier, XC_kAXXCAttributeAutomationType, XC_kAXXCAttributeTraits
+2026-09-12 01:42:13.888 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Capturing hierarchy with parameters {
+    attributes =     (
+        5003,
+        5004,
+        5002,
+        5019,
+        5058,
+        2004
+    );
+    maxArrayCount = 2147483647;
+    maxChildren = 2147483647;
+    maxDepth = 2147483647;
+    snapshotKeyHonorModalViews = 0;
+    traverseFromParentsToChildren = 1;
+}
+2026-09-12 01:42:13.888 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Snapshot attributes 5003, 5004, 5002, 5019, 5058, 2004
+2026-09-12 01:42:13.914 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Got snapshot for <AXUIElementRef 0x161b192f0> {pid=24480} {uid=[ID:1 hash:0x0]}
+2026-09-12 01:42:13.914 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Got app orientation 0
+2026-09-12 01:42:13.914 Df TroveDev[24480:17c922e] [com.apple.dt.xctest:Default] Captured accessibility snapshot data in 0.03s
+2026-09-12 01:42:13.914 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Found main window: Window
+2026-09-12 01:42:13.914 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Preferring automation type 48 instead of legacy element type OTHER derived from class/trait: UILabel:UILabel 8590000128
+2026-09-12 01:42:13.915 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Other is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.915 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.915 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.915 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.915 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.915 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Button is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.915 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Button, Selected is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.915 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Other is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-09-12 01:42:13.915 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] App orientation is 0 (not portrait) and UITextEffectsWindow window Window is not main window
+2026-09-12 01:42:13.915 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Leaving frame unchanged for Window: either already correct or we can't detect it.
+2026-09-12 01:42:13.915 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Query  found matching snapshots: {(
+    Application, pid: 24480
+)} (error: (null))
+2026-09-12 01:42:13.915 Df TroveDev[24480:17d210d] [com.apple.dt.xctest:Default] Replying to query  with results: <XCTElementQueryResults: 0x1613fbfc0> (error: (null))

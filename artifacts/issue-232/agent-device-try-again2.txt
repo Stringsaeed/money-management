@@ -1,0 +1,24 @@
+Tapped @e12 (201, 303)
+settled after 3519ms: +0 -0 (~32 unchanged)
+unchanged interactive (20):
+= @e2~s244163 [navigation-bar] "Settings"
+= @e3~s244163 [button] "Settings"
+= @e4~s244163 [text] "Profile"
+= @e5~s244163 [scroll-area] "stringsaeed@gmail.com"
+= @e6~s244163 [other] "stringsaeed@gmail.com"
+= @e7~s244163 [other] "Sign out"
+= @e8~s244163 [button] "Sign out"
+= @e9~s244163 [text] "Household sync is paused"
+= @e10~s244163 [text] "Your ledger on this device is still usable."
+= @e11~s244163 [other] "Try again"
+= @e12~s244163 [button] "Try again"
+= @e13~s244163 [text] "LEDGER"
+= @e14~s244163 [other] "Personal ✓"
+= @e15~s244163 [button] "Personal ✓"
+= @e16~s244163 [text] "Sync without a Household 🪪"
+= @e17~s244163 [text] "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."
+= @e18~s244163 [other] "Sync just for me"
+= @e19~s244163 [button] "Sync just for me"
+= @e20~s244163 [text] "Create a Household"
+= @e21~s244163 [text] "Start a shared space — family accounts, budgets, and reports in one place."
+… more interactive elements not shown, use snapshot -i

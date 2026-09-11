@@ -1,22 +1,35 @@
-date_utc=2026-09-11T21:05:00Z
+date_utc=2026-09-11T21:45:03Z
 branch=cursor/workos-certify-migration-b3d1
 api=https://auth.trove.ing
 api_note=#242 live (aud/client_id verify)
 client_id_compare=EQUAL
 WORKOS_WEBHOOK_SECRET_present=true
-POWERSYNC_URL_present=false
-POWERSYNC_JWT_PRIVATE_KEY_present=false
-POWERSYNC_JWT_KID_present=false
-PLANETSCALE_HOST_present=false
-PLANETSCALE_DATABASE_present=false
-PLANETSCALE_USER_present=false
-PLANETSCALE_PASSWORD_present=false
-DATABASE_URL_present=false
+
+# --- post-login facts (owner-signed-in sim; no OTP; no iOS rebuild) ---
+udid=F324175E-BCA2-4F20-857E-C2D9678D44F5
+metro=8083 healthy HTTP 200
+signed_in=true
+signed_in_email=stringsaeed@gmail.com
+signed_in_ui=Sign out visible (authkit-56-current.png / authkit-56-signed-in-profile.png)
+household_try_again=authkit-57-after-household-try-again.png
+sync_just_for_me_action=tapped Sync just for me (authkit-58-after-sync-just-for-me.png)
+sync_just_for_me_ui=Unauthorized
+http_outcome=CFNetwork HTTP 401 to auth.trove.ing /rpc
+http_evidence=cfnetwork-http-hits.txt; cfnetwork-401-context.txt; cfnetwork-401-summaries.txt; app-log-tail-postlogin.txt
+screenshots_postlogin=authkit-56-current.png authkit-56-signed-in-profile.png authkit-57-after-household-try-again.png authkit-58-after-sync-just-for-me.png authkit-59-after-household-try-again2.png authkit-60-unauthorized-final.png
+row2_post_login_orpc=FAIL (protected Sync probe returned HTTP 401; UI Unauthorized while signed in)
+relates_to=#232 only (NEVER Closes)
+certified=false
+
+# --- missing env names (absent; names only) ---
+POWERSYNC_URL=absent
+POWERSYNC_JWT_PRIVATE_KEY=absent
+POWERSYNC_JWT_KID=absent
+PLANETSCALE_HOST=absent
+PLANETSCALE_DATABASE=absent
+PLANETSCALE_USER=absent
+PLANETSCALE_PASSWORD=absent
+DATABASE_URL=absent
 
 row2_cancel=PASS (authkit-04-cancel.png)
 row2_email_challenge=PARTIAL (authkit-07..09 code challenge reached; OTP digit boxes AX-unavailable in ASWebAuthenticationSession)
-row2_post_login_orpc=NOT_RETESTED_THIS_PASS
-evidence_earlier_same_session=authkit-30/31 showed signed-in Profile (email visible, Sign out, Household sync paused / Try again, Sync just for me) after AuthKit; later simulator session returned to signed-out Sign-in sheet (authkit-41/43/46) so Try again / Sync just for me could not be re-driven for HTTP outcome capture
-hard_stop=signed_out_before_retry_controls; OTP AX blocks re-auth
-http_outcome=no fresh protected /rpc status captured this pass (no bearer session on active sim)
-screenshots=artifacts/issue-232/authkit-01..46*.png

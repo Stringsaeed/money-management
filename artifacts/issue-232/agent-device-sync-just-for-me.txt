@@ -1,0 +1,7 @@
+Error (AMBIGUOUS_MATCH): Selector matched 2 distinct actionable elements: label="Sync just for me"
+Hint: Multiple candidates matched. Narrow the query or pass an exact identifier.
+Candidates:
+  @e18~s244152 [other] "Sync just for me"
+  @e19~s244152 [button] "Sync just for me"
+Diagnostic ID: mtxh7lm5-c312fb68
+Diagnostics Log: /Users/saeed/.agent-device/sessions/issue-232/requests/1c614fa34c592767.ndjson

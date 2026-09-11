@@ -1,0 +1,35 @@
+Opened: com.stringsaeed.moneymanagement
+Session state: /Users/saeed/.agent-device/sessions/issue-232
+Page: com.stringsaeed.moneymanagement
+App: com.stringsaeed.moneymanagement
+Snapshot: 30 nodes
+@e1 [application] "Trove (Dev)"
+@e2 [other] "Home"
+@e3 [other] "0 pages"
+@e4 [scroll-area] "$0.00" [scrollable]
+@e5 [other] "$0.00"
+@e6 [cell] "repeat 1"
+@e7 [image] "repeat 1"
+@e8 [text] "Upcoming payments"
+@e9 [button] "View all recurring rules"
+@e10 [cell] "Nothing scheduled yet"
+@e11 [text] "🌱"
+@e12 [text] "Add a Recurring Rule to see what’s next."
+@e13 [button] "Create account"
+@e14 [other] "newspaper"
+@e15 [image] "newspaper"
+@e16 [text] "Recent Journal"
+@e17 [button] "View all recent transactions"
+@e18 [other] "No transactions"
+@e19 [text] "No transactions yet. Tap + Add Entry to get started."
+@e20 [image] "AdditionalDimmingOverlay"
+@e21 [navigation-bar] "Home"
+@e22 [button] "Filters"
+@e23 [other] "Ledger"
+@e24 [button] [selected]
+@e25 [button] "Ledger"
+@e26 [button] "Money Movement"
+@e27 [button] "Inbox"
+@e28 [button] "Envelopes"
+@e29 [button] "Settings"
+@e30 [button] "Create account"

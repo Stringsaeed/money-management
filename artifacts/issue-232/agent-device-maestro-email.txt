@@ -1,0 +1,7 @@
+Error (REPLAY_DIVERGENCE): Replay failed at step 1 (inputText <text>): No active session. Run open first. (/tmp/authkit-email.yaml:line 3)
+Hint: Run open first or pass an explicit device selector.
+Diagnostic ID: mtxgoemp-0d586199
+Diagnostics Log: /var/folders/4k/mlnwxj1d47x28dl1j4f57z900000gn/T/agent-device-replay-daemon-w8l96e/sessions/issue-232/requests/ea53b98a9c89513f.ndjson
+Divergence at step 1 (/tmp/authkit-email.yaml:3)
+Repair hint: manual — no safe automated repair could be proven; inspect the screen and repair by hand. if you fixed app state with --no-record actions: replay --from 1 --plan-digest e69d339e8c67e45636227c6a3ca5a1dbb3fb7c7729875a263cc846526c359c03.
+Screen: unavailable (no-session). The session closed before a post-failure screen could be captured.

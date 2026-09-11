@@ -1,0 +1,8 @@
+Page: com.stringsaeed.moneymanagement
+App: com.stringsaeed.moneymanagement
+Snapshot: 5 nodes
+@e1 [alert] "“TroveDev” Wants to Use “api.workos.com” to Sign In"
+@e2 [button] "Cancel"
+@e3 [button] "Continue"
+@e4 [text] [same label as parent]
+@e5 [text] "This allows the app and website to share information about you."

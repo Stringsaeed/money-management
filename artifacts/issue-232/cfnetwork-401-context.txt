@@ -1,0 +1,51 @@
+===== window lines 316-331 =====
+316:2026-09-12 01:41:32.384 I  TroveDev[24480:17d59e9] [com.apple.network:quic] quic_conn_keepalive_configure [C21.1.1.2:2] [-019acb475abfd7826c9928474abfe0eed58f8bf0] started keep-alive timer (20 seconds)
+317:2026-09-12 01:41:32.384 Df TroveDev[24480:17d59e9] [com.apple.CFNetwork:Default] Task <A1907ABF-5C94-4605-B5DF-EFE175EEF2DF>.<27> now using Connection 21
+318:2026-09-12 01:41:32.386 Df TroveDev[24480:17d59e9] [com.apple.cfnetwork:h3stream] 0x162396858 ID=24 Task <A1907ABF-5C94-4605-B5DF-EFE175EEF2DF>.<27> sent request, body S 29
+319:2026-09-12 01:41:32.386 Df TroveDev[24480:17c922e] [com.apple.UIKit:EventDispatch] Evaluating dispatch of UIEvent: 0x106d57100; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 1
+320:2026-09-12 01:41:32.387 I  TroveDev[24480:17c922e] [com.apple.Accessibility:AXRuntimeNotifications] Attempting to send notification:  (1001) <private>
+321:2026-09-12 01:41:32.387 A  TroveDev[24480:17c922e] (UIKitCore) send gesture actions
+322:2026-09-12 01:41:32.387 A  TroveDev[24480:17c922e] (UIKitCore) send gesture actions
+323:2026-09-12 01:41:32.387 I  TroveDev[24480:17c922e] [com.apple.Accessibility:AXRuntimeNotifications] Did post notification. notification:  (1001) error:0 data:<private>
+324:2026-09-12 01:41:32.614 Df TroveDev[24480:17cc755] [com.apple.cfnetwork:h3stream] 0x162396858 ID=24 Task <A1907ABF-5C94-4605-B5DF-EFE175EEF2DF>.<27> received response, status 401 content K
+325:2026-09-12 01:41:32.614 Df TroveDev[24480:17cc755] [com.apple.CFNetwork:Default] Task <A1907ABF-5C94-4605-B5DF-EFE175EEF2DF>.<27> response ended
+326:2026-09-12 01:41:32.615 Df TroveDev[24480:17cc755] [com.apple.network:connection] [C21] event: client:connection_idle @18.717s
+327:2026-09-12 01:41:32.615 I  TroveDev[24480:17cc755] [com.apple.network:connection] nw_endpoint_handler_report_connection_idle [C21 IPv6#ad78252c.443 ready parent-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)] Reporting connection idle to protocols
+328:2026-09-12 01:41:32.615 I  TroveDev[24480:17cc755] [com.apple.network:connection] nw_flow_notify [C21.1.1.2 IPv6#ad78252c.443 ready socket-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)] received notification connection_idle
+329:2026-09-12 01:41:32.615 I  TroveDev[24480:17cc755] [com.apple.network:quic] quic_conn_keepalive_configure [C21.1.1.2:2] [-019acb475abfd7826c9928474abfe0eed58f8bf0] stopped keep-alive timer
+330:2026-09-12 01:41:32.615 Df TroveDev[24480:17cc755] [com.apple.CFNetwork:Default] Task <A1907ABF-5C94-4605-B5DF-EFE175EEF2DF>.<27> done using Connection 21
+331:2026-09-12 01:41:32.615 Df TroveDev[24480:17d210c] [com.apple.CFNetwork:Summary] Task <A1907ABF-5C94-4605-B5DF-EFE175EEF2DF>.<27> summary for task success {transaction_duration_ms=232, response_status=401, connection=21, reused=1, reused_after_ms=14625, request_start_ms=1, request_duration_ms=1, response_start_ms=231, response_duration_ms=0, request_bytes=799, request_throughput_kbps=5896, response_bytes=521, response_throughput_kbps=6481, cache_hit=false}
+===== window lines 323-338 =====
+323:2026-09-12 01:41:32.387 I  TroveDev[24480:17c922e] [com.apple.Accessibility:AXRuntimeNotifications] Did post notification. notification:  (1001) error:0 data:<private>
+324:2026-09-12 01:41:32.614 Df TroveDev[24480:17cc755] [com.apple.cfnetwork:h3stream] 0x162396858 ID=24 Task <A1907ABF-5C94-4605-B5DF-EFE175EEF2DF>.<27> received response, status 401 content K
+325:2026-09-12 01:41:32.614 Df TroveDev[24480:17cc755] [com.apple.CFNetwork:Default] Task <A1907ABF-5C94-4605-B5DF-EFE175EEF2DF>.<27> response ended
+326:2026-09-12 01:41:32.615 Df TroveDev[24480:17cc755] [com.apple.network:connection] [C21] event: client:connection_idle @18.717s
+327:2026-09-12 01:41:32.615 I  TroveDev[24480:17cc755] [com.apple.network:connection] nw_endpoint_handler_report_connection_idle [C21 IPv6#ad78252c.443 ready parent-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)] Reporting connection idle to protocols
+328:2026-09-12 01:41:32.615 I  TroveDev[24480:17cc755] [com.apple.network:connection] nw_flow_notify [C21.1.1.2 IPv6#ad78252c.443 ready socket-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)] received notification connection_idle
+329:2026-09-12 01:41:32.615 I  TroveDev[24480:17cc755] [com.apple.network:quic] quic_conn_keepalive_configure [C21.1.1.2:2] [-019acb475abfd7826c9928474abfe0eed58f8bf0] stopped keep-alive timer
+330:2026-09-12 01:41:32.615 Df TroveDev[24480:17cc755] [com.apple.CFNetwork:Default] Task <A1907ABF-5C94-4605-B5DF-EFE175EEF2DF>.<27> done using Connection 21
+331:2026-09-12 01:41:32.615 Df TroveDev[24480:17d210c] [com.apple.CFNetwork:Summary] Task <A1907ABF-5C94-4605-B5DF-EFE175EEF2DF>.<27> summary for task success {transaction_duration_ms=232, response_status=401, connection=21, reused=1, reused_after_ms=14625, request_start_ms=1, request_duration_ms=1, response_start_ms=231, response_duration_ms=0, request_bytes=799, request_throughput_kbps=5896, response_bytes=521, response_throughput_kbps=6481, cache_hit=false}
+332:2026-09-12 01:41:32.615 Df TroveDev[24480:17d210c] [com.apple.CFNetwork:Default] Task <A1907ABF-5C94-4605-B5DF-EFE175EEF2DF>.<27> finished successfully
+333:2026-09-12 01:41:32.615 I  TroveDev[24480:17d59e9] [com.apple.runningboard:assertion] Acquiring assertion: <RBSAssertionDescriptor| "com.apple.CFNetwork.StorageDB" ID:(null) target:24480>
+334:2026-09-12 01:41:32.616 Df TroveDev[24480:17d5f5c] [com.apple.CFNetwork:Summary] Task <BC54A9CB-59DC-40C1-B229-A553DD744AEB>.<26> summary for task success {transaction_duration_ms=233, response_status=401, cache_hit=true}
+335:2026-09-12 01:41:32.616 Df TroveDev[24480:17d5f5c] [com.apple.CFNetwork:Default] Task <BC54A9CB-59DC-40C1-B229-A553DD744AEB>.<26> finished successfully
+336:2026-09-12 01:41:32.637 Df TroveDev[24480:17d59e9] [com.apple.dt.xctest:Default] Received request to fetch matches for query:
+337:2026-09-12 01:41:32.637 Df TroveDev[24480:17d59e9] [com.apple.dt.xctest:Default] Evaluating query:
+338:2026-09-12 01:41:32.637 Df TroveDev[24480:17d59e9] [com.apple.dt.xctest:Default] Getting root element snapshot
+===== window lines 326-341 =====
+326:2026-09-12 01:41:32.615 Df TroveDev[24480:17cc755] [com.apple.network:connection] [C21] event: client:connection_idle @18.717s
+327:2026-09-12 01:41:32.615 I  TroveDev[24480:17cc755] [com.apple.network:connection] nw_endpoint_handler_report_connection_idle [C21 IPv6#ad78252c.443 ready parent-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)] Reporting connection idle to protocols
+328:2026-09-12 01:41:32.615 I  TroveDev[24480:17cc755] [com.apple.network:connection] nw_flow_notify [C21.1.1.2 IPv6#ad78252c.443 ready socket-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)] received notification connection_idle
+329:2026-09-12 01:41:32.615 I  TroveDev[24480:17cc755] [com.apple.network:quic] quic_conn_keepalive_configure [C21.1.1.2:2] [-019acb475abfd7826c9928474abfe0eed58f8bf0] stopped keep-alive timer
+330:2026-09-12 01:41:32.615 Df TroveDev[24480:17cc755] [com.apple.CFNetwork:Default] Task <A1907ABF-5C94-4605-B5DF-EFE175EEF2DF>.<27> done using Connection 21
+331:2026-09-12 01:41:32.615 Df TroveDev[24480:17d210c] [com.apple.CFNetwork:Summary] Task <A1907ABF-5C94-4605-B5DF-EFE175EEF2DF>.<27> summary for task success {transaction_duration_ms=232, response_status=401, connection=21, reused=1, reused_after_ms=14625, request_start_ms=1, request_duration_ms=1, response_start_ms=231, response_duration_ms=0, request_bytes=799, request_throughput_kbps=5896, response_bytes=521, response_throughput_kbps=6481, cache_hit=false}
+332:2026-09-12 01:41:32.615 Df TroveDev[24480:17d210c] [com.apple.CFNetwork:Default] Task <A1907ABF-5C94-4605-B5DF-EFE175EEF2DF>.<27> finished successfully
+333:2026-09-12 01:41:32.615 I  TroveDev[24480:17d59e9] [com.apple.runningboard:assertion] Acquiring assertion: <RBSAssertionDescriptor| "com.apple.CFNetwork.StorageDB" ID:(null) target:24480>
+334:2026-09-12 01:41:32.616 Df TroveDev[24480:17d5f5c] [com.apple.CFNetwork:Summary] Task <BC54A9CB-59DC-40C1-B229-A553DD744AEB>.<26> summary for task success {transaction_duration_ms=233, response_status=401, cache_hit=true}
+335:2026-09-12 01:41:32.616 Df TroveDev[24480:17d5f5c] [com.apple.CFNetwork:Default] Task <BC54A9CB-59DC-40C1-B229-A553DD744AEB>.<26> finished successfully
+336:2026-09-12 01:41:32.637 Df TroveDev[24480:17d59e9] [com.apple.dt.xctest:Default] Received request to fetch matches for query:
+337:2026-09-12 01:41:32.637 Df TroveDev[24480:17d59e9] [com.apple.dt.xctest:Default] Evaluating query:
+338:2026-09-12 01:41:32.637 Df TroveDev[24480:17d59e9] [com.apple.dt.xctest:Default] Getting root element snapshot
+339:2026-09-12 01:41:32.637 Df TroveDev[24480:17d59e9] [com.apple.dt.xctest:Default] Getting snapshot for App element pid: 24480 for query
+340:2026-09-12 01:41:32.637 Df TroveDev[24480:17d59e9] [com.apple.dt.xctest:Default] Query requires iOS snapshot attributes .
+341:2026-09-12 01:41:32.637 Df TroveDev[24480:17d59e9] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: about to CFRunLoopPerform

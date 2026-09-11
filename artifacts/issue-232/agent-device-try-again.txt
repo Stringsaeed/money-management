@@ -1,0 +1,7 @@
+Error (AMBIGUOUS_MATCH): Selector matched 2 distinct actionable elements: label="Try again"
+Hint: Multiple candidates matched. Narrow the query or pass an exact identifier.
+Candidates:
+  @e11~s244150 [other] "Try again"
+  @e12~s244150 [button] "Try again"
+Diagnostic ID: mtxh7jbi-a06898ec
+Diagnostics Log: /Users/saeed/.agent-device/sessions/issue-232/requests/a269886be477c74f.ndjson

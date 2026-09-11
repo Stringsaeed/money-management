@@ -36,7 +36,7 @@ Recorded in `revision.txt` / `authkit-live-write.txt` (`date=2026-09-11T20:46:07
 - Repo-wide `pnpm lint` and `pnpm format:check` **fail** on pre-existing findings.
 - Full `pnpm test:ci` **passed** previously: mobile Jest **742/742** + `@trove/db` cutover **3/3**.
 - **Row 2 iOS AuthKit UI (partial):** cancel PASS; hosted AuthKit email page + email-code challenge PARTIAL; OTP entry hard-stopped (agent-device AX unavailable inside ASWebAuthenticationSession). Still signed out afterward (`authkit-21-signed-out-final.png`).
-- **Post-login protected API:** **NOT RETESTED** this finish pass — client ids are **EQUAL** (`client-id-compare.txt`; values omitted); #242 live. Active sim was signed out before Try again / Sync just for me; earlier signed-in Profile remains in `authkit-30`/`31` only (no fresh `/rpc` HTTP status).
+- **Post-login protected API:** **FAIL** — owner-signed-in sim (`stringsaeed@gmail.com`, Sign out). Sync just for me → UI Unauthorized + CFNetwork HTTP 401 on `https://auth.trove.ing/rpc` (`authkit-56`…`58`, `cfnetwork-401-summaries.txt`). Client ids EQUAL; #242 live. Do not treat as certified.
 - Android runtime **not started**. Disposable clean-setup after reset **blocked**.
 
 Do not merge as certified. No production deploy. Parent #224 stays open. **Do not use Closes #232.**
@@ -124,13 +124,13 @@ A row is complete only when every required sub-criterion is `PASS` (or an explic
 | Refresh rotation | not evidenced | No signed-in session. |
 | Session expiry | not evidenced on device | Automated expired-token coverage in `@trove/auth` only. |
 | Transient network recovery | not evidenced | No runtime artifact. |
-| Post-login protected oRPC / bearer | `NOT RETESTED` | Client ids **EQUAL** (`client-id-compare.txt`). Finish pass sim signed out before Try again / Sync just for me; earlier signed-in Profile only in `authkit-30`/`31` (no fresh `/rpc` status). #242 live on `auth.trove.ing`. |
+| Post-login protected oRPC / bearer | `FAIL` | Signed-in `stringsaeed@gmail.com` + Sign out (`authkit-56-*.png`). Sync just for me → UI **Unauthorized** (`authkit-58-after-sync-just-for-me.png`); CFNetwork `response_status=401` on protected `/rpc` (`cfnetwork-401-summaries.txt`, `authkit-live-write.txt`). Client ids EQUAL; #242 live. Not a successful bearer call. |
 | iOS development build | prior FAIL then recovered | ExpoSQLite vendor + Metro `.rnrepo-cache` blockList on this branch; live AuthKit driven without `stim ios` rebuild this session. |
 | Android development build | not started | No Android agent-device artifacts. **Do not claim Android pass.** |
 
-**Row status: `PARTIAL` (cancel PASS; email challenge PARTIAL; OTP/callback hard-stopped; post-login NOT RETESTED).**
+**Row status: `PARTIAL` (cancel PASS; email challenge PARTIAL; OTP/callback hard-stopped; post-login protected oRPC **FAIL** — HTTP 401 / Unauthorized while signed in).**
 
-Notes: OTP automation blocked by AuthKit webview AX (not an env-name blocker). Client ids **EQUAL** (mismatch cleared). Post-login protected oRPC **not re-captured** this pass (active sim signed out). Still BLOCKED for live PowerSync/PlanetScale mint: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`). `WORKOS_WEBHOOK_SECRET` **present** locally (value omitted) — live webhook apply still not evidenced.
+Notes: OTP automation blocked by AuthKit webview AX (not an env-name blocker). Client ids **EQUAL**. Post-login protected oRPC **FAIL** (signed-in Sync just for me → Unauthorized / CFNetwork 401). Still BLOCKED for live PowerSync/PlanetScale mint: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`) — `env-hardstop-absent.txt`. `WORKOS_WEBHOOK_SECRET` **present** locally (value omitted) — live webhook apply still not evidenced.
 
 Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_REDIRECT_URI`, `WORKOS_CLAIM_TOKEN`, `WORKOS_COOKIE_PASSWORD`, `EXPO_PUBLIC_WORKOS_CLIENT_ID`, `EXPO_PUBLIC_WORKOS_REDIRECT_URI`, `EXPO_PUBLIC_SERVER_URL`.
 
@@ -246,7 +246,7 @@ API focused files in the 97: `powersync/token.test.ts` (4), `personal-budget-rec
 | `stim ios` | Prior build recovery on branch; **this AuthKit session did not rebuild** (`simctl launch` only). | `stim-ios-*.json` |
 | agent-device (iOS AuthKit) | **PARTIAL** — cancel PASS; email + code challenge reached; OTP hard-stopped (AX unavailable). | `authkit-01-launch.png` … `authkit-21-signed-out-final.png`, `authkit-live-write.txt` |
 | Client id equality | **EQUAL** (names only) | `client-id-compare.txt` — `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) |
-| Post-login protected API | **NOT RETESTED** | Client ids EQUAL; #242 live; finish pass signed out before Try again / Sync just for me (`authkit-41`/`43`/`46`). Earlier signed-in Profile: `authkit-30`/`31`. |
+| Post-login protected API | **FAIL** | Signed-in + Sync just for me → Unauthorized; CFNetwork 401 (`authkit-56`…`58`, `cfnetwork-401-summaries.txt`, `authkit-live-write.txt`). |
 | `stim doctor android` / `stim android` / agent-device (Android) | not started | — |
 | Maestro / verify-trove flows | not started | — |
 
@@ -358,3 +358,14 @@ stim start --json  # -> stim-start.json (port 8083)
 4. Measure PowerSync existing-connection removal and the offline-device limitation, or keep those sub-criteria `BLOCKED` with the env names above.
 5. Either perform the skipped disposable reset and reproduce clean setup (row 8), or keep row 8 `BLOCKED` and **do not** claim #232 complete.
 6. Keep #224 open. Do not merge as certified. Do not deploy to production. **Do not use Closes #232** until certification is actually complete.
+
+## Post-login Sync evidence (2026-09-11T21:44Z)
+
+- Metro `:8083` **200**; stim-mobile UDID `F324175E-BCA2-4F20-857E-C2D9678D44F5` (no iOS rebuild).
+- Signed-in confirmed: `stringsaeed@gmail.com`, **Sign out** (`authkit-56-current.png`).
+- Household **Try again** + **Sync just for me** driven; Sync → UI **Unauthorized** (`authkit-58-after-sync-just-for-me.png`).
+- CFNetwork: `response_status=401` correlated with Sync tap (`cfnetwork-http-hits.txt`, `cfnetwork-401-summaries.txt`). Target API `https://auth.trove.ing` (`EXPO_PUBLIC_SERVER_URL`); `/rpc` path via oRPC client.
+- Env hard-stop names **absent** (names only): `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`) — see `env-hard-stop.txt`.
+- Screenshots: `authkit-56`…`authkit-60-unauthorized-final.png`.
+- **Not certified.** Relates to #232 only. Parent #224 stays open. No Closes.
+
