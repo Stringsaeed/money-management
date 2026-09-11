@@ -1,11 +1,14 @@
 export {
   COMMAND_KINDS,
   HOUSEHOLD_ROLES,
+  commandLedgerId,
   isCommandKind,
+  resolveCommandScope,
   type AppliedResult,
   type CommandEnvelope,
   type CommandKind,
   type CommandResult,
+  type CommandScope,
   type ConflictResult,
   type ForbiddenResult,
   type HouseholdRole,
@@ -17,6 +20,18 @@ export {
   type StaleVersionResult,
   type ValidationIssue,
 } from "./command.js";
+export {
+  PERSONAL_LEDGER_PREFIX,
+  isPersonalLedgerId,
+  ledgerIdForScope,
+  organizationLedgerId,
+  parseLedgerId,
+  personalLedgerId,
+  personalLedgerOwner,
+  sameLedgerScope,
+  type LedgerScope,
+  type LedgerScopeType,
+} from "./ledger-scope.js";
 export {
   EFFECT_TAGS,
   coversEffects,
