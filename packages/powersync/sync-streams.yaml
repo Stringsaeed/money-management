@@ -9,6 +9,32 @@ streams:
       SELECT * FROM membership
       WHERE user_id = auth.user_id()
 
+  # A signed-in User always has a Personal Ledger, so this streams eagerly and
+  # needs no subscription parameter: the ledger row itself names its owner.
+  personal_ledger:
+    auto_subscribe: true
+    priority: 2
+    accept_potentially_dangerous_queries: true
+    queries:
+      - |
+        SELECT * FROM accounts
+        WHERE ledger_id IN (
+          SELECT id FROM ledger
+          WHERE personal_user_id = auth.user_id()
+        )
+      - |
+        SELECT * FROM categories
+        WHERE ledger_id IN (
+          SELECT id FROM ledger
+          WHERE personal_user_id = auth.user_id()
+        )
+      - |
+        SELECT * FROM transactions
+        WHERE ledger_id IN (
+          SELECT id FROM ledger
+          WHERE personal_user_id = auth.user_id()
+        )
+
   household_ledger:
     accept_potentially_dangerous_queries: true
     queries:

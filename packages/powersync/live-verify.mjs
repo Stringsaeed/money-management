@@ -34,6 +34,11 @@ const publicRuleId = `${runId}-public-rule`;
 const privateRuleId = `${runId}-private-rule`;
 const publicOccurrenceId = `${runId}-public-occurrence`;
 const privateOccurrenceId = `${runId}-private-occurrence`;
+// User C belongs to no household and exercises the Personal Ledger stream.
+const personalLedgerId = `personal:${runId}-user-c`;
+const personalAccountId = `${runId}-personal-account`;
+const personalCategoryId = `${runId}-personal-category`;
+const personalTransactionId = `${runId}-personal-transaction`;
 const sql = postgres(databaseUrl.toString(), { max: 1 });
 const clients = [];
 
@@ -42,13 +47,15 @@ const membership = new Table({
   user_id: column.text,
 });
 const accounts = new Table({
+  ledger_id: column.text,
   household_id: column.text,
   owner_user_id: column.text,
   visibility: column.text,
 });
-const categories = new Table({ household_id: column.text });
+const categories = new Table({ ledger_id: column.text, household_id: column.text });
 const transactions = new Table({
   account_id: column.text,
+  ledger_id: column.text,
   household_id: column.text,
   to_account_id: column.text,
 });
@@ -100,16 +107,18 @@ try {
   assert.deepEqual(await ids(clientC.db, "membership"), []);
   assert.deepEqual(await ids(clientA.db, "accounts"), [privateAccountId, publicAccountId].sort());
   assert.deepEqual(await ids(clientB.db, "accounts"), [publicAccountId]);
-  assert.deepEqual(await ids(clientC.db, "accounts"), []);
   assert.deepEqual(await ids(clientA.db, "categories"), [categoryId]);
   assert.deepEqual(await ids(clientB.db, "categories"), [categoryId]);
-  assert.deepEqual(await ids(clientC.db, "categories"), []);
   assert.deepEqual(
     await ids(clientA.db, "transactions"),
     [privateTransactionId, publicTransactionId].sort(),
   );
   assert.deepEqual(await ids(clientB.db, "transactions"), [publicTransactionId]);
-  assert.deepEqual(await ids(clientC.db, "transactions"), []);
+  // User C is in no Household: they see their Personal Ledger and nothing else,
+  // and their rows never reach the Household members.
+  assert.deepEqual(await ids(clientC.db, "accounts"), [personalAccountId]);
+  assert.deepEqual(await ids(clientC.db, "categories"), [personalCategoryId]);
+  assert.deepEqual(await ids(clientC.db, "transactions"), [personalTransactionId]);
   for (const table of [
     "budget_workspaces",
     "envelopes",
@@ -149,6 +158,7 @@ try {
         auth: "ES256",
         tenancy: "pass",
         privateAccountIsolation: "pass",
+        personalLedgerIsolation: "pass",
         budgetDomains: "pass",
         recurringDomains: "pass",
         warmupMs: warmup,
@@ -216,6 +226,8 @@ async function connectClient(label, token) {
     ),
   );
   await Promise.all(subscriptions.map((subscription) => subscription.waitForFirstSync()));
+  // personal_ledger auto-subscribes, so wait on the database rather than a handle.
+  await db.waitForFirstSync();
   const client = { db, dbPath, subscriptions };
   clients.push(client);
   return client;
@@ -265,19 +277,20 @@ async function seed() {
   `;
   await sql`
     INSERT INTO accounts (
-      id, household_id, name, type, currency, color, icon, initial_balance_minor,
+      id, ledger_id, household_id, name, type, currency, color, icon, initial_balance_minor,
       exclude_from_total, sort_order, lifecycle, visibility, owner_user_id, version,
       created_by, updated_by, created_at, updated_at
     ) VALUES
-      (${publicAccountId}, ${householdId}, 'Shared', 'bank', 'USD', '#4A90D9', 'banknote.fill', 0, false, 0, 'active', 'public', null, 0, ${userA}, ${userA}, now(), now()),
-      (${privateAccountId}, ${householdId}, 'Private', 'bank', 'USD', '#4A90D9', 'banknote.fill', 0, false, 1, 'active', 'private', ${userA}, 0, ${userA}, ${userA}, now(), now())
+      (${publicAccountId}, ${householdId}, ${householdId}, 'Shared', 'bank', 'USD', '#4A90D9', 'banknote.fill', 0, false, 0, 'active', 'public', null, 0, ${userA}, ${userA}, now(), now()),
+      (${privateAccountId}, ${householdId}, ${householdId}, 'Private', 'bank', 'USD', '#4A90D9', 'banknote.fill', 0, false, 1, 'active', 'private', ${userA}, 0, ${userA}, ${userA}, now(), now())
   `;
   await sql`
     INSERT INTO categories (
-      id, household_id, name, type, color, icon, sort_order, lifecycle, version,
+      id, ledger_id, household_id, name, type, color, icon, sort_order, lifecycle, version,
       created_by, updated_by, created_at, updated_at
-    ) VALUES (${categoryId}, ${householdId}, 'Z3 category', 'expense', '#FF6B6B', 'tag', 0, 'active', 0, ${userA}, ${userA}, now(), now())
+    ) VALUES (${categoryId}, ${householdId}, ${householdId}, 'Z3 category', 'expense', '#FF6B6B', 'tag', 0, 'active', 0, ${userA}, ${userA}, now(), now())
   `;
+  await seedPersonalLedger();
   await insertTransaction(publicTransactionId, publicAccountId);
   await insertTransaction(privateTransactionId, privateAccountId);
   await sql`
@@ -333,6 +346,43 @@ async function seed() {
   `;
 }
 
+/** User C has no Household: everything here hangs off their Personal Ledger. */
+async function seedPersonalLedger() {
+  await sql`
+    INSERT INTO ledger (id, kind, personal_user_id, created_at, updated_at)
+    VALUES (${personalLedgerId}, 'personal', ${userC}, now(), now())
+  `;
+  await sql`
+    INSERT INTO accounts (
+      id, ledger_id, household_id, name, type, currency, color, icon, initial_balance_minor,
+      exclude_from_total, sort_order, lifecycle, visibility, owner_user_id, version,
+      created_by, updated_by, created_at, updated_at
+    ) VALUES (
+      ${personalAccountId}, ${personalLedgerId}, null, 'Personal', 'cash', 'USD', '#8B9D83',
+      'banknote.fill', 0, false, 0, 'active', 'public', null, 0, ${userC}, ${userC}, now(), now()
+    )
+  `;
+  await sql`
+    INSERT INTO categories (
+      id, ledger_id, household_id, name, type, color, icon, sort_order, lifecycle, version,
+      created_by, updated_by, created_at, updated_at
+    ) VALUES (
+      ${personalCategoryId}, ${personalLedgerId}, null, 'Personal category', 'expense',
+      '#FF6B6B', 'tag', 0, 'active', 0, ${userC}, ${userC}, now(), now()
+    )
+  `;
+  await sql`
+    INSERT INTO transactions (
+      id, ledger_id, household_id, type, amount_minor, currency, date, account_id, category_id,
+      is_recurring, description, version, created_by, updated_by, created_at, updated_at
+    ) VALUES (
+      ${personalTransactionId}, ${personalLedgerId}, null, 'expense', 100, 'USD', '2026-09-07',
+      ${personalAccountId}, ${personalCategoryId}, false, 'Z3 personal', 0,
+      ${userC}, ${userC}, now(), now()
+    )
+  `;
+}
+
 async function insertRule(id, accountId) {
   await sql`
     INSERT INTO recurring_rules (
@@ -350,10 +400,10 @@ async function insertRule(id, accountId) {
 async function insertTransaction(id, accountId = publicAccountId) {
   await sql`
     INSERT INTO transactions (
-      id, household_id, type, amount_minor, currency, date, account_id, category_id,
+      id, ledger_id, household_id, type, amount_minor, currency, date, account_id, category_id,
       is_recurring, description, version, created_by, updated_by, created_at, updated_at
     ) VALUES (
-      ${id}, ${householdId}, 'expense', 100, 'USD', '2026-09-07', ${accountId}, ${categoryId},
+      ${id}, ${householdId}, ${householdId}, 'expense', 100, 'USD', '2026-09-07', ${accountId}, ${categoryId},
       false, 'Z3 verification', 0, ${userA}, ${userA}, now(), now()
     )
   `;
