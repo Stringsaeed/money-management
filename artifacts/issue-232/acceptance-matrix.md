@@ -36,7 +36,7 @@ Recorded in `revision.txt` (updated after rebase onto #242).
 - Automated typecheck and focused package tests on the prior certification HEAD **pass**.
 - Repo-wide `pnpm lint` and `pnpm format:check` **fail** on pre-existing findings. Not treated as a #232 regression.
 - Full `pnpm test:ci` **passed**: mobile Jest **742/742** + `@trove/db` cutover **3/3** (`test-ci.txt`).
-- Required iOS/Android runtime cases are **not passed**. Stim doctor ran; `stim start` has started Metro. `stim ios` / agent-device / Android have **no pass artifacts**. Row 2 still needs live AuthKit evidence.
+- Required iOS/Android runtime cases are **not passed**. Stim doctor ran; `stim start` has started Metro. `stim ios` / agent-device / Android have **no pass artifacts**. Row 2 still needs live AuthKit evidence. Post-login API retest is additionally **BLOCKED** until `WORKOS_CLIENT_ID` and `EXPO_PUBLIC_WORKOS_CLIENT_ID` match (names only; Mac AuthKit agent).
 - Disposable clean-setup after reset is **blocked**.
 
 Do not merge. No production deploy. Parent #224 stays open. Do not close #232.
