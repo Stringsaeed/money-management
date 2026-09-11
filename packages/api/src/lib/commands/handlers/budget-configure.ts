@@ -10,9 +10,9 @@ import {
 } from "@trove/db/schema/budget";
 import { category, ledgerAccount } from "@trove/db/schema/ledger";
 
-import type { CommandPlan, HouseholdPlanContext, PlanRejection, PlanRequest } from "../pipeline";
+import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
-import { issuesFromZod } from "./shared";
+import { issuesFromZod, scopeColumns } from "./shared";
 
 const periodSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 const currencySchema = z.string().regex(/^[A-Z]{3}$/);
@@ -59,6 +59,8 @@ const payloadSchema = z.discriminatedUnion("action", [
 type BudgetConfigurePayload = z.infer<typeof payloadSchema>;
 
 export const budgetConfigureHandler = {
+  supportsPersonalScope: true as const,
+
   parsePayload(payload: unknown) {
     const result = payloadSchema.safeParse(payload);
     return result.success
@@ -66,10 +68,7 @@ export const budgetConfigureHandler = {
       : { ok: false as const, issues: issuesFromZod(result.error) };
   },
 
-  async plan(
-    ctx: HouseholdPlanContext,
-    { payload }: PlanRequest,
-  ): Promise<CommandPlan | PlanRejection> {
+  async plan(ctx: PlanContext, { payload }: PlanRequest): Promise<CommandPlan | PlanRejection> {
     const input = payload as BudgetConfigurePayload;
     if (input.action === "workspace.activate") return planWorkspace(ctx, input);
     if (input.action === "funding_membership.set") return planFundingMembership(ctx, input);
@@ -79,17 +78,14 @@ export const budgetConfigureHandler = {
 };
 
 async function planWorkspace(
-  ctx: HouseholdPlanContext,
+  ctx: PlanContext,
   input: Extract<BudgetConfigurePayload, { action: "workspace.activate" }>,
 ): Promise<CommandPlan | PlanRejection> {
   const existing = await ctx.db
     .select()
     .from(budgetWorkspace)
     .where(
-      and(
-        eq(budgetWorkspace.householdId, ctx.householdId),
-        eq(budgetWorkspace.currency, input.currency),
-      ),
+      and(eq(budgetWorkspace.ledgerId, ctx.ledgerId), eq(budgetWorkspace.currency, input.currency)),
     )
     .limit(1);
   if (existing[0]) return { kind: "conflict", reason: "budget_workspace_already_exists" };
@@ -102,7 +98,7 @@ async function planWorkspace(
   const statements: BatchStatement[] = [
     ctx.db.insert(budgetWorkspace).values({
       id: crypto.randomUUID(),
-      householdId: ctx.householdId,
+      ...scopeColumns(ctx),
       currency: input.currency,
       activationPeriod: input.activationPeriod,
       createdBy: ctx.actorUserId,
@@ -113,7 +109,7 @@ async function planWorkspace(
     statements.push(
       ctx.db.insert(fundingMembership).values({
         id: crypto.randomUUID(),
-        householdId: ctx.householdId,
+        ...scopeColumns(ctx),
         accountId,
         currency: input.currency,
         active: true,
@@ -128,7 +124,7 @@ async function planWorkspace(
     applied: { currency: input.currency, activationPeriod: input.activationPeriod },
     guards: [
       sql`(SELECT COUNT(*) FROM ${budgetWorkspace}
-          WHERE ${budgetWorkspace.householdId} = ${ctx.householdId}
+          WHERE ${budgetWorkspace.ledgerId} = ${ctx.ledgerId}
             AND ${budgetWorkspace.currency} = ${input.currency}) = 0`,
     ],
     statements,
@@ -136,7 +132,7 @@ async function planWorkspace(
 }
 
 async function planFundingMembership(
-  ctx: HouseholdPlanContext,
+  ctx: PlanContext,
   input: Extract<BudgetConfigurePayload, { action: "funding_membership.set" }>,
 ): Promise<CommandPlan | PlanRejection> {
   const accountRejection = await validateFundingAccounts(ctx, [input.accountId], input.currency);
@@ -150,7 +146,7 @@ async function planFundingMembership(
         .insert(fundingMembership)
         .values({
           id: crypto.randomUUID(),
-          householdId: ctx.householdId,
+          ...scopeColumns(ctx),
           accountId: input.accountId,
           currency: input.currency,
           active: input.active,
@@ -164,7 +160,7 @@ async function planFundingMembership(
 }
 
 async function planEnvelopeCreate(
-  ctx: HouseholdPlanContext,
+  ctx: PlanContext,
   input: Extract<BudgetConfigurePayload, { action: "envelope.create" }>,
 ): Promise<CommandPlan | PlanRejection> {
   const existing = await loadEnvelope(ctx, input.envelopeId);
@@ -178,12 +174,12 @@ async function planEnvelopeCreate(
     applied: { envelopeId: input.envelopeId, version: 0 },
     guards: [
       sql`(SELECT COUNT(*) FROM ${envelope}
-          WHERE ${envelope.householdId} = ${ctx.householdId}
+          WHERE ${envelope.ledgerId} = ${ctx.ledgerId}
             AND ${envelope.id} = ${input.envelopeId}) = 0`,
     ],
     statements: [
       ctx.db.insert(envelope).values({
-        householdId: ctx.householdId,
+        ...scopeColumns(ctx),
         id: input.envelopeId,
         currency: input.currency,
         name: input.name,
@@ -199,7 +195,7 @@ async function planEnvelopeCreate(
 }
 
 async function planEnvelopeUpdate(
-  ctx: HouseholdPlanContext,
+  ctx: PlanContext,
   input: Extract<BudgetConfigurePayload, { action: "envelope.update" }>,
 ): Promise<CommandPlan | PlanRejection> {
   const existing = await loadEnvelope(ctx, input.envelopeId);
@@ -229,7 +225,7 @@ async function planEnvelopeUpdate(
     applied: { envelopeId: input.envelopeId, version: existing.version + 1 },
     guards: [
       sql`(SELECT COUNT(*) FROM ${envelope}
-          WHERE ${envelope.householdId} = ${ctx.householdId}
+          WHERE ${envelope.ledgerId} = ${ctx.ledgerId}
             AND ${envelope.id} = ${input.envelopeId}
             AND ${envelope.version} = ${input.expectedVersion}) = 1`,
     ],
@@ -245,7 +241,7 @@ async function planEnvelopeUpdate(
           updatedBy: ctx.actorUserId,
         })
         .where(
-          and(eq(envelope.householdId, ctx.householdId), eq(envelope.id, input.envelopeId)),
+          and(eq(envelope.ledgerId, ctx.ledgerId), eq(envelope.id, input.envelopeId)),
         ) as unknown as BatchStatement,
       ...configurationStatements(
         ctx,
@@ -259,7 +255,7 @@ async function planEnvelopeUpdate(
 }
 
 function configurationStatements(
-  ctx: HouseholdPlanContext,
+  ctx: PlanContext,
   envelopeId: string,
   period: string,
   input: { categoryIds: readonly string[]; positiveRollover: boolean },
@@ -271,7 +267,7 @@ function configurationStatements(
         .insert(categoryMapping)
         .values({
           id: crypto.randomUUID(),
-          householdId: ctx.householdId,
+          ...scopeColumns(ctx),
           categoryId,
           envelopeId: selected.has(categoryId) ? envelopeId : null,
           effectiveFromPeriod: period,
@@ -285,7 +281,7 @@ function configurationStatements(
       .insert(rolloverSetting)
       .values({
         id: crypto.randomUUID(),
-        householdId: ctx.householdId,
+        ...scopeColumns(ctx),
         envelopeId,
         positiveRollover: input.positiveRollover,
         effectiveFromPeriod: period,
@@ -297,25 +293,20 @@ function configurationStatements(
   return statements;
 }
 
-async function loadEnvelope(ctx: HouseholdPlanContext, envelopeId: string) {
+async function loadEnvelope(ctx: PlanContext, envelopeId: string) {
   const rows = await ctx.db
     .select()
     .from(envelope)
-    .where(and(eq(envelope.householdId, ctx.householdId), eq(envelope.id, envelopeId)))
+    .where(and(eq(envelope.ledgerId, ctx.ledgerId), eq(envelope.id, envelopeId)))
     .limit(1);
   return rows[0] ?? null;
 }
 
-async function requireWorkspace(
-  ctx: HouseholdPlanContext,
-  currency: string,
-): Promise<PlanRejection | null> {
+async function requireWorkspace(ctx: PlanContext, currency: string): Promise<PlanRejection | null> {
   const rows = await ctx.db
     .select()
     .from(budgetWorkspace)
-    .where(
-      and(eq(budgetWorkspace.householdId, ctx.householdId), eq(budgetWorkspace.currency, currency)),
-    )
+    .where(and(eq(budgetWorkspace.ledgerId, ctx.ledgerId), eq(budgetWorkspace.currency, currency)))
     .limit(1);
   return rows[0]
     ? null
@@ -323,7 +314,7 @@ async function requireWorkspace(
 }
 
 async function validateFundingAccounts(
-  ctx: HouseholdPlanContext,
+  ctx: PlanContext,
   accountIds: readonly string[],
   currency: string,
 ): Promise<PlanRejection | null> {
@@ -331,7 +322,7 @@ async function validateFundingAccounts(
     const rows = await ctx.db
       .select()
       .from(ledgerAccount)
-      .where(and(eq(ledgerAccount.householdId, ctx.householdId), eq(ledgerAccount.id, accountId)))
+      .where(and(eq(ledgerAccount.ledgerId, ctx.ledgerId), eq(ledgerAccount.id, accountId)))
       .limit(1);
     const account = rows[0];
     if (!account) return { kind: "missing_entity", entityType: "account", entityId: accountId };
@@ -351,14 +342,14 @@ async function validateFundingAccounts(
 }
 
 async function validateCategories(
-  ctx: HouseholdPlanContext,
+  ctx: PlanContext,
   categoryIds: readonly string[],
 ): Promise<PlanRejection | null> {
   for (const categoryId of categoryIds) {
     const rows = await ctx.db
       .select()
       .from(category)
-      .where(and(eq(category.householdId, ctx.householdId), eq(category.id, categoryId)))
+      .where(and(eq(category.ledgerId, ctx.ledgerId), eq(category.id, categoryId)))
       .limit(1);
     const found = rows[0];
     if (!found) return { kind: "missing_entity", entityType: "category", entityId: categoryId };

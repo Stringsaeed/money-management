@@ -3,6 +3,7 @@ import { max } from "date-fns";
 import { dateAfter, nextScheduledDateOnOrAfter } from "@trove/domain/calendar";
 import type { CommandEnvelope } from "@trove/protocol";
 
+import type { SyncedLedgerBinding } from "@/modules/ledger-data-source/provider";
 import type { PowerSyncLedgerCollections } from "@/modules/ledger-db/collections";
 import { commandMetadataFor } from "@/modules/powersync/command-metadata";
 import type { PowerSyncRecurringRuleRow } from "@/modules/powersync/domain-types";
@@ -24,7 +25,7 @@ import type {
 
 interface SyncedRecurringRulesOptions {
   readonly collections: PowerSyncLedgerCollections;
-  readonly householdId: string;
+  readonly binding: SyncedLedgerBinding;
   readonly userId: string;
   readonly clock: RecurringRulesClock;
   readonly nextId: () => string;
@@ -43,7 +44,7 @@ async function read(
   query: RecurringRead,
 ): Promise<RecurringReadResult> {
   const rules = options.collections.recurringRules.toArray
-    .filter((row) => row.household_id === options.householdId)
+    .filter((row) => row.ledger_id === options.binding.ledgerId)
     .map(mapRule)
     .sort((left, right) => left.name.localeCompare(right.name) || left.id.localeCompare(right.id));
   if (query.kind === "detail") {
@@ -69,7 +70,7 @@ function upcoming(
   limit: number,
 ): RecurringUpcomingItem[] {
   const occurrences = options.collections.recurringOccurrences.toArray.filter(
-    (row) => row.household_id === options.householdId,
+    (row) => row.ledger_id === options.binding.ledgerId,
   );
   const items: RecurringUpcomingItem[] = [];
   for (const rule of rules) {
@@ -111,7 +112,7 @@ async function change(
 ): Promise<RecurringChangeResult> {
   if (intent.kind === "create") return create(options, intent.rule);
   const existing = options.collections.recurringRules.get(intent.ruleId);
-  if (!existing || existing.household_id !== options.householdId) {
+  if (!existing || existing.ledger_id !== options.binding.ledgerId) {
     return { kind: "missing_rule", ruleId: intent.ruleId };
   }
   if (existing.revision !== intent.expectedRevision) {
@@ -140,7 +141,8 @@ async function create(
   const now = options.clock.now().toISOString();
   const command: CommandEnvelope = {
     commandId: options.nextId(),
-    householdId: options.householdId,
+    scope: options.binding.scope,
+    householdId: options.binding.householdId ?? undefined,
     kind: "recurring.change",
     issuedAt: now,
     payload: { action: "create", ruleId, rule: draft },
@@ -148,7 +150,8 @@ async function create(
   await options.collections.recurringRules.insert(
     {
       id: ruleId,
-      household_id: options.householdId,
+      ledger_id: options.binding.ledgerId,
+      household_id: options.binding.householdId,
       ...draftRow(draft),
       lifecycle: "active",
       health: "ready",
@@ -196,7 +199,8 @@ function commandFor(
           };
   return {
     commandId: options.nextId(),
-    householdId: options.householdId,
+    scope: options.binding.scope,
+    householdId: options.binding.householdId ?? undefined,
     kind: "recurring.change",
     issuedAt: options.clock.now().toISOString(),
     payload,

@@ -502,6 +502,7 @@ function buildInsertStatement(
     }
     case "recurring_rule": {
       const values = (rows as z.infer<typeof recurringRuleRowSchema>[]).map((row) => ({
+        ledgerId,
         householdId,
         id: row.id,
         name: row.name,
@@ -542,6 +543,7 @@ function buildInsertStatement(
     }
     case "budget_workspace": {
       const values = (rows as z.infer<typeof budgetWorkspaceRowSchema>[]).map((row) => ({
+        ledgerId,
         householdId,
         id: row.id,
         currency: row.currency,
@@ -558,6 +560,7 @@ function buildInsertStatement(
     }
     case "envelope": {
       const values = (rows as z.infer<typeof envelopeRowSchema>[]).map((row) => ({
+        ledgerId,
         householdId,
         id: row.id,
         currency: row.currency,
@@ -578,6 +581,7 @@ function buildInsertStatement(
     }
     case "category_mapping": {
       const values = (rows as z.infer<typeof categoryMappingRowSchema>[]).map((row) => ({
+        ledgerId,
         householdId,
         id: row.id,
         categoryId: row.categoryId,
@@ -595,6 +599,7 @@ function buildInsertStatement(
     }
     case "funding_membership": {
       const values = (rows as z.infer<typeof fundingMembershipRowSchema>[]).map((row) => ({
+        ledgerId,
         householdId,
         id: row.id,
         accountId: row.accountId,
@@ -613,6 +618,7 @@ function buildInsertStatement(
     }
     case "rollover_setting": {
       const values = (rows as z.infer<typeof rolloverSettingRowSchema>[]).map((row) => ({
+        ledgerId,
         householdId,
         id: row.id,
         envelopeId: row.envelopeId,
@@ -630,6 +636,7 @@ function buildInsertStatement(
     }
     case "assignment": {
       const values = (rows as z.infer<typeof assignmentRowSchema>[]).map((row) => ({
+        ledgerId,
         householdId,
         id: row.id,
         currency: row.currency,
@@ -650,6 +657,7 @@ function buildInsertStatement(
     }
     case "recurring_occurrence": {
       const values = (rows as z.infer<typeof recurringOccurrenceRowSchema>[]).map((row) => ({
+        ledgerId,
         householdId,
         id: row.id,
         ruleId: row.ruleId,

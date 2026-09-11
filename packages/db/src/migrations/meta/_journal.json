@@ -29,6 +29,20 @@
       "when": 1788810900000,
       "tag": "0010_concurrent_change_sequence",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788820000000,
+      "tag": "0011_ledger_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788830000000,
+      "tag": "0012_budget_recurring_ledger_scope",
+      "breakpoints": true
     }
   ]
 }

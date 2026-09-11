@@ -3,8 +3,11 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { localDateInTimeZone } from "@trove/domain/clock";
 import type { SettlementIdentity } from "@trove/domain/settlement";
+import { personalLedgerId } from "@trove/protocol";
+
 import { user } from "@trove/db/schema/auth";
 import { household, membership } from "@trove/db/schema/household";
+import { ledger } from "@trove/db/schema/ledger-scope";
 import { recurringOccurrence, recurringRule } from "@trove/db/schema/recurring";
 import { ledgerAccount } from "@trove/db/schema/ledger";
 
@@ -65,6 +68,7 @@ async function insertRule(overrides: RuleOverrides = {}) {
   seq += 1;
   const row: typeof recurringRule.$inferInsert = {
     type: "expense",
+    ledgerId: householdId,
     householdId,
     id: overrides.id ?? `rule-${seq}`,
     name: `Rule ${String(seq).padStart(2, "0")}`,
@@ -195,6 +199,58 @@ describe("scheduled settlement sweep", () => {
     const summary = await settleDueRules(db, identity(), NOW);
     expect(summary.households).toBe(0);
     expect(summary.generatedCount).toBe(0);
+  });
+
+  it("includes personal ledgers in the hourly fan-out", async () => {
+    const owner = "user-personal-sweep";
+    const ledgerId = personalLedgerId(owner);
+    await db.insert(user).values({ id: owner, name: "Solo", email: `${owner}@example.com` });
+    await db.insert(ledger).values({
+      id: ledgerId,
+      kind: "personal",
+      personalUserId: owner,
+      organizationId: null,
+    });
+    await db.insert(ledgerAccount).values({
+      ledgerId,
+      householdId: null,
+      id: "account-personal",
+      name: "Wallet",
+      type: "cash",
+      currency: "USD",
+      initialBalanceMinor: 0,
+      version: 0,
+      createdBy: owner,
+      updatedBy: owner,
+    });
+    await db.insert(recurringRule).values({
+      ledgerId,
+      householdId: null,
+      id: "rule-personal",
+      name: "Personal coffee",
+      type: "expense",
+      amountMinor: 400,
+      currency: "USD",
+      accountId: "account-personal",
+      description: "Daily",
+      frequency: "day",
+      intervalCount: 1,
+      startDate: "2026-04-15",
+      endDate: null,
+      endCount: null,
+      timeZone: "UTC",
+      lifecycle: "active",
+      health: "ready",
+      eligibilityFloor: "2026-04-15",
+      revision: 1,
+      createdBy: owner,
+      updatedBy: owner,
+    });
+
+    const summary = await settleDueRules(db, identity(), NOW);
+    expect(summary.households).toBe(1);
+    expect(summary.generatedCount).toBe(1);
+    expect(await occurrenceDates("rule-personal")).toEqual(["2026-04-15"]);
   });
 
   it("uses production-shaped identities without colliding across sweeps", async () => {

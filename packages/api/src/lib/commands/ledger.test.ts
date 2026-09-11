@@ -207,6 +207,7 @@ describe("ledger commands — accounts", () => {
   it("refuses to privatize an account with active Funding Membership", async () => {
     await seedAccount();
     await db.insert(fundingMembership).values({
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       accountId: "acc-1",
       currency: "USD",
@@ -548,6 +549,7 @@ describe("ledger commands — transactions", () => {
     await seedTransaction({ date: "2025-11-20" });
     await db.insert(periodProjectionCache).values([
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         currency: "USD",
         budgetPeriod: "2025-10",
@@ -555,6 +557,7 @@ describe("ledger commands — transactions", () => {
         seqStamped: 1,
       },
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         currency: "USD",
         budgetPeriod: "2025-11",
@@ -562,6 +565,7 @@ describe("ledger commands — transactions", () => {
         seqStamped: 2,
       },
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         currency: "USD",
         budgetPeriod: "2025-12",
@@ -569,6 +573,7 @@ describe("ledger commands — transactions", () => {
         seqStamped: 3,
       },
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         currency: "USD",
         budgetPeriod: "2026-01",
@@ -593,6 +598,7 @@ describe("ledger commands — transactions", () => {
     await seedTransaction({ date: "2026-03-02" });
     await db.insert(periodProjectionCache).values([
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         currency: "USD",
         budgetPeriod: "2026-02",
@@ -600,6 +606,7 @@ describe("ledger commands — transactions", () => {
         seqStamped: 9,
       },
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         currency: "USD",
         budgetPeriod: "2026-03",

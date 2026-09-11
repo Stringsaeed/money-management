@@ -4,9 +4,9 @@ import { z } from "zod";
 import { recurringRule } from "@trove/db/schema/recurring";
 import { category, ledgerAccount } from "@trove/db/schema/ledger";
 
-import type { CommandPlan, HouseholdPlanContext, PlanRejection, PlanRequest } from "../pipeline";
+import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
-import { issuesFromZod } from "./shared";
+import { issuesFromZod, scopeColumns } from "./shared";
 import { privateAccountAccessRejection } from "./private-account";
 
 const recurringDraftSchema = z
@@ -88,6 +88,8 @@ type RecurringRuleRow = typeof recurringRule.$inferSelect;
 const effects = ["rules", "upcoming"] as const;
 
 export const recurringChangeHandler = {
+  supportsPersonalScope: true as const,
+
   parsePayload(payload: unknown) {
     const result = recurringChangePayloadSchema.safeParse(payload);
     return result.success
@@ -95,10 +97,7 @@ export const recurringChangeHandler = {
       : { ok: false as const, issues: issuesFromZod(result.error) };
   },
 
-  async plan(
-    ctx: HouseholdPlanContext,
-    { payload }: PlanRequest,
-  ): Promise<CommandPlan | PlanRejection> {
+  async plan(ctx: PlanContext, { payload }: PlanRequest): Promise<CommandPlan | PlanRejection> {
     const input = payload as RecurringChangePayload;
     if (input.action === "create") return planCreate(ctx, input);
 
@@ -132,7 +131,7 @@ export const recurringChangeHandler = {
           .update(recurringRule)
           .set(changeSet(existing, input, revision, now, ctx.actorUserId))
           .where(
-            and(eq(recurringRule.householdId, ctx.householdId), eq(recurringRule.id, existing.id)),
+            and(eq(recurringRule.ledgerId, ctx.ledgerId), eq(recurringRule.id, existing.id)),
           ) as unknown as BatchStatement,
       ],
     };
@@ -140,7 +139,7 @@ export const recurringChangeHandler = {
 };
 
 async function planCreate(
-  ctx: HouseholdPlanContext,
+  ctx: PlanContext,
   input: Extract<RecurringChangePayload, { action: "create" }>,
 ): Promise<CommandPlan | PlanRejection> {
   if (await loadRule(ctx, input.ruleId)) {
@@ -153,12 +152,12 @@ async function planCreate(
     applied: { ruleId: input.ruleId, revision: 1 },
     guards: [
       sql`(SELECT COUNT(*) FROM ${recurringRule}
-          WHERE ${recurringRule.householdId} = ${ctx.householdId}
+          WHERE ${recurringRule.ledgerId} = ${ctx.ledgerId}
             AND ${recurringRule.id} = ${input.ruleId}) = 0`,
     ],
     statements: [
       ctx.db.insert(recurringRule).values({
-        householdId: ctx.householdId,
+        ...scopeColumns(ctx),
         id: input.ruleId,
         ...draftValues(input.rule),
         lifecycle: "active",
@@ -173,21 +172,18 @@ async function planCreate(
   };
 }
 
-async function loadRule(
-  ctx: HouseholdPlanContext,
-  ruleId: string,
-): Promise<RecurringRuleRow | null> {
+async function loadRule(ctx: PlanContext, ruleId: string): Promise<RecurringRuleRow | null> {
   const rows = await ctx.db
     .select()
     .from(recurringRule)
-    .where(and(eq(recurringRule.householdId, ctx.householdId), eq(recurringRule.id, ruleId)))
+    .where(and(eq(recurringRule.ledgerId, ctx.ledgerId), eq(recurringRule.id, ruleId)))
     .limit(1);
   return rows[0] ?? null;
 }
 
-function revisionGuard(ctx: HouseholdPlanContext, ruleId: string, revision: number) {
+function revisionGuard(ctx: PlanContext, ruleId: string, revision: number) {
   return sql`(SELECT COUNT(*) FROM ${recurringRule}
-      WHERE ${recurringRule.householdId} = ${ctx.householdId}
+      WHERE ${recurringRule.ledgerId} = ${ctx.ledgerId}
         AND ${recurringRule.id} = ${ruleId}
         AND ${recurringRule.revision} = ${revision}) = 1`;
 }
@@ -284,7 +280,7 @@ function draftValues(rule: z.infer<typeof recurringDraftSchema>) {
 }
 
 async function validateDependencies(
-  ctx: HouseholdPlanContext,
+  ctx: PlanContext,
   rule: z.infer<typeof recurringDraftSchema>,
 ): Promise<PlanRejection | null> {
   for (const accountId of [rule.accountId, rule.toAccountId]) {
@@ -292,7 +288,7 @@ async function validateDependencies(
     const rows = await ctx.db
       .select()
       .from(ledgerAccount)
-      .where(and(eq(ledgerAccount.householdId, ctx.householdId), eq(ledgerAccount.id, accountId)))
+      .where(and(eq(ledgerAccount.ledgerId, ctx.ledgerId), eq(ledgerAccount.id, accountId)))
       .limit(1);
     const account = rows[0];
     if (!account) return { kind: "missing_entity", entityType: "account", entityId: accountId };
@@ -309,7 +305,7 @@ async function validateDependencies(
   const rows = await ctx.db
     .select()
     .from(category)
-    .where(and(eq(category.householdId, ctx.householdId), eq(category.id, rule.categoryId)))
+    .where(and(eq(category.ledgerId, ctx.ledgerId), eq(category.id, rule.categoryId)))
     .limit(1);
   if (!rows[0]) {
     return { kind: "missing_entity", entityType: "category", entityId: rule.categoryId };

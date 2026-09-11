@@ -16,7 +16,20 @@ test("uses Sync Streams edition 3 and an eager membership stream", () => {
 
 test("streams the Personal Ledger eagerly, scoped by the ledger's owner", () => {
   const stream = config.streams.personal_ledger;
-  const tables = ["accounts", "categories", "transactions"];
+  const tables = [
+    "accounts",
+    "categories",
+    "transactions",
+    "budget_workspaces",
+    "envelopes",
+    "category_mappings",
+    "funding_memberships",
+    "rollover_settings",
+    "assignments",
+    "refund_links",
+    "recurring_rules",
+    "recurring_occurrences",
+  ];
   assert.equal(stream.auto_subscribe, true);
   assert.equal(stream.priority, 2);
   assert.equal(stream.queries.length, tables.length);
@@ -30,6 +43,18 @@ test("streams the Personal Ledger eagerly, scoped by the ledger's owner", () => 
     // No subscription parameter: a User cannot ask for someone else's ledger.
     assert.doesNotMatch(query, /subscription\.parameter/);
   }
+});
+
+test("keeps private-account filters on personal recurring the same as household", () => {
+  const [rules, occurrences] = config.streams.personal_ledger.queries.slice(-2);
+  assert.match(rules, /FROM recurring_rules/);
+  assert.match(occurrences, /FROM recurring_occurrences/);
+  for (const query of [rules, occurrences]) {
+    assert.match(query, /visibility = 'public' OR owner_user_id = auth\.user_id\(\)/);
+    assert.match(query, /account_id IS NULL OR account_id IN/);
+    assert.match(query, /to_account_id IS NULL OR to_account_id IN/);
+  }
+  assert.match(occurrences, /rule_id IN/);
 });
 
 test("keeps the Personal Ledger and Household streams from bleeding into each other", () => {

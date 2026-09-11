@@ -11,14 +11,12 @@ export const useBudgetingCoordinator = () => {
   const queryClient = useQueryClient();
   const selection = useLedgerSourceSelection();
   const ledger = useSyncedTransactionLedger();
-  // Budgeting is Household-owned (#227), so a Personal Ledger keeps budgeting
-  // on-device rather than writing envelopes no stream would ever return.
-  if (selection.kind === "synced" && selection.ledger.householdId !== null) {
+  if (selection.kind === "synced") {
     if (!ledger) throw new Error("PowerSync budget collections are not ready.");
     return createSyncedBudgetingCoordinator({
       database,
       queryClient,
-      householdId: selection.ledger.householdId,
+      binding: selection.ledger,
       userId: selection.userId,
       ledger,
     });

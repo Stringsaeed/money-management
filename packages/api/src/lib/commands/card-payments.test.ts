@@ -77,6 +77,7 @@ async function seedAccount(id: string, type: "bank" | "cash" | "card", initialBa
 
 async function seedMembership(accountId: string) {
   await db.insert(fundingMembership).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     accountId,
     currency: "USD",
@@ -90,6 +91,7 @@ async function seedMembership(accountId: string) {
 
 async function seedEnvelope(id: string) {
   await db.insert(envelope).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id,
     name: `Envelope ${id}`,
@@ -124,6 +126,7 @@ async function mapCategory(
 ) {
   await seedCategory(categoryId);
   await db.insert(categoryMapping).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     categoryId,
     envelopeId,

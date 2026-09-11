@@ -78,6 +78,7 @@ async function insertRule(overrides: RuleOverrides = {}): Promise<string> {
   seq += 1;
   const id = overrides.id ?? `rule-${seq}`;
   await db.insert(recurringRule).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id,
     name: overrides.name ?? `Rent ${seq}`,
@@ -232,10 +233,14 @@ describe("settlement engine — revision & optimistic concurrency", () => {
     const ruleId = await insertRule({ revision: 3 });
 
     // Read the rule, then simulate an interleaved edit landing before commit.
-    const store = new PgRecurringStore(db, { householdId: HOUSEHOLD_ID, userId: OWNER }, (() => {
-      let n = 0;
-      return () => `tx-${++n}`;
-    }) as never);
+    const store = new PgRecurringStore(
+      db,
+      { ledgerId: HOUSEHOLD_ID, householdId: HOUSEHOLD_ID, userId: OWNER },
+      (() => {
+        let n = 0;
+        return () => `tx-${++n}`;
+      }) as never,
+    );
 
     const staleCommit = {
       ruleId,
@@ -251,7 +256,7 @@ describe("settlement engine — revision & optimistic concurrency", () => {
     };
 
     const guard = sql`(SELECT COUNT(*) FROM ${recurringRule}
-        WHERE ${recurringRule.householdId} = ${HOUSEHOLD_ID}
+        WHERE ${recurringRule.ledgerId} = ${HOUSEHOLD_ID}
           AND ${recurringRule.id} = ${ruleId}
           AND ${recurringRule.revision} = ${staleCommit.expectedRevision}) = 1`;
 
@@ -338,6 +343,7 @@ describe("settlement engine — order, sync effects, attention handling", () => 
 
     await insertRule({ eligibilityFloor: "2026-01-31" });
     await db.insert(recurringRule).values({
+      ledgerId: OTHER,
       householdId: OTHER,
       id: "rule-foreign",
       name: "Foreign Rule",

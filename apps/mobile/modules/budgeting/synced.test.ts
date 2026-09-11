@@ -1,4 +1,7 @@
-import { householdLedgerBinding } from "@/modules/ledger-data-source/provider";
+import {
+  householdLedgerBinding,
+  personalLedgerBinding,
+} from "@/modules/ledger-data-source/provider";
 import { createSyncedTransactionLedger } from "@/modules/ledger-db/ledger";
 import {
   createTestLedgerCollections,
@@ -25,6 +28,7 @@ describe("synced budgeting coordinator", () => {
       budgetWorkspaces: [
         {
           id: "workspace-usd",
+          ledger_id: "household-1",
           household_id: "household-1",
           currency: "USD",
           activation_period: "2026-09",
@@ -50,6 +54,7 @@ describe("synced budgeting coordinator", () => {
       envelopes: [
         {
           id: "envelope-1",
+          ledger_id: "household-1",
           household_id: "household-1",
           currency: "USD",
           name: "Needs",
@@ -63,6 +68,7 @@ describe("synced budgeting coordinator", () => {
       categoryMappings: [
         {
           id: "mapping-1",
+          ledger_id: "household-1",
           household_id: "household-1",
           category_id: "category-1",
           envelope_id: "envelope-1",
@@ -73,6 +79,7 @@ describe("synced budgeting coordinator", () => {
       rolloverSettings: [
         {
           id: "rollover-1",
+          ledger_id: "household-1",
           household_id: "household-1",
           envelope_id: "envelope-1",
           positive_rollover: 0,
@@ -97,7 +104,7 @@ describe("synced budgeting coordinator", () => {
     });
     const budgeting = createSyncedBudgetingCoordinator({
       database: sqlite.database,
-      householdId: "household-1",
+      binding: householdLedgerBinding("household-1"),
       userId: "user-1",
       ledger,
     });
@@ -126,10 +133,53 @@ describe("synced budgeting coordinator", () => {
     ledger.dispose();
     sqlite.close();
   });
+
+  it("keys personal workspace reads by ledger id, not a Household", async () => {
+    const sqlite = createTestSQLiteDatabase();
+    await applyLegacyMigrations(sqlite.database);
+    const collections = createTestLedgerCollections({
+      budgetWorkspaces: [
+        {
+          id: "workspace-personal",
+          ledger_id: "personal:user-1",
+          household_id: null,
+          currency: "USD",
+          activation_period: "2026-09",
+          ...audit,
+        },
+      ],
+    });
+    await preloadTestLedgerCollections(collections);
+    const ledger = createSyncedTransactionLedger({
+      binding: personalLedgerBinding("user-1"),
+      userId: "user-1",
+      dbIdentity: sqlite.database,
+      collections,
+      newId: () => "unused",
+      now: () => timestamp,
+    });
+    const budgeting = createSyncedBudgetingCoordinator({
+      database: sqlite.database,
+      binding: personalLedgerBinding("user-1"),
+      userId: "user-1",
+      ledger,
+    });
+
+    await expect(budgeting.getWorkspaceSelection()).resolves.toEqual({
+      workspaces: [{ currency: "USD", activationPeriod: "2026-09" }],
+      homeCurrency: "USD",
+      hasExplicitHomeCurrency: false,
+      selectedCurrency: "USD",
+    });
+
+    ledger.dispose();
+    sqlite.close();
+  });
 });
 
 const assignment = (id: string, reversesAssignmentId: string | null) => ({
   id,
+  ledger_id: "household-1",
   household_id: "household-1",
   currency: "USD",
   budget_period: "2026-09",

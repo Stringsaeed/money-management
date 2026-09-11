@@ -26,9 +26,9 @@ export interface CommandHandler<TPayload = unknown> {
   readonly supportedPredicates?: readonly string[];
   /**
    * True when the handler reads and writes by Ledger Scope alone. Handlers
-   * that touch Household-owned tables leave this unset and receive a
-   * {@link HouseholdPlanContext}; the pipeline rejects them under a Personal
-   * Ledger instead of dispatching them with no Household.
+   * that touch Household-owned tables (membership, import) leave this unset
+   * and receive a {@link HouseholdPlanContext}; the pipeline rejects them
+   * under a Personal Ledger instead of dispatching them with no Household.
    */
   readonly supportsPersonalScope?: boolean;
 }

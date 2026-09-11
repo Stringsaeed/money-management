@@ -87,6 +87,7 @@ export const powerSyncTransactions = new Table(
 
 export const powerSyncBudgetWorkspaces = new Table(
   {
+    ledger_id: column.text,
     household_id: column.text,
     currency: column.text,
     activation_period: column.text,
@@ -96,11 +97,12 @@ export const powerSyncBudgetWorkspaces = new Table(
     created_at: column.text,
     updated_at: column.text,
   },
-  { indexes: { household: ["household_id"] }, trackMetadata: true },
+  { indexes: { ledger: ["ledger_id"], household: ["household_id"] }, trackMetadata: true },
 );
 
 export const powerSyncEnvelopes = new Table(
   {
+    ledger_id: column.text,
     household_id: column.text,
     currency: column.text,
     name: column.text,
@@ -115,13 +117,19 @@ export const powerSyncEnvelopes = new Table(
     updated_at: column.text,
   },
   {
-    indexes: { household: ["household_id"], household_currency: ["household_id", "currency"] },
+    indexes: {
+      ledger: ["ledger_id"],
+      ledger_currency: ["ledger_id", "currency"],
+      household: ["household_id"],
+      household_currency: ["household_id", "currency"],
+    },
     trackMetadata: true,
   },
 );
 
 export const powerSyncCategoryMappings = new Table(
   {
+    ledger_id: column.text,
     household_id: column.text,
     category_id: column.text,
     envelope_id: column.text,
@@ -133,13 +141,17 @@ export const powerSyncCategoryMappings = new Table(
     updated_at: column.text,
   },
   {
-    indexes: { household_category: ["household_id", "category_id"] },
+    indexes: {
+      ledger_category: ["ledger_id", "category_id"],
+      household_category: ["household_id", "category_id"],
+    },
     trackMetadata: true,
   },
 );
 
 export const powerSyncFundingMemberships = new Table(
   {
+    ledger_id: column.text,
     household_id: column.text,
     account_id: column.text,
     currency: column.text,
@@ -152,13 +164,17 @@ export const powerSyncFundingMemberships = new Table(
     updated_at: column.text,
   },
   {
-    indexes: { household_currency: ["household_id", "currency"] },
+    indexes: {
+      ledger_currency: ["ledger_id", "currency"],
+      household_currency: ["household_id", "currency"],
+    },
     trackMetadata: true,
   },
 );
 
 export const powerSyncRolloverSettings = new Table(
   {
+    ledger_id: column.text,
     household_id: column.text,
     envelope_id: column.text,
     positive_rollover: column.integer,
@@ -170,13 +186,17 @@ export const powerSyncRolloverSettings = new Table(
     updated_at: column.text,
   },
   {
-    indexes: { household_envelope: ["household_id", "envelope_id"] },
+    indexes: {
+      ledger_envelope: ["ledger_id", "envelope_id"],
+      household_envelope: ["household_id", "envelope_id"],
+    },
     trackMetadata: true,
   },
 );
 
 export const powerSyncAssignments = new Table(
   {
+    ledger_id: column.text,
     household_id: column.text,
     currency: column.text,
     budget_period: column.text,
@@ -191,13 +211,17 @@ export const powerSyncAssignments = new Table(
     updated_at: column.text,
   },
   {
-    indexes: { household_period: ["household_id", "budget_period"] },
+    indexes: {
+      ledger_period: ["ledger_id", "budget_period"],
+      household_period: ["household_id", "budget_period"],
+    },
     trackMetadata: true,
   },
 );
 
 export const powerSyncRefundLinks = new Table(
   {
+    ledger_id: column.text,
     household_id: column.text,
     original_transaction_id: column.text,
     refund_transaction_id: column.text,
@@ -210,13 +234,17 @@ export const powerSyncRefundLinks = new Table(
     updated_at: column.text,
   },
   {
-    indexes: { household_original: ["household_id", "original_transaction_id"] },
+    indexes: {
+      ledger_original: ["ledger_id", "original_transaction_id"],
+      household_original: ["household_id", "original_transaction_id"],
+    },
     trackMetadata: true,
   },
 );
 
 export const powerSyncRecurringRules = new Table(
   {
+    ledger_id: column.text,
     household_id: column.text,
     name: column.text,
     type: column.text,
@@ -248,13 +276,19 @@ export const powerSyncRecurringRules = new Table(
     updated_at: column.text,
   },
   {
-    indexes: { household: ["household_id"], household_lifecycle: ["household_id", "lifecycle"] },
+    indexes: {
+      ledger: ["ledger_id"],
+      ledger_lifecycle: ["ledger_id", "lifecycle"],
+      household: ["household_id"],
+      household_lifecycle: ["household_id", "lifecycle"],
+    },
     trackMetadata: true,
   },
 );
 
 export const powerSyncRecurringOccurrences = new Table(
   {
+    ledger_id: column.text,
     household_id: column.text,
     rule_id: column.text,
     scheduled_date: column.text,
@@ -262,7 +296,10 @@ export const powerSyncRecurringOccurrences = new Table(
     settled_at: column.text,
   },
   {
-    indexes: { household_rule: ["household_id", "rule_id"] },
+    indexes: {
+      ledger_rule: ["ledger_id", "rule_id"],
+      household_rule: ["household_id", "rule_id"],
+    },
     trackMetadata: true,
   },
 );

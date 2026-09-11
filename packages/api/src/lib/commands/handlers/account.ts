@@ -58,22 +58,20 @@ async function loadAccount(
 
 /** A private Account may not contribute to any current or planned Funding Pool. */
 async function hasActiveFundingMembership(ctx: PlanContext, accountId: string): Promise<boolean> {
-  // Funding Pools are Household facts; a Personal Ledger has none to guard.
-  if (ctx.householdId === null) return false;
-  const householdId = ctx.householdId;
+  const ledgerId = ctx.ledgerId;
   const rows = await ctx.db
     .select({ active: fundingMembership.active })
     .from(fundingMembership)
     .where(
       and(
-        eq(fundingMembership.householdId, householdId),
+        eq(fundingMembership.ledgerId, ledgerId),
         eq(fundingMembership.accountId, accountId),
         eq(
           fundingMembership.effectiveFromPeriod,
           sql`(
             SELECT MAX(latest.effective_from_period)
             FROM funding_memberships latest
-            WHERE latest.household_id = ${householdId}
+            WHERE latest.ledger_id = ${ledgerId}
               AND latest.account_id = ${accountId}
           )`,
         ),

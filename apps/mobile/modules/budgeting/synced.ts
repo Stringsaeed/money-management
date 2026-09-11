@@ -3,6 +3,7 @@ import type { CommandEnvelope, CommandResult } from "@trove/protocol";
 
 import type { SQLiteDatabase } from "@/db/sqlite";
 import { orpc } from "@/lib/server/orpc";
+import type { SyncedLedgerBinding } from "@/modules/ledger-data-source/provider";
 import type { SyncedTransactionLedger } from "@/modules/ledger-db/ledger";
 import { commandMetadataFor } from "@/modules/powersync/command-metadata";
 import { nowIso } from "@/utils/date";
@@ -26,7 +27,7 @@ import { periodForLocalDate, requireCurrency } from "./validation";
 
 interface SyncedBudgetingOptions {
   readonly database: SQLiteDatabase;
-  readonly householdId: string;
+  readonly binding: SyncedLedgerBinding;
   readonly userId: string;
   readonly ledger: SyncedTransactionLedger;
   readonly queryClient?: QueryClient;
@@ -65,7 +66,7 @@ export const createSyncedBudgetingCoordinator = (
       options.ledger.collections.accounts.toArray
         .filter(
           (row) =>
-            row.household_id === options.householdId &&
+            row.ledger_id === options.binding.ledgerId &&
             row.currency === currency &&
             row.lifecycle === "active" &&
             row.visibility === "public",
@@ -116,7 +117,7 @@ export const createSyncedBudgetingCoordinator = (
 
 async function workspaceSelection(options: SyncedBudgetingOptions): Promise<WorkspaceSelection> {
   const workspaces = options.ledger.collections.budgetWorkspaces.toArray
-    .filter((row) => row.household_id === options.householdId)
+    .filter((row) => row.ledger_id === options.binding.ledgerId)
     .map((row) => ({ currency: row.currency, activationPeriod: row.activation_period }))
     .sort((left, right) => left.currency.localeCompare(right.currency));
   const settings = await options.database.getAllAsync<{ key: string; value: string }>(
@@ -141,7 +142,7 @@ async function setWorkspaceSetting(
 ): Promise<void> {
   const currency = requireCurrency(requestedCurrency);
   const exists = options.ledger.collections.budgetWorkspaces.toArray.some(
-    (row) => row.household_id === options.householdId && row.currency === currency,
+    (row) => row.ledger_id === options.binding.ledgerId && row.currency === currency,
   );
   if (!exists) throw new Error(`The ${currency} budget workspace does not exist.`);
   await options.database.runAsync(
@@ -158,11 +159,12 @@ async function projection(
   period: string,
 ): Promise<BudgetProjection | null> {
   const workspace = options.ledger.collections.budgetWorkspaces.toArray.find(
-    (row) => row.household_id === options.householdId && row.currency === currency,
+    (row) => row.ledger_id === options.binding.ledgerId && row.currency === currency,
   );
   if (!workspace || period < workspace.activation_period) return null;
   const result = await orpc.projections.get({
-    householdId: options.householdId,
+    scope: options.binding.scope,
+    householdId: options.binding.householdId ?? undefined,
     currency,
     startPeriod: period,
     endPeriod: period,
@@ -254,7 +256,8 @@ async function createEnvelope(
   await options.ledger.collections.envelopes.insert(
     {
       id: request.id,
-      household_id: options.householdId,
+      ledger_id: options.binding.ledgerId,
+      household_id: options.binding.householdId,
       currency: request.currency,
       name: request.name.trim(),
       icon: request.icon,
@@ -302,7 +305,8 @@ function envelopeCommand(
 ): CommandEnvelope {
   return {
     commandId: generateId(),
-    householdId: options.householdId,
+    scope: options.binding.scope,
+    householdId: options.binding.householdId ?? undefined,
     kind: "budget.configure",
     issuedAt: request.now,
     payload: {
@@ -329,7 +333,8 @@ async function insertAssignment(
 ): Promise<void> {
   const command: CommandEnvelope = {
     commandId: generateId(),
-    householdId: options.householdId,
+    scope: options.binding.scope,
+    householdId: options.binding.householdId ?? undefined,
     kind: "assignment.commit",
     issuedAt: request.now,
     payload: {
@@ -375,7 +380,8 @@ function assignmentRow(
 ) {
   return {
     id: request.id,
-    household_id: options.householdId,
+    ledger_id: options.binding.ledgerId,
+    household_id: options.binding.householdId,
     currency: request.currency,
     budget_period: request.period,
     source_envelope_id: request.sourceEnvelopeId,
@@ -430,7 +436,7 @@ function assignmentHistory(
 ): AssignmentHistoryEntry[] {
   const rows = options.ledger.collections.assignments.toArray.filter(
     (row) =>
-      row.household_id === options.householdId &&
+      row.ledger_id === options.binding.ledgerId &&
       row.currency === currency &&
       row.budget_period === period,
   );
@@ -461,7 +467,7 @@ function mappedCategoryIds(
 ): string[] {
   const latest = new Map<string, { envelopeId: string | null; period: string }>();
   for (const mapping of options.ledger.collections.categoryMappings.toArray) {
-    if (mapping.household_id !== options.householdId || mapping.effective_from_period > period) {
+    if (mapping.ledger_id !== options.binding.ledgerId || mapping.effective_from_period > period) {
       continue;
     }
     const current = latest.get(mapping.category_id);
@@ -487,7 +493,7 @@ function positiveRollover(
     options.ledger.collections.rolloverSettings.toArray
       .filter(
         (row) =>
-          row.household_id === options.householdId &&
+          row.ledger_id === options.binding.ledgerId &&
           row.envelope_id === envelopeId &&
           row.effective_from_period <= period,
       )
@@ -503,12 +509,12 @@ async function formOptions(
   period: string,
 ): Promise<EnvelopeCategoryOption[]> {
   const mappings = options.ledger.collections.categoryMappings.toArray.filter(
-    (row) => row.household_id === options.householdId,
+    (row) => row.ledger_id === options.binding.ledgerId,
   );
   return options.ledger.collections.categories.toArray
     .filter(
       (row) =>
-        row.household_id === options.householdId &&
+        row.ledger_id === options.binding.ledgerId &&
         row.lifecycle === "active" &&
         row.type === "expense",
     )
@@ -522,7 +528,7 @@ async function formOptions(
       const future = timeline.find((mapping) => mapping.effective_from_period > period);
       const incompatible = options.ledger.collections.transactions.toArray.some(
         (transaction) =>
-          transaction.household_id === options.householdId &&
+          transaction.ledger_id === options.binding.ledgerId &&
           transaction.category_id === category.id &&
           transaction.currency !== currency,
       );
@@ -549,7 +555,8 @@ async function apply(
 ): Promise<Extract<CommandResult, { kind: "applied" }>> {
   const result = await orpc.commands.apply({
     commandId: generateId(),
-    householdId: options.householdId,
+    scope: options.binding.scope,
+    householdId: options.binding.householdId ?? undefined,
     kind,
     issuedAt: nowIso(),
     payload,

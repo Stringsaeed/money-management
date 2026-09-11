@@ -50,6 +50,7 @@ async function setupBudget(): Promise<TestDb> {
     version: 0,
   });
   await database.insert(budgetWorkspace).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     currency: "USD",
     activationPeriod: "2026-01",
@@ -96,6 +97,7 @@ async function seedAccount(id: string, initialBalanceMinor = 0, type = "bank", p
   });
   if (poolMember) {
     await db.insert(fundingMembership).values({
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       accountId: id,
       currency: "USD",
@@ -114,6 +116,7 @@ const seedCardAccount = (id: string) => seedAccount(id, 0, "card", false);
 
 async function seedEnvelope(id: string, overrides: Partial<typeof envelope.$inferInsert> = {}) {
   await db.insert(envelope).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id,
     name: `Envelope ${id}`,
@@ -149,6 +152,7 @@ async function mapCategory(
   effectiveFromPeriod = "2026-01",
 ) {
   await db.insert(categoryMapping).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     categoryId,
     envelopeId,
@@ -166,6 +170,7 @@ async function assign(
 ) {
   await db.insert(assignment).values({
     id: crypto.randomUUID(),
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     currency: "USD",
     budgetPeriod,
@@ -203,7 +208,7 @@ async function spendExpense(
 function read() {
   return getProjections(
     db,
-    { userId: OWNER, householdId: HOUSEHOLD_ID },
+    { userId: OWNER, ledgerId: HOUSEHOLD_ID },
     {
       currency: "USD",
       startPeriod: "2026-01",
@@ -393,6 +398,7 @@ describe("period projections", () => {
     await seedCategory("cat-fresh");
     await mapCategory("cat-fresh", "env-fresh");
     await db.insert(rolloverSetting).values({
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       envelopeId: "env-fresh",
       positiveRollover: false,
@@ -514,7 +520,7 @@ describe("period projections", () => {
     await expect(
       getProjections(
         db,
-        { userId: OUTSIDER, householdId: HOUSEHOLD_ID },
+        { userId: OUTSIDER, ledgerId: HOUSEHOLD_ID },
         {
           currency: "USD",
           startPeriod: "2026-01",

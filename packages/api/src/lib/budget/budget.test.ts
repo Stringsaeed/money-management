@@ -11,6 +11,7 @@ import {
 } from "@trove/db/schema/budget";
 import { user } from "@trove/db/schema/auth";
 import { household, membership } from "@trove/db/schema/household";
+import { category, ledgerAccount } from "@trove/db/schema/ledger";
 
 import { listEnvelopes } from "./envelopes";
 import {
@@ -60,6 +61,7 @@ async function setupBudget(): Promise<TestDb> {
     });
   }
   await database.insert(budgetWorkspace).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     currency: "USD",
     activationPeriod: "2026-01",
@@ -73,6 +75,7 @@ async function setupBudget(): Promise<TestDb> {
 async function insertEnvelope(id: string, overrides: Partial<typeof envelope.$inferInsert> = {}) {
   await db.insert(envelope).values({
     id,
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     currency: "USD",
     name: `Envelope ${id}`,
@@ -80,6 +83,39 @@ async function insertEnvelope(id: string, overrides: Partial<typeof envelope.$in
     color: "#8B9D83",
     lifecycle: "active",
     sortOrder: 0,
+    version: 0,
+    createdBy: OWNER,
+    updatedBy: OWNER,
+    ...overrides,
+  });
+}
+
+async function insertAccount(
+  id: string,
+  overrides: Partial<typeof ledgerAccount.$inferInsert> = {},
+) {
+  await db.insert(ledgerAccount).values({
+    id,
+    ledgerId: HOUSEHOLD_ID,
+    householdId: HOUSEHOLD_ID,
+    name: `Account ${id}`,
+    type: "bank",
+    currency: "USD",
+    version: 0,
+    createdBy: OWNER,
+    updatedBy: OWNER,
+    ...overrides,
+  });
+}
+
+async function insertCategory(id: string, overrides: Partial<typeof category.$inferInsert> = {}) {
+  await db.insert(category).values({
+    id,
+    ledgerId: HOUSEHOLD_ID,
+    householdId: HOUSEHOLD_ID,
+    name: `Category ${id}`,
+    type: "expense",
+    lifecycle: "active",
     version: 0,
     createdBy: OWNER,
     updatedBy: OWNER,
@@ -97,7 +133,10 @@ describe("budget schema — append-only enforcement", () => {
   }
 
   it("rejects UPDATE and DELETE on category_mappings", async () => {
+    await insertEnvelope("env-1");
+    await insertCategory("cat-1");
     await db.insert(categoryMapping).values({
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       categoryId: "cat-1",
       envelopeId: "env-1",
@@ -120,7 +159,9 @@ describe("budget schema — append-only enforcement", () => {
   });
 
   it("rejects UPDATE and DELETE on funding_memberships", async () => {
+    await insertAccount("acc-1");
     await db.insert(fundingMembership).values({
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       accountId: "acc-1",
       currency: "USD",
@@ -146,6 +187,7 @@ describe("budget schema — append-only enforcement", () => {
   it("rejects UPDATE and DELETE on rollover_settings and assignments", async () => {
     await insertEnvelope("env-r");
     await db.insert(rolloverSetting).values({
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       envelopeId: "env-r",
       positiveRollover: true,
@@ -166,6 +208,7 @@ describe("budget schema — append-only enforcement", () => {
 
     await db.insert(assignment).values({
       id: "asg-1",
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       currency: "USD",
       budgetPeriod: "2026-01",
@@ -182,8 +225,10 @@ describe("budget schema — append-only enforcement", () => {
   });
 
   it("rejects malformed Budget Periods at the schema level", async () => {
+    await insertCategory("cat-bad");
     await expect(
       db.insert(categoryMapping).values({
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         categoryId: "cat-bad",
         envelopeId: null,
@@ -201,6 +246,7 @@ describe("budget schema — append-only enforcement", () => {
 
   it("enforces assignment data integrity checks", async () => {
     const base = {
+      ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
       currency: "USD",
       budgetPeriod: "2026-01",
@@ -231,6 +277,8 @@ describe("period-effective timelines — derived effective_to_period", () => {
   it("derives category mapping spans via LEAD and treats NULL targets as unmapped tombstones", async () => {
     await insertEnvelope("env-a");
     await insertEnvelope("env-b");
+    await insertCategory("cat-1");
+    await insertCategory("cat-2");
     const rows = [
       { categoryId: "cat-1", envelopeId: "env-a", period: "2026-01" },
       // Remap…
@@ -242,6 +290,7 @@ describe("period-effective timelines — derived effective_to_period", () => {
     ];
     for (const r of rows) {
       await db.insert(categoryMapping).values({
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         categoryId: r.categoryId,
         envelopeId: r.envelopeId,
@@ -254,7 +303,7 @@ describe("period-effective timelines — derived effective_to_period", () => {
 
     const timeline = await getCategoryMappingTimeline(db, {
       userId: OWNER,
-      householdId: HOUSEHOLD_ID,
+      ledgerId: HOUSEHOLD_ID,
     });
 
     const cat1 = timeline.filter((r) => r.categoryId === "cat-1");
@@ -284,6 +333,8 @@ describe("period-effective timelines — derived effective_to_period", () => {
   });
 
   it("derives funding membership spans with exit tombstones", async () => {
+    await insertAccount("acc-1");
+    await insertAccount("acc-2");
     const rows = [
       { accountId: "acc-1", active: true, period: "2026-01" },
       { accountId: "acc-1", active: false, period: "2026-04" }, // leaves the pool
@@ -291,6 +342,7 @@ describe("period-effective timelines — derived effective_to_period", () => {
     ];
     for (const r of rows) {
       await db.insert(fundingMembership).values({
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         accountId: r.accountId,
         currency: "USD",
@@ -304,7 +356,7 @@ describe("period-effective timelines — derived effective_to_period", () => {
 
     const timeline = await getFundingMembershipTimeline(db, {
       userId: OWNER,
-      householdId: HOUSEHOLD_ID,
+      ledgerId: HOUSEHOLD_ID,
     });
 
     const acc1 = timeline.filter((r) => r.accountId === "acc-1");
@@ -317,6 +369,7 @@ describe("period-effective timelines — derived effective_to_period", () => {
     await insertEnvelope("env-r");
     await db.insert(rolloverSetting).values([
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         envelopeId: "env-r",
         positiveRollover: true,
@@ -326,6 +379,7 @@ describe("period-effective timelines — derived effective_to_period", () => {
         updatedBy: OWNER,
       },
       {
+        ledgerId: HOUSEHOLD_ID,
         householdId: HOUSEHOLD_ID,
         envelopeId: "env-r",
         positiveRollover: false,
@@ -338,7 +392,7 @@ describe("period-effective timelines — derived effective_to_period", () => {
 
     const timeline = await getRolloverSettingTimeline(db, {
       userId: OWNER,
-      householdId: HOUSEHOLD_ID,
+      ledgerId: HOUSEHOLD_ID,
     });
     expect(timeline).toEqual([
       {
@@ -364,24 +418,24 @@ describe("budget reads — authorization", () => {
   });
 
   it("lets any member read, including the read-only viewer role", async () => {
-    const ownerView = await listEnvelopes(db, { userId: OWNER, householdId: HOUSEHOLD_ID });
-    const viewerView = await listEnvelopes(db, { userId: VIEWER, householdId: HOUSEHOLD_ID });
+    const ownerView = await listEnvelopes(db, { userId: OWNER, ledgerId: HOUSEHOLD_ID });
+    const viewerView = await listEnvelopes(db, { userId: VIEWER, ledgerId: HOUSEHOLD_ID });
     expect(ownerView.map((e) => e.id)).toEqual(["env-1", "env-2"]);
     expect(viewerView.map((e) => e.id)).toEqual(ownerView.map((e) => e.id));
   });
 
   it("rejects a non-member before any read", async () => {
+    await expect(listEnvelopes(db, { userId: OUTSIDER, ledgerId: HOUSEHOLD_ID })).rejects.toThrow(
+      /not a member/,
+    );
     await expect(
-      listEnvelopes(db, { userId: OUTSIDER, householdId: HOUSEHOLD_ID }),
+      getCategoryMappingTimeline(db, { userId: OUTSIDER, ledgerId: HOUSEHOLD_ID }),
     ).rejects.toThrow(/not a member/);
     await expect(
-      getCategoryMappingTimeline(db, { userId: OUTSIDER, householdId: HOUSEHOLD_ID }),
+      getFundingMembershipTimeline(db, { userId: OUTSIDER, ledgerId: HOUSEHOLD_ID }),
     ).rejects.toThrow(/not a member/);
     await expect(
-      getFundingMembershipTimeline(db, { userId: OUTSIDER, householdId: HOUSEHOLD_ID }),
-    ).rejects.toThrow(/not a member/);
-    await expect(
-      getRolloverSettingTimeline(db, { userId: OUTSIDER, householdId: HOUSEHOLD_ID }),
+      getRolloverSettingTimeline(db, { userId: OUTSIDER, ledgerId: HOUSEHOLD_ID }),
     ).rejects.toThrow(/not a member/);
   });
 
@@ -394,6 +448,7 @@ describe("budget reads — authorization", () => {
     // OWNER is not a member of household-2; even with an envelope there, reads fail.
     await db.insert(envelope).values({
       id: "secret-env",
+      ledgerId: "household-2",
       householdId: "household-2",
       currency: "EUR",
       name: "Secret",
@@ -405,7 +460,7 @@ describe("budget reads — authorization", () => {
       createdBy: OUTSIDER,
       updatedBy: OUTSIDER,
     });
-    await expect(listEnvelopes(db, { userId: OWNER, householdId: "household-2" })).rejects.toThrow(
+    await expect(listEnvelopes(db, { userId: OWNER, ledgerId: "household-2" })).rejects.toThrow(
       /not a member/,
     );
   });

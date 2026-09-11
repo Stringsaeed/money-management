@@ -1,7 +1,7 @@
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import type { CommandPlan, HouseholdPlanContext, PlanRejection, PlanRequest } from "../pipeline";
+import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
 
 import { ledgerAccount, transaction } from "@trove/db/schema/ledger";
@@ -9,7 +9,7 @@ import { getBudgetPoolFacts } from "../../budget/funding-pool";
 import { queryRows } from "../../sql-rows";
 
 import { privateAccountAccessRejection } from "./private-account";
-import { issuesFromZod } from "./shared";
+import { issuesFromZod, scopeColumns } from "./shared";
 
 /**
  * refund.link (#91, ADR-0008): a full or partial return of Money linked to
@@ -40,6 +40,8 @@ const refundPayloadSchema = z.object({
 type RefundPayload = z.infer<typeof refundPayloadSchema>;
 
 export const refundCreateHandler = {
+  supportsPersonalScope: true as const,
+
   parsePayload(payload: unknown) {
     const result = refundPayloadSchema.safeParse(payload);
     return result.success
@@ -47,20 +49,17 @@ export const refundCreateHandler = {
       : { ok: false as const, issues: issuesFromZod(result.error) };
   },
 
-  async plan(
-    ctx: HouseholdPlanContext,
-    { payload }: PlanRequest,
-  ): Promise<CommandPlan | PlanRejection> {
+  async plan(ctx: PlanContext, { payload }: PlanRequest): Promise<CommandPlan | PlanRejection> {
     const input = payload as RefundPayload;
 
-    // The original must exist in this household, be an expense, and share the
-    // currency — cross-household linkage is impossible by scoping alone.
+    // The original must exist in this ledger, be an expense, and share the
+    // currency — cross-ledger linkage is impossible by scoping alone.
     const originalRows = await ctx.db
       .select()
       .from(transaction)
       .where(
         and(
-          eq(transaction.householdId, ctx.householdId),
+          eq(transaction.ledgerId, ctx.ledgerId),
           eq(transaction.id, input.originalTransactionId),
         ),
       )
@@ -92,10 +91,7 @@ export const refundCreateHandler = {
       .select()
       .from(ledgerAccount)
       .where(
-        and(
-          eq(ledgerAccount.householdId, ctx.householdId),
-          eq(ledgerAccount.id, original.accountId),
-        ),
+        and(eq(ledgerAccount.ledgerId, ctx.ledgerId), eq(ledgerAccount.id, original.accountId)),
       )
       .limit(1);
     const originalAccount = originalAccountRows[0];
@@ -117,10 +113,7 @@ export const refundCreateHandler = {
       .select()
       .from(ledgerAccount)
       .where(
-        and(
-          eq(ledgerAccount.householdId, ctx.householdId),
-          eq(ledgerAccount.id, input.depositAccountId),
-        ),
+        and(eq(ledgerAccount.ledgerId, ctx.ledgerId), eq(ledgerAccount.id, input.depositAccountId)),
       )
       .limit(1);
     const deposit = depositRows[0];
@@ -161,7 +154,7 @@ export const refundCreateHandler = {
     const refundedRows = await queryRows<Record<string, number>>(
       ctx.db,
       sql`SELECT COALESCE(SUM(r.amount_minor), 0) AS total FROM refund_links r
-          WHERE r.household_id = ${ctx.householdId}
+          WHERE r.ledger_id = ${ctx.ledgerId}
             AND r.original_transaction_id = ${input.originalTransactionId}`,
     );
     const alreadyRefundedMinor = Number(
@@ -179,7 +172,7 @@ export const refundCreateHandler = {
       };
     }
 
-    const facts = await getBudgetPoolFacts(ctx.db, ctx.householdId, input.currency, budgetPeriod);
+    const facts = await getBudgetPoolFacts(ctx.db, ctx.ledgerId, input.currency, budgetPeriod);
 
     const refundTransactionId = input.transactionId ?? crypto.randomUUID();
     const { refundLink } = await import("@trove/db/schema/budget");
@@ -189,7 +182,7 @@ export const refundCreateHandler = {
     // committing first makes this assertion abort our batch.
     const guards = [
       sql`(SELECT COALESCE(SUM(r.amount_minor), 0) FROM refund_links r
-           WHERE r.household_id = ${ctx.householdId}
+           WHERE r.ledger_id = ${ctx.ledgerId}
              AND r.original_transaction_id = ${input.originalTransactionId})
          + ${input.amountMinor} <= ${original.amountMinor}`,
     ];
@@ -218,7 +211,7 @@ export const refundCreateHandler = {
       ctx.db
         .insert(refundLink)
         .values({
-          householdId: ctx.householdId,
+          ...scopeColumns(ctx),
           id: crypto.randomUUID(),
           originalTransactionId: input.originalTransactionId,
           refundTransactionId,

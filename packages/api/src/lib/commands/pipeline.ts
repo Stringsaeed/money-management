@@ -47,8 +47,8 @@ export interface PlanContext {
 
 /**
  * A {@link PlanContext} narrowed to the organization path. Handlers that read
- * or write Household-owned tables (memberships, budgeting, recurring) declare
- * this context and the pipeline never dispatches them under a Personal Ledger.
+ * or write Household-owned tables (memberships, import) declare this context
+ * and the pipeline never dispatches them under a Personal Ledger.
  */
 export interface HouseholdPlanContext extends PlanContext {
   householdId: string;
@@ -128,7 +128,7 @@ function personalUnsupportedRejection(kind: CommandKind): PlanRejection {
     issues: [
       {
         field: "scope",
-        message: `"${kind}" needs a Household; a personal ledger supports accounts, categories, and transactions only.`,
+        message: `"${kind}" needs a Household; a personal ledger does not include membership or import.`,
       },
     ],
   };
@@ -253,9 +253,9 @@ export async function applyCommand({
     return unknownKindRejection(kind);
   }
   if (scope.type === "personal") {
-    // Household-owned intents (membership, budgeting, recurring, import) have
-    // no meaning without a Household. Reject them loudly instead of writing
-    // rows a Personal Ledger can never read back.
+    // Household-owned intents (membership, import) have no meaning without a
+    // Household. Reject them loudly instead of writing rows a Personal Ledger
+    // can never read back.
     if (handler.supportsPersonalScope !== true) {
       return personalUnsupportedRejection(kind);
     }

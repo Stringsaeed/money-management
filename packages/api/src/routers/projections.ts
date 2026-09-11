@@ -4,6 +4,8 @@ import { z } from "zod";
 
 import { protectedProcedure } from "../index";
 import { getProjections } from "../lib/budget/projections";
+import { ledgerReadFields } from "../lib/ledger-read-input";
+import { resolveReadLedgerId } from "../lib/require-member";
 import { requireUserId } from "../lib/require-user";
 
 const periodSchema = z
@@ -11,20 +13,25 @@ const periodSchema = z
   .regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Budget Periods are "YYYY-MM" calendar months.');
 
 /**
- * Read surface for seq-stamped Period projections (#92). Any member role may
- * read (viewer included); the cache is transparent to callers — a stamp lag
- * behind the household's sync seq simply rebuilds on this read.
+ * Read surface for seq-stamped Period projections (#92). Any authorized
+ * reader may read (Household viewer and Personal Ledger owner included);
+ * the cache is transparent to callers — a stamp lag behind the ledger's
+ * sync seq simply rebuilds on this read.
  */
 export const projectionsRouter = {
   get: protectedProcedure
     .input(
-      z.object({
-        householdId: z.string().min(1),
-        /** ISO 4217 currency of the Budget Workspace to project. */
-        currency: z.string().regex(/^[A-Z]{3}$/, "Use a three-letter ISO currency code."),
-        startPeriod: periodSchema,
-        endPeriod: periodSchema,
-      }),
+      ledgerReadFields
+        .extend({
+          /** ISO 4217 currency of the Budget Workspace to project. */
+          currency: z.string().regex(/^[A-Z]{3}$/, "Use a three-letter ISO currency code."),
+          startPeriod: periodSchema,
+          endPeriod: periodSchema,
+        })
+        .refine((input) => input.scope !== undefined || input.householdId !== undefined, {
+          message: "Name the ledger this read belongs to: a personal or organization scope.",
+          path: ["scope"],
+        }),
     )
     .handler(async ({ context, input }) => {
       const userId = requireUserId(context);
@@ -35,7 +42,7 @@ export const projectionsRouter = {
       }
       return getProjections(
         createDb(),
-        { userId, householdId: input.householdId },
+        { userId, ledgerId: resolveReadLedgerId(userId, input) },
         {
           currency: input.currency,
           startPeriod: input.startPeriod,

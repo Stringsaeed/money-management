@@ -3,14 +3,14 @@ import { z } from "zod";
 
 import { applyAssignmentToAvailability, routeAssignment } from "@trove/domain/assignment-waterfall";
 
-import type { CommandPlan, HouseholdPlanContext, PlanRejection, PlanRequest } from "../pipeline";
+import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
 
 import { assignment, envelope } from "@trove/db/schema/budget";
 import { getBudgetPoolFacts, unassignedMoneySql } from "../../budget/funding-pool";
 import { getEnvelopeAssignedBalance } from "../../budget/envelope-balance";
 
-import { issuesFromZod } from "./shared";
+import { issuesFromZod, scopeColumns } from "./shared";
 
 /**
  * assignment.commit (#90): move Money into or out of one Envelope's plan.
@@ -43,16 +43,17 @@ const assignmentCommitPayloadSchema = z.object({
 
 type AssignmentCommitPayload = z.infer<typeof assignmentCommitPayloadSchema>;
 
-async function loadEnvelope(ctx: HouseholdPlanContext, id: string) {
+async function loadEnvelope(ctx: PlanContext, id: string) {
   const rows = await ctx.db
     .select()
     .from(envelope)
-    .where(and(eq(envelope.householdId, ctx.householdId), eq(envelope.id, id)))
+    .where(and(eq(envelope.ledgerId, ctx.ledgerId), eq(envelope.id, id)))
     .limit(1);
   return rows[0] ?? null;
 }
 
 export const assignmentCommitHandler = {
+  supportsPersonalScope: true as const,
   supportedPredicates: ["unassigned_money_gte"],
 
   parsePayload(payload: unknown) {
@@ -63,7 +64,7 @@ export const assignmentCommitHandler = {
   },
 
   async plan(
-    ctx: HouseholdPlanContext,
+    ctx: PlanContext,
     { payload, preconditions }: PlanRequest,
   ): Promise<CommandPlan | PlanRejection> {
     const input = payload as AssignmentCommitPayload;
@@ -114,10 +115,7 @@ export const assignmentCommitHandler = {
         .select()
         .from(assignment)
         .where(
-          and(
-            eq(assignment.householdId, ctx.householdId),
-            eq(assignment.id, input.reversesAssignmentId),
-          ),
+          and(eq(assignment.ledgerId, ctx.ledgerId), eq(assignment.id, input.reversesAssignmentId)),
         )
         .limit(1);
       const original = originalRows[0];
@@ -133,7 +131,7 @@ export const assignmentCommitHandler = {
         .from(assignment)
         .where(
           and(
-            eq(assignment.householdId, ctx.householdId),
+            eq(assignment.ledgerId, ctx.ledgerId),
             eq(assignment.reversesAssignmentId, input.reversesAssignmentId),
           ),
         )
@@ -204,7 +202,7 @@ export const assignmentCommitHandler = {
 
     const facts = await getBudgetPoolFacts(
       ctx.db,
-      ctx.householdId,
+      ctx.ledgerId,
       input.currency,
       input.budgetPeriod,
     );
@@ -254,7 +252,7 @@ export const assignmentCommitHandler = {
       // aborts the whole batch when Unassigned Money dipped below the
       // requirement between planning and commit.
       guards.push(
-        sql`(SELECT ${unassignedMoneySql(ctx.householdId, input.currency, input.budgetPeriod)}) >= ${requiredMinor}`,
+        sql`(SELECT ${unassignedMoneySql(ctx.ledgerId, input.currency, input.budgetPeriod)}) >= ${requiredMinor}`,
       );
     }
 
@@ -263,7 +261,7 @@ export const assignmentCommitHandler = {
     if (!input.reversesAssignmentId && destinationEnvelopeId) {
       const availableBefore = await getEnvelopeAssignedBalance(
         ctx.db,
-        ctx.householdId,
+        ctx.ledgerId,
         destinationEnvelopeId,
         input.budgetPeriod,
       );
@@ -301,7 +299,7 @@ export const assignmentCommitHandler = {
         ctx.db
           .insert(assignment)
           .values({
-            householdId: ctx.householdId,
+            ...scopeColumns(ctx),
             id: input.assignmentId ?? crypto.randomUUID(),
             currency: input.currency,
             budgetPeriod: input.budgetPeriod,

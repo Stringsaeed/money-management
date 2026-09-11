@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { isPersonalLedgerId } from "@trove/protocol";
 
 import { localDateInTimeZone } from "@trove/domain/clock";
 import type { SettlementIdentity } from "@trove/domain/settlement";
@@ -6,7 +7,7 @@ import type { SettlementIdentity } from "@trove/domain/settlement";
 import { recurringRule } from "@trove/db/schema/recurring";
 
 import type { CommandDatabase } from "../commands/types";
-import { settleHouseholdRules, type HouseholdSettlementSummary } from "./settle-household";
+import { settleLedgerRules, type HouseholdSettlementSummary } from "./settle-household";
 
 /**
  * Synthetic change-log actor for system-driven sweeps (#88): a real user row
@@ -27,21 +28,21 @@ export function createSettlementIdentity(): SettlementIdentity {
 }
 
 /**
- * Households that own at least one active Recurring Rule — the fan-out set
- * for the hourly Cron Trigger. Iterating households (not all rules) in one
+ * Ledgers that own at least one active Recurring Rule — the fan-out set
+ * for the hourly Cron Trigger. Iterating ledgers (not all rules) in one
  * invocation keeps each sweep bounded, the Workers CPU-limit mitigation the
  * issue triage calls for; larger deployments can move this loop onto a queue.
  */
-export async function listActiveRuleHouseholds(db: CommandDatabase): Promise<string[]> {
+export async function listActiveRuleLedgers(db: CommandDatabase): Promise<string[]> {
   const rows = await db
-    .selectDistinct({ householdId: recurringRule.householdId })
+    .selectDistinct({ ledgerId: recurringRule.ledgerId })
     .from(recurringRule)
     .where(eq(recurringRule.lifecycle, "active"));
-  return rows.map((row) => row.householdId);
+  return rows.map((row) => row.ledgerId);
 }
 
 export interface ScheduledSettlementSummary {
-  /** Households the sweep fanned out over. */
+  /** Ledgers the sweep fanned out over (personal + organization). */
   readonly households: number;
   readonly generatedCount: number;
   readonly totalMinor: number;
@@ -49,29 +50,33 @@ export interface ScheduledSettlementSummary {
 }
 
 /**
- * Hourly settlement sweep across ALL households (#88). Every active Rule is
- * evaluated on its OWN time zone's local date — the same calendar the client
- * clock resolves — so a UTC+14 household settles hours before a UTC-11 one,
- * and no Rule is ever pulled ahead of its local today. Idempotent under Cron
- * Trigger retries: the occurrence identity PK absorbs double-settlement and
- * the revision assertion aborts commits racing a concurrent edit. One
- * failing household never blocks the rest of the fan-out.
+ * Hourly settlement sweep across ALL ledgers (#88, #227). Every active Rule
+ * is evaluated on its OWN time zone's local date — the same calendar the
+ * client clock resolves — so a UTC+14 ledger settles hours before a UTC-11
+ * one, and no Rule is ever pulled ahead of its local today. Idempotent under
+ * Cron Trigger retries: the occurrence identity PK absorbs double-settlement
+ * and the revision assertion aborts commits racing a concurrent edit. One
+ * failing ledger never blocks the rest of the fan-out.
  */
 export async function settleDueRules(
   db: CommandDatabase,
   identity: SettlementIdentity,
   now: Date,
 ): Promise<ScheduledSettlementSummary> {
-  const householdIds = await listActiveRuleHouseholds(db);
+  const ledgerIds = await listActiveRuleLedgers(db);
 
   let generatedCount = 0;
   let totalMinor = 0;
   const reports: HouseholdSettlementSummary[] = [];
-  for (const householdId of [...householdIds].sort()) {
+  for (const ledgerId of [...ledgerIds].sort()) {
     try {
-      const summary = await settleHouseholdRules(
+      const summary = await settleLedgerRules(
         db,
-        { householdId, userId: SYSTEM_SETTLEMENT_ACTOR_ID },
+        {
+          ledgerId,
+          householdId: isPersonalLedgerId(ledgerId) ? null : ledgerId,
+          userId: SYSTEM_SETTLEMENT_ACTOR_ID,
+        },
         identity,
         // Nominal label only (UTC calendar date of `now`) — with per-rule
         // time zones a sweep-wide date would be misleading; every Rule
@@ -84,7 +89,7 @@ export async function settleDueRules(
       generatedCount += summary.generatedCount;
       totalMinor += summary.totalMinor;
     } catch (error) {
-      console.error(`Settlement sweep failed for household ${householdId}:`, error);
+      console.error(`Settlement sweep failed for ledger ${ledgerId}:`, error);
     }
   }
 

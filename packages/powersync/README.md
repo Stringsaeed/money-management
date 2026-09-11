@@ -14,9 +14,10 @@ This package is the reviewed source for Trove's PowerSync Sync Streams. The mobi
 
 ## Sync Streams
 
-`sync-streams.yaml` uses edition 3 and exposes four streams:
+`sync-streams.yaml` uses edition 3 and exposes five streams:
 
 - `memberships` automatically syncs the signed-in user's memberships at priority 1.
+- `personal_ledger` auto-subscribes by `auth.user_id()` and streams accounts, categories, transactions, budget tables, and recurring rules/occurrences for that Personal Ledger. Recurring queries repeat private-account ownership checks.
 - `household_ledger` is on demand. The client supplies `household_id`, but every query also proves membership with the signed JWT `sub`. Account and transaction queries apply private-account ownership rules.
 - `household_budget` streams workspaces, envelopes, period-effective facts, assignments, and refund links.
 - `household_recurring` streams rules and occurrences and repeats private-account ownership checks.
