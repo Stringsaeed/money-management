@@ -13,6 +13,7 @@ import {
 
 import * as auth from "./auth";
 import { household } from "./household";
+import { ledger } from "./ledger-scope";
 
 const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 
@@ -24,9 +25,12 @@ const TRANSACTION_TYPES = ["expense", "income", "transfer"] as const;
 export const ledgerAccount = pgTable(
   "accounts",
   {
-    householdId: text("household_id")
+    /** Owning Ledger — personal or organization. The scope of record. */
+    ledgerId: text("ledger_id")
       .notNull()
-      .references(() => household.id, { onDelete: "cascade" }),
+      .references(() => ledger.id, { onDelete: "cascade" }),
+    /** Household backing an organization Ledger; null on personal rows. */
+    householdId: text("household_id").references(() => household.id, { onDelete: "cascade" }),
     id: text("id").primaryKey(),
     name: text("name").notNull(),
     type: text("type", { enum: ACCOUNT_TYPES }).notNull(),
@@ -57,13 +61,19 @@ export const ledgerAccount = pgTable(
   },
   (table) => [
     unique("accounts_household_id_id_unique").on(table.householdId, table.id),
+    unique("accounts_ledger_id_id_unique").on(table.ledgerId, table.id),
     check("accounts_lifecycle_valid", sql`${table.lifecycle} IN ('active', 'archived')`),
     check("accounts_type_valid", sql`${table.type} IN ('cash', 'bank', 'card')`),
     check(
       "accounts_private_owner_required",
       sql`${table.visibility} = 'public' OR ${table.ownerUserId} IS NOT NULL`,
     ),
+    check(
+      "accounts_household_required_for_organization",
+      sql`${table.householdId} IS NOT NULL OR ${table.ledgerId} LIKE 'personal:%'`,
+    ),
     index("accounts_household_lifecycle_idx").on(table.householdId, table.lifecycle),
+    index("accounts_ledger_lifecycle_idx").on(table.ledgerId, table.lifecycle),
     index("accounts_household_visibility_owner_idx").on(
       table.householdId,
       table.visibility,
@@ -75,9 +85,10 @@ export const ledgerAccount = pgTable(
 export const category = pgTable(
   "categories",
   {
-    householdId: text("household_id")
+    ledgerId: text("ledger_id")
       .notNull()
-      .references(() => household.id, { onDelete: "cascade" }),
+      .references(() => ledger.id, { onDelete: "cascade" }),
+    householdId: text("household_id").references(() => household.id, { onDelete: "cascade" }),
     id: text("id").primaryKey(),
     name: text("name").notNull(),
     type: text("type", { enum: CATEGORY_TYPES }).notNull(),
@@ -104,18 +115,25 @@ export const category = pgTable(
   },
   (table) => [
     unique("categories_household_id_id_unique").on(table.householdId, table.id),
+    unique("categories_ledger_id_id_unique").on(table.ledgerId, table.id),
     check("categories_lifecycle_valid", sql`${table.lifecycle} IN ('active', 'archived')`),
     check("categories_type_valid", sql`${table.type} IN ('income', 'expense')`),
+    check(
+      "categories_household_required_for_organization",
+      sql`${table.householdId} IS NOT NULL OR ${table.ledgerId} LIKE 'personal:%'`,
+    ),
     index("categories_household_lifecycle_idx").on(table.householdId, table.lifecycle),
+    index("categories_ledger_lifecycle_idx").on(table.ledgerId, table.lifecycle),
   ],
 );
 
 export const transaction = pgTable(
   "transactions",
   {
-    householdId: text("household_id")
+    ledgerId: text("ledger_id")
       .notNull()
-      .references(() => household.id, { onDelete: "cascade" }),
+      .references(() => ledger.id, { onDelete: "cascade" }),
+    householdId: text("household_id").references(() => household.id, { onDelete: "cascade" }),
     id: text("id").primaryKey(),
     type: text("type", { enum: TRANSACTION_TYPES }).notNull(),
     amountMinor: integer("amount_minor").notNull(),
@@ -152,6 +170,10 @@ export const transaction = pgTable(
       sql`(${table.type} = 'transfer' AND ${table.toAccountId} IS NOT NULL AND ${table.categoryId} IS NULL AND ${table.accountId} <> ${table.toAccountId})
         OR (${table.type} <> 'transfer' AND ${table.toAccountId} IS NULL)`,
     ),
+    check(
+      "transactions_household_required_for_organization",
+      sql`${table.householdId} IS NOT NULL OR ${table.ledgerId} LIKE 'personal:%'`,
+    ),
     foreignKey({
       columns: [table.householdId, table.accountId],
       foreignColumns: [ledgerAccount.householdId, ledgerAccount.id],
@@ -164,34 +186,57 @@ export const transaction = pgTable(
       columns: [table.householdId, table.categoryId],
       foreignColumns: [category.householdId, category.id],
     }).onDelete("set null"),
+    // Ledger-keyed twins of the Household foreign keys above. They are the
+    // ones that hold on personal rows (a null household_id satisfies any
+    // composite key), so no Transaction can point across Ledger Scopes.
+    foreignKey({
+      columns: [table.ledgerId, table.accountId],
+      foreignColumns: [ledgerAccount.ledgerId, ledgerAccount.id],
+    }),
+    foreignKey({
+      columns: [table.ledgerId, table.toAccountId],
+      foreignColumns: [ledgerAccount.ledgerId, ledgerAccount.id],
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.ledgerId, table.categoryId],
+      foreignColumns: [category.ledgerId, category.id],
+    }).onDelete("set null"),
     index("transactions_household_date_idx").on(table.householdId, table.date),
     index("transactions_household_account_idx").on(table.householdId, table.accountId),
+    index("transactions_ledger_date_idx").on(table.ledgerId, table.date),
+    index("transactions_ledger_account_idx").on(table.ledgerId, table.accountId),
   ],
 );
 
-export const ledgerAccountRelations = relations(ledgerAccount, ({ many }) => ({
+export const ledgerAccountRelations = relations(ledgerAccount, ({ many, one }) => ({
+  ledger: one(ledger, { fields: [ledgerAccount.ledgerId], references: [ledger.id] }),
   transactions: many(transaction),
 }));
 
-export const categoryRelations = relations(category, ({ many }) => ({
+export const categoryRelations = relations(category, ({ many, one }) => ({
+  ledger: one(ledger, { fields: [category.ledgerId], references: [ledger.id] }),
   transactions: many(transaction),
 }));
 
 export const transactionRelations = relations(transaction, ({ one }) => ({
+  ledger: one(ledger, {
+    fields: [transaction.ledgerId],
+    references: [ledger.id],
+  }),
   household: one(household, {
     fields: [transaction.householdId],
     references: [household.id],
   }),
   account: one(ledgerAccount, {
-    fields: [transaction.householdId, transaction.accountId],
-    references: [ledgerAccount.householdId, ledgerAccount.id],
+    fields: [transaction.ledgerId, transaction.accountId],
+    references: [ledgerAccount.ledgerId, ledgerAccount.id],
   }),
   toAccount: one(ledgerAccount, {
-    fields: [transaction.householdId, transaction.toAccountId],
-    references: [ledgerAccount.householdId, ledgerAccount.id],
+    fields: [transaction.ledgerId, transaction.toAccountId],
+    references: [ledgerAccount.ledgerId, ledgerAccount.id],
   }),
   category: one(category, {
-    fields: [transaction.householdId, transaction.categoryId],
-    references: [category.householdId, category.id],
+    fields: [transaction.ledgerId, transaction.categoryId],
+    references: [category.ledgerId, category.id],
   }),
 }));

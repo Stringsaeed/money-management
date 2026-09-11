@@ -2,6 +2,7 @@
 export * from "./auth";
 export * from "./budget";
 export * from "./ledger";
+export * from "./ledger-scope";
 export * from "./recurring";
 export * from "./commands";
 export * from "./household";

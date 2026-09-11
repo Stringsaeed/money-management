@@ -15,6 +15,7 @@ import type { EffectTag } from "@trove/protocol";
 
 import * as auth from "./auth";
 import { household } from "./household";
+import { ledger } from "./ledger-scope";
 
 const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 
@@ -22,9 +23,11 @@ export const householdChange = pgTable(
   "household_changes",
   {
     id: text("id").primaryKey(),
-    householdId: text("household_id")
+    /** Ledger whose history this row extends; the `seq` watermark is per ledger. */
+    ledgerId: text("ledger_id")
       .notNull()
-      .references(() => household.id, { onDelete: "cascade" }),
+      .references(() => ledger.id, { onDelete: "cascade" }),
+    householdId: text("household_id").references(() => household.id, { onDelete: "cascade" }),
     seq: integer("seq").notNull(),
     userId: text("user_id")
       .notNull()
@@ -42,28 +45,32 @@ export const householdChange = pgTable(
       table.householdId,
       table.commandId,
     ),
+    uniqueIndex("household_changes_ledger_seq_unique").on(table.ledgerId, table.seq),
+    uniqueIndex("household_changes_ledger_command_unique").on(table.ledgerId, table.commandId),
     index("household_changes_commandId_idx").on(table.commandId),
   ],
 );
 
 export const householdChangeSequence = pgTable("household_change_sequences", {
-  householdId: text("household_id")
+  ledgerId: text("ledger_id")
     .primaryKey()
-    .references(() => household.id, { onDelete: "cascade" }),
+    .references(() => ledger.id, { onDelete: "cascade" }),
+  householdId: text("household_id").references(() => household.id, { onDelete: "cascade" }),
   seq: integer("seq").notNull(),
 });
 
 export const commandResult = pgTable(
   "command_results",
   {
-    householdId: text("household_id")
+    ledgerId: text("ledger_id")
       .notNull()
-      .references(() => household.id, { onDelete: "cascade" }),
+      .references(() => ledger.id, { onDelete: "cascade" }),
+    householdId: text("household_id").references(() => household.id, { onDelete: "cascade" }),
     commandId: text("command_id").notNull(),
     result: jsonb("result").$type<unknown>().notNull(),
     createdAt: timestamptz("created_at").defaultNow().notNull(),
   },
-  (table) => [primaryKey({ columns: [table.householdId, table.commandId] })],
+  (table) => [primaryKey({ columns: [table.ledgerId, table.commandId] })],
 );
 
 export const pipelineAssertion = pgTable(
@@ -76,6 +83,10 @@ export const pipelineAssertion = pgTable(
 );
 
 export const householdChangeRelations = relations(householdChange, ({ one }) => ({
+  ledger: one(ledger, {
+    fields: [householdChange.ledgerId],
+    references: [ledger.id],
+  }),
   household: one(household, {
     fields: [householdChange.householdId],
     references: [household.id],
