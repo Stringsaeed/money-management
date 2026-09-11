@@ -11,7 +11,6 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
 import { appLinks } from "./app-links";
-import { createServerAuth } from "./auth";
 
 const app = new Hono();
 
@@ -21,14 +20,12 @@ app.use(
   cors({
     origin: env.CORS_ORIGIN,
     allowMethods: ["GET", "POST", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization", "Cookie"],
+    allowHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   }),
 );
 
 app.route("/", appLinks);
-
-app.on(["POST", "GET"], "/api/auth/*", (c) => createServerAuth().handler(c.req.raw));
 
 app.get("/api/powersync/jwks.json", () => createPowerSyncJwksResponse(getPowerSyncServerConfig()));
 
@@ -41,8 +38,7 @@ export const rpcHandler = new RPCHandler(appRouter, {
 });
 
 app.use("/*", async (c, next) => {
-  const auth = createServerAuth();
-  const context = await createContext({ context: c, auth });
+  const context = await createContext({ context: c });
 
   const rpcResult = await rpcHandler.handle(c.req.raw, {
     prefix: "/rpc",

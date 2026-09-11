@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "@azure/core-asynciterator-polyfill": "1.0.2",
-    "@better-auth/expo": "catalog:",
     "@expo-google-fonts/nunito": "^0.4.2",
     "@expo/ui": "~57.0.16",
     "@op-engineering/op-sqlite": "^18.2.0",
@@ -40,7 +39,6 @@
     "@tanstack/react-store": "^0.11.1",
     "@trove/domain": "workspace:*",
     "@trove/protocol": "workspace:*",
-    "better-auth": "catalog:",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

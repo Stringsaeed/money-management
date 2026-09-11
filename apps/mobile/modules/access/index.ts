@@ -1,5 +1,5 @@
 export { coreFromAccess } from "./core-from-state";
-export { redeemMagicToken } from "./actions";
+export { beginHostedSignIn } from "./actions";
 export type { AuthActionFailure, AuthActionResult } from "./actions";
 export {
   nextClaim,
@@ -17,7 +17,7 @@ export { AccessProvider } from "./provider";
 export { usePresentAuthSheet } from "./use-auth-sheet";
 export { firstRouteParam } from "./route-param";
 export { hrefForInternal, PROFILE_HOUSEHOLD_HREF, returnTo, serializeReturnTo } from "./return-to";
-export { getAuthCookie, probeSession, tryRemoteSignOut } from "./session-probe";
+export { getAuthAccessToken, getAuthCookie, probeSession, tryRemoteSignOut } from "./session-probe";
 export { signedInUserId, useAccess } from "./use-access";
 export type {
   AccessCore,

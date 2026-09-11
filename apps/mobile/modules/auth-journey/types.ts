@@ -64,6 +64,7 @@ export interface ReduceResult {
 }
 
 export type JourneyEffect =
+  | { readonly kind: "open_authkit" }
   | { readonly kind: "send_link"; readonly email: string; readonly operation: LinkOperation }
   | { readonly kind: "sign_in_with_password"; readonly email: string; readonly password: string }
   | {

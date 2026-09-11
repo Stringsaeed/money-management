@@ -73,6 +73,13 @@ export const server = Cloudflare.Worker(
         HYPERDRIVE_FRESH: hd,
         METRICS: metrics,
         CORS_ORIGIN: Config.string("CORS_ORIGIN"),
+        WORKOS_API_KEY: Config.redacted("WORKOS_API_KEY"),
+        WORKOS_CLIENT_ID: Config.string("WORKOS_CLIENT_ID"),
+        WORKOS_TOKEN_AUDIENCE: Config.string("WORKOS_TOKEN_AUDIENCE").pipe(Config.withDefault("")),
+        WORKOS_TOKEN_ISSUER: Config.string("WORKOS_TOKEN_ISSUER").pipe(
+          Config.withDefault("https://api.workos.com"),
+        ),
+        // Retained until #231 removes Better Auth cutover checks; unused on the active auth path.
         BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
         BETTER_AUTH_URL: Cloudflare.Worker.URL,
         POWERSYNC_URL: Config.string("POWERSYNC_URL"),
