@@ -18,9 +18,6 @@ export function HouseholdMembers({
 }: {
   members: readonly HouseholdMember[];
   currentUserId: string;
-  /** @deprecated Ownership transfer removed; kept optional for call-site churn. */
-  isOwner?: boolean;
-  householdId?: string;
 }) {
   return (
     <View>

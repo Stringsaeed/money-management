@@ -6,11 +6,8 @@ import type { CommandDatabase } from "../commands/types";
 import type { HouseholdCaller } from "../require-member";
 import { requireHouseholdMember } from "../require-member";
 
-function accountVisibility(caller: HouseholdCaller) {
-  return and(
-    eq(ledgerAccount.householdId, caller.householdId),
-    or(eq(ledgerAccount.visibility, "public"), eq(ledgerAccount.ownerUserId, caller.userId)),
-  );
+function householdAccounts(caller: HouseholdCaller) {
+  return eq(ledgerAccount.householdId, caller.householdId);
 }
 
 export async function listAccounts(db: CommandDatabase, caller: HouseholdCaller) {
@@ -18,7 +15,7 @@ export async function listAccounts(db: CommandDatabase, caller: HouseholdCaller)
   return db
     .select()
     .from(ledgerAccount)
-    .where(accountVisibility(caller))
+    .where(householdAccounts(caller))
     .orderBy(asc(ledgerAccount.sortOrder), asc(ledgerAccount.name));
 }
 
@@ -34,7 +31,7 @@ export interface TransactionPage {
 }
 
 function visibleAccountIds(db: CommandDatabase, caller: HouseholdCaller) {
-  return db.select({ id: ledgerAccount.id }).from(ledgerAccount).where(accountVisibility(caller));
+  return db.select({ id: ledgerAccount.id }).from(ledgerAccount).where(householdAccounts(caller));
 }
 
 function transactionVisibility(db: CommandDatabase, caller: HouseholdCaller) {

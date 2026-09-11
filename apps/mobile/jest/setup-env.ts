@@ -75,7 +75,6 @@ jest.mock("@/modules/access", () => ({
     beginAuth: jest.fn(),
   })),
   AccessProvider: ({ children }: { children: React.ReactNode }) => children,
-  AuthLinkGate: () => null,
   signedInUserId: (access: { kind: string; user?: { userId: string } }) =>
     access.kind === "signed_in" ? (access.user?.userId ?? null) : null,
   getAuthCookie: jest.fn(() => ""),

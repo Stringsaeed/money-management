@@ -428,7 +428,6 @@ function buildInsertStatement(
         sortOrder: row.sortOrder,
         lifecycle: row.lifecycle,
         lifecycleChangedAt: row.lifecycleChangedAt ? new Date(row.lifecycleChangedAt) : null,
-        visibility: "public" as const,
         ownerUserId: null,
         version: 0,
         createdBy: actorUserId,

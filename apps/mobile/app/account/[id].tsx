@@ -3,14 +3,9 @@ import { ActivityIndicator, Pressable, ScrollView, useColorScheme, View } from "
 import { Text } from "@/components/ui/text";
 
 import { MoneyText } from "@/components/ui/money-text";
-import { AccountPrivacyToggle } from "@/components/account/account-privacy-toggle";
 import { TransactionGroup } from "@/components/transaction/transaction-group";
 import { useAccount } from "@/hooks/use-accounts";
-import { useAccountPrivacy } from "@/hooks/use-account-privacy";
-import { useAuthorizedLedgerAccounts } from "@/hooks/use-authorized-ledger-accounts";
-import { useActiveHousehold } from "@/hooks/use-households";
 import { useTransactions } from "@/hooks/use-transactions";
-import { signedInUserId, useAccess } from "@/modules/access";
 import { useUIStore } from "@/stores/ui-store";
 import { formatMonth, addMonths } from "@/utils/date";
 import type { DayGroup } from "@/types";
@@ -31,12 +26,6 @@ function groupByDay(transactions: import("@/types").TransactionWithDetails[]): D
 
 export default function AccountDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const userId = signedInUserId(useAccess());
-  const { activeHousehold } = useActiveHousehold();
-  const householdId = activeHousehold?.householdId ?? null;
-  const { data: serverAccounts = [] } = useAuthorizedLedgerAccounts(householdId);
-  const serverAccount = serverAccounts.find((candidate) => candidate.id === id);
-  const accountPrivacy = useAccountPrivacy(serverAccount, householdId);
   const { data: account, isLoading: loadingAccount } = useAccount(id);
   const { selectedYear, selectedMonth, setSelectedMonth } = useUIStore();
   const colorScheme = useColorScheme();
@@ -140,25 +129,6 @@ export default function AccountDetailScreen() {
           </View>
         </View>
       </View>
-
-      {serverAccount && serverAccount.ownerUserId === userId ? (
-        <View className="px-4 pt-4">
-          <AccountPrivacyToggle
-            isPending={accountPrivacy.isPending}
-            isPrivate={
-              accountPrivacy.variables !== undefined
-                ? accountPrivacy.variables
-                : serverAccount.visibility === "private"
-            }
-            onChange={accountPrivacy.mutate}
-          />
-          {accountPrivacy.error ? (
-            <Text className="mt-2 font-body-normal text-xs text-destructive">
-              Could not update account privacy. Please try again.
-            </Text>
-          ) : null}
-        </View>
-      ) : null}
 
       {/* Transactions */}
       <View className="py-2">

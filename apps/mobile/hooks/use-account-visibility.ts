@@ -11,7 +11,7 @@ export interface AccountVisibility {
  * Applies the server's API-authorized ledger view to local UI caches. An
  * active household fails closed while its authorized account list is loading
  * or unavailable, so retained local rows cannot reveal another member's
- * private Account.
+ * unauthorized Account rows during Household sync enrollment.
  */
 export function useAccountVisibility(): AccountVisibility {
   const { activeHousehold } = useActiveHousehold();

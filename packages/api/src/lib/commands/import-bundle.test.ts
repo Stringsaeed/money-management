@@ -293,7 +293,6 @@ describe("commands.apply — import_bundle idempotency", () => {
       householdId: "household-other",
       ...ACCOUNT_ROW,
       initialBalanceMinor: ACCOUNT_ROW.initialBalanceMinor,
-      visibility: "public",
       ownerUserId: null,
       version: 0,
       createdBy: OWNER,

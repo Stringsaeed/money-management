@@ -5,7 +5,7 @@ import { useSyncModeStore } from "@/stores/sync-mode-store";
 
 export type AuthorizedLedgerAccount = Awaited<ReturnType<typeof orpc.ledger.accounts.list>>[number];
 
-/** Server-authorized Account visibility used only to filter retained local rows. */
+/** Server-authorized Household Accounts used to filter retained local rows. */
 export const useAuthorizedLedgerAccounts = (householdId: string | null) => {
   const syncMode = useSyncModeStore((state) => state.mode);
   return useQuery({

@@ -8,7 +8,6 @@ import { ledgerAccount, transaction } from "@trove/db/schema/ledger";
 import { getBudgetPoolFacts } from "../../budget/funding-pool";
 import { queryRows } from "../../sql-rows";
 
-import { privateAccountAccessRejection } from "./private-account";
 import { issuesFromZod, scopeColumns } from "./shared";
 
 /**
@@ -102,10 +101,6 @@ export const refundCreateHandler = {
         entityId: original.accountId,
       };
     }
-    const originalAccountAccessRejection = privateAccountAccessRejection(ctx, originalAccount);
-    if (originalAccountAccessRejection) {
-      return originalAccountAccessRejection;
-    }
 
     // Deposit account must exist here; card refunds must return to the
     // original card (ADR-0008), cash refunds may use any Funding Account.
@@ -123,10 +118,6 @@ export const refundCreateHandler = {
         entityType: "account",
         entityId: input.depositAccountId,
       };
-    }
-    const depositAccessRejection = privateAccountAccessRejection(ctx, deposit);
-    if (depositAccessRejection) {
-      return depositAccessRejection;
     }
     // Card Refunds return to the original card; other accounts act as
     // same-currency Funding destinations.

@@ -40,4 +40,10 @@ export {
   renderMemberWidgetPage,
   widgetPageSecurityHeaders,
 } from "./member-widget-page";
-export { AUTH_LINK_PATHS, TROVE_APP_IDENTITY, buildSchemeLink } from "./app-association";
+export {
+  TROVE_APP_IDENTITY,
+  buildAppleAppSiteAssociation,
+  buildAssetLinks,
+  parseCertFingerprints,
+} from "./app-association";
+export type { AppIdentity, AppleAppSiteAssociation, AssetLinkStatement } from "./app-association";

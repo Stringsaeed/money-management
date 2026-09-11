@@ -14,7 +14,6 @@ export const powerSyncAccounts = new Table(
     sort_order: column.integer,
     lifecycle: column.text,
     lifecycle_changed_at: column.text,
-    visibility: column.text,
     owner_user_id: column.text,
     version: column.integer,
     created_by: column.text,

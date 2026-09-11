@@ -78,7 +78,6 @@ function spendingPerEnvelopeSql(
     WHERE t.ledger_id = ${ledgerId}
       AND t.type = 'expense'
       AND t.currency = ${currency}
-      AND ca.visibility = 'public'
       AND t.date < ${ceiling}
     GROUP BY cm.envelope_id`;
 }
@@ -89,13 +88,12 @@ function paymentsIntoCardsSql(ledgerId: string, currency: string, ceiling: strin
     SELECT SUM(p.amount_minor)
     FROM transactions p
     JOIN accounts source
-      ON source.ledger_id = p.ledger_id AND source.id = p.account_id AND source.visibility = 'public'
+      ON source.ledger_id = p.ledger_id AND source.id = p.account_id
     JOIN accounts dest
       ON dest.ledger_id = p.ledger_id AND dest.id = p.to_account_id AND dest.type = 'card'
     WHERE p.ledger_id = ${ledgerId}
       AND p.type = 'transfer'
       AND p.currency = ${currency}
-      AND dest.visibility = 'public'
       AND p.date < ${ceiling}
   ), 0)`;
 }

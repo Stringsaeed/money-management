@@ -279,7 +279,7 @@ describe("use-accounts hooks", () => {
     const mutation = await startMutationAwaitingCoherence(() =>
       result.current.mutateAsync({
         id: "account-1",
-        data: { name: "Updated Name", visibility: "private" },
+        data: { name: "Updated Name" },
       }),
     );
 
