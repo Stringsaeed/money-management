@@ -22,6 +22,13 @@ export interface WorkOSTokenVerifyConfig {
   readonly clientId: string;
   readonly audience: string;
   readonly issuer: string;
+  /**
+   * Optional WorkOS custom authentication hostname (no scheme), e.g. `auth.trove.ing`.
+   * AuthKit session tokens use `https://{hostname}` as `iss` when a custom auth domain
+   * is configured; without this, verify fails with `claim_iss` while defaulting to
+   * `https://api.workos.com`.
+   */
+  readonly authHostname?: string;
   /** Injected JWKS for tests; production uses WorkOS remote JWKS. */
   readonly jwks?: import("jose").JWTVerifyGetKey;
 }

@@ -9,7 +9,12 @@ export {
   verifyAccessToken,
 } from "./verify-access-token";
 export type { TokenVerifyFailureCode } from "./verify-access-token";
-export { resolveWorkOSVerifyEnv } from "./workos-env";
+export {
+  DEFAULT_WORKOS_TOKEN_ISSUER,
+  issuerVariants,
+  resolveIssuerCandidates,
+  resolveWorkOSVerifyEnv,
+} from "./workos-env";
 export type { ResolvedWorkOSVerifyEnv, WorkOSServerEnv } from "./workos-env";
 export { WIDGET_SAFEGUARD_FINDINGS, decideWidgetToken } from "./widget-contract";
 export type { WidgetTokenDecision, WidgetTokenRequest } from "./widget-contract";

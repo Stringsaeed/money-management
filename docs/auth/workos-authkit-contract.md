@@ -15,7 +15,8 @@ Personal authentication must succeed without an organization.
 
 - Header: `Authorization: Bearer <access_token>`
 - JWKS: live `https://api.workos.com/sso/jwks/{WORKOS_CLIENT_ID}` (never hardcode JWKS JSON in production)
-- Issuer: `WORKOS_TOKEN_ISSUER` or `https://api.workos.com`
+- Issuer: `WORKOS_TOKEN_ISSUER` or `https://api.workos.com`, plus slash twins and `https://{WORKOS_AUTH_HOSTNAME}` when set (Alchemy defaults hostname to `auth.trove.ing` so custom AuthKit domains do not fail as `claim_iss`)
+
 - Binding (AuthKit session tokens omit `aud` by default):
   - Default (no `aud`): mismatched `client_id` fails; missing `client_id` is OK because jose already verified against JWKS for `WORKOS_CLIENT_ID`
   - If `aud` is present: require it to match `WORKOS_TOKEN_AUDIENCE` or `WORKOS_CLIENT_ID`
@@ -51,6 +52,6 @@ See `WIDGET_SAFEGUARD_FINDINGS` / `decideWidgetToken` in `@trove/auth`.
 
 ## Env names
 
-Server: `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_TOKEN_ISSUER?`, `WORKOS_TOKEN_AUDIENCE?`, `WORKOS_REDIRECT_URI?`
+Server: `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_TOKEN_ISSUER?`, `WORKOS_TOKEN_AUDIENCE?`, `WORKOS_AUTH_HOSTNAME?`, `WORKOS_REDIRECT_URI?`
 
 Mobile: `EXPO_PUBLIC_WORKOS_CLIENT_ID`, `EXPO_PUBLIC_WORKOS_REDIRECT_URI?`

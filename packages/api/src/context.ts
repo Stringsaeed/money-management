@@ -50,11 +50,13 @@ async function resolveSession(authorization: string | null): Promise<SessionReso
       WORKOS_CLIENT_ID: env.WORKOS_CLIENT_ID,
       WORKOS_TOKEN_AUDIENCE: env.WORKOS_TOKEN_AUDIENCE,
       WORKOS_TOKEN_ISSUER: env.WORKOS_TOKEN_ISSUER,
+      WORKOS_AUTH_HOSTNAME: env.WORKOS_AUTH_HOSTNAME,
     });
     const session = await verifyAccessToken(token, {
       clientId: resolved.clientId,
       audience: resolved.audience,
       issuer: resolved.issuer,
+      authHostname: resolved.authHostname ?? undefined,
     });
     return { session, authFailure: null };
   } catch (error) {
