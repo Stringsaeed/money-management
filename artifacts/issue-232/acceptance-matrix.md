@@ -36,7 +36,7 @@ Recorded in `revision.txt` / `authkit-live-write.txt` (`date=2026-09-11T20:46:07
 - Repo-wide `pnpm lint` and `pnpm format:check` **fail** on pre-existing findings.
 - Full `pnpm test:ci` **passed** previously: mobile Jest **742/742** + `@trove/db` cutover **3/3**.
 - **Row 2 iOS AuthKit UI (partial):** cancel PASS; hosted AuthKit email page + email-code challenge PARTIAL; OTP entry hard-stopped (agent-device AX unavailable inside ASWebAuthenticationSession). Still signed out afterward (`authkit-21-signed-out-final.png`).
-- **Post-login protected API:** **BLOCKED** — local `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) (names only; see `client-id-compare.txt`). Even with #242 live, mismatched client ids can 401 the new check.
+- **Post-login protected API:** **NOT RETESTED** this finish pass — client ids are **EQUAL** (`client-id-compare.txt`; values omitted); #242 live. Active sim was signed out before Try again / Sync just for me; earlier signed-in Profile remains in `authkit-30`/`31` only (no fresh `/rpc` HTTP status).
 - Android runtime **not started**. Disposable clean-setup after reset **blocked**.
 
 Do not merge as certified. No production deploy. Parent #224 stays open. **Do not use Closes #232.**
@@ -46,7 +46,7 @@ Do not merge as certified. No production deploy. Parent #224 stays open. **Do no
 - Metro `8083` **200**; iOS stim-mobile launched via `simctl` (no `stim ios` rebuild).
 - Cancel abandoned sign-in: **PASS** (`authkit-03-sheet-open.png` → `authkit-04-cancel.png`).
 - Continue → system alert → AuthKit staging email page → code challenge: **PARTIAL** (`authkit-06`…`authkit-09-code-challenge.png`). OTP boxes not enterable via agent-device (AX empty / fill selects page text).
-- Callback / signed-in session / protected oRPC: **not evidenced**. Hard-stop. Post-login API also **BLOCKED** on `WORKOS_CLIENT_ID` / `EXPO_PUBLIC_WORKOS_CLIENT_ID` mismatch.
+- Callback / signed-in session / protected oRPC: **not evidenced** on the OTP path (AX hard-stop). Client-id mismatch **cleared** (now EQUAL). Post-login protected oRPC **not retested** on the finish pass (sim signed out).
 - #242 live on `auth.trove.ing` (`44fde92`).
 
 
@@ -55,15 +55,22 @@ Do not merge as certified. No production deploy. Parent #224 stays open. **Do no
 - Rebased `cursor/workos-certify-migration-b3d1` onto `origin/main` @ `44fde92` (merge of [#242](https://github.com/Stringsaeed/money-management/pull/242)).
 - Live API `https://auth.trove.ing` already has #242 (Deploy Worker succeeded for `44fde92`).
 - Mac AuthKit evidence landed: cancel PASS; email/code challenge PARTIAL; OTP hard-stopped (AX unavailable).
-- Post-login protected API **BLOCKED**: `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) (`client-id-compare.txt`, values omitted).
+- Client ids **EQUAL** (`client-id-compare.txt`). Post-login protected API **not retested** this finish pass (signed-out sim); #242 live on `auth.trove.ing`.
 - Parent #224 stays open. **Relates to #232** only — do not close #232. Do not merge as certified. No production deploy.
 
-### Client-id mismatch (Mac evidence)
+### Client-id equality (Mac evidence)
 
 | Sub-criterion | Status | Evidence |
 | --- | --- | --- |
-| Mobile public client id matches API `WORKOS_CLIENT_ID` | `BLOCKED` | Names only: `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) (`client-id-compare.txt`). |
+| Mobile public client id matches API `WORKOS_CLIENT_ID` | `PASS` | Names only: `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (**EQUAL**; values omitted) (`client-id-compare.txt`). |
 
+
+## Matrix honesty pass (2026-09-11T21:08Z)
+
+- Cleared contradictory wording: client-id mismatch is **EQUAL/PASS**; post-login is **NOT RETESTED** (signed-out finish pass), not blocked by client_id.
+- Recorded `WORKOS_WEBHOOK_SECRET` **present** locally; live webhook apply still not evidenced.
+- PowerSync/PlanetScale mint env names remain absent (BLOCKED for rows 6/8 live mint/reset).
+- Relates to #232 only. Parent #224 stays open. Do not merge as certified.
 
 ## AuthKit Mac finish pass (2026-09-11T21:05Z)
 
@@ -117,13 +124,13 @@ A row is complete only when every required sub-criterion is `PASS` (or an explic
 | Refresh rotation | not evidenced | No signed-in session. |
 | Session expiry | not evidenced on device | Automated expired-token coverage in `@trove/auth` only. |
 | Transient network recovery | not evidenced | No runtime artifact. |
-| Post-login protected oRPC / bearer | `BLOCKED` | Local `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) (`client-id-compare.txt`, values omitted). Hard-stop even though #242 is live on `auth.trove.ing`. |
+| Post-login protected oRPC / bearer | `NOT RETESTED` | Client ids **EQUAL** (`client-id-compare.txt`). Finish pass sim signed out before Try again / Sync just for me; earlier signed-in Profile only in `authkit-30`/`31` (no fresh `/rpc` status). #242 live on `auth.trove.ing`. |
 | iOS development build | prior FAIL then recovered | ExpoSQLite vendor + Metro `.rnrepo-cache` blockList on this branch; live AuthKit driven without `stim ios` rebuild this session. |
 | Android development build | not started | No Android agent-device artifacts. **Do not claim Android pass.** |
 
-**Row status: `PARTIAL` (cancel PASS; email challenge PARTIAL; OTP/callback/post-login API BLOCKED).**
+**Row status: `PARTIAL` (cancel PASS; email challenge PARTIAL; OTP/callback hard-stopped; post-login NOT RETESTED).**
 
-Blockers (names only): OTP automation blocked by AuthKit webview AX (not an env-name blocker). Client ids now **EQUAL**. Post-login protected oRPC **not re-captured** this pass (active sim signed out before Try again / Sync just for me). Still BLOCKED for live PowerSync/PlanetScale mint: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`). `WORKOS_WEBHOOK_SECRET` **present** locally (value omitted).
+Notes: OTP automation blocked by AuthKit webview AX (not an env-name blocker). Client ids **EQUAL** (mismatch cleared). Post-login protected oRPC **not re-captured** this pass (active sim signed out). Still BLOCKED for live PowerSync/PlanetScale mint: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`). `WORKOS_WEBHOOK_SECRET` **present** locally (value omitted) — live webhook apply still not evidenced.
 
 Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_REDIRECT_URI`, `WORKOS_CLAIM_TOKEN`, `WORKOS_COOKIE_PASSWORD`, `EXPO_PUBLIC_WORKOS_CLIENT_ID`, `EXPO_PUBLIC_WORKOS_REDIRECT_URI`, `EXPO_PUBLIC_SERVER_URL`.
 
@@ -149,9 +156,9 @@ Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT
 | Management-page return (widget) | `PARTIAL` (API + auth) | Widget handoff + expired/demoted-admin codes in households tests; `@trove/auth` member-widget-page **3**. No iOS/Android return artifact. |
 | Admin / member / viewer | `PARTIAL` (API seam) | Import-bundle rejects member/viewer bulk-import; households role changes; PowerSync streams deny inactive/unknown roles (`test-powersync-proper.txt` **9/9**). Device role UX not run. |
 | Personal data stays private on create/join | `PARTIAL` (API seam) | Personal vs Household isolation in personal-ledger + budget-recurring + PowerSync streams. No live create/join privacy proof. |
-| Webhook-driven membership apply | `BLOCKED` locally | `WORKOS_WEBHOOK_SECRET` **absent** locally. Cannot verify webhook signatures on a local worker. GitHub Actions secrets include `WORKOS_*` but **not** `WORKOS_WEBHOOK_SECRET` (`gh secret list`). |
+| Webhook-driven membership apply | `PARTIAL` / not evidenced live | `WORKOS_WEBHOOK_SECRET` **present** locally (value omitted). Signature verify / live membership apply against WorkOS deliveries **not yet evidenced** on this tip. |
 
-**Row status: `PARTIAL` automated / live not run / webhook verify `BLOCKED`.**
+**Row status: `PARTIAL` automated / live not run / webhook secret present but live verify not evidenced.**
 
 ### 5. Cross-User/Household API/stream isolation, cross-scope financial-ref rejection, queued writes after role downgrade, stale-response handling
 
@@ -200,13 +207,13 @@ Note: `test-powersync.txt` is a **failed** `vitest run` (`No test suite found` /
 | Better Auth / custom Household removal on `main` | predecessor done | HEAD is the #240 squash that closed #231. This ticket certifies composition; it did not re-implement removal. |
 | Disposable env reset (DB, WorkOS env, PowerSync, device stores) | `SKIPPED` by #231/#240 | Reset was not performed. Cannot claim a clean start after reset. |
 | Local disposable DB / worker mint | `BLOCKED` | Absent locally: `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`); `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`. |
-| Webhook verify on local worker | `BLOCKED` | `WORKOS_WEBHOOK_SECRET` absent locally **and** absent from GitHub Actions secrets. |
+| Webhook verify on local worker | `PARTIAL` | `WORKOS_WEBHOOK_SECRET` **present** locally (value omitted). Live signed-delivery verify / membership apply **not evidenced** this tip. |
 | Live API reachable | `PASS` (health only) | `https://auth.trove.ing` health **200 OK**. Not a clean-install walkthrough. |
 | Clean-install anonymous + login + personal sync + Household select after reset | not evidenced | Requires the skipped reset plus device runs. |
 
-CI secrets (`gh secret list`) include `POWERSYNC_*`, `PLANETSCALE_*`, and `WORKOS_*`, and do **not** include `WORKOS_WEBHOOK_SECRET`. Values are not claimed.
+Still BLOCKED for disposable mint/reset: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`). Values are not claimed.
 
-**Row status: `BLOCKED`.**
+**Row status: `BLOCKED` (reset skipped + PowerSync/PlanetScale mint env absent).**
 
 ---
 
@@ -239,7 +246,7 @@ API focused files in the 97: `powersync/token.test.ts` (4), `personal-budget-rec
 | `stim ios` | Prior build recovery on branch; **this AuthKit session did not rebuild** (`simctl launch` only). | `stim-ios-*.json` |
 | agent-device (iOS AuthKit) | **PARTIAL** — cancel PASS; email + code challenge reached; OTP hard-stopped (AX unavailable). | `authkit-01-launch.png` … `authkit-21-signed-out-final.png`, `authkit-live-write.txt` |
 | Client id equality | **EQUAL** (names only) | `client-id-compare.txt` — `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) |
-| Post-login protected API | **BLOCKED** | Same client-id previously mismatched; now EQUAL; #242 already live on `auth.trove.ing` |
+| Post-login protected API | **NOT RETESTED** | Client ids EQUAL; #242 live; finish pass signed out before Try again / Sync just for me (`authkit-41`/`43`/`46`). Earlier signed-in Profile: `authkit-30`/`31`. |
 | `stim doctor android` / `stim android` / agent-device (Android) | not started | — |
 | Maestro / verify-trove flows | not started | — |
 
@@ -259,18 +266,23 @@ iOS email-code OTP completion, callback, restart, refresh, expiry, network recov
 
 | Check | Result |
 | --- | --- |
-| `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` | **EQUAL** (`client-id-compare.txt`) (`client-id-compare.txt`) — blocks post-login protected API even with #242 live |
+| `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` | **EQUAL** (`client-id-compare.txt`) — mismatch cleared; does **not** block post-login by itself |
+
+### Present for webhook (names only)
+
+| Name | Notes |
+| --- | --- |
+| `WORKOS_WEBHOOK_SECRET` | **Present** locally (value omitted). Live signed-delivery verify still not evidenced. |
 
 ### Absent locally (block the named capability)
 
 | Absent name(s) | Blocks |
 | --- | --- |
-| `WORKOS_WEBHOOK_SECRET` | Local webhook signature verify. Also **absent** from GitHub Actions secrets. |
 | `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID` | Local worker mint; live PowerSync removal-bound measure from this machine. |
 | `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`) | Local disposable DB reset / mint. |
 | `EXPO_PUBLIC_POWERSYNC_URL` | Not required if the client takes the endpoint from the API token response against `auth.trove.ing`. Still not two-device proof. |
 
-GitHub Actions secrets include `POWERSYNC_*`, `PLANETSCALE_*`, and `WORKOS_*`, and do **not** include `WORKOS_WEBHOOK_SECRET`. Do not claim values.
+Do not claim secret values.
 
 ---
 
