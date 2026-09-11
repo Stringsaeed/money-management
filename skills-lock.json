@@ -13,6 +13,12 @@
       "skillPath": "skills/android-emulator/SKILL.md",
       "computedHash": "20b3ca719cceeb25a7442f167f5ae60a816e03cd2b05dc3574cdd9d9056e8dac"
     },
+    "animate-expo": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "skillPath": "skills/animate-expo/SKILL.md",
+      "computedHash": "c9eaf6603b97ca61b05c7561e1045b2f58b6d84cdf8d67565bff23a9ff94ce8a"
+    },
     "argent-android-emulator-setup": {
       "source": "software-mansion/argent",
       "ref": "v0.20.0",
@@ -136,6 +142,12 @@
       "sourceType": "github",
       "skillPath": "skills/ios-simulator/SKILL.md",
       "computedHash": "a0196ca78c5af1e2f25f4d534b3971fe8d9e5e6aa02a2d0f35a53b222bca57da"
+    },
+    "react-native-ease-refactor": {
+      "source": "appandflow/react-native-ease",
+      "sourceType": "github",
+      "skillPath": "skills/react-native-ease-refactor/SKILL.md",
+      "computedHash": "04f02e80f2f9ccae412826af2f2be20adc4b9e9cb2b5bebf6e141103f35dc1d0"
     }
   }
 }
