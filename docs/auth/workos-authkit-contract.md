@@ -5,7 +5,7 @@
 | Field            | Source                           | Notes                                                     |
 | ---------------- | -------------------------------- | --------------------------------------------------------- |
 | `user.id`        | JWT `sub`                        | WorkOS User id (`user_…`). Canonical for API + PowerSync. |
-| `user.email`     | JWT `email`                      | Required claim.                                           |
+| `user.email`     | JWT `email` (optional)           | May be empty on bare access tokens; mobile keeps profile from authenticate. |
 | `user.name`      | JWT `name` or email              | Display only.                                             |
 | `organizationId` | JWT `org_id` / `organization_id` | Optional. `null` for personal auth.                       |
 
