@@ -2,12 +2,12 @@
 
 ## Identity
 
-| Field            | Source                           | Notes                                                     |
-| ---------------- | -------------------------------- | --------------------------------------------------------- |
-| `user.id`        | JWT `sub`                        | WorkOS User id (`user_…`). Canonical for API + PowerSync. |
+| Field            | Source                           | Notes                                                                       |
+| ---------------- | -------------------------------- | --------------------------------------------------------------------------- |
+| `user.id`        | JWT `sub`                        | WorkOS User id (`user_…`). Canonical for API + PowerSync.                   |
 | `user.email`     | JWT `email` (optional)           | May be empty on bare access tokens; mobile keeps profile from authenticate. |
-| `user.name`      | JWT `name` or email              | Display only.                                             |
-| `organizationId` | JWT `org_id` / `organization_id` | Optional. `null` for personal auth.                       |
+| `user.name`      | JWT `name` or email              | Display only.                                                               |
+| `organizationId` | JWT `org_id` / `organization_id` | Optional. `null` for personal auth.                                         |
 
 Personal authentication must succeed without an organization.
 
@@ -25,6 +25,16 @@ Personal authentication must succeed without an organization.
 - Redirect: `EXPO_PUBLIC_WORKOS_REDIRECT_URI` (default `trove://callback`) — must match WorkOS dashboard + `WORKOS_REDIRECT_URI`
 - PKCE authorize → AuthKit email code → token exchange → SecureStore
 - Sign-in does not create Households or upload device data
+
+## Personal sync (#226)
+
+A verified session is the whole entitlement to a personal Ledger — see [ADR 0026](../adr/0026-scope-ledgers-to-a-user-or-an-organization.md).
+
+- Ledger id is `personal:<jwt sub>`. Commands declare `scope: { type: "personal" }` and carry no user id, so the claim cannot be forged by sending someone else's.
+- No Membership check and no `org_id` requirement; the API provisions the Ledger on first write.
+- The local `user` row is projected from verified claims on that first write, since WorkOS owns the User record. Email falls back to `<sub>@users.workos.invalid` when the token carries none.
+- PowerSync `personal_ledger` auto-subscribes and resolves the Ledger from `auth.user_id()` rather than a client-supplied parameter.
+- Turning it on creates no Household and uploads nothing — the cloud Ledger starts empty.
 
 ## Widget (bounded feasibility)
 
