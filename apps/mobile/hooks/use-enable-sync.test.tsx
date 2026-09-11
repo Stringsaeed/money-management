@@ -72,7 +72,10 @@ describe("useEnableSync", () => {
     });
     expect(mockBackupLocalDatabase).toHaveBeenCalledWith(FAKE_SQLITE);
     expect(mockRunImport).toHaveBeenCalledWith(
-      expect.objectContaining({ db: FAKE_DB, householdId: "household-new" }),
+      expect.objectContaining({
+        db: FAKE_DB,
+        binding: { kind: "household", householdId: "household-new", ledgerId: "household-new" },
+      }),
     );
     expect(mockMarkMigrationCompleted).toHaveBeenCalledWith(FAKE_DB, "household-new");
     await waitFor(() => expect(result.current.status).toBe("matched"));
@@ -89,7 +92,13 @@ describe("useEnableSync", () => {
 
     expect(mockHouseholdsCreate).not.toHaveBeenCalled();
     expect(mockRunImport).toHaveBeenCalledWith(
-      expect.objectContaining({ householdId: "household-existing" }),
+      expect.objectContaining({
+        binding: {
+          kind: "household",
+          householdId: "household-existing",
+          ledgerId: "household-existing",
+        },
+      }),
     );
     await waitFor(() => expect(result.current.status).toBe("matched"));
   });
@@ -117,7 +126,9 @@ describe("useEnableSync", () => {
     expect(mockHouseholdsCreate).toHaveBeenCalledTimes(1);
     expect(mockRunImport).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({ householdId: "household-new" }),
+      expect.objectContaining({
+        binding: { kind: "household", householdId: "household-new", ledgerId: "household-new" },
+      }),
     );
     await waitFor(() => expect(result.current.status).toBe("matched"));
   });
