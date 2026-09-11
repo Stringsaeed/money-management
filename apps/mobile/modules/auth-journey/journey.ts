@@ -88,6 +88,7 @@ function reduceAwaitLink(
 }
 
 function reducePassword(state: Extract<JourneyState, { step: "password" }>, event: JourneyEvent) {
+  if (event.type === "chose_recovery") return idle({ ...state, step: "recover", notice: null });
   if (event.type === "submitted_password" && event.password) {
     return busy(state, {
       kind: "sign_in_with_password",

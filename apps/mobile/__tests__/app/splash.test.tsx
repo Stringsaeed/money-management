@@ -18,7 +18,7 @@ jest.mock("@/hooks/use-accounts", () => ({
 }));
 
 describe("app/splash", () => {
-  it("redirects to onboarding when there are no accounts", async () => {
+  it("redirects home when there are no accounts while onboarding is disabled", async () => {
     mockUseAllAccountsWithBalances.mockReturnValue({
       data: [],
       isLoading: false,
@@ -26,7 +26,7 @@ describe("app/splash", () => {
 
     await render(<Splash />);
 
-    expect(screen.getByText("redirect:/onboarding")).toBeOnTheScreen();
+    expect(screen.getByText("redirect:/")).toBeOnTheScreen();
   });
 
   it("redirects home when only archived Accounts exist", async () => {

@@ -36,6 +36,7 @@ export function SignInStep({ journey }: { readonly journey: AuthJourneyControlle
       <PasswordStep
         state={state}
         onSubmit={(password) => send({ type: "submitted_password", password })}
+        onForgot={() => send({ type: "chose_recovery" })}
         onBack={() => send({ type: "back_to_identify" })}
       />
     );

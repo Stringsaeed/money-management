@@ -13,9 +13,23 @@ export function isUnreachableFailure(error: ClientFailure | Error | null | undef
 
 export function authFailureFromClient(error: ClientFailure | Error) {
   if (isUnreachableFailure(error)) return { kind: "offline" } as const;
-  const code = failureCode(error);
+  return failureForCode(failureCode(error), error);
+}
+
+function failureForCode(code: string, error: ClientFailure | Error) {
+  if (code === "INVALID_EMAIL") {
+    return { kind: "invalid_email" } as const;
+  }
+  if (code === "VALIDATION_ERROR") {
+    return failureMessage(error).toLowerCase().includes("email")
+      ? { kind: "invalid_email" as const }
+      : { kind: "invalid_input" as const };
+  }
   if (code === "INVALID_EMAIL_OR_PASSWORD" || code === "INVALID_PASSWORD") {
     return { kind: "bad_credentials" } as const;
+  }
+  if (code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
+    return { kind: "account_exists" } as const;
   }
   if (code === "PASSWORD_TOO_SHORT" || code === "PASSWORD_TOO_LONG") {
     return { kind: "weak_password", requirement: "Use at least 8 characters." } as const;

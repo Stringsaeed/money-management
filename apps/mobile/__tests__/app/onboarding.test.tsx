@@ -1,13 +1,21 @@
+import { createElement } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { Text } from "react-native";
 
+import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 import OnboardingScreen from "@/app/onboarding";
 
 const mockReplace = jest.fn();
 const mockMutateAsync = jest.fn();
+const mockCreateElement = createElement;
+const mockText = Text;
 
 jest.mock("expo-router", () => ({
   router: {
     replace: (href: string) => mockReplace(href),
+  },
+  Redirect: ({ href }: { href: string }) => {
+    return mockCreateElement(mockText, null, `redirect:${href}`);
   },
 }));
 
@@ -36,14 +44,14 @@ describe("app/onboarding", () => {
   });
 
   it("opens on the welcome screen", async () => {
-    await render(<OnboardingScreen />);
+    await render(<OnboardingFlow />);
 
     expect(screen.getByText("Trove")).toBeOnTheScreen();
     expect(screen.getByTestId("onboarding-start")).toBeOnTheScreen();
   });
 
   it("blocks the first step until the account has a name", async () => {
-    await render(<OnboardingScreen />);
+    await render(<OnboardingFlow />);
     await advanceTo("name");
 
     expect(screen.getByTestId("onboarding-continue")).toBeDisabled();
@@ -54,7 +62,7 @@ describe("app/onboarding", () => {
   });
 
   it("rejects a starting balance with too many decimals", async () => {
-    await render(<OnboardingScreen />);
+    await render(<OnboardingFlow />);
     await advanceTo("balance");
 
     await fireEvent.changeText(screen.getByTestId("onboarding-amount-input"), "12.345");
@@ -63,7 +71,7 @@ describe("app/onboarding", () => {
   });
 
   it("steps back to the previous step", async () => {
-    await render(<OnboardingScreen />);
+    await render(<OnboardingFlow />);
     await advanceTo("balance");
 
     expect(screen.getByText("What's in it today?")).toBeOnTheScreen();
@@ -74,7 +82,7 @@ describe("app/onboarding", () => {
   });
 
   it("creates the account and hands off to the app", async () => {
-    await render(<OnboardingScreen />);
+    await render(<OnboardingFlow />);
     await advanceTo("balance");
 
     await fireEvent.changeText(screen.getByTestId("onboarding-amount-input"), "12.34");
@@ -106,7 +114,7 @@ describe("app/onboarding", () => {
   it("surfaces a message when account creation fails", async () => {
     mockMutateAsync.mockRejectedValueOnce(new Error("boom"));
 
-    await render(<OnboardingScreen />);
+    await render(<OnboardingFlow />);
     await advanceTo("style");
 
     await fireEvent.press(screen.getByTestId("onboarding-continue"));
@@ -114,5 +122,11 @@ describe("app/onboarding", () => {
     expect(
       await screen.findByText("Could not create the account. Please try again."),
     ).toBeOnTheScreen();
+  });
+
+  it("redirects direct navigation while onboarding is disabled", async () => {
+    await render(<OnboardingScreen />);
+
+    expect(screen.getByText("redirect:/")).toBeOnTheScreen();
   });
 });

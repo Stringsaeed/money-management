@@ -1,3 +1,4 @@
+// oxlint-disable anti-slop/no-module-mocking, anti-slop/no-unknown-parameters -- router and ledger query boundaries
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
 import { UpcomingRecurringSection } from "@/components/home/upcoming-recurring-section";
@@ -5,6 +6,7 @@ import { createRecurringRule } from "@/tests/test-utils/factories";
 import { formatCents } from "@/utils/currency";
 
 const mockPush = jest.fn();
+const mockUseAccounts = jest.fn();
 const mockUseUpcomingRecurringRules = jest.fn();
 
 jest.mock("expo-router", () => ({
@@ -15,6 +17,10 @@ jest.mock("@/hooks/use-recurring-rules", () => ({
   useUpcomingRecurringRules: (limit: number) => mockUseUpcomingRecurringRules(limit),
 }));
 
+jest.mock("@/hooks/use-accounts", () => ({
+  useAccounts: () => mockUseAccounts(),
+}));
+
 jest.mock("@/utils/date", () => ({
   ...jest.requireActual("@/utils/date"),
   today: () => "2026-03-28",
@@ -23,6 +29,7 @@ jest.mock("@/utils/date", () => ({
 describe("UpcomingRecurringSection", () => {
   beforeEach(() => {
     mockPush.mockClear();
+    mockUseAccounts.mockReturnValue({ data: [{ id: "account-1" }], isLoading: false });
     mockUseUpcomingRecurringRules.mockReturnValue({
       data: [],
       isError: false,
@@ -51,6 +58,28 @@ describe("UpcomingRecurringSection", () => {
       pathname: "/transaction/[id]",
       params: { id: "new", recurring: "true" },
     });
+  });
+
+  it("routes Add to account creation when no accounts exist", async () => {
+    mockUseAccounts.mockReturnValue({ data: [], isLoading: false });
+
+    await render(<UpcomingRecurringSection />);
+
+    await fireEvent.press(screen.getByRole("button", { name: "Create account" }));
+
+    expect(mockPush).toHaveBeenCalledWith("/accounts");
+  });
+
+  it("disables Add while accounts are loading", async () => {
+    mockUseAccounts.mockReturnValue({ data: [], isLoading: true });
+
+    await render(<UpcomingRecurringSection />);
+
+    const addButton = screen.getByRole("button", { name: "Loading accounts" });
+    expect(addButton).toBeDisabled();
+    await fireEvent.press(addButton);
+
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it("opens the complete Rules list", async () => {

@@ -3,6 +3,7 @@ import { ScrollView } from "react-native";
 
 import { HomeListHeader } from "@/components/home/home-list-header";
 import { RecentJournalSection } from "@/components/home/recent-journal-section";
+import { ONBOARDING_ENABLED } from "@/constants/onboarding";
 import { useHomeScreen } from "@/hooks/use-home-screen";
 import { useAccess } from "@/modules/access";
 
@@ -22,7 +23,13 @@ export default function HomeScreen() {
 
   const showAccount = activeAccountId === null;
 
-  if (!loadingAccounts && !loadingAllAccounts && !hasAnyAccounts && access.kind !== "signed_in") {
+  if (
+    ONBOARDING_ENABLED &&
+    !loadingAccounts &&
+    !loadingAllAccounts &&
+    !hasAnyAccounts &&
+    access.kind !== "signed_in"
+  ) {
     return <Redirect href="/onboarding" />;
   }
 

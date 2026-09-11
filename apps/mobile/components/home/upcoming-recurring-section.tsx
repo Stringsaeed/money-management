@@ -4,15 +4,24 @@ import { ActivityIndicator, Pressable, useColorScheme, View } from "react-native
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { UpcomingRecurringRow } from "@/components/home/upcoming-recurring-row";
+import { resolveUpcomingAddAction } from "@/components/home/upcoming-add-action";
 import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
+import { useAccounts } from "@/hooks/use-accounts";
 import { useUpcomingRecurringRules } from "@/hooks/use-recurring-rules";
 import { today } from "@/utils/date";
 
 export function UpcomingRecurringSection() {
   const colorScheme = useColorScheme();
   const todayString = today();
+  const { data: accounts = [], isLoading: isAccountsLoading } = useAccounts();
   const { data: upcoming = [], isError, isLoading } = useUpcomingRecurringRules(3);
+  const hasAccounts = accounts.length > 0;
+  const addAction = resolveUpcomingAddAction(isAccountsLoading, hasAccounts);
+
+  function handleAddPress() {
+    if (addAction.href) router.push(addAction.href);
+  }
 
   return (
     <Animated.View
@@ -73,17 +82,13 @@ export function UpcomingRecurringSection() {
             </Text>
           </View>
           <Pressable
-            accessibilityLabel="Add a recurring rule"
+            accessibilityLabel={addAction.accessibilityLabel}
             accessibilityRole="button"
-            className="px-1 py-2 active:opacity-50"
-            onPress={() =>
-              router.push({
-                pathname: "/transaction/[id]",
-                params: { id: "new", recurring: "true" },
-              })
-            }
+            className="px-1 py-2 active:opacity-50 disabled:opacity-50"
+            disabled={!addAction.href}
+            onPress={handleAddPress}
           >
-            <Text className="font-body-semibold text-xs text-ink">Add →</Text>
+            <Text className="font-body-semibold text-xs text-ink">{addAction.buttonLabel}</Text>
           </Pressable>
         </Animated.View>
       ) : (

@@ -1,4 +1,5 @@
 import { useAllAccountsWithBalances } from "@/hooks/use-accounts";
+import { ONBOARDING_ENABLED } from "@/constants/onboarding";
 import { Redirect } from "expo-router";
 import Animated from "react-native-reanimated";
 
@@ -15,7 +16,7 @@ export default function Splash() {
     );
   }
 
-  if (accounts.length === 0) {
+  if (ONBOARDING_ENABLED && accounts.length === 0) {
     return <Redirect href="/onboarding" />;
   }
 

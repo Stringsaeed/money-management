@@ -65,6 +65,16 @@ describe("auth journey reducer", () => {
     });
   });
 
+  it("opens password recovery from password sign-in", () => {
+    const password = apply(initialIdentifyState("ada@trove.ing"), {
+      type: "chose_password",
+    }).state;
+    expect(apply(password, { type: "chose_recovery" }).state).toMatchObject({
+      step: "recover",
+      email: "ada@trove.ing",
+    });
+  });
+
   it("sends a generic recovery link", () => {
     const recover = apply(initialIdentifyState("ada@trove.ing"), { type: "chose_recovery" }).state;
     const sent = apply(recover, { type: "requested_recovery_link" });
