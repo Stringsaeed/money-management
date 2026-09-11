@@ -27,7 +27,7 @@ const createHarness = (crud = [entry(envelope())]) => {
   const apply = jest.fn<Promise<CommandResult>, [CommandEnvelope]>();
   const disconnect = jest.fn(async () => undefined);
   const setLocalOnly = jest.fn();
-  return { apply, complete, database, disconnect, execute, setLocalOnly };
+  return { apply, complete, database, disconnect, execute, setLocalOnly, userId: "user-1" };
 };
 
 describe("PowerSync connector uploadData", () => {

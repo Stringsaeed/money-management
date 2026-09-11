@@ -1,3 +1,4 @@
+import { householdLedgerBinding } from "@/modules/ledger-data-source/provider";
 import { act, waitFor } from "@testing-library/react-native";
 
 import {
@@ -216,7 +217,7 @@ describe("Recurring Rules hooks", () => {
     const { result } = await renderHookWithProviders(() => useSettleRecurringRules(), {
       ledgerSelection: {
         kind: "synced",
-        householdId: "household-1",
+        ledger: householdLedgerBinding("household-1"),
         offlineState: { kind: "offline_cached", reason: "Sync is temporarily unavailable." },
       },
     });

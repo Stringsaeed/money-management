@@ -10,7 +10,7 @@ import {
 } from "@trove/db/schema/budget";
 import { category, ledgerAccount } from "@trove/db/schema/ledger";
 
-import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
+import type { CommandPlan, HouseholdPlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
 import { issuesFromZod } from "./shared";
 
@@ -66,7 +66,10 @@ export const budgetConfigureHandler = {
       : { ok: false as const, issues: issuesFromZod(result.error) };
   },
 
-  async plan(ctx: PlanContext, { payload }: PlanRequest): Promise<CommandPlan | PlanRejection> {
+  async plan(
+    ctx: HouseholdPlanContext,
+    { payload }: PlanRequest,
+  ): Promise<CommandPlan | PlanRejection> {
     const input = payload as BudgetConfigurePayload;
     if (input.action === "workspace.activate") return planWorkspace(ctx, input);
     if (input.action === "funding_membership.set") return planFundingMembership(ctx, input);
@@ -76,7 +79,7 @@ export const budgetConfigureHandler = {
 };
 
 async function planWorkspace(
-  ctx: PlanContext,
+  ctx: HouseholdPlanContext,
   input: Extract<BudgetConfigurePayload, { action: "workspace.activate" }>,
 ): Promise<CommandPlan | PlanRejection> {
   const existing = await ctx.db
@@ -133,7 +136,7 @@ async function planWorkspace(
 }
 
 async function planFundingMembership(
-  ctx: PlanContext,
+  ctx: HouseholdPlanContext,
   input: Extract<BudgetConfigurePayload, { action: "funding_membership.set" }>,
 ): Promise<CommandPlan | PlanRejection> {
   const accountRejection = await validateFundingAccounts(ctx, [input.accountId], input.currency);
@@ -161,7 +164,7 @@ async function planFundingMembership(
 }
 
 async function planEnvelopeCreate(
-  ctx: PlanContext,
+  ctx: HouseholdPlanContext,
   input: Extract<BudgetConfigurePayload, { action: "envelope.create" }>,
 ): Promise<CommandPlan | PlanRejection> {
   const existing = await loadEnvelope(ctx, input.envelopeId);
@@ -196,7 +199,7 @@ async function planEnvelopeCreate(
 }
 
 async function planEnvelopeUpdate(
-  ctx: PlanContext,
+  ctx: HouseholdPlanContext,
   input: Extract<BudgetConfigurePayload, { action: "envelope.update" }>,
 ): Promise<CommandPlan | PlanRejection> {
   const existing = await loadEnvelope(ctx, input.envelopeId);
@@ -256,7 +259,7 @@ async function planEnvelopeUpdate(
 }
 
 function configurationStatements(
-  ctx: PlanContext,
+  ctx: HouseholdPlanContext,
   envelopeId: string,
   period: string,
   input: { categoryIds: readonly string[]; positiveRollover: boolean },
@@ -294,7 +297,7 @@ function configurationStatements(
   return statements;
 }
 
-async function loadEnvelope(ctx: PlanContext, envelopeId: string) {
+async function loadEnvelope(ctx: HouseholdPlanContext, envelopeId: string) {
   const rows = await ctx.db
     .select()
     .from(envelope)
@@ -303,7 +306,10 @@ async function loadEnvelope(ctx: PlanContext, envelopeId: string) {
   return rows[0] ?? null;
 }
 
-async function requireWorkspace(ctx: PlanContext, currency: string): Promise<PlanRejection | null> {
+async function requireWorkspace(
+  ctx: HouseholdPlanContext,
+  currency: string,
+): Promise<PlanRejection | null> {
   const rows = await ctx.db
     .select()
     .from(budgetWorkspace)
@@ -317,7 +323,7 @@ async function requireWorkspace(ctx: PlanContext, currency: string): Promise<Pla
 }
 
 async function validateFundingAccounts(
-  ctx: PlanContext,
+  ctx: HouseholdPlanContext,
   accountIds: readonly string[],
   currency: string,
 ): Promise<PlanRejection | null> {
@@ -345,7 +351,7 @@ async function validateFundingAccounts(
 }
 
 async function validateCategories(
-  ctx: PlanContext,
+  ctx: HouseholdPlanContext,
   categoryIds: readonly string[],
 ): Promise<PlanRejection | null> {
   for (const categoryId of categoryIds) {

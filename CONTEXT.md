@@ -26,6 +26,14 @@ _Avoid_: Hidden personal organization
 A shared money-management workspace that multiple Users join to see household-owned data together. The Household is the unit of membership and invitation — not a container for device-local ledger data. Financial records remain local-first until a future sharing milestone claims them.
 _Avoid_: Family, Workspace, Group
 
+**Ledger Scope**:
+Who owns one body of cloud financial records: either a single User (personal) or a WorkOS Organization (organization). Scope is what a client declares on a Command and what the API resolves before authorizing it; a client-supplied scope is a request, never proof. Personal scope carries no identifier on the wire because the Authentication Session already names the User.
+_Avoid_: Tenant, Container, Namespace
+
+**Ledger**:
+The row that makes a Ledger Scope addressable, identified by a Ledger id: `personal:<workos-user-id>` for personal scope, and the Household id for organization scope until Households migrate onto WorkOS Organizations. Every Account, Category, and Transaction belongs to exactly one Ledger, and nothing crosses between two — an Account and the Category it is booked against must share a Ledger. A personal Ledger exists from its owner's first write; it has no Members, no invitations, and no Owner other than the User themselves.
+_Avoid_: Book, Tenant, Workspace
+
 **Membership**:
 The association of one User with one Household carrying a role and an active flag. A User holds at most one active Membership at a time; the active one is the Household the app currently addresses. Memberships support multiple Households per User even though only one is active. WorkOS is the source of truth for organization Memberships once Household administration migrates.
 _Avoid_: Account Link, Subscription
@@ -49,7 +57,7 @@ The client-side list of Commands the server refused with a typed rejection reaso
 _Avoid_: Failed Syncs, Dead Letter Queue
 
 **Household Change**:
-One row appended per committed Command in `household_changes`, carrying a per-household monotonic sequence number (`seq`), the acting user, the command's `commandId`, and the `effects[]` tags it invalidated. It is the household's activity history and the source of the `seq` returned by `commands.apply`; PowerSync streams the authoritative ledger rows directly.
+One row appended per committed Command in `household_changes`, carrying a per-Ledger monotonic sequence number (`seq`), the acting user, the command's `commandId`, and the `effects[]` tags it invalidated. It is a Ledger's activity history and the source of the `seq` returned by `commands.apply`; PowerSync streams the authoritative ledger rows directly. Idempotency is keyed by Ledger too, so the same `commandId` in two Ledgers is two Commands.
 _Avoid_: Audit Log Entry
 
 **Effect Tag**:
@@ -57,7 +65,7 @@ A token from a fixed vocabulary (`rules | upcoming | ledger | balances | summari
 _Avoid_: Change Type, Event Type
 
 **Sync Stream**:
-A PowerSync query that selects the authoritative rows a signed-in client may retain. `memberships` auto-subscribes by JWT subject; `household_ledger`, `household_budget`, and `household_recurring` are subscribed with a Household parameter and independently prove membership before streaming ledger, envelope, and recurring facts.
+A PowerSync query that selects the authoritative rows a signed-in client may retain. `memberships` and `personal_ledger` auto-subscribe by JWT subject, the latter resolving the caller's own Ledger rather than taking one as a parameter; `household_ledger`, `household_budget`, and `household_recurring` are subscribed with a Household parameter and independently prove membership before streaming ledger, envelope, and recurring facts.
 _Avoid_: Delta, Poll Feed
 
 **PowerSync Checkpoint**:

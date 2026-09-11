@@ -11,7 +11,7 @@ import { commandMetadataFor, parseCommandMetadata } from "./command-metadata";
 
 export interface RejectedChange {
   readonly commandId: string;
-  readonly householdId: string;
+  readonly ledgerId: string;
   readonly kind: CommandKind | "unknown";
   readonly rejectionKind: string;
   readonly rejection: RejectionResult;
@@ -35,10 +35,10 @@ const transactionEditPayloadSchema = z.object({
 
 export const listRejectedChanges = (
   collections: PowerSyncLedgerCollections,
-  householdId: string,
+  ledgerId: string,
 ): readonly RejectedChange[] =>
   collections.rejectedChanges.toArray
-    .filter((row) => row.household_id === householdId)
+    .filter((row) => row.ledger_id === ledgerId)
     .map(rejectedChangeFrom)
     .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime());
 
@@ -71,7 +71,7 @@ export const resubmitRejectedChange = async (
   }
   const payload = transactionEditPayloadSchema.parse(editedPayload ?? change.payload);
   const current = ledger.collections.transactions.get(payload.transactionId);
-  if (!current || current.household_id !== change.householdId) {
+  if (!current || current.ledger_id !== change.ledgerId) {
     throw new Error("The rejected Transaction is no longer in the authorized collection.");
   }
   const envelope: CommandEnvelope = {
@@ -106,7 +106,7 @@ const rejectedChangeFrom = (
   const envelope = parseEnvelope(row.command_id, row.envelope);
   return {
     commandId: row.command_id,
-    householdId: row.household_id,
+    ledgerId: row.ledger_id,
     kind: envelope?.kind ?? "unknown",
     rejectionKind: row.rejection_kind,
     rejection: parseStoredRejection(row.rejection_payload),

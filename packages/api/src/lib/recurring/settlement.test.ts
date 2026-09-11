@@ -42,6 +42,7 @@ async function setupHousehold(): Promise<TestDb> {
 
 async function seedAccount(id: string, currency = "USD") {
   await db.insert(ledgerAccount).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id,
     name: `Account ${id}`,
@@ -226,8 +227,7 @@ describe("settlement engine — revision & optimistic concurrency", () => {
 
   it("aborts the commit when another writer bumped the revision mid-settlement", async () => {
     const { PgRecurringStore } = await import("./pg-store");
-    const { assertionStatement, executeHouseholdTransaction } =
-      await import("../commands/statements");
+    const { assertionStatement, executeLedgerTransaction } = await import("../commands/statements");
 
     const ruleId = await insertRule({ revision: 3 });
 
@@ -261,7 +261,7 @@ describe("settlement engine — revision & optimistic concurrency", () => {
     // The stale settlement's assertion now fails: the batch must abort whole
     // instead of clobbering the concurrent edit.
     await expect(
-      executeHouseholdTransaction(db, [assertionStatement(db as never, guard)], HOUSEHOLD_ID),
+      executeLedgerTransaction(db, [assertionStatement(db as never, guard)], HOUSEHOLD_ID),
     ).rejects.toThrow();
 
     // The engine's own commit path goes through the identical assertion.

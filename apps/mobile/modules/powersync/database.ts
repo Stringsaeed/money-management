@@ -35,7 +35,7 @@ export const openPowerSyncDatabase = async (userId: string): Promise<PowerSyncDa
 
 export const connectPowerSync = async (userId: string): Promise<PowerSyncDatabaseType> => {
   const database = await openPowerSyncDatabase(userId);
-  await database.connect(createPowerSyncConnector());
+  await database.connect(createPowerSyncConnector(userId));
   return database;
 };
 

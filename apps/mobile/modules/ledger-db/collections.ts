@@ -24,6 +24,7 @@ import {
   type PowerSyncRolloverSettingRow,
 } from "@/modules/powersync/domain-types";
 import { withLegacyPowerSyncLogger } from "@/modules/powersync/collection-compat";
+import type { SyncedLedgerBinding } from "@/modules/ledger-data-source/provider";
 
 import {
   powerSyncAccountRowSchema,
@@ -73,28 +74,49 @@ export interface PowerSyncLedgerCollections {
   readonly rolloverSettings: LedgerCollection<PowerSyncRolloverSettingRow>;
 }
 
-const householdStreamLoader =
-  (database: PowerSyncDatabase, stream: string, householdId: string) => async () => {
+type StreamLoader = (() => Promise<() => void>) | undefined;
+
+const householdStreamLoader = (
+  database: PowerSyncDatabase,
+  stream: string,
+  householdId: string | null,
+): StreamLoader => {
+  // A Personal Ledger arrives on the auto-subscribed personal_ledger stream,
+  // and the Household-only domains simply stay empty.
+  if (householdId === null) return undefined;
+  return async () => {
     const subscription = await database
       .syncStream(stream, { household_id: householdId })
       .subscribe();
     await subscription.waitForFirstSync();
     return () => subscription.unsubscribe();
   };
+};
+
+const personalStreamLoader =
+  (database: PowerSyncDatabase): StreamLoader =>
+  async () => {
+    await database.waitForFirstSync();
+    return () => undefined;
+  };
 
 export const createPowerSyncLedgerCollections = (
   database: PowerSyncDatabase,
-  householdId: string,
+  ledger: SyncedLedgerBinding,
 ): PowerSyncLedgerCollections => {
   const collectionDatabase = withLegacyPowerSyncLogger(database);
   const tables = powerSyncSchema.props;
-  const onLedgerLoad = householdStreamLoader(database, "household_ledger", householdId);
+  const { ledgerId, householdId } = ledger;
+  const onLedgerLoad =
+    householdId === null
+      ? personalStreamLoader(database)
+      : householdStreamLoader(database, "household_ledger", householdId);
   const onBudgetLoad = householdStreamLoader(database, "household_budget", householdId);
   const onRecurringLoad = householdStreamLoader(database, "household_recurring", householdId);
   return {
     accounts: createCollection(
       powerSyncCollectionOptions({
-        id: `powersync-accounts:${householdId}`,
+        id: `powersync-accounts:${ledgerId}`,
         database: collectionDatabase,
         table: tables.accounts,
         schema: powerSyncAccountRowSchema,
@@ -107,7 +129,7 @@ export const createPowerSyncLedgerCollections = (
     ),
     categories: createCollection(
       powerSyncCollectionOptions({
-        id: `powersync-categories:${householdId}`,
+        id: `powersync-categories:${ledgerId}`,
         database: collectionDatabase,
         table: tables.categories,
         schema: powerSyncCategoryRowSchema,
@@ -120,7 +142,7 @@ export const createPowerSyncLedgerCollections = (
     ),
     transactions: createCollection(
       powerSyncCollectionOptions({
-        id: `powersync-transactions:${householdId}`,
+        id: `powersync-transactions:${ledgerId}`,
         database: collectionDatabase,
         table: tables.transactions,
         schema: powerSyncTransactionRowSchema,
@@ -133,7 +155,7 @@ export const createPowerSyncLedgerCollections = (
     ),
     assignments: createCollection(
       powerSyncCollectionOptions({
-        id: `powersync-assignments:${householdId}`,
+        id: `powersync-assignments:${ledgerId}`,
         database: collectionDatabase,
         table: tables.assignments,
         schema: powerSyncAssignmentRowSchema,
@@ -146,7 +168,7 @@ export const createPowerSyncLedgerCollections = (
     ),
     budgetWorkspaces: createCollection(
       powerSyncCollectionOptions({
-        id: `powersync-budget-workspaces:${householdId}`,
+        id: `powersync-budget-workspaces:${ledgerId}`,
         database: collectionDatabase,
         table: tables.budget_workspaces,
         schema: powerSyncBudgetWorkspaceRowSchema,
@@ -161,7 +183,7 @@ export const createPowerSyncLedgerCollections = (
     ),
     categoryMappings: createCollection(
       powerSyncCollectionOptions({
-        id: `powersync-category-mappings:${householdId}`,
+        id: `powersync-category-mappings:${ledgerId}`,
         database: collectionDatabase,
         table: tables.category_mappings,
         schema: powerSyncCategoryMappingRowSchema,
@@ -176,7 +198,7 @@ export const createPowerSyncLedgerCollections = (
     ),
     envelopes: createCollection(
       powerSyncCollectionOptions({
-        id: `powersync-envelopes:${householdId}`,
+        id: `powersync-envelopes:${ledgerId}`,
         database: collectionDatabase,
         table: tables.envelopes,
         schema: powerSyncEnvelopeRowSchema,
@@ -189,7 +211,7 @@ export const createPowerSyncLedgerCollections = (
     ),
     fundingMemberships: createCollection(
       powerSyncCollectionOptions({
-        id: `powersync-funding-memberships:${householdId}`,
+        id: `powersync-funding-memberships:${ledgerId}`,
         database: collectionDatabase,
         table: tables.funding_memberships,
         schema: powerSyncFundingMembershipRowSchema,
@@ -204,7 +226,7 @@ export const createPowerSyncLedgerCollections = (
     ),
     recurringOccurrences: createCollection(
       powerSyncCollectionOptions({
-        id: `powersync-recurring-occurrences:${householdId}`,
+        id: `powersync-recurring-occurrences:${ledgerId}`,
         database: collectionDatabase,
         table: tables.recurring_occurrences,
         schema: powerSyncRecurringOccurrenceRowSchema,
@@ -219,7 +241,7 @@ export const createPowerSyncLedgerCollections = (
     ),
     recurringRules: createCollection(
       powerSyncCollectionOptions({
-        id: `powersync-recurring-rules:${householdId}`,
+        id: `powersync-recurring-rules:${ledgerId}`,
         database: collectionDatabase,
         table: tables.recurring_rules,
         schema: powerSyncRecurringRuleRowSchema,
@@ -232,7 +254,7 @@ export const createPowerSyncLedgerCollections = (
     ),
     refundLinks: createCollection(
       powerSyncCollectionOptions({
-        id: `powersync-refund-links:${householdId}`,
+        id: `powersync-refund-links:${ledgerId}`,
         database: collectionDatabase,
         table: tables.refund_links,
         schema: powerSyncRefundLinkRowSchema,
@@ -245,7 +267,7 @@ export const createPowerSyncLedgerCollections = (
     ),
     rolloverSettings: createCollection(
       powerSyncCollectionOptions({
-        id: `powersync-rollover-settings:${householdId}`,
+        id: `powersync-rollover-settings:${ledgerId}`,
         database: collectionDatabase,
         table: tables.rollover_settings,
         schema: powerSyncRolloverSettingRowSchema,
@@ -260,7 +282,7 @@ export const createPowerSyncLedgerCollections = (
     ),
     rejectedChanges: createCollection(
       powerSyncCollectionOptions({
-        id: `powersync-rejected-changes:${householdId}`,
+        id: `powersync-rejected-changes:${ledgerId}`,
         database: collectionDatabase,
         table: tables.rejected_changes,
         schema: powerSyncRejectedChangeRowSchema,

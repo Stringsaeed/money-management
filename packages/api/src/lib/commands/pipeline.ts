@@ -6,9 +6,10 @@ import type {
   CommandResult,
   EffectTag,
   HouseholdRole,
+  LedgerScope,
   Precondition,
 } from "@trove/protocol";
-import { isCommandKind } from "@trove/protocol";
+import { isCommandKind, resolveCommandScope } from "@trove/protocol";
 import { ORPCError } from "@orpc/server";
 
 import { commandResult, householdChange } from "@trove/db/schema/commands";
@@ -17,9 +18,16 @@ import { membership } from "@trove/db/schema/household";
 import { can, requiredCapability } from "./capabilities";
 import { COMMAND_HANDLERS, type CommandHandler } from "./handlers";
 import {
+  bindLedgerScope,
+  ensurePersonalLedger,
+  ensureUserProjection,
+  type CommandActor,
+  type ScopeBinding,
+} from "./scope";
+import {
   assertionStatement,
   changeLogStatement,
-  executeHouseholdTransaction,
+  executeLedgerTransaction,
   resultStatement,
   type BatchStatement,
 } from "./statements";
@@ -28,9 +36,22 @@ import type { CommandDatabase } from "./types";
 /** Everything a handler needs to read current state and plan writes. */
 export interface PlanContext {
   db: CommandDatabase;
-  householdId: string;
+  /** Owning Ledger — the scope every ledger row is filtered and written by. */
+  ledgerId: string;
+  scope: LedgerScope;
+  /** Household backing an organization Ledger; null for a Personal Ledger. */
+  householdId: string | null;
   actorUserId: string;
   actorRole: HouseholdRole;
+}
+
+/**
+ * A {@link PlanContext} narrowed to the organization path. Handlers that read
+ * or write Household-owned tables (memberships, budgeting, recurring) declare
+ * this context and the pipeline never dispatches them under a Personal Ledger.
+ */
+export interface HouseholdPlanContext extends PlanContext {
+  householdId: string;
 }
 
 export interface PlanRequest {
@@ -70,6 +91,11 @@ export interface ApplyCommandArgs {
   db: CommandDatabase;
   userId: string;
   envelope: ApplyCommandEnvelope;
+  /**
+   * Verified WorkOS claims for the caller. Supplied by the router so a first
+   * personal write can project the identity it attributes rows to.
+   */
+  actor?: CommandActor;
 }
 
 function unknownKindRejection(kind: string): PlanRejection {
@@ -84,33 +110,132 @@ function unknownKindRejection(kind: string): PlanRejection {
   };
 }
 
+function unscopedRejection(): PlanRejection {
+  return {
+    kind: "invalid_intent",
+    issues: [
+      {
+        field: "scope",
+        message: "Name the ledger this command writes to: a personal or organization scope.",
+      },
+    ],
+  };
+}
+
+function personalUnsupportedRejection(kind: CommandKind): PlanRejection {
+  return {
+    kind: "invalid_intent",
+    issues: [
+      {
+        field: "scope",
+        message: `"${kind}" needs a Household; a personal ledger supports accounts, categories, and transactions only.`,
+      },
+    ],
+  };
+}
+
+type ScopeAuthorization =
+  | { readonly rejected: PlanRejection }
+  | {
+      readonly rejected?: undefined;
+      readonly scope: LedgerScope;
+      readonly binding: ScopeBinding;
+      readonly actorRole: HouseholdRole;
+    };
+
 /**
- * The commands pipeline: authorization → idempotency → parse → plan → one
- * atomic batch (guards, apply, recompute inputs, change-log append,
- * idempotency store) → discriminated result.
+ * Resolves the envelope's Ledger Scope and authorizes the caller against it.
+ *
+ * Personal: the scope is bound to the authenticated User by construction, so
+ * there is no membership to check and no way to address someone else's ledger.
+ * Organization: live membership decides, as a typed rejection rather than an
+ * HTTP error, so clients can render the Rejected Changes inbox.
+ */
+async function authorizeEnvelope(
+  db: CommandDatabase,
+  envelope: ApplyCommandEnvelope,
+  userId: string,
+): Promise<ScopeAuthorization> {
+  const scope = resolveCommandScope(envelope, userId);
+  if (!scope) {
+    return { rejected: unscopedRejection() };
+  }
+  const binding = bindLedgerScope(scope);
+  if (scope.type === "personal") {
+    return { scope, binding, actorRole: "owner" };
+  }
+  const membershipRows = await db
+    .select()
+    .from(membership)
+    .where(and(eq(membership.userId, userId), eq(membership.householdId, scope.organizationId)))
+    .limit(1);
+  const actorMembership = membershipRows[0];
+  if (!actorMembership) {
+    return {
+      rejected: {
+        kind: "forbidden",
+        role: null,
+        requiredCapability: requiredCapability(envelope.kind),
+      },
+    };
+  }
+  return { scope, binding, actorRole: actorMembership.role as HouseholdRole };
+}
+
+/** A Personal Ledger is provisioned by its owner's first write, not up front. */
+async function provisionPersonalLedger(
+  db: CommandDatabase,
+  userId: string,
+  actor: CommandActor | undefined,
+): Promise<void> {
+  if (actor) await ensureUserProjection(db, actor);
+  await ensurePersonalLedger(db, userId);
+}
+
+/**
+ * Predicate preconditions are evaluated by their handler inside the batch
+ * guard; anything the handler does not declare is rejected loudly rather than
+ * silently granting no guard.
+ */
+function unsupportedPredicateRejection(
+  handler: CommandHandler,
+  preconditions: readonly Precondition[],
+): PlanRejection | null {
+  const supported = handler.supportedPredicates ?? [];
+  const unsupported = preconditions.filter(
+    (p) => p.predicate !== undefined && !supported.includes(p.predicate),
+  );
+  if (unsupported.length === 0) return null;
+  return {
+    kind: "invalid_intent",
+    issues: unsupported.map((p) => ({
+      field: "preconditions",
+      message: `Predicate precondition "${p.predicate ?? ""}" is not supported yet; only expectedVersion is validated.`,
+    })),
+  };
+}
+
+/**
+ * The commands pipeline: scope resolution → authorization → idempotency →
+ * parse → plan → one atomic batch (guards, apply, recompute inputs,
+ * change-log append, idempotency store) → discriminated result.
  */
 export async function applyCommand({
   db,
   userId,
   envelope,
+  actor,
 }: ApplyCommandArgs): Promise<CommandResult> {
   const rawKind = envelope.kind;
 
-  // 1. Authorization against live membership — a typed rejection, not an
-  //    HTTP error, so clients can render the Rejected Changes inbox.
-  const membershipRows = await db
-    .select()
-    .from(membership)
-    .where(and(eq(membership.userId, userId), eq(membership.householdId, envelope.householdId)))
-    .limit(1);
-  const actorMembership = membershipRows[0];
-  if (!actorMembership) {
-    return {
-      kind: "forbidden",
-      role: null,
-      requiredCapability: requiredCapability(rawKind),
-    };
+  // 1. Resolve the Ledger Scope and authorize against it. A personal envelope
+  //    binds to the caller, so it can never name another User's ledger.
+  const authorization = await authorizeEnvelope(db, envelope, userId);
+  if (authorization.rejected) {
+    return authorization.rejected;
   }
+  const { scope, binding, actorRole } = authorization;
+  const { ledgerId, householdId } = binding;
 
   // Removed / unknown kinds must be typed rejections (outbox drain), not
   // Zod 400s or capability-matrix crashes.
@@ -118,9 +243,23 @@ export async function applyCommand({
     return unknownKindRejection(rawKind);
   }
   const kind: CommandKind = rawKind;
-  const actorRole = actorMembership.role as HouseholdRole;
   if (!can(actorRole, kind)) {
     return { kind: "forbidden", role: actorRole, requiredCapability: requiredCapability(kind) };
+  }
+
+  // 3. Parse the kind-specific payload.
+  const handler: CommandHandler | undefined = COMMAND_HANDLERS[kind];
+  if (!handler) {
+    return unknownKindRejection(kind);
+  }
+  if (scope.type === "personal") {
+    // Household-owned intents (membership, budgeting, recurring, import) have
+    // no meaning without a Household. Reject them loudly instead of writing
+    // rows a Personal Ledger can never read back.
+    if (handler.supportsPersonalScope !== true) {
+      return personalUnsupportedRejection(kind);
+    }
+    await provisionPersonalLedger(db, userId, actor);
   }
 
   // 2. Idempotency: a retry replays the stored result instead of re-executing.
@@ -128,21 +267,12 @@ export async function applyCommand({
     .select()
     .from(commandResult)
     .where(
-      and(
-        eq(commandResult.householdId, envelope.householdId),
-        eq(commandResult.commandId, envelope.commandId),
-      ),
+      and(eq(commandResult.ledgerId, ledgerId), eq(commandResult.commandId, envelope.commandId)),
     )
     .limit(1);
   const stored = storedRows[0];
   if (stored) {
-    const replay = await loadAppliedResult(
-      db,
-      envelope.householdId,
-      envelope.commandId,
-      stored.result,
-      true,
-    );
+    const replay = await loadAppliedResult(db, ledgerId, envelope.commandId, stored.result, true);
     if (replay) {
       return replay;
     }
@@ -151,45 +281,27 @@ export async function applyCommand({
         "Idempotency store has a result without a matching change row. Verify the household_changes table.",
     });
   }
-
-  // 3. Parse the kind-specific payload.
-  const handler: CommandHandler | undefined = COMMAND_HANDLERS[kind];
-  if (!handler) {
-    return unknownKindRejection(kind);
-  }
   const parsed = handler.parsePayload(envelope.payload);
   if (!parsed.ok) {
     return { kind: "invalid_intent", issues: parsed.issues };
   }
 
-  // Predicate preconditions (expectedAsOf-style) are evaluated by their
-  // handler inside the batch guard; anything the handler does not declare is
-  // rejected loudly rather than silently granting no guard.
-  const supportedPredicates = handler.supportedPredicates ?? [];
-  const unsupportedPreconditions = (envelope.preconditions ?? []).filter(
-    (p) => p.predicate !== undefined && !supportedPredicates.includes(p.predicate),
-  );
-  if (unsupportedPreconditions.length > 0) {
-    return {
-      kind: "invalid_intent",
-      issues: unsupportedPreconditions.map((p) => ({
-        field: "preconditions",
-        message: `Predicate precondition "${p.predicate ?? ""}" is not supported yet; only expectedVersion is validated.`,
-      })),
-    };
+  const preconditions = envelope.preconditions ?? [];
+  const unsupported = unsupportedPredicateRejection(handler, preconditions);
+  if (unsupported) {
+    return unsupported;
   }
 
   // 4. Plan via pure domain rules over current state.
   const planContext: PlanContext = {
     db,
-    householdId: envelope.householdId,
+    ledgerId,
+    scope,
+    householdId,
     actorUserId: userId,
     actorRole,
   };
-  const request: PlanRequest = {
-    payload: parsed.value,
-    preconditions: envelope.preconditions ?? [],
-  };
+  const request: PlanRequest = { payload: parsed.value, preconditions };
   const outcome = await handler.plan(planContext, request);
   if (isPlanRejection(outcome)) {
     return outcome;
@@ -201,20 +313,22 @@ export async function applyCommand({
     ...outcome.guards.map((guard) => assertionStatement(db, guard)),
     ...outcome.statements,
     changeLogStatement(db, {
-      householdId: envelope.householdId,
+      ledgerId,
+      householdId,
       userId,
       commandId: envelope.commandId,
       effects: outcome.effects,
     }),
     resultStatement(db, {
-      householdId: envelope.householdId,
+      ledgerId,
+      householdId,
       commandId: envelope.commandId,
       result: outcome.applied,
     }),
   ];
   try {
-    await executeHouseholdTransaction(db, statements, envelope.householdId, {
-      lockHousehold: kind !== "transaction.create",
+    await executeLedgerTransaction(db, statements, ledgerId, {
+      lockLedger: kind !== "transaction.create",
     });
   } catch (error) {
     // Concurrent duplicate: another writer committed this exact commandId
@@ -223,22 +337,13 @@ export async function applyCommand({
       .select()
       .from(commandResult)
       .where(
-        and(
-          eq(commandResult.householdId, envelope.householdId),
-          eq(commandResult.commandId, envelope.commandId),
-        ),
+        and(eq(commandResult.ledgerId, ledgerId), eq(commandResult.commandId, envelope.commandId)),
       )
       .limit(1)
       .catch(() => []);
     const raced = racedRows[0];
     if (raced) {
-      const replay = await loadAppliedResult(
-        db,
-        envelope.householdId,
-        envelope.commandId,
-        raced.result,
-        true,
-      );
+      const replay = await loadAppliedResult(db, ledgerId, envelope.commandId, raced.result, true);
       if (replay) {
         return replay;
       }
@@ -252,7 +357,7 @@ export async function applyCommand({
     }
     console.error("commands.apply: atomic batch failed", {
       commandId: envelope.commandId,
-      householdId: envelope.householdId,
+      ledgerId,
       kind,
     });
     throw new ORPCError("INTERNAL_SERVER_ERROR", {
@@ -262,13 +367,7 @@ export async function applyCommand({
   }
 
   // 6. Return the recomputed state with the allocated sequence number.
-  const applied = await loadAppliedResult(
-    db,
-    envelope.householdId,
-    envelope.commandId,
-    outcome.applied,
-    false,
-  );
+  const applied = await loadAppliedResult(db, ledgerId, envelope.commandId, outcome.applied, false);
   if (!applied) {
     throw new ORPCError("INTERNAL_SERVER_ERROR", {
       message: "Command committed but no change row was appended. Verify the batch statements.",
@@ -279,7 +378,7 @@ export async function applyCommand({
 
 async function loadAppliedResult(
   db: CommandDatabase,
-  householdId: string,
+  ledgerId: string,
   commandId: string,
   appliedPayload: unknown,
   replayed: boolean,
@@ -287,9 +386,7 @@ async function loadAppliedResult(
   const changeRows = await db
     .select()
     .from(householdChange)
-    .where(
-      and(eq(householdChange.householdId, householdId), eq(householdChange.commandId, commandId)),
-    )
+    .where(and(eq(householdChange.ledgerId, ledgerId), eq(householdChange.commandId, commandId)))
     .limit(1);
   const change = changeRows[0];
   if (!change) {

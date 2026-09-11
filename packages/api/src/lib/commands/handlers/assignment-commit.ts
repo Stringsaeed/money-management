@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { applyAssignmentToAvailability, routeAssignment } from "@trove/domain/assignment-waterfall";
 
-import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
+import type { CommandPlan, HouseholdPlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
 
 import { assignment, envelope } from "@trove/db/schema/budget";
@@ -43,7 +43,7 @@ const assignmentCommitPayloadSchema = z.object({
 
 type AssignmentCommitPayload = z.infer<typeof assignmentCommitPayloadSchema>;
 
-async function loadEnvelope(ctx: PlanContext, id: string) {
+async function loadEnvelope(ctx: HouseholdPlanContext, id: string) {
   const rows = await ctx.db
     .select()
     .from(envelope)
@@ -63,7 +63,7 @@ export const assignmentCommitHandler = {
   },
 
   async plan(
-    ctx: PlanContext,
+    ctx: HouseholdPlanContext,
     { payload, preconditions }: PlanRequest,
   ): Promise<CommandPlan | PlanRejection> {
     const input = payload as AssignmentCommitPayload;

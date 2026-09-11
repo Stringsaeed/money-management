@@ -89,7 +89,8 @@ const sqliteBooleanSchema = z.union([z.literal(0), z.literal(1)]);
 
 export const powerSyncAccountRowSchema = z.object({
   id: z.string(),
-  household_id: z.string(),
+  ledger_id: z.string(),
+  household_id: z.string().nullable(),
   name: z.string(),
   type: z.enum(["cash", "bank", "card"]),
   currency: z.string(),
@@ -111,7 +112,8 @@ export const powerSyncAccountRowSchema = z.object({
 
 export const powerSyncCategoryRowSchema = z.object({
   id: z.string(),
-  household_id: z.string(),
+  ledger_id: z.string(),
+  household_id: z.string().nullable(),
   name: z.string(),
   type: z.enum(["income", "expense"]),
   color: z.string(),
@@ -129,7 +131,8 @@ export const powerSyncCategoryRowSchema = z.object({
 
 export const powerSyncTransactionRowSchema = z.object({
   id: z.string(),
-  household_id: z.string(),
+  ledger_id: z.string(),
+  household_id: z.string().nullable(),
   type: z.enum(["expense", "income", "transfer"]),
   amount_minor: z.number().int().positive(),
   currency: z.string(),
@@ -153,7 +156,7 @@ export const powerSyncTransactionRowSchema = z.object({
 export const powerSyncRejectedChangeRowSchema = z.object({
   id: z.string(),
   command_id: z.string(),
-  household_id: z.string(),
+  ledger_id: z.string(),
   kind: z.string(),
   rejection_kind: z.string(),
   rejection_payload: z.string(),

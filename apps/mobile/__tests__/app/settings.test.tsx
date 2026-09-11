@@ -5,7 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import SettingsScreen from "@/app/(tabs)/settings";
 import { useAccess } from "@/modules/access";
-import { LedgerDataSourceProvider } from "@/modules/ledger-data-source/provider";
+import {
+  householdLedgerBinding,
+  LedgerDataSourceProvider,
+} from "@/modules/ledger-data-source/provider";
 
 const mockUseAccess = jest.mocked(useAccess);
 const mockBeginAuth = jest.fn();
@@ -314,7 +317,7 @@ describe("app/settings", () => {
         <LedgerDataSourceProvider
           selection={{
             kind: "synced",
-            householdId: "household-1",
+            ledger: householdLedgerBinding("household-1"),
             userId: "user-1",
             offlineState: { kind: "offline_cached", reason: "kill_switch" },
           }}

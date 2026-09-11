@@ -1,3 +1,4 @@
+import { householdLedgerBinding } from "@/modules/ledger-data-source/provider";
 import { createSyncedTransactionLedger, type LedgerDependencies } from "./ledger";
 import { createTestLedgerCollections, preloadTestLedgerCollections } from "./test-collections";
 import type { PowerSyncAccountRow, PowerSyncCategoryRow, PowerSyncTransactionRow } from "./types";
@@ -8,6 +9,7 @@ const TIMESTAMP = "2026-01-01T00:00:00.000Z";
 
 const account: PowerSyncAccountRow = {
   id: "cash",
+  ledger_id: HOUSEHOLD_ID,
   household_id: HOUSEHOLD_ID,
   name: "Cash",
   type: "bank",
@@ -30,6 +32,7 @@ const account: PowerSyncAccountRow = {
 
 const category: PowerSyncCategoryRow = {
   id: "groceries",
+  ledger_id: HOUSEHOLD_ID,
   household_id: HOUSEHOLD_ID,
   name: "Groceries",
   type: "expense",
@@ -48,6 +51,7 @@ const category: PowerSyncCategoryRow = {
 
 const transaction: PowerSyncTransactionRow = {
   id: "transaction-existing",
+  ledger_id: HOUSEHOLD_ID,
   household_id: HOUSEHOLD_ID,
   type: "expense",
   amount_minor: 500,
@@ -85,7 +89,7 @@ const createHarness = async (transactions: PowerSyncTransactionRow[] = []) => {
     "command-refund",
   ];
   const dependencies: LedgerDependencies = {
-    householdId: HOUSEHOLD_ID,
+    binding: householdLedgerBinding(HOUSEHOLD_ID),
     userId: USER_ID,
     dbIdentity: {},
     collections,

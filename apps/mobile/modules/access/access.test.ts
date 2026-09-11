@@ -9,6 +9,7 @@ import type {
 import { describe, expect, it } from "@jest/globals";
 
 import {
+  NO_SYNC_ENROLLMENT,
   householdReadFromQuery,
   householdUserIdForQuery,
   householdsQueryKeyForUser,
@@ -17,8 +18,15 @@ import {
   resolveAccess,
   resolveReturnDestination,
   selectLedgerSourceForAccess,
+  type SyncEnrollment,
 } from "./access";
+import { householdLedgerBinding } from "@/modules/ledger-data-source/provider";
 import { PROFILE_HOUSEHOLD_HREF, returnTo } from "./return-to";
+
+const migratedTo = (householdId: string): SyncEnrollment => ({
+  migratedHouseholdId: householdId,
+  personalSyncUserId: null,
+});
 
 const user: Identity = {
   userId: "user-1",
@@ -256,7 +264,7 @@ describe("selectLedgerSourceForAccess", () => {
     expect(
       selectLedgerSourceForAccess(
         { kind: "session_revoked", lastKnown: user },
-        null,
+        NO_SYNC_ENROLLMENT,
         "synced",
         null,
       ).kind,
@@ -264,13 +272,13 @@ describe("selectLedgerSourceForAccess", () => {
     expect(
       selectLedgerSourceForAccess(
         { kind: "session_revoked", lastKnown: user },
-        "hh-1",
+        migratedTo("hh-1"),
         "synced",
         null,
       ),
     ).toEqual({
       kind: "synced",
-      householdId: "hh-1",
+      ledger: householdLedgerBinding("hh-1"),
       userId: "user-1",
       offlineState: {
         kind: "offline_cached",
@@ -286,10 +294,12 @@ describe("selectLedgerSourceForAccess", () => {
       household: { kind: "unavailable" },
       memberships: [],
     };
-    expect(selectLedgerSourceForAccess(unavailable, null, "synced", null).kind).toBe("local");
-    expect(selectLedgerSourceForAccess(unavailable, "hh-1", "synced", null)).toEqual({
+    expect(selectLedgerSourceForAccess(unavailable, NO_SYNC_ENROLLMENT, "synced", null).kind).toBe(
+      "local",
+    );
+    expect(selectLedgerSourceForAccess(unavailable, migratedTo("hh-1"), "synced", null)).toEqual({
       kind: "synced",
-      householdId: "hh-1",
+      ledger: householdLedgerBinding("hh-1"),
       userId: "user-1",
       offlineState: {
         kind: "offline_cached",
@@ -299,12 +309,16 @@ describe("selectLedgerSourceForAccess", () => {
   });
 
   it("selects a live synced ledger only for the migrated active household", () => {
-    expect(selectLedgerSourceForAccess(signedInActive, "hh-1", "synced", null)).toEqual({
-      kind: "synced",
-      householdId: "hh-1",
-      userId: "user-1",
-    });
-    expect(selectLedgerSourceForAccess(signedInActive, "hh-other", "synced", null)).toEqual({
+    expect(selectLedgerSourceForAccess(signedInActive, migratedTo("hh-1"), "synced", null)).toEqual(
+      {
+        kind: "synced",
+        ledger: householdLedgerBinding("hh-1"),
+        userId: "user-1",
+      },
+    );
+    expect(
+      selectLedgerSourceForAccess(signedInActive, migratedTo("hh-other"), "synced", null),
+    ).toEqual({
       kind: "local",
     });
   });
@@ -315,9 +329,45 @@ describe("selectLedgerSourceForAccess", () => {
       probe: null,
       households: loadedActive,
     });
-    expect(selectLedgerSourceForAccess(access, "hh-1", "synced", null)).toEqual({
+    expect(selectLedgerSourceForAccess(access, migratedTo("hh-1"), "synced", null)).toEqual({
       kind: "synced",
-      householdId: "hh-1",
+      ledger: householdLedgerBinding("hh-1"),
+      userId: "user-1",
+    });
+  });
+
+  it("syncs a Personal Ledger for a signed-in user who never joined a Household", () => {
+    const noHousehold: AccessCore = {
+      kind: "signed_in",
+      user,
+      household: { kind: "none" },
+      memberships: [],
+    };
+    const enrollment: SyncEnrollment = {
+      migratedHouseholdId: null,
+      personalSyncUserId: "user-1",
+    };
+    expect(selectLedgerSourceForAccess(noHousehold, enrollment, "synced", null)).toEqual({
+      kind: "synced",
+      ledger: { ledgerId: "personal:user-1", scope: { type: "personal" }, householdId: null },
+      userId: "user-1",
+    });
+  });
+
+  it("does not degrade a Personal Ledger when the household list fails to load", () => {
+    const unavailable: AccessCore = {
+      kind: "signed_in",
+      user,
+      household: { kind: "unavailable" },
+      memberships: [],
+    };
+    const enrollment: SyncEnrollment = {
+      migratedHouseholdId: null,
+      personalSyncUserId: "user-1",
+    };
+    expect(selectLedgerSourceForAccess(unavailable, enrollment, "synced", null)).toEqual({
+      kind: "synced",
+      ledger: { ledgerId: "personal:user-1", scope: { type: "personal" }, householdId: null },
       userId: "user-1",
     });
   });

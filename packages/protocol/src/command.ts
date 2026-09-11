@@ -8,6 +8,7 @@
  */
 
 import type { Effects } from "./effects.js";
+import { type LedgerScope, ledgerIdForScope } from "./ledger-scope.js";
 
 /**
  * The vocabulary of domain intents, grown phase by phase as the backend
@@ -70,6 +71,18 @@ export interface Precondition {
 }
 
 /**
+ * The Ledger Scope a command addresses, as it travels on the wire.
+ *
+ * A personal command names no owner: the server binds it to the authenticated
+ * User, so one User can never post into another User's Personal Ledger.
+ * An organization command names the organization — which, until Household
+ * administration migrates to WorkOS (#228), is the Household id.
+ */
+export type CommandScope =
+  | { readonly type: "personal" }
+  | { readonly type: "organization"; readonly organizationId: string };
+
+/**
  * The envelope posted to `POST /commands`. Payloads are intentionally opaque
  * here: each kind's payload schema lives with its handler in `apps/api`; the
  * protocol fixes only the envelope and result machinery.
@@ -77,7 +90,16 @@ export interface Precondition {
 export interface CommandEnvelope<TPayload = unknown> {
   /** Client-generated UUID; doubles as the idempotency key. */
   readonly commandId: string;
-  readonly householdId: string;
+  /**
+   * Ledger this command writes to. Omitted only by clients predating the
+   * Ledger Scope prefactor, where `householdId` alone names an organization.
+   */
+  readonly scope?: CommandScope;
+  /**
+   * Household backing an organization-scoped command. Retained so existing
+   * clients and the Household import path keep working; `scope` supersedes it.
+   */
+  readonly householdId?: string;
   readonly kind: CommandKind;
   readonly payload: TPayload;
   readonly preconditions?: readonly Precondition[];
@@ -86,6 +108,38 @@ export interface CommandEnvelope<TPayload = unknown> {
    * period membership (ADR-0021: Ledger Date decides).
    */
   readonly issuedAt?: string;
+}
+
+/**
+ * Resolves an envelope's Ledger Scope against the authenticated User. Returns
+ * null when the envelope names neither a scope nor a household, which is an
+ * invalid intent rather than a silent default.
+ */
+export function resolveCommandScope(
+  envelope: Pick<CommandEnvelope, "householdId" | "scope">,
+  authenticatedUserId: string,
+): LedgerScope | null {
+  if (envelope.scope) {
+    return envelope.scope.type === "personal"
+      ? { type: "personal", userId: authenticatedUserId }
+      : { type: "organization", organizationId: envelope.scope.organizationId };
+  }
+  if (envelope.householdId) {
+    return { type: "organization", organizationId: envelope.householdId };
+  }
+  return null;
+}
+
+/**
+ * The ledger id an envelope addresses, for clients that must label a queued or
+ * rejected command before the server answers.
+ */
+export function commandLedgerId(
+  envelope: Pick<CommandEnvelope, "householdId" | "scope">,
+  authenticatedUserId: string,
+): string | null {
+  const scope = resolveCommandScope(envelope, authenticatedUserId);
+  return scope ? ledgerIdForScope(scope) : null;
 }
 
 /** A typed field-level rejection reason for invalid intents. */

@@ -9,7 +9,7 @@ import { ledgerAccount, transaction } from "@trove/db/schema/ledger";
 import {
   assertionStatement,
   changeLogStatement,
-  executeHouseholdTransaction,
+  executeLedgerTransaction,
   resultStatement,
   type BatchStatement,
 } from "../commands/statements";
@@ -68,6 +68,9 @@ export class PgRecurringStore implements SettlementStore {
     for (const generated of commit.generated) {
       statements.push(
         this.db.insert(transaction).values({
+          // Recurring Rules stay Household-owned until #227 teaches them
+          // Ledger Scope; an organization ledger id is its Household id.
+          ledgerId: this.scope.householdId,
           householdId: this.scope.householdId,
           id: generated.transactionId,
           type: generated.type,
@@ -124,6 +127,7 @@ export class PgRecurringStore implements SettlementStore {
       const commandId = `settlement:${commit.ruleId}:${commit.generated[0]?.transactionId ?? ""}`;
       statements.push(
         changeLogStatement(this.db, {
+          ledgerId: this.scope.householdId,
           householdId: this.scope.householdId,
           userId: this.scope.userId,
           commandId,
@@ -132,6 +136,7 @@ export class PgRecurringStore implements SettlementStore {
       );
       statements.push(
         resultStatement(this.db, {
+          ledgerId: this.scope.householdId,
           householdId: this.scope.householdId,
           commandId,
           result: { generatedCount: commit.generated.length },
@@ -139,7 +144,7 @@ export class PgRecurringStore implements SettlementStore {
       );
     }
 
-    await executeHouseholdTransaction(this.db, statements, this.scope.householdId);
+    await executeLedgerTransaction(this.db, statements, this.scope.householdId);
   }
 }
 

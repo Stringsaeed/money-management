@@ -1,3 +1,4 @@
+import { householdLedgerBinding } from "@/modules/ledger-data-source/provider";
 import type { LedgerDependencies } from "./ledger";
 import { createTestLedgerCollections } from "./test-collections";
 import {
@@ -11,7 +12,7 @@ interface DbIdentity {
 }
 
 const deps = (dbIdentity: DbIdentity): LedgerDependencies => ({
-  householdId: "household-1",
+  binding: householdLedgerBinding("household-1"),
   userId: "user-1",
   dbIdentity,
   collections: createTestLedgerCollections(),

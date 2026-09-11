@@ -1,5 +1,7 @@
 import type { CommandEnvelope } from "@trove/protocol";
 
+import type { SyncedLedgerBinding } from "@/modules/ledger-data-source/provider";
+
 import type {
   IntentReceipt,
   LedgerTransaction,
@@ -10,7 +12,7 @@ import type {
 } from "./types";
 
 export interface MintContext {
-  readonly householdId: string;
+  readonly binding: SyncedLedgerBinding;
   readonly newId: () => string;
   readonly now: () => string;
 }
@@ -27,7 +29,7 @@ export const mintCreate = (ctx: MintContext, input: NewTransactionInput): Minted
     receipt: { id, commandId },
     command: {
       commandId,
-      householdId: ctx.householdId,
+      scope: ctx.binding.scope,
       kind: "transaction.create",
       issuedAt: ctx.now(),
       payload: {
@@ -54,7 +56,7 @@ export const mintEdit = (
   changes: TransactionEdit,
 ): CommandEnvelope => ({
   commandId: ctx.newId(),
-  householdId: ctx.householdId,
+  scope: ctx.binding.scope,
   kind: "transaction.edit",
   issuedAt: ctx.now(),
   payload: {
@@ -72,7 +74,7 @@ export const mintEdit = (
 
 export const mintRemove = (ctx: MintContext, row: LedgerTransaction): CommandEnvelope => ({
   commandId: ctx.newId(),
-  householdId: ctx.householdId,
+  scope: ctx.binding.scope,
   kind: "transaction.remove",
   issuedAt: ctx.now(),
   payload: { transactionId: row.id },
@@ -86,7 +88,7 @@ export const mintRefund = (ctx: MintContext, input: RefundInput): MintedCreate =
     receipt: { id, commandId },
     command: {
       commandId,
-      householdId: ctx.householdId,
+      scope: ctx.binding.scope,
       kind: "refund.link",
       issuedAt: ctx.now(),
       payload: {
@@ -130,7 +132,8 @@ export const mintPowerSyncCreate = (
     ...minted,
     row: {
       id: minted.receipt.id,
-      household_id: ctx.householdId,
+      ledger_id: ctx.binding.ledgerId,
+      household_id: ctx.binding.householdId,
       type: input.type,
       amount_minor: input.amount,
       currency: ctx.accountCurrency(input.accountId),
@@ -198,7 +201,8 @@ export const mintPowerSyncRefund = (
     ...minted,
     row: {
       id: minted.receipt.id,
-      household_id: ctx.householdId,
+      ledger_id: ctx.binding.ledgerId,
+      household_id: ctx.binding.householdId,
       type: "income",
       amount_minor: input.amount,
       currency: input.currency,

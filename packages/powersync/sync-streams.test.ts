@@ -14,6 +14,33 @@ test("uses Sync Streams edition 3 and an eager membership stream", () => {
   assert.match(config.streams.memberships.query, /user_id = auth\.user_id\(\)/);
 });
 
+test("streams the Personal Ledger eagerly, scoped by the ledger's owner", () => {
+  const stream = config.streams.personal_ledger;
+  const tables = ["accounts", "categories", "transactions"];
+  assert.equal(stream.auto_subscribe, true);
+  assert.equal(stream.priority, 2);
+  assert.equal(stream.queries.length, tables.length);
+
+  for (const [index, table] of tables.entries()) {
+    const query = stream.queries[index];
+    assert.match(query, new RegExp(`FROM ${table}`));
+    assert.match(query, /ledger_id IN/);
+    assert.match(query, /SELECT id\s+FROM ledger/);
+    assert.match(query, /personal_user_id = auth\.user_id\(\)/);
+    // No subscription parameter: a User cannot ask for someone else's ledger.
+    assert.doesNotMatch(query, /subscription\.parameter/);
+  }
+});
+
+test("keeps the Personal Ledger and Household streams from bleeding into each other", () => {
+  for (const query of config.streams.personal_ledger.queries) {
+    assert.doesNotMatch(query, /household_id/);
+  }
+  for (const query of config.streams.household_ledger.queries) {
+    assert.doesNotMatch(query, /personal_user_id/);
+  }
+});
+
 test("guards every household query by the subscription and signed-in membership", () => {
   const stream = config.streams.household_ledger;
   assert.equal(stream.auto_subscribe, undefined);

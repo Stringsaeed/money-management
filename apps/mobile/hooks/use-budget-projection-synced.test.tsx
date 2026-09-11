@@ -1,3 +1,4 @@
+import { householdLedgerBinding } from "@/modules/ledger-data-source/provider";
 import { waitFor } from "@testing-library/react-native";
 
 import { useBudgetProjection } from "@/hooks/use-budget-workspaces";
@@ -25,7 +26,7 @@ describe("useBudgetProjection synced", () => {
     const { result } = await renderHookWithProviders(() => useBudgetProjection("USD", "2026-03"), {
       ledgerSelection: {
         kind: "synced",
-        householdId: "household-1",
+        ledger: householdLedgerBinding("household-1"),
         offlineState: { kind: "offline_cached", reason: "kill_switch" },
       },
     });

@@ -2,6 +2,7 @@ import { column, Schema, Table } from "@powersync/react-native";
 
 export const powerSyncAccounts = new Table(
   {
+    ledger_id: column.text,
     household_id: column.text,
     name: column.text,
     type: column.text,
@@ -22,13 +23,14 @@ export const powerSyncAccounts = new Table(
     updated_at: column.text,
   },
   {
-    indexes: { household: ["household_id"], household_lifecycle: ["household_id", "lifecycle"] },
+    indexes: { ledger: ["ledger_id"], ledger_lifecycle: ["ledger_id", "lifecycle"] },
     trackMetadata: true,
   },
 );
 
 export const powerSyncCategories = new Table(
   {
+    ledger_id: column.text,
     household_id: column.text,
     name: column.text,
     type: column.text,
@@ -45,13 +47,14 @@ export const powerSyncCategories = new Table(
     updated_at: column.text,
   },
   {
-    indexes: { household: ["household_id"], household_lifecycle: ["household_id", "lifecycle"] },
+    indexes: { ledger: ["ledger_id"], ledger_lifecycle: ["ledger_id", "lifecycle"] },
     trackMetadata: true,
   },
 );
 
 export const powerSyncTransactions = new Table(
   {
+    ledger_id: column.text,
     household_id: column.text,
     type: column.text,
     amount_minor: column.integer,
@@ -74,9 +77,9 @@ export const powerSyncTransactions = new Table(
   },
   {
     indexes: {
-      household: ["household_id"],
-      household_account: ["household_id", "account_id"],
-      household_date: ["household_id", "date"],
+      ledger: ["ledger_id"],
+      ledger_account: ["ledger_id", "account_id"],
+      ledger_date: ["ledger_id", "date"],
     },
     trackMetadata: true,
   },
@@ -267,7 +270,7 @@ export const powerSyncRecurringOccurrences = new Table(
 export const rejectedChanges = new Table(
   {
     command_id: column.text,
-    household_id: column.text,
+    ledger_id: column.text,
     kind: column.text,
     rejection_kind: column.text,
     rejection_payload: column.text,

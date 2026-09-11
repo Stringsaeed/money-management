@@ -1,6 +1,9 @@
 import { createContext, useContext, useLayoutEffect, useState, type ReactNode } from "react";
 
-import { useLedgerSourceSelection } from "@/modules/ledger-data-source/provider";
+import {
+  useLedgerSourceSelection,
+  type SyncedLedgerBinding,
+} from "@/modules/ledger-data-source/provider";
 import { openPowerSyncDatabase } from "@/modules/powersync/database";
 
 import { createLedgerDependencies } from "./deps";
@@ -10,13 +13,13 @@ import { acquireSyncedTransactionLedger } from "./registry";
 const LedgerContext = createContext<SyncedTransactionLedger | null>(null);
 
 export interface SyncedTransactionsProviderProps {
-  readonly householdId: string;
+  readonly binding: SyncedLedgerBinding;
   readonly userId: string;
   readonly children: ReactNode;
 }
 
 export const SyncedTransactionsProvider = ({
-  householdId,
+  binding,
   userId,
   children,
 }: SyncedTransactionsProviderProps) => {
@@ -34,7 +37,7 @@ export const SyncedTransactionsProvider = ({
       .then((database) => {
         if (cancelled) return;
         const handle = acquireSyncedTransactionLedger(
-          createLedgerDependencies({ householdId, userId, database }),
+          createLedgerDependencies({ ledger: binding, userId, database }),
         );
         release = handle.release;
         setLedger(handle.ledger);
@@ -51,7 +54,7 @@ export const SyncedTransactionsProvider = ({
       release?.();
       setLedger(null);
     };
-  }, [householdId, userId]);
+  }, [binding, userId]);
 
   useLayoutEffect(() => {
     ledger?.setOffline(offline);

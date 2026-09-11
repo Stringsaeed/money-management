@@ -62,6 +62,7 @@ async function seedFundingAccount(id: string, initialBalanceMinor = 0) {
 
 async function seedAccount(id: string, type: "bank" | "cash" | "card", initialBalanceMinor = 0) {
   await db.insert(ledgerAccount).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id,
     name: `${type} ${id}`,
@@ -105,6 +106,7 @@ async function seedEnvelope(id: string) {
 
 async function seedCategory(categoryId: string) {
   await db.insert(category).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id: categoryId,
     name: `Category ${categoryId}`,
@@ -140,6 +142,7 @@ async function seedExpense(
   date = "2026-02-10",
 ) {
   await db.insert(transaction).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id,
     type: "expense",
@@ -403,11 +406,13 @@ describe("refund.link", () => {
 
   it("aborts an interleaved over-refund through the in-batch cap guard", async () => {
     const { refundCreateHandler } = await import("./handlers/refund-create");
-    const { assertionStatement, changeLogStatement, executeHouseholdTransaction, resultStatement } =
+    const { assertionStatement, changeLogStatement, executeLedgerTransaction, resultStatement } =
       await import("./statements");
 
     const planCtx = {
       db,
+      ledgerId: HOUSEHOLD_ID,
+      scope: { type: "organization", organizationId: HOUSEHOLD_ID } as const,
       householdId: HOUSEHOLD_ID,
       actorUserId: OWNER,
       actorRole: "owner" as const,
@@ -436,14 +441,20 @@ describe("refund.link", () => {
         ...refundPlan.guards.map((guard) => assertionStatement(db as never, guard)),
         ...refundPlan.statements,
         changeLogStatement(db as never, {
+          ledgerId: HOUSEHOLD_ID,
           householdId: HOUSEHOLD_ID,
           userId: OWNER,
           commandId,
           effects: ["ledger"],
         }),
-        resultStatement(db as never, { householdId: HOUSEHOLD_ID, commandId, result: {} }),
+        resultStatement(db as never, {
+          ledgerId: HOUSEHOLD_ID,
+          householdId: HOUSEHOLD_ID,
+          commandId,
+          result: {},
+        }),
       ];
-      await executeHouseholdTransaction(db, statements, HOUSEHOLD_ID);
+      await executeLedgerTransaction(db, statements, HOUSEHOLD_ID);
     };
 
     await commit(planA);

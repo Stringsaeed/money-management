@@ -25,7 +25,7 @@ export const useAccountDataSource = (): LedgerAccountDataSource => {
     return local;
   }
   return createSyncedLedgerDataSource({
-    householdId: selection.householdId,
+    binding: selection.ledger,
     userId: selection.userId,
     ledger: requireSyncedLedger(ledger),
     offlineState: selection.offlineState,
@@ -42,7 +42,7 @@ export const useTransactionDataSource = (): LedgerTransactionDataSource => {
   if (ledger) {
     return {
       source: "synced",
-      cacheKey: `synced:${selection.householdId}:${selection.userId}`,
+      cacheKey: `synced:${selection.ledger.ledgerId}:${selection.userId}`,
       offlineState: selection.offlineState ?? { kind: "online" },
       transactions: toLedgerTransactionResource(ledger),
       observeErrors: () => ignoreLedgerError,
@@ -59,7 +59,7 @@ export const useCategoryDataSource = (): LedgerCategoryDataSource => {
     return local;
   }
   return createSyncedLedgerDataSource({
-    householdId: selection.householdId,
+    binding: selection.ledger,
     userId: selection.userId,
     ledger: requireSyncedLedger(ledger),
     offlineState: selection.offlineState,
