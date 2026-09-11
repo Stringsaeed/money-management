@@ -25,6 +25,7 @@ describe("canPresentAuthSheet", () => {
       user,
       household: { kind: "none" },
       memberships: [],
+      selection: { kind: "personal" },
     },
   ] satisfies AccessCore[])("blocks $kind", (core) => {
     expect(canPresentAuthSheet(core)).toBe(false);

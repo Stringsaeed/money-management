@@ -120,10 +120,13 @@ export const LEDGER_SQLITE_ALLOWLIST: SqliteRoleEntry[] = [
     files: [
       "apps/mobile/lib/migration/chunks.ts",
       "apps/mobile/lib/migration/manifest.ts",
+      "apps/mobile/lib/migration/status.ts",
       "apps/mobile/hooks/use-enable-sync.ts",
+      "apps/mobile/components/sync/membership-revocation-cleanup.tsx",
     ],
-    reason: "Reads local A/C/T once to build import_bundle chunks; keeps the #98 backup.",
-    issue: 136,
+    reason:
+      "Reads local A/C/T once to build import_bundle chunks; keeps the #98 backup; clears Household enrollment after confirmed Membership removal (#228).",
+    issue: 228,
   },
   {
     role: "erase",

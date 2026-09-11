@@ -57,6 +57,19 @@ test("keeps private-account filters on personal recurring the same as household"
   assert.match(occurrences, /rule_id IN/);
 });
 
+test("every Household stream denies inactive memberships and unknown role slugs", () => {
+  const householdStreams = ["household_ledger", "household_budget", "household_recurring"];
+  for (const name of householdStreams) {
+    for (const query of config.streams[name].queries) {
+      assert.match(
+        query,
+        /SELECT household_id FROM membership\s+WHERE user_id = auth\.user_id\(\)\s+AND status = 'active'\s+AND role IN \('admin', 'member', 'viewer'\)/,
+        `${name} query gates on an active, known-role membership`,
+      );
+    }
+  }
+});
+
 test("keeps the Personal Ledger and Household streams from bleeding into each other", () => {
   for (const query of config.streams.personal_ledger.queries) {
     assert.doesNotMatch(query, /household_id/);

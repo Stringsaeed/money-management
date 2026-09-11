@@ -1,7 +1,6 @@
 import type { CommandKind } from "@trove/protocol";
 
 const KIND_LABELS: Record<CommandKind, string> = {
-  "member.role.change": "Change member role",
   "account.create": "New account",
   "account.update": "Update account",
   "account.archive": "Archive account",

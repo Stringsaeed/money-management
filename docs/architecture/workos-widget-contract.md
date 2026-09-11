@@ -35,3 +35,6 @@ Bounded feasibility record for hosting the WorkOS User Management widget from Tr
 - Token gate: `packages/auth/src/widget-contract.ts` (`decideWidgetToken`)
 - Findings constant: `WIDGET_SAFEGUARD_FINDINGS`
 - Auth session claims: `packages/auth/src/session.ts`
+- Handoff + page: `packages/api/src/lib/households/widget-handoff.ts`, `packages/auth/src/member-widget-page.ts`, `apps/server/src/member-widget.ts`
+- Sole-admin User-deletion guard: `packages/api/src/lib/households/sole-admin-deletion-guard.ts`
+- Revocation bound: `docs/architecture/membership-revocation.md`

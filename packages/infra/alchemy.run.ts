@@ -3,6 +3,7 @@ import * as Cloudflare from "alchemy/Cloudflare";
 import { config } from "dotenv";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
 
 import { hyperdriveNameForStage } from "./hyperdrive-name.mjs";
 
@@ -78,6 +79,12 @@ export const server = Cloudflare.Worker(
         WORKOS_TOKEN_AUDIENCE: Config.string("WORKOS_TOKEN_AUDIENCE").pipe(Config.withDefault("")),
         WORKOS_TOKEN_ISSUER: Config.string("WORKOS_TOKEN_ISSUER").pipe(
           Config.withDefault("https://api.workos.com"),
+        ),
+        // Signing secret of the WorkOS webhook endpoint that feeds the Membership
+        // projection. Empty disables the route (503) rather than accepting
+        // unsigned events.
+        WORKOS_WEBHOOK_SECRET: Config.redacted("WORKOS_WEBHOOK_SECRET").pipe(
+          Config.withDefault(Redacted.make("")),
         ),
         // Retained until #231 removes Better Auth cutover checks; unused on the active auth path.
         BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),

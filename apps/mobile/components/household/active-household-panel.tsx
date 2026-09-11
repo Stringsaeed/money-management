@@ -3,31 +3,37 @@ import { Alert, View } from "react-native";
 import { EnableSyncCard } from "@/components/household/enable-sync-card";
 import { HouseholdMembers, type HouseholdMember } from "@/components/household/household-members";
 import { SyncStatusCard } from "@/components/household/sync-status-card";
-import { NativeDestructiveButton, NativeHost, NativePrimaryButton } from "@/components/native-ui";
+import {
+  NativeDestructiveButton,
+  NativeHost,
+  NativePrimaryButton,
+  NativeSecondaryButton,
+} from "@/components/native-ui";
 import { Card } from "@/components/settings/card";
 import { SectionHeader } from "@/components/settings/section-header";
 import { Text } from "@/components/ui/text";
-import { useDeleteHousehold, useGenerateInvite, useLeaveHousehold } from "@/hooks/use-households";
-import { formatInviteExpiry } from "@/utils/invite-code";
+import { useDeleteHousehold, useLeaveHousehold, useOpenMemberWidget } from "@/hooks/use-households";
 
 interface ActiveHouseholdPanelProps {
   readonly householdId: string;
   readonly name: string;
   readonly currentUserId: string;
-  readonly isOwner: boolean;
+  readonly isAdmin: boolean;
   readonly needsSync: boolean;
   readonly members: readonly HouseholdMember[];
+  readonly adminless?: boolean;
 }
 
 export function ActiveHouseholdPanel({
   householdId,
   name,
   currentUserId,
-  isOwner,
+  isAdmin,
   needsSync,
   members,
+  adminless = false,
 }: ActiveHouseholdPanelProps) {
-  const generateInvite = useGenerateInvite();
+  const openWidget = useOpenMemberWidget();
   const leaveHousehold = useLeaveHousehold();
   const deleteHousehold = useDeleteHousehold();
 
@@ -48,28 +54,41 @@ export function ActiveHouseholdPanel({
             </Text>
             <Text className="font-heading-normal text-xl italic text-ink">{name}</Text>
           </View>
-          <NativeHost fillWidth={false}>
-            <NativePrimaryButton
-              label="Invite 🎟️"
-              onPress={() => invite(householdId, generateInvite)}
-              testID="invite-household"
-            />
-          </NativeHost>
+          {isAdmin ? (
+            <NativeHost fillWidth={false}>
+              <NativePrimaryButton
+                label={openWidget.isPending ? "Opening…" : "Manage 👥"}
+                onPress={() => openMembers(householdId, openWidget)}
+                disabled={openWidget.isPending}
+                testID="manage-household-members"
+              />
+            </NativeHost>
+          ) : null}
         </View>
+        {adminless ? (
+          <Text className="px-4 pb-4 text-xs text-terracotta">
+            This Household has no admin. Ask WorkOS support or recreate administration carefully —
+            Trove cannot invent a last-admin invariant from webhooks.
+          </Text>
+        ) : null}
       </Card>
       <Card>
         <SectionHeader title="Members 👥" variant="card" />
-        <HouseholdMembers
-          householdId={householdId}
-          isOwner={isOwner}
-          currentUserId={currentUserId}
-          members={members}
-        />
+        <HouseholdMembers currentUserId={currentUserId} members={members} />
+        {!isAdmin ? (
+          <Text className="px-4 pb-4 text-xs text-ink/50">
+            Invitations and role changes are managed by a Household admin.
+          </Text>
+        ) : (
+          <Text className="px-4 pb-4 text-xs text-ink/50">
+            Invite people and change roles in Manage — WorkOS hosts that screen.
+          </Text>
+        )}
       </Card>
       <Card>
         <View className="gap-2 p-4">
           <Text className="font-body-semibold text-xs uppercase text-destructive">Danger Zone</Text>
-          {isOwner ? (
+          {isAdmin ? (
             <NativeHost>
               <NativeDestructiveButton
                 label="Delete household"
@@ -86,27 +105,27 @@ export function ActiveHouseholdPanel({
               />
             </NativeHost>
           )}
+          {isAdmin ? (
+            <NativeHost>
+              <NativeSecondaryButton
+                label="Leave household"
+                onPress={() => confirmLeave(householdId, leaveHousehold.mutate)}
+                testID="leave-household"
+              />
+            </NativeHost>
+          ) : null}
         </View>
       </Card>
     </>
   );
 }
 
-function invite(householdId: string, generateInvite: ReturnType<typeof useGenerateInvite>) {
-  generateInvite.mutate(
-    { householdId },
-    {
-      onSuccess: (created) => {
-        Alert.alert(
-          "Invite code 🎟️",
-          `Share this code with family:\n\n${created.code}\n\n${formatInviteExpiry(created.expiresAt)} · single-use`,
-        );
-      },
-      onError: () => {
-        Alert.alert("Couldn't create invite", "Check your connection and try again.");
-      },
+function openMembers(householdId: string, openWidget: ReturnType<typeof useOpenMemberWidget>) {
+  openWidget.mutate(householdId, {
+    onError: () => {
+      Alert.alert("Couldn't open members", "Check your connection and try again.");
     },
-  );
+  });
 }
 
 function confirmLeave(householdId: string, leave: (householdId: string) => void) {
@@ -119,7 +138,7 @@ function confirmLeave(householdId: string, leave: (householdId: string) => void)
 function confirmDelete(householdId: string, remove: (householdId: string) => void) {
   Alert.alert(
     "Delete household?",
-    "All memberships and invites are removed for everyone. This cannot be undone.",
+    "Deletes the WorkOS organization and every shared Account, Category, and Transaction. Personal ledgers are untouched.",
     [
       { text: "Cancel", style: "cancel" },
       { text: "Delete", style: "destructive", onPress: () => remove(householdId) },

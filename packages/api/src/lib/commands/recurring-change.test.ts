@@ -42,7 +42,7 @@ beforeEach(async () => {
     id: "recurring-membership",
     householdId: HOUSEHOLD,
     userId: OWNER,
-    role: "owner",
+    role: "admin",
   });
   await db.insert(ledgerAccount).values({
     id: ACCOUNT,

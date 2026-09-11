@@ -32,8 +32,7 @@ async function seedHousehold(id: string) {
     id: `membership-${id}`,
     userId: owner,
     householdId: id,
-    role: "owner",
-    version: 0,
+    role: "admin",
   });
   return owner;
 }

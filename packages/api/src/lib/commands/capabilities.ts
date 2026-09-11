@@ -1,29 +1,31 @@
-import type { CommandKind, HouseholdRole } from "@trove/protocol";
+import { type CommandKind, type HouseholdRole, isHouseholdRole } from "@trove/protocol";
 
 const CAPABILITY_MATRIX: Readonly<Record<CommandKind, readonly HouseholdRole[]>> = {
-  "member.role.change": ["owner"],
-  "account.create": ["owner", "admin"],
-  "account.update": ["owner", "admin"],
-  "account.archive": ["owner", "admin"],
-  "category.create": ["owner", "admin"],
-  "category.update": ["owner", "admin"],
-  "category.archive": ["owner", "admin"],
-  "transaction.create": ["owner", "admin", "member"],
-  "transaction.edit": ["owner", "admin", "member"],
-  "transaction.remove": ["owner", "admin", "member"],
-  "recurring.change": ["owner", "admin"],
-  "budget.configure": ["owner", "admin"],
-  "assignment.commit": ["owner", "admin", "member"],
-  "assignment.correct": ["owner", "admin", "member"],
-  "refund.link": ["owner", "admin", "member"],
-  // One-time local-to-cloud migration (#98): only the household's creator
-  // may bulk-import — never a joined member, whose local data is separate.
-  import_bundle: ["owner"],
+  "account.create": ["admin"],
+  "account.update": ["admin"],
+  "account.archive": ["admin"],
+  "category.create": ["admin"],
+  "category.update": ["admin"],
+  "category.archive": ["admin"],
+  "transaction.create": ["admin", "member"],
+  "transaction.edit": ["admin", "member"],
+  "transaction.remove": ["admin", "member"],
+  "recurring.change": ["admin"],
+  "budget.configure": ["admin"],
+  "assignment.commit": ["admin", "member"],
+  "assignment.correct": ["admin", "member"],
+  "refund.link": ["admin", "member"],
+  // One-time local-to-cloud migration (#98): only a Household admin may
+  // bulk-import — never a joined member, whose local data is separate.
+  import_bundle: ["admin"],
 };
 
-/** True when `role` may issue commands of kind `kind`. Viewers can issue nothing. */
-export function can(role: HouseholdRole, kind: CommandKind): boolean {
-  return CAPABILITY_MATRIX[kind].includes(role);
+/**
+ * True when `role` may issue commands of kind `kind`. Viewers can issue
+ * nothing; a role slug Trove does not know grants nothing either.
+ */
+export function can(role: string, kind: CommandKind): boolean {
+  return isHouseholdRole(role) && CAPABILITY_MATRIX[kind].includes(role);
 }
 
 /** Label surfaced on `forbidden` results so clients know what was missing. */

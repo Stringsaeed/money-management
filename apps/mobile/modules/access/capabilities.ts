@@ -11,7 +11,7 @@ export function attachCapabilities(
   deps: {
     readonly beginAuth: (target: ReturnTo) => void;
     readonly signOut: () => Promise<void>;
-    readonly setActiveHousehold: (householdId: string) => Promise<void>;
+    readonly setActiveHousehold: (householdId: string | null) => Promise<void>;
     readonly retryHouseholds: () => void;
   },
 ): AccessState {
@@ -32,6 +32,7 @@ export function attachCapabilities(
     user: core.user,
     household: householdWithRetry(core.household, deps.retryHouseholds),
     memberships: core.memberships,
+    selection: core.selection,
     setActiveHousehold: deps.setActiveHousehold,
     signOut: deps.signOut,
   };

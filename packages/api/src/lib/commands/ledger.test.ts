@@ -49,28 +49,25 @@ async function setupHousehold(): Promise<TestDb> {
     createdByUserId: OUTSIDER,
   });
   await database.insert(membership).values([
-    { id: "membership-owner", userId: OWNER, householdId: HOUSEHOLD_ID, role: "owner", version: 0 },
-    { id: "membership-admin", userId: ADMIN, householdId: HOUSEHOLD_ID, role: "admin", version: 0 },
+    { id: "membership-owner", userId: OWNER, householdId: HOUSEHOLD_ID, role: "admin" },
+    { id: "membership-admin", userId: ADMIN, householdId: HOUSEHOLD_ID, role: "admin" },
     {
       id: "membership-member",
       userId: MEMBER,
       householdId: HOUSEHOLD_ID,
       role: "member",
-      version: 0,
     },
     {
       id: "membership-viewer",
       userId: VIEWER,
       householdId: HOUSEHOLD_ID,
       role: "viewer",
-      version: 0,
     },
     {
       id: "membership-outsider",
       userId: OUTSIDER,
       householdId: OTHER_HOUSEHOLD_ID,
-      role: "owner",
-      version: 0,
+      role: "admin",
     },
   ]);
   return database;

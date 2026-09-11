@@ -13,8 +13,8 @@ import { isCommandKind, resolveCommandScope } from "@trove/protocol";
 import { ORPCError } from "@orpc/server";
 
 import { commandResult, householdChange } from "@trove/db/schema/commands";
-import { membership } from "@trove/db/schema/household";
 
+import { findActiveMembership } from "../membership/access";
 import { can, requiredCapability } from "./capabilities";
 import { COMMAND_HANDLERS, type CommandHandler } from "./handlers";
 import {
@@ -162,14 +162,10 @@ async function authorizeEnvelope(
   }
   const binding = bindLedgerScope(scope);
   if (scope.type === "personal") {
-    return { scope, binding, actorRole: "owner" };
+    // The owner of a Personal Ledger holds every capability over it.
+    return { scope, binding, actorRole: "admin" };
   }
-  const membershipRows = await db
-    .select()
-    .from(membership)
-    .where(and(eq(membership.userId, userId), eq(membership.householdId, scope.organizationId)))
-    .limit(1);
-  const actorMembership = membershipRows[0];
+  const actorMembership = await findActiveMembership(db, userId, scope.organizationId);
   if (!actorMembership) {
     return {
       rejected: {
@@ -179,7 +175,7 @@ async function authorizeEnvelope(
       },
     };
   }
-  return { scope, binding, actorRole: actorMembership.role as HouseholdRole };
+  return { scope, binding, actorRole: actorMembership.role };
 }
 
 /** A Personal Ledger is provisioned by its owner's first write, not up front. */

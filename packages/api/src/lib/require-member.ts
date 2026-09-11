@@ -1,4 +1,3 @@
-import { and, eq } from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
 import {
   isPersonalLedgerId,
@@ -8,9 +7,8 @@ import {
   type CommandScope,
 } from "@trove/protocol";
 
-import { membership } from "@trove/db/schema/household";
-
 import type { CommandDatabase } from "./commands/types";
+import { findActiveMembership } from "./membership/access";
 
 /** A caller already narrowed to one household context. */
 export interface HouseholdCaller {
@@ -25,24 +23,20 @@ export interface LedgerCaller {
 }
 
 /**
- * Household tenancy gate shared by budget-domain reads. D1 has no RLS and no
+ * Household tenancy gate shared by budget-domain reads. There is no RLS and no
  * DB-level backstop — this check is what keeps one household out of another's
  * data, so every entry point must run it before any scoped read.
  *
- * Any member role may pass, including `viewer`: reads are allowed, writes are
- * separately gated by the command capability map (`can(role, kind)`).
+ * Any active member role may pass, including `viewer`: reads are allowed,
+ * writes are separately gated by the command capability map (`can(role, kind)`).
  */
 export async function requireHouseholdMember(
   db: CommandDatabase,
   userId: string,
   householdId: string,
 ): Promise<void> {
-  const rows = await db
-    .select({ id: membership.id })
-    .from(membership)
-    .where(and(eq(membership.userId, userId), eq(membership.householdId, householdId)))
-    .limit(1);
-  if (!rows[0]) {
+  const active = await findActiveMembership(db, userId, householdId);
+  if (!active) {
     throw new ORPCError("FORBIDDEN", {
       message: "You are not a member of this household.",
     });

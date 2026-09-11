@@ -11,6 +11,8 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
 import { appLinks } from "./app-links";
+import { memberWidget } from "./member-widget";
+import { workosWebhooks } from "./workos-webhooks";
 
 const app = new Hono();
 
@@ -26,6 +28,8 @@ app.use(
 );
 
 app.route("/", appLinks);
+app.route("/", memberWidget);
+app.route("/", workosWebhooks);
 
 app.get("/api/powersync/jwks.json", () => createPowerSyncJwksResponse(getPowerSyncServerConfig()));
 

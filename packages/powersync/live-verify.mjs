@@ -266,14 +266,18 @@ async function seed() {
       (${userC}, 'Z3 User C', ${`${userC}@example.test`}, true, now(), now())
   `;
   await sql`
+    INSERT INTO ledger (id, kind, organization_id, created_at, updated_at)
+    VALUES (${householdId}, 'organization', ${householdId}, now(), now())
+  `;
+  await sql`
     INSERT INTO household (id, name, created_by_user_id, created_at, updated_at)
     VALUES (${householdId}, 'Z3 verification', ${userA}, now(), now())
   `;
   await sql`
-    INSERT INTO membership (id, user_id, household_id, role, version, is_active, created_at)
+    INSERT INTO membership (id, user_id, household_id, role, status, created_at)
     VALUES
-      (${`${runId}-membership-a`}, ${userA}, ${householdId}, 'owner', 0, true, now()),
-      (${`${runId}-membership-b`}, ${userB}, ${householdId}, 'member', 0, true, now())
+      (${`${runId}-membership-a`}, ${userA}, ${householdId}, 'admin', 'active', now()),
+      (${`${runId}-membership-b`}, ${userB}, ${householdId}, 'member', 'active', now())
   `;
   await sql`
     INSERT INTO accounts (

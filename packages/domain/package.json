@@ -11,10 +11,6 @@
       "types": "./dist/calendar.d.ts",
       "default": "./dist/calendar.js"
     },
-    "./member-role-change": {
-      "types": "./dist/member-role-change.d.ts",
-      "default": "./dist/member-role-change.js"
-    },
     "./assignment-waterfall": {
       "types": "./dist/assignment-waterfall.d.ts",
       "default": "./dist/assignment-waterfall.js"

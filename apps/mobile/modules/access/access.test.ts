@@ -43,9 +43,8 @@ const other: Identity = {
 const activeMembership: MembershipSummary = {
   householdId: "hh-1",
   name: "Home",
-  role: "owner",
-  isActive: true,
-  createdAt: "2026-01-01T00:00:00.000Z",
+  role: "admin",
+  joinedAt: "2026-01-01T00:00:00.000Z",
 };
 
 const loadedActive: HouseholdRead = {
@@ -59,6 +58,9 @@ const held: IdentityClaim = {
   establishedAt: "2026-02-01T00:00:00.000Z",
 };
 
+const householdSelection = { kind: "household", householdId: "hh-1" } as const;
+const personalSelection = { kind: "personal" } as const;
+
 const signedInActive: AccessCore = {
   kind: "signed_in",
   user,
@@ -66,9 +68,10 @@ const signedInActive: AccessCore = {
     kind: "active",
     householdId: "hh-1",
     name: "Home",
-    role: "owner",
+    role: "admin",
   },
   memberships: [activeMembership],
+  selection: householdSelection,
 };
 
 describe("resolveAccess", () => {
@@ -118,6 +121,7 @@ describe("resolveAccess", () => {
         user,
         household: { kind: "unavailable" },
         memberships: [],
+        selection: personalSelection,
       },
     },
     {
@@ -148,7 +152,9 @@ describe("resolveAccess", () => {
     households: HouseholdRead;
     expected: AccessCore;
   }[])("$name", ({ claim, probe, households, expected }) => {
-    expect(resolveAccess({ claim, probe, households })).toEqual(expected);
+    expect(resolveAccess({ claim, probe, households, selection: householdSelection })).toEqual(
+      expected,
+    );
   });
 
   it("keeps signed_in when listMine fails instead of treating it as signed out", () => {
@@ -157,12 +163,14 @@ describe("resolveAccess", () => {
         claim: held,
         probe: { kind: "session", user },
         households: { kind: "failed" },
+        selection: householdSelection,
       }),
     ).toEqual({
       kind: "signed_in",
       user,
       household: { kind: "unavailable" },
       memberships: [],
+      selection: personalSelection,
     });
   });
 
@@ -171,6 +179,7 @@ describe("resolveAccess", () => {
       claim: held,
       probe: { kind: "unreachable" },
       households: { kind: "failed" },
+      selection: householdSelection,
     });
     expect(access.kind).toBe("signed_in");
     expect(access).not.toMatchObject({ kind: "session_revoked" });
@@ -206,29 +215,29 @@ describe("nextClaim", () => {
 });
 
 describe("pickActiveHousehold", () => {
-  it("returns at most one active household, preferring the newest createdAt", () => {
-    const older: MembershipSummary = {
+  it("returns the selected household when membership still exists", () => {
+    const other: MembershipSummary = {
       ...activeMembership,
-      householdId: "hh-old",
-      name: "Old",
-      createdAt: "2025-01-01T00:00:00.000Z",
+      householdId: "hh-2",
+      name: "Other",
+      joinedAt: "2026-06-01T00:00:00.000Z",
     };
-    const newer: MembershipSummary = {
-      ...activeMembership,
-      householdId: "hh-new",
-      name: "New",
-      createdAt: "2026-06-01T00:00:00.000Z",
-    };
-    expect(pickActiveHousehold([older, newer])).toEqual({
+    expect(
+      pickActiveHousehold([activeMembership, other], {
+        kind: "household",
+        householdId: "hh-2",
+      }),
+    ).toEqual({
       kind: "active",
-      householdId: "hh-new",
-      name: "New",
-      role: "owner",
+      householdId: "hh-2",
+      name: "Other",
+      role: "admin",
     });
   });
 
-  it("returns null when no membership is active", () => {
-    expect(pickActiveHousehold([{ ...activeMembership, isActive: false }])).toBeNull();
+  it("returns null for Personal selection or unknown household ids", () => {
+    expect(pickActiveHousehold([activeMembership], { kind: "personal" })).toBeNull();
+    expect(pickActiveHousehold([], { kind: "household", householdId: "hh-1" })).toBeNull();
   });
 });
 
@@ -240,7 +249,13 @@ describe("resolveReturnDestination", () => {
   it("returns Profile & household when there is no active household", () => {
     expect(
       resolveReturnDestination(
-        { kind: "signed_in", user, household: { kind: "none" }, memberships: [] },
+        {
+          kind: "signed_in",
+          user,
+          household: { kind: "none" },
+          memberships: [],
+          selection: personalSelection,
+        },
         returnTo.parse("/(tabs)"),
       ),
     ).toBe(PROFILE_HOUSEHOLD_HREF);
@@ -293,6 +308,7 @@ describe("selectLedgerSourceForAccess", () => {
       user,
       household: { kind: "unavailable" },
       memberships: [],
+      selection: personalSelection,
     };
     expect(selectLedgerSourceForAccess(unavailable, NO_SYNC_ENROLLMENT, "synced", null).kind).toBe(
       "local",
@@ -328,6 +344,7 @@ describe("selectLedgerSourceForAccess", () => {
       claim: held,
       probe: null,
       households: loadedActive,
+      selection: householdSelection,
     });
     expect(selectLedgerSourceForAccess(access, migratedTo("hh-1"), "synced", null)).toEqual({
       kind: "synced",
@@ -342,6 +359,7 @@ describe("selectLedgerSourceForAccess", () => {
       user,
       household: { kind: "none" },
       memberships: [],
+      selection: personalSelection,
     };
     const enrollment: SyncEnrollment = {
       migratedHouseholdId: null,
@@ -360,6 +378,7 @@ describe("selectLedgerSourceForAccess", () => {
       user,
       household: { kind: "unavailable" },
       memberships: [],
+      selection: personalSelection,
     };
     const enrollment: SyncEnrollment = {
       migratedHouseholdId: null,

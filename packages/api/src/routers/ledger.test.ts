@@ -27,13 +27,12 @@ beforeEach(async () => {
     createdByUserId: OWNER,
   });
   await db.insert(membership).values([
-    { id: "membership-owner", userId: OWNER, householdId: HOUSEHOLD_ID, role: "owner", version: 0 },
+    { id: "membership-owner", userId: OWNER, householdId: HOUSEHOLD_ID, role: "admin" },
     {
       id: "membership-member",
       userId: MEMBER,
       householdId: HOUSEHOLD_ID,
       role: "member",
-      version: 0,
     },
   ]);
   await db.insert(ledgerAccount).values([

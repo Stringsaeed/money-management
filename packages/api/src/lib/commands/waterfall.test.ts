@@ -48,8 +48,7 @@ async function setupHousehold(): Promise<TestDb> {
     id: "membership-owner",
     userId: OWNER,
     householdId: HOUSEHOLD_ID,
-    role: "owner",
-    version: 0,
+    role: "admin",
   });
   return database;
 }
@@ -162,7 +161,7 @@ const planContext = (): HouseholdPlanContext => ({
   scope: { type: "organization", organizationId: HOUSEHOLD_ID },
   householdId: HOUSEHOLD_ID,
   actorUserId: OWNER,
-  actorRole: "owner",
+  actorRole: "admin",
 });
 
 async function planTopUp(envelopeId: string, amountMinor: number): Promise<CommandPlan> {

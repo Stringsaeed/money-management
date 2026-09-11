@@ -11,7 +11,6 @@ import { HouseholdMembers } from "./household-members";
 import { ActiveHouseholdPanel } from "./active-household-panel";
 
 const mockCreateMutateAsync = jest.fn();
-const mockAcceptMutateAsync = jest.fn();
 const mockEnableSync = jest.fn();
 type EnableSyncMockState = {
   status: EnableSyncStatus;
@@ -23,8 +22,7 @@ const mockEnableSyncState: EnableSyncMockState = {
   error: null,
   discrepancy: null,
 };
-const mockTransferMutate = jest.fn();
-const mockGenerateInviteMutate = jest.fn();
+const mockOpenWidgetMutate = jest.fn();
 const mockLeaveMutate = jest.fn();
 const mockDeleteMutate = jest.fn();
 
@@ -34,17 +32,11 @@ jest.mock("@/hooks/use-households", () => ({
     isPending: false,
     isError: false,
   }),
-  useAcceptInvite: () => ({
-    mutateAsync: mockAcceptMutateAsync,
+  useOpenMemberWidget: () => ({
+    mutate: mockOpenWidgetMutate,
     isPending: false,
     isError: false,
   }),
-  useTransferOwnership: () => ({
-    mutate: mockTransferMutate,
-    isPending: false,
-    isError: false,
-  }),
-  useGenerateInvite: () => ({ mutate: mockGenerateInviteMutate }),
   useLeaveHousehold: () => ({ mutate: mockLeaveMutate }),
   useDeleteHousehold: () => ({ mutate: mockDeleteMutate }),
 }));
@@ -82,20 +74,10 @@ describe("CreateHouseholdForm", () => {
 });
 
 describe("JoinHouseholdForm", () => {
-  beforeEach(() => {
-    mockAcceptMutateAsync.mockReset().mockResolvedValue(undefined);
-  });
-
-  it("joins with a valid invite code", async () => {
+  it("explains WorkOS invitation email instead of invite codes", async () => {
     await render(<JoinHouseholdForm />);
-    await fireEvent.changeText(
-      screen.getByPlaceholderText("Invite code (e.g. ABCD2345)"),
-      "ABCD2345",
-    );
-    await fireEvent.press(screen.getByText("🤝 Join household"));
-    await waitFor(() => {
-      expect(mockAcceptMutateAsync).toHaveBeenCalledWith("ABCD2345");
-    });
+    expect(screen.getByText(/invitation link/i)).toBeOnTheScreen();
+    expect(screen.queryByPlaceholderText(/Invite code/i)).toBeNull();
   });
 });
 
@@ -144,23 +126,16 @@ describe("EnableSyncCard", () => {
 });
 
 describe("HouseholdMembers", () => {
-  it("confirms ownership transfer from Make owner", async () => {
-    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation((_title, _message, buttons) => {
-      const transfer = buttons?.find((button) => button.text === "Transfer");
-      transfer?.onPress?.();
-    });
-
+  it("renders WorkOS roles without ownership transfer", async () => {
     await render(
       <HouseholdMembers
-        householdId="hh-1"
-        currentUserId="owner-1"
-        isOwner
+        currentUserId="admin-1"
         members={[
           {
-            userId: "owner-1",
+            userId: "admin-1",
             userName: "Ada",
             userEmail: "ada@trove.ing",
-            role: "owner",
+            role: "admin",
           },
           {
             userId: "member-2",
@@ -172,44 +147,85 @@ describe("HouseholdMembers", () => {
       />,
     );
 
-    await fireEvent.press(screen.getByText("Make owner"));
-    expect(mockTransferMutate).toHaveBeenCalledWith({
-      householdId: "hh-1",
-      userId: "member-2",
-    });
-    alertSpy.mockRestore();
+    expect(screen.getByText(/Admin/)).toBeOnTheScreen();
+    expect(screen.getByText("Member")).toBeOnTheScreen();
+    expect(screen.queryByText("Make owner")).toBeNull();
   });
 });
 
 describe("ActiveHouseholdPanel", () => {
-  it("renders invite and leave actions for members", async () => {
+  beforeEach(() => {
+    mockOpenWidgetMutate.mockReset();
+    mockLeaveMutate.mockReset();
+    mockDeleteMutate.mockReset();
+  });
+
+  it("renders manage and leave actions for admins", async () => {
+    await render(
+      <ActiveHouseholdPanel
+        householdId="hh-1"
+        name="The Saeeds"
+        currentUserId="admin-1"
+        isAdmin
+        needsSync={false}
+        members={[]}
+      />,
+    );
+
+    expect(screen.getByText("Manage 👥")).toBeOnTheScreen();
+    expect(screen.getByText("Delete household")).toBeOnTheScreen();
+    expect(screen.getByText("Leave household")).toBeOnTheScreen();
+  });
+
+  it("hides manage for non-admins and shows leave", async () => {
     await render(
       <ActiveHouseholdPanel
         householdId="hh-1"
         name="The Saeeds"
         currentUserId="member-1"
-        isOwner={false}
+        isAdmin={false}
         needsSync={false}
         members={[]}
       />,
     );
 
-    expect(screen.getByText("Invite 🎟️")).toBeOnTheScreen();
+    expect(screen.queryByText("Manage 👥")).toBeNull();
     expect(screen.getByText("Leave household")).toBeOnTheScreen();
+    expect(screen.queryByText("Delete household")).toBeNull();
   });
 
-  it("renders delete for owners", async () => {
+  it("opens the member widget for admins", async () => {
     await render(
       <ActiveHouseholdPanel
         householdId="hh-1"
         name="The Saeeds"
-        currentUserId="owner-1"
-        isOwner
+        currentUserId="admin-1"
+        isAdmin
         needsSync={false}
         members={[]}
       />,
     );
+    await fireEvent.press(screen.getByTestId("manage-household-members"));
+    expect(mockOpenWidgetMutate).toHaveBeenCalledWith("hh-1", expect.any(Object));
+  });
 
-    expect(screen.getByText("Delete household")).toBeOnTheScreen();
+  it("confirms delete for admins", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation((_title, _message, buttons) => {
+      const del = buttons?.find((button) => button.text === "Delete");
+      del?.onPress?.();
+    });
+    await render(
+      <ActiveHouseholdPanel
+        householdId="hh-1"
+        name="The Saeeds"
+        currentUserId="admin-1"
+        isAdmin
+        needsSync={false}
+        members={[]}
+      />,
+    );
+    await fireEvent.press(screen.getByTestId("delete-household"));
+    expect(mockDeleteMutate).toHaveBeenCalledWith("hh-1");
+    alertSpy.mockRestore();
   });
 });

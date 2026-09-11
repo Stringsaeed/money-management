@@ -42,6 +42,7 @@ describe("settings/household", () => {
       household: { kind: "none" },
       memberships: [],
       setActiveHousehold: jest.fn(),
+      selection: { kind: "personal" },
       signOut: jest.fn(),
     });
     await render(<HouseholdScreen />);

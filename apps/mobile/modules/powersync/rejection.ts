@@ -81,10 +81,7 @@ export function parseRejection(value: unknown): RejectionResult {
       return {
         kind: "forbidden",
         role:
-          record.role === "owner" ||
-          record.role === "admin" ||
-          record.role === "member" ||
-          record.role === "viewer"
+          record.role === "admin" || record.role === "member" || record.role === "viewer"
             ? record.role
             : null,
         requiredCapability: toStringOr(record.requiredCapability, "unknown capability"),
