@@ -24,11 +24,16 @@ const KILL_SWITCH_POLL_INTERVAL_MS = 5 * 60_000;
 const QUEUE_STATUS_INTERVAL_MS = 5_000;
 const EMPTY_REJECTED_CHANGES: readonly RejectedChange[] = [];
 
-export function useSyncWorker(
-  householdId: string | null,
-  userId?: string,
-  preserveWhenIneligible = false,
-) {
+export interface UseSyncWorkerInput {
+  readonly householdId: string | null;
+  readonly userId?: string;
+  readonly syncPersonalLedger?: boolean;
+  readonly preserveWhenIneligible?: boolean;
+}
+
+export function useSyncWorker(input: UseSyncWorkerInput) {
+  const { householdId, userId, syncPersonalLedger = false, preserveWhenIneligible = false } = input;
+  const syncActive = Boolean(userId && (householdId || syncPersonalLedger));
   const [pendingCount, setPendingCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastError, setLastError] = useState<Error | null>(null);
@@ -41,7 +46,7 @@ export function useSyncWorker(
   const statusQuery = useQuery({
     queryKey: ["sync", "status", householdId],
     queryFn: () => orpc.sync.status(),
-    enabled: Boolean(householdId && userId),
+    enabled: syncActive,
     refetchInterval: KILL_SWITCH_POLL_INTERVAL_MS,
   });
 
@@ -105,7 +110,7 @@ export function useSyncWorker(
   );
 
   const syncNow = useCallback(async () => {
-    if (!householdId || !userId || statusQuery.data?.killSwitchLocalOnly) return;
+    if (!syncActive || !userId || statusQuery.data?.killSwitchLocalOnly) return;
     if (syncingRef.current) return;
     syncingRef.current = true;
     setIsSyncing(true);
@@ -119,13 +124,7 @@ export function useSyncWorker(
       syncingRef.current = false;
       setIsSyncing(false);
     }
-  }, [
-    householdId,
-    observeAvailability,
-    refreshPendingCount,
-    statusQuery.data?.killSwitchLocalOnly,
-    userId,
-  ]);
+  }, [observeAvailability, refreshPendingCount, statusQuery.data?.killSwitchLocalOnly, syncActive]);
 
   useEffect(() => {
     const store = useSyncModeStore.getState();
@@ -133,6 +132,7 @@ export function useSyncWorker(
       {
         householdId,
         userId,
+        syncPersonalLedger,
         killSwitchLocalOnly: statusQuery.data?.killSwitchLocalOnly,
         preserveWhenIneligible,
       },
@@ -153,7 +153,7 @@ export function useSyncWorker(
     ).catch((error) => {
       setLastError(error instanceof Error ? error : new Error("PowerSync connection failed."));
     });
-    if (!householdId || !userId) setPendingCount(0);
+    if (!syncActive) setPendingCount(0);
   }, [
     clearAvailabilityObserver,
     householdId,
@@ -161,27 +161,29 @@ export function useSyncWorker(
     preserveWhenIneligible,
     refreshPendingCount,
     statusQuery.data,
+    syncActive,
+    syncPersonalLedger,
     userId,
   ]);
 
   useEffect(() => clearAvailabilityObserver, [clearAvailabilityObserver]);
 
   useEffect(() => {
-    if (!householdId || !userId) return;
+    if (!syncActive) return;
     const timer = setInterval(() => void refreshPendingCount(), QUEUE_STATUS_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [householdId, refreshPendingCount, userId]);
+  }, [refreshPendingCount, syncActive]);
 
   const refetchStatus = statusQuery.refetch;
   useEffect(() => {
-    if (!householdId || !userId) return;
+    if (!syncActive) return;
     const subscription = AppState.addEventListener("change", (state) => {
       if (state !== "active") return;
       void refetchStatus();
       void syncNow();
     });
     return () => subscription.remove();
-  }, [householdId, refetchStatus, syncNow, userId]);
+  }, [refetchStatus, syncActive, syncNow]);
 
   return {
     pendingCount,

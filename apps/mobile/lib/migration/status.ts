@@ -71,6 +71,17 @@ export async function clearHouseholdSyncEnrollment(db: LocalDb): Promise<void> {
   await db.delete(appSettings).where(eq(appSettings.key, COMPLETED_AT_KEY));
 }
 
+/** Clears Personal Ledger sync opt-in (#229 sign-out / identity change). */
+export async function clearPersonalSyncEnrollment(db: LocalDb): Promise<void> {
+  await db.delete(appSettings).where(eq(appSettings.key, PERSONAL_SYNC_USER_ID_KEY));
+}
+
+/** Clears both Household migration and Personal sync enrollment flags. */
+export async function clearAllSyncEnrollment(db: LocalDb): Promise<void> {
+  await clearHouseholdSyncEnrollment(db);
+  await clearPersonalSyncEnrollment(db);
+}
+
 /** Reads both sync opt-ins in one pass so the gate renders from one query. */
 export async function getSyncEnrollment(
   db: LocalDb,

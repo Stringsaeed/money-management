@@ -9,13 +9,16 @@ import { PersonalSyncCard } from "@/components/household/personal-sync-card";
 import { NativeHost, NativePrimaryButton, NativeSecondaryButton } from "@/components/native-ui";
 import { Card } from "@/components/settings/card";
 import { Text } from "@/components/ui/text";
+import { SignOutPendingSheet } from "@/components/access/sign-out-pending-sheet";
 import { useSyncEnrollment } from "@/hooks/use-enable-sync";
+import { useSignOutRequest } from "@/hooks/use-sign-out";
 import { useHouseholdDetail } from "@/hooks/use-households";
 import { NO_SYNC_ENROLLMENT, type AccessState } from "@/modules/access";
 
 type SignedInAccess = Extract<AccessState, { kind: "signed_in" }>;
 
 export function SignedInHousehold({ access }: { readonly access: SignedInAccess }) {
+  const signOutRequest = useSignOutRequest();
   const { data: detail } = useHouseholdDetail(
     access.household.kind === "active" ? access.household.householdId : null,
   );
@@ -27,7 +30,18 @@ export function SignedInHousehold({ access }: { readonly access: SignedInAccess 
 
   return (
     <>
-      <ProfileCard access={access} />
+      <ProfileCard access={access} onSignOut={signOutRequest.requestSignOut} />
+      {signOutRequest.sheetOpen ? (
+        <SignOutPendingSheet
+          open={signOutRequest.sheetOpen}
+          pendingCount={signOutRequest.pendingCount}
+          busy={signOutRequest.busy}
+          error={signOutRequest.error}
+          onSyncThenSignOut={() => void signOutRequest.syncThenSignOut()}
+          onDiscardAndSignOut={() => void signOutRequest.discardAndSignOut()}
+          onCancel={signOutRequest.cancelSignOut}
+        />
+      ) : null}
       {access.household.kind === "unavailable" ? <UnavailableCard access={access} /> : null}
       <LedgerSelector access={access} />
       {active ? (
@@ -49,7 +63,13 @@ export function SignedInHousehold({ access }: { readonly access: SignedInAccess 
   );
 }
 
-function ProfileCard({ access }: { readonly access: SignedInAccess }) {
+function ProfileCard({
+  access,
+  onSignOut,
+}: {
+  readonly access: SignedInAccess;
+  readonly onSignOut: () => void;
+}) {
   return (
     <Card>
       <View className="gap-3 p-4">
@@ -61,11 +81,7 @@ function ProfileCard({ access }: { readonly access: SignedInAccess }) {
             <Text className="text-xs text-ink/50">{access.user.email}</Text>
           </View>
           <NativeHost fillWidth={false}>
-            <NativeSecondaryButton
-              label="Sign out"
-              onPress={access.signOut}
-              testID="profile-sign-out"
-            />
+            <NativeSecondaryButton label="Sign out" onPress={onSignOut} testID="profile-sign-out" />
           </NativeHost>
         </View>
       </View>

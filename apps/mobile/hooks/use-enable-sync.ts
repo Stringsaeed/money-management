@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+
 import { useSQLiteContext } from "@/db/sqlite";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -7,6 +8,8 @@ import type { ImportManifest } from "@trove/protocol";
 import { useDatabase } from "@/db/client";
 import { backupLocalDatabase } from "@/lib/migration/backup";
 import { runImport } from "@/lib/migration/enable-sync";
+import { householdImportBinding, personalImportBinding } from "@/lib/migration/import-binding";
+import { isImportManifestEmpty, localLedgerHasImportRows } from "@/lib/migration/manifest-utils";
 import {
   getMigratedHouseholdId,
   getSyncEnrollment,
@@ -87,18 +90,18 @@ export function useEnableSync() {
         setStatus("uploading");
         const result = await runImport({
           db,
-          householdId,
+          binding: householdImportBinding(householdId),
           sendCommand: (envelope) =>
             orpc.commands.apply({
               ...envelope,
               preconditions: envelope.preconditions?.map((precondition) => ({ ...precondition })),
             }),
-          fetchManifest: (id) => orpc.migration.getManifest({ householdId: id }),
-          connectAndWait: async (id) => {
+          fetchManifest: () => orpc.migration.getManifest({ householdId }),
+          connectAndWait: async () => {
             if (!userId) throw new Error("Sign in again before finishing PowerSync migration.");
             const powerSync = await connectPowerSync(userId);
             const subscription = await powerSync
-              .syncStream("household_ledger", { household_id: id })
+              .syncStream("household_ledger", { household_id: householdId })
               .subscribe();
             try {
               await subscription.waitForFirstSync();
@@ -168,21 +171,85 @@ export function useSyncEnrollment() {
   });
 }
 
-export type PersonalSyncStatus = "idle" | "connecting" | "enabled" | "error";
+export type PersonalSyncStatus =
+  | "idle"
+  | "probing"
+  | "confirm_upload"
+  | "backing_up"
+  | "uploading"
+  | "verifying"
+  | "connecting"
+  | "enabled"
+  | "error";
+
+export type PersonalCloudMode = "empty" | "populated" | null;
 
 /**
- * Turns on Personal Ledger sync (#226) for the signed-in User.
- *
- * Unlike {@link useEnableSync} this creates no Household and uploads nothing:
- * the cloud ledger starts empty and this device's existing local rows stay
- * exactly where they are, readable again the moment sync is turned back off.
+ * Personal Ledger sync (#226 / #229): probe the cloud, optionally confirm a
+ * one-time upload from this device, or open an already-populated cloud while
+ * keeping the independent local SQLite ledger intact.
  */
 export function useEnablePersonalSync() {
   const db = useDatabase();
+  const sqlite = useSQLiteContext();
   const queryClient = useQueryClient();
   const userId = signedInUserId(useAccess());
   const [status, setStatus] = useState<PersonalSyncStatus>("idle");
+  const [cloudMode, setCloudMode] = useState<PersonalCloudMode>(null);
   const [error, setError] = useState<Error | null>(null);
+
+  const waitForPersonalFirstSync = useCallback(async () => {
+    if (!userId) throw new Error("Sign in before turning on sync for your personal ledger.");
+    const powerSync = await connectPowerSync(userId);
+    await powerSync.waitForFirstSync();
+  }, [userId]);
+
+  const markPersonalReady = useCallback(async () => {
+    if (!userId) throw new Error("Sign in before turning on sync for your personal ledger.");
+    await markPersonalSyncEnabled(db, userId);
+    useSyncModeStore.getState().setSynced();
+    await queryClient.invalidateQueries({ queryKey: ["migration"] });
+    setStatus("enabled");
+  }, [db, queryClient, userId]);
+
+  const finishPersonalEnrollment = useCallback(async () => {
+    await waitForPersonalFirstSync();
+    await markPersonalReady();
+  }, [markPersonalReady, waitForPersonalFirstSync]);
+
+  const runPersonalImport = useCallback(async () => {
+    if (!userId) throw new Error("Sign in before uploading to your personal ledger.");
+    setStatus("backing_up");
+    await backupLocalDatabase(sqlite);
+    setStatus("uploading");
+    const binding = personalImportBinding(userId);
+    const result = await runImport({
+      db,
+      binding,
+      sendCommand: (envelope) =>
+        orpc.commands.apply({
+          ...envelope,
+          preconditions: envelope.preconditions?.map((precondition) => ({ ...precondition })),
+        }),
+      fetchManifest: () => orpc.migration.getManifest({ scope: "personal" }),
+      // First sync only — enroll after manifests match so a mismatch stays recoverable.
+      connectAndWait: waitForPersonalFirstSync,
+    });
+    if (result.status === "rejected") {
+      const rejection = parseRejection(result.result);
+      const detail = rejection ? describeRejection(rejection) : result.result.kind;
+      throw new Error(
+        `Import paused while uploading "${result.entityType}" (chunk ${result.chunkIndex + 1}): ${detail}`,
+      );
+    }
+    if (result.status === "mismatched") {
+      throw new Error(
+        "Personal import finished but manifests did not match. Your backup is intact.",
+      );
+    }
+    setStatus("verifying");
+    await markPersonalReady();
+  }, [db, markPersonalReady, sqlite, userId, waitForPersonalFirstSync]);
 
   const enablePersonalSync = useCallback(async () => {
     setError(null);
@@ -192,21 +259,54 @@ export function useEnablePersonalSync() {
       return;
     }
     try {
+      setStatus("probing");
+      const [serverManifest, hasLocalRows] = await Promise.all([
+        orpc.migration.getManifest({ scope: "personal" }),
+        localLedgerHasImportRows(db),
+      ]);
+      const cloudEmpty = isImportManifestEmpty(serverManifest);
+      if (!cloudEmpty) {
+        setCloudMode("populated");
+        setStatus("connecting");
+        await finishPersonalEnrollment();
+        return;
+      }
+      if (hasLocalRows) {
+        setCloudMode("empty");
+        setStatus("confirm_upload");
+        return;
+      }
+      setCloudMode("empty");
       setStatus("connecting");
-      // personal_ledger auto-subscribes, so the database-level first sync is
-      // the only signal that the empty ledger has arrived.
-      const powerSync = await connectPowerSync(userId);
-      await powerSync.waitForFirstSync();
-
-      await markPersonalSyncEnabled(db, userId);
-      useSyncModeStore.getState().setSynced();
-      await queryClient.invalidateQueries({ queryKey: ["migration"] });
-      setStatus("enabled");
+      await finishPersonalEnrollment();
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err : new Error("Could not turn on personal sync."));
     }
-  }, [db, queryClient, userId]);
+  }, [db, finishPersonalEnrollment, userId]);
 
-  return { status, error, enablePersonalSync };
+  const confirmPersonalUpload = useCallback(async () => {
+    setError(null);
+    try {
+      await runPersonalImport();
+    } catch (err) {
+      setStatus("error");
+      setError(err instanceof Error ? err : new Error("Personal upload failed."));
+    }
+  }, [runPersonalImport]);
+
+  const cancelPersonalUpload = useCallback(() => {
+    setStatus("idle");
+    setCloudMode(null);
+    setError(null);
+  }, []);
+
+  return {
+    status,
+    cloudMode,
+    error,
+    enablePersonalSync,
+    confirmPersonalUpload,
+    cancelPersonalUpload,
+  };
 }

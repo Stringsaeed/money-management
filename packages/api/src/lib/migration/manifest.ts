@@ -37,9 +37,9 @@ const importAggregateSchema = z
 
 export async function computeImportManifest(
   db: CommandDatabase,
-  householdId: string,
+  ledgerId: string,
 ): Promise<ImportManifest> {
-  return db.transaction((tx) => computeImportManifestSnapshot(tx, householdId), {
+  return db.transaction((tx) => computeImportManifestSnapshot(tx, ledgerId), {
     isolationLevel: "repeatable read",
     accessMode: "read only",
   });
@@ -49,7 +49,7 @@ type ManifestDatabase = Pick<CommandDatabase, "select">;
 
 async function computeImportManifestSnapshot(
   db: ManifestDatabase,
-  householdId: string,
+  ledgerId: string,
 ): Promise<ImportManifest> {
   const [
     accountCount,
@@ -71,34 +71,34 @@ async function computeImportManifestSnapshot(
     db
       .select({ count: sql<ImportAggregate>`COUNT(*)` })
       .from(ledgerAccount)
-      .where(eq(ledgerAccount.householdId, householdId)),
+      .where(eq(ledgerAccount.ledgerId, ledgerId)),
     db
       .select({ count: sql<ImportAggregate>`COUNT(*)` })
       .from(category)
-      .where(eq(category.householdId, householdId)),
+      .where(eq(category.ledgerId, ledgerId)),
     db
       .select({ count: sql<ImportAggregate>`COUNT(*)` })
       .from(transaction)
-      .where(eq(transaction.householdId, householdId)),
+      .where(eq(transaction.ledgerId, ledgerId)),
     db
       .select({
         key: transaction.accountId,
         total: sql<ImportAggregate>`COALESCE(SUM(${transaction.amountMinor}), 0)`,
       })
       .from(transaction)
-      .where(eq(transaction.householdId, householdId))
+      .where(eq(transaction.ledgerId, ledgerId))
       .groupBy(transaction.accountId),
-    db.select().from(ledgerAccount).where(eq(ledgerAccount.householdId, householdId)),
-    db.select().from(category).where(eq(category.householdId, householdId)),
-    db.select().from(transaction).where(eq(transaction.householdId, householdId)),
-    db.select().from(recurringRule).where(eq(recurringRule.householdId, householdId)),
-    db.select().from(budgetWorkspace).where(eq(budgetWorkspace.householdId, householdId)),
-    db.select().from(envelope).where(eq(envelope.householdId, householdId)),
-    db.select().from(categoryMapping).where(eq(categoryMapping.householdId, householdId)),
-    db.select().from(fundingMembership).where(eq(fundingMembership.householdId, householdId)),
-    db.select().from(rolloverSetting).where(eq(rolloverSetting.householdId, householdId)),
-    db.select().from(assignment).where(eq(assignment.householdId, householdId)),
-    db.select().from(recurringOccurrence).where(eq(recurringOccurrence.householdId, householdId)),
+    db.select().from(ledgerAccount).where(eq(ledgerAccount.ledgerId, ledgerId)),
+    db.select().from(category).where(eq(category.ledgerId, ledgerId)),
+    db.select().from(transaction).where(eq(transaction.ledgerId, ledgerId)),
+    db.select().from(recurringRule).where(eq(recurringRule.ledgerId, ledgerId)),
+    db.select().from(budgetWorkspace).where(eq(budgetWorkspace.ledgerId, ledgerId)),
+    db.select().from(envelope).where(eq(envelope.ledgerId, ledgerId)),
+    db.select().from(categoryMapping).where(eq(categoryMapping.ledgerId, ledgerId)),
+    db.select().from(fundingMembership).where(eq(fundingMembership.ledgerId, ledgerId)),
+    db.select().from(rolloverSetting).where(eq(rolloverSetting.ledgerId, ledgerId)),
+    db.select().from(assignment).where(eq(assignment.ledgerId, ledgerId)),
+    db.select().from(recurringOccurrence).where(eq(recurringOccurrence.ledgerId, ledgerId)),
   ]);
   const canonicalContent = canonicalizeImportContent([
     ...accountRows.map(accountContentRow),

@@ -160,12 +160,41 @@ describe("personal ledger commands — no Household required", () => {
     expect(rows[0]).toMatchObject({ id: CARLA, name: "Carla", email: "Carla@Example.com" });
   });
 
-  it("rejects Household-only intents with a typed invalid_intent", async () => {
-    const result = await applyAs(ALICE, personalEnvelope("import_bundle", { entities: [] }));
+  it("accepts import_bundle on personal scope", async () => {
+    const applied = expectApplied(
+      await applyAs(
+        ALICE,
+        personalEnvelope("import_bundle", {
+          entityType: "account",
+          chunkIndex: 0,
+          chunkCount: 1,
+          rows: [
+            {
+              id: "acc-import-1",
+              name: "Imported",
+              type: "cash",
+              currency: "USD",
+              color: "#4A90D9",
+              icon: "banknote.fill",
+              initialBalanceMinor: 0,
+              excludeFromTotal: false,
+              sortOrder: 0,
+              lifecycle: "active",
+              lifecycleChangedAt: null,
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+        }),
+      ),
+    );
 
-    expect(result).toMatchObject({
-      kind: "invalid_intent",
-      issues: [expect.objectContaining({ field: "scope" })],
+    expect(applied.seq).toBe(1);
+    const [row] = await db.select().from(ledgerAccount);
+    expect(row).toMatchObject({
+      id: "acc-import-1",
+      ledgerId: personalLedgerId(ALICE),
+      householdId: null,
     });
   });
 

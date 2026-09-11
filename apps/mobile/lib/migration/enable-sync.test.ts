@@ -7,6 +7,7 @@ import type {
   ImportBundlePayload,
   ImportManifest,
 } from "@trove/protocol";
+import { personalLedgerId } from "@trove/protocol";
 
 import { migrateAccountLifecycle } from "@/db/account-lifecycle-migration";
 import { migrateBudgeting } from "@/db/budgeting-migration";
@@ -16,6 +17,7 @@ import * as schema from "@/db/schema";
 import { accounts } from "@/db/schema";
 import { applyLegacyMigrations, createTestSQLiteDatabase } from "@/tests/test-utils/sqlite";
 
+import { personalImportBinding } from "./import-binding";
 import { runImport } from "./enable-sync";
 import { computeLocalManifest, type LocalDb } from "./manifest";
 
@@ -89,7 +91,7 @@ describe("runImport", () => {
     const connectAndWait = jest.fn(async () => undefined);
     const result = await runImport({
       db,
-      householdId: HOUSEHOLD_ID,
+      binding: { kind: "household", householdId: HOUSEHOLD_ID, ledgerId: HOUSEHOLD_ID },
       sendCommand: async (envelope) => {
         sent.push(envelope);
         return APPLIED_RESULT;
@@ -103,7 +105,7 @@ describe("runImport", () => {
     expect(sent[0]?.householdId).toBe(HOUSEHOLD_ID);
     expect(sent[0]?.kind).toBe("import_bundle");
     expect(sent[0]?.payload.entityType).toBe("account");
-    expect(connectAndWait).toHaveBeenCalledWith(HOUSEHOLD_ID);
+    expect(connectAndWait).toHaveBeenCalledTimes(1);
   });
 
   it("stops uploading and reports rejected at the first non-applied result", async () => {
@@ -119,7 +121,7 @@ describe("runImport", () => {
     const rejection: CommandResult = { kind: "forbidden", role: "member", requiredCapability: "x" };
     const result = await runImport({
       db,
-      householdId: HOUSEHOLD_ID,
+      binding: { kind: "household", householdId: HOUSEHOLD_ID, ledgerId: HOUSEHOLD_ID },
       sendCommand: async () => {
         calls += 1;
         return calls === 1 ? APPLIED_RESULT : rejection;
@@ -138,7 +140,7 @@ describe("runImport", () => {
     const db = await setupDb();
     const result = await runImport({
       db,
-      householdId: HOUSEHOLD_ID,
+      binding: { kind: "household", householdId: HOUSEHOLD_ID, ledgerId: HOUSEHOLD_ID },
       sendCommand: async () => APPLIED_RESULT,
       fetchManifest: async () => ({
         ...MATCHING_MANIFEST,
@@ -154,7 +156,7 @@ describe("runImport", () => {
     const uploadedSnapshot = await computeLocalManifest(db, HOUSEHOLD_ID);
     const result = await runImport({
       db,
-      householdId: HOUSEHOLD_ID,
+      binding: { kind: "household", householdId: HOUSEHOLD_ID, ledgerId: HOUSEHOLD_ID },
       sendCommand: async () => {
         await db.insert(schema.categories).values({
           id: "category-during-import",
@@ -173,5 +175,23 @@ describe("runImport", () => {
       expect(result.localManifest.rowCounts.category).toBe(1);
       expect(result.serverManifest.rowCounts.category).toBe(0);
     }
+  });
+
+  it("sends personal scope on personal import binding", async () => {
+    const db = await setupDb();
+    const matchingManifest = await computeLocalManifest(db, personalLedgerId("user-1"));
+    const sent: CommandEnvelope<ImportBundlePayload>[] = [];
+    await runImport({
+      db,
+      binding: personalImportBinding("user-1"),
+      sendCommand: async (envelope) => {
+        sent.push(envelope);
+        return APPLIED_RESULT;
+      },
+      fetchManifest: async () => matchingManifest,
+    });
+
+    expect(sent[0]?.scope).toEqual({ type: "personal" });
+    expect(sent[0]?.householdId).toBeUndefined();
   });
 });

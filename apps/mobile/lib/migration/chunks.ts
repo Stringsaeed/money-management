@@ -31,7 +31,7 @@ import type { LocalDb } from "./manifest";
  */
 export async function buildImportChunks(
   db: LocalDb,
-  householdId: string,
+  ledgerId: string,
 ): Promise<readonly ImportBundlePayload[]> {
   const chunks: ImportBundlePayload[] = [];
   // Categories keep a single global server id (no per-household scoping — required
@@ -41,7 +41,7 @@ export async function buildImportChunks(
   // by the time later entity types need to remap their categoryId (#194).
   const categoryIdMap = new Map<string, string>();
   for (const entityType of IMPORT_ENTITY_TYPES) {
-    const rows = await loadWireRows(db, entityType, householdId, categoryIdMap);
+    const rows = await loadWireRows(db, entityType, ledgerId, categoryIdMap);
     if (rows.length === 0) {
       continue;
     }
@@ -60,18 +60,18 @@ export async function buildImportChunks(
 }
 
 /**
- * Namespaces a locally seeded/created category id by household so two
- * households' categories never collide on the server's single global id
- * column. Deterministic, so a retry recomputes the same id (#194).
+ * Namespaces a locally seeded/created category id by ledger so two ledgers'
+ * categories never collide on the server's single global id column.
+ * Deterministic, so a retry recomputes the same id (#194 / #229).
  */
-function remapCategoryId(householdId: string, localCategoryId: string): string {
-  return `${householdId}::${localCategoryId}`;
+function remapCategoryId(ledgerId: string, localCategoryId: string): string {
+  return `${ledgerId}::${localCategoryId}`;
 }
 
 async function loadWireRows(
   db: LocalDb,
   entityType: ImportEntityType,
-  householdId: string,
+  ledgerId: string,
   categoryIdMap: Map<string, string>,
 ): Promise<readonly Record<string, unknown>[]> {
   switch (entityType) {
@@ -96,16 +96,16 @@ async function loadWireRows(
     case "category": {
       const rows = await db.select().from(categories);
       for (const row of rows) {
-        categoryIdMap.set(row.id, remapCategoryId(householdId, row.id));
+        categoryIdMap.set(row.id, remapCategoryId(ledgerId, row.id));
       }
       return rows.map((row) => ({
-        id: categoryIdMap.get(row.id) ?? remapCategoryId(householdId, row.id),
+        id: categoryIdMap.get(row.id) ?? remapCategoryId(ledgerId, row.id),
         name: row.name,
         type: row.type,
         color: row.color,
         icon: row.icon,
         parentId: row.parentId
-          ? (categoryIdMap.get(row.parentId) ?? remapCategoryId(householdId, row.parentId))
+          ? (categoryIdMap.get(row.parentId) ?? remapCategoryId(ledgerId, row.parentId))
           : null,
         sortOrder: row.sortOrder,
         lifecycle: row.lifecycle,
