@@ -102,55 +102,67 @@ describe("verifyAccessToken", () => {
     });
   });
 
-  it("rejects forged signatures and wrong audiences", async () => {
-    const good = await testKeys();
-    const other = await testKeys();
-    const token = await sign(good.privateKey, {
-      sub: "user_01FORGED",
-      email: "forged@trove.ing",
-      client_id: CLIENT_ID,
-    });
+  it("accepts WorkOS docs-shaped session tokens with client_id and no aud", async () => {
+    // https://workos.com/docs/reference/authkit/session-tokens/access-token
+    const { privateKey, jwks } = await testKeys();
+    const token = await sign(
+      privateKey,
+      {
+        sub: "user_01HBEQKA6K4QJAS93VPE39W1JT",
+        client_id: CLIENT_ID,
+        org_id: "org_01HRDMC6CM357W30QMHMQ96Q0S",
+        role: "member",
+        roles: ["member"],
+        permissions: ["posts:read"],
+        sid: "session_01HQSXZGF8FHF7A9ZZFCW4387R",
+        jti: "01HQSXZXPPFPKMDD32RKTFY6PV",
+      },
+      { audience: false },
+    );
 
     await expect(
       verifyAccessToken(token, {
         clientId: CLIENT_ID,
         audience: CLIENT_ID,
         issuer: ISSUER,
-        jwks: other.jwks,
+        jwks,
       }),
-    ).rejects.toBeInstanceOf(TokenVerifyError);
-
-    const wrongAud = await sign(
-      good.privateKey,
-      { sub: "user_01AUD", email: "aud@trove.ing", client_id: CLIENT_ID },
-      { audience: "not-the-client" },
-    );
-    await expect(
-      verifyAccessToken(wrongAud, {
-        clientId: CLIENT_ID,
-        audience: CLIENT_ID,
-        issuer: ISSUER,
-        jwks: good.jwks,
-      }),
-    ).rejects.toMatchObject({ code: "claim_aud" });
+    ).resolves.toMatchObject({
+      user: { id: "user_01HBEQKA6K4QJAS93VPE39W1JT" },
+      organizationId: "org_01HRDMC6CM357W30QMHMQ96Q0S",
+      sessionId: "session_01HQSXZGF8FHF7A9ZZFCW4387R",
+    });
   });
 
-  it("rejects missing or mismatched client_id on no-aud session tokens", async () => {
+  it("accepts no-aud session tokens that omit client_id after JWKS verify", async () => {
+    // Env client ids can match while the JWT still lacks client_id — #242 still 401'd.
     const { privateKey, jwks } = await testKeys();
-
-    const missingClient = await sign(
+    const token = await sign(
       privateKey,
-      { sub: "user_01NOCLIENT", email: "noclient@trove.ing" },
+      {
+        sub: "user_01NOCLIENT",
+        email: "noclient@trove.ing",
+        sid: "session_01NOCLIENT",
+      },
       { audience: false },
     );
+
     await expect(
-      verifyAccessToken(missingClient, {
+      verifyAccessToken(token, {
         clientId: CLIENT_ID,
         audience: CLIENT_ID,
         issuer: ISSUER,
         jwks,
       }),
-    ).rejects.toMatchObject({ code: "claim_client_id" });
+    ).resolves.toEqual({
+      user: { id: "user_01NOCLIENT", email: "noclient@trove.ing", name: "noclient@trove.ing" },
+      organizationId: null,
+      sessionId: "session_01NOCLIENT",
+    });
+  });
+
+  it("rejects mismatched client_id on no-aud session tokens", async () => {
+    const { privateKey, jwks } = await testKeys();
 
     const wrongClient = await sign(
       privateKey,
@@ -171,7 +183,7 @@ describe("verifyAccessToken", () => {
     ).rejects.toMatchObject({ code: "claim_client_id" });
   });
 
-  it("requires aud when a custom WORKOS_TOKEN_AUDIENCE is configured", async () => {
+  it("rejects no-aud tokens when sticky custom WORKOS_TOKEN_AUDIENCE is set", async () => {
     const { privateKey, jwks } = await testKeys();
     const apiAudience = "https://api.trove.ing";
 
@@ -210,6 +222,39 @@ describe("verifyAccessToken", () => {
         jwks,
       }),
     ).resolves.toMatchObject({ user: { id: "user_01CUSTOMAUD" } });
+  });
+
+  it("rejects forged signatures and wrong audiences", async () => {
+    const good = await testKeys();
+    const other = await testKeys();
+    const token = await sign(good.privateKey, {
+      sub: "user_01FORGED",
+      email: "forged@trove.ing",
+      client_id: CLIENT_ID,
+    });
+
+    await expect(
+      verifyAccessToken(token, {
+        clientId: CLIENT_ID,
+        audience: CLIENT_ID,
+        issuer: ISSUER,
+        jwks: other.jwks,
+      }),
+    ).rejects.toBeInstanceOf(TokenVerifyError);
+
+    const wrongAud = await sign(
+      good.privateKey,
+      { sub: "user_01AUD", email: "aud@trove.ing", client_id: CLIENT_ID },
+      { audience: "not-the-client" },
+    );
+    await expect(
+      verifyAccessToken(wrongAud, {
+        clientId: CLIENT_ID,
+        audience: CLIENT_ID,
+        issuer: ISSUER,
+        jwks: good.jwks,
+      }),
+    ).rejects.toMatchObject({ code: "claim_aud" });
   });
 
   it("rejects wrong issuer, expiry, and missing subject", async () => {
