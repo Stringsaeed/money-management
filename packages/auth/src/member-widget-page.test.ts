@@ -24,6 +24,9 @@ describe("member widget handoff page", () => {
     expect(html).toContain('fetch("/widgets/session"');
     expect(html).toContain(`href="${WIDGET_RETURN_LINK}"`);
     expect(html).toContain('<script type="module" nonce="nonce-1">');
+    expect(html).toContain("@radix-ui/themes@3.3.0/styles.css");
+    expect(html).toContain("@workos-inc/widgets@1.18.0/styles.css");
+    expect(html).toContain("@tanstack/react-query@5.102.8");
     expect(html).not.toMatch(/authToken=/);
   });
 

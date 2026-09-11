@@ -9,6 +9,11 @@ import {
 
 import type { CommandDatabase } from "./commands/types";
 import { findActiveMembership } from "./membership/access";
+import {
+  type MembershipDeps,
+  reconcileUserMembershipsIfStale,
+  USER_RECONCILE_MAX_AGE_MS,
+} from "./membership/reconcile";
 
 /** A caller already narrowed to one household context. */
 export interface HouseholdCaller {
@@ -62,6 +67,29 @@ export async function requireLedgerAccess(
     return;
   }
   await requireHouseholdMember(db, userId, ledgerId);
+}
+
+/** Refreshes WorkOS authority before a public API read trusts the projection. */
+export async function requireFreshHouseholdMember(
+  deps: MembershipDeps,
+  userId: string,
+  householdId: string,
+): Promise<void> {
+  await reconcileUserMembershipsIfStale(deps, userId, USER_RECONCILE_MAX_AGE_MS);
+  await requireHouseholdMember(deps.db, userId, householdId);
+}
+
+/** Personal reads need no directory call; organization reads refresh Membership first. */
+export async function requireFreshLedgerAccess(
+  deps: MembershipDeps,
+  userId: string,
+  ledgerId: string,
+): Promise<void> {
+  if (isPersonalLedgerId(ledgerId)) {
+    await requireLedgerAccess(deps.db, userId, ledgerId);
+    return;
+  }
+  await requireFreshHouseholdMember(deps, userId, ledgerId);
 }
 
 /** Resolves a read request to the Ledger it names, or throws when it names none. */

@@ -96,8 +96,8 @@ function useLedgerSelection(userId: string | null) {
 
   useEffect(() => {
     let cancelled = false;
+    setValue(PERSONAL);
     if (!userId) {
-      setValue(PERSONAL);
       return;
     }
     void readLedgerSelection(userId).then((next) => {
@@ -167,7 +167,12 @@ function useAccessActions(
   }
 
   async function signOut() {
-    const userId = core.kind === "signed_in" ? core.user.userId : null;
+    const userId =
+      core.kind === "signed_in"
+        ? core.user.userId
+        : core.kind === "session_revoked"
+          ? core.lastKnown.userId
+          : null;
     setSignedOut(true);
     await tryRemoteSignOut();
     if (userId) await clearLedgerSelection(userId);
@@ -176,22 +181,32 @@ function useAccessActions(
     setClaim({ kind: "none" });
   }
 
-  async function setActiveHousehold(householdId: string | null) {
+  async function selectLedger(householdId: string | null) {
     if (core.kind !== "signed_in") return;
     const next: LedgerSelection =
       householdId === null ? PERSONAL : { kind: "household", householdId };
     if (next.kind === "household") {
-      const allowed = core.memberships.some((row) => row.householdId === next.householdId);
-      if (!allowed) return;
+      let allowed = core.memberships.some((row) => row.householdId === next.householdId);
+      if (!allowed) {
+        const latest = await queryClient.fetchQuery({
+          queryKey: householdsQueryKeyForUser(core.user.userId),
+          queryFn: () => orpc.households.listMine(),
+        });
+        allowed = latest
+          .map(toMembershipSummary)
+          .some((row) => row?.householdId === next.householdId);
+      }
+      if (!allowed) {
+        throw new Error("That Household is no longer available to this User.");
+      }
     }
     setSelection(next);
     await writeLedgerSelection(core.user.userId, next);
-    await queryClient.invalidateQueries({ queryKey: HOUSEHOLDS_KEY });
   }
 
   function retryHouseholds() {
     void queryClient.invalidateQueries({ queryKey: HOUSEHOLDS_KEY });
   }
 
-  return { beginAuth, presentAuthSheet, signOut, setActiveHousehold, retryHouseholds };
+  return { beginAuth, presentAuthSheet, signOut, selectLedger, retryHouseholds };
 }

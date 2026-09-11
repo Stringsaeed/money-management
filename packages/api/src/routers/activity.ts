@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { protectedProcedure } from "../index";
 import { DEFAULT_ACTIVITY_LIMIT, MAX_ACTIVITY_LIMIT, getActivity } from "../lib/activity/list";
+import { createHouseholdDeps } from "../lib/households/deps";
+import { requireFreshHouseholdMember } from "../lib/require-member";
 import { requireUserId } from "../lib/require-user";
 
 /** "YYYY-MM-DD" date-only string, as produced by client date pickers. */
@@ -32,10 +34,12 @@ export const activityRouter = {
         to: dateString.optional(),
       }),
     )
-    .handler(({ context, input }) => {
+    .handler(async ({ context, input }) => {
       const callerId = requireUserId(context);
+      const db = createDb();
+      await requireFreshHouseholdMember(createHouseholdDeps(db), callerId, input.householdId);
       return getActivity({
-        db: createDb(),
+        db,
         userId: callerId,
         householdId: input.householdId,
         limit: input.limit,

@@ -5,12 +5,23 @@ import { useDatabase } from "@/db/client";
 import { useMigratedHouseholdId } from "@/hooks/use-enable-sync";
 import { clearHouseholdSyncEnrollment } from "@/lib/migration/status";
 import { useAccess } from "@/modules/access";
-import { disconnectAndClearPowerSync } from "@/modules/powersync/database";
+import { restorePowerSyncLedgerAccess, revokePowerSyncLedger } from "@/modules/powersync/database";
+
+function restoreConfirmedLedgerAccess(householdIds: readonly string[]): void {
+  for (const householdId of householdIds) {
+    restorePowerSyncLedgerAccess(householdId);
+  }
+}
+
+function reportRevocationCleanupFailure(): void {
+  console.error("[PowerSync] Failed to finish confirmed Household revocation cleanup.");
+}
 
 /**
- * When a selected or enrolled Household Membership disappears from listMine,
- * treat it as confirmed removal: stop uploads and clear that Household's
- * PowerSync cache/pending edits. Ordinary Personal selection does not clear.
+ * When a Household Membership disappears from a successful listMine read,
+ * stop uploads immediately and mark that Ledger's queued Commands as
+ * discard-only. Stream unsubscription owns removal of its server cache;
+ * unrelated Personal/Household pending edits are never globally cleared.
  */
 export function MembershipRevocationCleanup() {
   const access = useAccess();
@@ -24,25 +35,43 @@ export function MembershipRevocationCleanup() {
       previousMemberships.current = new Set();
       return;
     }
-    const current = new Set(access.memberships.map((row) => row.householdId));
+    // A failed listMine read is ordinary offline use, not proof of removal.
+    if (access.household.kind === "unavailable") return;
+
+    const currentIds = access.memberships.map((row) => row.householdId);
+    const current = new Set(currentIds);
+    // A successful reconciled Membership read is the only client-side signal
+    // that may re-enable uploads after this User is explicitly invited back.
+    restoreConfirmedLedgerAccess(currentIds);
     const previous = previousMemberships.current;
     const removed = [...previous].filter((id) => !current.has(id));
     previousMemberships.current = current;
 
     const enrolled = migration.data;
     const lostEnrollment = enrolled != null && !current.has(enrolled);
-    if (removed.length === 0 && !lostEnrollment) return;
+    const lostSelection =
+      access.selection.kind === "household" && !current.has(access.selection.householdId)
+        ? access.selection.householdId
+        : null;
+    const revoked = new Set([
+      ...removed,
+      ...(lostEnrollment && enrolled ? [enrolled] : []),
+      ...(lostSelection ? [lostSelection] : []),
+    ]);
+    if (revoked.size === 0) return;
 
     void (async () => {
-      if (lostEnrollment || (enrolled != null && removed.includes(enrolled))) {
+      for (const householdId of revoked) {
+        await revokePowerSyncLedger(householdId);
+      }
+      if (lostEnrollment) {
         await clearHouseholdSyncEnrollment(db);
-        await disconnectAndClearPowerSync();
         await queryClient.invalidateQueries({ queryKey: ["migration"] });
       }
-      if (access.selection.kind === "household" && !current.has(access.selection.householdId)) {
-        await access.setActiveHousehold(null);
+      if (lostSelection) {
+        await access.selectLedger(null);
       }
-    })();
+    })().catch(reportRevocationCleanupFailure);
   }, [access, db, migration.data, queryClient]);
 
   return null;

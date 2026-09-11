@@ -80,6 +80,8 @@ jest.mock("@/modules/access", () => ({
     access.kind === "signed_in" ? (access.user?.userId ?? null) : null,
   getAuthCookie: jest.fn(() => ""),
   HOUSEHOLDS_KEY: ["households"],
+  householdsQueryKeyForUser: (userId: string | null) => ["households", userId],
+  NO_SYNC_ENROLLMENT: { migratedHouseholdId: null, personalSyncUserId: null },
   PROFILE_HOUSEHOLD_HREF: "/(tabs)/settings/household",
   returnTo: {
     profileHousehold: () => ({ kind: "profile_household" }),

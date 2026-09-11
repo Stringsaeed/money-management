@@ -157,6 +157,9 @@ export const createSyncedLedgerDataSource = ({
       update: (id, data) =>
         run("mutation.account-update", async () => {
           assertSupportedAccountUpdate(data);
+          if (householdId !== null && data.visibility === "private") {
+            throw new Error("Household Accounts are shared with every active Household member.");
+          }
           const current = accountRow(id);
           const command = timestamped({
             commandId: generateId(),

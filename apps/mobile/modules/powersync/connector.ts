@@ -7,6 +7,7 @@ import type { CommandEnvelope, CommandResult } from "@trove/protocol";
 import { commandLedgerId } from "@trove/protocol";
 
 import { orpc } from "@/lib/server/orpc";
+import { isPowerSyncLedgerRevoked } from "@/modules/powersync/revoked-ledgers";
 import { useSyncModeStore } from "@/stores/sync-mode-store";
 
 import { parseCommandMetadata, serializeCommandMetadata } from "./command-metadata";
@@ -37,6 +38,8 @@ export interface PowerSyncUploadDependencies {
   readonly setLocalOnly: (reason: "kill_switch") => void;
   /** The signed-in User, so a personal envelope resolves to its Ledger id. */
   readonly userId: string;
+  /** Confirmed Membership removal discards this Ledger's queued Commands without uploading them. */
+  readonly isLedgerRevoked?: (ledgerId: string) => boolean;
 }
 
 interface RejectedChangeInput {
@@ -84,6 +87,8 @@ export const processPowerSyncUpload = async (
   }
 
   for (const envelope of commands.values()) {
+    const ledgerId = rejectedLedgerId(envelope, dependencies.userId);
+    if (dependencies.isLedgerRevoked?.(ledgerId)) continue;
     const result = await dependencies.apply(envelope);
     if (result.kind === "applied") continue;
     if (result.kind === "local_only") {
@@ -113,6 +118,7 @@ export const createPowerSyncConnector = (userId: string): PowerSyncBackendConnec
           preconditions: envelope.preconditions?.map((precondition) => ({ ...precondition })),
         }),
       disconnect: () => database.disconnect(),
+      isLedgerRevoked: isPowerSyncLedgerRevoked,
       setLocalOnly: (reason) => useSyncModeStore.getState().setLocalOnly(reason),
       userId,
     }),

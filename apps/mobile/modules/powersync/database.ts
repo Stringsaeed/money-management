@@ -4,7 +4,10 @@ import {
 } from "@powersync/react-native";
 
 import { createPowerSyncConnector } from "./connector";
+import { markPowerSyncLedgerRevoked } from "./revoked-ledgers";
 import { powerSyncSchema } from "./schema";
+
+export { restorePowerSyncLedgerAccess } from "./revoked-ledgers";
 
 interface ActivePowerSyncDatabase {
   readonly database: PowerSyncDatabaseType;
@@ -48,6 +51,13 @@ export const disconnectAndClearPowerSync = async (): Promise<void> => {
 };
 
 export const peekPowerSyncDatabase = (): PowerSyncDatabaseType | null => active?.database ?? null;
+
+/** Stops uploads immediately and marks queued commands for this removed Household as discard-only. */
+export const revokePowerSyncLedger = async (ledgerId: string): Promise<void> => {
+  markPowerSyncLedgerRevoked(ledgerId);
+  await active?.database.disconnect();
+  await active?.database.execute("DELETE FROM rejected_changes WHERE ledger_id = ?", [ledgerId]);
+};
 
 const clearActiveDatabase = async (): Promise<void> => {
   const current = active;

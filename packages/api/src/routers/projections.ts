@@ -4,8 +4,9 @@ import { z } from "zod";
 
 import { protectedProcedure } from "../index";
 import { getProjections } from "../lib/budget/projections";
+import { createHouseholdDeps } from "../lib/households/deps";
 import { ledgerReadFields } from "../lib/ledger-read-input";
-import { resolveReadLedgerId } from "../lib/require-member";
+import { requireFreshLedgerAccess, resolveReadLedgerId } from "../lib/require-member";
 import { requireUserId } from "../lib/require-user";
 
 const periodSchema = z
@@ -40,9 +41,12 @@ export const projectionsRouter = {
           message: "endPeriod must not precede startPeriod.",
         });
       }
+      const db = createDb();
+      const ledgerId = resolveReadLedgerId(userId, input);
+      await requireFreshLedgerAccess(createHouseholdDeps(db), userId, ledgerId);
       return getProjections(
-        createDb(),
-        { userId, ledgerId: resolveReadLedgerId(userId, input) },
+        db,
+        { userId, ledgerId },
         {
           currency: input.currency,
           startPeriod: input.startPeriod,

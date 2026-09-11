@@ -1,18 +1,28 @@
-import { useMigratedHouseholdId } from "@/hooks/use-enable-sync";
-import { useActiveHousehold } from "@/hooks/use-households";
+import { useSyncEnrollment } from "@/hooks/use-enable-sync";
 import { useSyncWorker } from "@/hooks/use-sync-worker";
-import { signedInUserId, useAccess } from "@/modules/access";
+import {
+  coreFromAccess,
+  NO_SYNC_ENROLLMENT,
+  selectLedgerSourceForAccess,
+  useAccess,
+} from "@/modules/access";
+import { useSyncModeStore } from "@/stores/sync-mode-store";
 
 export function PowerSyncWorker() {
   const access = useAccess();
-  const userId = signedInUserId(access);
-  const { activeHousehold } = useActiveHousehold();
-  const migration = useMigratedHouseholdId();
-  const householdId = activeHousehold?.householdId ?? null;
-  const eligible = Boolean(userId && householdId && migration.data === householdId);
+  const enrollment = useSyncEnrollment();
+  const mode = useSyncModeStore((state) => state.mode);
+  const reason = useSyncModeStore((state) => state.reason);
+  const selection = selectLedgerSourceForAccess(
+    coreFromAccess(access),
+    enrollment.data ?? NO_SYNC_ENROLLMENT,
+    mode,
+    reason,
+  );
+  const canConnect = access.kind === "signed_in" && selection.kind === "synced";
   useSyncWorker(
-    eligible ? householdId : null,
-    eligible ? (userId ?? undefined) : undefined,
+    canConnect ? selection.ledger.ledgerId : null,
+    canConnect ? selection.userId : undefined,
     access.kind !== "anonymous",
   );
   return null;

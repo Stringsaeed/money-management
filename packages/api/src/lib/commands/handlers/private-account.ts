@@ -11,7 +11,14 @@ export function privateAccountAccessRejection(
   ctx: PlanContext,
   account: AccountRow,
 ): PlanRejection | null {
-  if (account.visibility !== "private" || account.ownerUserId === ctx.actorUserId) {
+  // Organization-ledger Accounts are shared. The schema and Account handler
+  // prevent new private Household rows; this scope check keeps legacy rows
+  // shared while migration 0013 normalizes them to public.
+  if (
+    ctx.householdId !== null ||
+    account.visibility !== "private" ||
+    account.ownerUserId === ctx.actorUserId
+  ) {
     return null;
   }
   return {

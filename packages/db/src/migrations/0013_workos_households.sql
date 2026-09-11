@@ -27,9 +27,17 @@ ALTER TABLE "household" ADD CONSTRAINT "household_created_by_user_id_user_id_fk"
 --> statement-breakpoint
 ALTER TABLE "household" ADD COLUMN IF NOT EXISTS "create_request_id" text;
 ALTER TABLE "household" ADD COLUMN IF NOT EXISTS "members_reconciled_at" timestamp with time zone;
-ALTER TABLE "household" ADD CONSTRAINT "household_create_request_id_unique" UNIQUE ("create_request_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "household_creator_request_unique"
+  ON "household" USING btree ("created_by_user_id", "create_request_id");
 --> statement-breakpoint
 ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "memberships_reconciled_at" timestamp with time zone;
+--> statement-breakpoint
+-- Organization-ledger Accounts are Household facts. Personal Ledgers retain
+-- private Account support, but no Household Account may be hidden from Members.
+UPDATE "accounts" SET "visibility" = 'public' WHERE "household_id" IS NOT NULL;
+--> statement-breakpoint
+ALTER TABLE "accounts" ADD CONSTRAINT "accounts_organization_accounts_shared"
+  CHECK ("accounts"."household_id" IS NULL OR "accounts"."visibility" = 'public');
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "widget_handoff" (
   "code_hash" text PRIMARY KEY NOT NULL,

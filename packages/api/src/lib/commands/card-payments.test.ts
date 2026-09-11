@@ -242,25 +242,6 @@ describe("routeCardPayment (pure waterfall)", () => {
   });
 });
 
-describe("private account command authorization", () => {
-  it("rejects a member refund linked to a private account transaction", async () => {
-    await seedFundingAccount("acc-1", 10000);
-    await seedCategory("cat-groceries");
-    await seedExpense("private-expense", "acc-1", 1000);
-    await db
-      .update(ledgerAccount)
-      .set({ ownerUserId: OWNER, visibility: "private" })
-      .where(eq(ledgerAccount.id, "acc-1"));
-
-    await expect(
-      linkRefund({ originalTransactionId: "private-expense" }, MEMBER),
-    ).resolves.toMatchObject({
-      kind: "forbidden",
-      requiredCapability: "accounts:private.owner",
-    });
-  });
-});
-
 describe("card payment reserve calculation", () => {
   beforeEach(async () => {
     await seedFundingAccount("acc-1", 50_000);

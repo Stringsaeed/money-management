@@ -20,10 +20,24 @@ export const WIDGET_RETURN_LINK = "trove://widget-return";
 const ESM_ORIGIN = "https://esm.sh";
 const WORKOS_API_ORIGIN = "https://api.workos.com";
 
-const WIDGETS_MODULE = `${ESM_ORIGIN}/@workos-inc/widgets@1?deps=react@18.3.1,react-dom@18.3.1`;
-const REACT_MODULE = `${ESM_ORIGIN}/react@18.3.1`;
-const REACT_DOM_MODULE = `${ESM_ORIGIN}/react-dom@18.3.1/client`;
-const WIDGETS_STYLES = `${ESM_ORIGIN}/@workos-inc/widgets@1/styles.css`;
+const REACT_VERSION = "19.3.0";
+const WIDGETS_VERSION = "1.18.0";
+const RADIX_THEMES_VERSION = "3.3.0";
+const REACT_QUERY_VERSION = "5.102.8";
+const SWR_VERSION = "2.5.1";
+const WIDGET_DEPENDENCIES = [
+  `react@${REACT_VERSION}`,
+  `react-dom@${REACT_VERSION}`,
+  `@radix-ui/themes@${RADIX_THEMES_VERSION}`,
+  `@tanstack/react-query@${REACT_QUERY_VERSION}`,
+  `swr@${SWR_VERSION}`,
+].join(",");
+
+const WIDGETS_MODULE = `${ESM_ORIGIN}/@workos-inc/widgets@${WIDGETS_VERSION}?deps=${WIDGET_DEPENDENCIES}`;
+const REACT_MODULE = `${ESM_ORIGIN}/react@${REACT_VERSION}`;
+const REACT_DOM_MODULE = `${ESM_ORIGIN}/react-dom@${REACT_VERSION}/client?deps=react@${REACT_VERSION}`;
+const RADIX_THEMES_STYLES = `${ESM_ORIGIN}/@radix-ui/themes@${RADIX_THEMES_VERSION}/styles.css`;
+const WIDGETS_STYLES = `${ESM_ORIGIN}/@workos-inc/widgets@${WIDGETS_VERSION}/styles.css`;
 
 /** Fragment-based handoff URL the app opens in the system browser. */
 export function buildWidgetPageUrl(serverUrl: string, code: string): string {
@@ -66,6 +80,7 @@ export function renderMemberWidgetPage(nonce: string): string {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Household members · Trove</title>
+<link rel="stylesheet" href="${RADIX_THEMES_STYLES}">
 <link rel="stylesheet" href="${WIDGETS_STYLES}">
 <style>
   :root { color-scheme: light; }

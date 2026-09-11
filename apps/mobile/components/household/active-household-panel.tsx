@@ -1,6 +1,5 @@
 import { Alert, View } from "react-native";
 
-import { EnableSyncCard } from "@/components/household/enable-sync-card";
 import { HouseholdMembers, type HouseholdMember } from "@/components/household/household-members";
 import { SyncStatusCard } from "@/components/household/sync-status-card";
 import {
@@ -19,7 +18,6 @@ interface ActiveHouseholdPanelProps {
   readonly name: string;
   readonly currentUserId: string;
   readonly isAdmin: boolean;
-  readonly needsSync: boolean;
   readonly members: readonly HouseholdMember[];
   readonly adminless?: boolean;
 }
@@ -29,7 +27,6 @@ export function ActiveHouseholdPanel({
   name,
   currentUserId,
   isAdmin,
-  needsSync,
   members,
   adminless = false,
 }: ActiveHouseholdPanelProps) {
@@ -39,18 +36,12 @@ export function ActiveHouseholdPanel({
 
   return (
     <>
-      {needsSync ? (
-        <Card>
-          <EnableSyncCard activeHouseholdId={householdId} />
-        </Card>
-      ) : (
-        <SyncStatusCard />
-      )}
+      <SyncStatusCard />
       <Card>
         <View className="flex-row items-center justify-between p-4">
           <View className="gap-1">
             <Text className="font-body-semibold text-xs uppercase text-ink/40">
-              Active Household
+              Selected Household
             </Text>
             <Text className="font-heading-normal text-xl italic text-ink">{name}</Text>
           </View>

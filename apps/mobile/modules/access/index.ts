@@ -3,6 +3,7 @@ export { beginHostedSignIn } from "./actions";
 export type { AuthActionFailure, AuthActionResult } from "./actions";
 export {
   NO_SYNC_ENROLLMENT,
+  householdsQueryKeyForUser,
   nextClaim,
   pickActiveHousehold,
   resolveAccess,

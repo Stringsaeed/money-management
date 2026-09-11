@@ -1,12 +1,18 @@
 import { createDb } from "@trove/db";
 import { env } from "@trove/env/server";
+import { resolveCommandScope } from "@trove/protocol";
 
 import { protectedProcedure } from "../index";
+import { createHouseholdDeps } from "../lib/households/deps";
 import { instrumentCommandApply } from "../lib/observability/metrics";
 import { requestMetrics } from "../lib/observability/runtime";
 import { isKillSwitchEngaged, LOCAL_ONLY_RESULT } from "../lib/observability/kill-switch";
 import { applyCommand } from "../lib/commands/pipeline";
 import { commandEnvelopeSchema } from "../lib/commands/schema";
+import {
+  reconcileUserMembershipsIfStale,
+  USER_RECONCILE_MAX_AGE_MS,
+} from "../lib/membership/reconcile";
 import { requireUserId } from "../lib/require-user";
 
 export const commandsRouter = {
@@ -28,6 +34,14 @@ export const commandsRouter = {
     }
     const db = createDb();
     const actor = context.session?.user;
+    const scope = resolveCommandScope(input, userId);
+    if (scope?.type === "organization") {
+      await reconcileUserMembershipsIfStale(
+        createHouseholdDeps(db),
+        userId,
+        USER_RECONCILE_MAX_AGE_MS,
+      );
+    }
     return instrumentCommandApply(requestMetrics(), () =>
       applyCommand({
         db,

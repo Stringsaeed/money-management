@@ -109,7 +109,7 @@ describe("resolveAccess", () => {
       claim: held,
       probe: { kind: "no_session" } as const,
       households: loadedActive,
-      expected: { kind: "session_revoked", lastKnown: user },
+      expected: { kind: "session_revoked", lastKnown: user, selection: householdSelection },
     },
     {
       name: "held x unreachable",
@@ -121,7 +121,7 @@ describe("resolveAccess", () => {
         user,
         household: { kind: "unavailable" },
         memberships: [],
-        selection: personalSelection,
+        selection: householdSelection,
       },
     },
     {
@@ -170,7 +170,7 @@ describe("resolveAccess", () => {
       user,
       household: { kind: "unavailable" },
       memberships: [],
-      selection: personalSelection,
+      selection: householdSelection,
     });
   });
 
@@ -183,6 +183,23 @@ describe("resolveAccess", () => {
     });
     expect(access.kind).toBe("signed_in");
     expect(access).not.toMatchObject({ kind: "session_revoked" });
+  });
+
+  it("retains an invalidated Household id long enough for revocation cleanup to discard it", () => {
+    expect(
+      resolveAccess({
+        claim: held,
+        probe: { kind: "session", user },
+        households: { kind: "loaded", memberships: [] },
+        selection: householdSelection,
+      }),
+    ).toEqual({
+      kind: "signed_in",
+      user,
+      household: { kind: "none" },
+      memberships: [],
+      selection: householdSelection,
+    });
   });
 });
 
@@ -264,7 +281,7 @@ describe("resolveReturnDestination", () => {
   it("returns Profile & household for revoked and anonymous access", () => {
     expect(
       resolveReturnDestination(
-        { kind: "session_revoked", lastKnown: user },
+        { kind: "session_revoked", lastKnown: user, selection: householdSelection },
         returnTo.parse("/(tabs)"),
       ),
     ).toBe(PROFILE_HOUSEHOLD_HREF);
@@ -278,15 +295,23 @@ describe("selectLedgerSourceForAccess", () => {
   it("never full-screen-blocks on session_revoked", () => {
     expect(
       selectLedgerSourceForAccess(
-        { kind: "session_revoked", lastKnown: user },
+        { kind: "session_revoked", lastKnown: user, selection: householdSelection },
         NO_SYNC_ENROLLMENT,
         "synced",
         null,
-      ).kind,
-    ).toBe("local");
+      ),
+    ).toEqual({
+      kind: "synced",
+      ledger: householdLedgerBinding("hh-1"),
+      userId: "user-1",
+      offlineState: {
+        kind: "offline_cached",
+        reason: "Signed out remotely. Your ledger is safe on this device.",
+      },
+    });
     expect(
       selectLedgerSourceForAccess(
-        { kind: "session_revoked", lastKnown: user },
+        { kind: "session_revoked", lastKnown: user, selection: householdSelection },
         migratedTo("hh-1"),
         "synced",
         null,
@@ -314,6 +339,16 @@ describe("selectLedgerSourceForAccess", () => {
       "local",
     );
     expect(selectLedgerSourceForAccess(unavailable, migratedTo("hh-1"), "synced", null)).toEqual({
+      kind: "local",
+    });
+
+    const unavailableHousehold = {
+      ...unavailable,
+      selection: householdSelection,
+    } satisfies AccessCore;
+    expect(
+      selectLedgerSourceForAccess(unavailableHousehold, NO_SYNC_ENROLLMENT, "synced", null),
+    ).toEqual({
       kind: "synced",
       ledger: householdLedgerBinding("hh-1"),
       userId: "user-1",
@@ -324,7 +359,7 @@ describe("selectLedgerSourceForAccess", () => {
     });
   });
 
-  it("selects a live synced ledger only for the migrated active household", () => {
+  it("selects every validated Household as a separate synced ledger", () => {
     expect(selectLedgerSourceForAccess(signedInActive, migratedTo("hh-1"), "synced", null)).toEqual(
       {
         kind: "synced",
@@ -335,7 +370,9 @@ describe("selectLedgerSourceForAccess", () => {
     expect(
       selectLedgerSourceForAccess(signedInActive, migratedTo("hh-other"), "synced", null),
     ).toEqual({
-      kind: "local",
+      kind: "synced",
+      ledger: householdLedgerBinding("hh-1"),
+      userId: "user-1",
     });
   });
 

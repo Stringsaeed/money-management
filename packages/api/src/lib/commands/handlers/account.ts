@@ -108,6 +108,9 @@ export const accountHandlers = {
       const input = payload as CreateAccountPayload;
       const accountId = input.id ?? crypto.randomUUID();
 
+      if (ctx.householdId !== null && input.visibility === "private") {
+        return householdAccountPrivacyRejection();
+      }
       if (await loadAccount(ctx, accountId)) {
         return { kind: "conflict", reason: "account_id_already_exists", current: { accountId } };
       }
@@ -169,7 +172,14 @@ export const accountHandlers = {
       if (privateAccessRejection) {
         return privateAccessRejection;
       }
-      if (input.visibility !== undefined && existing.ownerUserId !== ctx.actorUserId) {
+      if (ctx.householdId !== null && input.visibility === "private") {
+        return householdAccountPrivacyRejection();
+      }
+      if (
+        ctx.householdId === null &&
+        input.visibility !== undefined &&
+        existing.ownerUserId !== ctx.actorUserId
+      ) {
         return {
           kind: "forbidden",
           role: ctx.actorRole,
@@ -289,3 +299,15 @@ export const accountHandlers = {
     },
   },
 };
+
+function householdAccountPrivacyRejection(): PlanRejection {
+  return {
+    kind: "invalid_intent",
+    issues: [
+      {
+        field: "visibility",
+        message: "Household Accounts are shared with every active Household member.",
+      },
+    ],
+  };
+}

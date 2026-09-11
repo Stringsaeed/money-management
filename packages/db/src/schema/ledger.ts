@@ -69,6 +69,10 @@ export const ledgerAccount = pgTable(
       sql`${table.visibility} = 'public' OR ${table.ownerUserId} IS NOT NULL`,
     ),
     check(
+      "accounts_organization_accounts_shared",
+      sql`${table.householdId} IS NULL OR ${table.visibility} = 'public'`,
+    ),
+    check(
       "accounts_household_required_for_organization",
       sql`${table.householdId} IS NOT NULL OR ${table.ledgerId} LIKE 'personal:%'`,
     ),

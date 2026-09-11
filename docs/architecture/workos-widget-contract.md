@@ -6,13 +6,13 @@ Bounded feasibility record for hosting the WorkOS User Management widget from Tr
 
 ## Integration contract
 
-| Concern         | Contract                                                                                                                |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Who may open it | WorkOS organization `admin` only. Members and viewers are denied before a token is minted (`decideWidgetToken`).        |
-| Credentials     | Server mints a short-lived widget token with `WORKOS_API_KEY`. Never put API keys or refresh tokens in URLs.            |
-| Identity        | Widget page validates the intended WorkOS User id and organization id against the authenticated session.                |
-| Return path     | Mobile/browser return uses the app scheme / https handoff without reusable secrets in the query string.                 |
-| User deletion   | App-owned guard required: sole Household admin must appoint another admin or delete the Household before User deletion. |
+| Concern         | Contract                                                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Who may open it | WorkOS organization `admin` only. Members and viewers are denied before a token is minted (`decideWidgetToken`).                                 |
+| Credentials     | Server mints a short-lived widget token with `WORKOS_API_KEY`. Never put API keys or refresh tokens in URLs.                                     |
+| Identity        | The authenticated mobile session issues a one-time handoff bound to its WorkOS User and Organization; exchange rechecks active admin Membership. |
+| Return path     | Mobile/browser return uses the app scheme / https handoff without reusable secrets in the query string.                                          |
+| User deletion   | App-owned guard required: sole Household admin must appoint another admin or delete the Household before User deletion.                          |
 
 ## Observed safeguard limitations
 
@@ -25,6 +25,7 @@ Bounded feasibility record for hosting the WorkOS User Management widget from Tr
 
 - WorkOS environment with AuthKit email codes enabled; password/social disabled
 - Redirect URI `trove://callback` registered
+- The deployed widget-page origin registered under the WorkOS application's Sessions CORS settings
 - `EXPO_PUBLIC_WORKOS_CLIENT_ID`, `WORKOS_CLIENT_ID`, `WORKOS_API_KEY`
 - JWT template that sets `aud` to `WORKOS_TOKEN_AUDIENCE` (defaults to client id)
 - `WORKOS_TOKEN_ISSUER` matching issued tokens (default `https://api.workos.com`)

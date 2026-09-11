@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNull, lt, or } from "drizzle-orm";
+import { and, asc, desc, eq, lt, or } from "drizzle-orm";
 
 import { ledgerAccount, transaction } from "@trove/db/schema/ledger";
 
@@ -6,19 +6,12 @@ import type { CommandDatabase } from "../commands/types";
 import type { HouseholdCaller } from "../require-member";
 import { requireHouseholdMember } from "../require-member";
 
-function accountVisibility(caller: HouseholdCaller) {
-  return and(
-    eq(ledgerAccount.householdId, caller.householdId),
-    or(eq(ledgerAccount.visibility, "public"), eq(ledgerAccount.ownerUserId, caller.userId)),
-  );
-}
-
 export async function listAccounts(db: CommandDatabase, caller: HouseholdCaller) {
   await requireHouseholdMember(db, caller.userId, caller.householdId);
   return db
     .select()
     .from(ledgerAccount)
-    .where(accountVisibility(caller))
+    .where(eq(ledgerAccount.householdId, caller.householdId))
     .orderBy(asc(ledgerAccount.sortOrder), asc(ledgerAccount.name));
 }
 
@@ -33,19 +26,6 @@ export interface TransactionPage {
   readonly nextCursor: TransactionCursor | null;
 }
 
-function visibleAccountIds(db: CommandDatabase, caller: HouseholdCaller) {
-  return db.select({ id: ledgerAccount.id }).from(ledgerAccount).where(accountVisibility(caller));
-}
-
-function transactionVisibility(db: CommandDatabase, caller: HouseholdCaller) {
-  const accountIds = visibleAccountIds(db, caller);
-  return and(
-    eq(transaction.householdId, caller.householdId),
-    inArray(transaction.accountId, accountIds),
-    or(isNull(transaction.toAccountId), inArray(transaction.toAccountId, accountIds)),
-  );
-}
-
 export async function listTransactions(
   db: CommandDatabase,
   caller: HouseholdCaller,
@@ -58,7 +38,7 @@ export async function listTransactions(
     .from(transaction)
     .where(
       and(
-        transactionVisibility(db, caller),
+        eq(transaction.householdId, caller.householdId),
         ...(cursor
           ? [
               or(
@@ -90,7 +70,7 @@ export async function getTransaction(
   const rows = await db
     .select()
     .from(transaction)
-    .where(and(transactionVisibility(db, caller), eq(transaction.id, transactionId)))
+    .where(and(eq(transaction.householdId, caller.householdId), eq(transaction.id, transactionId)))
     .limit(1);
   return rows[0] ?? null;
 }

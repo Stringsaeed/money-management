@@ -1,4 +1,3 @@
-import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {
@@ -313,27 +312,23 @@ describe("period projections", () => {
     ).toEqual([10000, 10000, 10000]);
   });
 
-  it("excludes private accounts and their spending from shared projections", async () => {
+  it("includes every Household Account and its spending in shared projections", async () => {
     await seedFundingAccount("acc-shared", 10000);
-    await seedFundingAccount("acc-private", 50000);
-    await db
-      .update(ledgerAccount)
-      .set({ ownerUserId: OWNER, visibility: "private" })
-      .where(eq(ledgerAccount.id, "acc-private"));
+    await seedFundingAccount("acc-savings", 50000);
     await seedEnvelope("env-groceries");
     await seedCategory("cat-groceries");
     await mapCategory("cat-groceries", "env-groceries");
     await assign("2026-01", "env-groceries", 2000);
-    await spendExpense("2026-01-15", 500, "acc-private", "cat-groceries");
+    await spendExpense("2026-01-15", 500, "acc-savings", "cat-groceries");
     await db.insert(transaction).values({
       ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
-      id: "private-transfer",
+      id: "shared-transfer",
       type: "transfer",
       amountMinor: 2000,
       currency: "USD",
       date: "2026-01-16",
-      accountId: "acc-private",
+      accountId: "acc-savings",
       toAccountId: "acc-shared",
       version: 0,
       createdBy: OWNER,
@@ -343,10 +338,10 @@ describe("period projections", () => {
 
     const { projections } = await read();
     const january = projections[0];
-    expect(january.fundingPoolMinor).toBe(10000);
+    expect(january.fundingPoolMinor).toBe(59500);
     expect(
       january.envelopes.find((item) => item.envelopeId === "env-groceries")?.availableMinor,
-    ).toBe(2000);
+    ).toBe(1500);
   });
 
   it("routes card spending through availability without going negative, reporting Unfunded Card Spending", async () => {

@@ -101,16 +101,6 @@ export function pickActiveHousehold(
   };
 }
 
-export function normalizeLedgerSelection(
-  memberships: readonly MembershipSummary[],
-  selection: LedgerSelection,
-): LedgerSelection {
-  if (selection.kind === "personal") return selection;
-  return memberships.some((row) => row.householdId === selection.householdId)
-    ? selection
-    : { kind: "personal" };
-}
-
 export function resolveReturnDestination(access: AccessCore, target: ReturnTo): InternalHref {
   if (
     access.kind === "signed_in" &&
@@ -139,11 +129,13 @@ function mergeClaimAndProbe(
 ): AccessCore {
   if (probe.kind === "no_session") {
     return claim.kind === "held"
-      ? { kind: "session_revoked", lastKnown: claim.user }
+      ? { kind: "session_revoked", lastKnown: claim.user, selection }
       : { kind: "anonymous" };
   }
   if (probe.kind === "unreachable") {
-    return claim.kind === "held" ? signedInUnavailable(claim.user) : { kind: "anonymous" };
+    return claim.kind === "held"
+      ? signedInUnavailable(claim.user, selection)
+      : { kind: "anonymous" };
   }
   return signedInFromSession(probe.user, households, selection);
 }
@@ -154,25 +146,24 @@ function signedInFromSession(
   selection: LedgerSelection,
 ): AccessCore {
   if (households.kind === "pending") return { kind: "resolving" };
-  if (households.kind === "failed") return signedInUnavailable(user);
-  const normalized = normalizeLedgerSelection(households.memberships, selection);
-  const active = pickActiveHousehold(households.memberships, normalized);
+  if (households.kind === "failed") return signedInUnavailable(user, selection);
+  const active = pickActiveHousehold(households.memberships, selection);
   return {
     kind: "signed_in",
     user,
     household: active ?? { kind: "none" },
     memberships: households.memberships,
-    selection: normalized,
+    selection,
   };
 }
 
-function signedInUnavailable(user: Identity): AccessCore {
+function signedInUnavailable(user: Identity, selection: LedgerSelection): AccessCore {
   return {
     kind: "signed_in",
     user,
     household: { kind: "unavailable" },
     memberships: [],
-    selection: { kind: "personal" },
+    selection,
   };
 }
 
@@ -194,7 +185,7 @@ function ledgerFactsForAccess(
     return localFacts(enrollment);
   }
   if (access.kind === "session_revoked") {
-    return revokedFacts(access.lastKnown.userId, enrollment);
+    return revokedFacts(access.lastKnown.userId, access.selection, enrollment);
   }
   return signedInFacts(access, enrollment, mode, reason);
 }
@@ -208,10 +199,14 @@ function localFacts(enrollment: SyncEnrollment): LedgerSourceFacts {
   };
 }
 
-function revokedFacts(userId: string, enrollment: SyncEnrollment): LedgerSourceFacts {
+function revokedFacts(
+  userId: string,
+  selection: LedgerSelection,
+  enrollment: SyncEnrollment,
+): LedgerSourceFacts {
   return {
     authenticatedUserId: userId,
-    activeHouseholdId: enrollment.migratedHouseholdId,
+    activeHouseholdId: selection.kind === "household" ? selection.householdId : null,
     ...enrollment,
     offlineReason: "Signed out remotely. Your ledger is safe on this device.",
   };
@@ -225,7 +220,7 @@ function signedInFacts(
 ): LedgerSourceFacts {
   return {
     authenticatedUserId: access.user.userId,
-    activeHouseholdId: activeHouseholdIdForSignedIn(access, enrollment.migratedHouseholdId),
+    activeHouseholdId: activeHouseholdIdForSignedIn(access),
     ...enrollment,
     offlineReason: offlineReasonForSignedIn(access, enrollment, mode, reason),
   };
@@ -233,10 +228,11 @@ function signedInFacts(
 
 function activeHouseholdIdForSignedIn(
   access: Extract<AccessCore, { kind: "signed_in" }>,
-  migratedHouseholdId: string | null,
 ): string | null {
   if (access.household.kind === "active") return access.household.householdId;
-  if (access.household.kind === "unavailable") return migratedHouseholdId;
+  if (access.household.kind === "unavailable" && access.selection.kind === "household") {
+    return access.selection.householdId;
+  }
   return null;
 }
 
@@ -248,7 +244,7 @@ function offlineReasonForSignedIn(
 ): string | null {
   // Only a device that lives in a Household is degraded by a failed
   // household read; a Personal Ledger never consults that list.
-  if (access.household.kind === "unavailable" && enrollment.migratedHouseholdId !== null) {
+  if (access.household.kind === "unavailable" && access.selection.kind === "household") {
     return "Household sync is temporarily unavailable.";
   }
   if (mode === "local_only" && reason === "kill_switch") {

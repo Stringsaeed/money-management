@@ -99,6 +99,23 @@ describe("personal ledger commands — no Household required", () => {
     expect(await db.select().from(membership)).toEqual([]);
   });
 
+  it("retains private Account support inside a Personal Ledger", async () => {
+    await createAccount(ALICE, "acc-alice-1");
+    expectApplied(
+      await applyAs(
+        ALICE,
+        personalEnvelope("account.update", {
+          accountId: "acc-alice-1",
+          visibility: "private",
+        }),
+      ),
+    );
+
+    expect(await db.select().from(ledgerAccount)).toEqual([
+      expect.objectContaining({ householdId: null, visibility: "private", ownerUserId: ALICE }),
+    ]);
+  });
+
   it("carries categories and transactions on the same personal ledger", async () => {
     await createAccount(ALICE, "acc-alice-1");
     expectApplied(

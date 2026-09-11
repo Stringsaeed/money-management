@@ -19,17 +19,13 @@ export const powersyncRouter = {
   token: protectedProcedure.handler(async ({ context }) => {
     const userId = requireUserId(context);
     const config = getPowerSyncServerConfig();
-    try {
-      await reconcileUserMembershipsIfStale(
-        createHouseholdDeps(),
-        userId,
-        TOKEN_RECONCILE_MAX_AGE_MS,
-      );
-    } catch (error) {
-      // The projection keeps serving its last verified state; a WorkOS outage
-      // must not take sync down with it.
-      console.error("powersync.token: membership reconcile skipped", { userId, error });
-    }
+    // If a stale projection cannot be refreshed, fail closed instead of
+    // extending potentially-revoked Household access with a fresh token.
+    await reconcileUserMembershipsIfStale(
+      createHouseholdDeps(),
+      userId,
+      TOKEN_RECONCILE_MAX_AGE_MS,
+    );
     return {
       endpoint: config.audience,
       token: await signPowerSyncToken({

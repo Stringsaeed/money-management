@@ -68,9 +68,9 @@ export function selectLedgerSource(input: {
     ? { offlineState: { kind: "offline_cached" as const, reason: input.offlineReason } }
     : {};
 
-  // A migrated Household always wins: this device already uploaded its rows
-  // there, and a Personal Ledger would hide them.
-  if (input.activeHouseholdId && input.activeHouseholdId === input.migratedHouseholdId) {
+  // Every validated Household selection opens that organization's separate
+  // shared Ledger. Existing device rows are never imported as a side effect.
+  if (input.activeHouseholdId) {
     return {
       kind: "synced",
       ledger: householdLedgerBinding(input.activeHouseholdId),

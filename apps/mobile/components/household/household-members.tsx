@@ -18,9 +18,6 @@ export function HouseholdMembers({
 }: {
   members: readonly HouseholdMember[];
   currentUserId: string;
-  /** @deprecated Ownership transfer removed; kept optional for call-site churn. */
-  isOwner?: boolean;
-  householdId?: string;
 }) {
   return (
     <View>
@@ -37,7 +34,7 @@ export function HouseholdMembers({
             <Text className="font-body-normal text-xs text-ink/40">{member.userEmail}</Text>
           </View>
           <Text className="font-body-semibold text-xs uppercase tracking-wide text-ink/40">
-            {member.role === "admin" ? "👑 " : ""}
+            {member.role === "admin" ? "🛡️ " : ""}
             {roleLabel(member.role)}
           </Text>
         </View>

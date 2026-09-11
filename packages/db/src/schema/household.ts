@@ -15,20 +15,29 @@ export type MembershipStatus = (typeof MEMBERSHIP_STATUSES)[number];
  * call, so a retried create finds the Household it already made instead of
  * creating a second Organization.
  */
-export const household = pgTable("household", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  createdByUserId: text("created_by_user_id").references(() => auth.user.id, {
-    onDelete: "set null",
-  }),
-  createRequestId: text("create_request_id").unique(),
-  membersReconciledAt: timestamptz("members_reconciled_at"),
-  createdAt: timestamptz("created_at").defaultNow().notNull(),
-  updatedAt: timestamptz("updated_at")
-    .defaultNow()
-    .$onUpdate(() => /* @__PURE__ */ new Date())
-    .notNull(),
-});
+export const household = pgTable(
+  "household",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    createdByUserId: text("created_by_user_id").references(() => auth.user.id, {
+      onDelete: "set null",
+    }),
+    createRequestId: text("create_request_id"),
+    membersReconciledAt: timestamptz("members_reconciled_at"),
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("household_creator_request_unique").on(
+      table.createdByUserId,
+      table.createRequestId,
+    ),
+  ],
+);
 
 /**
  * Membership is a derived projection of a WorkOS organization membership.

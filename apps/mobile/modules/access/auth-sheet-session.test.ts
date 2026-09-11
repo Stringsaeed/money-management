@@ -13,7 +13,7 @@ const user: Identity = {
 describe("canPresentAuthSheet", () => {
   it.each([
     { kind: "anonymous" },
-    { kind: "session_revoked", lastKnown: user },
+    { kind: "session_revoked", lastKnown: user, selection: { kind: "personal" } },
   ] satisfies AccessCore[])("allows $kind", (core) => {
     expect(canPresentAuthSheet(core)).toBe(true);
   });

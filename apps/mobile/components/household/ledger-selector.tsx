@@ -19,13 +19,13 @@ export function LedgerSelector({ access }: { readonly access: SignedInAccess }) 
             {access.selection.kind === "personal" ? (
               <NativePrimaryButton
                 label="Personal ✓"
-                onPress={() => access.setActiveHousehold(null)}
+                onPress={() => access.selectLedger(null)}
                 testID="select-ledger-personal"
               />
             ) : (
               <NativeSecondaryButton
                 label="Personal"
-                onPress={() => access.setActiveHousehold(null)}
+                onPress={() => access.selectLedger(null)}
                 testID="select-ledger-personal"
               />
             )}
@@ -53,13 +53,13 @@ function HouseholdOption({
       {selected ? (
         <NativePrimaryButton
           label={`${household.name} ✓`}
-          onPress={() => access.setActiveHousehold(household.householdId)}
+          onPress={() => access.selectLedger(household.householdId)}
           testID={`select-household-${household.householdId}`}
         />
       ) : (
         <NativeSecondaryButton
           label={`${household.name} · ${roleHint(household.role)}`}
-          onPress={() => access.setActiveHousehold(household.householdId)}
+          onPress={() => access.selectLedger(household.householdId)}
           testID={`select-household-${household.householdId}`}
         />
       )}

@@ -2,8 +2,9 @@ import { createDb } from "@trove/db";
 import { z } from "zod";
 
 import { protectedProcedure } from "../index";
+import { createHouseholdDeps } from "../lib/households/deps";
 import { requireUserId } from "../lib/require-user";
-import { requireHouseholdMember } from "../lib/require-member";
+import { requireFreshHouseholdMember } from "../lib/require-member";
 import { computeImportManifest } from "../lib/migration/manifest";
 
 export const migrationRouter = {
@@ -17,7 +18,7 @@ export const migrationRouter = {
     .handler(async ({ context, input }) => {
       const userId = requireUserId(context);
       const db = createDb();
-      await requireHouseholdMember(db, userId, input.householdId);
+      await requireFreshHouseholdMember(createHouseholdDeps(db), userId, input.householdId);
       return computeImportManifest(db, input.householdId);
     }),
 };

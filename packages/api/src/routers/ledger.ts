@@ -5,9 +5,10 @@ import { z } from "zod";
 import { category } from "@trove/db/schema/ledger";
 
 import type { CommandDatabase } from "../lib/commands/types";
+import { createHouseholdDeps } from "../lib/households/deps";
 import type { HouseholdCaller } from "../lib/require-member";
 import { getTransaction, listAccounts, listTransactions } from "../lib/ledger/read";
-import { requireHouseholdMember } from "../lib/require-member";
+import { requireFreshHouseholdMember, requireHouseholdMember } from "../lib/require-member";
 import { requireUserId } from "../lib/require-user";
 import { protectedProcedure } from "../index";
 
@@ -50,37 +51,41 @@ async function listCategories(db: CommandDatabase, caller: HouseholdCaller) {
  */
 export const ledgerRouter = {
   accounts: {
-    list: protectedProcedure.input(householdInput).handler(({ context, input }) => {
+    list: protectedProcedure.input(householdInput).handler(async ({ context, input }) => {
       const userId = requireUserId(context);
-      return listAccounts(createDb(), { userId, householdId: input.householdId });
+      const db = createDb();
+      await requireFreshHouseholdMember(createHouseholdDeps(db), userId, input.householdId);
+      return listAccounts(db, { userId, householdId: input.householdId });
     }),
   },
 
   categories: {
-    list: protectedProcedure.input(householdInput).handler(({ context, input }) => {
+    list: protectedProcedure.input(householdInput).handler(async ({ context, input }) => {
       const userId = requireUserId(context);
-      return listCategories(createDb(), { userId, householdId: input.householdId });
+      const db = createDb();
+      await requireFreshHouseholdMember(createHouseholdDeps(db), userId, input.householdId);
+      return listCategories(db, { userId, householdId: input.householdId });
     }),
   },
 
   transactions: {
     /** Newest-first page of ledger transactions with keyset cursor. */
-    list: protectedProcedure.input(transactionsInput).handler(({ context, input }) => {
+    list: protectedProcedure.input(transactionsInput).handler(async ({ context, input }) => {
       const userId = requireUserId(context);
+      const db = createDb();
+      await requireFreshHouseholdMember(createHouseholdDeps(db), userId, input.householdId);
       return listTransactions(
-        createDb(),
+        db,
         { userId, householdId: input.householdId },
         input.limit,
         input.beforeDate ? { date: input.beforeDate, id: input.beforeId ?? "" } : undefined,
       );
     }),
-    get: protectedProcedure.input(transactionDetailInput).handler(({ context, input }) => {
+    get: protectedProcedure.input(transactionDetailInput).handler(async ({ context, input }) => {
       const userId = requireUserId(context);
-      return getTransaction(
-        createDb(),
-        { userId, householdId: input.householdId },
-        input.transactionId,
-      );
+      const db = createDb();
+      await requireFreshHouseholdMember(createHouseholdDeps(db), userId, input.householdId);
+      return getTransaction(db, { userId, householdId: input.householdId }, input.transactionId);
     }),
   },
 };

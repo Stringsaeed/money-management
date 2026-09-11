@@ -29,6 +29,7 @@ describe("AccessBanner", () => {
     const revokedAccess: AccessState = {
       kind: "session_revoked",
       lastKnown: { userId: "user-1", email: "a@b.c", displayName: "A" },
+      selection: { kind: "personal" },
       reauthenticate,
       signOut: jest.fn(async () => undefined),
     };
@@ -57,6 +58,7 @@ describe("AccessBanner", () => {
     const revokedAccess: AccessState = {
       kind: "session_revoked",
       lastKnown: { userId: "user-1", email: "a@b.c", displayName: "A" },
+      selection: { kind: "personal" },
       reauthenticate: jest.fn(),
       signOut: jest.fn(async () => undefined),
     };

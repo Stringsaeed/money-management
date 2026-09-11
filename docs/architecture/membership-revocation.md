@@ -11,15 +11,15 @@
 
 ## Worst-case online revocation
 
-| Path                           | Bound                                                                                                   |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| API Commands / Household reads | Immediate after webhook projection, or within 60s via reconcile-on-read if the webhook was missed.      |
-| New PowerSync token            | Immediate after webhook, or within 5m via token-time reconcile if the webhook was missed.               |
-| Existing PowerSync connection  | Until the current sync token expires. Tokens are issued with a **30-minute** TTL (`TOKEN_TTL_SECONDS`). |
+| Path                           | Bound                                                                                                                                 |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| API Commands / Household reads | Immediate after webhook projection, or within 60s via reconcile-on-read if the webhook was missed.                                    |
+| New PowerSync token            | Immediate after webhook, or within 5m via token-time reconcile if the webhook was missed; stale refresh failures deny token issuance. |
+| Existing PowerSync connection  | Until the current sync token expires. Tokens are issued with a **30-minute** TTL (`TOKEN_TTL_SECONDS`).                               |
 
 **Worst-case online revocation for an already-connected sync client:** about **30 minutes** (remaining token lifetime) when webhooks are delayed or missed, plus up to **5 minutes** before the next token reconcile if the client refreshes just before expiry without a webhook. With timely webhooks, stream queries deny inactive Memberships on the next evaluation without waiting for token expiry.
 
-Do not claim immediate global revocation from webhook delivery alone. An offline device cannot observe remote removal until it reconnects; confirmed removal then stops uploads and clears that Household's pending edits and cache on the device.
+Do not claim immediate global revocation from webhook delivery alone. An offline device cannot observe remote removal until it reconnects. Once `listMine` confirms removal, mobile disconnects uploads, marks that Household's queued Commands discard-only, and unselects its Ledger. Sync Stream unsubscription is expected to evict downloaded rows; iOS/Android evidence is still required before claiming the cache-clear criterion passes.
 
 ## Assumptions
 

@@ -114,11 +114,15 @@ describe("createHousehold", () => {
     ]);
   });
 
-  it("refuses another User's requestId", async () => {
-    await createHome();
-    await expect(
-      createHousehold(deps, { actor: BOB, name: "Mine", requestId: REQUEST }),
-    ).rejects.toThrow(/another User/);
+  it("scopes requestId idempotency to the creating User", async () => {
+    const alice = await createHome();
+    const bob = await createHousehold(deps, {
+      actor: BOB,
+      name: "Mine",
+      requestId: REQUEST,
+    });
+    expect(bob.householdId).not.toBe(alice.householdId);
+    expect(directory.organizations.size).toBe(2);
   });
 });
 
@@ -239,6 +243,23 @@ describe("member administration", () => {
         role: "member",
       }),
     ).rejects.toThrow(/admin/);
+  });
+
+  it("refreshes stale WorkOS authority before trusting a projected admin role", async () => {
+    const home = await createHome();
+    const alice = [...directory.memberships.values()].find((row) => row.userId === ALICE.id);
+    await directory.setMembershipRole(alice!.id, "member");
+    advance(61_000);
+
+    await expect(
+      inviteMember(deps, {
+        userId: ALICE.id,
+        householdId: home.householdId,
+        email: "carla@example.com",
+        role: "member",
+      }),
+    ).rejects.toThrow(/admin/);
+    expect(directory.invitations).toEqual([]);
   });
 
   it("changes a role in WorkOS first and projects the result", async () => {
@@ -418,7 +439,9 @@ describe("widget handoff", () => {
       userId: ALICE.id,
       householdId: home.householdId,
     });
-    await db.update(membership).set({ role: "member" }).where(eq(membership.userId, ALICE.id));
+    const alice = [...directory.memberships.values()].find((row) => row.userId === ALICE.id);
+    await directory.setMembershipRole(alice!.id, "member");
+    advance(61_000);
     expect(await exchangeWidgetHandoff(deps, fresh.code)).toBeNull();
     expect(await exchangeWidgetHandoff(deps, "not-a-real-code-at-all")).toBeNull();
   });

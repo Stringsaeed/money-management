@@ -53,6 +53,7 @@ export interface HouseholdDetail {
 }
 
 async function requireActive(deps: HouseholdDeps, userId: string, householdId: string) {
+  await reconcileUserMembershipsIfStale(deps, userId, USER_RECONCILE_MAX_AGE_MS);
   const active = await findActiveMembership(deps.db, userId, householdId);
   if (!active) {
     throw new ORPCError("NOT_FOUND", { message: "You are not a member of this Household." });
@@ -69,6 +70,7 @@ async function requireAdmin(deps: HouseholdDeps, userId: string, householdId: st
 }
 
 async function activeMembers(deps: HouseholdDeps, householdId: string) {
+  await reconcileHouseholdMembersIfStale(deps, householdId, HOUSEHOLD_RECONCILE_MAX_AGE_MS);
   return deps.db
     .select({ id: membership.id, userId: membership.userId, role: membership.role })
     .from(membership)
@@ -98,14 +100,13 @@ export async function createHousehold(
   await ensureUserProjection(db, input.actor);
 
   const priorRows = await db
-    .select({ id: household.id, name: household.name, createdByUserId: household.createdByUserId })
+    .select({ id: household.id, name: household.name })
     .from(household)
-    .where(eq(household.createRequestId, input.requestId))
+    .where(
+      and(eq(household.createdByUserId, userId), eq(household.createRequestId, input.requestId)),
+    )
     .limit(1);
   const prior = priorRows[0];
-  if (prior && prior.createdByUserId !== userId) {
-    throw new ORPCError("CONFLICT", { message: "This create request belongs to another User." });
-  }
 
   const organizationId =
     prior?.id ??
@@ -352,6 +353,7 @@ export async function exchangeWidgetHandoff(
 ): Promise<WidgetSession | null> {
   const consumed = await consumeWidgetHandoff(deps.db, code, deps.now());
   if (!consumed) return null;
+  await reconcileUserMembershipsIfStale(deps, consumed.userId, USER_RECONCILE_MAX_AGE_MS);
   const active = await findActiveMembership(deps.db, consumed.userId, consumed.organizationId);
   if (active?.role !== "admin") return null;
   const minted = await deps.directory.mintWidgetToken({

@@ -5,10 +5,12 @@ import { NativeHost, NativePrimaryButton } from "@/components/native-ui";
 import { inputTextStyle } from "@/components/ui/input-style";
 import { Text } from "@/components/ui/text";
 import { useCreateHousehold } from "@/hooks/use-households";
+import { generateId } from "@/utils/id";
 
 /** Names and creates a new shared household; the creator becomes its admin. */
 export function CreateHouseholdForm({ onCreated }: { onCreated?: () => void }) {
   const [name, setName] = useState("");
+  const [requestId, setRequestId] = useState(generateId);
   const createHousehold = useCreateHousehold();
   const trimmed = name.trim();
   const disabled = !trimmed || createHousehold.isPending;
@@ -16,8 +18,9 @@ export function CreateHouseholdForm({ onCreated }: { onCreated?: () => void }) {
   async function handleCreate() {
     if (!trimmed) return;
     try {
-      await createHousehold.mutateAsync(trimmed);
+      await createHousehold.mutateAsync({ name: trimmed, requestId });
       setName("");
+      setRequestId(generateId());
       onCreated?.();
     } catch {
       // Error surfaced by the mutation's error state below.

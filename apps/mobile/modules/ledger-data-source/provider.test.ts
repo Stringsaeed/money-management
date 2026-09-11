@@ -10,7 +10,7 @@ const facts = (overrides: Partial<Parameters<typeof selectLedgerSource>[0]> = {}
 });
 
 describe("selectLedgerSource", () => {
-  it("selects synced only for the persisted migrated active household", () => {
+  it("selects every validated active Household as its shared synced Ledger", () => {
     expect(
       selectLedgerSource(
         facts({
@@ -32,7 +32,11 @@ describe("selectLedgerSource", () => {
           migratedHouseholdId: "household-1",
         }),
       ),
-    ).toEqual({ kind: "local" });
+    ).toEqual({
+      kind: "synced",
+      ledger: householdLedgerBinding("household-2"),
+      userId: "user-1",
+    });
   });
 
   it("keeps a migrated household synced while degraded", () => {
@@ -56,7 +60,7 @@ describe("selectLedgerSource", () => {
     });
   });
 
-  it("stays local for anonymous sessions and for households this device never migrated", () => {
+  it("stays local for anonymous sessions and when no Ledger is selected for sync", () => {
     expect(
       selectLedgerSource(
         facts({ activeHouseholdId: "household-1", migratedHouseholdId: "household-1" }),
@@ -85,7 +89,7 @@ describe("selectLedgerSource", () => {
     ).toEqual({ kind: "local" });
   });
 
-  it("prefers a migrated Household over a personal opt-in so uploaded rows stay visible", () => {
+  it("prefers a selected Household over a personal sync opt-in", () => {
     expect(
       selectLedgerSource(
         facts({

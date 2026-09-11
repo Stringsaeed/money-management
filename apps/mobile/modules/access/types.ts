@@ -56,7 +56,11 @@ export type AccessCore =
       readonly memberships: readonly MembershipSummary[];
       readonly selection: LedgerSelection;
     }
-  | { readonly kind: "session_revoked"; readonly lastKnown: Identity };
+  | {
+      readonly kind: "session_revoked";
+      readonly lastKnown: Identity;
+      readonly selection: LedgerSelection;
+    };
 
 export type InternalHref = "/(tabs)/settings/household" | "/(tabs)" | "/(tabs)/settings";
 
@@ -76,13 +80,14 @@ export type AccessState =
       readonly household: HouseholdAccess;
       readonly memberships: readonly MembershipSummary[];
       readonly selection: LedgerSelection;
-      /** Pass null to select the Personal Ledger. */
-      readonly setActiveHousehold: (householdId: string | null) => Promise<void>;
+      /** Pass null to select the Personal Ledger. Household ids are validated against listMine. */
+      readonly selectLedger: (householdId: string | null) => Promise<void>;
       readonly signOut: () => Promise<void>;
     }
   | {
       readonly kind: "session_revoked";
       readonly lastKnown: Identity;
+      readonly selection: LedgerSelection;
       readonly reauthenticate: (target: ReturnTo) => void;
       readonly signOut: () => Promise<void>;
     };

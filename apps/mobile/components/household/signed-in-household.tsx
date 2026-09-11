@@ -4,6 +4,7 @@ import { View } from "react-native";
 import { ActiveHouseholdPanel } from "@/components/household/active-household-panel";
 import type { HouseholdMember } from "@/components/household/household-members";
 import { CreateHouseholdForm } from "@/components/household/create-household-form";
+import { JoinHouseholdForm } from "@/components/household/join-household-form";
 import { LedgerSelector } from "@/components/household/ledger-selector";
 import { PersonalSyncCard } from "@/components/household/personal-sync-card";
 import { NativeHost, NativePrimaryButton, NativeSecondaryButton } from "@/components/native-ui";
@@ -36,7 +37,6 @@ export function SignedInHousehold({ access }: { readonly access: SignedInAccess 
           name={active.name}
           currentUserId={access.user.userId}
           isAdmin={isAdmin}
-          needsSync={enrollment.migratedHouseholdId !== active.householdId}
           members={members}
           adminless={detail?.adminless === true}
         />
@@ -105,13 +105,10 @@ function PersonalAndCreateCards({ personalEnabled }: { readonly personalEnabled:
         </View>
       </Card>
       <Card>
-        <View className="gap-2 p-4">
+        <View className="px-4 pt-4">
           <Text className="font-body-semibold text-sm">Join a Household</Text>
-          <Text className="text-xs text-ink/50">
-            Accept the WorkOS invitation email (hosted AuthKit). Custom invite codes are gone —
-            joining never moves your Personal ledger into the shared one.
-          </Text>
         </View>
+        <JoinHouseholdForm />
       </Card>
     </>
   );

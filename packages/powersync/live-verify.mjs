@@ -19,10 +19,10 @@ const userA = `${runId}-user-a`;
 const userB = `${runId}-user-b`;
 const userC = `${runId}-user-c`;
 const publicAccountId = `${runId}-public-account`;
-const privateAccountId = `${runId}-private-account`;
+const savingsAccountId = `${runId}-savings-account`;
 const categoryId = `${runId}-category`;
 const publicTransactionId = `${runId}-public-transaction`;
-const privateTransactionId = `${runId}-private-transaction`;
+const savingsTransactionId = `${runId}-savings-transaction`;
 const workspaceId = `${runId}-workspace`;
 const envelopeId = `${runId}-envelope`;
 const mappingId = `${runId}-mapping`;
@@ -31,9 +31,9 @@ const rolloverId = `${runId}-rollover`;
 const assignmentId = `${runId}-assignment`;
 const refundLinkId = `${runId}-refund-link`;
 const publicRuleId = `${runId}-public-rule`;
-const privateRuleId = `${runId}-private-rule`;
+const savingsRuleId = `${runId}-savings-rule`;
 const publicOccurrenceId = `${runId}-public-occurrence`;
-const privateOccurrenceId = `${runId}-private-occurrence`;
+const savingsOccurrenceId = `${runId}-savings-occurrence`;
 // User C belongs to no household and exercises the Personal Ledger stream.
 const personalLedgerId = `personal:${runId}-user-c`;
 const personalAccountId = `${runId}-personal-account`;
@@ -105,15 +105,18 @@ try {
   assert.deepEqual(await ids(clientA.db, "membership"), [`${runId}-membership-a`]);
   assert.deepEqual(await ids(clientB.db, "membership"), [`${runId}-membership-b`]);
   assert.deepEqual(await ids(clientC.db, "membership"), []);
-  assert.deepEqual(await ids(clientA.db, "accounts"), [privateAccountId, publicAccountId].sort());
-  assert.deepEqual(await ids(clientB.db, "accounts"), [publicAccountId]);
+  assert.deepEqual(await ids(clientA.db, "accounts"), [publicAccountId, savingsAccountId].sort());
+  assert.deepEqual(await ids(clientB.db, "accounts"), [publicAccountId, savingsAccountId].sort());
   assert.deepEqual(await ids(clientA.db, "categories"), [categoryId]);
   assert.deepEqual(await ids(clientB.db, "categories"), [categoryId]);
   assert.deepEqual(
     await ids(clientA.db, "transactions"),
-    [privateTransactionId, publicTransactionId].sort(),
+    [publicTransactionId, savingsTransactionId].sort(),
   );
-  assert.deepEqual(await ids(clientB.db, "transactions"), [publicTransactionId]);
+  assert.deepEqual(
+    await ids(clientB.db, "transactions"),
+    [publicTransactionId, savingsTransactionId].sort(),
+  );
   // User C is in no Household: they see their Personal Ledger and nothing else,
   // and their rows never reach the Household members.
   assert.deepEqual(await ids(clientC.db, "accounts"), [personalAccountId]);
@@ -132,14 +135,17 @@ try {
     assert.equal((await ids(clientB.db, table)).length, 1, `${table} missing for member`);
     assert.deepEqual(await ids(clientC.db, table), [], `${table} leaked to non-member`);
   }
-  assert.deepEqual(await ids(clientA.db, "recurring_rules"), [privateRuleId, publicRuleId].sort());
-  assert.deepEqual(await ids(clientB.db, "recurring_rules"), [publicRuleId]);
+  assert.deepEqual(await ids(clientA.db, "recurring_rules"), [publicRuleId, savingsRuleId].sort());
+  assert.deepEqual(await ids(clientB.db, "recurring_rules"), [publicRuleId, savingsRuleId].sort());
   assert.deepEqual(await ids(clientC.db, "recurring_rules"), []);
   assert.deepEqual(
     await ids(clientA.db, "recurring_occurrences"),
-    [privateOccurrenceId, publicOccurrenceId].sort(),
+    [publicOccurrenceId, savingsOccurrenceId].sort(),
   );
-  assert.deepEqual(await ids(clientB.db, "recurring_occurrences"), [publicOccurrenceId]);
+  assert.deepEqual(
+    await ids(clientB.db, "recurring_occurrences"),
+    [publicOccurrenceId, savingsOccurrenceId].sort(),
+  );
   assert.deepEqual(await ids(clientC.db, "recurring_occurrences"), []);
 
   const warmup = await measureLag(clientA.db, 10, "warmup");
@@ -157,7 +163,7 @@ try {
         runId,
         auth: "ES256",
         tenancy: "pass",
-        privateAccountIsolation: "pass",
+        householdAccountsShared: "pass",
         personalLedgerIsolation: "pass",
         budgetDomains: "pass",
         recurringDomains: "pass",
@@ -286,7 +292,7 @@ async function seed() {
       created_by, updated_by, created_at, updated_at
     ) VALUES
       (${publicAccountId}, ${householdId}, ${householdId}, 'Shared', 'bank', 'USD', '#4A90D9', 'banknote.fill', 0, false, 0, 'active', 'public', null, 0, ${userA}, ${userA}, now(), now()),
-      (${privateAccountId}, ${householdId}, ${householdId}, 'Private', 'bank', 'USD', '#4A90D9', 'banknote.fill', 0, false, 1, 'active', 'private', ${userA}, 0, ${userA}, ${userA}, now(), now())
+      (${savingsAccountId}, ${householdId}, ${householdId}, 'Shared savings', 'bank', 'USD', '#4A90D9', 'banknote.fill', 0, false, 1, 'active', 'public', ${userA}, 0, ${userA}, ${userA}, now(), now())
   `;
   await sql`
     INSERT INTO categories (
@@ -296,57 +302,57 @@ async function seed() {
   `;
   await seedPersonalLedger();
   await insertTransaction(publicTransactionId, publicAccountId);
-  await insertTransaction(privateTransactionId, privateAccountId);
+  await insertTransaction(savingsTransactionId, savingsAccountId);
   await sql`
     INSERT INTO budget_workspaces (
-      id, household_id, currency, activation_period, version,
+      id, ledger_id, household_id, currency, activation_period, version,
       created_by, updated_by, created_at, updated_at
-    ) VALUES (${workspaceId}, ${householdId}, 'USD', '2026-09', 0, ${userA}, ${userA}, now(), now())
+    ) VALUES (${workspaceId}, ${householdId}, ${householdId}, 'USD', '2026-09', 0, ${userA}, ${userA}, now(), now())
   `;
   await sql`
     INSERT INTO envelopes (
-      id, household_id, currency, name, icon, color, lifecycle, sort_order, version,
+      id, ledger_id, household_id, currency, name, icon, color, lifecycle, sort_order, version,
       created_by, updated_by, created_at, updated_at
-    ) VALUES (${envelopeId}, ${householdId}, 'USD', 'Z3 envelope', 'box', '#8B9D83', 'active', 0, 0, ${userA}, ${userA}, now(), now())
+    ) VALUES (${envelopeId}, ${householdId}, ${householdId}, 'USD', 'Z3 envelope', 'box', '#8B9D83', 'active', 0, 0, ${userA}, ${userA}, now(), now())
   `;
   await sql`
     INSERT INTO category_mappings (
-      id, household_id, category_id, envelope_id, effective_from_period, version,
+      id, ledger_id, household_id, category_id, envelope_id, effective_from_period, version,
       created_by, updated_by, created_at, updated_at
-    ) VALUES (${mappingId}, ${householdId}, ${categoryId}, ${envelopeId}, '2026-09', 0, ${userA}, ${userA}, now(), now())
+    ) VALUES (${mappingId}, ${householdId}, ${householdId}, ${categoryId}, ${envelopeId}, '2026-09', 0, ${userA}, ${userA}, now(), now())
   `;
   await sql`
     INSERT INTO funding_memberships (
-      id, household_id, account_id, currency, active, effective_from_period, version,
+      id, ledger_id, household_id, account_id, currency, active, effective_from_period, version,
       created_by, updated_by, created_at, updated_at
-    ) VALUES (${fundingId}, ${householdId}, ${publicAccountId}, 'USD', true, '2026-09', 0, ${userA}, ${userA}, now(), now())
+    ) VALUES (${fundingId}, ${householdId}, ${householdId}, ${publicAccountId}, 'USD', true, '2026-09', 0, ${userA}, ${userA}, now(), now())
   `;
   await sql`
     INSERT INTO rollover_settings (
-      id, household_id, envelope_id, positive_rollover, effective_from_period, version,
+      id, ledger_id, household_id, envelope_id, positive_rollover, effective_from_period, version,
       created_by, updated_by, created_at, updated_at
-    ) VALUES (${rolloverId}, ${householdId}, ${envelopeId}, true, '2026-09', 0, ${userA}, ${userA}, now(), now())
+    ) VALUES (${rolloverId}, ${householdId}, ${householdId}, ${envelopeId}, true, '2026-09', 0, ${userA}, ${userA}, now(), now())
   `;
   await sql`
     INSERT INTO assignments (
-      id, household_id, currency, budget_period, destination_envelope_id, amount_minor, version,
+      id, ledger_id, household_id, currency, budget_period, destination_envelope_id, amount_minor, version,
       created_by, updated_by, created_at, updated_at
-    ) VALUES (${assignmentId}, ${householdId}, 'USD', '2026-09', ${envelopeId}, 100, 0, ${userA}, ${userA}, now(), now())
+    ) VALUES (${assignmentId}, ${householdId}, ${householdId}, 'USD', '2026-09', ${envelopeId}, 100, 0, ${userA}, ${userA}, now(), now())
   `;
   await sql`
     INSERT INTO refund_links (
-      id, household_id, original_transaction_id, refund_transaction_id, currency, amount_minor,
+      id, ledger_id, household_id, original_transaction_id, refund_transaction_id, currency, amount_minor,
       version, created_by, updated_by, created_at, updated_at
-    ) VALUES (${refundLinkId}, ${householdId}, ${publicTransactionId}, ${privateTransactionId}, 'USD', 10, 0, ${userA}, ${userA}, now(), now())
+    ) VALUES (${refundLinkId}, ${householdId}, ${householdId}, ${publicTransactionId}, ${savingsTransactionId}, 'USD', 10, 0, ${userA}, ${userA}, now(), now())
   `;
   await insertRule(publicRuleId, publicAccountId);
-  await insertRule(privateRuleId, privateAccountId);
+  await insertRule(savingsRuleId, savingsAccountId);
   await sql`
     INSERT INTO recurring_occurrences (
-      id, household_id, rule_id, scheduled_date, transaction_id, settled_at
+      id, ledger_id, household_id, rule_id, scheduled_date, transaction_id, settled_at
     ) VALUES
-      (${publicOccurrenceId}, ${householdId}, ${publicRuleId}, '2026-09-07', ${publicTransactionId}, now()),
-      (${privateOccurrenceId}, ${householdId}, ${privateRuleId}, '2026-09-08', ${privateTransactionId}, now())
+      (${publicOccurrenceId}, ${householdId}, ${householdId}, ${publicRuleId}, '2026-09-07', ${publicTransactionId}, now()),
+      (${savingsOccurrenceId}, ${householdId}, ${householdId}, ${savingsRuleId}, '2026-09-08', ${savingsTransactionId}, now())
   `;
 }
 
@@ -390,11 +396,11 @@ async function seedPersonalLedger() {
 async function insertRule(id, accountId) {
   await sql`
     INSERT INTO recurring_rules (
-      id, household_id, name, type, amount_minor, currency, account_id, description,
+      id, ledger_id, household_id, name, type, amount_minor, currency, account_id, description,
       frequency, interval_count, start_date, time_zone, lifecycle, health,
       attention_reasons, eligibility_floor, revision, created_by, updated_by, created_at, updated_at
     ) VALUES (
-      ${id}, ${householdId}, ${id}, 'expense', 100, 'USD', ${accountId}, 'verification',
+      ${id}, ${householdId}, ${householdId}, ${id}, 'expense', 100, 'USD', ${accountId}, 'verification',
       'month', 1, '2026-09-07', 'Asia/Dubai', 'active', 'ready', '[]', '2026-09-07', 1,
       ${userA}, ${userA}, now(), now()
     )

@@ -11,8 +11,8 @@ import { PowerSyncWorker } from "@/components/sync/powersync-worker";
 export function SyncWorker() {
   return (
     <Fragment>
-      <PowerSyncWorker />
       <MembershipRevocationCleanup />
+      <PowerSyncWorker />
     </Fragment>
   );
 }

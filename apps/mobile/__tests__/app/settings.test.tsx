@@ -355,7 +355,7 @@ describe("app/settings", () => {
       household: { kind: "none" },
       memberships: [],
       selection: { kind: "personal" },
-      setActiveHousehold: jest.fn(),
+      selectLedger: jest.fn(),
       signOut: jest.fn(),
     });
 
@@ -374,6 +374,7 @@ describe("app/settings", () => {
     mockUseAccess.mockReturnValue({
       kind: "session_revoked",
       lastKnown: { userId: "user-1", email: "ada@trove.ing", displayName: "Ada" },
+      selection: { kind: "personal" },
       reauthenticate: mockReauthenticate,
       signOut: jest.fn(),
     });

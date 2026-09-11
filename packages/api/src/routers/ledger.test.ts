@@ -52,15 +52,15 @@ beforeEach(async () => {
     {
       ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
-      id: "account-private",
-      name: "Personal checking",
+      id: "account-savings",
+      name: "Shared savings",
       type: "bank",
       currency: "USD",
       version: 0,
       createdBy: OWNER,
       updatedBy: OWNER,
       ownerUserId: OWNER,
-      visibility: "private",
+      visibility: "public",
     },
   ]);
   await db.insert(transaction).values([
@@ -80,12 +80,12 @@ beforeEach(async () => {
     {
       ledgerId: HOUSEHOLD_ID,
       householdId: HOUSEHOLD_ID,
-      id: "transaction-private",
+      id: "transaction-savings",
       type: "income",
       amountMinor: 1000,
       currency: "USD",
       date: "2026-02-02",
-      accountId: "account-private",
+      accountId: "account-savings",
       version: 0,
       createdBy: OWNER,
       updatedBy: OWNER,
@@ -93,36 +93,36 @@ beforeEach(async () => {
   ]);
 });
 
-describe("ledger privacy reads", () => {
-  it("returns private accounts and transactions only to their owner", async () => {
+describe("shared Household ledger reads", () => {
+  it("returns every Household Account and Transaction to every active member", async () => {
     await expect(
       listAccounts(db, { userId: OWNER, householdId: HOUSEHOLD_ID }),
     ).resolves.toHaveLength(2);
     await expect(
       listTransactions(db, { userId: OWNER, householdId: HOUSEHOLD_ID }, 10),
     ).resolves.toMatchObject({
-      transactions: [{ id: "transaction-private" }, { id: "transaction-public" }],
+      transactions: [{ id: "transaction-savings" }, { id: "transaction-public" }],
     });
 
     await expect(
       listAccounts(db, { userId: MEMBER, householdId: HOUSEHOLD_ID }),
-    ).resolves.toMatchObject([{ id: "account-public" }]);
+    ).resolves.toHaveLength(2);
     await expect(
       listTransactions(db, { userId: MEMBER, householdId: HOUSEHOLD_ID }, 10),
     ).resolves.toMatchObject({
-      transactions: [{ id: "transaction-public" }],
+      transactions: [{ id: "transaction-savings" }, { id: "transaction-public" }],
     });
   });
 });
 
 describe("transaction detail", () => {
-  it("applies the same private visibility predicate to detail reads", async () => {
+  it("returns shared transaction detail to every active member", async () => {
     await expect(
-      getTransaction(db, { userId: OWNER, householdId: HOUSEHOLD_ID }, "transaction-private"),
-    ).resolves.toMatchObject({ id: "transaction-private" });
+      getTransaction(db, { userId: OWNER, householdId: HOUSEHOLD_ID }, "transaction-savings"),
+    ).resolves.toMatchObject({ id: "transaction-savings" });
     await expect(
-      getTransaction(db, { userId: MEMBER, householdId: HOUSEHOLD_ID }, "transaction-private"),
-    ).resolves.toBeNull();
+      getTransaction(db, { userId: MEMBER, householdId: HOUSEHOLD_ID }, "transaction-savings"),
+    ).resolves.toMatchObject({ id: "transaction-savings" });
   });
 });
 
@@ -182,7 +182,7 @@ describe("transaction pagination", () => {
       "transaction-same-c",
       "transaction-same-b",
       "transaction-same-a",
-      "transaction-public",
+      "transaction-savings",
     ]);
   });
 });

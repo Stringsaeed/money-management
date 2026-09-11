@@ -33,7 +33,6 @@ export async function listSoleAdminHouseholds(
       householdId: membership.householdId,
       userId: membership.userId,
       role: membership.role,
-      status: membership.status,
     })
     .from(membership)
     .where(eq(membership.status, "active"));

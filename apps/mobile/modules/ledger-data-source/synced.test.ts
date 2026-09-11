@@ -131,7 +131,7 @@ describe("PowerSync synced ledger data source", () => {
     const { collections, ledger, source } = await createHarness();
     const update = jest.spyOn(collections.accounts, "update");
 
-    await source.accounts.update(account.id, { name: "Daily", visibility: "private" });
+    await source.accounts.update(account.id, { name: "Daily" });
 
     expect(update).toHaveBeenCalledWith(
       account.id,
@@ -141,7 +141,7 @@ describe("PowerSync synced ledger data source", () => {
           envelope: expect.objectContaining({
             kind: "account.update",
             scope: { type: "organization", organizationId: HOUSEHOLD_ID },
-            payload: { accountId: account.id, name: "Daily", visibility: "private" },
+            payload: { accountId: account.id, name: "Daily" },
             preconditions: [{ entityId: account.id, expectedVersion: 3 }],
           }),
         }),
@@ -150,9 +150,21 @@ describe("PowerSync synced ledger data source", () => {
     );
     expect(collections.accounts.get(account.id)).toMatchObject({
       name: "Daily",
-      visibility: "private",
+      visibility: "public",
       version: 4,
     });
+    ledger.dispose();
+  });
+
+  it("does not optimistically hide a Household Account from other members", async () => {
+    const { collections, ledger, source } = await createHarness();
+    const update = jest.spyOn(collections.accounts, "update");
+
+    await expect(source.accounts.update(account.id, { visibility: "private" })).rejects.toThrow(
+      /Household Accounts are shared/,
+    );
+    expect(update).not.toHaveBeenCalled();
+    expect(collections.accounts.get(account.id)).toMatchObject({ visibility: "public" });
     ledger.dispose();
   });
 

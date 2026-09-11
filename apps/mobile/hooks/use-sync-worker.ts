@@ -25,7 +25,7 @@ const QUEUE_STATUS_INTERVAL_MS = 5_000;
 const EMPTY_REJECTED_CHANGES: readonly RejectedChange[] = [];
 
 export function useSyncWorker(
-  householdId: string | null,
+  ledgerId: string | null,
   userId?: string,
   preserveWhenIneligible = false,
 ) {
@@ -39,9 +39,9 @@ export function useSyncWorker(
   const availabilityRef = useRef(initialPowerSyncAvailability());
 
   const statusQuery = useQuery({
-    queryKey: ["sync", "status", householdId],
+    queryKey: ["sync", "status", ledgerId],
     queryFn: () => orpc.sync.status(),
-    enabled: Boolean(householdId && userId),
+    enabled: Boolean(ledgerId && userId),
     refetchInterval: KILL_SWITCH_POLL_INTERVAL_MS,
   });
 
@@ -105,7 +105,7 @@ export function useSyncWorker(
   );
 
   const syncNow = useCallback(async () => {
-    if (!householdId || !userId || statusQuery.data?.killSwitchLocalOnly) return;
+    if (!ledgerId || !userId || statusQuery.data?.killSwitchLocalOnly) return;
     if (syncingRef.current) return;
     syncingRef.current = true;
     setIsSyncing(true);
@@ -120,7 +120,7 @@ export function useSyncWorker(
       setIsSyncing(false);
     }
   }, [
-    householdId,
+    ledgerId,
     observeAvailability,
     refreshPendingCount,
     statusQuery.data?.killSwitchLocalOnly,
@@ -131,7 +131,7 @@ export function useSyncWorker(
     const store = useSyncModeStore.getState();
     void reconcilePowerSyncStatus(
       {
-        householdId,
+        householdId: ledgerId,
         userId,
         killSwitchLocalOnly: statusQuery.data?.killSwitchLocalOnly,
         preserveWhenIneligible,
@@ -153,10 +153,10 @@ export function useSyncWorker(
     ).catch((error) => {
       setLastError(error instanceof Error ? error : new Error("PowerSync connection failed."));
     });
-    if (!householdId || !userId) setPendingCount(0);
+    if (!ledgerId || !userId) setPendingCount(0);
   }, [
     clearAvailabilityObserver,
-    householdId,
+    ledgerId,
     observeAvailability,
     preserveWhenIneligible,
     refreshPendingCount,
@@ -167,21 +167,21 @@ export function useSyncWorker(
   useEffect(() => clearAvailabilityObserver, [clearAvailabilityObserver]);
 
   useEffect(() => {
-    if (!householdId || !userId) return;
+    if (!ledgerId || !userId) return;
     const timer = setInterval(() => void refreshPendingCount(), QUEUE_STATUS_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [householdId, refreshPendingCount, userId]);
+  }, [ledgerId, refreshPendingCount, userId]);
 
   const refetchStatus = statusQuery.refetch;
   useEffect(() => {
-    if (!householdId || !userId) return;
+    if (!ledgerId || !userId) return;
     const subscription = AppState.addEventListener("change", (state) => {
       if (state !== "active") return;
       void refetchStatus();
       void syncNow();
     });
     return () => subscription.remove();
-  }, [householdId, refetchStatus, syncNow, userId]);
+  }, [ledgerId, refetchStatus, syncNow, userId]);
 
   return {
     pendingCount,

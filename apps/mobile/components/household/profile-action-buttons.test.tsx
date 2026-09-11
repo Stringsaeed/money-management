@@ -9,6 +9,7 @@ import { JoinHouseholdForm } from "./join-household-form";
 import { EnableSyncCard } from "./enable-sync-card";
 import { HouseholdMembers } from "./household-members";
 import { ActiveHouseholdPanel } from "./active-household-panel";
+import { LedgerSelector } from "./ledger-selector";
 
 const mockCreateMutateAsync = jest.fn();
 const mockEnableSync = jest.fn();
@@ -63,8 +64,29 @@ describe("CreateHouseholdForm", () => {
     );
     await fireEvent.press(screen.getByText("🏠 Create household"));
     await waitFor(() => {
-      expect(mockCreateMutateAsync).toHaveBeenCalledWith("The Saeeds");
+      expect(mockCreateMutateAsync).toHaveBeenCalledWith({
+        name: "The Saeeds",
+        requestId: expect.stringMatching(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+        ),
+      });
     });
+  });
+
+  it("reuses the create requestId when a retry follows an uncertain failure", async () => {
+    mockCreateMutateAsync
+      .mockRejectedValueOnce(new Error("response lost"))
+      .mockResolvedValueOnce(undefined);
+    await render(<CreateHouseholdForm />);
+    await fireEvent.changeText(screen.getByPlaceholderText(/Household name/), "Home");
+
+    await fireEvent.press(screen.getByText("🏠 Create household"));
+    await fireEvent.press(screen.getByText("🏠 Create household"));
+
+    await waitFor(() => expect(mockCreateMutateAsync).toHaveBeenCalledTimes(2));
+    expect(mockCreateMutateAsync.mock.calls[1]?.[0].requestId).toBe(
+      mockCreateMutateAsync.mock.calls[0]?.[0].requestId,
+    );
   });
 
   it("keeps the create control disabled without a name", async () => {
@@ -78,6 +100,44 @@ describe("JoinHouseholdForm", () => {
     await render(<JoinHouseholdForm />);
     expect(screen.getByText(/invitation link/i)).toBeOnTheScreen();
     expect(screen.queryByPlaceholderText(/Invite code/i)).toBeNull();
+  });
+});
+
+describe("LedgerSelector", () => {
+  it("keeps Personal available and selects any active Household Membership", async () => {
+    const selectLedger = jest.fn(async () => undefined);
+    await render(
+      <LedgerSelector
+        access={{
+          kind: "signed_in",
+          user: { userId: "user-1", email: "ada@trove.ing", displayName: "Ada" },
+          household: { kind: "none" },
+          memberships: [
+            {
+              householdId: "home",
+              name: "Home",
+              role: "admin",
+              joinedAt: "2026-09-01T00:00:00.000Z",
+            },
+            {
+              householdId: "club",
+              name: "Club",
+              role: "viewer",
+              joinedAt: "2026-09-02T00:00:00.000Z",
+            },
+          ],
+          selection: { kind: "personal" },
+          selectLedger,
+          signOut: jest.fn(async () => undefined),
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Personal ✓")).toBeOnTheScreen();
+    expect(screen.getByText("Home · admin")).toBeOnTheScreen();
+    expect(screen.getByText("Club · viewer")).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId("select-household-club"));
+    expect(selectLedger).toHaveBeenCalledWith("club");
   });
 });
 
@@ -167,7 +227,6 @@ describe("ActiveHouseholdPanel", () => {
         name="The Saeeds"
         currentUserId="admin-1"
         isAdmin
-        needsSync={false}
         members={[]}
       />,
     );
@@ -184,7 +243,6 @@ describe("ActiveHouseholdPanel", () => {
         name="The Saeeds"
         currentUserId="member-1"
         isAdmin={false}
-        needsSync={false}
         members={[]}
       />,
     );
@@ -201,7 +259,6 @@ describe("ActiveHouseholdPanel", () => {
         name="The Saeeds"
         currentUserId="admin-1"
         isAdmin
-        needsSync={false}
         members={[]}
       />,
     );
@@ -220,7 +277,6 @@ describe("ActiveHouseholdPanel", () => {
         name="The Saeeds"
         currentUserId="admin-1"
         isAdmin
-        needsSync={false}
         members={[]}
       />,
     );

@@ -93,6 +93,19 @@ describe("PowerSync connector uploadData", () => {
     expect(harness.execute).not.toHaveBeenCalled();
   });
 
+  it("discards queued Commands for a Household after confirmed Membership removal", async () => {
+    const harness = createHarness();
+
+    await processPowerSyncUpload(harness.database, {
+      ...harness,
+      isLedgerRevoked: (ledgerId) => ledgerId === "household-1",
+    });
+
+    expect(harness.apply).not.toHaveBeenCalled();
+    expect(harness.complete).toHaveBeenCalledTimes(1);
+    expect(harness.execute).not.toHaveBeenCalled();
+  });
+
   it("moves entries without a parsed envelope to rejected_changes", async () => {
     const harness = createHarness([
       { id: "transaction-bad", metadata: "not-json", table: "transactions" },

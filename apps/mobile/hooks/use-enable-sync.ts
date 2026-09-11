@@ -64,6 +64,7 @@ export function useEnableSync() {
   // Retrying (a rejected chunk or a manifest mismatch) must reuse the household
   // created on the first attempt instead of creating another one every tap.
   const createdHouseholdIdRef = useRef<string | null>(null);
+  const createRequestIdRef = useRef(generateId());
 
   const enableSync = useCallback(
     async (input: EnableSyncInput) => {
@@ -75,7 +76,7 @@ export function useEnableSync() {
           setStatus("creating_household");
           const created = await orpc.households.create({
             name: input.householdName?.trim() || "My Household",
-            requestId: generateId(),
+            requestId: createRequestIdRef.current,
           });
           householdId = created.householdId;
           createdHouseholdIdRef.current = householdId;

@@ -6,6 +6,12 @@
 - **Domain language:** [Money Management Context](../../CONTEXT.md)
 - **Related:** all 22 files in [`docs/adr/`](../adr/), [Recurring Rules Architecture](./recurring-rules-design.md), [Ledger Cache Coherence Plan](./ledger-cache-coherence-plan.md)
 
+> **Current scope contract:** the original Household/auth sections below are retained as design
+> history. ADR 0026 and ADR 0027 supersede their Better Auth, custom Invite Code, `owner` role,
+> private Household Account, and create-a-Household-during-sync assumptions. WorkOS owns
+> Organizations and Memberships; Personal and Household Ledgers are separate; every Household
+> Account is shared.
+
 ## Purpose
 
 Turn Trove from a single-device, local-only app into a multi-user, shared-budget product: households and partners sharing one budget, with the server as the authoritative source of truth for every derived financial value (Available Money, Funding Pool, Card Payment Reserve, Rollover, Budget/Envelope Health). Synced installs retain authorized facts in PowerSync-managed op-sqlite and queue optimistic writes through PowerSync; anonymous installs keep the independent local SQLite ledger.

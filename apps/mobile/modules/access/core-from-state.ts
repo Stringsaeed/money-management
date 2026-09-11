@@ -12,7 +12,11 @@ export function coreFromAccess(access: AccessState): AccessCore {
     };
   }
   if (access.kind === "session_revoked") {
-    return { kind: "session_revoked", lastKnown: access.lastKnown };
+    return {
+      kind: "session_revoked",
+      lastKnown: access.lastKnown,
+      selection: access.selection,
+    };
   }
   if (access.kind === "anonymous") return { kind: "anonymous" };
   return { kind: "resolving" };
