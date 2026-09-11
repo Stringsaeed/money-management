@@ -3,9 +3,9 @@ import { and, asc, eq, sql, type AnyColumn } from "drizzle-orm";
 import { categoryMapping, fundingMembership, rolloverSetting } from "@trove/db/schema/budget";
 
 import type { CommandDatabase } from "../commands/types";
-import { requireHouseholdMember, type HouseholdCaller } from "../require-member";
+import { requireLedgerAccess, type LedgerCaller } from "../require-member";
 
-export type { HouseholdCaller };
+export type { LedgerCaller };
 
 /**
  * Period-effective timelines (ADR-0006/0012/0016). `effective_to_period` is
@@ -16,13 +16,13 @@ export type { HouseholdCaller };
  */
 
 /**
- * The partition always includes `household_id` so the derivation stays
- * tenant-safe even if a caller forgets the household WHERE filter.
+ * The partition always includes `ledger_id` so the derivation stays
+ * tenant-safe even if a caller forgets the ledger WHERE filter.
  */
-const leadPeriod = (householdId: AnyColumn, entity: AnyColumn, column: AnyColumn) =>
+const leadPeriod = (ledgerId: AnyColumn, entity: AnyColumn, column: AnyColumn) =>
   sql<
     string | null
-  >`LEAD(${column}) OVER (PARTITION BY ${householdId}, ${entity} ORDER BY ${column})`;
+  >`LEAD(${column}) OVER (PARTITION BY ${ledgerId}, ${entity} ORDER BY ${column})`;
 
 export interface PeriodEffectiveRow {
   readonly effectiveFromPeriod: string;
@@ -38,22 +38,22 @@ export interface CategoryMappingTimelineRow extends PeriodEffectiveRow {
 
 export async function getCategoryMappingTimeline(
   db: CommandDatabase,
-  caller: HouseholdCaller,
+  caller: LedgerCaller,
 ): Promise<CategoryMappingTimelineRow[]> {
-  await requireHouseholdMember(db, caller.userId, caller.householdId);
+  await requireLedgerAccess(db, caller.userId, caller.ledgerId);
   return db
     .select({
       categoryId: categoryMapping.categoryId,
       envelopeId: categoryMapping.envelopeId,
       effectiveFromPeriod: categoryMapping.effectiveFromPeriod,
       effectiveToPeriod: leadPeriod(
-        categoryMapping.householdId,
+        categoryMapping.ledgerId,
         categoryMapping.categoryId,
         categoryMapping.effectiveFromPeriod,
       ),
     })
     .from(categoryMapping)
-    .where(eq(categoryMapping.householdId, caller.householdId))
+    .where(eq(categoryMapping.ledgerId, caller.ledgerId))
     .orderBy(asc(categoryMapping.categoryId), asc(categoryMapping.effectiveFromPeriod));
 }
 
@@ -66,10 +66,10 @@ export interface FundingMembershipTimelineRow extends PeriodEffectiveRow {
 
 export async function getFundingMembershipTimeline(
   db: CommandDatabase,
-  caller: HouseholdCaller,
+  caller: LedgerCaller,
   currency?: string,
 ): Promise<FundingMembershipTimelineRow[]> {
-  await requireHouseholdMember(db, caller.userId, caller.householdId);
+  await requireLedgerAccess(db, caller.userId, caller.ledgerId);
   return db
     .select({
       accountId: fundingMembership.accountId,
@@ -77,7 +77,7 @@ export async function getFundingMembershipTimeline(
       active: fundingMembership.active,
       effectiveFromPeriod: fundingMembership.effectiveFromPeriod,
       effectiveToPeriod: leadPeriod(
-        fundingMembership.householdId,
+        fundingMembership.ledgerId,
         fundingMembership.accountId,
         fundingMembership.effectiveFromPeriod,
       ),
@@ -86,10 +86,10 @@ export async function getFundingMembershipTimeline(
     .where(
       currency
         ? and(
-            eq(fundingMembership.householdId, caller.householdId),
+            eq(fundingMembership.ledgerId, caller.ledgerId),
             eq(fundingMembership.currency, currency),
           )
-        : eq(fundingMembership.householdId, caller.householdId),
+        : eq(fundingMembership.ledgerId, caller.ledgerId),
     )
     .orderBy(asc(fundingMembership.accountId), asc(fundingMembership.effectiveFromPeriod));
 }
@@ -101,21 +101,21 @@ export interface RolloverSettingTimelineRow extends PeriodEffectiveRow {
 
 export async function getRolloverSettingTimeline(
   db: CommandDatabase,
-  caller: HouseholdCaller,
+  caller: LedgerCaller,
 ): Promise<RolloverSettingTimelineRow[]> {
-  await requireHouseholdMember(db, caller.userId, caller.householdId);
+  await requireLedgerAccess(db, caller.userId, caller.ledgerId);
   return db
     .select({
       envelopeId: rolloverSetting.envelopeId,
       positiveRollover: rolloverSetting.positiveRollover,
       effectiveFromPeriod: rolloverSetting.effectiveFromPeriod,
       effectiveToPeriod: leadPeriod(
-        rolloverSetting.householdId,
+        rolloverSetting.ledgerId,
         rolloverSetting.envelopeId,
         rolloverSetting.effectiveFromPeriod,
       ),
     })
     .from(rolloverSetting)
-    .where(eq(rolloverSetting.householdId, caller.householdId))
+    .where(eq(rolloverSetting.ledgerId, caller.ledgerId))
     .orderBy(asc(rolloverSetting.envelopeId), asc(rolloverSetting.effectiveFromPeriod));
 }

@@ -1,4 +1,8 @@
 import {
+  householdLedgerBinding,
+  personalLedgerBinding,
+} from "@/modules/ledger-data-source/provider";
+import {
   createTestLedgerCollections,
   preloadTestLedgerCollections,
 } from "@/modules/ledger-db/test-collections";
@@ -29,6 +33,7 @@ describe("synced Recurring Rules", () => {
       recurringRules: [
         {
           id: "rule-1",
+          ledger_id: "household-1",
           household_id: "household-1",
           name: draft.name,
           type: draft.type,
@@ -64,7 +69,7 @@ describe("synced Recurring Rules", () => {
     await preloadTestLedgerCollections(collections);
     const recurring = createSyncedRecurringRules({
       collections,
-      householdId: "household-1",
+      binding: householdLedgerBinding("household-1"),
       userId: "user-1",
       clock: { now: () => now, localDate: () => "2026-09-07" },
       nextId: () => "unused",
@@ -86,7 +91,7 @@ describe("synced Recurring Rules", () => {
     const ids = ["rule-new", "command-new"];
     const recurring = createSyncedRecurringRules({
       collections,
-      householdId: "household-1",
+      binding: householdLedgerBinding("household-1"),
       userId: "user-1",
       clock: { now: () => now, localDate: () => "2026-09-07" },
       nextId: () => ids.shift() ?? "unexpected",
@@ -98,9 +103,33 @@ describe("synced Recurring Rules", () => {
       revision: 1,
     });
     expect(collections.recurringRules.get("rule-new")).toMatchObject({
+      ledger_id: "household-1",
       household_id: "household-1",
       name: "Rent",
       revision: 1,
+    });
+  });
+
+  it("creates a personal rule keyed by personal ledger id", async () => {
+    const collections = createTestLedgerCollections();
+    await preloadTestLedgerCollections(collections);
+    const ids = ["rule-personal", "command-personal"];
+    const recurring = createSyncedRecurringRules({
+      collections,
+      binding: personalLedgerBinding("user-1"),
+      userId: "user-1",
+      clock: { now: () => now, localDate: () => "2026-09-07" },
+      nextId: () => ids.shift() ?? "unexpected",
+    });
+
+    await expect(recurring.change({ kind: "create", rule: draft })).resolves.toMatchObject({
+      kind: "applied",
+      ruleId: "rule-personal",
+    });
+    expect(collections.recurringRules.get("rule-personal")).toMatchObject({
+      ledger_id: "personal:user-1",
+      household_id: null,
+      name: "Rent",
     });
   });
 });

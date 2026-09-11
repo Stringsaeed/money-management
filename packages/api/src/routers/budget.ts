@@ -8,37 +8,43 @@ import {
   getFundingMembershipTimeline,
   getRolloverSettingTimeline,
 } from "../lib/budget/period-effective";
+import { ledgerReadFields, ledgerReadInput } from "../lib/ledger-read-input";
 import { requireUserId } from "../lib/require-user";
+import { resolveReadLedgerId } from "../lib/require-member";
 
-const householdInput = z.object({
-  householdId: z.string().min(1),
-});
-
-const fundingMembershipInput = householdInput.extend({
-  /** Optional filter to one workspace's currency. */
-  currency: z.string().min(1).optional(),
-});
+const fundingMembershipInput = ledgerReadFields
+  .extend({
+    /** Optional filter to one workspace's currency. */
+    currency: z.string().min(1).optional(),
+  })
+  .refine((input) => input.scope !== undefined || input.householdId !== undefined, {
+    message: "Name the ledger this read belongs to: a personal or organization scope.",
+    path: ["scope"],
+  });
 
 /**
- * Read surface for the budget domain. Any member role — including viewer —
- * may read; every write goes through `commands.apply`, whose capability map
- * keeps viewers out.
+ * Read surface for the budget domain. Any authorized reader — including a
+ * Household viewer and a Personal Ledger owner — may read; every write goes
+ * through `commands.apply`, whose capability map keeps viewers out.
  */
 export const budgetRouter = {
   envelopes: {
-    list: protectedProcedure.input(householdInput).handler(({ context, input }) => {
+    list: protectedProcedure.input(ledgerReadInput).handler(({ context, input }) => {
       const userId = requireUserId(context);
-      return listEnvelopes(createDb(), { userId, householdId: input.householdId });
+      return listEnvelopes(createDb(), {
+        userId,
+        ledgerId: resolveReadLedgerId(userId, input),
+      });
     }),
   },
 
   mappings: {
     /** Category→Envelope attribution with derived effective spans. */
-    list: protectedProcedure.input(householdInput).handler(({ context, input }) => {
+    list: protectedProcedure.input(ledgerReadInput).handler(({ context, input }) => {
       const userId = requireUserId(context);
       return getCategoryMappingTimeline(createDb(), {
         userId,
-        householdId: input.householdId,
+        ledgerId: resolveReadLedgerId(userId, input),
       });
     }),
   },
@@ -49,7 +55,7 @@ export const budgetRouter = {
       const userId = requireUserId(context);
       return getFundingMembershipTimeline(
         createDb(),
-        { userId, householdId: input.householdId },
+        { userId, ledgerId: resolveReadLedgerId(userId, input) },
         input.currency,
       );
     }),
@@ -57,11 +63,11 @@ export const budgetRouter = {
 
   rolloverSettings: {
     /** Per-envelope rollover settings with derived effective spans. */
-    list: protectedProcedure.input(householdInput).handler(({ context, input }) => {
+    list: protectedProcedure.input(ledgerReadInput).handler(({ context, input }) => {
       const userId = requireUserId(context);
       return getRolloverSettingTimeline(createDb(), {
         userId,
-        householdId: input.householdId,
+        ledgerId: resolveReadLedgerId(userId, input),
       });
     }),
   },

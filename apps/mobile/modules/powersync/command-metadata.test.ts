@@ -16,6 +16,18 @@ describe("PowerSync command metadata", () => {
     expect(parseCommandMetadata(serializeCommandMetadata(envelope))).toEqual(envelope);
   });
 
+  it("round-trips a personal-scope envelope without a Household", () => {
+    const envelope: CommandEnvelope = {
+      commandId: "command-personal",
+      scope: { type: "personal" },
+      kind: "budget.configure",
+      issuedAt: "2026-09-07T12:00:00.000Z",
+      payload: { action: "workspace.activate" },
+    };
+
+    expect(parseCommandMetadata(serializeCommandMetadata(envelope))).toEqual(envelope);
+  });
+
   it("rejects malformed JSON and mismatched command ids", () => {
     expect(parseCommandMetadata("not-json")).toBeNull();
     expect(

@@ -115,7 +115,7 @@ The act of materializing every due Occurrence of a Recurring Rule into Generated
 _Avoid_: Processing, Generation
 
 **Settlement Sweep**:
-The hourly server-side pass that settles every active Recurring Rule of every household, evaluating each Rule on its own time zone's local date. Idempotent under Cron Trigger retries; manual runs go through an admin-guarded procedure.
+The hourly server-side pass that settles every active Recurring Rule of every ledger (personal and organization), evaluating each Rule on its own time zone's local date. Idempotent under Cron Trigger retries; manual runs go through an admin-guarded procedure.
 _Avoid_: Cron Job, Sync Job
 
 **Money**:

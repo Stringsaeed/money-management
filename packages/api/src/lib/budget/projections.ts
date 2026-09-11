@@ -1,11 +1,12 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
+import { isPersonalLedgerId } from "@trove/protocol";
 
 import { budgetWorkspace, envelope, periodProjectionCache } from "@trove/db/schema/budget";
 import { householdChange } from "@trove/db/schema/commands";
 
 import type { CommandDatabase } from "../commands/types";
-import type { HouseholdCaller } from "../require-member";
-import { requireHouseholdMember } from "../require-member";
+import type { LedgerCaller } from "../require-member";
+import { requireLedgerAccess } from "../require-member";
 import { queryRows } from "../sql-rows";
 import { getBudgetPoolFacts, periodCeiling, type BudgetPoolFacts } from "./funding-pool";
 import { getReserveFacts } from "./reserve";
@@ -13,7 +14,7 @@ import { getReserveFacts } from "./reserve";
 /**
  * Period projections (#92): Available Money, Envelope Health, and Rollover
  * per Budget Period, cached in `period_projection_cache` stamped with the
- * household's change sequence (#84).
+ * ledger's change sequence (#84).
  *
  * Two layers, deliberately:
  * - Workspace-level facts reuse the SHIPPED #90/#91 guard fragments verbatim —
@@ -32,7 +33,7 @@ import { getReserveFacts } from "./reserve";
  * rebuilt periods with the household's CURRENT sync seq; any committed
  * command advances that seq, so stale rows are detected by comparison and
  * transparently rebuilt ("invalidate when seq advances" = "rebuild when the
- * stamp lags"). Rows are keyed (household_id, currency, budget_period).
+ * stamp lags"). Rows are keyed (ledger_id, currency, budget_period).
  */
 
 export interface ProjectionAttentionReason {
@@ -101,12 +102,12 @@ export function enumeratePeriods(startPeriod: string, endPeriod: string): string
   return periods;
 }
 
-/** The household's current sync sequence (#84): the projection cache stamp. */
-async function currentHouseholdSeq(db: CommandDatabase, householdId: string): Promise<number> {
+/** The ledger's current sync sequence (#84): the projection cache stamp. */
+async function currentLedgerSeq(db: CommandDatabase, ledgerId: string): Promise<number> {
   const rows = await db
     .select({ seq: sql<number>`COALESCE(MAX(${householdChange.seq}), 0)` })
     .from(householdChange)
-    .where(eq(householdChange.householdId, householdId));
+    .where(eq(householdChange.ledgerId, ledgerId));
   return Number(rows[0]?.seq ?? 0);
 }
 
@@ -121,13 +122,13 @@ type WorkspaceFacts = BudgetPoolFacts;
  */
 async function getWorkspaceFacts(
   db: CommandDatabase,
-  householdId: string,
+  ledgerId: string,
   currency: string,
   period: string,
 ): Promise<WorkspaceFacts> {
   const [pool, reserve] = await Promise.all([
-    getBudgetPoolFacts(db, householdId, currency, period),
-    getReserveFacts(db, householdId, currency, period),
+    getBudgetPoolFacts(db, ledgerId, currency, period),
+    getReserveFacts(db, ledgerId, currency, period),
   ]);
   return { ...pool, reservesMinor: Math.max(reserve.reserveMinor, pool.reservesMinor) };
 }
@@ -141,7 +142,7 @@ interface EnvelopeMonthDelta {
 
 async function getEnvelopeMonthDeltas(
   db: CommandDatabase,
-  householdId: string,
+  ledgerId: string,
   currency: string,
   startPeriod: string,
   endPeriod: string,
@@ -168,26 +169,26 @@ async function getEnvelopeMonthDeltas(
           - COALESCE((
             SELECT SUM(r.amount_minor)
             FROM refund_links r
-            WHERE r.household_id = t.household_id
+            WHERE r.ledger_id = t.ledger_id
               AND r.original_transaction_id = t.id
           ), 0)
         ) AS spent_minor
       FROM transactions t
       JOIN accounts ca
-        ON ca.household_id = t.household_id AND ca.id = t.account_id
+        ON ca.ledger_id = t.ledger_id AND ca.id = t.account_id
       JOIN category_mappings cm
-        ON cm.household_id = t.household_id
+        ON cm.ledger_id = t.ledger_id
         AND cm.category_id = t.category_id
         AND cm.envelope_id IS NOT NULL
         AND cm.effective_from_period = (
           SELECT MAX(x.effective_from_period)
           FROM category_mappings x
-          WHERE x.household_id = cm.household_id
+          WHERE x.ledger_id = cm.ledger_id
             AND x.category_id = t.category_id
             AND x.envelope_id IS NOT NULL
             AND x.effective_from_period <= substr(t.date, 1, 7)
         )
-      WHERE t.household_id = ${householdId}
+      WHERE t.ledger_id = ${ledgerId}
         AND t.type = 'expense'
         AND t.currency = ${currency}
         AND ca.visibility = 'public'
@@ -206,13 +207,13 @@ async function getEnvelopeMonthDeltas(
       FROM (
         SELECT g.budget_period, g.destination_envelope_id AS envelope_id, g.amount_minor AS delta_minor
         FROM assignments g
-        WHERE g.household_id = ${householdId}
+        WHERE g.ledger_id = ${ledgerId}
           AND g.currency = ${currency}
           AND g.budget_period BETWEEN ${startPeriod} AND ${endPeriod}
         UNION ALL
         SELECT g.budget_period, g.source_envelope_id AS envelope_id, -g.amount_minor AS delta_minor
         FROM assignments g
-        WHERE g.household_id = ${householdId}
+        WHERE g.ledger_id = ${ledgerId}
           AND g.currency = ${currency}
           AND g.budget_period BETWEEN ${startPeriod} AND ${endPeriod}
       )
@@ -248,7 +249,7 @@ async function getEnvelopeMonthDeltas(
 /** Latest period-effective rollover setting per envelope at or before `period`. */
 async function getPositiveRolloverMap(
   db: CommandDatabase,
-  householdId: string,
+  ledgerId: string,
   currency: string,
   period: string,
 ): Promise<Map<string, boolean>> {
@@ -257,13 +258,13 @@ async function getPositiveRolloverMap(
     sql`
     SELECT r.envelope_id, r.positive_rollover
     FROM rollover_settings r
-    JOIN envelopes e ON e.household_id = r.household_id AND e.id = r.envelope_id
-    WHERE r.household_id = ${householdId}
+    JOIN envelopes e ON e.ledger_id = r.ledger_id AND e.id = r.envelope_id
+    WHERE r.ledger_id = ${ledgerId}
       AND e.currency = ${currency}
       AND r.effective_from_period = (
         SELECT MAX(x.effective_from_period)
         FROM rollover_settings x
-        WHERE x.household_id = r.household_id
+        WHERE x.ledger_id = r.ledger_id
           AND x.envelope_id = r.envelope_id
           AND x.effective_from_period <= ${period}
       )`,
@@ -274,7 +275,7 @@ async function getPositiveRolloverMap(
 /** Active expense Category ids per Envelope effective at `period`. */
 async function getActiveExpenseCategoriesMap(
   db: CommandDatabase,
-  householdId: string,
+  ledgerId: string,
   period: string,
 ): Promise<Map<string, Set<string>>> {
   // #89 timeline semantics: effective_to_period is DERIVED (LEAD), never
@@ -284,12 +285,12 @@ async function getActiveExpenseCategoriesMap(
     sql`
     SELECT c.envelope_id, c.category_id
     FROM category_mappings c
-    INNER JOIN categories cat ON cat.household_id = c.household_id AND cat.id = c.category_id
-    WHERE c.household_id = ${householdId}
+    INNER JOIN categories cat ON cat.ledger_id = c.ledger_id AND cat.id = c.category_id
+    WHERE c.ledger_id = ${ledgerId}
       AND c.effective_from_period = (
         SELECT MAX(x.effective_from_period)
         FROM category_mappings x
-        WHERE x.household_id = c.household_id
+        WHERE x.ledger_id = c.ledger_id
           AND x.category_id = c.category_id
           AND x.effective_from_period <= ${period}
       )
@@ -312,13 +313,13 @@ async function getActiveExpenseCategoriesMap(
  */
 export async function buildProjections(options: {
   db: CommandDatabase;
-  householdId: string;
+  ledgerId: string;
   currency: string;
   activationPeriod: string;
   startPeriod: string;
   endPeriod: string;
 }): Promise<PeriodProjection[]> {
-  const { db, householdId, currency, activationPeriod, startPeriod, endPeriod } = options;
+  const { db, ledgerId, currency, activationPeriod, startPeriod, endPeriod } = options;
 
   const envelopeRows = await db
     .select({
@@ -330,24 +331,24 @@ export async function buildProjections(options: {
       sortOrder: envelope.sortOrder,
     })
     .from(envelope)
-    .where(and(eq(envelope.householdId, householdId), eq(envelope.currency, currency)))
+    .where(and(eq(envelope.ledgerId, ledgerId), eq(envelope.currency, currency)))
     .orderBy(envelope.sortOrder, envelope.name);
 
   const walkStart = startPeriod < activationPeriod ? activationPeriod : startPeriod;
   const walkedPeriods = enumeratePeriods(walkStart, endPeriod);
-  const monthDeltas = await getEnvelopeMonthDeltas(db, householdId, currency, walkStart, endPeriod);
+  const monthDeltas = await getEnvelopeMonthDeltas(db, ledgerId, currency, walkStart, endPeriod);
 
   const carryByEnvelope = new Map<string, number>();
-  const activeExpenseCategories = await getActiveExpenseCategoriesMap(db, householdId, endPeriod);
+  const activeExpenseCategories = await getActiveExpenseCategoriesMap(db, ledgerId, endPeriod);
 
   const projections: PeriodProjection[] = [];
   for (const period of walkedPeriods) {
     // Rollover settings are period-effective and can flip AT any month, so
     // they are resolved per walked month (cheap timeline lookup).
-    const positiveRollover = await getPositiveRolloverMap(db, householdId, currency, period);
+    const positiveRollover = await getPositiveRolloverMap(db, ledgerId, currency, period);
 
     const facts =
-      period >= startPeriod ? await getWorkspaceFacts(db, householdId, currency, period) : null;
+      period >= startPeriod ? await getWorkspaceFacts(db, ledgerId, currency, period) : null;
 
     const envelopes: EnvelopeProjection[] = [];
     for (const row of envelopeRows) {
@@ -429,10 +430,12 @@ export async function buildProjections(options: {
  */
 export async function getProjections(
   db: CommandDatabase,
-  caller: HouseholdCaller,
+  caller: LedgerCaller,
   input: { currency: string; startPeriod: string; endPeriod: string },
 ): Promise<{ seqStamped: number; projections: PeriodProjection[] }> {
-  await requireHouseholdMember(db, caller.userId, caller.householdId);
+  await requireLedgerAccess(db, caller.userId, caller.ledgerId);
+  const ledgerId = caller.ledgerId;
+  const householdId = isPersonalLedgerId(ledgerId) ? null : ledgerId;
 
   const requestedPeriods = enumeratePeriods(input.startPeriod, input.endPeriod);
   if (requestedPeriods.length === 0) {
@@ -443,10 +446,7 @@ export async function getProjections(
     .select({ activationPeriod: budgetWorkspace.activationPeriod })
     .from(budgetWorkspace)
     .where(
-      and(
-        eq(budgetWorkspace.householdId, caller.householdId),
-        eq(budgetWorkspace.currency, input.currency),
-      ),
+      and(eq(budgetWorkspace.ledgerId, ledgerId), eq(budgetWorkspace.currency, input.currency)),
     )
     .limit(1);
   const activationPeriod = workspaces[0]?.activationPeriod;
@@ -456,7 +456,7 @@ export async function getProjections(
     );
   }
 
-  const seq = await currentHouseholdSeq(db, caller.householdId);
+  const seq = await currentLedgerSeq(db, ledgerId);
 
   const cachedRows = requestedPeriods.length
     ? await db
@@ -468,7 +468,7 @@ export async function getProjections(
         .from(periodProjectionCache)
         .where(
           and(
-            eq(periodProjectionCache.householdId, caller.householdId),
+            eq(periodProjectionCache.ledgerId, ledgerId),
             eq(periodProjectionCache.currency, input.currency),
             inArray(periodProjectionCache.budgetPeriod, requestedPeriods),
           ),
@@ -491,7 +491,8 @@ export async function getProjections(
     await db
       .insert(periodProjectionCache)
       .values({
-        householdId: caller.householdId,
+        ledgerId,
+        householdId,
         currency: input.currency,
         budgetPeriod: projection.budgetPeriod,
         projectionJson: projection,
@@ -499,7 +500,7 @@ export async function getProjections(
       })
       .onConflictDoUpdate({
         target: [
-          periodProjectionCache.householdId,
+          periodProjectionCache.ledgerId,
           periodProjectionCache.currency,
           periodProjectionCache.budgetPeriod,
         ],
@@ -529,7 +530,7 @@ export async function getProjections(
     if (buildable.length > 0) {
       const built = await buildProjections({
         db,
-        householdId: caller.householdId,
+        ledgerId,
         currency: input.currency,
         activationPeriod,
         startPeriod: buildable[0],

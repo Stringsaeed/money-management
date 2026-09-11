@@ -81,8 +81,7 @@ const householdStreamLoader = (
   stream: string,
   householdId: string | null,
 ): StreamLoader => {
-  // A Personal Ledger arrives on the auto-subscribed personal_ledger stream,
-  // and the Household-only domains simply stay empty.
+  // A Personal Ledger arrives on the auto-subscribed personal_ledger stream.
   if (householdId === null) return undefined;
   return async () => {
     const subscription = await database
@@ -111,8 +110,14 @@ export const createPowerSyncLedgerCollections = (
     householdId === null
       ? personalStreamLoader(database)
       : householdStreamLoader(database, "household_ledger", householdId);
-  const onBudgetLoad = householdStreamLoader(database, "household_budget", householdId);
-  const onRecurringLoad = householdStreamLoader(database, "household_recurring", householdId);
+  const onBudgetLoad =
+    householdId === null
+      ? personalStreamLoader(database)
+      : householdStreamLoader(database, "household_budget", householdId);
+  const onRecurringLoad =
+    householdId === null
+      ? personalStreamLoader(database)
+      : householdStreamLoader(database, "household_recurring", householdId);
   return {
     accounts: createCollection(
       powerSyncCollectionOptions({

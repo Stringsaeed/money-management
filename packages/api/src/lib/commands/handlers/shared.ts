@@ -2,6 +2,8 @@ import type { z } from "zod";
 
 import type { ValidationIssue } from "@trove/protocol";
 
+import type { PlanContext } from "../pipeline";
+
 /** Maps a zod failure onto the protocol's validation-issue shape. */
 export function issuesFromZod(error: z.ZodError): readonly ValidationIssue[] {
   return error.issues.map((issue) => ({
@@ -36,4 +38,9 @@ export function checkExpectedVersion(
     };
   }
   return null;
+}
+
+/** Dual-write columns every ledger-scoped budget/recurring row carries. */
+export function scopeColumns(ctx: PlanContext) {
+  return { ledgerId: ctx.ledgerId, householdId: ctx.householdId };
 }

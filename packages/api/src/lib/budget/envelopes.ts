@@ -3,7 +3,7 @@ import { asc, eq } from "drizzle-orm";
 import { envelope } from "@trove/db/schema/budget";
 
 import type { CommandDatabase } from "../commands/types";
-import { requireHouseholdMember, type HouseholdCaller } from "../require-member";
+import { requireLedgerAccess, type LedgerCaller } from "../require-member";
 
 export interface EnvelopeSummary {
   readonly id: string;
@@ -16,12 +16,12 @@ export interface EnvelopeSummary {
   readonly version: number;
 }
 
-/** Lists the household's envelopes; any member role may read (viewer included). */
+/** Lists the ledger's envelopes; any authorized reader may see them (viewer included). */
 export async function listEnvelopes(
   db: CommandDatabase,
-  caller: HouseholdCaller,
+  caller: LedgerCaller,
 ): Promise<EnvelopeSummary[]> {
-  await requireHouseholdMember(db, caller.userId, caller.householdId);
+  await requireLedgerAccess(db, caller.userId, caller.ledgerId);
   return db
     .select({
       id: envelope.id,
@@ -34,6 +34,6 @@ export async function listEnvelopes(
       version: envelope.version,
     })
     .from(envelope)
-    .where(eq(envelope.householdId, caller.householdId))
+    .where(eq(envelope.ledgerId, caller.ledgerId))
     .orderBy(asc(envelope.sortOrder), asc(envelope.name));
 }

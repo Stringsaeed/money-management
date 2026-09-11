@@ -35,17 +35,17 @@ export function periodCeiling(period: string): string {
  * `period` is active (#89 timeline semantics: the greatest
  * effective_from_period wins; later rows are future changes).
  */
-function activeMemberIdsSql(householdId: string, currency: string, period: string): SQL {
+function activeMemberIdsSql(ledgerId: string, currency: string, period: string): SQL {
   return sql`(
     SELECT COALESCE(json_agg(m.account_id), '[]'::json)
     FROM funding_memberships m
-    WHERE m.household_id = ${householdId}
+    WHERE m.ledger_id = ${ledgerId}
       AND m.currency = ${currency}
       AND m.active IS TRUE
       AND m.effective_from_period = (
         SELECT MAX(x.effective_from_period)
         FROM funding_memberships x
-        WHERE x.household_id = m.household_id
+        WHERE x.ledger_id = m.ledger_id
           AND x.account_id = m.account_id
           AND x.effective_from_period <= ${period}
       )
@@ -53,9 +53,9 @@ function activeMemberIdsSql(householdId: string, currency: string, period: strin
 }
 
 /** Funding Pool: initial balances plus signed activity of member accounts through `period`. */
-export function fundingPoolSql(householdId: string, currency: string, period: string): SQL<number> {
+export function fundingPoolSql(ledgerId: string, currency: string, period: string): SQL<number> {
   const ceiling = periodCeiling(period);
-  const members = activeMemberIdsSql(householdId, currency, period);
+  const members = activeMemberIdsSql(ledgerId, currency, period);
   return sql<number>`(
     SELECT COALESCE(SUM(account_balance), 0)
     FROM (
@@ -73,7 +73,7 @@ export function fundingPoolSql(householdId: string, currency: string, period: st
             END
           )
           FROM transactions t
-          WHERE t.household_id = ${householdId}
+          WHERE t.ledger_id = ${ledgerId}
             AND t.currency = ${currency}
             AND t.date < ${ceiling}
             AND (t.account_id = a.id OR t.to_account_id = a.id)
@@ -82,13 +82,13 @@ export function fundingPoolSql(householdId: string, currency: string, period: st
               OR (
                 EXISTS (
                   SELECT 1 FROM accounts source
-                  WHERE source.household_id = t.household_id
+                  WHERE source.ledger_id = t.ledger_id
                     AND source.id = t.account_id
                     AND source.visibility = 'public'
                 )
                 AND EXISTS (
                   SELECT 1 FROM accounts destination
-                  WHERE destination.household_id = t.household_id
+                  WHERE destination.ledger_id = t.ledger_id
                     AND destination.id = t.to_account_id
                     AND destination.visibility = 'public'
                 )
@@ -96,7 +96,7 @@ export function fundingPoolSql(householdId: string, currency: string, period: st
             )
         ), 0) AS account_balance
       FROM accounts a
-      WHERE a.household_id = ${householdId}
+      WHERE a.ledger_id = ${ledgerId}
         AND a.currency = ${currency}
         AND a.visibility = 'public'
         AND a.id IN (SELECT jsonb_array_elements_text((${members})::jsonb))
@@ -106,7 +106,7 @@ export function fundingPoolSql(householdId: string, currency: string, period: st
 
 /** Net assignments OUT of Unassigned Money through `period` (destinations − sources). */
 export function assignedThroughPeriodSql(
-  householdId: string,
+  ledgerId: string,
   currency: string,
   period: string,
 ): SQL<number> {
@@ -116,7 +116,7 @@ export function assignedThroughPeriodSql(
       - CASE WHEN g.source_envelope_id IS NOT NULL THEN g.amount_minor ELSE 0 END
     )
     FROM assignments g
-    WHERE g.household_id = ${householdId}
+    WHERE g.ledger_id = ${ledgerId}
       AND g.currency = ${currency}
       AND g.budget_period <= ${period}
   ), 0)`;
@@ -127,11 +127,11 @@ export function assignedThroughPeriodSql(
  * Card Payment Reserves subtract once #91 lands; today they are zero.
  */
 export function unassignedMoneySql(
-  householdId: string,
+  ledgerId: string,
   currency: string,
   period: string,
 ): SQL<number> {
-  return sql<number>`(${fundingPoolSql(householdId, currency, period)} - ${assignedThroughPeriodSql(householdId, currency, period)})`;
+  return sql<number>`(${fundingPoolSql(ledgerId, currency, period)} - ${assignedThroughPeriodSql(ledgerId, currency, period)})`;
 }
 
 export interface BudgetPoolFacts {
@@ -145,14 +145,14 @@ export interface BudgetPoolFacts {
 /** Executes the pool facts for real (plan-time read of the same SQL the guard asserts). */
 export async function getBudgetPoolFacts(
   db: { execute: (query: SQL) => Promise<unknown> },
-  householdId: string,
+  ledgerId: string,
   currency: string,
   period: string,
 ): Promise<BudgetPoolFacts> {
   const query = sql`SELECT
-    ${fundingPoolSql(householdId, currency, period)} AS funding_pool,
-    ${assignedThroughPeriodSql(householdId, currency, period)} AS assigned,
-    ${unassignedMoneySql(householdId, currency, period)} AS unassigned`;
+    ${fundingPoolSql(ledgerId, currency, period)} AS funding_pool,
+    ${assignedThroughPeriodSql(ledgerId, currency, period)} AS assigned,
+    ${unassignedMoneySql(ledgerId, currency, period)} AS unassigned`;
   const rows = await queryRows<Record<string, number>>(db, query);
   const row = (rows[0] ?? {}) as Record<string, number>;
   const fundingPoolMinor = Number(row.funding_pool ?? 0);

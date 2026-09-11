@@ -37,14 +37,15 @@ Handlers filter and insert by `ctx.ledgerId`. Household-only handlers take `Hous
 
 ## For #227 — envelopes, assignments, recurring
 
-Budgeting and recurring tables are still Household-keyed and their handlers still reject personal scope. Extending them means:
+Done. Migration `0012_budget_recurring_ledger_scope.sql` adds `ledger_id NOT NULL` (backfilled from `household_id`) to budget and recurring tables, dual-write CHECKs, and ledger-scoped composite uniques/FKs. Handlers `budget.configure`, `assignment.commit`, `assignment.correct`, `refund.link`, and `recurring.change` take `PlanContext` with `supportsPersonalScope: true` and key rows by `ctx.ledgerId`. Settlement fans out by `ledger_id`, so a Personal Ledger settles without a Household. The `personal_ledger` stream now includes those tables (recurring keeps private-account filters). Mobile synced coordinators bind on `selection.kind === "synced"` and command envelopes carry `scope`, not a Household fallback.
 
-1. Add `ledger_id NOT NULL` to `envelopes`, `assignments`, `category_mappings`, `rollover_settings`, `budget_workspaces`, and `recurring_rules`, backfilled from `household_id` the way migration `0011_ledger_scope.sql` does it.
-2. Change those handlers from `HouseholdPlanContext` back to `PlanContext` and set `supportsPersonalScope: true`.
-3. Add the rows to the `personal_ledger` sync stream using the same `ledger_id IN (SELECT id FROM ledger WHERE personal_user_id = auth.user_id())` subquery.
-4. Drop the mobile fallbacks that route a personal Ledger to the on-device budgeting and recurring modules — `useBudgetingCoordinator` and `RecurringRulesProvider` both branch on `binding.householdId !== null` today.
+Membership and import stay Household-only. `mirror_household_organization_ledger` is untouched — #228 owns it.
 
-Append-only assignment history and the envelope invariants are untouched by scope; the ledger-keyed composite foreign keys on `transactions` are the pattern to copy for keeping envelope references inside one Ledger.
+## Remaining cleanup for #228 / #229
+
+- #228: drop the Household→organization Ledger mirror trigger once Households write their own Ledger rows; remap organization Ledger ids if they stop equaling Household ids.
+- #228: after reads are fully on `ledger_id`, drop the nullable dual-written `household_id` (CHECK included).
+- #229: onboarding/import of on-device rows onto a Personal Ledger. A personal sync still starts empty.
 
 ## For #228 — Households on WorkOS Organizations
 

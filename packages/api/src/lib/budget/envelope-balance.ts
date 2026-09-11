@@ -4,7 +4,7 @@ import { queryRows } from "../sql-rows";
 
 /** Net assigned balance of one envelope: in − out through `period` (minor units). */
 export function envelopeAssignedBalanceSql(
-  householdId: string,
+  ledgerId: string,
   envelopeId: string,
   period: string,
 ): SQL<number> {
@@ -14,7 +14,7 @@ export function envelopeAssignedBalanceSql(
       - CASE WHEN g.source_envelope_id = ${envelopeId} THEN g.amount_minor ELSE 0 END
     )
     FROM assignments g
-    WHERE g.household_id = ${householdId}
+    WHERE g.ledger_id = ${ledgerId}
       AND g.budget_period <= ${period}
       AND (g.destination_envelope_id = ${envelopeId} OR g.source_envelope_id = ${envelopeId})
   ), 0)`;
@@ -27,11 +27,11 @@ export function envelopeAssignedBalanceSql(
  */
 export async function getEnvelopeAssignedBalance(
   db: { execute: (query: SQL) => Promise<unknown> },
-  householdId: string,
+  ledgerId: string,
   envelopeId: string,
   period: string,
 ): Promise<number> {
-  const query = sql`SELECT ${envelopeAssignedBalanceSql(householdId, envelopeId, period)} AS balance`;
+  const query = sql`SELECT ${envelopeAssignedBalanceSql(ledgerId, envelopeId, period)} AS balance`;
   const rows = await queryRows<Record<string, number>>(db, query);
   return Number((rows[0] as Record<string, number> | undefined)?.balance ?? 0);
 }

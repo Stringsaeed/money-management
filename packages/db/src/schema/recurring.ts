@@ -7,20 +7,23 @@ import {
   pgTable,
   text,
   timestamp,
+  unique,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 import * as auth from "./auth";
 import { household } from "./household";
+import { ledger } from "./ledger-scope";
 
 const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 
 export const recurringRule = pgTable(
   "recurring_rules",
   {
-    householdId: text("household_id")
+    ledgerId: text("ledger_id")
       .notNull()
-      .references(() => household.id, { onDelete: "cascade" }),
+      .references(() => ledger.id, { onDelete: "cascade" }),
+    householdId: text("household_id").references(() => household.id, { onDelete: "cascade" }),
     id: text("id").primaryKey(),
     name: text("name").notNull(),
     type: text("type", { enum: ["expense", "income", "transfer"] }).notNull(),
@@ -64,12 +67,18 @@ export const recurringRule = pgTable(
   },
   (table) => [
     uniqueIndex("recurring_rules_household_id_unique").on(table.householdId, table.id),
+    unique("recurring_rules_ledger_id_id_unique").on(table.ledgerId, table.id),
     check(
       "recurring_rules_lifecycle_valid",
       sql`${table.lifecycle} IN ('active', 'paused', 'completed', 'archived')`,
     ),
     check("recurring_rules_health_valid", sql`${table.health} IN ('ready', 'needs_attention')`),
+    check(
+      "recurring_rules_household_required_for_organization",
+      sql`${table.householdId} IS NOT NULL OR ${table.ledgerId} LIKE 'personal:%'`,
+    ),
     index("recurring_rules_household_lifecycle_idx").on(table.householdId, table.lifecycle),
+    index("recurring_rules_ledger_lifecycle_idx").on(table.ledgerId, table.lifecycle),
   ],
 );
 
@@ -79,9 +88,10 @@ export const recurringOccurrence = pgTable(
     id: text("id")
       .primaryKey()
       .default(sql`md5(random()::text || clock_timestamp()::text)`),
-    householdId: text("household_id")
+    ledgerId: text("ledger_id")
       .notNull()
-      .references(() => household.id, { onDelete: "cascade" }),
+      .references(() => ledger.id, { onDelete: "cascade" }),
+    householdId: text("household_id").references(() => household.id, { onDelete: "cascade" }),
     ruleId: text("rule_id").notNull(),
     scheduledDate: text("scheduled_date").notNull(),
     transactionId: text("transaction_id"),
@@ -93,11 +103,25 @@ export const recurringOccurrence = pgTable(
       table.ruleId,
       table.scheduledDate,
     ),
+    uniqueIndex("recurring_occurrences_ledger_rule_date_unique").on(
+      table.ledgerId,
+      table.ruleId,
+      table.scheduledDate,
+    ),
     uniqueIndex("uq_recurring_occurrence_transaction").on(table.transactionId),
+    check(
+      "recurring_occurrences_household_required_for_organization",
+      sql`${table.householdId} IS NOT NULL OR ${table.ledgerId} LIKE 'personal:%'`,
+    ),
     index("recurring_occurrences_rule_idx").on(table.householdId, table.ruleId),
+    index("recurring_occurrences_ledger_rule_idx").on(table.ledgerId, table.ruleId),
     foreignKey({
       columns: [table.householdId, table.ruleId],
       foreignColumns: [recurringRule.householdId, recurringRule.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.ledgerId, table.ruleId],
+      foreignColumns: [recurringRule.ledgerId, recurringRule.id],
     }).onDelete("cascade"),
   ],
 );

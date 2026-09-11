@@ -71,6 +71,7 @@ async function seedFundingAccount(id: string, initialBalanceMinor = 0) {
 
 async function seedMembership(accountId: string, effectiveFromPeriod = "2026-01", active = true) {
   await db.insert(fundingMembership).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     accountId,
     currency: "USD",
@@ -84,6 +85,7 @@ async function seedMembership(accountId: string, effectiveFromPeriod = "2026-01"
 
 async function seedEnvelope(id: string) {
   await db.insert(envelope).values({
+    ledgerId: HOUSEHOLD_ID,
     householdId: HOUSEHOLD_ID,
     id,
     name: `Envelope ${id}`,

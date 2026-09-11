@@ -4,9 +4,9 @@ import { z } from "zod";
 import { assignment, envelope } from "@trove/db/schema/budget";
 
 import { getBudgetPoolFacts } from "../../budget/funding-pool";
-import type { CommandPlan, HouseholdPlanContext, PlanRejection, PlanRequest } from "../pipeline";
+import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
-import { issuesFromZod } from "./shared";
+import { issuesFromZod, scopeColumns } from "./shared";
 
 const payloadSchema = z
   .object({
@@ -28,6 +28,8 @@ const payloadSchema = z
 type AssignmentCorrectPayload = z.infer<typeof payloadSchema>;
 
 export const assignmentCorrectHandler = {
+  supportsPersonalScope: true as const,
+
   parsePayload(payload: unknown) {
     const result = payloadSchema.safeParse(payload);
     return result.success
@@ -36,7 +38,7 @@ export const assignmentCorrectHandler = {
   },
 
   async plan(
-    ctx: HouseholdPlanContext,
+    ctx: PlanContext,
     { payload }: PlanRequest,
   ): Promise<CommandPlan | PlanRejection> {
     const input = payload as AssignmentCorrectPayload;
@@ -45,8 +47,8 @@ export const assignmentCorrectHandler = {
       .from(assignment)
       .where(
         and(
-          eq(assignment.householdId, ctx.householdId),
-          eq(assignment.id, input.originalAssignmentId),
+            eq(assignment.ledgerId, ctx.ledgerId),
+            eq(assignment.id, input.originalAssignmentId),
         ),
       )
       .limit(1);
@@ -78,8 +80,8 @@ export const assignmentCorrectHandler = {
       .from(assignment)
       .where(
         and(
-          eq(assignment.householdId, ctx.householdId),
-          eq(assignment.reversesAssignmentId, original.id),
+            eq(assignment.ledgerId, ctx.ledgerId),
+            eq(assignment.reversesAssignmentId, original.id),
         ),
       )
       .limit(1);
@@ -96,7 +98,7 @@ export const assignmentCorrectHandler = {
 
     const facts = await getBudgetPoolFacts(
       ctx.db,
-      ctx.householdId,
+      ctx.ledgerId,
       input.currency,
       input.budgetPeriod,
     );
@@ -120,12 +122,12 @@ export const assignmentCorrectHandler = {
       },
       guards: [
         sql`(SELECT COUNT(*) FROM ${assignment}
-            WHERE ${assignment.householdId} = ${ctx.householdId}
+            WHERE ${assignment.ledgerId} = ${ctx.ledgerId}
               AND ${assignment.reversesAssignmentId} = ${original.id}) = 0`,
       ],
       statements: [
         ctx.db.insert(assignment).values({
-          householdId: ctx.householdId,
+          ...scopeColumns(ctx),
           id: input.reversalId,
           currency: original.currency,
           budgetPeriod: original.budgetPeriod,
@@ -137,7 +139,7 @@ export const assignmentCorrectHandler = {
           updatedBy: ctx.actorUserId,
         }) as unknown as BatchStatement,
         ctx.db.insert(assignment).values({
-          householdId: ctx.householdId,
+          ...scopeColumns(ctx),
           id: input.replacementId,
           currency: input.currency,
           budgetPeriod: input.budgetPeriod,
@@ -154,7 +156,7 @@ export const assignmentCorrectHandler = {
 };
 
 async function validateEndpoints(
-  ctx: HouseholdPlanContext,
+  ctx: PlanContext,
   input: AssignmentCorrectPayload,
 ): Promise<PlanRejection | null> {
   for (const envelopeId of [input.sourceEnvelopeId, input.destinationEnvelopeId]) {
@@ -162,7 +164,7 @@ async function validateEndpoints(
     const rows = await ctx.db
       .select()
       .from(envelope)
-      .where(and(eq(envelope.householdId, ctx.householdId), eq(envelope.id, envelopeId)))
+      .where(and(eq(envelope.ledgerId, ctx.ledgerId), eq(envelope.id, envelopeId)))
       .limit(1);
     const found = rows[0];
     if (!found) return { kind: "missing_entity", entityType: "envelope", entityId: envelopeId };

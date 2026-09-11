@@ -105,12 +105,9 @@ async function validateExistingAccountAccess(
  * read, stamped with the change's seq.
  */
 function invalidateProjectionsFrom(ctx: PlanContext, period: string): BatchStatement | null {
-  // Projections are Household facts; a Personal Ledger has no cache to drop
-  // until budgeting learns Ledger Scope (#227).
-  if (ctx.householdId === null) return null;
   return ctx.db.delete(periodProjectionCache).where(
     and(
-      eq(periodProjectionCache.householdId, ctx.householdId),
+      eq(periodProjectionCache.ledgerId, ctx.ledgerId),
       // String comparison is correct because both sides are zero-padded YYYY-MM.
       gte(periodProjectionCache.budgetPeriod, period),
     ),

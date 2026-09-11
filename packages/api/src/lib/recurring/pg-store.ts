@@ -18,7 +18,10 @@ import type { CommandDatabase } from "../commands/types";
 export { settlementEffects };
 
 export interface RecurringScope {
-  readonly householdId: string;
+  /** Real ledger id: `personal:<userId>` or the organization/Household id. */
+  readonly ledgerId: string;
+  /** Household backing an organization Ledger; null on a Personal Ledger. */
+  readonly householdId: string | null;
   readonly userId: string;
 }
 
@@ -33,9 +36,7 @@ export class PgRecurringStore implements SettlementStore {
     const rows = await this.db
       .select({ currency: ledgerAccount.currency })
       .from(ledgerAccount)
-      .where(
-        and(eq(ledgerAccount.householdId, this.scope.householdId), eq(ledgerAccount.id, accountId)),
-      )
+      .where(and(eq(ledgerAccount.ledgerId, this.scope.ledgerId), eq(ledgerAccount.id, accountId)))
       .limit(1);
     return rows[0]?.currency ?? null;
   }
@@ -46,7 +47,7 @@ export class PgRecurringStore implements SettlementStore {
       .from(recurringOccurrence)
       .where(
         and(
-          eq(recurringOccurrence.householdId, this.scope.householdId),
+          eq(recurringOccurrence.ledgerId, this.scope.ledgerId),
           eq(recurringOccurrence.ruleId, ruleId),
         ),
       );
@@ -59,7 +60,7 @@ export class PgRecurringStore implements SettlementStore {
       assertionStatement(
         this.db,
         sql`(SELECT COUNT(*) FROM ${recurringRule}
-             WHERE ${recurringRule.householdId} = ${this.scope.householdId}
+             WHERE ${recurringRule.ledgerId} = ${this.scope.ledgerId}
                AND ${recurringRule.id} = ${commit.ruleId}
                AND ${recurringRule.revision} = ${commit.expectedRevision}) = 1`,
       ),
@@ -68,9 +69,7 @@ export class PgRecurringStore implements SettlementStore {
     for (const generated of commit.generated) {
       statements.push(
         this.db.insert(transaction).values({
-          // Recurring Rules stay Household-owned until #227 teaches them
-          // Ledger Scope; an organization ledger id is its Household id.
-          ledgerId: this.scope.householdId,
+          ledgerId: this.scope.ledgerId,
           householdId: this.scope.householdId,
           id: generated.transactionId,
           type: generated.type,
@@ -90,6 +89,7 @@ export class PgRecurringStore implements SettlementStore {
       statements.push(
         this.db.insert(recurringOccurrence).values({
           id: this.nextTransactionId(),
+          ledgerId: this.scope.ledgerId,
           householdId: this.scope.householdId,
           ruleId: commit.ruleId,
           scheduledDate: generated.date,
@@ -117,7 +117,7 @@ export class PgRecurringStore implements SettlementStore {
         })
         .where(
           and(
-            eq(recurringRule.householdId, this.scope.householdId),
+            eq(recurringRule.ledgerId, this.scope.ledgerId),
             eq(recurringRule.id, commit.ruleId),
           ),
         ),
@@ -127,7 +127,7 @@ export class PgRecurringStore implements SettlementStore {
       const commandId = `settlement:${commit.ruleId}:${commit.generated[0]?.transactionId ?? ""}`;
       statements.push(
         changeLogStatement(this.db, {
-          ledgerId: this.scope.householdId,
+          ledgerId: this.scope.ledgerId,
           householdId: this.scope.householdId,
           userId: this.scope.userId,
           commandId,
@@ -136,7 +136,7 @@ export class PgRecurringStore implements SettlementStore {
       );
       statements.push(
         resultStatement(this.db, {
-          ledgerId: this.scope.householdId,
+          ledgerId: this.scope.ledgerId,
           householdId: this.scope.householdId,
           commandId,
           result: { generatedCount: commit.generated.length },
@@ -144,14 +144,14 @@ export class PgRecurringStore implements SettlementStore {
       );
     }
 
-    await executeLedgerTransaction(this.db, statements, this.scope.householdId);
+    await executeLedgerTransaction(this.db, statements, this.scope.ledgerId);
   }
 }
 
-export async function listSettleableRules(db: CommandDatabase, householdId: string) {
+export async function listSettleableRules(db: CommandDatabase, ledgerId: string) {
   return db
     .select()
     .from(recurringRule)
-    .where(and(eq(recurringRule.householdId, householdId), ne(recurringRule.lifecycle, "archived")))
+    .where(and(eq(recurringRule.ledgerId, ledgerId), ne(recurringRule.lifecycle, "archived")))
     .orderBy(asc(recurringRule.name), asc(recurringRule.id));
 }

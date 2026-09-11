@@ -1,6 +1,10 @@
 import { z } from "zod";
 
 const sqliteBooleanSchema = z.union([z.literal(0), z.literal(1)]);
+const scopeColumns = {
+  ledger_id: z.string(),
+  household_id: z.string().nullable(),
+};
 const auditColumns = {
   version: z.number().int().nonnegative(),
   created_by: z.string(),
@@ -11,7 +15,7 @@ const auditColumns = {
 
 export const powerSyncBudgetWorkspaceRowSchema = z.object({
   id: z.string(),
-  household_id: z.string(),
+  ...scopeColumns,
   currency: z.string(),
   activation_period: z.string(),
   ...auditColumns,
@@ -19,7 +23,7 @@ export const powerSyncBudgetWorkspaceRowSchema = z.object({
 
 export const powerSyncEnvelopeRowSchema = z.object({
   id: z.string(),
-  household_id: z.string(),
+  ...scopeColumns,
   currency: z.string(),
   name: z.string(),
   icon: z.string(),
@@ -31,7 +35,7 @@ export const powerSyncEnvelopeRowSchema = z.object({
 
 export const powerSyncCategoryMappingRowSchema = z.object({
   id: z.string(),
-  household_id: z.string(),
+  ...scopeColumns,
   category_id: z.string(),
   envelope_id: z.string().nullable(),
   effective_from_period: z.string(),
@@ -40,7 +44,7 @@ export const powerSyncCategoryMappingRowSchema = z.object({
 
 export const powerSyncFundingMembershipRowSchema = z.object({
   id: z.string(),
-  household_id: z.string(),
+  ...scopeColumns,
   account_id: z.string(),
   currency: z.string(),
   active: sqliteBooleanSchema,
@@ -50,7 +54,7 @@ export const powerSyncFundingMembershipRowSchema = z.object({
 
 export const powerSyncRolloverSettingRowSchema = z.object({
   id: z.string(),
-  household_id: z.string(),
+  ...scopeColumns,
   envelope_id: z.string(),
   positive_rollover: sqliteBooleanSchema,
   effective_from_period: z.string(),
@@ -59,7 +63,7 @@ export const powerSyncRolloverSettingRowSchema = z.object({
 
 export const powerSyncAssignmentRowSchema = z.object({
   id: z.string(),
-  household_id: z.string(),
+  ...scopeColumns,
   currency: z.string(),
   budget_period: z.string(),
   source_envelope_id: z.string().nullable(),
@@ -71,7 +75,7 @@ export const powerSyncAssignmentRowSchema = z.object({
 
 export const powerSyncRefundLinkRowSchema = z.object({
   id: z.string(),
-  household_id: z.string(),
+  ...scopeColumns,
   original_transaction_id: z.string(),
   refund_transaction_id: z.string(),
   currency: z.string(),
@@ -81,7 +85,7 @@ export const powerSyncRefundLinkRowSchema = z.object({
 
 export const powerSyncRecurringRuleRowSchema = z.object({
   id: z.string(),
-  household_id: z.string(),
+  ...scopeColumns,
   name: z.string(),
   type: z.enum(["expense", "income", "transfer"]),
   amount_minor: z.number().int().nullable(),
@@ -114,7 +118,7 @@ export const powerSyncRecurringRuleRowSchema = z.object({
 
 export const powerSyncRecurringOccurrenceRowSchema = z.object({
   id: z.string(),
-  household_id: z.string(),
+  ...scopeColumns,
   rule_id: z.string(),
   scheduled_date: z.string(),
   transaction_id: z.string().nullable(),
