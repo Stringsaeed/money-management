@@ -1,0 +1,13 @@
+✔ a Personal Ledger id names its owning User (0.815958ms)
+✔ an Organization Ledger id is the organization id itself (0.095792ms)
+✔ parsing a ledger id round-trips both scopes (0.445375ms)
+✔ parsing rejects ids that name no owner (0.06825ms)
+✔ scopes match only when they address the same ledger (0.070125ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 96.058708

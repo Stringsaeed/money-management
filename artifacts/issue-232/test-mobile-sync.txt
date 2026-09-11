@@ -1,0 +1,10 @@
+PASS hooks/use-enable-sync.test.tsx (7.406 s)
+PASS hooks/use-sync-worker.test.tsx
+PASS db/initialize.test.ts
+PASS lib/migration/manifest.test.ts
+
+Test Suites: 4 passed, 4 total
+Tests:       19 passed, 19 total
+Snapshots:   0 total
+Time:        8.962 s
+Ran all test suites matching /hooks\/use-enable-sync.test.tsx|hooks\/use-sync-worker.test.tsx|lib\/migration\/manifest.test.ts|db\/initialize.test.ts/i.

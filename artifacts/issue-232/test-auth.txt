@@ -1,0 +1,14 @@
+$ vitest run
+
+ RUN  v3.2.7 /Users/saeed/Work/money-management-wt-232/packages/auth
+
+ ✓ src/member-widget-page.test.ts (3 tests) 2ms
+ ✓ src/app-association.test.ts (3 tests) 2ms
+ ✓ src/household-events.test.ts (3 tests) 2ms
+ ✓ src/verify-access-token.test.ts (5 tests) 154ms
+
+ Test Files  4 passed (4)
+      Tests  14 passed (14)
+   Start at  23:37:08
+   Duration  592ms (transform 128ms, setup 0ms, collect 288ms, tests 160ms, environment 0ms, prepare 416ms)
+

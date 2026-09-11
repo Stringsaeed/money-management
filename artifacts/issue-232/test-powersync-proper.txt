@@ -1,0 +1,18 @@
+$ node --test sync-streams.test.ts
+✔ uses Sync Streams edition 3 and an eager membership stream (0.458208ms)
+✔ streams the Personal Ledger eagerly, scoped by the ledger's owner (0.170834ms)
+✔ scopes personal recurring rules to ledger-owned accounts without visibility gating (0.072875ms)
+✔ every Household stream denies inactive memberships and unknown role slugs (0.135333ms)
+✔ keeps the Personal Ledger and Household streams from bleeding into each other (0.064ms)
+✔ guards every household query by the subscription and signed-in membership (0.093833ms)
+✔ streams all household accounts and transactions to active members (0.06ms)
+✔ publishes every budget table through a membership-guarded household stream (0.07125ms)
+✔ publishes household recurring rules and occurrences to active members (0.081084ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 115.740208

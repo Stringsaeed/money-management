@@ -1,0 +1,29 @@
+
+ RUN  v3.2.7 /Users/saeed/Work/money-management-wt-232/packages/api
+
+ ✓ src/lib/deletion/service.test.ts (5 tests) 3158ms
+   ✓ requestHouseholdDeletion > requires confirmName and rejects non-admins  991ms
+   ✓ requestHouseholdDeletion > removes shared ledger data, keeps personal ledgers, and tombstones the org  604ms
+   ✓ requestHouseholdDeletion > resumes after a WorkOS failure without duplicating local deletes  576ms
+   ✓ requestUserDeletion > blocks sole admins until they appoint another admin or delete the Household  521ms
+   ✓ requestUserDeletion > anonymizes attribution, clears personal data, and ignores delayed membership events  466ms
+ ✓ src/lib/membership/projection.test.ts (13 tests) 6637ms
+   ✓ projectMembership ordering rule > projects a first observation and grants access  959ms
+   ✓ projectMembership ordering rule > applies the same event twice without changing anything  571ms
+   ✓ projectMembership ordering rule > ignores an older observation that arrives after a newer one  523ms
+   ✓ projectMembership ordering rule > lets a delayed newer observation win over an older one already applied  556ms
+   ✓ projectMembership ordering rule > keeps a deletion tombstone ahead of a stale created event  511ms
+   ✓ projectMembership ordering rule > re-admits a User through a genuinely newer membership under a new id  458ms
+   ✓ projectMembership ordering rule > does not resolve two distinct events at the same instant in favor of the later arrival  470ms
+   ✓ projectMembership ordering rule > refuses to write for Households or Users Trove does not know  432ms
+   ✓ access decisions > denies pending and unknown-role memberships  436ms
+   ✓ bootstrap tombstones > tombstones memberships missing from the authoritative list, dated at the list request  420ms
+   ✓ bootstrap tombstones > leaves a membership created after the list was requested untouched  436ms
+   ✓ bootstrap tombstones > keeps listed memberships  426ms
+   ✓ bootstrap tombstones > tombstones every member when the Organization is deleted  437ms
+
+ Test Files  2 passed (2)
+      Tests  18 passed (18)
+   Start at  23:37:11
+   Duration  7.29s (transform 153ms, setup 0ms, collect 829ms, tests 9.79s, environment 0ms, prepare 133ms)
+

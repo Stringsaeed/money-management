@@ -1,0 +1,15 @@
+$ oxfmt --check
+Checking formatting...
+
+apps/mobile/components/ui/input.tsx (0ms)
+artifacts/powersync-planetscale-spike/package.json (0ms)
+artifacts/powersync-planetscale-spike/wrangler.template.jsonc (0ms)
+artifacts/powersync-planetscale/z2-import-chunk.json (0ms)
+artifacts/powersync-planetscale/z2-import-chunk.mts (0ms)
+artifacts/powersync-planetscale/z2-live-apply.mts (0ms)
+artifacts/powersync-planetscale/z2-vs-z1-perf-8640e41-d1661b9.md (9ms)
+internal/228-wip-gap-checklist.md (80ms)
+
+Format issues found in above 8 files. Run without `--check` to fix.
+Finished in 686ms on 985 files using 12 threads.
+[ELIFECYCLE] Command failed with exit code 1.

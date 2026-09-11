@@ -1,0 +1,5 @@
+  fingerprint 7f3707.. miss (29.2s)
+  cache       eas did not answer within 30s; building instead
+  build       compiling Debug with xcodebuild
+  cache       compilation cache on (CAS at /Users/saeed/.stim/compilation-cache)
+› Searching builds with matching fingerprint on EAS servers

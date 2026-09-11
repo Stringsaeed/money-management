@@ -1,0 +1,28 @@
+  device      stim-mobile (iPhone 17 26.5) (F324..) created (1.1s)
+  fingerprint fff292.. miss (16.1s)
+  cache       eas did not answer within 30s; building instead
+  build       compiling Debug with xcodebuild
+  cache       compilation cache on (CAS at /Users/saeed/.stim/compilation-cache)
+› Searching builds with matching fingerprint on EAS servers
+  build       still compiling (30s)
+  build       still compiling (1m00s)
+  build       still compiling (1m30s)
+  build       still compiling (2m00s)
+  build       still compiling (2m30s)
+  build       still compiling (3m00s)
+  build       still compiling (3m30s)
+  build       still compiling (4m00s)
+  cache       compilation cache 0/853 hits (0%)
+  build       FAILED after 4m18s
+  error       /Users/saeed/Work/money-management-wt-232/node_modules/expo-sqlite/ios/SQLiteModule.swift:114:14: cannot find 'exsqlite3_open' in scope
+  error       /Users/saeed/Work/money-management-wt-232/node_modules/expo-sqlite/ios/SQLiteModule.swift:133:16: cannot find 'exsqlite3_get_autocommit' in scope
+  error       /Users/saeed/Work/money-management-wt-232/node_modules/expo-sqlite/ios/SQLiteModule.swift:137:16: cannot find 'exsqlite3_get_autocommit' in scope
+  error       /Users/saeed/Work/money-management-wt-232/node_modules/expo-sqlite/ios/SQLiteModule.swift:324:8: cannot find 'exsqlite3_open' in scope
+  error       /Users/saeed/Work/money-management-wt-232/node_modules/expo-sqlite/ios/SQLiteModule.swift:328:24: cannot find 'exsqlite3_malloc64' in scope
+  error       /Users/saeed/Work/money-management-wt-232/node_modules/expo-sqlite/ios/SQLiteModule.swift:333:9: cannot find 'exsqlite3_free' in scope
+  error       ... and 61 more diagnostics in the log
+  error       `xcodebuild` failed (exit code 65) with 10 diagnostics.
+  remedy      See /Users/saeed/.stim/workspaces/mobile--f32c8e64f19c5328/logs/build-ios.ndjson for the transcript.
+  log         /Users/saeed/.stim/workspaces/mobile--f32c8e64f19c5328/logs/build-ios.ndjson
+  failed      STIM_BUILD_FAILED
+{"code":"STIM_BUILD_FAILED","message":"`xcodebuild` failed (exit code 65) with 10 diagnostics.","remedy":"See /Users/saeed/.stim/workspaces/mobile--f32c8e64f19c5328/logs/build-ios.ndjson for the transcript."}

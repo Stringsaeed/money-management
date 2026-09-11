@@ -1,0 +1,28 @@
+
+ RUN  v3.2.7 /Users/saeed/Work/money-management-wt-232/packages/powersync
+
+✔ uses Sync Streams edition 3 and an eager membership stream (0.734833ms)
+✔ streams the Personal Ledger eagerly, scoped by the ledger's owner (1.62775ms)
+✔ scopes personal recurring rules to ledger-owned accounts without visibility gating (0.093208ms)
+✔ every Household stream denies inactive memberships and unknown role slugs (0.17225ms)
+✔ keeps the Personal Ledger and Household streams from bleeding into each other (0.080583ms)
+✔ guards every household query by the subscription and signed-in membership (0.1055ms)
+✔ streams all household accounts and transactions to active members (0.058166ms)
+✔ publishes every budget table through a membership-guarded household stream (0.075292ms)
+✔ publishes household recurring rules and occurrences to active members (0.07825ms)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  sync-streams.test.ts [ sync-streams.test.ts ]
+Error: No test suite found in file /Users/saeed/Work/money-management-wt-232/packages/powersync/sync-streams.test.ts
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  23:37:09
+   Duration  389ms (transform 43ms, setup 0ms, collect 68ms, tests 0ms, environment 0ms, prepare 112ms)
+
+undefined
+/Users/saeed/Work/money-management-wt-232/packages/powersync:
+[ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL] Command failed with exit code 1: vitest run

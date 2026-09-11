@@ -1,0 +1,674 @@
+$ turbo run build && pnpm -C apps/mobile test:ci && pnpm --filter @trove/db cutover:test
+• turbo 2.10.11
+
+   • Packages in scope: @trove/api, @trove/auth, @trove/db, @trove/domain, @trove/env, @trove/infra, @trove/powersync, @trove/protocol, @trove/server, @trove/typescript-config, mobile
+   • Running build in 11 packages
+   • Remote caching disabled, using shared worktree cache
+
+@trove/protocol:build: cache hit, replaying logs 537efce8daab8a9b
+@trove/protocol:build: $ tsc --project tsconfig.json
+@trove/domain:build: cache hit, replaying logs 99a4857a4cb8046e
+@trove/domain:build: $ tsc --project tsconfig.json
+
+ Tasks:    2 successful, 2 total
+Cached:    2 cached, 2 total
+  Time:    306ms >>> FULL TURBO
+
+$ jest --runInBand --coverage --ci --watchman=false --forceExit
+PASS modules/accounts/account-lifecycle.test.ts (5.388 s)
+PASS tests/envelopes/setup-draft-route.test.tsx
+PASS modules/recurring-rules/recurring-rules.test.ts
+PASS modules/budgeting/setup-drafts.test.ts
+PASS db/recurring-rules-migration.test.ts
+PASS lib/migration/chunks.test.ts
+PASS __tests__/app/transaction/[id].test.tsx
+PASS modules/ledger-cache.test.ts
+PASS hooks/use-transactions.test.tsx
+PASS hooks/use-accounts.test.tsx
+PASS modules/access/access.test.ts
+PASS modules/categories/category-lifecycle.test.ts
+PASS __tests__/app/settings.test.tsx (23.046 s)
+PASS __tests__/app/envelopes/workspace-status.test.tsx
+PASS __tests__/app/accounts.test.tsx
+PASS modules/budgeting/budgeting.test.ts
+PASS db/budgeting-migration.test.ts
+PASS __tests__/app/envelopes/workspace-form.test.tsx
+PASS hooks/use-categories.test.tsx
+PASS modules/ledger-cache-behavior.test.ts
+PASS components/household/profile-action-buttons.test.tsx
+PASS hooks/use-recurring-rules.test.tsx
+PASS __tests__/app/_layout.test.tsx
+PASS db/account-lifecycle-migration.test.ts
+PASS modules/budgeting/envelope-resources.test.ts
+PASS lib/migration/enable-sync.test.ts
+PASS hooks/use-market-quotes.test.ts
+PASS components/updates/app-update-provider.test.tsx
+PASS modules/categories/future-category-mapping.test.ts
+PASS modules/budgeting/assignment-corrections.test.ts
+PASS modules/ledger-db/ledger.test.ts
+PASS modules/ledger-data-source/synced.test.ts
+PASS modules/budgeting/synced.test.ts
+PASS modules/budgeting/funding-pools.test.ts
+PASS modules/powersync/rejection.test.ts
+PASS modules/budgeting/envelope-mapping-invariants.test.ts
+PASS modules/budgeting/funding-membership.test.ts
+
+ReferenceError: You are trying to `import` a file after the Jest environment has been torn down. From __tests__/app/_layout.test.tsx.
+
+      at Object.require [as Platform] (../../node_modules/react-native/index.js:313:12)
+      at PostHog.getCustomUserAgent (../../node_modules/posthog-react-native/dist/posthog-rn.js:1:13613)
+      at PostHog.getCustomHeaders (../../node_modules/@posthog/core/dist/posthog-core-stateless.js:733:38)
+      at ../../node_modules/posthog-react-native/dist/posthog-rn.js:1:3181
+      at PostHog.getCustomHeaders (../../node_modules/posthog-react-native/dist/posthog-rn.js:1:13865)
+      at PostHog.sendBatch (../../node_modules/@posthog/core/dist/posthog-core-stateless.js:754:25)
+      at PostHog._flushRoute (../../node_modules/@posthog/core/dist/posthog-core-stateless.js:814:17)
+      at PostHog._flush (../../node_modules/@posthog/core/dist/posthog-core-stateless.js:774:13)
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Error while flushing PostHog TypeError: Cannot read properties of undefined (reading 'OS')
+        at PostHog.getCustomUserAgent (/Users/saeed/Work/money-management-wt-232/node_modules/posthog-react-native/dist/posthog-rn.js:1:13622)
+        at PostHog.getCustomHeaders (/Users/saeed/Work/money-management-wt-232/node_modules/@posthog/core/dist/posthog-core-stateless.js:733:38)
+        at /Users/saeed/Work/money-management-wt-232/node_modules/posthog-react-native/dist/posthog-rn.js:1:3181
+        at PostHog.getCustomHeaders (/Users/saeed/Work/money-management-wt-232/node_modules/posthog-react-native/dist/posthog-rn.js:1:13865)
+        at PostHog.sendBatch (/Users/saeed/Work/money-management-wt-232/node_modules/@posthog/core/dist/posthog-core-stateless.js:754:25)
+        at processTicksAndRejections (node:internal/process/task_queues:104:5)
+        at PostHog._flushRoute (/Users/saeed/Work/money-management-wt-232/node_modules/@posthog/core/dist/posthog-core-stateless.js:814:17)
+        at PostHog._flush (/Users/saeed/Work/money-management-wt-232/node_modules/@posthog/core/dist/posthog-core-stateless.js:774:13)".
+
+      at PostHog.getCustomUserAgent (../../node_modules/posthog-react-native/dist/posthog-rn.js:1:13622)
+      at PostHog.getCustomHeaders (../../node_modules/@posthog/core/dist/posthog-core-stateless.js:733:38)
+      at ../../node_modules/posthog-react-native/dist/posthog-rn.js:1:3181
+      at PostHog.getCustomHeaders (../../node_modules/posthog-react-native/dist/posthog-rn.js:1:13865)
+      at PostHog.sendBatch (../../node_modules/@posthog/core/dist/posthog-core-stateless.js:754:25)
+      at PostHog._flushRoute (../../node_modules/@posthog/core/dist/posthog-core-stateless.js:814:17)
+      at PostHog._flush (../../node_modules/@posthog/core/dist/posthog-core-stateless.js:774:13)".
+      at console.error (../../node_modules/@jest/console/build/BufferedConsole.js:127:10)
+      at logFlushError (../../node_modules/@posthog/core/dist/posthog-core-stateless.js:116:20)
+      at ../../node_modules/@posthog/core/dist/posthog-core-stateless.js:680:19
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Error while flushing PostHog TypeError: Cannot read properties of undefined (reading 'OS')
+        at PostHog.getCustomUserAgent (/Users/saeed/Work/money-management-wt-232/node_modules/posthog-react-native/dist/posthog-rn.js:1:13622)
+        at PostHog.getCustomHeaders (/Users/saeed/Work/money-management-wt-232/node_modules/@posthog/core/dist/posthog-core-stateless.js:733:38)
+        at /Users/saeed/Work/money-management-wt-232/node_modules/posthog-react-native/dist/posthog-rn.js:1:3181
+        at PostHog.getCustomHeaders (/Users/saeed/Work/money-management-wt-232/node_modules/posthog-react-native/dist/posthog-rn.js:1:13865)
+        at PostHog.sendBatch (/Users/saeed/Work/money-management-wt-232/node_modules/@posthog/core/dist/posthog-core-stateless.js:754:25)
+        at processTicksAndRejections (node:internal/process/task_queues:104:5)
+        at PostHog._flushRoute (/Users/saeed/Work/money-management-wt-232/node_modules/@posthog/core/dist/posthog-core-stateless.js:814:17)
+        at PostHog._flush (/Users/saeed/Work/money-management-wt-232/node_modules/@posthog/core/dist/posthog-core-stateless.js:774:13)".
+
+      at PostHog.getCustomUserAgent (../../node_modules/posthog-react-native/dist/posthog-rn.js:1:13622)
+      at PostHog.getCustomHeaders (../../node_modules/@posthog/core/dist/posthog-core-stateless.js:733:38)
+      at ../../node_modules/posthog-react-native/dist/posthog-rn.js:1:3181
+      at PostHog.getCustomHeaders (../../node_modules/posthog-react-native/dist/posthog-rn.js:1:13865)
+      at PostHog.sendBatch (../../node_modules/@posthog/core/dist/posthog-core-stateless.js:754:25)
+      at PostHog._flushRoute (../../node_modules/@posthog/core/dist/posthog-core-stateless.js:814:17)
+      at PostHog._flush (../../node_modules/@posthog/core/dist/posthog-core-stateless.js:774:13)".
+      at console.error (../../node_modules/@jest/console/build/BufferedConsole.js:127:10)
+      at logFlushError (../../node_modules/@posthog/core/dist/posthog-core-stateless.js:116:20)
+      at ../../node_modules/@posthog/core/dist/posthog-core-stateless.js:680:19
+
+PASS __tests__/app/envelopes/workspace-list.test.tsx (11.111 s)
+PASS db/reset.test.ts
+PASS modules/ledger-db/intents.test.ts
+PASS modules/account-recurring-coordinator.test.ts
+PASS modules/budgeting/envelope-restored-mappings.test.ts
+PASS components/recurring/recurring-settlement-provider.test.tsx
+PASS components/home/recent-journal-section.test.tsx
+PASS modules/powersync/connector.test.ts
+PASS hooks/use-archive-category.test.tsx
+PASS modules/budgeting/move-money.test.ts
+PASS hooks/use-delete-category.test.tsx
+PASS modules/recurring-rules/synced.test.ts
+PASS components/account/account-currency-picker.test.tsx
+PASS modules/budgeting/envelope-period-mappings.test.ts
+PASS __tests__/app/onboarding.test.tsx
+PASS hooks/use-home-screen.test.tsx
+PASS __tests__/app/index.test.tsx
+PASS __tests__/app/categories.test.tsx (7.644 s)
+PASS components/home/upcoming-recurring-section.test.tsx
+PASS db/category-lifecycle-migration.test.ts
+PASS components/money-movement/money-movement-screen.test.tsx (7.086 s)
+PASS components/transaction/ui/transaction-text-field.test.tsx
+PASS components/rejected-changes/rejected-change-edit-screen.test.tsx
+PASS modules/ledger-data-source/provider.test.ts
+PASS components/account/account-archive-blocker-item.test.tsx
+PASS components/account/account-form-content.test.tsx (6.04 s)
+PASS hooks/use-num-pad-number.test.ts
+PASS components/recurring/recurring-settlement-banner.test.tsx
+PASS modules/budgeting/envelope-schedule-idempotence.test.ts
+PASS modules/budgeting/card-dependency-evaluator.test.ts
+PASS components/account/account-lifecycle-actions.test.tsx
+PASS components/account/form.test.tsx
+PASS __tests__/app/envelopes/workspace-schedule.test.tsx
+PASS components/settings/update-section.test.tsx (11.626 s)
+PASS __tests__/app/recurring/index.test.tsx
+PASS components/rejected-changes/rejected-change-card.test.tsx
+  ● Console
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/react/cjs/react.development.js:844:17
+
+PASS components/settings/dev-tools-section.test.tsx
+PASS __tests__/app/account/[id].test.tsx
+PASS utils/currency.test.ts
+PASS components/access/access-banner.test.tsx
+PASS components/navigation/glass-tab-bar/use-tab-bar-pan-gesture.test.ts
+PASS components/rejected-changes/payload-fields.test.ts
+PASS modules/budgeting/workspace-settings.test.ts
+PASS utils/activity.test.ts
+PASS hooks/use-activity.test.tsx
+PASS utils/date.test.ts
+PASS components/rejected-changes/rejected-changes-screen.test.tsx
+PASS components/sync/sync-mode-banner.test.tsx
+PASS components/native-ui/recipes.test.ts
+PASS components/home/filter-bar.test.tsx
+PASS modules/ledger-data-source/sqlite-allowlist.test.ts
+PASS components/account/account-form-preview.test.tsx
+PASS lib/migration/backup.test.ts
+PASS components/household/enable-sync-copy.test.ts
+PASS modules/ledger-db/registry.test.ts
+PASS modules/budgeting/assignment-cache.test.ts
+PASS __tests__/app/household.test.tsx
+PASS components/home/home-journal-list.test.tsx
+PASS components/updates/mandatory-update-gate.test.tsx
+PASS components/account/account-currency-utils.test.ts
+PASS modules/budgeting/envelope-projection.test.ts
+PASS modules/access/session-probe.test.ts
+PASS hooks/use-rejected-changes.test.ts
+PASS utils/intent-summary.test.ts
+PASS lib/migration/status.test.ts
+PASS modules/recurring-rules/calendar.test.ts
+PASS components/category/category-picker.test.tsx
+PASS components/auth/ui/recipes.test.ts
+PASS components/navigation/glass-tab-bar/create-tab-button.test.tsx
+PASS modules/recurring-rules/provider.test.tsx
+PASS components/home/journal-list-item-row.test.tsx
+PASS modules/powersync/command-metadata.test.ts
+PASS utils/transaction.test.ts
+PASS modules/budgeting/envelope-order.test.ts
+PASS components/activity/activity-entry-row.test.tsx
+PASS modules/powersync/collection-compat.test.ts
+PASS modules/access/auth-sheet-session.test.ts
+PASS __tests__/app/category/new.test.tsx
+PASS hooks/use-budget-projection-synced.test.tsx
+PASS modules/access/actions.test.ts
+PASS components/transaction/category-picker/category-picker.test.tsx
+PASS components/transaction/ui/field-style.test.ts
+PASS components/ui/button.test.tsx
+PASS __tests__/components/settings/section-header.test.tsx
+PASS components/account/account-picker.test.tsx
+PASS components/access/profile-action-buttons.test.tsx
+PASS lib/migration/manifest-utils.test.ts
+PASS components/banner/banner-fingerprint.test.ts
+PASS components/auth/auth-bottom-sheet.test.tsx
+PASS components/transaction/utils.test.ts
+PASS modules/budgeting/envelope-order-tie.test.ts
+PASS utils/recurring.test.ts
+PASS components/rejected-changes/rejected-changes-screen.no-ledger.test.tsx
+PASS __tests__/app/splash.test.tsx
+PASS modules/access/client-error.test.ts
+PASS hooks/use-account-visibility.test.tsx
+PASS components/transaction/transaction-row.test.tsx
+PASS utils/journal-list.test.ts
+PASS hooks/use-authorized-ledger-accounts.test.tsx
+PASS components/recurring/recurring-rule-appearance.test.ts
+PASS components/home/home-empty-state.test.tsx
+PASS modules/powersync/availability.test.ts
+PASS components/transaction/account-picker/account-picker.test.tsx
+PASS components/envelopes/setup/setup-assignment-input.test.tsx
+PASS components/recurring/recurring-rule-warning.test.tsx
+PASS components/transaction/note-input.test.tsx
+PASS modules/access/claim-store.test.ts
+PASS components/home/balance-hero.test.tsx
+PASS components/auth/ui/tokens.test.ts
+PASS components/common/color-picker.test.tsx
+PASS components/settings/account-row.test.tsx
+PASS components/transaction/amount-display.test.tsx
+PASS components/updates/mandatory-policy.test.ts
+PASS hooks/use-theme-color.test.ts
+PASS components/account/account-currency-list-scroll.test.ts
+PASS components/settings/settings-row.test.tsx
+PASS stores/ui-store.test.ts
+PASS components/common/empty-state.test.tsx
+PASS modules/budgeting/setup-assignment.test.ts
+PASS components/settings/category-row.test.tsx
+PASS __tests__/app/envelopes/index.test.tsx
+PASS components/account/utils.test.ts
+PASS components/settings/chart-utils.test.ts
+PASS components/money-movement/market-formatters.test.ts
+PASS components/home/journal-day-header.test.tsx
+PASS components/resource/resource-sheet-delete-button.test.tsx
+PASS components/common/amount-input.test.tsx
+PASS __tests__/app/modal.test.tsx
+(node:89857) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/saeed/Work/money-management-wt-232/tools/oxlint/ledger-boundary/oxlint.fixture.config.ts?cache=1789155955733 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/saeed/Work/money-management-wt-232/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:89944) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/saeed/Work/money-management-wt-232/tools/oxlint/ledger-boundary/oxlint.fixture.config.ts?cache=1789155956804 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/saeed/Work/money-management-wt-232/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:89959) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/saeed/Work/money-management-wt-232/tools/oxlint/ledger-boundary/oxlint.fixture.config.ts?cache=1789155957781 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/saeed/Work/money-management-wt-232/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:89983) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/saeed/Work/money-management-wt-232/tools/oxlint/ledger-boundary/oxlint.fixture.config.ts?cache=1789155958520 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/saeed/Work/money-management-wt-232/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS modules/ledger-data-source/ledger-boundary-lint.test.ts (5.046 s)
+PASS components/common/emoji-picker.test.tsx
+PASS modules/recurring-rules/clock.test.ts
+PASS components/auth/ui/roles.test.ts
+PASS components/auth/ui/stretch.ios.test.ts
+PASS components/ui/text.test.tsx
+PASS components/home/home-brand.test.tsx
+PASS modules/access/email.test.ts
+PASS utils/id.test.ts
+PASS hooks/use-enable-sync.test.tsx
+PASS db/initialize.test.ts
+PASS lib/migration/manifest.test.ts
+PASS hooks/use-sync-worker.test.tsx
+------------------------------------------------|---------|----------|---------|---------|-------------------------------------------------------------
+File                                            | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                           
+------------------------------------------------|---------|----------|---------|---------|-------------------------------------------------------------
+All files                                       |   69.97 |    59.34 |   70.89 |   71.65 |                                                             
+ app                                            |   54.54 |    54.54 |   54.54 |   57.74 |                                                             
+  _layout.tsx                                   |   92.85 |    92.85 |      80 |   92.85 | 119                                                         
+  accounts.tsx                                  |     100 |    71.42 |     100 |     100 | 22-31                                                       
+  activity.tsx                                  |       0 |        0 |       0 |       0 | 14-99                                                       
+  categories.tsx                                |   63.63 |       70 |   54.54 |   73.68 | 50-54,81,136                                                
+  onboarding.tsx                                |   66.66 |       50 |     100 |      50 | 8                                                           
+  rejected-change-edit.tsx                      |       0 |        0 |       0 |       0 | 5-6                                                         
+  splash.tsx                                    |   66.66 |    42.85 |     100 |   66.66 | 10,20                                                       
+ app/(tabs)                                     |       0 |      100 |       0 |       0 |                                                             
+  _layout.tsx                                   |       0 |      100 |       0 |       0 | 4-10                                                        
+ app/(tabs)/(home)                              |    62.5 |    28.57 |   33.33 |    62.5 |                                                             
+  _layout.tsx                                   |       0 |      100 |       0 |       0 | 7-14                                                        
+  index.tsx                                     |   83.33 |    28.57 |     100 |   83.33 | 33                                                          
+ app/(tabs)/envelopes                           |      80 |      100 |   66.66 |   66.66 |                                                             
+  _layout.tsx                                   |       0 |      100 |       0 |       0 | 6                                                           
+  index.tsx                                     |       0 |        0 |       0 |       0 |                                                             
+ app/(tabs)/inbox                               |       0 |      100 |       0 |       0 |                                                             
+  _layout.tsx                                   |       0 |      100 |       0 |       0 | 6                                                           
+  index.tsx                                     |       0 |      100 |       0 |       0 | 4                                                           
+ app/(tabs)/ledger                              |       0 |        0 |       0 |       0 |                                                             
+  _layout.tsx                                   |       0 |      100 |       0 |       0 | 7-14                                                        
+  index.tsx                                     |       0 |        0 |       0 |       0 | 10-16                                                       
+ app/(tabs)/money-movement                      |       0 |      100 |       0 |       0 |                                                             
+  _layout.tsx                                   |       0 |      100 |       0 |       0 | 6                                                           
+  index.tsx                                     |       0 |      100 |       0 |       0 | 4                                                           
+ app/(tabs)/settings                            |      75 |    65.71 |   42.85 |   75.75 |                                                             
+  _layout.tsx                                   |       0 |      100 |       0 |       0 | 6                                                           
+  household.tsx                                 |      40 |     87.5 |      25 |      40 | 21-30                                                       
+  index.tsx                                     |   83.33 |    59.25 |   55.55 |   85.18 | 54-75                                                       
+ app/account                                    |      65 |    43.75 |   58.33 |   73.52 |                                                             
+  [id].tsx                                      |      65 |    43.75 |   58.33 |   73.52 | 39,50,79-103,148                                            
+ app/category                                   |      50 |       25 |      60 |   44.44 |                                                             
+  new.tsx                                       |      50 |       25 |      60 |   44.44 | 16-25                                                       
+ app/recurring                                  |   91.66 |       76 |     100 |      95 |                                                             
+  index.tsx                                     |   91.66 |       76 |     100 |      95 | 119                                                         
+ app/transaction                                |   73.41 |    68.42 |   70.58 |   80.88 |                                                             
+  [id].tsx                                      |   73.41 |    68.42 |   70.58 |   80.88 | 123-128,140-145,148-149,161-175,202                         
+ components                                     |     100 |    63.63 |     100 |     100 |                                                             
+  themed-text.tsx                               |     100 |    63.63 |     100 |     100 | 16-25,27-28                                                 
+ components/access                              |   52.63 |    21.42 |   55.55 |   58.82 |                                                             
+  access-banner.tsx                             |      80 |       75 |      75 |   88.88 | 26                                                          
+  sign-out-pending-sheet.tsx                    |       0 |        0 |       0 |       0 | 27-38                                                       
+ components/account                             |   80.78 |    74.23 |   87.62 |   82.71 |                                                             
+  account-archive-blocker-item.tsx              |     100 |    83.33 |     100 |     100 | 53,94,115                                                   
+  account-currency-picker.tsx                   |   97.14 |    84.61 |     100 |     100 | 59,84                                                       
+  account-currency-utils.ts                     |   83.33 |    78.57 |     100 |   88.88 | 17,34                                                       
+  account-edit-sheet.tsx                        |      50 |       50 |      50 |      55 | 35-47,91-92                                                 
+  account-form-balance-section.tsx              |    90.9 |    64.28 |     100 |    90.9 | 82                                                          
+  account-form-preview.tsx                      |     100 |       75 |     100 |     100 | 24-60                                                       
+  account-form-sheet.tsx                        |      30 |       20 |    37.5 |   33.33 | 28-48,67                                                    
+  account-lifecycle-actions.tsx                 |     100 |    86.95 |     100 |     100 | 84-100                                                      
+  account-picker.tsx                            |     100 |       50 |     100 |     100 | 19-41,48                                                    
+  account-type-picker.tsx                       |      75 |    85.71 |   66.66 |      75 | 34                                                          
+  form.ts                                       |   93.33 |    66.66 |     100 |   93.33 | 101                                                         
+  use-account-lifecycle-actions.ts              |   60.71 |        0 |   71.42 |   60.71 | 22-39,61-65,88-92                                           
+  utils.ts                                      |     100 |    83.33 |     100 |     100 | 13                                                          
+ components/activity                            |    7.89 |    14.28 |   16.66 |    8.33 |                                                             
+  activity-date-range-filter.tsx                |       0 |        0 |       0 |       0 | 34-74                                                       
+  activity-detail-sheet.tsx                     |       0 |        0 |       0 |       0 | 17-72                                                       
+  activity-user-filter.tsx                      |       0 |        0 |       0 |       0 | 33-77                                                       
+ components/auth                                |   81.25 |     62.5 |      75 |   84.61 |                                                             
+  auth-bottom-sheet.tsx                         |   81.25 |     62.5 |      75 |   84.61 | 25-26                                                       
+ components/auth/ui                             |   47.14 |    26.58 |   34.28 |   47.72 |                                                             
+  auth-button.tsx                               |       0 |        0 |       0 |       0 | 26-72                                                       
+  auth-field.tsx                                |       0 |        0 |       0 |       0 | 31-42                                                       
+  auth-host.tsx                                 |   16.66 |        0 |       0 |   16.66 | 17-41                                                       
+  auth-screen-shell.tsx                         |       0 |      100 |       0 |       0 | 15                                                          
+  auth-surface.tsx                              |   66.66 |      100 |      50 |   66.66 | 17                                                          
+  auth-text.tsx                                 |       0 |        0 |       0 |       0 | 9-24                                                        
+  index.ts                                      |       0 |        0 |       0 |       0 |                                                             
+  recipe-core.ts                                |    6.66 |        0 |      40 |    7.69 | 20-40,68-92                                                 
+  recipe-types.ts                               |       0 |        0 |       0 |       0 |                                                             
+  recipes.android.ts                            |       0 |      100 |       0 |       0 | 21-35                                                       
+  recipes.ios.ts                                |   78.26 |    42.85 |      75 |   80.95 | 37,79,100-101                                               
+  recipes.ts                                    |       0 |      100 |       0 |       0 | 19-30                                                       
+  tokens.ts                                     |     100 |    85.71 |     100 |     100 | 82                                                          
+  use-auth-palette.ts                           |     100 |       75 |     100 |     100 | 16                                                          
+  use-auth-palette.web.ts                       |       0 |        0 |       0 |       0 | 6-7                                                         
+ components/banner                              |   74.28 |       75 |   81.81 |   76.47 |                                                             
+  banner-fingerprint.ts                         |   91.66 |    68.75 |     100 |     100 | 14-28,30                                                    
+  ledger-toaster.tsx                            |       0 |      100 |       0 |       0 | 3-15                                                        
+  ledger-toaster.web.tsx                        |       0 |      100 |       0 |       0 | 5                                                           
+ components/category                            |   78.12 |    81.48 |      82 |   78.72 |                                                             
+  category-edit-sheet.tsx                       |    62.5 |      100 |      60 |    62.5 | 31,44-45                                                    
+  category-form-content.tsx                     |      90 |      100 |      90 |      90 | 77                                                          
+  category-form-sheet.tsx                       |   35.71 |       25 |   42.85 |   38.46 | 29-42,60                                                    
+  category-lifecycle-actions.tsx                |    87.5 |       75 |     100 |    87.5 | 40,62,85                                                    
+  category-picker.tsx                           |     100 |    81.81 |     100 |     100 | 57,63-75,96                                                 
+  category-type-picker.tsx                      |      75 |      100 |   66.66 |      75 | 36                                                          
+  form.ts                                       |   66.66 |       50 |      75 |   66.66 | 82-93                                                       
+ components/common                              |   94.44 |    77.77 |      90 |   94.44 |                                                             
+  amount-input.tsx                              |   88.88 |       40 |   66.66 |   88.88 | 30                                                          
+  empty-state.tsx                               |     100 |    83.33 |     100 |     100 | 33                                                          
+ components/envelopes                           |   94.32 |    88.42 |   91.83 |   93.84 |                                                             
+  assignment-history.tsx                        |   93.33 |    92.85 |     100 |    92.3 | 35                                                          
+  budget-overview-screen.tsx                    |   92.59 |    86.04 |   85.71 |      92 | 48,140                                                      
+  budget-summary-card.tsx                       |     100 |       50 |     100 |     100 | 16                                                          
+  budget-workspace-screen.tsx                   |    90.9 |      100 |      50 |    90.9 | 22                                                          
+  use-move-money-sheet.ts                       |   92.85 |       75 |   91.66 |   92.59 | 63-64,102-103                                               
+  workspace-option.tsx                          |     100 |    83.33 |     100 |     100 | 22                                                          
+ components/envelopes/envelope-form             |   97.01 |    92.85 |   95.23 |   96.92 |                                                             
+  envelope-category-fields.tsx                  |   94.73 |    86.36 |    92.3 |   94.44 | 104                                                         
+  envelope-settings-fields.tsx                  |   83.33 |      100 |   83.33 |   83.33 | 61                                                          
+  form.ts                                       |     100 |     87.5 |     100 |     100 | 102                                                         
+ components/envelopes/setup                     |   99.13 |    94.73 |   98.03 |      99 |                                                             
+  setup-draft-screen.tsx                        |     100 |    93.75 |     100 |     100 | 67                                                          
+  setup-draft-workspace.tsx                     |   94.73 |     87.5 |    90.9 |   94.11 | 58                                                          
+  setup-envelope-card.tsx                       |     100 |    83.33 |     100 |     100 | 62-63                                                       
+ components/graphics                            |   90.16 |    70.58 |      90 |   89.28 |                                                             
+  coin-plant.tsx                                |       0 |        0 |       0 |       0 | 11-14                                                       
+  growing-garden.tsx                            |     100 |    81.81 |     100 |     100 | 80-94                                                       
+  palette.ts                                    |     100 |       50 |     100 |     100 | 25                                                          
+  seed-packets.tsx                              |       0 |        0 |       0 |       0 | 11-14                                                       
+ components/home                                |   67.96 |    59.45 |   61.36 |   65.95 |                                                             
+  balance-hero.tsx                              |   66.66 |       50 |     100 |    61.9 | 37-48                                                       
+  filter-bar.tsx                                |     100 |    88.88 |     100 |     100 | 21-22                                                       
+  filter-chip.tsx                               |       0 |      100 |       0 |       0 | 8                                                           
+  filters-button.tsx                            |       0 |        0 |       0 |       0 | 23-153                                                      
+  home-journal-list.tsx                         |      75 |        0 |      50 |   83.33 | 20                                                          
+  home-list-header.tsx                          |       0 |      100 |       0 |       0 | 8                                                           
+  journal-day-header.tsx                        |     100 |    57.14 |     100 |     100 | 18-25                                                       
+  journal-list-item-row.tsx                     |     100 |       75 |     100 |     100 | 19                                                          
+  recent-journal-section.tsx                    |     100 |     87.5 |     100 |     100 | 35                                                          
+  upcoming-recurring-row.tsx                    |     100 |    68.75 |     100 |     100 | 30,34-59                                                    
+  upcoming-recurring-section.tsx                |     100 |    64.28 |     100 |     100 | 17-50                                                       
+ components/household                           |   47.67 |    41.58 |   39.47 |   48.19 |                                                             
+  active-household-panel.tsx                    |   66.66 |    76.19 |   53.84 |      65 | 103-112,126-134,167-172                                     
+  create-household-form.tsx                     |    90.9 |     62.5 |     100 |     100 | 17-48                                                       
+  enable-sync-card.tsx                          |     100 |    68.18 |     100 |     100 | 29-31,46,56-75                                              
+  ledger-selector.tsx                           |       0 |        0 |       0 |       0 | 13-77                                                       
+  personal-sync-card.tsx                        |       0 |        0 |       0 |       0 | 7-78                                                        
+  signed-in-household.tsx                       |       0 |        0 |       0 |       0 | 21-142                                                      
+ components/ledger                              |       0 |      100 |       0 |       0 |                                                             
+  ledger-list-header.tsx                        |       0 |      100 |       0 |       0 | 6                                                           
+ components/money-movement                      |     100 |    85.41 |     100 |     100 |                                                             
+  money-movement-screen.tsx                     |     100 |    86.95 |     100 |     100 | 17,40,45                                                    
+  quote-row.tsx                                 |     100 |    73.33 |     100 |     100 | 16-33                                                       
+ components/native-ui                           |   62.85 |    48.07 |   66.66 |   63.07 |                                                             
+  index.ts                                      |       0 |        0 |       0 |       0 |                                                             
+  native-button.tsx                             |      80 |    45.45 |      80 |      80 | 40,68                                                       
+  native-host.tsx                               |    87.5 |       80 |     100 |    87.5 | 37                                                          
+  recipe-core.ts                                |       0 |        0 |       0 |       0 | 16-54                                                       
+  recipe-types.ts                               |       0 |        0 |       0 |       0 |                                                             
+  recipes.android.ts                            |       0 |      100 |       0 |       0 | 15                                                          
+  recipes.ios.ts                                |   89.47 |    66.66 |     100 |   94.11 | 71                                                          
+  recipes.ts                                    |       0 |      100 |       0 |       0 | 13                                                          
+  roles.ts                                      |     100 |     87.5 |     100 |     100 | 77                                                          
+  stretch.ios.ts                                |     100 |       50 |     100 |     100 | 8                                                           
+ components/navigation                          |       0 |        0 |       0 |       0 |                                                             
+  tab-stack.tsx                                 |       0 |        0 |       0 |       0 | 4-16                                                        
+ components/navigation/glass-tab-bar            |    40.2 |       25 |      36 |   42.22 |                                                             
+  create-tab-button.tsx                         |    87.5 |    77.77 |     100 |     100 | 13,22                                                       
+  glass-surface.tsx                             |      75 |       40 |     100 |      75 | 25                                                          
+  glass-tab-bar.tsx                             |       0 |        0 |       0 |       0 | 17-92                                                       
+  glass-tab-button.tsx                          |       0 |        0 |       0 |       0 | 16                                                          
+  index.tsx                                     |       0 |        0 |       0 |       0 |                                                             
+  scroll-fade.tsx                               |       0 |        0 |       0 |       0 | 9-35                                                        
+  tab-icons.ts                                  |       0 |      100 |       0 |       0 | 11-22                                                       
+  use-tab-bar-pan-gesture.ts                    |   73.33 |       50 |   66.66 |      75 | 48-61                                                       
+ components/onboarding                          |   80.81 |       75 |   82.53 |   82.09 |                                                             
+  onboarding-background.tsx                     |     100 |       50 |     100 |     100 | 37-53                                                       
+  onboarding-bloom-burst.tsx                    |   90.47 |    76.92 |     100 |     100 | 33-41,75                                                    
+  onboarding-complete-step.tsx                  |   46.15 |        0 |      50 |   46.15 | 71-79                                                       
+  onboarding-cta.tsx                            |      60 |    71.42 |   33.33 |      60 | 39-40                                                       
+  onboarding-flow.tsx                           |   77.77 |    78.57 |    82.6 |   78.12 | 61-62,73-74,99-114                                          
+  onboarding-text-field.tsx                     |   42.85 |    81.81 |   33.33 |   42.85 | 48-53                                                       
+  use-keyboard-visible.ts                       |   81.81 |       50 |      60 |   81.81 | 16,19                                                       
+ components/recurring                           |   75.24 |    59.45 |      64 |   79.77 |                                                             
+  recurring-change-feedback.ts                  |       0 |        0 |       0 |       0 | 10-38                                                       
+  recurring-rule-row.tsx                        |     100 |    71.42 |     100 |     100 | 55-64                                                       
+  recurring-settlement-banner.tsx               |      80 |    61.53 |   66.66 |    82.6 | 18,39,69-70                                                 
+  recurring-settlement-provider.tsx             |   84.61 |    63.63 |    87.5 |   93.33 | 83-84,97                                                    
+ components/rejected-changes                    |   85.54 |    81.96 |   82.14 |   85.36 |                                                             
+  payload-fields.ts                             |     100 |    95.65 |     100 |     100 | 52                                                          
+  rejected-change-card.tsx                      |     100 |       50 |     100 |     100 | 43-48                                                       
+  rejected-change-edit-form.tsx                 |      80 |       50 |     100 |      80 | 17                                                          
+  rejected-change-edit-screen.tsx               |   77.77 |    78.57 |      50 |   77.77 | 44,93                                                       
+  rejected-changes-screen.tsx                   |   57.14 |    83.33 |      40 |   57.14 | 19,53-54                                                    
+  rejection-kind-badge.tsx                      |     100 |       50 |     100 |     100 | 21                                                          
+  use-rejected-edit-form.ts                     |   84.61 |       80 |     100 |   84.21 | 35-37,49-50,62                                              
+ components/resource                            |   86.66 |     87.5 |    87.5 |   84.61 |                                                             
+  create-resource-bottom-sheet.tsx              |   81.81 |    77.77 |      80 |   77.77 | 41-42                                                       
+ components/settings                            |   94.44 |    84.21 |     100 |   97.14 |                                                             
+  account-row.tsx                               |     100 |       70 |     100 |     100 | 32,41-44                                                    
+  dev-tools-section.tsx                         |   93.75 |       50 |     100 |     100 | 26-55                                                       
+  erase-local-data-control.tsx                  |   85.71 |       80 |     100 |    92.3 | 31                                                          
+  update-section.tsx                            |     100 |    93.33 |     100 |     100 | 71                                                          
+  use-elevated-surface-style.ts                 |      75 |       50 |     100 |      75 | 12                                                          
+ components/sync                                |   63.46 |    38.09 |   66.66 |   67.39 |                                                             
+  membership-revocation-cleanup.tsx             |   37.03 |     5.88 |      40 |   41.66 | 27-43                                                       
+  powersync-worker.tsx                          |     100 |    47.05 |     100 |     100 | 13-19                                                       
+  sync-mode-banner.tsx                          |   84.61 |     87.5 |      80 |      90 | 36                                                          
+ components/transaction                         |   30.71 |    21.82 |   20.89 |   32.11 |                                                             
+  amount-display.tsx                            |     100 |       50 |     100 |     100 | 27-35                                                       
+  breadcrumb-segment.tsx                        |       0 |        0 |       0 |       0 | 15                                                          
+  num-pad.tsx                                   |       0 |        0 |       0 |       0 | 23-74                                                       
+  transaction-form.tsx                          |       0 |        0 |       0 |       0 | 29-300                                                      
+  transaction-group.tsx                         |       0 |        0 |       0 |       0 | 17-40                                                       
+  transaction-row.tsx                           |     100 |    36.95 |     100 |     100 | 14-67                                                       
+  transaction-screen-header-items.ts            |   73.68 |    64.28 |      75 |   73.68 | 95,109-118                                                  
+  transaction-screen-initial-data.ts            |     100 |       90 |     100 |     100 | 27                                                          
+  utils.ts                                      |    87.5 |       75 |      75 |   85.71 | 11,36                                                       
+ components/transaction/account-picker          |      80 |       50 |   83.33 |   78.57 |                                                             
+  account-picker.tsx                            |      80 |       50 |   83.33 |   78.57 | 33,55-56                                                    
+ components/transaction/category-picker         |    90.9 |    58.33 |      90 |   89.47 |                                                             
+  category-picker.tsx                           |    90.9 |    58.33 |      90 |   89.47 | 64,79                                                       
+ components/transaction/recurrence              |       4 |      3.5 |    3.84 |    4.28 |                                                             
+  count-stepper.tsx                             |       0 |        0 |       0 |       0 | 16-37                                                       
+  ends-control.tsx                              |       0 |        0 |       0 |       0 | 27-154                                                      
+  presets.ts                                    |       0 |        0 |       0 |       0 | 20-40                                                       
+  repeat-control.tsx                            |       0 |        0 |       0 |       0 | 16-156                                                      
+  to-recurring-rule.ts                          |      75 |       40 |      50 |     100 | 16-27                                                       
+ components/transaction/transaction-date-picker |       0 |        0 |       0 |       0 |                                                             
+  transaction-date-picker.tsx                   |       0 |        0 |       0 |       0 | 23-86                                                       
+ components/transaction/ui                      |   95.23 |    85.71 |     100 |   94.73 |                                                             
+  field-style.ts                                |     100 |     87.5 |     100 |     100 | 28                                                          
+  transaction-text-field.tsx                    |    92.3 |    83.33 |     100 |    92.3 | 58                                                          
+ components/ui                                  |     100 |    61.11 |     100 |     100 |                                                             
+  badge.tsx                                     |     100 |       50 |     100 |     100 | 59                                                          
+  icon.tsx                                      |     100 |        0 |     100 |     100 | 46                                                          
+  input.tsx                                     |     100 |       50 |     100 |     100 | 9                                                           
+  money-text.tsx                                |     100 |       50 |     100 |     100 | 21                                                          
+  text.tsx                                      |     100 |     62.5 |     100 |     100 | 78-83                                                       
+ components/updates                             |   89.74 |    86.66 |      80 |    92.1 |                                                             
+  app-update-provider.tsx                       |   89.23 |    82.14 |   83.33 |   90.62 | 24,57,92-94,127                                             
+  mandatory-update-gate.tsx                     |    87.5 |    91.66 |      50 |     100 | 42                                                          
+ hooks                                          |    68.2 |    59.61 |    74.9 |   69.74 |                                                             
+  use-account-visibility.ts                     |    87.5 |       25 |   66.66 |   85.71 | 34                                                          
+  use-accounts.ts                               |   91.37 |       50 |   95.83 |   91.37 | 36,82,101,129,148                                           
+  use-app-update.ts                             |      75 |       50 |     100 |      75 | 9                                                           
+  use-authorized-ledger-accounts.ts             |      80 |      100 |   66.66 |      75 | 13                                                          
+  use-budgeting-coordinator.ts                  |      70 |       25 |     100 |   77.77 | 15-16                                                       
+  use-categories.ts                             |      94 |       50 |     100 |      94 | 71,90,118                                                   
+  use-color-scheme.ts                           |       0 |        0 |       0 |       0 |                                                             
+  use-enable-sync.ts                            |   33.33 |    26.31 |   28.57 |   34.37 | 95-109,146-147,193-304                                      
+  use-home-screen.ts                            |     100 |       75 |     100 |     100 | 14-16                                                       
+  use-households.ts                             |   19.51 |    33.33 |    12.5 |   19.51 | 17,32,37-103                                                
+  use-market-quotes.ts                          |    84.4 |    68.57 |   85.18 |   86.27 | 121,127,162,166,181,187,214,218,231,237,299,344,351,355     
+  use-recurring-rules.ts                        |   79.41 |    63.33 |   73.07 |   84.21 | 29,44,52-61                                                 
+  use-rejected-changes.ts                       |   53.33 |    43.75 |   55.55 |   55.26 | 40-46,53-54,60-61,71-75,84-86                               
+  use-setup-draft.ts                            |   96.42 |       75 |     100 |     100 | 73,90-151                                                   
+  use-sign-out.ts                               |       0 |        0 |       0 |       0 | 6-84                                                        
+  use-sync-worker.ts                            |   72.72 |       50 |      70 |   78.82 | 48,56-57,113-125,154,181-183                                
+  use-transactions.ts                           |   72.28 |    57.14 |      75 |   71.25 | 49-50,74-77,101-102,137-138,173-174,233-249                 
+ lib                                            |    3.92 |     5.19 |    6.06 |    2.81 |                                                             
+  auth-client.ts                                |       0 |        0 |       0 |       0 | 8-389                                                       
+  sonner.ts                                     |       0 |        0 |       0 |       0 |                                                             
+  sonner.web.ts                                 |       0 |        0 |       0 |       0 |                                                             
+ lib/migration                                  |    87.6 |    77.19 |   79.48 |   86.11 |                                                             
+  chunks.ts                                     |   98.21 |    75.67 |   94.44 |   97.72 | 241                                                         
+  enable-sync.ts                                |   88.88 |       80 |     100 |   88.88 | 74-75                                                       
+  manifest-utils.ts                             |      50 |      100 |   66.66 |   33.33 | 13-14                                                       
+  status.ts                                     |   44.44 |       50 |      25 |   44.44 | 49-93                                                       
+ lib/server                                     |       0 |        0 |       0 |       0 |                                                             
+  orpc.ts                                       |       0 |        0 |       0 |       0 | 7-17                                                        
+ modules                                        |   97.29 |    73.07 |     100 |   98.59 |                                                             
+  account-recurring-coordinator.ts              |   95.45 |       80 |     100 |     100 | 24-45                                                       
+  ledger-cache.ts                               |   98.07 |    68.75 |     100 |   98.03 | 275                                                         
+ modules/access                                 |   37.71 |    45.78 |   39.58 |   37.45 |                                                             
+  access.ts                                     |   88.15 |    83.78 |   95.23 |   91.37 | 74-75,194,203,255                                           
+  actions.ts                                    |    87.5 |    66.66 |     100 |   85.71 | 26                                                          
+  auth-sheet-host.tsx                           |       0 |        0 |       0 |       0 | 21-61                                                       
+  capabilities.ts                               |       0 |        0 |       0 |       0 | 18-43                                                       
+  claim-store.ts                                |   29.16 |    42.85 |      25 |   26.08 | 12-47                                                       
+  client-error.ts                               |   71.42 |    76.59 |    87.5 |   82.14 | 29,35,38,69-70                                              
+  core-from-state.ts                            |       0 |        0 |       0 |       0 | 4-18                                                        
+  identity.ts                                   |      50 |       20 |      50 |      50 | 16                                                          
+  index.ts                                      |       0 |        0 |       0 |       0 |                                                             
+  ledger-selection-store.ts                     |       0 |        0 |       0 |       0 | 6-39                                                        
+  memberships.ts                                |   42.85 |    28.57 |      50 |      50 | 11-12,27                                                    
+  provider.tsx                                  |       0 |        0 |       0 |       0 | 33-195                                                      
+  return-to.ts                                  |   42.85 |       20 |      50 |      50 | 11-21,29                                                    
+  route-param.ts                                |       0 |        0 |       0 |       0 | 2-3                                                         
+  session-probe.ts                              |    42.1 |    44.44 |   16.66 |   35.29 | 8-39                                                        
+  sign-out-session.ts                           |       0 |        0 |       0 |       0 | 19-25                                                       
+  use-access.ts                                 |       0 |        0 |       0 |       0 | 5-16                                                        
+  use-auth-sheet.ts                             |       0 |        0 |       0 |       0 | 9-16                                                        
+ modules/accounts                               |   91.42 |    78.12 |     100 |   96.87 |                                                             
+  account-archive-preview.ts                    |   95.45 |    91.66 |     100 |     100 | 16                                                          
+  account-balance.ts                            |     100 |       75 |     100 |     100 | 70                                                          
+  account-deletion.ts                           |   85.71 |    66.66 |     100 |     100 | 31,52                                                       
+  account-ledger-date.ts                        |   66.66 |       75 |     100 |   66.66 | 5                                                           
+  account-lifecycle.ts                          |   88.23 |    66.66 |     100 |   93.33 | 77                                                          
+ modules/budgeting                              |   81.61 |    71.18 |    84.7 |    83.2 |                                                             
+  account-dependencies.ts                       |   90.41 |       75 |   93.33 |   91.17 | 143,193-199                                                 
+  activation.ts                                 |      85 |    68.42 |     100 |   88.88 | 112,132,139,142                                             
+  assignment-persistence.ts                     |   77.27 |    73.68 |     100 |   83.33 | 20,34,37                                                    
+  assignment-preview.ts                         |     100 |    79.16 |     100 |     100 | 23,29-31,91,113                                             
+  assignment-validation.ts                      |   81.35 |    76.59 |   91.66 |   86.53 | 21,38,50,53,77,114,127                                      
+  assignments.ts                                |   97.43 |    66.66 |     100 |     100 | 101-130                                                     
+  budgeting.ts                                  |   95.65 |    86.66 |     100 |   95.55 | 114,124                                                     
+  card-dependency-evaluator.ts                  |   93.75 |    72.22 |    90.9 |   97.61 | 110                                                         
+  card-dependency-transactions.ts               |   77.19 |       78 |     100 |   77.77 | 15-24,119-123                                               
+  card-dependency-types.ts                      |       0 |        0 |       0 |       0 |                                                             
+  card-dependency-validation.ts                 |      95 |       90 |     100 |      95 | 29                                                          
+  envelope-form-options.ts                      |   88.88 |    83.33 |     100 |     100 | 29                                                          
+  envelope-mappings.ts                          |   95.91 |    82.14 |     100 |   97.77 | 71                                                          
+  envelope-order.ts                             |      90 |    84.21 |     100 |    92.3 | 64,91                                                       
+  envelope-projection.ts                        |     100 |    83.33 |     100 |     100 | 102-104,116                                                 
+  envelope-resources.ts                         |   87.75 |    66.66 |     100 |   93.47 | 101,138,185                                                 
+  envelope-validation.ts                        |      80 |    78.04 |     100 |   86.48 | 32,40,57,73,137                                             
+  funding-membership.ts                         |   73.68 |    68.75 |     100 |   77.77 | 28,31,40,60                                                 
+  funding-pool-calculation.ts                   |   93.18 |    83.87 |     100 |    92.5 | 67,141,147                                                  
+  projection.ts                                 |      90 |    77.77 |     100 |   91.89 | 94-97                                                       
+  setup-assignment.ts                           |      90 |    85.71 |     100 |   88.88 | 18                                                          
+  setup-draft-codec.ts                          |   82.35 |    88.88 |     100 |    87.5 | 42,64                                                       
+  setup-draft-editing.ts                        |   87.93 |    68.18 |     100 |    87.5 | 37,43,80,111,126,141                                        
+  setup-draft-persistence.ts                    |   91.66 |      100 |     100 |    90.9 | 25                                                          
+  setup-draft-validation.ts                     |      90 |     82.5 |     100 |   88.88 | 49,77,99,103,113,122                                        
+  setup-drafts.ts                               |   88.23 |    83.33 |     100 |   88.23 | 61,65                                                       
+  synced.ts                                     |   26.38 |    21.49 |   29.85 |   25.75 | 43-73,86-98,103-110,113,121,142-409,467-500,524,530,555-566 
+  validation.ts                                 |   79.16 |       75 |     100 |   78.26 | 21,28,32,39,46                                              
+  workspace-settings.ts                         |   95.45 |    91.66 |     100 |     100 | 60                                                          
+ modules/categories                             |   88.88 |    77.77 |     100 |   94.02 |                                                             
+  category-lifecycle.ts                         |   88.88 |    71.42 |     100 |   96.87 | 167                                                         
+  future-category-mapping.ts                    |   88.88 |    81.81 |     100 |   91.42 | 120,123,146                                                 
+ modules/ledger-data-source                     |    76.2 |    46.46 |   79.33 |   79.59 |                                                             
+  contract.ts                                   |   85.18 |    63.63 |   71.42 |      88 | 108-109,123                                                 
+  coordinator.ts                                |   66.66 |       25 |      50 |   71.42 | 27,42-51,61,70-71                                           
+  ledger-data-source-gate.tsx                   |       0 |        0 |       0 |       0 | 18-41                                                       
+  local-accounts.ts                             |   97.05 |       50 |     100 |   96.66 | 47                                                          
+  local-categories.ts                           |     100 |       50 |     100 |     100 | 27                                                          
+  local-transactions.ts                         |    91.3 |    61.81 |     100 |   96.77 | 134,137                                                     
+  local-types.ts                                |       0 |        0 |       0 |       0 |                                                             
+  local.ts                                      |    90.9 |      100 |   66.66 |    90.9 | 91-94                                                       
+  synced-mappers.ts                             |   83.33 |    34.14 |   78.57 |   85.18 | 181,191,200-208                                             
+  synced.ts                                     |   53.38 |     35.8 |      60 |   56.25 | 58,65,95-98,108-154,182,192-208,218-291                     
+ modules/ledger-db                              |   55.55 |    47.32 |   49.62 |   57.78 |                                                             
+  collections.ts                                |    8.82 |        0 |       0 |    9.67 | 85-91,97-99,106-295                                         
+  compat.ts                                     |   47.61 |        0 |   31.25 |   52.94 | 28-32,34-39                                                 
+  deps.ts                                       |      50 |      100 |       0 |      50 | 15                                                          
+  filters.ts                                    |      50 |    32.91 |      50 |      54 | 41-46,54-60,64-65,69-70,81,94,113-115,123-125               
+  index.ts                                      |       0 |        0 |       0 |       0 |                                                             
+  intents.ts                                    |     100 |       68 |     100 |     100 | 64,66-69,130,146-168,170-176,180-199                        
+  ledger.ts                                     |   78.82 |    58.33 |   77.41 |   85.71 | 58,102,180,197-208                                          
+  provider.tsx                                  |    14.7 |        0 |    12.5 |   15.62 | 26-64,71-75                                                 
+  registry.ts                                   |   96.66 |      100 |     100 |     100 |                                                             
+  test-collections.ts                           |   77.77 |      100 |   73.33 |   77.77 | 100-108,124,140                                             
+  use-synced-transactions.ts                    |       0 |        0 |       0 |       0 | 28-63                                                       
+  use-transaction-intents.ts                    |       0 |      100 |       0 |       0 | 4                                                           
+ modules/powersync                              |   69.79 |    57.97 |   57.14 |   73.75 |                                                             
+  availability.ts                               |     100 |    83.33 |     100 |     100 | 17                                                          
+  command-metadata.ts                           |   94.44 |    83.33 |     100 |     100 | 55                                                          
+  connector.ts                                  |   80.85 |    83.33 |   41.66 |   85.71 | 107-116                                                     
+  database.ts                                   |   48.57 |     8.33 |   33.33 |   53.33 | 18-33,37-39,43,56-57                                        
+  rejected-changes.ts                           |   15.68 |        0 |       0 |   18.18 | 40-43,49-50,57,66-100,106-107,123-128,132-135               
+  rejection.ts                                  |   93.33 |     90.9 |      90 |   93.33 | 110-111                                                     
+  status.ts                                     |   94.11 |     87.5 |     100 |     100 | 29,31                                                       
+ modules/recurring-rules                        |   75.04 |     58.7 |   81.57 |   78.53 |                                                             
+  account-impact.ts                             |   87.87 |    53.33 |   81.81 |   90.62 | 56,97,133                                                   
+  change-content.ts                             |   79.66 |    57.89 |     100 |   93.75 | 37,60,179                                                   
+  change-lifecycle.ts                           |   82.85 |    76.66 |     100 |   90.32 | 28,31,83                                                    
+  change-results.ts                             |   47.82 |     37.5 |      75 |   47.36 | 46,84-87,113,117-134                                        
+  change.ts                                     |   90.62 |       85 |     100 |     100 | 18,56-62                                                    
+  clock.ts                                      |   71.42 |    57.14 |   57.14 |   69.23 | 7-13,29                                                     
+  confirmation.ts                               |   96.66 |       84 |     100 |     100 | 68-84,89                                                    
+  index.ts                                      |       0 |        0 |       0 |       0 |                                                             
+  persistence.ts                                |   86.36 |       50 |    92.3 |   85.71 | 192-193,217                                                 
+  provider.tsx                                  |   85.71 |    64.28 |   66.66 |   85.71 | 42,57                                                       
+  read.ts                                       |   74.07 |    57.69 |   66.66 |   81.81 | 19,39-43,61                                                 
+  runtime.ts                                    |    87.5 |    71.42 |   85.71 |    92.3 | 49,81                                                       
+  settlement.ts                                 |   77.04 |    69.49 |     100 |   78.57 | 76,84-95,169,171,180-189,244-254                            
+  synced.ts                                     |   49.36 |       30 |   56.52 |   49.29 | 39,49,51,73,80-82,103,114-133,181-234,297-298,313           
+  validation.ts                                 |    61.9 |    54.83 |     100 |   63.41 | 20,23,26,29,32,35,38,40,43,46,52,55,58,80,104               
+ utils                                          |   96.85 |    92.95 |      95 |   96.49 |                                                             
+  activity.ts                                   |   95.65 |    93.75 |    87.5 |   94.73 | 40                                                          
+  intent-summary.ts                             |   96.96 |     87.5 |     100 |   96.96 | 72                                                          
+  widget-handoff.ts                             |       0 |      100 |       0 |       0 | 3-4                                                         
+------------------------------------------------|---------|----------|---------|---------|-------------------------------------------------------------
+
+Test Suites: 178 passed, 178 total
+Tests:       742 passed, 742 total
+Snapshots:   0 total
+Time:        195.951 s
+Ran all test suites.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+$ node --test scripts/d1-cutover-lib.test.mjs
+✔ transforms D1 scalar representations for Postgres (3.293833ms)
+✔ synthesizes globally stable IDs for PowerSync-expanded tables (0.157125ms)
+✔ row digests ignore object key and row order (0.550334ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 107.496917

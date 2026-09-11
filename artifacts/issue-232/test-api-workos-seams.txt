@@ -1,0 +1,117 @@
+
+ RUN  v3.2.7 /Users/saeed/Work/money-management-wt-232/packages/api
+
+ ✓ src/lib/powersync/token.test.ts (4 tests) 41ms
+ ✓ src/lib/commands/personal-budget-recurring.test.ts (4 tests) 7992ms
+   ✓ personal budget and recurring — no Household required > configures a workspace, assigns, refunds, and creates a rule on the personal ledger  4198ms
+   ✓ personal budget and recurring — no Household required > rejects a second user addressing the first user's personal envelope  1061ms
+   ✓ personal budget and recurring — no Household required > keeps personal budget rows invisible across users  883ms
+   ✓ personal budget and recurring — no Household required > settles a personal rule without a Household and is occurrence-idempotent  1848ms
+ ✓ src/lib/deletion/service.test.ts (5 tests) 8857ms
+   ✓ requestHouseholdDeletion > requires confirmName and rejects non-admins  3622ms
+   ✓ requestHouseholdDeletion > removes shared ledger data, keeps personal ledgers, and tombstones the org  1520ms
+   ✓ requestHouseholdDeletion > resumes after a WorkOS failure without duplicating local deletes  1141ms
+   ✓ requestUserDeletion > blocks sole admins until they appoint another admin or delete the Household  1110ms
+   ✓ requestUserDeletion > anonymizes attribution, clears personal data, and ignores delayed membership events  1464ms
+stderr | src/lib/commands/import-bundle.test.ts > commands.apply — import_bundle chunk ordering > fails a transaction chunk referencing an account that hasn't landed yet
+commands.apply: atomic batch failed {
+  commandId: '942e8831-36f5-4759-b322-fee8eafa4431',
+  ledgerId: 'household-1',
+  kind: 'import_bundle'
+}
+
+ ✓ src/lib/membership/projection.test.ts (13 tests) 13380ms
+   ✓ projectMembership ordering rule > projects a first observation and grants access  3449ms
+   ✓ projectMembership ordering rule > applies the same event twice without changing anything  1598ms
+   ✓ projectMembership ordering rule > ignores an older observation that arrives after a newer one  907ms
+   ✓ projectMembership ordering rule > lets a delayed newer observation win over an older one already applied  894ms
+   ✓ projectMembership ordering rule > keeps a deletion tombstone ahead of a stale created event  1046ms
+   ✓ projectMembership ordering rule > re-admits a User through a genuinely newer membership under a new id  1360ms
+   ✓ projectMembership ordering rule > does not resolve two distinct events at the same instant in favor of the later arrival  543ms
+   ✓ projectMembership ordering rule > refuses to write for Households or Users Trove does not know  585ms
+   ✓ access decisions > denies pending and unknown-role memberships  505ms
+   ✓ bootstrap tombstones > tombstones memberships missing from the authoritative list, dated at the list request  533ms
+   ✓ bootstrap tombstones > leaves a membership created after the list was requested untouched  577ms
+   ✓ bootstrap tombstones > keeps listed memberships  680ms
+   ✓ bootstrap tombstones > tombstones every member when the Organization is deleted  702ms
+ ✓ src/lib/migration/manifest.test.ts (13 tests) 13189ms
+   ✓ computeImportManifest > reads every aggregate and content row from one repeatable snapshot  3645ms
+   ✓ computeImportManifest > canonicalizes key order and equivalent timestamp offsets  1482ms
+   ✓ computeImportManifest > normalizes PostgreSQL bigint aggregates at the database boundary  1061ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value:   824ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: 10.5  1667ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: invalid  645ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: -1  587ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: 10.5  452ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: -1  481ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: 9007199254740992n  486ms
+   ✓ computeImportManifest > rejects an unsafe numeric aggregate string  507ms
+   ✓ computeImportManifest > counts ledger facts and sums transactions by account, scoped to the household  674ms
+   ✓ computeImportManifest > returns zeroed counts and empty sums for a household with no imported rows  677ms
+ ✓ src/lib/commands/import-bundle.test.ts (15 tests) 14838ms
+   ✓ commands.apply — import_bundle authorization > rejects a user-member — only a Household admin may bulk-import  4132ms
+   ✓ commands.apply — import_bundle authorization > rejects a user-viewer — only a Household admin may bulk-import  1237ms
+   ✓ commands.apply — import_bundle authorization > allows every admin (user-owner)  988ms
+   ✓ commands.apply — import_bundle authorization > allows every admin (user-admin)  1068ms
+   ✓ commands.apply — import_bundle validation > rejects a malformed row as invalid_intent  1459ms
+   ✓ commands.apply — import_bundle validation > rejects chunkIndex >= chunkCount  567ms
+   ✓ commands.apply — import_bundle chunk ordering > fails a transaction chunk referencing an account that hasn't landed yet  576ms
+   ✓ commands.apply — import_bundle chunk ordering > succeeds once accounts import before the transactions that reference them  535ms
+   ✓ commands.apply — import_bundle idempotency > resending the same rows under a fresh commandId never duplicates them  568ms
+   ✓ commands.apply — import_bundle idempotency > rejects a fresh command when an existing id has different content  572ms
+   ✓ commands.apply — import_bundle idempotency > returns a typed conflict for the same content under another household  684ms
+   ✓ commands.apply — import_bundle idempotency > accepts an exact transaction retry under a fresh commandId  817ms
+   ✓ import_bundle bind budget > applies a chunk with more than 100 bound values in one transaction  511ms
+   ✓ commands.apply — import_bundle end-to-end + manifest recompute > imports the full dependency-ordered chain and the manifest reconciles  591ms
+   ✓ commands.apply — import_bundle end-to-end + manifest recompute > imports recurring and budget facts in dependency order  533ms
+ ✓ src/lib/commands/personal-ledger.test.ts (18 tests) 16299ms
+   ✓ personal ledger commands — no Household required > creates an account on a ledger provisioned by the first write  4131ms
+   ✓ personal ledger commands — no Household required > never creates or joins a Household  1359ms
+   ✓ personal ledger commands — no Household required > carries categories and transactions on the same personal ledger  1057ms
+   ✓ personal ledger commands — no Household required > replays a retried command instead of re-executing it  1607ms
+   ✓ personal ledger commands — no Household required > projects the WorkOS identity so the first write can attribute itself  830ms
+   ✓ personal ledger commands — no Household required > accepts import_bundle on personal scope  648ms
+   ✓ personal ledger commands — no Household required > rejects an envelope that names no ledger at all  486ms
+   ✓ personal ledger isolation — one User cannot reach another's ledger > keeps each User's rows on their own ledger  524ms
+   ✓ personal ledger isolation — one User cannot reach another's ledger > cannot update another User's account — it is invisible, not forbidden  559ms
+   ✓ personal ledger isolation — one User cannot reach another's ledger > cannot archive another User's account  614ms
+   ✓ personal ledger isolation — one User cannot reach another's ledger > cannot book a transaction against another User's account  645ms
+   ✓ personal ledger isolation — one User cannot reach another's ledger > cannot link a category from another User's ledger  870ms
+   ✓ personal ledger isolation — one User cannot reach another's ledger > allocates change sequences per ledger, not globally  489ms
+   ✓ personal ledger isolation — one User cannot reach another's ledger > does not let a personal commandId collide across ledgers  594ms
+   ✓ organization scope — the Household path is unchanged > writes household rows for an explicit organization scope  486ms
+   ✓ organization scope — the Household path is unchanged > still accepts a bare householdId from older clients  510ms
+   ✓ organization scope — the Household path is unchanged > keeps a personal ledger separate from the Household the same User owns  446ms
+   ✓ organization scope — the Household path is unchanged > rejects a non-member naming the Household as an organization scope  440ms
+ ✓ src/lib/households/service.test.ts (25 tests) 19262ms
+   ✓ createHousehold > creates one Organization, one ledger, one household and an admin membership  3327ms
+   ✓ createHousehold > retries with the same requestId converge on the same Household  1456ms
+   ✓ createHousehold > finishes a create whose membership step failed on the first attempt  1168ms
+   ✓ createHousehold > finishes a create whose Organization was made but never recorded  941ms
+   ✓ createHousehold > refuses another User's requestId  1700ms
+   ✓ listMyHouseholds > bootstraps memberships WorkOS knows about that Trove has not projected yet  726ms
+   ✓ listMyHouseholds > reuses a fresh bootstrap and refreshes a stale one  642ms
+   ✓ listMyHouseholds > drops a membership WorkOS no longer lists, even when the event was missed  494ms
+   ✓ listMyHouseholds > ignores Organizations Trove did not create  538ms
+   ✓ listMyHouseholds > hides memberships with a role slug Trove does not know  573ms
+   ✓ getHousehold > lists members and projects Users Trove has never seen  702ms
+   ✓ getHousehold > is invisible to non-members and to removed members  803ms
+   ✓ getHousehold > reports a Household left without an admin by a widget-side change  636ms
+   ✓ member administration > lets only admins invite, through WorkOS invitations  528ms
+   ✓ member administration > changes a role in WorkOS first and projects the result  547ms
+   ✓ member administration > keeps the last admin in place  542ms
+   ✓ member administration > removes a member: WorkOS deletion plus an immediate local tombstone  456ms
+   ✓ member administration > lets a non-admin leave and an admin leave once another admin exists  444ms
+   ✓ deleteHousehold > removes the Organization, the Household, and its ledger data; personal data stays  458ms
+   ✓ deleteHousehold > is admin-only  442ms
+   ✓ widget handoff > issues a single-use code to admins only and exchanges it for a bound token  437ms
+   ✓ widget handoff > rejects expired codes and codes whose admin was demoted in the meantime  447ms
+   ✓ applyHouseholdEvent > projects a created membership for a User Trove has never seen  439ms
+   ✓ applyHouseholdEvent > denies everyone when the Organization is deleted, keeping the data  418ms
+   ✓ applyHouseholdEvent > ignores events for Organizations Trove does not know  393ms
+
+ Test Files  8 passed (8)
+      Tests  97 passed (97)
+   Start at  23:35:58
+   Duration  20.65s (transform 1.09s, setup 0ms, collect 7.98s, tests 93.86s, environment 2ms, prepare 1.13s)
+
