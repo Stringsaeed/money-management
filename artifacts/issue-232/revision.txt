@@ -1,5 +1,6 @@
-revision=post-245-claim-iss
+revision=post-246-user-upsert-500
 branch=cursor/workos-certify-migration-b3d1
-note=post-#245 Sync retest: CF code=claim_iss; token iss recorded; Relates to #232; #224 open
-deploy_sha=cb3c90c1852556ec51af9223cf3b52dd434a4eee
-date=2026-09-11T23:34:00Z
+note=post-#246 Sync retest: claim_iss cleared; auth PASS; listMine FAIL HTTP 500 orpc UNKNOWN user upsert; Relates to #232; #224 open
+deploy_sha=58997473f20bbe1ec9353334eb3ce44d2efbbb6b
+deploy_worker_run=34659057570
+date=2026-09-11T23:50:02Z

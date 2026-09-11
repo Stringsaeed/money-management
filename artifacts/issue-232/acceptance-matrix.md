@@ -20,13 +20,13 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip after post-#245 `claim_iss` + token `iss` evidence (docs on certify branch; live API tip `cb3c90c` / #245) |
-| Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242) and [#245](https://github.com/Stringsaeed/money-management/pull/245) (`cb3c90c`) on `main` and live on `auth.trove.ing`. |
+| HEAD | tip after post-#246 Sync retest evidence (docs on certify branch; live API tip `5899747` / #246) |
+| Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), and [#246](https://github.com/Stringsaeed/money-management/pull/246) (`5899747`) on `main` and live on `auth.trove.ing`. |
 | Worktree | `/Users/saeed/Work/money-management-wt-232` |
-| Live API | `https://auth.trove.ing` — root **200 OK**; Deploy Worker **34657777870** success for `cb3c90c` (#245 CF-readable codes) after #242 |
+| Live API | `https://auth.trove.ing` — root **200 OK**; Deploy Worker **34659057570** success for `5899747` (#246 AuthKit `iss` accept) after #245 |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
-Recorded in `revision.txt` / `authkit-live-write.txt` / `post-245-claim-iss.txt`.
+Recorded in `revision.txt` / `authkit-live-write.txt` / `post-246-user-upsert-500.txt`.
 
 ## Verdict (this write)
 
@@ -36,7 +36,8 @@ Recorded in `revision.txt` / `authkit-live-write.txt` / `post-245-claim-iss.txt`
 - Repo-wide `pnpm lint` and `pnpm format:check` **fail** on pre-existing findings.
 - Full `pnpm test:ci` **passed** previously: mobile Jest **742/742** + `@trove/db` cutover **3/3**.
 - **Row 2 iOS AuthKit UI (partial):** cancel PASS; hosted AuthKit email page + email-code challenge PARTIAL; OTP entry hard-stopped (agent-device AX unavailable inside ASWebAuthenticationSession). Still signed out afterward (`authkit-21-signed-out-final.png`).
-- **Post-login protected API:** **FAIL** — Sync / `households.listMine` still **401**. After #245 on tip `cb3c90c`, owner CF log root code is **`claim_iss`** (`Unauthorized (claim_iss)`). Stored access-token `iss` = `https://api.workos.com/user_management/client_01M11FD9X26FA35C5Y9YCK2KG9` (`aud_present=false`, `client_id_present=true`, `sub_present=true`; raw JWT not logged) — see `post-245-claim-iss.txt`. Client ids EQUAL; #242+#245 live. Do not treat as certified.
+- **Post-login JWT verify:** **PASS** after #246 — prior `claim_iss` cleared (AuthKit `iss` accepted).
+- **Post-login `households.listMine`:** **FAIL** — Sync just for me → UI **Internal server error** + HTTP **500**. Owner CF: `orpc_error code=UNKNOWN` — failed `insert into "user" … on conflict do nothing` (params shape: WorkOS user id, name=id, email `{id}@users.workos.invalid`, `email_verified=true`). See `post-246-user-upsert-500.txt`. Client ids EQUAL; #242+#245+#246 live. Do not treat as certified.
 - Android runtime **not started**. Disposable clean-setup after reset **blocked**.
 
 Do not merge as certified. No production deploy. Parent #224 stays open. **Do not use Closes #232.**
@@ -124,13 +125,14 @@ A row is complete only when every required sub-criterion is `PASS` (or an explic
 | Refresh rotation | not evidenced | No signed-in session. |
 | Session expiry | not evidenced on device | Automated expired-token coverage in `@trove/auth` only. |
 | Transient network recovery | not evidenced | No runtime artifact. |
-| Post-login protected oRPC / bearer | `FAIL` | Signed-in Sync just for me → UI **Unauthorized** + HTTP 401 (`authkit-58`, `cfnetwork-401-summaries.txt`). Post-#245 CF-readable code **`claim_iss`** on `POST /rpc/households/listMine`. Token `iss`=`https://api.workos.com/user_management/client_01M11FD9X26FA35C5Y9YCK2KG9`; `aud_present=false`; `client_id_present=true`; `sub_present=true` (`post-245-claim-iss.txt`; raw JWT not logged). Client ids EQUAL; #245 live (`cb3c90c`). |
+| Post-login JWT verify (issuer) | `PASS` (post-#246) | #246 Deploy Worker [34659057570](https://github.com/Stringsaeed/money-management/actions/runs/34659057570) on `5899747` cleared prior `claim_iss`. Sync progresses past JWT verify. |
+| Post-login protected oRPC / bearer (`listMine`) | `FAIL` | Signed-in Sync just for me → UI **Internal server error** + HTTP **500** (`authkit-72-post246-after-sync.png`, `cfnetwork-500-post246.txt`). Owner CF: `orpc_error code=UNKNOWN` — failed `insert into "user" … on conflict do nothing` (params shape only: WorkOS user id; name=id; email `{id}@users.workos.invalid`; `email_verified=true`). Prior post-#245 `claim_iss` / 401 superseded. Client ids EQUAL; #246 live (`5899747`). |
 | iOS development build | prior FAIL then recovered | ExpoSQLite vendor + Metro `.rnrepo-cache` blockList on this branch; live AuthKit driven without `stim ios` rebuild this session. |
 | Android development build | not started | No Android agent-device artifacts. **Do not claim Android pass.** |
 
-**Row status: `PARTIAL` (cancel PASS; email challenge PARTIAL; OTP/callback hard-stopped; post-login protected oRPC **FAIL** — HTTP 401 / Unauthorized while signed in).**
+**Row status: `PARTIAL` (cancel PASS; email challenge PARTIAL; OTP/callback hard-stopped; JWT verify PASS post-#246; post-login `listMine` **FAIL** — HTTP 500 user upsert / Internal server error).**
 
-Notes: OTP automation blocked by AuthKit webview AX (not an env-name blocker). Client ids **EQUAL**. Post-login protected oRPC **FAIL** (signed-in Sync just for me → Unauthorized / CFNetwork 401). Still BLOCKED for live PowerSync/PlanetScale mint: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`) — `env-hardstop-absent.txt`. `WORKOS_WEBHOOK_SECRET` **present** locally (value omitted) — live webhook apply still not evidenced.
+Notes: OTP automation blocked by AuthKit webview AX (not an env-name blocker). Client ids **EQUAL**. JWT issuer accept **PASS** (#246). `listMine` **FAIL** (user upsert 500; DB fix owned elsewhere). Still BLOCKED for live PowerSync/PlanetScale mint: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`) — `env-hardstop-absent.txt`. `WORKOS_WEBHOOK_SECRET` **present** locally (value omitted) — live webhook apply still not evidenced.
 
 Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_REDIRECT_URI`, `WORKOS_CLAIM_TOKEN`, `WORKOS_COOKIE_PASSWORD`, `EXPO_PUBLIC_WORKOS_CLIENT_ID`, `EXPO_PUBLIC_WORKOS_REDIRECT_URI`, `EXPO_PUBLIC_SERVER_URL`.
 
@@ -246,7 +248,7 @@ API focused files in the 97: `powersync/token.test.ts` (4), `personal-budget-rec
 | `stim ios` | Prior build recovery on branch; **this AuthKit session did not rebuild** (`simctl launch` only). | `stim-ios-*.json` |
 | agent-device (iOS AuthKit) | **PARTIAL** — cancel PASS; email + code challenge reached; OTP hard-stopped (AX unavailable). | `authkit-01-launch.png` … `authkit-21-signed-out-final.png`, `authkit-live-write.txt` |
 | Client id equality | **EQUAL** (names only) | `client-id-compare.txt` — `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) |
-| Post-login protected API | **FAIL** | Sync / listMine 401; CF code **`claim_iss`** post-#245; token `iss` recorded in `post-245-claim-iss.txt` (prior UI `authkit-56`…`58`). |
+| Post-login protected API | **FAIL** (auth PASS) | Post-#246: `claim_iss` cleared; Sync / listMine HTTP **500** `orpc_error code=UNKNOWN` user upsert (`post-246-user-upsert-500.txt`; UI `authkit-72`; CFNetwork `cfnetwork-500-post246.txt`). |
 | `stim doctor android` / `stim android` / agent-device (Android) | not started | — |
 | Maestro / verify-trove flows | not started | — |
 
@@ -379,6 +381,17 @@ stim start --json  # -> stim-start.json (port 8083)
   - `client_id_present=true`
   - `sub_present=true`
   - raw JWT / signature / other PII **not** logged
-- Implication: configure `WORKOS_TOKEN_ISSUER` to that `iss` (default `https://api.workos.com` mismatches). Optional Sync retest after issuer fix deploys.
-- **Still FAIL / not certified.** Relates to #232 only. Parent #224 stays open. No Closes.
+- Implication: configure `WORKOS_TOKEN_ISSUER` to that `iss` (default `https://api.workos.com` mismatches). **Superseded by post-#246** (issuer accept landed; new failure is user upsert 500).
+- Historical FAIL at JWT verify. Relates to #232 only. Parent #224 stays open. No Closes.
+
+## Post-#246 Sync retest (2026-09-11T23:50Z)
+
+- Deploy Worker [34659057570](https://github.com/Stringsaeed/money-management/actions/runs/34659057570) **success** on `5899747` (#246 AuthKit `iss` accept) live on `auth.trove.ing`.
+- Signed-in Profile → **Sync just for me** (`authkit-71-post246-open.png` → `authkit-72-post246-after-sync.png`).
+- **Auth / JWT verify:** **PASS** — prior `claim_iss` cleared; request reaches handler.
+- **`households.listMine`:** **FAIL** — UI **Internal server error**; CFNetwork `response_status=500` (`cfnetwork-500-post246.txt`).
+- Owner CF: `orpc_error code=UNKNOWN` — Failed query `insert into "user" … on conflict do nothing` (params shape only: WorkOS user id; name=same as id; email `{id}@users.workos.invalid`; `email_verified=true`). No raw JWT / secret values logged.
+- Client-visible: `client-visible-error-post246.txt` / agent-device snapshots.
+- DB upsert fix owned by a separate cloud worker — not fixed in this evidence push.
+- **Still FAIL / not certified.** Matrix rows still blocked: OTP/callback AX, Android runtime, live PowerSync/PlanetScale mint envs (names in `env-hardstop-absent.txt`), disposable reset (#231 skip), live webhook apply. Relates to #232 only. Parent #224 stays open. No Closes.
 

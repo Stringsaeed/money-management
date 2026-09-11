@@ -1,0 +1,28 @@
+date_utc=2026-09-11T23:50:02Z
+deploy_worker_run=34659057570
+deploy_conclusion=success
+deploy_sha=58997473f20bbe1ec9353334eb3ce44d2efbbb6b
+api=https://auth.trove.ing
+rpc_path=POST /rpc/households/listMine
+auth_jwt_verify=PASS
+claim_iss_cleared=true
+prior_cf_code=claim_iss (cleared by #246 issuer accept)
+http=500
+cf_readable_code=UNKNOWN
+orpc_error=orpc_error code=UNKNOWN
+worker_failure=Failed query insert into "user" ... on conflict do nothing
+params_shape=workos user id; name=same as id; email={id}@users.workos.invalid; email_verified=true
+ui=Internal server error (Sync just for me -> Try again)
+ui_screenshot=authkit-72-post246-after-sync.png
+ui_open_screenshot=authkit-71-post246-open.png
+cfnetwork=cfnetwork-post246-summaries.txt; cfnetwork-500-post246.txt (response_status=500)
+client_visible=client-visible-error-post246.txt
+signed_in=true
+signed_in_email=stringsaeed@gmail.com
+udid=F324175E-BCA2-4F20-857E-C2D9678D44F5
+metro=8083
+raw_jwt_logged=false
+pii_values_logged=false
+db_upsert_fix=owned by separate cloud worker (not this certify evidence push)
+relates_to=#232 only (NEVER Closes)
+certified=false

@@ -1,0 +1,1 @@
+LOGDIR=/Users/saeed/.stim/workspaces/mobile--f32c8e64f19c5328/logs

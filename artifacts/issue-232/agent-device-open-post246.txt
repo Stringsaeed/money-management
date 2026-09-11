@@ -1,0 +1,4 @@
+Error (DEVICE_IN_USE): Device is already in use by session "issue-232".
+Hint: Run agent-device session list to inspect active sessions. To reuse this device, rerun the command with --session issue-232. To open a new session on this device, first run agent-device close --session issue-232.
+Diagnostic ID: mtxlwi97-92c63b15
+Diagnostics Log: /Users/saeed/.agent-device/sessions/issue-232-post246/requests/ac15f88eb7cfc31a.ndjson

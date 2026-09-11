@@ -1,0 +1,3 @@
+Detected file type from extension: PNG
+Note: No display specified. Defaulting to display: 7801507D-EE51-4C4E-894F-37AC855A5CC6 (screenID: 1, name: LCD)
+Wrote screenshot to: /Users/saeed/Work/money-management-wt-232/artifacts/issue-232/authkit-70-post246-launch.png

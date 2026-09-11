@@ -45,3 +45,20 @@ client_id_present=true
 sub_present=true
 evidence=post-245-claim-iss.txt
 raw_jwt_logged=false
+
+# --- post-#246 (2026-09-11T23:50Z) ---
+deploy_worker_run=34659057570
+deploy_sha=58997473f20bbe1ec9353334eb3ce44d2efbbb6b
+claim_iss_cleared=true
+auth_jwt_verify=PASS
+listMine_http=500
+cf_readable_code=UNKNOWN
+orpc_error=orpc_error code=UNKNOWN
+worker_failure_shape=insert into "user" on conflict do nothing (workos id; name=id; email {id}@users.workos.invalid; email_verified=true)
+ui=Internal server error
+ui_screenshots=authkit-71-post246-open.png authkit-72-post246-after-sync.png
+cfnetwork_500=cfnetwork-500-post246.txt
+evidence=post-246-user-upsert-500.txt
+row2_post_login_orpc=FAIL (auth PASS; listMine user upsert 500)
+relates_to=#232 only (NEVER Closes)
+certified=false

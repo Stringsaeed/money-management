@@ -1,0 +1,4 @@
+ui_text=Internal server error
+ui_after_sync=Try again button replaces Sync just for me
+screenshot=authkit-72-post246-after-sync.png
+agent_device=agent-device-sync-just-for-me-post246.txt; agent-device-after-sync-post246.txt
