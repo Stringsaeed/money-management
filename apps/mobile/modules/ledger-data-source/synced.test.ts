@@ -1,3 +1,4 @@
+import { householdLedgerBinding } from "@/modules/ledger-data-source/provider";
 import { createSyncedTransactionLedger, type LedgerDependencies } from "@/modules/ledger-db/ledger";
 import {
   createTestLedgerCollections,
@@ -17,6 +18,7 @@ const TIMESTAMP = "2026-01-01T00:00:00.000Z";
 
 const account: PowerSyncAccountRow = {
   id: "cash",
+  ledger_id: HOUSEHOLD_ID,
   household_id: HOUSEHOLD_ID,
   name: "Cash",
   type: "bank",
@@ -39,6 +41,7 @@ const account: PowerSyncAccountRow = {
 
 const category: PowerSyncCategoryRow = {
   id: "groceries",
+  ledger_id: HOUSEHOLD_ID,
   household_id: HOUSEHOLD_ID,
   name: "Groceries",
   type: "expense",
@@ -57,6 +60,7 @@ const category: PowerSyncCategoryRow = {
 
 const transaction: PowerSyncTransactionRow = {
   id: "transaction-1",
+  ledger_id: HOUSEHOLD_ID,
   household_id: HOUSEHOLD_ID,
   type: "expense",
   amount_minor: 500,
@@ -87,7 +91,7 @@ const createHarness = async () => {
   await preloadTestLedgerCollections(collections);
   const ids = ["transaction-new", "command-new"];
   const dependencies: LedgerDependencies = {
-    householdId: HOUSEHOLD_ID,
+    binding: householdLedgerBinding(HOUSEHOLD_ID),
     userId: USER_ID,
     dbIdentity: {},
     collections,
@@ -100,7 +104,7 @@ const createHarness = async () => {
   };
   const ledger = createSyncedTransactionLedger(dependencies);
   const source = createSyncedLedgerDataSource({
-    householdId: HOUSEHOLD_ID,
+    binding: householdLedgerBinding(HOUSEHOLD_ID),
     userId: USER_ID,
     ledger,
   });
@@ -136,7 +140,7 @@ describe("PowerSync synced ledger data source", () => {
           storageVersion: 1,
           envelope: expect.objectContaining({
             kind: "account.update",
-            householdId: HOUSEHOLD_ID,
+            scope: { type: "organization", organizationId: HOUSEHOLD_ID },
             payload: { accountId: account.id, name: "Daily", visibility: "private" },
             preconditions: [{ entityId: account.id, expectedVersion: 3 }],
           }),

@@ -36,8 +36,20 @@ interface LedgerSourceFacts {
   readonly authenticatedUserId: string | null;
   readonly activeHouseholdId: string | null;
   readonly migratedHouseholdId: string | null;
+  readonly personalSyncUserId: string | null;
   readonly offlineReason: string | null;
 }
+
+/** What this device has already opted into, read once from local settings. */
+export interface SyncEnrollment {
+  readonly migratedHouseholdId: string | null;
+  readonly personalSyncUserId: string | null;
+}
+
+export const NO_SYNC_ENROLLMENT: SyncEnrollment = {
+  migratedHouseholdId: null,
+  personalSyncUserId: null,
+};
 
 export function resolveAccess(input: ResolveAccessInput): AccessCore {
   if (input.probe === null) {
@@ -95,11 +107,11 @@ export function resolveReturnDestination(access: AccessCore, target: ReturnTo): 
 
 export function selectLedgerSourceForAccess(
   access: AccessCore,
-  migratedHouseholdId: string | null,
+  enrollment: SyncEnrollment,
   mode: SyncMode,
   reason: LocalOnlyReason | null,
 ): LedgerSourceSelection {
-  return selectLedgerSource(ledgerFactsForAccess(access, migratedHouseholdId, mode, reason));
+  return selectLedgerSource(ledgerFactsForAccess(access, enrollment, mode, reason));
 }
 
 function mergeClaimAndProbe(
@@ -153,48 +165,48 @@ function newerMembership(left: MembershipSummary, right: MembershipSummary): Mem
 
 function ledgerFactsForAccess(
   access: AccessCore,
-  migratedHouseholdId: string | null,
+  enrollment: SyncEnrollment,
   mode: SyncMode,
   reason: LocalOnlyReason | null,
 ): LedgerSourceFacts {
   if (access.kind === "resolving" || access.kind === "anonymous") {
-    return localFacts(migratedHouseholdId);
+    return localFacts(enrollment);
   }
   if (access.kind === "session_revoked") {
-    return revokedFacts(access.lastKnown.userId, migratedHouseholdId);
+    return revokedFacts(access.lastKnown.userId, enrollment);
   }
-  return signedInFacts(access, migratedHouseholdId, mode, reason);
+  return signedInFacts(access, enrollment, mode, reason);
 }
 
-function localFacts(migratedHouseholdId: string | null): LedgerSourceFacts {
+function localFacts(enrollment: SyncEnrollment): LedgerSourceFacts {
   return {
     authenticatedUserId: null,
     activeHouseholdId: null,
-    migratedHouseholdId,
+    ...enrollment,
     offlineReason: null,
   };
 }
 
-function revokedFacts(userId: string, migratedHouseholdId: string | null): LedgerSourceFacts {
+function revokedFacts(userId: string, enrollment: SyncEnrollment): LedgerSourceFacts {
   return {
     authenticatedUserId: userId,
-    activeHouseholdId: migratedHouseholdId,
-    migratedHouseholdId,
+    activeHouseholdId: enrollment.migratedHouseholdId,
+    ...enrollment,
     offlineReason: "Signed out remotely. Your ledger is safe on this device.",
   };
 }
 
 function signedInFacts(
   access: Extract<AccessCore, { kind: "signed_in" }>,
-  migratedHouseholdId: string | null,
+  enrollment: SyncEnrollment,
   mode: SyncMode,
   reason: LocalOnlyReason | null,
 ): LedgerSourceFacts {
   return {
     authenticatedUserId: access.user.userId,
-    activeHouseholdId: activeHouseholdIdForSignedIn(access, migratedHouseholdId),
-    migratedHouseholdId,
-    offlineReason: offlineReasonForSignedIn(access, mode, reason),
+    activeHouseholdId: activeHouseholdIdForSignedIn(access, enrollment.migratedHouseholdId),
+    ...enrollment,
+    offlineReason: offlineReasonForSignedIn(access, enrollment, mode, reason),
   };
 }
 
@@ -209,10 +221,13 @@ function activeHouseholdIdForSignedIn(
 
 function offlineReasonForSignedIn(
   access: Extract<AccessCore, { kind: "signed_in" }>,
+  enrollment: SyncEnrollment,
   mode: SyncMode,
   reason: LocalOnlyReason | null,
 ): string | null {
-  if (access.household.kind === "unavailable") {
+  // Only a device that lives in a Household is degraded by a failed
+  // household read; a Personal Ledger never consults that list.
+  if (access.household.kind === "unavailable" && enrollment.migratedHouseholdId !== null) {
     return "Household sync is temporarily unavailable.";
   }
   if (mode === "local_only" && reason === "kill_switch") {

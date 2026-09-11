@@ -4,6 +4,7 @@ import type {
   PowerSyncCredentials,
 } from "@powersync/react-native";
 import type { CommandEnvelope, CommandResult } from "@trove/protocol";
+import { commandLedgerId } from "@trove/protocol";
 
 import { orpc } from "@/lib/server/orpc";
 import { useSyncModeStore } from "@/stores/sync-mode-store";
@@ -34,11 +35,13 @@ export interface PowerSyncUploadDependencies {
   readonly apply: (envelope: CommandEnvelope) => Promise<CommandResult>;
   readonly disconnect: () => Promise<void>;
   readonly setLocalOnly: (reason: "kill_switch") => void;
+  /** The signed-in User, so a personal envelope resolves to its Ledger id. */
+  readonly userId: string;
 }
 
 interface RejectedChangeInput {
   readonly commandId: string;
-  readonly householdId: string;
+  readonly ledgerId: string;
   readonly kind: string;
   readonly result: CommandResult;
   readonly envelope: CommandEnvelope | null;
@@ -46,7 +49,7 @@ interface RejectedChangeInput {
 
 const INSERT_REJECTED_CHANGE = `
   INSERT OR REPLACE INTO rejected_changes (
-    id, command_id, household_id, kind, rejection_kind,
+    id, command_id, ledger_id, kind, rejection_kind,
     rejection_payload, envelope, attempts, created_at
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 `;
@@ -69,7 +72,10 @@ export const processPowerSyncUpload = async (
     if (invalidCommandIds.has(envelope.commandId)) continue;
     const existing = commands.get(envelope.commandId);
     if (existing && serializeCommandMetadata(existing) !== serializeCommandMetadata(envelope)) {
-      await writeRejectedChange(database, conflictingMetadataRejection(entry, envelope));
+      await writeRejectedChange(
+        database,
+        conflictingMetadataRejection(entry, envelope, dependencies.userId),
+      );
       commands.delete(envelope.commandId);
       invalidCommandIds.add(envelope.commandId);
       continue;
@@ -87,7 +93,7 @@ export const processPowerSyncUpload = async (
     }
     await writeRejectedChange(database, {
       commandId: envelope.commandId,
-      householdId: envelope.householdId,
+      ledgerId: rejectedLedgerId(envelope, dependencies.userId),
       kind: envelope.kind,
       result,
       envelope,
@@ -97,7 +103,7 @@ export const processPowerSyncUpload = async (
   await transaction.complete();
 };
 
-export const createPowerSyncConnector = (): PowerSyncBackendConnector => ({
+export const createPowerSyncConnector = (userId: string): PowerSyncBackendConnector => ({
   fetchCredentials: async (): Promise<PowerSyncCredentials> => orpc.powersync.token(),
   uploadData: async (database: CommonPowerSyncDatabase) =>
     processPowerSyncUpload(database, {
@@ -108,8 +114,13 @@ export const createPowerSyncConnector = (): PowerSyncBackendConnector => ({
         }),
       disconnect: () => database.disconnect(),
       setLocalOnly: (reason) => useSyncModeStore.getState().setLocalOnly(reason),
+      userId,
     }),
 });
+
+/** An envelope with neither scope nor household has no Ledger to file under. */
+const rejectedLedgerId = (envelope: CommandEnvelope, userId: string): string =>
+  commandLedgerId(envelope, userId) ?? "";
 
 const writeRejectedChange = (
   database: PowerSyncUploadDatabase,
@@ -118,7 +129,7 @@ const writeRejectedChange = (
   database.execute(INSERT_REJECTED_CHANGE, [
     input.commandId,
     input.commandId,
-    input.householdId,
+    input.ledgerId,
     input.kind,
     input.result.kind,
     JSON.stringify(input.result),
@@ -129,7 +140,7 @@ const writeRejectedChange = (
 
 const invalidMetadataRejection = (entry: PowerSyncCrudEntry): RejectedChangeInput => ({
   commandId: `invalid-metadata:${entry.id}`,
-  householdId: "",
+  ledgerId: "",
   kind: "unknown",
   result: {
     kind: "invalid_intent",
@@ -141,9 +152,10 @@ const invalidMetadataRejection = (entry: PowerSyncCrudEntry): RejectedChangeInpu
 const conflictingMetadataRejection = (
   entry: PowerSyncCrudEntry,
   envelope: CommandEnvelope,
+  userId: string,
 ): RejectedChangeInput => ({
   commandId: envelope.commandId,
-  householdId: envelope.householdId,
+  ledgerId: rejectedLedgerId(envelope, userId),
   kind: envelope.kind,
   result: {
     kind: "invalid_intent",

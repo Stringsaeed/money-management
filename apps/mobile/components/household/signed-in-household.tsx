@@ -3,12 +3,13 @@ import { View } from "react-native";
 import { ActiveHouseholdPanel } from "@/components/household/active-household-panel";
 import { CreateHouseholdForm } from "@/components/household/create-household-form";
 import { JoinHouseholdForm } from "@/components/household/join-household-form";
+import { PersonalSyncCard } from "@/components/household/personal-sync-card";
 import { NativeHost, NativePrimaryButton, NativeSecondaryButton } from "@/components/native-ui";
 import { Card } from "@/components/settings/card";
 import { Text } from "@/components/ui/text";
-import { useMigratedHouseholdId } from "@/hooks/use-enable-sync";
+import { useSyncEnrollment } from "@/hooks/use-enable-sync";
 import { useHouseholdDetail } from "@/hooks/use-households";
-import type { AccessState } from "@/modules/access";
+import { NO_SYNC_ENROLLMENT, type AccessState } from "@/modules/access";
 
 type SignedInAccess = Extract<AccessState, { kind: "signed_in" }>;
 
@@ -16,12 +17,13 @@ export function SignedInHousehold({ access }: { readonly access: SignedInAccess 
   const { data: detail } = useHouseholdDetail(
     access.household.kind === "active" ? access.household.householdId : null,
   );
-  const { data: migratedHouseholdId } = useMigratedHouseholdId();
+  const { data } = useSyncEnrollment();
+  const enrollment = data ?? NO_SYNC_ENROLLMENT;
   const active = access.household.kind === "active" ? access.household : null;
-  const isOwner =
-    detail?.members.some(
-      (member) => member.userId === access.user.userId && member.role === "owner",
-    ) ?? false;
+  const members = detail?.members ?? [];
+  const isOwner = members.some(
+    (member) => member.userId === access.user.userId && member.role === "owner",
+  );
 
   return (
     <>
@@ -99,11 +101,16 @@ export function SignedInHousehold({ access }: { readonly access: SignedInAccess 
           name={active.name}
           currentUserId={access.user.userId}
           isOwner={isOwner}
-          needsSync={migratedHouseholdId !== active.householdId}
-          members={detail?.members ?? []}
+          needsSync={enrollment.migratedHouseholdId !== active.householdId}
+          members={members}
         />
       ) : (
         <>
+          <Card>
+            <PersonalSyncCard
+              alreadyEnabled={enrollment.personalSyncUserId === access.user.userId}
+            />
+          </Card>
           <Card>
             <View className="p-4">
               <Text className="mb-3 font-body-semibold text-sm">Create a Household</Text>

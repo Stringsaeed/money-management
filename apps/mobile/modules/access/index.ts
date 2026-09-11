@@ -2,12 +2,14 @@ export { coreFromAccess } from "./core-from-state";
 export { beginHostedSignIn } from "./actions";
 export type { AuthActionFailure, AuthActionResult } from "./actions";
 export {
+  NO_SYNC_ENROLLMENT,
   nextClaim,
   pickActiveHousehold,
   resolveAccess,
   resolveReturnDestination,
   selectLedgerSourceForAccess,
 } from "./access";
+export type { SyncEnrollment } from "./access";
 export { AuthLinkGate } from "./auth-link-gate";
 export { canPresentAuthSheet } from "./auth-sheet-session";
 export type { AuthSheetSession, PresentAuthSheetInput } from "./auth-sheet-session";

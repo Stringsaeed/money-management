@@ -7,7 +7,12 @@ import type { ImportManifest } from "@trove/protocol";
 import { useDatabase } from "@/db/client";
 import { backupLocalDatabase } from "@/lib/migration/backup";
 import { runImport } from "@/lib/migration/enable-sync";
-import { getMigratedHouseholdId, markMigrationCompleted } from "@/lib/migration/status";
+import {
+  getMigratedHouseholdId,
+  getSyncEnrollment,
+  markMigrationCompleted,
+  markPersonalSyncEnabled,
+} from "@/lib/migration/status";
 import { describeRejection, parseRejection } from "@/modules/powersync/rejection";
 import { orpc } from "@/lib/server/orpc";
 import { signedInUserId, useAccess } from "@/modules/access";
@@ -150,4 +155,56 @@ export function useMigratedHouseholdId() {
     queryKey: ["migration", "completedHouseholdId"],
     queryFn: () => getMigratedHouseholdId(db),
   });
+}
+
+/** Both sync opt-ins this device holds: a migrated Household and/or a Personal Ledger. */
+export function useSyncEnrollment() {
+  const db = useDatabase();
+  return useQuery({
+    queryKey: ["migration", "syncEnrollment"],
+    queryFn: () => getSyncEnrollment(db),
+  });
+}
+
+export type PersonalSyncStatus = "idle" | "connecting" | "enabled" | "error";
+
+/**
+ * Turns on Personal Ledger sync (#226) for the signed-in User.
+ *
+ * Unlike {@link useEnableSync} this creates no Household and uploads nothing:
+ * the cloud ledger starts empty and this device's existing local rows stay
+ * exactly where they are, readable again the moment sync is turned back off.
+ */
+export function useEnablePersonalSync() {
+  const db = useDatabase();
+  const queryClient = useQueryClient();
+  const userId = signedInUserId(useAccess());
+  const [status, setStatus] = useState<PersonalSyncStatus>("idle");
+  const [error, setError] = useState<Error | null>(null);
+
+  const enablePersonalSync = useCallback(async () => {
+    setError(null);
+    if (!userId) {
+      setStatus("error");
+      setError(new Error("Sign in before turning on sync for your personal ledger."));
+      return;
+    }
+    try {
+      setStatus("connecting");
+      // personal_ledger auto-subscribes, so the database-level first sync is
+      // the only signal that the empty ledger has arrived.
+      const powerSync = await connectPowerSync(userId);
+      await powerSync.waitForFirstSync();
+
+      await markPersonalSyncEnabled(db, userId);
+      useSyncModeStore.getState().setSynced();
+      await queryClient.invalidateQueries({ queryKey: ["migration"] });
+      setStatus("enabled");
+    } catch (err) {
+      setStatus("error");
+      setError(err instanceof Error ? err : new Error("Could not turn on personal sync."));
+    }
+  }, [db, queryClient, userId]);
+
+  return { status, error, enablePersonalSync };
 }

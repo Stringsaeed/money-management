@@ -12,7 +12,7 @@ interface RegistryEntry {
 
 const entries = new Map<string, RegistryEntry>();
 
-const scopeKey = (householdId: string, userId: string): string => `${householdId}\0${userId}`;
+const scopeKey = (ledgerId: string, userId: string): string => `${ledgerId}\0${userId}`;
 
 export interface AcquiredLedger {
   readonly ledger: SyncedTransactionLedger;
@@ -20,7 +20,7 @@ export interface AcquiredLedger {
 }
 
 export const acquireSyncedTransactionLedger = (deps: LedgerDependencies): AcquiredLedger => {
-  const key = scopeKey(deps.householdId, deps.userId);
+  const key = scopeKey(deps.binding.ledgerId, deps.userId);
   const existing = entries.get(key);
   if (existing?.dbIdentity === deps.dbIdentity) {
     existing.refs += 1;
@@ -33,9 +33,9 @@ export const acquireSyncedTransactionLedger = (deps: LedgerDependencies): Acquir
 };
 
 export const peekSyncedTransactionLedger = (
-  householdId: string,
+  ledgerId: string,
   userId: string,
-): SyncedTransactionLedger | null => entries.get(scopeKey(householdId, userId))?.ledger ?? null;
+): SyncedTransactionLedger | null => entries.get(scopeKey(ledgerId, userId))?.ledger ?? null;
 
 export const resetLedgerRegistryForTests = (): void => {
   for (const entry of entries.values()) entry.ledger.dispose();

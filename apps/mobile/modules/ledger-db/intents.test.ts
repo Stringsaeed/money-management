@@ -1,10 +1,25 @@
-import { mintCreate, mintEdit, mintRefund, mintRemove, type MintContext } from "./intents";
+import {
+  householdLedgerBinding,
+  personalLedgerBinding,
+  type SyncedLedgerBinding,
+} from "@/modules/ledger-data-source/provider";
+import {
+  mintCreate,
+  mintEdit,
+  mintPowerSyncCreate,
+  mintRefund,
+  mintRemove,
+  type MintContext,
+} from "./intents";
 import type { LedgerTransaction } from "./types";
 
-const ids = (values: string[]): MintContext => {
+const ids = (
+  values: string[],
+  binding: SyncedLedgerBinding = householdLedgerBinding("household-1"),
+): MintContext => {
   const queue = [...values];
   return {
-    householdId: "household-1",
+    binding,
     newId: () => {
       const next = queue.shift();
       if (!next) throw new Error("mint test ran out of ids");
@@ -87,5 +102,58 @@ describe("intents", () => {
       originalTransactionId: "txn-projected",
       amountMinor: 200,
     });
+  });
+
+  it("stamps the binding's scope on every command it mints", () => {
+    const personal = personalLedgerBinding("user-1");
+    const ctx = ids(["txn-new", "cmd-new"], personal);
+
+    const created = mintCreate(ctx, {
+      type: "expense",
+      amount: 1250,
+      date: "2026-03-01",
+      accountId: "cash",
+      categoryId: "groceries",
+      description: "Lunch",
+    });
+
+    expect(created.command.scope).toEqual({ type: "personal" });
+    expect(created.command.householdId).toBeUndefined();
+
+    const organization = mintCreate(ids(["txn-org", "cmd-org"]), {
+      type: "expense",
+      amount: 1250,
+      date: "2026-03-01",
+      accountId: "cash",
+      categoryId: "groceries",
+      description: "Lunch",
+    });
+
+    expect(organization.command.scope).toEqual({
+      type: "organization",
+      organizationId: "household-1",
+    });
+  });
+
+  it("writes a personal row to the personal ledger with no Household", () => {
+    const personal = personalLedgerBinding("user-1");
+    const minted = mintPowerSyncCreate(
+      {
+        ...ids(["txn-new", "cmd-new"], personal),
+        userId: "user-1",
+        accountCurrency: () => "USD",
+      },
+      {
+        type: "expense",
+        amount: 1250,
+        date: "2026-03-01",
+        accountId: "cash",
+        categoryId: "groceries",
+        description: "Lunch",
+      },
+    );
+
+    expect(minted.row.ledger_id).toBe("personal:user-1");
+    expect(minted.row.household_id).toBeNull();
   });
 });

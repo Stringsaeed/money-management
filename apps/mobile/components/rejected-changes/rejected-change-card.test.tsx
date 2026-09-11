@@ -14,7 +14,7 @@ const mockOnDiscard = jest.fn();
 function makeChange(overrides: Partial<RejectedChange> = {}): RejectedChange {
   return {
     commandId: "cmd-1",
-    householdId: "household-1",
+    ledgerId: "household-1",
     kind: "transaction.create",
     rejectionKind: "invalid_intent",
     rejection: {

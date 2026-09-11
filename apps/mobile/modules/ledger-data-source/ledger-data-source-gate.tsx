@@ -1,8 +1,13 @@
 import type { ReactNode } from "react";
 import { ActivityIndicator, View } from "react-native";
 
-import { useMigratedHouseholdId } from "@/hooks/use-enable-sync";
-import { coreFromAccess, selectLedgerSourceForAccess, useAccess } from "@/modules/access";
+import { useSyncEnrollment } from "@/hooks/use-enable-sync";
+import {
+  coreFromAccess,
+  NO_SYNC_ENROLLMENT,
+  selectLedgerSourceForAccess,
+  useAccess,
+} from "@/modules/access";
 import { useSyncModeStore } from "@/stores/sync-mode-store";
 
 import { SyncedTransactionsProvider } from "@/modules/ledger-db/provider";
@@ -11,14 +16,14 @@ import { LedgerDataSourceProvider } from "./provider";
 
 export function LedgerDataSourceGate({ children }: { readonly children: ReactNode }) {
   const access = useAccess();
-  const migration = useMigratedHouseholdId();
+  const enrollment = useSyncEnrollment();
   const mode = useSyncModeStore((state) => state.mode);
   const reason = useSyncModeStore((state) => state.reason);
 
   // Only block the first migration read. Access "resolving" (session/households
   // pending) must not unmount the tree — that remounts onboarding at welcome
   // and looks like a loop when the session probe flaps.
-  if (migration.isPending) {
+  if (enrollment.isPending) {
     return (
       <View className="safe-top safe-bottom flex-1 items-center justify-center">
         <ActivityIndicator size="large" />
@@ -28,7 +33,7 @@ export function LedgerDataSourceGate({ children }: { readonly children: ReactNod
 
   const selection = selectLedgerSourceForAccess(
     coreFromAccess(access),
-    migration.data ?? null,
+    enrollment.data ?? NO_SYNC_ENROLLMENT,
     mode,
     reason,
   );
@@ -36,7 +41,7 @@ export function LedgerDataSourceGate({ children }: { readonly children: ReactNod
   return (
     <LedgerDataSourceProvider selection={selection}>
       {selection.kind === "synced" ? (
-        <SyncedTransactionsProvider householdId={selection.householdId} userId={selection.userId}>
+        <SyncedTransactionsProvider binding={selection.ledger} userId={selection.userId}>
           {children}
         </SyncedTransactionsProvider>
       ) : (

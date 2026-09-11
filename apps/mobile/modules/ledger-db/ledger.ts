@@ -5,6 +5,7 @@ import {
   mapSyncedTransaction,
 } from "@/modules/ledger-data-source/synced-mappers";
 import { commandMetadataFor } from "@/modules/powersync/command-metadata";
+import type { SyncedLedgerBinding } from "@/modules/ledger-data-source/provider";
 
 import type { PowerSyncLedgerCollections } from "./collections";
 import {
@@ -23,7 +24,7 @@ import type {
 } from "./types";
 
 export interface LedgerDependencies {
-  readonly householdId: string;
+  readonly binding: SyncedLedgerBinding;
   readonly userId: string;
   readonly dbIdentity: object;
   readonly collections: PowerSyncLedgerCollections;
@@ -40,7 +41,7 @@ export interface TransactionIntents {
 }
 
 export interface SyncedTransactionLedger {
-  readonly householdId: string;
+  readonly binding: SyncedLedgerBinding;
   readonly userId: string;
   readonly collections: PowerSyncLedgerCollections;
   readonly intents: TransactionIntents;
@@ -61,7 +62,8 @@ const missingRow = (): Error =>
 export const createSyncedTransactionLedger = (
   dependencies: LedgerDependencies,
 ): SyncedTransactionLedger => {
-  const { collections, householdId, userId } = dependencies;
+  const { binding, collections, userId } = dependencies;
+  const { ledgerId } = binding;
   let offline = dependencies.offline ?? false;
   let revision = 0;
   let disposed = false;
@@ -96,13 +98,13 @@ export const createSyncedTransactionLedger = (
 
   const accountCurrency = (accountId: string): string => {
     const account = collections.accounts.get(accountId);
-    if (!account || account.household_id !== householdId) {
+    if (!account || account.ledger_id !== ledgerId) {
       throw new Error("This Account is not in the authorized PowerSync collection.");
     }
     return account.currency;
   };
   const mintContext: PowerSyncMintContext = {
-    householdId,
+    binding,
     userId,
     newId: dependencies.newId,
     now: dependencies.now,
@@ -111,13 +113,13 @@ export const createSyncedTransactionLedger = (
 
   const rows = (): readonly LedgerTransaction[] => {
     const accounts = collections.accounts.toArray
-      .filter((row) => row.household_id === householdId)
+      .filter((row) => row.ledger_id === ledgerId)
       .map(mapPowerSyncAccount);
     const categories = collections.categories.toArray
-      .filter((row) => row.household_id === householdId)
+      .filter((row) => row.ledger_id === ledgerId)
       .map(mapPowerSyncCategory);
     return collections.transactions.toArray
-      .filter((row) => row.household_id === householdId)
+      .filter((row) => row.ledger_id === ledgerId)
       .map((row) => ({
         ...mapSyncedTransaction(mapPowerSyncTransaction(row), accounts, categories),
         version: row.version,
@@ -157,7 +159,7 @@ export const createSyncedTransactionLedger = (
     },
     linkRefund: async (input) => {
       const original = collections.transactions.get(input.originalTransactionId);
-      if (!original || original.household_id !== householdId) throw missingRow();
+      if (!original || original.ledger_id !== ledgerId) throw missingRow();
       const minted = mintPowerSyncRefund(mintContext, input, original);
       await collections.transactions.insert(minted.row, {
         metadata: commandMetadataFor(minted.command),
@@ -167,7 +169,7 @@ export const createSyncedTransactionLedger = (
   };
 
   return {
-    householdId,
+    binding,
     userId,
     collections,
     intents,

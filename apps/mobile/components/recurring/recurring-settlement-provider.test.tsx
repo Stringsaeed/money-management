@@ -3,7 +3,10 @@ import { act, render, waitFor } from "@testing-library/react-native";
 import { AppState, Text } from "react-native";
 
 import * as ledgerCache from "@/modules/ledger-cache";
-import { LedgerDataSourceProvider } from "@/modules/ledger-data-source/provider";
+import {
+  householdLedgerBinding,
+  LedgerDataSourceProvider,
+} from "@/modules/ledger-data-source/provider";
 import { RecurringSettlementError, type SettlementReport } from "@/modules/recurring-rules";
 import {
   RecurringSettlementProvider,
@@ -119,7 +122,11 @@ describe("RecurringSettlementProvider", () => {
     await render(
       <QueryClientProvider client={queryClient}>
         <LedgerDataSourceProvider
-          selection={{ kind: "synced", householdId: "household-1", userId: "user-1" }}
+          selection={{
+            kind: "synced",
+            ledger: householdLedgerBinding("household-1"),
+            userId: "user-1",
+          }}
         >
           <RecurringSettlementProvider>
             <FeedbackProbe />

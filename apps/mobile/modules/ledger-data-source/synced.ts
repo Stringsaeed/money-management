@@ -15,6 +15,7 @@ import {
   type LedgerOfflineState,
   type LedgerTransactionDataSource,
 } from "./contract";
+import type { SyncedLedgerBinding } from "./provider";
 import {
   assertSupportedAccountUpdate,
   calculateSyncedBalance,
@@ -29,39 +30,38 @@ export type SyncedLedgerDataSource = LedgerAccountDataSource &
   LedgerTransactionDataSource;
 
 interface CreateSyncedLedgerDataSourceOptions {
-  householdId: string;
+  binding: SyncedLedgerBinding;
   userId: string;
   ledger: SyncedTransactionLedger;
   offlineState?: Exclude<LedgerOfflineState, { kind: "offline_ready" }>;
 }
 
 export const createSyncedLedgerDataSource = ({
-  householdId,
+  binding,
   userId,
   ledger,
   offlineState = { kind: "online" },
 }: CreateSyncedLedgerDataSourceOptions): SyncedLedgerDataSource => {
+  const { ledgerId, householdId, scope } = binding;
   const runner = createLedgerOperationRunner("synced");
   const { accounts, categories, transactions } = ledger.collections;
   const run = <TResult>(operation: LedgerDataSourceOperation, execute: () => Promise<TResult>) =>
     runner.run(operation, execute);
 
-  const accountRows = () => accounts.toArray.filter((row) => row.household_id === householdId);
-  const categoryRows = () => categories.toArray.filter((row) => row.household_id === householdId);
+  const accountRows = () => accounts.toArray.filter((row) => row.ledger_id === ledgerId);
+  const categoryRows = () => categories.toArray.filter((row) => row.ledger_id === ledgerId);
   const transactionRows = () =>
-    transactions.toArray
-      .filter((row) => row.household_id === householdId)
-      .map(mapPowerSyncTransaction);
+    transactions.toArray.filter((row) => row.ledger_id === ledgerId).map(mapPowerSyncTransaction);
   const accountRow = (id: string) => {
     const row = accounts.get(id);
-    if (!row || row.household_id !== householdId) {
+    if (!row || row.ledger_id !== ledgerId) {
       throw new Error("This Account is not in the authorized PowerSync collection.");
     }
     return row;
   };
   const categoryRow = (id: string) => {
     const row = categories.get(id);
-    if (!row || row.household_id !== householdId) {
+    if (!row || row.ledger_id !== ledgerId) {
       throw new Error("This Category is not in the authorized PowerSync collection.");
     }
     return row;
@@ -89,7 +89,7 @@ export const createSyncedLedgerDataSource = ({
 
   return {
     source: "synced",
-    cacheKey: "synced:" + householdId + ":" + userId,
+    cacheKey: "synced:" + ledgerId + ":" + userId,
     offlineState,
     accounts: {
       list: () => run("read.accounts", () => listAccounts(false)),
@@ -110,7 +110,7 @@ export const createSyncedLedgerDataSource = ({
           const issuedAt = nowIso();
           const command: CommandEnvelope = {
             commandId: generateId(),
-            householdId,
+            scope,
             kind: "account.create",
             issuedAt,
             payload: {
@@ -129,6 +129,7 @@ export const createSyncedLedgerDataSource = ({
             accounts.insert(
               {
                 id,
+                ledger_id: ledgerId,
                 household_id: householdId,
                 name: data.name,
                 type: toSyncedAccountType(data.type),
@@ -159,7 +160,7 @@ export const createSyncedLedgerDataSource = ({
           const current = accountRow(id);
           const command = timestamped({
             commandId: generateId(),
-            householdId,
+            scope,
             kind: "account.update",
             payload: {
               accountId: id,
@@ -196,7 +197,7 @@ export const createSyncedLedgerDataSource = ({
           if (current.lifecycle === "archived") return;
           const command = timestamped({
             commandId: generateId(),
-            householdId,
+            scope,
             kind: "account.archive",
             payload: { accountId: id },
             preconditions: [{ entityId: id, expectedVersion: current.version }],
@@ -226,7 +227,7 @@ export const createSyncedLedgerDataSource = ({
           const issuedAt = nowIso();
           const command: CommandEnvelope = {
             commandId: generateId(),
-            householdId,
+            scope,
             kind: "category.create",
             issuedAt,
             payload: {
@@ -243,6 +244,7 @@ export const createSyncedLedgerDataSource = ({
             categories.insert(
               {
                 id,
+                ledger_id: ledgerId,
                 household_id: householdId,
                 name: data.name,
                 type: data.type,
@@ -268,7 +270,7 @@ export const createSyncedLedgerDataSource = ({
           const current = categoryRow(id);
           const command = timestamped({
             commandId: generateId(),
-            householdId,
+            scope,
             kind: "category.update",
             payload: {
               categoryId: id,
@@ -299,7 +301,7 @@ export const createSyncedLedgerDataSource = ({
           if (current.lifecycle === "archived") return;
           const command = timestamped({
             commandId: generateId(),
-            householdId,
+            scope,
             kind: "category.archive",
             payload: { categoryId: id },
             preconditions: [{ entityId: id, expectedVersion: current.version }],

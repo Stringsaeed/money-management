@@ -138,6 +138,7 @@ export const mapPowerSyncCategory = (row: PowerSyncCategoryRow): Category => ({
 
 export const mapPowerSyncTransaction = (row: PowerSyncTransactionRow): SyncedTransaction => ({
   id: row.id,
+  ledgerId: row.ledger_id,
   householdId: row.household_id,
   type: row.type,
   amountMinor: row.amount_minor,

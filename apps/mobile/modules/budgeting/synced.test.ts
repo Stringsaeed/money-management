@@ -1,3 +1,4 @@
+import { householdLedgerBinding } from "@/modules/ledger-data-source/provider";
 import { createSyncedTransactionLedger } from "@/modules/ledger-db/ledger";
 import {
   createTestLedgerCollections,
@@ -33,6 +34,7 @@ describe("synced budgeting coordinator", () => {
       categories: [
         {
           id: "category-1",
+          ledger_id: "household-1",
           household_id: "household-1",
           name: "Housing",
           type: "expense",
@@ -86,7 +88,7 @@ describe("synced budgeting coordinator", () => {
     });
     await preloadTestLedgerCollections(collections);
     const ledger = createSyncedTransactionLedger({
-      householdId: "household-1",
+      binding: householdLedgerBinding("household-1"),
       userId: "user-1",
       dbIdentity: sqlite.database,
       collections,
