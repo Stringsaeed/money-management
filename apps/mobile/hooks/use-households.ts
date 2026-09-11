@@ -83,8 +83,8 @@ export function useDeleteHousehold() {
   const access = useAccess();
   const invalidate = useInvalidateHouseholds();
   return useMutation({
-    mutationFn: async (householdId: string) => {
-      await orpc.households.delete({ householdId });
+    mutationFn: async (input: { householdId: string; confirmName: string }) => {
+      await orpc.households.delete(input);
       if (access.kind === "signed_in") {
         await access.setActiveHousehold(null);
       }

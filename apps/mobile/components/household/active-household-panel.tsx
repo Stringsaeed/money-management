@@ -1,4 +1,4 @@
-import { Alert, View } from "react-native";
+import { Alert, Platform, View } from "react-native";
 
 import { EnableSyncCard } from "@/components/household/enable-sync-card";
 import { HouseholdMembers, type HouseholdMember } from "@/components/household/household-members";
@@ -92,7 +92,7 @@ export function ActiveHouseholdPanel({
             <NativeHost>
               <NativeDestructiveButton
                 label="Delete household"
-                onPress={() => confirmDelete(householdId, deleteHousehold.mutate)}
+                onPress={() => confirmDelete(householdId, name, deleteHousehold.mutate)}
                 testID="delete-household"
               />
             </NativeHost>
@@ -135,13 +135,41 @@ function confirmLeave(householdId: string, leave: (householdId: string) => void)
   ]);
 }
 
-function confirmDelete(householdId: string, remove: (householdId: string) => void) {
+function confirmDelete(
+  householdId: string,
+  name: string,
+  remove: (input: { householdId: string; confirmName: string }) => void,
+) {
+  const run = (confirmName: string) => remove({ householdId, confirmName });
+
+  // Alert.prompt is iOS-only; collect the typed Household name there.
+  if (Platform.OS === "ios") {
+    Alert.prompt(
+      "Delete household?",
+      `Type "${name}" to confirm. Deletes the WorkOS organization and every shared Account, Category, and Transaction. Personal ledgers are untouched.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: (value?: string) => {
+            if (value != null && value.length > 0) {
+              run(value);
+            }
+          },
+        },
+      ],
+      "plain-text",
+    );
+    return;
+  }
+
   Alert.alert(
     "Delete household?",
-    "Deletes the WorkOS organization and every shared Account, Category, and Transaction. Personal ledgers are untouched.",
+    `This permanently deletes "${name}" — the WorkOS organization and every shared Account, Category, and Transaction. Personal ledgers are untouched.`,
     [
       { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => remove(householdId) },
+      { text: "Delete", style: "destructive", onPress: () => run(name) },
     ],
   );
 }
