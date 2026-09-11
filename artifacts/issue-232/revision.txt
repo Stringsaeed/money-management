@@ -1,5 +1,5 @@
-revision=c865ea3b6d05dc91511174393421be9ab4ee777a
+revision=c4c91ab8f700b817f0521e523f6fa43a6d7355da
 branch=cursor/workos-certify-migration-b3d1
 base_main=44fde92b62cd29ff3e290106510f31a48362063f
-note=includes #242 on main+live auth.trove.ing; client_id mismatch blocks post-login API retest; #232 not certified
-date=2026-09-11T20:47:00Z
+note=includes #242 on main+live; client_id mismatch blocks post-login API retest; #232 not certified
+date=2026-09-11T20:48:00Z
