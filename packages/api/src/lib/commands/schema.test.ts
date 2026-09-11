@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { commandLedgerId, personalLedgerId, resolveCommandScope } from "@trove/protocol";
+
 import { commandEnvelopeSchema } from "./schema";
 
 const base = {
@@ -23,5 +25,69 @@ describe("commandEnvelopeSchema", () => {
   it("still rejects an empty kind", () => {
     const parsed = commandEnvelopeSchema.safeParse({ ...base, kind: "" });
     expect(parsed.success).toBe(false);
+  });
+
+  it("accepts a personal scope with no householdId", () => {
+    const parsed = commandEnvelopeSchema.safeParse({
+      commandId: base.commandId,
+      payload: {},
+      scope: { type: "personal" },
+      kind: "account.create",
+    });
+    expect(parsed.success).toBe(true);
+  });
+
+  it("rejects an envelope that names neither a scope nor a household", () => {
+    const parsed = commandEnvelopeSchema.safeParse({
+      commandId: base.commandId,
+      payload: {},
+      kind: "account.create",
+    });
+    expect(parsed.success).toBe(false);
+    if (!parsed.success) {
+      expect(parsed.error.issues[0]?.path).toEqual(["scope"]);
+    }
+  });
+
+  it("rejects an organization scope with a blank organizationId", () => {
+    const parsed = commandEnvelopeSchema.safeParse({
+      commandId: base.commandId,
+      payload: {},
+      scope: { type: "organization", organizationId: "" },
+      kind: "account.create",
+    });
+    expect(parsed.success).toBe(false);
+  });
+});
+
+describe("resolveCommandScope", () => {
+  const envelope = { commandId: base.commandId, kind: "account.create", payload: {} };
+
+  it("binds a personal scope to the authenticated user, never the payload", () => {
+    const scope = resolveCommandScope({ ...envelope, scope: { type: "personal" } }, "user-alice");
+    expect(scope).toEqual({ type: "personal", userId: "user-alice" });
+    expect(commandLedgerId({ ...envelope, scope: { type: "personal" } }, "user-alice")).toBe(
+      personalLedgerId("user-alice"),
+    );
+  });
+
+  it("reads a bare householdId as an organization scope", () => {
+    expect(resolveCommandScope({ ...envelope, householdId: "household-1" }, "user-alice")).toEqual({
+      type: "organization",
+      organizationId: "household-1",
+    });
+  });
+
+  it("lets an explicit scope win over a legacy householdId", () => {
+    const scope = resolveCommandScope(
+      { ...envelope, householdId: "household-1", scope: { type: "personal" } },
+      "user-alice",
+    );
+    expect(scope).toEqual({ type: "personal", userId: "user-alice" });
+  });
+
+  it("returns null when the envelope names no ledger", () => {
+    expect(resolveCommandScope(envelope, "user-alice")).toBeNull();
+    expect(commandLedgerId(envelope, "user-alice")).toBeNull();
   });
 });
