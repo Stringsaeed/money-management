@@ -29,7 +29,10 @@ beforeEach(async () => {
   }
 });
 
-function personalEnvelope(kind: CommandEnvelope["kind"], payload: unknown): CommandEnvelope {
+function personalEnvelope(
+  kind: CommandEnvelope["kind"],
+  payload: CommandEnvelope["payload"],
+): CommandEnvelope {
   return {
     commandId: crypto.randomUUID(),
     scope: { type: "personal" },
@@ -44,6 +47,7 @@ function applyAs(userId: string, envelope: CommandEnvelope): Promise<CommandResu
 
 function expectApplied(result: CommandResult): AppliedResult {
   expect(result.kind).toBe("applied");
+  // SAFETY: the expect above fails the test before this line on any other kind.
   return result as AppliedResult;
 }
 

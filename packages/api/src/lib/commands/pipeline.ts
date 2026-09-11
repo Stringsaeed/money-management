@@ -134,22 +134,35 @@ function personalUnsupportedRejection(kind: CommandKind): PlanRejection {
   };
 }
 
+type ScopeAuthorization =
+  | { readonly rejected: PlanRejection }
+  | {
+      readonly rejected?: undefined;
+      readonly scope: LedgerScope;
+      readonly binding: ScopeBinding;
+      readonly actorRole: HouseholdRole;
+    };
+
 /**
- * Authorizes the command against its Ledger Scope.
+ * Resolves the envelope's Ledger Scope and authorizes the caller against it.
  *
  * Personal: the scope is bound to the authenticated User by construction, so
  * there is no membership to check and no way to address someone else's ledger.
  * Organization: live membership decides, as a typed rejection rather than an
  * HTTP error, so clients can render the Rejected Changes inbox.
  */
-async function authorizeScope(
+async function authorizeEnvelope(
   db: CommandDatabase,
-  scope: LedgerScope,
+  envelope: ApplyCommandEnvelope,
   userId: string,
-): Promise<{ binding: ScopeBinding; role: HouseholdRole } | null> {
+): Promise<ScopeAuthorization> {
+  const scope = resolveCommandScope(envelope, userId);
+  if (!scope) {
+    return { rejected: unscopedRejection() };
+  }
   const binding = bindLedgerScope(scope);
   if (scope.type === "personal") {
-    return { binding, role: "owner" };
+    return { scope, binding, actorRole: "owner" };
   }
   const membershipRows = await db
     .select()
@@ -157,8 +170,49 @@ async function authorizeScope(
     .where(and(eq(membership.userId, userId), eq(membership.householdId, scope.organizationId)))
     .limit(1);
   const actorMembership = membershipRows[0];
-  if (!actorMembership) return null;
-  return { binding, role: actorMembership.role as HouseholdRole };
+  if (!actorMembership) {
+    return {
+      rejected: {
+        kind: "forbidden",
+        role: null,
+        requiredCapability: requiredCapability(envelope.kind),
+      },
+    };
+  }
+  return { scope, binding, actorRole: actorMembership.role as HouseholdRole };
+}
+
+/** A Personal Ledger is provisioned by its owner's first write, not up front. */
+async function provisionPersonalLedger(
+  db: CommandDatabase,
+  userId: string,
+  actor: CommandActor | undefined,
+): Promise<void> {
+  if (actor) await ensureUserProjection(db, actor);
+  await ensurePersonalLedger(db, userId);
+}
+
+/**
+ * Predicate preconditions are evaluated by their handler inside the batch
+ * guard; anything the handler does not declare is rejected loudly rather than
+ * silently granting no guard.
+ */
+function unsupportedPredicateRejection(
+  handler: CommandHandler,
+  preconditions: readonly Precondition[],
+): PlanRejection | null {
+  const supported = handler.supportedPredicates ?? [];
+  const unsupported = preconditions.filter(
+    (p) => p.predicate !== undefined && !supported.includes(p.predicate),
+  );
+  if (unsupported.length === 0) return null;
+  return {
+    kind: "invalid_intent",
+    issues: unsupported.map((p) => ({
+      field: "preconditions",
+      message: `Predicate precondition "${p.predicate ?? ""}" is not supported yet; only expectedVersion is validated.`,
+    })),
+  };
 }
 
 /**
@@ -174,22 +228,13 @@ export async function applyCommand({
 }: ApplyCommandArgs): Promise<CommandResult> {
   const rawKind = envelope.kind;
 
-  // 1. Resolve the Ledger Scope. A personal envelope binds to the caller, so
-  //    the scope can never name another User's ledger.
-  const scope = resolveCommandScope(envelope, userId);
-  if (!scope) {
-    return unscopedRejection();
+  // 1. Resolve the Ledger Scope and authorize against it. A personal envelope
+  //    binds to the caller, so it can never name another User's ledger.
+  const authorization = await authorizeEnvelope(db, envelope, userId);
+  if (authorization.rejected) {
+    return authorization.rejected;
   }
-
-  const authorized = await authorizeScope(db, scope, userId);
-  if (!authorized) {
-    return {
-      kind: "forbidden",
-      role: null,
-      requiredCapability: requiredCapability(rawKind),
-    };
-  }
-  const { binding, role: actorRole } = authorized;
+  const { scope, binding, actorRole } = authorization;
   const { ledgerId, householdId } = binding;
 
   // Removed / unknown kinds must be typed rejections (outbox drain), not
@@ -207,16 +252,14 @@ export async function applyCommand({
   if (!handler) {
     return unknownKindRejection(kind);
   }
-  // Household-owned intents (membership, budgeting, recurring, import) have no
-  // meaning without a Household. Reject them loudly instead of writing rows a
-  // Personal Ledger can never read back.
-  if (scope.type === "personal" && handler.supportsPersonalScope !== true) {
-    return personalUnsupportedRejection(kind);
-  }
-
   if (scope.type === "personal") {
-    if (actor) await ensureUserProjection(db, actor);
-    await ensurePersonalLedger(db, userId);
+    // Household-owned intents (membership, budgeting, recurring, import) have
+    // no meaning without a Household. Reject them loudly instead of writing
+    // rows a Personal Ledger can never read back.
+    if (handler.supportsPersonalScope !== true) {
+      return personalUnsupportedRejection(kind);
+    }
+    await provisionPersonalLedger(db, userId, actor);
   }
 
   // 2. Idempotency: a retry replays the stored result instead of re-executing.
@@ -243,21 +286,10 @@ export async function applyCommand({
     return { kind: "invalid_intent", issues: parsed.issues };
   }
 
-  // Predicate preconditions (expectedAsOf-style) are evaluated by their
-  // handler inside the batch guard; anything the handler does not declare is
-  // rejected loudly rather than silently granting no guard.
-  const supportedPredicates = handler.supportedPredicates ?? [];
-  const unsupportedPreconditions = (envelope.preconditions ?? []).filter(
-    (p) => p.predicate !== undefined && !supportedPredicates.includes(p.predicate),
-  );
-  if (unsupportedPreconditions.length > 0) {
-    return {
-      kind: "invalid_intent",
-      issues: unsupportedPreconditions.map((p) => ({
-        field: "preconditions",
-        message: `Predicate precondition "${p.predicate ?? ""}" is not supported yet; only expectedVersion is validated.`,
-      })),
-    };
+  const preconditions = envelope.preconditions ?? [];
+  const unsupported = unsupportedPredicateRejection(handler, preconditions);
+  if (unsupported) {
+    return unsupported;
   }
 
   // 4. Plan via pure domain rules over current state.
@@ -269,10 +301,7 @@ export async function applyCommand({
     actorUserId: userId,
     actorRole,
   };
-  const request: PlanRequest = {
-    payload: parsed.value,
-    preconditions: envelope.preconditions ?? [],
-  };
+  const request: PlanRequest = { payload: parsed.value, preconditions };
   const outcome = await handler.plan(planContext, request);
   if (isPlanRejection(outcome)) {
     return outcome;
