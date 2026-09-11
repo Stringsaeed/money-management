@@ -66,7 +66,10 @@ describe("useEnableSync", () => {
       await result.current.enableSync({ householdName: "The Saeeds" });
     });
 
-    expect(mockHouseholdsCreate).toHaveBeenCalledWith({ name: "The Saeeds" });
+    expect(mockHouseholdsCreate).toHaveBeenCalledWith({
+      name: "The Saeeds",
+      requestId: expect.any(String),
+    });
     expect(mockBackupLocalDatabase).toHaveBeenCalledWith(FAKE_SQLITE);
     expect(mockRunImport).toHaveBeenCalledWith(
       expect.objectContaining({ db: FAKE_DB, householdId: "household-new" }),
