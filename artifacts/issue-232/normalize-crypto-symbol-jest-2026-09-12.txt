@@ -1,0 +1,10 @@
+PASS path: apps/mobile/hooks/normalize-crypto-symbol.test.ts
+PASS hooks/normalize-crypto-symbol.test.ts
+  normalizeCryptoSymbol
+    ✓ strips venue suffixes and uppercases the base symbol (9 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.955 s
+Ran all test suites matching /hooks\/normalize-crypto-symbol.test.ts/i.
