@@ -1,0 +1,34 @@
+Page: com.stringsaeed.moneymanagement
+App: com.stringsaeed.moneymanagement
+Snapshot: 30 visible nodes (33 total)
+@e1 [application] "Trove (Dev)"
+@e2 [other] "gearshape.fill"
+@e3 [image] "gearshape.fill" [covered]
+@e4 [other] "Profile"
+@e5 [navigation-bar] "Profile"
+@e6 [scroll-area] "stringsaeed@gmail.com" [scrollable]
+  [content above scroll-area hidden]
+@e7 [other] "stringsaeed@gmail.com"
+@e11 [other] "Personal ✓"
+@e12 [button] "Personal ✓"
+@e13 [text] "Upload to your cloud? ☁️"
+@e14 [text] "Your personal cloud is empty and this device has local accounts and transactions. Confirm once to copy them up — sign-in alone never uploads. Your on-device ledger stays here for local-only use anytime."
+@e15 [other] "Upload once to cloud"
+@e16 [button] "Upload once to cloud"
+@e17 [button] "Not now"
+@e18 [text] "Create a Household"
+@e19 [text] "Start a shared space — family accounts, budgets, and reports in one place."
+@e20 [text-field] "The Saeeds" [editable]
+@e21 [other] "🏠 Create household"
+@e22 [button] "🏠 Create household"
+@e23 [text] "Could not create the household. Check your connection and try again."
+@e24 [text] "Join a Household"
+@e25 [text] "Accept the WorkOS invitation email (hosted AuthKit). Custom invite codes are gone — joining never moves your Personal ledger into the shared one."
+@e26 [other] "Ledger"
+@e27 [button]
+@e28 [button] "Ledger"
+@e29 [button] "Money Movement"
+@e30 [button] "Inbox"
+@e31 [button] "Envelopes"
+@e32 [button] "Settings" [selected]
+@e33 [button] "Create transaction"

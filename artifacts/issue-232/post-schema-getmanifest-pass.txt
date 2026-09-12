@@ -1,0 +1,13 @@
+device=iPhone 17 Pro 6E4BBB8A-790E-4DDD-995B-6A3D1D9101DB
+stim=not_used
+rpc=POST /rpc/migration/getManifest
+cf_worker=money-management-server-prod
+cf_http=200
+cf_latencies_ms=216,412
+ui=Upload to your cloud? (empty personal cloud offer)
+screenshots=authkit-102-postschema-upload-offer.png,authkit-103-postschema-final.png
+prior_fail=42703 accounts.ledger_id
+schema=0011-0015 applied trove/main
+relates=#232 only
+closes=none
+certified=false

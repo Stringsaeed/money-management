@@ -1,0 +1,28 @@
+Tapped @e16 (201, 317)
+settled after 834ms: +2 -2 (~30 unchanged)
+- @e15 [other] "Sync just for me"
+- @e16 [button] "Sync just for me"
++ @e15~s880482 [other] "Checking cloud…"
++ @e16~s880482 [button] "Checking cloud…" [disabled]
+unchanged interactive (20):
+= @e2~s880482 [other] "gearshape.fill"
+= @e4~s880482 [other] "Profile"
+= @e5~s880482 [navigation-bar] "Profile"
+= @e6~s880482 [scroll-area] "stringsaeed@gmail.com"
+= @e7~s880482 [other] "stringsaeed@gmail.com"
+= @e8~s880482 [other] "Sign out"
+= @e9~s880482 [button] "Sign out"
+= @e10~s880482 [text] "LEDGER"
+= @e11~s880482 [other] "Personal ✓"
+= @e12~s880482 [button] "Personal ✓"
+= @e13~s880482 [text] "Sync without a Household 🪪"
+= @e14~s880482 [text] "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."
+= @e17~s880482 [text] "Create a Household"
+= @e18~s880482 [text] "Start a shared space — family accounts, budgets, and reports in one place."
+= @e19~s880482 [text-field] "The Saeeds"
+= @e20~s880482 [other] "🏠 Create household"
+= @e21~s880482 [button] "🏠 Create household"
+= @e22~s880482 [text] "Could not create the household. Check your connection and try again."
+= @e23~s880482 [text] "Join a Household"
+= @e24~s880482 [text] "Accept the WorkOS invitation email (hosted AuthKit). Custom invite codes are gone — joining never moves your Personal ledger into the shared one."
+… more interactive elements not shown, use snapshot -i

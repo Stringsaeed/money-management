@@ -20,29 +20,30 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip after post-schema getManifest PASS (DDL 0011–0015; docs on certify branch) |
-| Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), and [#246](https://github.com/Stringsaeed/money-management/pull/246) (`5899747`) on `main` and live on `auth.trove.ing`. |
+| HEAD | tip after post-schema getManifest PASS (CF 200 + iPhone 17 Pro UI; docs on certify branch) |
+| Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/Users/saeed/Work/money-management-wt-232` |
-| Live API | `https://auth.trove.ing` — root **200 OK**; Deploy Worker **34659057570** success for `5899747` (#246 AuthKit `iss` accept) after #245 |
+| Live API | `https://auth.trove.ing` — root **200 OK**; Sync `getManifest` CF Worker **200** post-DDL |
+| Device (this write) | **iPhone 17 Pro** `6E4BBB8A-790E-4DDD-995B-6A3D1D9101DB` — **no stim** |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
-Recorded in `revision.txt` / `authkit-live-write.txt` / `post-246-user-upsert-500.txt`.
+Recorded in `revision.txt` / `post-schema-sync-retest.md`.
 
-## Post-schema Sync retest (2026-09-12, DDL 0011–0015)
+## Post-schema Sync retest (2026-09-12, schema 0011–0015)
 
 - PlanetScale `trove/main` migrations **0011–0015** applied (ledger + `ledger_id`, `create_request_id`, `membership.status`, deletion tables; legacy session/account/verification dropped).
 - Cloudflare Worker `money-management-server-prod-mfhkibosfd6z5ym5`, window **2026-09-12T01:20–01:45Z**:
   - `--> POST /rpc/migration/getManifest 200 216ms`
   - `--> POST /rpc/migration/getManifest 200 412ms`
-- Personal Sync / `migration/getManifest` **PASS** (CF **200**). Prior PG **42703** missing `accounts.ledger_id` cleared.
-- `households/listMine` already **PASS** post-#250.
-- Evidence: `post-schema-sync-retest.md`. Relates to #232 only. Matrix still incomplete — **not certified**.
+- Device: **iPhone 17 Pro** only (**no stim**). Auth **PASS**. `listMine` remains **PASS** (post-#250).
+- Sync `migration/getManifest` **PASS**: CF Worker **200** + UI → **Upload to your cloud?** (`authkit-102-postschema-upload-offer.png`, `authkit-103-postschema-final.png`). Prior `42703 accounts.ledger_id` cleared.
+- Evidence: `post-schema-sync-retest.md`. Relates to #232 only. Matrix still incomplete — **not certified.** Do not Closes #232/#224.
 
 ## Post-#250 Sync retest (2026-09-12)
 
 - Deploy Worker [34663345218](https://github.com/Stringsaeed/money-management/actions/runs/34663345218) **success** (`4171c2c`, #250).
 - Auth **PASS**. `households/listMine` **PASS** HTTP **200** `{"json":[]}`. Prior `42703 membership.status` cleared for this RPC.
-- Sync just for me was **FAIL** on `migration/getManifest` HTTP **500** client **`INTERNAL_SERVER_ERROR`** at that tip (`post-250-sync-retest.md`). **Superseded:** getManifest **PASS** after DDL 0011–0015 (`post-schema-sync-retest.md`).
+- Sync just for me was **FAIL** on `migration/getManifest` HTTP **500** client **`INTERNAL_SERVER_ERROR`** at that tip (`post-250-sync-retest.md`). **Superseded:** getManifest **PASS** after DDL 0011–0015 — CF Worker **200** + iPhone 17 Pro UI upload offer (`post-schema-sync-retest.md`, `authkit-102-postschema-upload-offer.png`).
 - Relates to #232 only. Not certified.
 
 ## Post-#249 Sync retest (2026-09-12)
@@ -59,16 +60,16 @@ Recorded in `revision.txt` / `authkit-live-write.txt` / `post-246-user-upsert-50
 
 ## Verdict (this write)
 
-**Incomplete / not certifiable yet.**
+**Incomplete / not certifiable yet** — but Sync `getManifest` is now **PASS** post schema 0011–0015.
 
 - Automated typecheck and focused package tests on this branch **pass** (prior write).
 - Repo-wide `pnpm lint` and `pnpm format:check` **fail** on pre-existing findings.
 - Full `pnpm test:ci` **passed** previously: mobile Jest **742/742** + `@trove/db` cutover **3/3**.
-- **Row 2 iOS AuthKit UI (partial):** cancel PASS; hosted AuthKit email page + email-code challenge PARTIAL; OTP entry hard-stopped (agent-device AX unavailable inside ASWebAuthenticationSession). Still signed out afterward (`authkit-21-signed-out-final.png`).
+- **Row 2 iOS AuthKit UI (partial):** cancel PASS; hosted AuthKit email page + email-code challenge PARTIAL; OTP entry hard-stopped (agent-device AX unavailable inside ASWebAuthenticationSession).
 - **Post-login JWT verify:** **PASS** after #246 — prior `claim_iss` cleared (AuthKit `iss` accepted).
 - **Post-login `households.listMine`:** **PASS** after #250 — HTTP **200** `{"json":[]}`.
-- **Personal Sync / `migration/getManifest`:** **PASS** after DDL **0011–0015** — CF Worker `--> POST /rpc/migration/getManifest 200` (216ms, 412ms) in window 2026-09-12T01:20–01:45Z (`post-schema-sync-retest.md`). Prior PG 42703 `accounts.ledger_id` cleared. Does **not** certify full #232.
-- Android runtime **not started**. Disposable clean-setup after reset **blocked**.
+- **Personal Sync / `migration/getManifest`:** **PASS** after DDL **0011–0015** — CF Worker `--> POST /rpc/migration/getManifest 200` (216ms, 412ms) in window 2026-09-12T01:20–01:45Z; iPhone 17 Pro UI → **Upload to your cloud?** (`post-schema-sync-retest.md`, `authkit-102-postschema-upload-offer.png`). Prior PG 42703 `accounts.ledger_id` cleared. **No stim**. Does **not** certify full #232.
+- Android runtime **not started**. Disposable clean-setup after reset **blocked**. OTP/callback/two-device rows still open.
 
 Do not merge as certified. No production deploy. Parent #224 stays open. **Do not use Closes #232.**
 
@@ -156,11 +157,12 @@ A row is complete only when every required sub-criterion is `PASS` (or an explic
 | Session expiry | not evidenced on device | Automated expired-token coverage in `@trove/auth` only. |
 | Transient network recovery | not evidenced | No runtime artifact. |
 | Post-login JWT verify (issuer) | `PASS` (post-#246) | #246 Deploy Worker [34659057570](https://github.com/Stringsaeed/money-management/actions/runs/34659057570) on `5899747` cleared prior `claim_iss`. Sync progresses past JWT verify. |
-| Post-login protected oRPC / bearer (`listMine`) | `FAIL` | Signed-in Sync just for me → UI **Internal server error** + HTTP **500** (`authkit-72-post246-after-sync.png`, `cfnetwork-500-post246.txt`). Owner CF: `orpc_error code=UNKNOWN` — failed `insert into "user" … on conflict do nothing` (params shape only: WorkOS user id; name=id; email `{id}@users.workos.invalid`; `email_verified=true`). Prior post-#245 `claim_iss` / 401 superseded. Client ids EQUAL; #246 live (`5899747`). |
-| iOS development build | prior FAIL then recovered | ExpoSQLite vendor + Metro `.rnrepo-cache` blockList on this branch; live AuthKit driven without `stim ios` rebuild this session. |
+| Post-login protected oRPC / bearer (`listMine`) | `PASS` (post-#250) | HTTP **200** `{"json":[]}` (`post-250-sync-retest.md`). |
+| Post-login Sync `migration/getManifest` | `PASS` (post-schema 0011–0015) | CF Worker **200** (216ms / 412ms); iPhone 17 Pro UI **Upload to your cloud?** (`post-schema-sync-retest.md`, `authkit-102-postschema-upload-offer.png`). Prior ledger_id **42703** cleared. |
+| iOS development build | prior FAIL then recovered | ExpoSQLite vendor + Metro `.rnrepo-cache` blockList on this branch; post-schema retest used **iPhone 17 Pro** (`simctl` / agent-device; **no stim**). |
 | Android development build | not started | No Android agent-device artifacts. **Do not claim Android pass.** |
 
-**Row status: `PARTIAL` (cancel PASS; email challenge PARTIAL; OTP/callback hard-stopped; JWT verify PASS post-#246; post-login `listMine` **FAIL** — HTTP 500 user upsert / Internal server error).**
+**Row status: `PARTIAL` (cancel PASS; email challenge PARTIAL; OTP/callback hard-stopped; JWT verify PASS; `listMine` PASS; `getManifest` PASS post-DDL). Full row-2 still incomplete (OTP/Android/session rows).**
 
 Notes: OTP automation blocked by AuthKit webview AX (not an env-name blocker). Client ids **EQUAL**. JWT issuer accept **PASS** (#246). `listMine` **FAIL** (user upsert 500; DB fix owned elsewhere). Still BLOCKED for live PowerSync/PlanetScale mint: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`) — `env-hardstop-absent.txt`. `WORKOS_WEBHOOK_SECRET` **present** locally (value omitted) — live webhook apply still not evidenced.
 
@@ -278,7 +280,7 @@ API focused files in the 97: `powersync/token.test.ts` (4), `personal-budget-rec
 | `stim ios` | Prior build recovery on branch; **this AuthKit session did not rebuild** (`simctl launch` only). | `stim-ios-*.json` |
 | agent-device (iOS AuthKit) | **PARTIAL** — cancel PASS; email + code challenge reached; OTP hard-stopped (AX unavailable). | `authkit-01-launch.png` … `authkit-21-signed-out-final.png`, `authkit-live-write.txt` |
 | Client id equality | **EQUAL** (names only) | `client-id-compare.txt` — `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) |
-| Post-login protected API | **PASS** (listMine + getManifest) | listMine **200** post-#250; getManifest **200** after DDL 0011–0015 (`post-schema-sync-retest.md`). Matrix still incomplete. |
+| Post-login protected API | **PASS** (listMine + getManifest) | listMine **200** post-#250; getManifest CF **200** + iPhone 17 Pro UI upload offer (`post-schema-sync-retest.md`, `authkit-102-postschema-upload-offer.png`). **No stim**. Matrix still incomplete. |
 | `stim doctor android` / `stim android` / agent-device (Android) | not started | — |
 | Maestro / verify-trove flows | not started | — |
 
