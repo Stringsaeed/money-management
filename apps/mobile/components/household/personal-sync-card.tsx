@@ -52,12 +52,15 @@ export function PersonalSyncCard({ alreadyEnabled }: { readonly alreadyEnabled: 
           once to copy them up — sign-in alone never uploads. Your on-device ledger stays here for
           local-only use anytime.
         </Text>
+        {/* Separate Hosts so Expo UI hit-testing cannot conflate confirm vs cancel. */}
         <NativeHost>
           <NativePrimaryButton
             label={BUTTON_LABEL.confirm_upload}
             onPress={confirmPersonalUpload}
             testID="confirm-personal-upload"
           />
+        </NativeHost>
+        <NativeHost>
           <NativeSecondaryButton
             label="Not now"
             onPress={cancelPersonalUpload}
