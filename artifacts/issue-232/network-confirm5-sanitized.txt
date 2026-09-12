@@ -1,0 +1,10 @@
+active=true state=active backend=ios-simulator include=summary scannedLines=4000 matchedLines=9/Users/saeed/.agent-device/sessions/issue-232-17pro/app.log
+2026-09-12 06:06:41.338 HTTP https://api.workos.com/user_management/authenticate,
+2026-09-12 06:06:41.337 HTTP https://api.workos.com/user_management/authenticate,
+2026-09-12 06:06:41.337 HTTP https://api.workos.com/user_management/authenticate,
+2026-09-12 06:06:41.336 HTTP https://us.i.posthog.com/flags/,
+2026-09-12 06:06:41.334 HTTP https://us.i.posthog.com/flags/,
+2026-09-12 06:06:41.334 HTTP https://us.i.posthog.com/flags/,
+2026-09-12 06:06:41.333 HTTP https://us-assets.i.posthog.com/array/[REDACTED]/config,
+2026-09-12 06:06:41.330 HTTP https://us-assets.i.posthog.com/array/[REDACTED]/config,
+2026-09-12 06:06:41.329 HTTP https://us-assets.i.posthog.com/array/[REDACTED]/config,

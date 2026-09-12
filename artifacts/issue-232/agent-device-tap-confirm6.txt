@@ -1,0 +1,1 @@
+Tapped id="confirm-personal-upload" (201.16667112708092, 529.6666768491268)

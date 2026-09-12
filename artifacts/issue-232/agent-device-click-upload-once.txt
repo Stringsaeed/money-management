@@ -1,0 +1,11 @@
+Tapped @e16 (201, 333)
+settled after 819ms: +4 -5 (~28 unchanged)
+- @e13 [text] "Upload to your cloud? ☁️"
+- @e14 [text] "Your personal cloud is empty and this device has local accounts and transactions. Confirm once to copy them up — sign-in alone never uploads. Your on-device ledger stays here for local-only use anytime."
+- @e15 [other] "Upload once to cloud"
+- @e16 [button] "Upload once to cloud"
+- @e17 [button] "Not now"
++ @e13~s880488 [text] "Sync without a Household 🪪"
++ @e14~s880488 [text] "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."
++ @e15~s880488 [other] "Sync just for me"
++ @e16~s880488 [button] "Sync just for me"

@@ -1,0 +1,11 @@
+Tapped id="confirm-personal-upload" (201, 530)
+settled after 881ms: +4 -5 (~30 unchanged)
+- @e16 [text] "Upload to your cloud? ☁️"
+- @e17 [text] "Your personal cloud is empty and this device has local accounts and transactions. Confirm once to copy them up — sign-in alone never uploads. Your on-device ledger stays here for local-only use anytime."
+- @e18 [other] "Upload once to cloud"
+- @e19 [button] "Upload once to cloud"
+- @e20 [button] "Not now"
++ @e16~s850288 [text] "Sync without a Household 🪪"
++ @e17~s850288 [text] "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."
++ @e18~s850288 [other] "Sync just for me"
++ @e19~s850288 [button] "Sync just for me"

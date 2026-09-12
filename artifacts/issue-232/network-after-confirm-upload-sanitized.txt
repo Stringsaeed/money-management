@@ -1,0 +1,3 @@
+active=true state=active backend=ios-simulator include=summary scannedLines=4000 matchedLines=0
+No HTTP(s) entries were found in recent iOS simulator app logs. If the app only emits non-HTTP diagnostics, inspect logs path or add app-side URLSession/network logging for per-request timing and payload details./Users/saeed/.agent-device/sessions/issue-232-17pro/app.log
+No recent HTTP(s) entries found.

@@ -1,0 +1,28 @@
+779:2026-09-12 06:05:42.372 Df TroveDev[11864:18e5925] [com.apple.CFNetwork:Default] Task <DD3DEDF0-583A-4643-9D90-EEE760F791B4>.<11> resuming, timeouts(0.0, 604800.0) qos(0x19) voucher((null)) activity(00000000-0000-0000-0000-000000000000)
+780:2026-09-12 06:05:42.373 Df TroveDev[11864:18b6faf] [com.apple.CFNetwork:Default] Task <239771D5-88F8-41ED-998F-619DBF3F58E8>.<40> resuming, timeouts(0.0, 604800.0) qos(0x19) voucher((null)) activity(00000000-0000-0000-0000-000000000000)
+785:2026-09-12 06:05:42.376 Df TroveDev[11864:18e63e6] [com.apple.CFNetwork:Default] Task <239771D5-88F8-41ED-998F-619DBF3F58E8>.<40> now using Connection 42
+786:2026-09-12 06:05:42.377 Df TroveDev[11864:18e63e6] [com.apple.cfnetwork:h3stream] 0x148a34558 ID=12 Task <239771D5-88F8-41ED-998F-619DBF3F58E8>.<40> sent request, body S 29
+1139:2026-09-12 06:05:43.294 Df TroveDev[11864:18e63e8] [com.apple.cfnetwork:h3stream] 0x148a34558 ID=12 Task <239771D5-88F8-41ED-998F-619DBF3F58E8>.<40> received response, status 200 content U
+1140:2026-09-12 06:05:43.294 I  TroveDev[11864:18e5926] [com.apple.runningboard:assertion] Acquiring assertion: <RBSAssertionDescriptor| "com.apple.CFNetwork.StorageDB" ID:(null) target:11864>
+1141:2026-09-12 06:05:43.294 Df TroveDev[11864:18e63e8] [com.apple.CFNetwork:Default] Task <239771D5-88F8-41ED-998F-619DBF3F58E8>.<40> response ended
+1146:2026-09-12 06:05:43.294 Df TroveDev[11864:18e63e8] [com.apple.CFNetwork:Default] Task <239771D5-88F8-41ED-998F-619DBF3F58E8>.<40> done using Connection 42
+1147:2026-09-12 06:05:43.294 Df TroveDev[11864:18e63e9] [com.apple.CFNetwork:Summary] Task <239771D5-88F8-41ED-998F-619DBF3F58E8>.<40> summary for task success {transaction_duration_ms=921, response_status=200, connection=42, reused=1, reused_after_ms=173769, request_start_ms=2, request_duration_ms=0, response_start_ms=920, response_duration_ms=0, request_bytes=802, request_throughput_kbps=6683, response_bytes=648, response_throughput_kbps=11495, cache_hit=false}
+1148:2026-09-12 06:05:43.294 Df TroveDev[11864:18e63e9] [com.apple.CFNetwork:Default] Task <239771D5-88F8-41ED-998F-619DBF3F58E8>.<40> finished successfully
+1149:2026-09-12 06:05:43.295 Df TroveDev[11864:18e5925] [com.apple.CFNetwork:Summary] Task <DD3DEDF0-583A-4643-9D90-EEE760F791B4>.<11> summary for task success {transaction_duration_ms=922, response_status=200, cache_hit=true}
+1150:2026-09-12 06:05:43.295 Df TroveDev[11864:18e5925] [com.apple.CFNetwork:Default] Task <DD3DEDF0-583A-4643-9D90-EEE760F791B4>.<11> finished successfully
+1429:[agent-device][mark][2026-09-12T02:05:44.745Z] before-confirm5-upload
+5452:2026-09-12 06:06:41.329 Df TroveDev[11864:18e63e8] [com.apple.CFNetwork:Default] Connection 40: cleaning up
+5453:2026-09-12 06:06:41.329 Df TroveDev[11864:18e63e8] [com.apple.network:connection] [C40 B439232D-287E-4AF1-9605-737E3C20FA46 Hostname#89d7d4ba:443 quic-connection, url: https://us-assets.i.posthog.com/array/[REDACTED]/config, definite, attribution: developer] cancel
+5454:2026-09-12 06:06:41.330 Df TroveDev[11864:18e63e8] [com.apple.network:connection] [C40 B439232D-287E-4AF1-9605-737E3C20FA46 Hostname#89d7d4ba:443 quic-connection, url: https://us-assets.i.posthog.com/array/[REDACTED]/config, definite, attribution: developer] cancelled
+5473:2026-09-12 06:06:41.333 Df TroveDev[11864:18e63e8] [com.apple.CFNetwork:Default] Connection 40: done
+5474:2026-09-12 06:06:41.333 I  TroveDev[11864:18e63e8] [com.apple.network:connection] [C40 Hostname#89d7d4ba:443 quic-connection, url: https://us-assets.i.posthog.com/array/[REDACTED]/config, definite, attribution: developer] dealloc
+5475:2026-09-12 06:06:41.334 Df TroveDev[11864:18e63e8] [com.apple.CFNetwork:Default] Connection 45: cleaning up
+5476:2026-09-12 06:06:41.334 Df TroveDev[11864:18e63e8] [com.apple.network:connection] [C45 D6E138A5-1160-41B5-82DA-68AD7D15E847 Hostname#84ba843e:443 quic-connection, url: https://us.i.posthog.com/flags/, definite, attribution: developer] cancel
+5477:2026-09-12 06:06:41.334 Df TroveDev[11864:18e63e8] [com.apple.network:connection] [C45 D6E138A5-1160-41B5-82DA-68AD7D15E847 Hostname#84ba843e:443 quic-connection, url: https://us.i.posthog.com/flags/, definite, attribution: developer] cancelled
+5508:2026-09-12 06:06:41.336 Df TroveDev[11864:18e63e8] [com.apple.CFNetwork:Default] Connection 45: done
+5509:2026-09-12 06:06:41.336 I  TroveDev[11864:18e63e8] [com.apple.network:connection] [C45 Hostname#84ba843e:443 quic-connection, url: https://us.i.posthog.com/flags/, definite, attribution: developer] dealloc
+5510:2026-09-12 06:06:41.337 Df TroveDev[11864:18e63e8] [com.apple.CFNetwork:Default] Connection 41: cleaning up
+5511:2026-09-12 06:06:41.337 Df TroveDev[11864:18e63e8] [com.apple.network:connection] [C41 6997F53C-25B2-43CC-8A6B-625170DAA0B7 Hostname#fed9307e:443 quic-connection, url: https://api.workos.com/user_management/authenticate, definite, attribution: developer] cancel
+5512:2026-09-12 06:06:41.337 Df TroveDev[11864:18e63e8] [com.apple.network:connection] [C41 6997F53C-25B2-43CC-8A6B-625170DAA0B7 Hostname#fed9307e:443 quic-connection, url: https://api.workos.com/user_management/authenticate, definite, attribution: developer] cancelled
+5531:2026-09-12 06:06:41.338 Df TroveDev[11864:18e63e8] [com.apple.CFNetwork:Default] Connection 41: done
+5532:2026-09-12 06:06:41.338 I  TroveDev[11864:18e63e8] [com.apple.network:connection] [C41 Hostname#fed9307e:443 quic-connection, url: https://api.workos.com/user_management/authenticate, definite, attribution: developer] dealloc

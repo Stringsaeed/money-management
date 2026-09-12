@@ -1,0 +1,28 @@
+Tapped role=button text="Sync just for me" (201, 514)
+settled after 843ms: +2 -2 (~32 unchanged)
+- @e18 [other] "Sync just for me"
+- @e19 [button] "Sync just for me"
++ @e18~s850348 [other] "Checking cloud…"
++ @e19~s850348 [button] "Checking cloud…" [disabled]
+unchanged interactive (20):
+= @e2~s850348 [other] "gearshape.fill"
+= @e4~s850348 [navigation-bar] "Settings"
+= @e5~s850348 [button] "Settings"
+= @e6~s850348 [text] "Profile"
+= @e7~s850348 [scroll-area] "stringsaeed@gmail.com"
+= @e8~s850348 [other] "stringsaeed@gmail.com"
+= @e9~s850348 [other] "Sign out"
+= @e10~s850348 [button] "Sign out"
+= @e11~s850348 [text] "LEDGER"
+= @e12~s850348 [other] "Personal ✓"
+= @e13~s850348 [button] "Personal ✓"
+= @e14~s850348 [other] "The Saeeds · admin"
+= @e15~s850348 [button] "The Saeeds · admin"
+= @e16~s850348 [text] "Sync without a Household 🪪"
+= @e17~s850348 [text] "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."
+= @e20~s850348 [text] "Create a Household"
+= @e21~s850348 [text] "Start a shared space — family accounts, budgets, and reports in one place."
+= @e22~s850348 [text-field]
+= @e23~s850348 [other] "🏠 Create household"
+= @e24~s850348 [button] "🏠 Create household"
+… more interactive elements not shown, use snapshot -i
