@@ -1,0 +1,20 @@
+=== vitest run src/lib/activity/list.test.ts ===
+
+ RUN  v3.2.7 /tmp/cert-232-relates-import/packages/api
+
+ ✓ src/lib/activity/list.test.ts (10 tests) 6057ms
+   ✓ getActivity > rejects a non-member before reading any change data  918ms
+   ✓ getActivity > returns entries newest-first with user attribution and decoded summaries  626ms
+   ✓ getActivity > paginates by limit/offset and reports hasMore  606ms
+   ✓ getActivity > filters by user attribution  690ms
+   ✓ getActivity > filters to a date range inclusive of both bounds  681ms
+   ✓ getActivity > combines user and date filters  593ms
+   ✓ getActivity > never leaks another household's changes  646ms
+   ✓ getActivity > returns an empty page for a household with no changes  625ms
+   ✓ getActivity > caps the limit at MAX_ACTIVITY_LIMIT regardless of input  670ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  12:05:40
+   Duration  6.61s (transform 81ms, setup 0ms, collect 391ms, tests 6.06s, environment 0ms, prepare 51ms)
+
