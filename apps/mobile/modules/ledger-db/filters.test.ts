@@ -1,6 +1,12 @@
 import { createTransactionWithDetails } from "@/tests/test-utils/factories";
 
-import { applyLedgerFilters, dateRangeOf, pageTransactions, toEditDate } from "./filters";
+import {
+  applyLedgerFilters,
+  dateRangeOf,
+  pageTransactions,
+  summarizeTransactions,
+  toEditDate,
+} from "./filters";
 import type { LedgerTransaction } from "./types";
 
 const row = (overrides: Parameters<typeof createTransactionWithDetails>[0]): LedgerTransaction => ({
@@ -100,5 +106,26 @@ describe("toEditDate", () => {
   it("passes through string dates and formats Date instances", () => {
     expect(toEditDate("2026-03-28")).toBe("2026-03-28");
     expect(toEditDate(new Date(2026, 2, 28))).toBe("2026-03-28");
+  });
+});
+
+describe("summarizeTransactions", () => {
+  it("sums income and expense into netAmount", () => {
+    expect(
+      summarizeTransactions([
+        createTransactionWithDetails({ id: "in-1", type: "income", amount: 50_00 }),
+        createTransactionWithDetails({ id: "out-1", type: "expense", amount: 20_00 }),
+        createTransactionWithDetails({ id: "out-2", type: "expense", amount: 5_00 }),
+      ]),
+    ).toEqual({ totalIncome: 50_00, totalExpense: 25_00, netAmount: 25_00 });
+  });
+
+  it("ignores transfers when totaling income and expense", () => {
+    expect(
+      summarizeTransactions([
+        createTransactionWithDetails({ id: "xfer", type: "transfer", amount: 99_00 }),
+        createTransactionWithDetails({ id: "in-1", type: "income", amount: 10_00 }),
+      ]),
+    ).toEqual({ totalIncome: 10_00, totalExpense: 0, netAmount: 10_00 });
   });
 });
