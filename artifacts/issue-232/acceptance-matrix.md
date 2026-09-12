@@ -32,7 +32,7 @@ Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026
 
 ## Server capability + tenancy Jest Relates (2026-09-12, no device)
 
-- Added , ,  — **17/17 PASS** ():  sole-admin guard; / admin/member/viewer matrix incl.  admin-only;  + personal/org  /  tenancy.
+- Added `packages/api/src/lib/households/admin-guard.test.ts`, `commands/capabilities.test.ts`, `require-member.test.ts` — **17/17 PASS** (`server-capability-tenancy-jest-2026-09-12.txt`): `canDropAdmin` sole-admin guard; `can`/`requiredCapability` admin/member/viewer matrix incl. `import_bundle` admin-only; `resolveReadLedgerId` + personal/org `requireLedgerAccess` / `requireHouseholdMember` tenancy.
 - Row 4 / row 5 server role + isolation seams → advances automated capability/tenancy; live invite/device role UX and dual-identity still **BLOCKED**; webhook membership apply still **BLOCKED** (**503**).
 - Create Account still **BLOCKED** on [#258](https://github.com/Stringsaeed/money-management/pull/258); dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing); Android / OTP AX / PowerSync mint unchanged **BLOCKED**. Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
