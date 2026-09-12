@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip after post-#248 Sync retest evidence (docs on certify branch; live API tip `5899747` / #246) |
+| HEAD | tip after post-schema getManifest PASS (DDL 0011–0015; docs on certify branch) |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), and [#246](https://github.com/Stringsaeed/money-management/pull/246) (`5899747`) on `main` and live on `auth.trove.ing`. |
 | Worktree | `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK**; Deploy Worker **34659057570** success for `5899747` (#246 AuthKit `iss` accept) after #245 |
