@@ -1,6 +1,6 @@
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 
-import { NativeHost, NativePrimaryButton, NativeSecondaryButton } from "@/components/native-ui";
+import { NativeHost, NativePrimaryButton } from "@/components/native-ui";
 import { Text } from "@/components/ui/text";
 import { useEnablePersonalSync } from "@/hooks/use-enable-sync";
 
@@ -19,6 +19,9 @@ const BUTTON_LABEL = {
 /**
  * Personal Ledger sync (#226 / #229): empty cloud with local rows needs a
  * one-time confirm upload; a populated cloud opens without touching device SQLite.
+ *
+ * Confirm/cancel use RN Pressable (not Expo UI Host buttons): separate NativeHosts
+ * still collapsed the primary host so agent-device taps on confirm hit cancel → idle.
  */
 export function PersonalSyncCard({ alreadyEnabled }: { readonly alreadyEnabled: boolean }) {
   const {
@@ -52,21 +55,24 @@ export function PersonalSyncCard({ alreadyEnabled }: { readonly alreadyEnabled: 
           once to copy them up — sign-in alone never uploads. Your on-device ledger stays here for
           local-only use anytime.
         </Text>
-        {/* Separate Hosts so Expo UI hit-testing cannot conflate confirm vs cancel. */}
-        <NativeHost>
-          <NativePrimaryButton
-            label={BUTTON_LABEL.confirm_upload}
-            onPress={confirmPersonalUpload}
-            testID="confirm-personal-upload"
-          />
-        </NativeHost>
-        <NativeHost>
-          <NativeSecondaryButton
-            label="Not now"
-            onPress={cancelPersonalUpload}
-            testID="cancel-personal-upload"
-          />
-        </NativeHost>
+        <Pressable
+          accessibilityRole="button"
+          testID="confirm-personal-upload"
+          onPress={confirmPersonalUpload}
+          className="min-h-12 items-center justify-center rounded-xl bg-ink px-4 py-3 active:opacity-80"
+        >
+          <Text className="font-body-semibold text-base text-surface">
+            {BUTTON_LABEL.confirm_upload}
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          testID="cancel-personal-upload"
+          onPress={cancelPersonalUpload}
+          className="min-h-12 items-center justify-center rounded-xl px-4 py-3 active:bg-ink/5"
+        >
+          <Text className="font-body-semibold text-base text-ink/60">Not now</Text>
+        </Pressable>
       </View>
     );
   }
