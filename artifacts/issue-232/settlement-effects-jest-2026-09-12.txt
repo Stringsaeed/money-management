@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=808deb0
+gap=settlementEffects
+matrix_row=4/6 domain settlement effects helper
+command=pnpm exec vitest run src/domain/settlement-effects.test.ts
+result=PASS 2/2
+tsc=PASS packages/api --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
