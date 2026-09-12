@@ -1,6 +1,6 @@
 import { createTransactionWithDetails } from "@/tests/test-utils/factories";
 
-import { applyLedgerFilters } from "./filters";
+import { applyLedgerFilters, dateRangeOf } from "./filters";
 import type { LedgerTransaction } from "./types";
 
 const row = (overrides: Parameters<typeof createTransactionWithDetails>[0]): LedgerTransaction => ({
@@ -39,5 +39,21 @@ describe("applyLedgerFilters", () => {
     expect(
       applyLedgerFilters(rows, { type: "expense", sort: "desc", limit: 2 }).map((item) => item.id),
     ).toEqual(["newer", "mid"]);
+  });
+});
+
+describe("dateRangeOf", () => {
+  it("returns null bounds for an empty row set", () => {
+    expect(dateRangeOf([])).toEqual({ minDate: null, maxDate: null });
+  });
+
+  it("returns earliest and latest dates regardless of input order", () => {
+    const rows = [
+      row({ id: "mid", date: "2026-03-15" }),
+      row({ id: "late", date: "2026-03-28" }),
+      row({ id: "early", date: "2026-03-01" }),
+    ];
+
+    expect(dateRangeOf(rows)).toEqual({ minDate: "2026-03-01", maxDate: "2026-03-28" });
   });
 });
