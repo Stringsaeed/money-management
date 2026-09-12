@@ -40,6 +40,7 @@ export function CreateResourceSheetFooter({
         accessibilityRole="button"
         disabled={isSubmitting}
         onPress={onSubmit}
+        pointerEvents="auto"
         testID="create-resource-submit"
         className={cn(
           "min-h-12 items-center justify-center rounded-xl bg-ink px-4 py-3 active:opacity-80",
