@@ -1,0 +1,10 @@
+PASS path: apps/mobile/utils/cents-to-decimal-string.test.ts
+PASS utils/cents-to-decimal-string.test.ts
+  centsToDecimalString
+    ✓ formats integer cents as a fixed two-decimal string (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1 s
+Ran all test suites matching /utils\/cents-to-decimal-string.test.ts/i.
