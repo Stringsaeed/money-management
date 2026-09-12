@@ -39,3 +39,4 @@ bind_ledger_scope_jest=PASS 2/2 product=05ce0ed
 is_plan_rejection_jest=PASS 2/2 product=fd5fb98
 household_import_binding_jest=PASS 2/2 product=eda8c86
 new_deletion_operation_id_jest=PASS 2/2 product=e923503
+command_scope_precondition_schema_jest=PASS 4/4 product=e846aa3
