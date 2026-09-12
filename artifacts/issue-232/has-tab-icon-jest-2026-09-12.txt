@@ -1,0 +1,13 @@
+=== Relates #232 hasTabIcon Jest ===
+2026-09-12T10:21:22Z
+PASS components/navigation/glass-tab-bar/tab-icons.test.ts (19.724 s)
+  hasTabIcon
+    ✓ returns true for known tab route names (21 ms)
+    ✓ returns false for unknown route names
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        19.866 s
+Ran all test suites matching /components\/navigation\/glass-tab-bar\/tab-icons.test.ts/i.
+=== tsc --noEmit ===
