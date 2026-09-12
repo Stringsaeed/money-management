@@ -1,0 +1,13 @@
+=== Relates #232 unassignedMoneySql vitest ===
+2026-09-12T10:49:15Z
+
+ RUN  v3.2.7 /tmp/cert-232-relates-0951/packages/api
+
+ ✓ src/lib/budget/period.test.ts (10 tests) 5ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  10:49:16
+   Duration  373ms (transform 41ms, setup 0ms, collect 198ms, tests 5ms, environment 0ms, prepare 62ms)
+
+=== tsc --noEmit ===
