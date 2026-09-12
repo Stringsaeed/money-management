@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/onboarding/welcome-garden-stage.test.ts
+PASS components/onboarding/welcome-garden-stage.test.ts
+  WELCOME_GARDEN_STAGE
+    ✓ locks the welcome-screen garden stage notch (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.01 s
+Ran all test suites matching /components\/onboarding\/welcome-garden-stage.test.ts/i.
