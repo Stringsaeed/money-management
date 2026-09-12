@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { computeUnassignedMoney, routeAssignment } from "./assignment-waterfall";
+import {
+  applyAssignmentToAvailability,
+  computeUnassignedMoney,
+  routeAssignment,
+} from "./assignment-waterfall";
 
 describe("routeAssignment", () => {
   it("covers cash overspending first, then unfunded card spending, then new availability", () => {
@@ -51,5 +55,27 @@ describe("computeUnassignedMoney", () => {
         reservesMinor: 500,
       }),
     ).toBe(-1_500);
+  });
+});
+
+describe("applyAssignmentToAvailability", () => {
+  it("adds overspend cover and new availability when starting negative", () => {
+    expect(
+      applyAssignmentToAvailability(-3_000, {
+        cashOverspendingMinor: 3_000,
+        unfundedCardSpendingMinor: 2_000,
+        newAvailabilityMinor: 1_000,
+      }),
+    ).toBe(1_000);
+  });
+
+  it("adds only new availability when starting non-negative", () => {
+    expect(
+      applyAssignmentToAvailability(2_000, {
+        cashOverspendingMinor: 0,
+        unfundedCardSpendingMinor: 500,
+        newAvailabilityMinor: 1_500,
+      }),
+    ).toBe(3_500);
   });
 });
