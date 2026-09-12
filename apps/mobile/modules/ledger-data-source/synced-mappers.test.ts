@@ -1,13 +1,14 @@
 import { describe, expect, it } from "@jest/globals";
 
 import type { Account, Category } from "@/types";
-import type { PowerSyncAccountRow } from "@/modules/ledger-db/types";
+import type { PowerSyncAccountRow, PowerSyncCategoryRow } from "@/modules/ledger-db/types";
 
 import {
   assertSupportedAccountUpdate,
   assertSupportedTransactionUpdate,
   calculateSyncedBalance,
   mapPowerSyncAccount,
+  mapPowerSyncCategory,
   mapSyncedAccount,
   mapSyncedCategory,
   mapSyncedTransaction,
@@ -462,5 +463,72 @@ describe("mapPowerSyncAccount", () => {
     expect(
       mapPowerSyncAccount(powerSyncAccount({ exclude_from_total: 1 })).excludeFromTotal,
     ).toBe(true);
+  });
+});
+
+const powerSyncCategory = (
+  overrides: Partial<PowerSyncCategoryRow> = {},
+): PowerSyncCategoryRow => ({
+  id: "ps-cat-1",
+  ledger_id: "led-1",
+  household_id: "hh-1",
+  name: "Groceries",
+  type: "expense",
+  color: "#B48A7B",
+  icon: "🛒",
+  parent_id: null,
+  sort_order: 3,
+  lifecycle: "active",
+  lifecycle_changed_at: null,
+  version: 1,
+  created_by: "user-1",
+  updated_by: "user-1",
+  created_at: TIMESTAMP,
+  updated_at: TIMESTAMP,
+  ...overrides,
+});
+
+describe("mapPowerSyncCategory", () => {
+  it("maps snake_case row fields onto the domain Category", () => {
+    expect(mapPowerSyncCategory(powerSyncCategory())).toEqual(
+      expect.objectContaining({
+        id: "ps-cat-1",
+        name: "Groceries",
+        type: "expense",
+        color: "#B48A7B",
+        icon: "🛒",
+        parentId: null,
+        sortOrder: 3,
+        lifecycle: "active",
+        lifecycleChangedAt: null,
+        createdAt: TIMESTAMP,
+        updatedAt: TIMESTAMP,
+      }),
+    );
+  });
+
+  it("preserves parent_id as parentId for nested categories", () => {
+    expect(
+      mapPowerSyncCategory(powerSyncCategory({ parent_id: "ps-cat-parent", type: "income" })),
+    ).toEqual(
+      expect.objectContaining({
+        parentId: "ps-cat-parent",
+        type: "income",
+      }),
+    );
+  });
+
+  it("passes through lifecycle_changed_at timestamps", () => {
+    expect(
+      mapPowerSyncCategory(
+        powerSyncCategory({ lifecycle_changed_at: "2026-07-01T12:00:00.000Z" }),
+      ).lifecycleChangedAt,
+    ).toBe("2026-07-01T12:00:00.000Z");
+  });
+
+  it("keeps null lifecycle_changed_at when unset", () => {
+    expect(
+      mapPowerSyncCategory(powerSyncCategory({ lifecycle_changed_at: null })).lifecycleChangedAt,
+    ).toBeNull();
   });
 });
