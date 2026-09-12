@@ -28,13 +28,15 @@ Out of scope here: personal upload UI, PowerSync removal bound, disposable reset
 | `POST /rpc/households/listMine` | **PASS** | `post-250-listmine-pass.txt` / `post-250-sync-retest.md` — HTTP **200** `{"json":[]}` after #250 | Window 01:00–01:10Z: **7** `--> … listMine 200` lines; **no 500** in that window (`cf-api-corroboration-2026-09-12.txt`) |
 | `POST /rpc/migration/getManifest` | **PASS** | `post-schema-sync-retest.md` / `post-schema-getmanifest-pass.txt` after DDL 0011–0015 | Window 01:20–01:45Z: `--> … getManifest 200 216ms` + `200 412ms` |
 | Client id equality | **PASS** | `client-id-compare.txt` — `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (**EQUAL**; values omitted) | n/a (local name compare; no secrets) |
-| Isolation / API seams (automated) | **PARTIAL** | `test-api-workos-seams.txt` **97/97**; `test-deletion-projection.txt` **18/18**; `test-powersync-proper.txt` **9/9**; `test-ledger-scope.txt` **5/5** | Not a live cross-tenant stream proof |
-| Live API/stream isolation | **BLOCKED** / not evidenced | Requires multi-identity live probes | Not run (no device; no second bearer) |
+| Isolation / API seams (automated) | **PARTIAL** | `test-api-workos-seams.txt` **97/97**; `test-deletion-projection.txt` **18/18**; `test-powersync-proper.txt` **9/9**; `test-ledger-scope.txt` **5/5**; `pipeline.test.ts` **18/18** viewer deny (`test-pipeline-viewer-deny.txt`) | Not a live cross-tenant stream proof |
+| Live auth-gate (missing / forged JWT) | **PASS** | `live-auth-gate-probe-2026-09-12.txt` — **401** `missing_token` / `invalid_token` | CF 05:20–05:35Z: **7** missing + **8** invalid |
+| Schema DDL 0011–0015 | **PASS** (reconfirm) | PlanetScale read-only column presence (`planetscale-schema-ddl-confirm-2026-09-12.txt`) | n/a |
+| Live API/stream isolation (dual-identity) | **BLOCKED** | Requires two live session bearers | Absent: `CERT_USER_A_TOKEN`, `CERT_USER_B_TOKEN`, `WORKOS_API_KEY`, … (`api-isolation-live-2026-09-12.md`) |
 | Queued writes after role downgrade | not in suite | Matrix row 5 | unchanged |
 | PowerSync removal bound | **BLOCKED** | Absent mint env names: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID` | unchanged |
 | Disposable clean setup (row 8) | **BLOCKED** | #231 skipped reset + PlanetScale/PowerSync mint envs absent | unchanged |
 | iOS OTP / callback AX | **BLOCKED** (automation) | See `ios-otp-ax-blocker.md` — **not** a PASS | No device this write |
-| WorkOS webhook / membership projection | **BLOCKED** (prod) | `POST /webhooks/workos` → **503** empty `WORKOS_WEBHOOK_SECRET` (`workos-webhook-blocked.md`) | Re-probe `2026-09-12T03:16:04Z` |
+| WorkOS webhook / membership projection | **BLOCKED** (prod) | `POST /webhooks/workos` → **503** empty `WORKOS_WEBHOOK_SECRET` (`workos-webhook-blocked.md`) | Re-probe still **503** |
 
 ## Row roll-up (non-device lens)
 
@@ -44,7 +46,7 @@ Out of scope here: personal upload UI, PowerSync removal bound, disposable reset
 | 2 AuthKit | **PARTIAL** | JWT/`listMine`/`getManifest` live **PASS**; cancel **PASS** (prior); OTP/callback **BLOCKED** for automation; Android not started. |
 | 3 Personal sync | **PARTIAL** | getManifest live **PASS**; confirmed first upload UX / two-device still open (device). |
 | 4 Households | **PARTIAL** + webhook **BLOCKED** | API seams only; live create/switch/invite not evidenced; prod webhook **503**. |
-| 5 Isolation | **PARTIAL** | Automated seams PASS; live isolation **not** evidenced. |
+| 5 Isolation | **PARTIAL** | Auth-gate forged/missing JWT **PASS**; viewer pipeline **PASS**; live dual-identity **BLOCKED**. |
 | 6 Events + PowerSync removal | **PARTIAL** + **BLOCKED** | Event seams PASS; removal/offline **BLOCKED**. |
 | 7 Sign-out / deletion | **PARTIAL** | Deletion API seams PASS; live sign-out/identity switch not evidenced. |
 | 8 Clean setup | **BLOCKED** | Reset skipped + mint envs. |

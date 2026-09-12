@@ -1,0 +1,28 @@
+
+ RUN  v3.2.7 /workspace/packages/api
+
+ ✓ src/lib/commands/pipeline.test.ts (18 tests) 12756ms
+   ✓ commands.apply — authorization > rejects a non-member with a null role  1155ms
+   ✓ commands.apply — authorization > rejects a member who lacks the capability, naming their role  707ms
+   ✓ commands.apply — authorization > rejects a viewer (read-only role) via the capability map  734ms
+   ✓ commands.apply — authorization > rejects a removed (inactive) admin exactly like a stranger  744ms
+   ✓ commands.apply — authorization > rejects a pending membership before the invitation is accepted  734ms
+   ✓ commands.apply — authorization > rejects a role slug Trove does not know  712ms
+   ✓ commands.apply — authorization > appends no change row when authorization fails  810ms
+   ✓ commands.apply — happy path > applies atomically and appends exactly one change row  727ms
+   ✓ commands.apply — happy path > allocates monotonically increasing per-household seq numbers  678ms
+   ✓ commands.apply — happy path > stores an idempotency record alongside the change row  642ms
+   ✓ commands.apply — idempotency > replays the stored result for a retried command_id without re-executing  685ms
+   ✓ commands.apply — idempotency > scopes idempotency per household — the same commandId in another household executes fresh  721ms
+   ✓ commands.apply — precondition validation > returns stale_version when expectedVersion does not match  624ms
+   ✓ commands.apply — precondition validation > applies when expectedVersion matches current state  638ms
+   ✓ commands.apply — intent validation > rejects malformed payloads as invalid_intent  627ms
+   ✓ commands.apply — intent validation > returns missing_entity for an unknown parent category  592ms
+   ✓ commands.apply — intent validation > rejects unsupported predicate preconditions instead of silently ignoring them  621ms
+   ✓ commands.apply — intent validation > rejects removed or unknown command kinds as invalid_intent  602ms
+
+ Test Files  1 passed (1)
+      Tests  18 passed (18)
+   Start at  05:28:30
+   Duration  14.13s (transform 237ms, setup 0ms, collect 1.10s, tests 12.76s, environment 0ms, prepare 109ms)
+

@@ -1,0 +1,41 @@
+date_utc=2026-09-12T05:27:35Z..05:28:20Z
+target=https://auth.trove.ing
+note=names/status only; no tokens recorded
+
+GET /
+  http=200 body=OK
+
+POST /rpc/households/listMine (no Authorization)
+  http=401 Unauthorized (missing_token)
+POST /rpc/households/get (no Authorization)
+  http=401 Unauthorized (missing_token)
+POST /rpc/households/create (no Authorization)
+  http=401 Unauthorized (missing_token)
+POST /rpc/migration/getManifest (no Authorization)
+  http=401 Unauthorized (missing_token)
+POST /rpc/powersync/token (no Authorization)
+  http=401 Unauthorized (missing_token)
+
+POST /rpc/households/listMine Authorization: Bearer forged.not.a.jwt
+  http=401 Unauthorized (invalid_token)
+POST /rpc/households/get + forged JWT + forged householdId=org_forged_isolation
+  http=401 Unauthorized (invalid_token)
+POST /rpc/households/invite + forged JWT + forged householdId
+  http=401 Unauthorized (invalid_token)
+POST /rpc/households/setMemberRole + forged JWT + forged householdId/userId
+  http=401 Unauthorized (invalid_token)
+POST /rpc/households/rename + forged JWT + forged householdId
+  http=401 Unauthorized (invalid_token)
+
+POST /webhooks/workos (fake signature)
+  http=503 WORKOS_WEBHOOK_SECRET is not configured.
+
+CF Observability (service money-management-server-prod-mfhkibosfd6z5ym5)
+  window 2026-09-12T05:20:00Z..05:35:00Z needle Unauthorized:
+  orpc_error UNAUTHORIZED missing_token = 7
+  orpc_error UNAUTHORIZED invalid_token = 8
+
+Interpretation:
+  PASS — bearer gate rejects missing + forged JWTs before any household/org body is honored.
+  NOT evidenced — authenticated cross-user / cross-household isolation (requires two live session tokens).
+  NOT evidenced — viewer-write denial against live API (requires viewer-role bearer).

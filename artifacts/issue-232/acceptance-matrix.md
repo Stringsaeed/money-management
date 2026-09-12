@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip after Create Account hit-test Relates stamp (personal upload PASS; round-trip BLOCKED; #257 pending Mac retest) |
+| HEAD | tip after API-only isolation/auth-gate Relates stamp (personal upload PASS; Create Account BLOCKED; live dual-identity isolation BLOCKED) |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK**; Sync `getManifest` CF Worker **200** post-DDL |
@@ -28,6 +28,15 @@ Report implementation, automated verification, runtime verification, and publica
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
 Recorded in `revision.txt` / `create-account-hittest-status.md` / `post-schema-sync-retest.md`.
+
+## API-only isolation / auth-gate Relates (2026-09-12, no device)
+
+- Live dual-identity isolation **BLOCKED** — absent dual session tokens / WorkOS mint names: `CERT_USER_A_TOKEN`, `CERT_USER_B_TOKEN` (and aliases `TEST_USER_*_BEARER`, `TROVE_TEST_TOKEN_*`, `API_BEARER_*`), plus `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_REDIRECT_URI`, `WORKOS_CLAIM_TOKEN`, `WORKOS_COOKIE_PASSWORD` (values never recorded).
+- Auth gate **PASS**: missing bearer → **401** `missing_token`; forged JWT (+ forged `householdId` / `targetUserId` body) → **401** `invalid_token` on `listMine` / `get` / `invite` / `setMemberRole` / `rename` / `getManifest` / `powersync/token` (`live-auth-gate-probe-2026-09-12.txt`). CF window 05:20–05:35Z: **7** `missing_token` + **8** `invalid_token`.
+- Viewer-write denial (API seam) **PASS**: `pipeline.test.ts` **18/18** including viewer capability map (`test-pipeline-viewer-deny.txt`) — previously not in the captured 97-test run.
+- Schema DDL 0011–0015 **PASS** reconfirm via PlanetScale read-only (`planetscale-schema-ddl-confirm-2026-09-12.txt`): `accounts.ledger_id`, `membership.status`, `household.create_request_id`, `user.memberships_reconciled_at`, `ledger` table.
+- Webhook still **BLOCKED** (**503** empty `WORKOS_WEBHOOK_SECRET`). Create Account still **BLOCKED** — **not** claimed PASS.
+- Evidence: `api-isolation-live-2026-09-12.md`. Relates to #232 only. Matrix still incomplete.
 
 ## Create Account hit-test / one-device round-trip (2026-09-12)
 
@@ -52,9 +61,9 @@ Recorded in `revision.txt` / `create-account-hittest-status.md` / `post-schema-s
   - `claim_iss`: **22** failures pre-#246 window; **0** after 00:00Z Sep 12 → JWT issuer path **PASS**
   - `households/listMine`: **7** `200` responses in 01:00–01:10Z (no 500 in window) → **PASS**
   - `migration/getManifest`: `200` at 216ms and 412ms in 01:20–01:45Z → **PASS**
-- Isolation/deletion/PowerSync stream seams remain **PARTIAL** (automated suites only; live isolation not evidenced).
+- Follow-up API-only write: auth-gate forged/missing JWT **PASS**; viewer `pipeline.test.ts` **18/18** **PASS**; schema DDL reconfirm **PASS**; live dual-identity isolation **BLOCKED** (missing dual session token names) — `api-isolation-live-2026-09-12.md`.
 - iOS OTP AX: durable **BLOCKER** note for owner — `ios-otp-ax-blocker.md` (not a fake PASS).
-- Evidence: `api-matrix-non-device.md`, `cf-api-corroboration-2026-09-12.txt`. Relates to #232 only. Matrix still incomplete.
+- Evidence: `api-matrix-non-device.md`, `cf-api-corroboration-2026-09-12.txt`, `api-isolation-live-2026-09-12.md`. Relates to #232 only. Matrix still incomplete.
 
 ## Post-schema Sync retest (2026-09-12, schema 0011–0015)
 
@@ -87,7 +96,7 @@ Recorded in `revision.txt` / `create-account-hittest-status.md` / `post-schema-s
 
 ## Verdict (this write)
 
-**Incomplete / not certifiable yet** — Sync `getManifest` and Pressable personal upload are **PASS**; Create Account round-trip and WorkOS webhook remain **BLOCKED**.
+**Incomplete / not certifiable yet** — Sync `getManifest` and Pressable personal upload are **PASS**; Create Account round-trip and WorkOS webhook remain **BLOCKED**. Live dual-identity isolation **BLOCKED** (no dual session tokens); auth-gate forged/missing JWT **PASS**; viewer pipeline **PASS**.
 
 - Automated typecheck and focused package tests on this branch **pass** (prior write).
 - Repo-wide `pnpm lint` and `pnpm format:check` **fail** on pre-existing findings.
@@ -98,6 +107,7 @@ Recorded in `revision.txt` / `create-account-hittest-status.md` / `post-schema-s
 - **Personal Sync / `migration/getManifest`:** **PASS** after DDL **0011–0015** — CF Worker `--> POST /rpc/migration/getManifest 200` (216ms, 412ms) in window 2026-09-12T01:20–01:45Z; iPhone 17 Pro UI → **Upload to your cloud?** (`post-schema-sync-retest.md`, `authkit-102-postschema-upload-offer.png`). Prior PG 42703 `accounts.ledger_id` cleared. **No stim**.
 - **Personal upload confirm (Pressable):** **PASS** at tip `fb8c786` (`post-pressable-upload-pass.md`).
 - **Create Account / one-device round-trip:** **BLOCKED** after #254/#255/#256 — Metro-confirmed MISS on #256 tip `c9a3ca8` (cert evidence `9e3f69f`). Next candidate #257 tip `75491fe` (Mac retest pending; self-hosted worker offline). See `create-account-hittest-status.md`.
+- **Row 5 auth-gate / viewer pipeline:** missing + forged JWT → **401** **PASS**; `pipeline.test.ts` viewer deny **18/18** **PASS**; live dual-identity isolation **BLOCKED** (`api-isolation-live-2026-09-12.md`).
 - **WorkOS webhook:** still **BLOCKED** — owner must set prod `WORKOS_WEBHOOK_SECRET`.
 - Android runtime **not started**. Disposable clean-setup after reset **blocked**. OTP/callback/two-device rows still open.
 
@@ -219,7 +229,7 @@ Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT
 | Multi-Household switch | not evidenced live | No device selector proof. |
 | Invitations via WorkOS | `PARTIAL` (API seam) | `member administration > lets only admins invite, through WorkOS invitations`. No live invite acceptance. |
 | Management-page return (widget) | `PARTIAL` (API + auth) | Widget handoff + expired/demoted-admin codes in households tests; `@trove/auth` member-widget-page **3**. No iOS/Android return artifact. |
-| Admin / member / viewer | `PARTIAL` (API seam) | Import-bundle rejects member/viewer bulk-import; households role changes; PowerSync streams deny inactive/unknown roles (`test-powersync-proper.txt` **9/9**). Device role UX not run. |
+| Admin / member / viewer | `PARTIAL` (API seam) | Import-bundle rejects member/viewer bulk-import; households role changes; PowerSync streams deny inactive/unknown roles (`test-powersync-proper.txt` **9/9**). Viewer command deny **PASS** in `pipeline.test.ts` **18/18** (`test-pipeline-viewer-deny.txt`). Device role UX not run; live viewer bearer absent. |
 | Personal data stays private on create/join | `PARTIAL` (API seam) | Personal vs Household isolation in personal-ledger + budget-recurring + PowerSync streams. No live create/join privacy proof. |
 | Webhook-driven membership apply | `BLOCKED` (prod) | Live `POST /webhooks/workos` on `auth.trove.ing` → **503** `WORKOS_WEBHOOK_SECRET is not configured.` (`workos-webhook-blocked.md`, `workos-webhook-probe-2026-09-12.txt`). Local name may be present; **prod binding empty**. Not 404/401/500. |
 
@@ -229,14 +239,14 @@ Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT
 
 | Sub-criterion | Status | Evidence |
 | --- | --- | --- |
-| Cross-User personal isolation | `PARTIAL` (API + streams) | Personal-ledger isolation (invisible, not merely forbidden); personal budget/recurring cross-user reject; PowerSync personal stream scoped by owner (`test-powersync-proper.txt`). |
-| Cross-Household / stream isolation | `PARTIAL` (API + streams) | Households `getHousehold` invisible to non-members; PowerSync “Personal Ledger and Household streams from bleeding”; household queries membership-guarded. |
-| Cross-scope financial-reference rejection | `PARTIAL` (API seam) | Personal-ledger rejects addressing another User’s account / category / envelope; organization-scope rejects a non-member. Command `pipeline.test.ts` (viewer capability map) was **not** in the captured 97-test run. |
+| Cross-User personal isolation | `PARTIAL` (API + streams) | Personal-ledger isolation (invisible, not merely forbidden); personal budget/recurring cross-user reject; PowerSync personal stream scoped by owner (`test-powersync-proper.txt`). Live dual-identity probe **BLOCKED** — absent `CERT_USER_A_TOKEN` / `CERT_USER_B_TOKEN` (and WorkOS mint names). |
+| Cross-Household / stream isolation | `PARTIAL` (API + streams) | Households `getHousehold` invisible to non-members; PowerSync “Personal Ledger and Household streams from bleeding”; household queries membership-guarded. Live dual-identity probe **BLOCKED** (same missing token names). |
+| Cross-scope financial-reference rejection | `PARTIAL` (API seam) | Personal-ledger rejects addressing another User’s account / category / envelope; organization-scope rejects a non-member. Viewer capability map now **PASS** in `pipeline.test.ts` **18/18** (`test-pipeline-viewer-deny.txt`). Live viewer bearer still absent. |
 | Queued writes after role downgrade | not in captured suite | No focused test file in `test-api-workos-seams.txt` covers queued Commands after a live demotion. Widget handoff rejects codes after admin demotion — **not** the same criterion. |
 | Stale-response handling | `PARTIAL` (events only) | Membership projection stale/older/delayed observations (`test-deletion-projection.txt` **18/18**, also inside the 97). Client stale HTTP/sync responses after sign-out or identity switch: **not** in the captured mobile 19. |
-| Live API/stream isolation | not evidenced | No runtime artifact. |
+| Live API/stream isolation | `PARTIAL` (auth-gate) / dual-identity `BLOCKED` | Auth-gate **PASS**: missing → **401** `missing_token`; forged JWT + forged org/user body → **401** `invalid_token` (`live-auth-gate-probe-2026-09-12.txt`; CF **7**+**8**). Authenticated cross-tenant negatives **BLOCKED** without dual session tokens. |
 
-**Row status: `PARTIAL`.** Isolation seams pass in captured automated suites. Downgrade-queued writes and client stale-response are **not** certified.
+**Row status: `PARTIAL`.** Isolation seams + auth-gate + viewer pipeline pass; live dual-identity and downgrade-queued writes / client stale-response are **not** certified.
 
 ### 6. Duplicated / reordered / missed events + reconciliation; PowerSync removal / offline-device limitation
 
@@ -291,6 +301,7 @@ Still BLOCKED for disposable mint/reset: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE
 | `pnpm format:check` | FAIL, 8 pre-existing files | 1 (not a #232 regression) |
 | `@trove/auth` `vitest run` | **14/14** `test-auth.txt` | 2 (token/callback contract), 4 (widget page) |
 | `@trove/api` focused vitest (8 files) | **97/97** `test-api-workos-seams.txt` | 3, 4, 5, 6, 7 |
+| `@trove/api` `pipeline.test.ts` | **18/18** `test-pipeline-viewer-deny.txt` | 4 (viewer), 5 (capability / cross-scope) |
 | `@trove/api` deletion + projection | **18/18** `test-deletion-projection.txt` | 6, 7 |
 | `@trove/powersync` `pnpm test` (`node --test`) | **9/9** `test-powersync-proper.txt` | 3, 4, 5 |
 | `@trove/powersync` via vitest | FAIL runner mismatch `test-powersync.txt` | ignore for product status |
@@ -406,6 +417,10 @@ stim start --json  # -> stim-start.json (port 8083)
 | `create-account-hittest255-blocked.md` | #255 NativeHost Create Account retest **BLOCKED**. |
 | `create-account-fresh-mac-blocked.md` | #256 Metro-confirmed Create Account MISS tip `c9a3ca8`. |
 | `api-matrix-non-device.md` | Non-device Relates summary: listMine / getManifest / claim_iss PASS + isolation PARTIAL + blocked rows. |
+| `api-isolation-live-2026-09-12.md` | API-only auth-gate + viewer pipeline + schema reconfirm; live dual-identity **BLOCKED**. |
+| `live-auth-gate-probe-2026-09-12.txt` | Live curl: missing/forged JWT → **401**; webhook still **503**. |
+| `planetscale-schema-ddl-confirm-2026-09-12.txt` | PlanetScale read-only DDL 0011–0015 column reconfirm. |
+| `test-pipeline-viewer-deny.txt` | `pipeline.test.ts` **18/18** (viewer capability map). |
 | `cf-api-corroboration-2026-09-12.txt` | CF Observability re-query stamp (counts only; no secrets). |
 | `ios-otp-ax-blocker.md` | Durable iOS OTP AX **BLOCKER** for owner decision (not a PASS). |
 | `workos-webhook-blocked.md` | Prod webhook **BLOCKED** — empty `WORKOS_WEBHOOK_SECRET` → **503**. |

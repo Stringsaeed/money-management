@@ -1,0 +1,16 @@
+date_utc=2026-09-12T05:29:00Z
+source=PlanetScale MCP execute_read_query (read-only)
+org=stringsaeed db=trove branch=main
+schema_last_updated_at=2026-09-12T01:35:24.504Z
+note=column presence only; no row payloads / secrets
+
+Confirmed columns (information_schema):
+  ledger (table present): id, kind, personal_user_id, organization_id, created_at, updated_at
+  accounts.ledger_id text
+  membership.status text (+ observed_at, observed_event_id)
+  household.create_request_id text
+  user.memberships_reconciled_at timestamptz
+  deletion_operation.status text
+  deleted_identity / deletion_operation tables present in branch schema listing (24 tables)
+
+Verdict: PASS — DDL 0011–0015 surfaces still present on PlanetScale trove/main (reconfirm).
