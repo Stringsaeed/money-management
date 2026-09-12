@@ -1,13 +1,10 @@
-PASS path: components/auth/ui/roles.test.ts
-PASS components/auth/ui/roles.test.ts
+PASS path: apps/mobile/components/auth/ui/auth-field-kinds.test.ts
+PASS components/auth/ui/auth-field-kinds.test.ts
   AUTH_FIELD_KINDS
-    ✓ maps every AuthFieldKind onto its input preset (11 ms)
-    ✓ only exposes email, name, and password field kinds (1 ms)
-  resolveColor
-    ✓ resolves token, ring, and white refs (1 ms)
+    ✓ locks email/name/password field kind presets (3 ms)
 
 Test Suites: 1 passed, 1 total
-Tests:       3 passed, 3 total
+Tests:       1 passed, 1 total
 Snapshots:   0 total
-Time:        1.157 s
-Ran all test suites matching /components\/auth\/ui\/roles.test.ts/i.
+Time:        0.951 s
+Ran all test suites matching /components\/auth\/ui\/auth-field-kinds.test.ts/i.
