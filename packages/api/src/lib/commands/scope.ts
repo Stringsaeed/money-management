@@ -42,15 +42,22 @@ export async function ensureUserProjection(
   actor: CommandActor,
 ): Promise<void> {
   const email = actor.email?.trim();
+  const now = new Date();
   await db
     .insert(user)
     .values({
       id: actor.id,
       name: actor.name?.trim() || email || actor.id,
       // WorkOS verifies the address before it issues a session; the local row
-      // only mirrors that fact for display.
+      // only mirrors that fact for display. AuthKit access tokens often omit
+      // `email`, so fall back to a stable placeholder until a claim or
+      // directory read supplies one.
       email: email || `${actor.id}@users.workos.invalid`,
       emailVerified: true,
+      image: null,
+      membershipsReconciledAt: null,
+      createdAt: now,
+      updatedAt: now,
     })
     .onConflictDoNothing();
 }

@@ -133,6 +133,20 @@ describe("listMyHouseholds", () => {
     ]);
   });
 
+  it("projects a WorkOS caller whose access token omitted email before listing", async () => {
+    const id = "user_01M28TK8JZ27ZQZ40DCMMFHJ26";
+    directory.seedUser({ id, email: `${id}@users.workos.invalid`, name: id });
+
+    expect(await listMyHouseholds(deps, { id, email: "", name: "" })).toEqual([]);
+    expect(await db.select().from(user).where(eq(user.id, id))).toEqual([
+      expect.objectContaining({
+        id,
+        email: "user_01M28TK8JZ27ZQZ40DCMMFHJ26@users.workos.invalid",
+        emailVerified: true,
+      }),
+    ]);
+  });
+
   it("reuses a fresh bootstrap and refreshes a stale one", async () => {
     const home = await createHome();
     await listMyHouseholds(deps, BOB);
