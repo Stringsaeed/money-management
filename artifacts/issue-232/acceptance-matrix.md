@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `bf415225fef8767fd316378a871c122d71ebfb9f` CATEGORY_TYPE_OPTIONS stamp — product `da488141c8c41a1f84fba7c6c6769db84e5d04df` (`CATEGORY_TYPE_OPTIONS` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` resolveCommandScope stamp — product `6e4ef5058652c1c2345768c52bc65fbb579a40da` (`resolveCommandScope` **4/4** new; suite **4/4**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -180,6 +180,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Added `apps/mobile/components/category/category-type-options.test.ts` — **1/1 new PASS** / suite **1/1** (`category-type-options-jest-2026-09-12.txt`): exact lock of expense/income `CATEGORY_TYPE_OPTIONS` array (pure const surface).
 - Row 4 / row 6 category-type options seam → advances automated category vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## resolveCommandScope Relates (2026-09-12, no device)
+
+- Added `packages/protocol/src/resolve-command-scope.test.ts` — **4/4 new PASS** / suite **4/4** (`resolve-command-scope-node-2026-09-12.txt`): pure lock for personal / organization / householdId fallback / null resolution.
+- Row 4 / row 6 command-scope resolution seam → advances automated ledger-scope vocabulary; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## DEFAULT_CATEGORY_ICON Relates (2026-09-12, no device)

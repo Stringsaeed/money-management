@@ -1,0 +1,13 @@
+PASS path: packages/protocol/src/resolve-command-scope.test.ts
+✔ resolveCommandScope maps personal scope to the authenticated user (0.917324ms)
+✔ resolveCommandScope maps organization scope to the organization id (0.107283ms)
+✔ resolveCommandScope falls back to householdId as organization scope (0.087242ms)
+✔ resolveCommandScope returns null when neither scope nor household is named (0.094846ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 72.983989
