@@ -1,0 +1,10 @@
+PASS path: db/constants.test.ts
+PASS db/constants.test.ts
+  DB_NAME
+    ✓ locks on-device SQLite filename to "money.db" (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.023 s
+Ran all test suites matching /db\/constants.test.ts/i.
