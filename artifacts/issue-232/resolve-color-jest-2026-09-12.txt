@@ -1,0 +1,14 @@
+PASS components/auth/ui/roles.test.ts
+  AUTH_SHELL_SPEC
+    ○ skipped locks auth shell spacing
+  AUTH_FIELD_KINDS
+    ○ skipped maps every AuthFieldKind onto its input preset
+    ○ skipped only exposes email, name, and password field kinds
+  resolveColor
+    ✓ resolves token, ring, and white refs (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       3 skipped, 1 passed, 4 total
+Snapshots:   0 total
+Time:        1.042 s
+Ran all test suites matching /components\/auth\/ui\/roles.test.ts/i with tests matching "resolveColor".

@@ -1,0 +1,13 @@
+PASS components/sync/plan-membership-revocation.test.ts (9.166 s)
+  planMembershipRevocation
+    ✓ returns null when memberships are unchanged and enrollment still listed (7 ms)
+    ✓ clears Household sync and selection when the enrolled selected membership disappears (1 ms)
+    ✓ clears Household sync but leaves Personal selection alone
+    ✓ clears only selection when a non-enrolled selected Household is removed (1 ms)
+    ✓ clears sync when enrollment is lost even if previous snapshot was empty
+
+Test Suites: 1 passed, 1 total
+Tests:       5 passed, 5 total
+Snapshots:   0 total
+Time:        10.003 s
+Ran all test suites matching /components\/sync\/plan-membership-revocation.test.ts/i.

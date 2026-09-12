@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Repo                | `Stringsaeed/money-management`                                                                                                                                                                                                                                                                                   |
 | Branch              | `cursor/workos-certify-migration-b3d1`                                                                                                                                                                                                                                                                           |
-| HEAD                | tip `ea7e7fa` (product batch) + `attachCapabilities` **4/4** jest; `can` / `requiredCapability` **4/4** vitest; `resolveWorkOSVerifyEnv` **4/4** vitest; prior `f346e88` access/tenancy/import/period stamps; remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD                | tip pending push — dedicated `planMembershipRevocation` **5/5** jest; `normalizeLedgerSelection` **3/3** jest; auth `fieldBoxStyle` / `fieldRecipe` / `controlRecipe` **3/3** jest; `resolveColor` **1/1** jest; prior `9011095` / `ea7e7fa` access batch; remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance          | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`.   |
 | Worktree            | `/tmp/wt232` (cloud re-verify dedicated Relates titles); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232`                                                                                                                                                                                     |
 | Live API            | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503**                                                                                                                                                                          |
@@ -461,6 +461,30 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Re-verify `packages/auth/src/workos-env.test.ts` — **4/4 PASS** (`resolveWorkOSVerifyEnv-vitest-2026-09-12.txt`): default audience=clientId / issuer=api.workos.com; overrides; rejects blank credentials; empty audience → client id fallback
 - Row 2 AuthKit verify-env resolution seam → advances automated WorkOS JWT env lock; live OTP/device verify still **BLOCKED** (AX); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## planMembershipRevocation Relates (2026-09-12, no device)
+
+- Re-verify `apps/mobile/components/sync/plan-membership-revocation.test.ts` — **5/5 PASS** (`plan-membership-revocation-dedicated-jest-2026-09-12.txt`): unchanged membership → null; enrolled household loss → sync + selection clear; personal selection preserved; non-enrolled household selection clear; enrollment loss with empty prior snapshot → sync clear only.
+- Row 5 stale-response / membership-revocation planner seam → advances automated cleanup plan lock (file-scoped, no composite-only stamp); live stale HTTP/sync after identity switch still **not** device-certified.
+- Create Account still **BLOCKED** on [#258](https://github.com/Stringsaeed/money-management/pull/258); webhook still **BLOCKED** (**503**); dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## normalizeLedgerSelection Relates (2026-09-12, no device)
+
+- Re-verify `apps/mobile/modules/access/access.test.ts` (`-t normalizeLedgerSelection`) — **3/3 PASS** (`normalize-ledger-selection-jest-2026-09-12.txt`): active membership preserves personal/household selection; stale household id → personal fallback.
+- Row 5 ledger selection normalize seam → dedicated title (separate from composite access batch); live device selection UX still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## fieldBoxStyle / fieldRecipe / controlRecipe Relates (2026-09-12, no device)
+
+- Re-verify `apps/mobile/components/auth/ui/recipes.test.ts` (`-t fieldBoxStyle|fieldRecipe|controlRecipe`) — **3/3 PASS** (`auth-recipes-field-control-jest-2026-09-12.txt`): field stroke border pairing; strokeBorder modifier recipe; primary control label-on-button recipe.
+- Row 4 / row 6 AuthKit native UI field/control recipe seam → advances automated auth chrome lock; live OTP/device AuthKit still **BLOCKED** (AX); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## resolveColor Relates (2026-09-12, no device)
+
+- Re-verify `apps/mobile/components/auth/ui/roles.test.ts` (`-t resolveColor`) — **1/1 PASS** (`resolve-color-jest-2026-09-12.txt`): palette token, ring, and white refs resolve to expected colors.
+- Row 4 AuthKit role color resolver seam → dedicated title; live device theming still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## formatPrice Relates (2026-09-12, no device)
