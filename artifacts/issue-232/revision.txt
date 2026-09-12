@@ -28,3 +28,4 @@ gh_actions=BLOCKED billing/spend limit (ci-billing-blocked-2026-09-12.txt)
 health=PASS GET / 200 OK 06:30Z
 relates=#232 only
 certified=false
+import_content_jest=PASS 6/6 product=eca3299

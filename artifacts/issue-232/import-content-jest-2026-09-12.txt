@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=eca3299
+gap=import-content content-row codecs + sha256Hex
+matrix_row=6 migration import content serialization / digest
+command=pnpm exec vitest run src/lib/migration/import-content.test.ts
+result=PASS 6/6
+tsc=PASS packages/api --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
