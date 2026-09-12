@@ -1,0 +1,17 @@
+PASS modules/ledger-data-source/contract.test.ts
+  unsupportedSyncedOperation
+    ✓ returns an Error whose message joins operation, impact, and nextAction (3 ms)
+    ✓ interpolates each argument into the fixed unavailable template (1 ms)
+    ✓ does not throw — callers decide whether to throw the returned Error (1 ms)
+  assertLocalLedgerAuthority
+    ✓ is a no-op when selection.kind is local
+    ✓ is a no-op for non-synced selection kinds (1 ms)
+    ✓ throws via unsupportedSyncedOperation when selection.kind is synced (7 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       6 passed, 6 total
+Snapshots:   0 total
+Time:        1.223 s
+Ran all test suites matching /modules\/ledger-data-source\/contract.test.ts/i.
+
+--- tsc --noEmit ---
