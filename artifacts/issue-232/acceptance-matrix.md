@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Repo                | `Stringsaeed/money-management`                                                                                                                                                                                                                                                                                   |
 | Branch              | `cursor/workos-certify-migration-b3d1`                                                                                                                                                                                                                                                                           |
-| HEAD                | tip `a3c530526c919d5ff4a1ba629c222d89faccc1be` recurring-calendar stamp — product `b45082be6f39da2fc5896e71166645105bd89bcb` (`date.ts` helpers **9/9**; `scheduledDatesThrough` / `nextScheduledDateOnOrAfter` **4/4**; `organizationLedgerId` / `ledgerIdForScope` / `personalLedgerOwner` **7/7** node); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD                | tip _(pending stamp)_ — product `b45082be6f39da2fc5896e71166645105bd89bcb` (`parseWidgetFragment` / `widgetPageSecurityHeaders` / `renderMemberWidgetPage` **5/5** vitest; `parseHouseholdEvent` **5/5** vitest; `buildAppleAppSiteAssociation` / `buildAssetLinks` / `parseCertFingerprints` **3/3** vitest; `normalizeAuthEmail` **1/1** jest; `isImportManifestEmpty` **2/2** jest); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance          | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`.   |
 | Worktree            | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232`                                                                                                                                                                               |
 | Live API            | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503**                                                                                                                                                                          |
@@ -341,6 +341,36 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Existing `packages/protocol/src/ledger-scope.test.ts` — **7/7 PASS** / node suite **7/7** (`ledger-scope-helpers-node-2026-09-12.txt`): pure lock for organization ledger ids, scope→id mapping, and personal owner extraction (companion to stamped `PERSONAL_LEDGER_PREFIX` / `parseLedgerId` / `sameLedgerScope`)
 - Row 4 / row 6 ledger-scope id seam → advances automated WorkOS ledger id vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## isImportManifestEmpty Relates (2026-09-12, no device)
+
+- Existing `apps/mobile/lib/migration/manifest-utils.test.ts` — **2/2 PASS** / suite **2/2** (`is-import-manifest-empty-jest-2026-09-12.txt`): zero row-count manifest vs any non-zero entity
+- Row 6 sync import empty-manifest seam → advances automated migration manifest guard; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## normalizeAuthEmail Relates (2026-09-12, no device)
+
+- Existing `apps/mobile/modules/access/email.test.ts` — **1/1 PASS** / suite **1/1** (`normalize-auth-email-jest-2026-09-12.txt`): trim + lowercase AuthKit email input
+- Row 2 AuthKit email normalize seam → advances automated hosted-sign-in input lock; live OTP/device still **BLOCKED** (AX); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## buildAppleAppSiteAssociation / buildAssetLinks / parseCertFingerprints Relates (2026-09-12, no device)
+
+- Existing `packages/auth/src/app-association.test.ts` — **3/3 PASS** / suite **3/3** (`app-association-vitest-2026-09-12.txt`): AASA webcredentials without legacy applinks; Android asset statements from SHA-256 fingerprints; colon formatting round-trip
+- Row 4 universal link + Android app-link seam → advances automated deep-link association lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## parseHouseholdEvent Relates (2026-09-12, no device)
+
+- Existing `packages/auth/src/household-events.test.ts` — **5/5 PASS** / suite **5/5** (`parse-household-event-vitest-2026-09-12.txt`): membership create/update/delete observations; organization.deleted; ignored events
+- Row 5 WorkOS household webhook projection seam → advances automated event→observation lock (live webhook apply still **BLOCKED** **503**); create/device still **BLOCKED** (#258).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## parseWidgetFragment / widgetPageSecurityHeaders / renderMemberWidgetPage Relates (2026-09-12, no device)
+
+- Existing `packages/auth/src/member-widget-page.test.ts` — **5/5 PASS** / suite **5/5** (`member-widget-fragment-vitest-2026-09-12.txt`): fragment `#code=` parse/empty guards; CSP nonce headers; HTML erases fragment before session fetch; no auth token in markup
+- Row 4 admin widget browser handoff page seam → advances automated member-widget page lock (companion to stamped `buildWidgetPageUrl` / path consts); live widget mint/device return still **BLOCKED**; webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## formatPrice Relates (2026-09-12, no device)

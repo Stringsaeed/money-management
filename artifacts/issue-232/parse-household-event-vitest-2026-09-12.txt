@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=b45082be6f39da2fc5896e71166645105bd89bcb
+gap=packages/auth/src/household-events.ts parseHouseholdEvent
+matrix_row=5 WorkOS household webhook projection seam
+command=pnpm exec vitest run src/household-events.test.ts
+result=PASS 5/5
+tsc=skipped file-scoped only
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
