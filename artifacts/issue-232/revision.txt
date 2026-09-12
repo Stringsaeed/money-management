@@ -29,3 +29,4 @@ health=PASS GET / 200 OK 06:30Z
 relates=#232 only
 certified=false
 import_content_jest=PASS 6/6 product=eca3299
+to_directory_membership_jest=PASS 2/2

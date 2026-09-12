@@ -20,15 +20,21 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `b218b82` import-content Vitest stamp — product `eca3299` (`accountContentRow`/`categoryContentRow`/`transactionContentRow`/`budgetWorkspaceContentRow`/`recurringOccurrenceContentRow`/`sha256Hex` **6/6**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` toDirectoryMembership Vitest stamp — product `PENDING_PRODUCT` (`toDirectoryMembership` **2/2**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/workspace/.wt-cert-232-relates` (this Relates write); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T06:30:58Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
 | Device (this write) | **none** — API/docs-only; no iOS/Android device; no Mac |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
-Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `ci-billing-blocked-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `session-probe-jest-2026-09-12.txt` / `ledger-source-offline-jest-2026-09-12.txt` / `memberships-role-jest-2026-09-12.txt` / `access-core-capabilities-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt` /  / `workos-verify-env-jest-2026-09-12.txt` / `widget-handoff-jest-2026-09-12.txt` / `reconcile-freshness-jest-2026-09-12.txt` / `command-shared-ledger-powersync-jest-2026-09-12.txt` / `sole-admin-budget-pure-jest-2026-09-12.txt` / `card-dependency-setup-draft-jest-2026-09-12.txt` / `import-content-jest-2026-09-12.txt`.
+Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `ci-billing-blocked-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `session-probe-jest-2026-09-12.txt` / `ledger-source-offline-jest-2026-09-12.txt` / `memberships-role-jest-2026-09-12.txt` / `access-core-capabilities-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt` /  / `workos-verify-env-jest-2026-09-12.txt` / `widget-handoff-jest-2026-09-12.txt` / `reconcile-freshness-jest-2026-09-12.txt` / `command-shared-ledger-powersync-jest-2026-09-12.txt` / `sole-admin-budget-pure-jest-2026-09-12.txt` / `card-dependency-setup-draft-jest-2026-09-12.txt` / `import-content-jest-2026-09-12.txt` / `to-directory-membership-jest-2026-09-12.txt`.
 
+
+## toDirectoryMembership Vitest Relates (2026-09-12, no device)
+
+- Added `packages/auth/src/to-directory-membership.test.ts` — **2/2 PASS** (`to-directory-membership-jest-2026-09-12.txt`): maps WorkOS membership → `roleSlug` + Date timestamps; preserves unknown role slugs and pending/inactive status.
+- Row 4 / row 5 directory membership projection seam → advances automated WorkOS membership normalize; live webhook apply still **BLOCKED** (**503**).
+- Create Account still **BLOCKED** on [#258](https://github.com/Stringsaeed/money-management/pull/258); dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## Import-content row codec Vitest Relates (2026-09-12, no device)
 
@@ -653,4 +659,3 @@ stim start --json  # -> stim-start.json (port 8083)
 - Client-visible: `client-visible-error-post246.txt` / agent-device snapshots.
 - DB upsert fix owned by a separate cloud worker — not fixed in this evidence push.
 - **Still FAIL / not certified.** Matrix rows still blocked: OTP/callback AX, Android runtime, live PowerSync/PlanetScale mint envs (names in `env-hardstop-absent.txt`), disposable reset (#231 skip), live webhook apply. Relates to #232 only. Parent #224 stays open. No Closes.
-

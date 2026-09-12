@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=4bac88c
+gap=toDirectoryMembership WorkOS membership normalize
+matrix_row=4/5 directory membership projection seam
+command=pnpm exec vitest run src/to-directory-membership.test.ts
+result=PASS 2/2
+tsc=PASS packages/auth --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
