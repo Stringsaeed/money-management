@@ -1,14 +1,23 @@
 # Create Account hit-test status (Relates #232)
 
-Concise stamp for the acceptance matrix. No secrets. **Never** Closes/Fixes #232 or #224.
+Updated: 2026-09-12T06:03:43Z
 
-| Item | Status | Tip / note |
-| --- | --- | --- |
-| Personal upload (Pressable confirm) | **PASS** | Cert tip `fb8c786` — `post-pressable-upload-pass.md` |
-| Create Account / one-device round-trip | **BLOCKED** | Still blocked on device after #254 / #255 / #256; **do not claim PASS** |
-| #256 Metro-confirmed miss | **MISS** | Tip `c9a3ca8` — `create-account-fresh-mac-blocked.md`; cert evidence tip `9e3f69f` |
-| Superseded candidates | superseded | [#257](https://github.com/Stringsaeed/money-management/pull/257) / [#256](https://github.com/Stringsaeed/money-management/pull/256) / [#255](https://github.com/Stringsaeed/money-management/pull/255) superseded by #258 |
-| Next candidate | **BLOCKED (Mac ghosting)** | [#258](https://github.com/Stringsaeed/money-management/pull/258) tip [`709acf85250c02c8f9746c544da67f0c49f99233`](https://github.com/Stringsaeed/money-management/commit/709acf85250c02c8f9746c544da67f0c49f99233) — Expo Router Create Account screen; Jest+tsc green; EAS pending/hold merge; **Mac device retest blocked** (self-hosted agents ghosting). Do **not** merge #258 from this cert write. Do **not** claim Create Account PASS. |
-| WorkOS webhook | **BLOCKED** | Owner must set prod `WORKOS_WEBHOOK_SECRET` + redeploy — `workos-webhook-blocked.md` (re-probe 05:47Z still **503**) |
+## PASS (prior)
 
-Do not merge #258 from this cert write. Matrix remains incomplete / not certified.
+- Personal upload confirm (Pressable): **PASS** at cert tip `fb8c78656551a4e756061d81a15a9d21a783ce1f`.
+
+## Create Account / one-device round-trip
+
+| Candidate | Tip | Device result | Notes |
+| --- | --- | --- | --- |
+| #254 Pressable | merged | BLOCKED / superseded | |
+| #255 NativeHost | draft | BLOCKED / superseded | |
+| #256 pan-disable | `c9a3ca89c00b3a8059d5abb7c136b790d6a7a7ef` | Metro-confirmed **MISS** | cert evidence `9e3f69f` |
+| #257 portal | superseded | not retested | |
+| **#258 screen route** | `709acf85250c02c8f9746c544da67f0c49f99233` | **BLOCKED** | Draft; all product CI green; Expo preview live; Mac automation ghosting / money-management worker offline. Manual iPhone 17 Pro `/account/new` still required. **Not PASS.** Do not merge from cert write. |
+
+## Owner next
+
+1. Restart money-management Mac Cursor worker **or** manually verify Create Account on iPhone 17 Pro at `/account/new` against #258 preview/build.
+2. On device PASS: Relates stamp on #241, then merge #258.
+3. Keep #232/#224 open until full matrix acceptance.

@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip after non-device Relates stamp (CI + schema reconfirm + explicit BLOCKED docs; personal upload PASS; Create Account BLOCKED on #258 Mac ghosting; dual-identity BLOCKED) |
+| HEAD | tip after goal-continue Relates re-probe (webhook still 503; #241 product CI PASS / GG historical fail; Create Account still BLOCKED on #258; dual-identity BLOCKED) |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/workspace` (this Relates write); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK**; Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -28,6 +28,17 @@ Report implementation, automated verification, runtime verification, and publica
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
 Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `post-schema-sync-retest.md`.
+
+## Goal-continue Relates re-probe (2026-09-12T06:03:43Z, no device / no Mac)
+
+- Live `GET https://auth.trove.ing/` → **200** `OK`.
+- Webhook re-probe still **503** empty prod `WORKOS_WEBHOOK_SECRET` (`goal-continue-reprobe-2026-09-12c.txt`). Runner also lacks that env name.
+- PR [#241](https://github.com/Stringsaeed/money-management/pull/241) tip `2ac477b` product CI: Typescript + Jest + EAS **SUCCESS**; GitGuardian **FAILURE** (historical PostHog — not inventing security PASS).
+- Create Account next remains [#258](https://github.com/Stringsaeed/money-management/pull/258) tip `709acf8` — draft, all product CI green — device still **BLOCKED** (money-management Mac worker offline; prior Mac retest stopped; not restarted). **Not** PASS. Do not merge #258 from this write.
+- Dual-session isolation still **BLOCKED** (`CERT_USER_A_TOKEN`, `CERT_USER_B_TOKEN`, …) — names ABSENT on this runner.
+- PowerSync / PlanetScale mint + disposable reset still **BLOCKED** (`POWERSYNC_*`, `PLANETSCALE_*` / `DATABASE_URL` ABSENT).
+- Android runtime / iOS OTP AX unchanged **BLOCKED**.
+- Cloud Relates stamp agents ghosted this hour → stopped; this stamp written in coordinator worktree. Relates to #232 only. Matrix still incomplete.
 
 ## Non-device Relates advance (2026-09-12T05:47Z, no device / no Mac)
 

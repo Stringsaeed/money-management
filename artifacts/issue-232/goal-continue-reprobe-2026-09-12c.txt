@@ -1,0 +1,29 @@
+#232 goal-continue Relates stamp (2026-09-12T06:03:43Z)
+Repo: Stringsaeed/money-management
+Cert PR: #241 tip before this commit: 2ac477bc7f851076bcd3b009d79fbe0bccbfe151
+Create Account candidate: #258 tip 709acf85250c02c8f9746c544da67f0c49f99233 (draft, all product CI SUCCESS; hold merge)
+
+Re-probes (no secrets):
+- GET https://auth.trove.ing/ -> HTTP 200 body OK
+- POST https://auth.trove.ing/webhooks/workos {} -> HTTP 503
+  body: Webhook receiver is disabled: WORKOS_WEBHOOK_SECRET is not configured.
+- PR #241 checks on tip 2ac477b: Typescript SUCCESS, Jest SUCCESS, EAS Preview SUCCESS, GitGuardian FAILURE (historical PostHog; not claimed security PASS)
+- PR #258 checks: Typescript/Jest/EAS/GitGuardian SUCCESS; draft OPEN
+
+Env names on this runner (PRESENT/ABSENT only):
+- WORKOS_WEBHOOK_SECRET: ABSENT
+- CERT_USER_A_TOKEN / CERT_USER_B_TOKEN (and TEST_USER_*_BEARER aliases): ABSENT
+- POWERSYNC_URL / POWERSYNC_JWT_PRIVATE_KEY / POWERSYNC_JWT_KID: ABSENT
+- PLANETSCALE_* / DATABASE_URL: ABSENT
+
+Device / Mac:
+- money-management self-hosted worker: NOT connected (only xlikes worker visible)
+- Mac #258 retest deliberately stopped earlier; NOT restarted
+- Create Account row remains BLOCKED — do not invent PASS
+
+Cloud Relates agents this hour:
+- prior Advance #232 cert matrix ghosted (RUNNING/empty events) -> stopped
+- Stamp #232 Relates blockers also ghosted -> stopped; this stamp written in coordinator worktree instead
+
+Governance: Relates #232 only. Parent #224 stays open. Do not Closes/Fixes #232/#224.
+Matrix still incomplete / not certified.
