@@ -1,0 +1,29 @@
+PASS utils/activity.test.ts
+  EFFECT_EMOJIS
+    ✓ maps every lead effect tag to its emoji (3 ms)
+    ✓ is the source of truth for effectEmoji known tags (1 ms)
+  effectEmoji
+    ✓ maps known tags onto emojis (1 ms)
+    ✓ falls back to a generic emoji for unknown tags
+  formatActivityFullTimestamp
+    ✓ renders an absolute MMM d, yyyy at h:mm a detail stamp (2 ms)
+    ✓ includes the year and an 'at' separator
+  formatActivityTimestamp
+    ✓ shows only the time for today (1 ms)
+    ✓ prefixes yesterday entries with 'Yesterday'
+    ✓ includes the month and day for older entries in the same year
+    ✓ includes the year for entries from another year
+  resolveActivityRange
+    ✓ yields no bounds for the all-time preset
+    ✓ yields inclusive day bounds ending today for day-based presets
+    ✓ covers every preset key
+  activityRangeLabel
+    ✓ falls back to All Time for unknown keys
+
+Test Suites: 1 passed, 1 total
+Tests:       14 passed, 14 total
+Snapshots:   0 total
+Time:        1.081 s
+Ran all test suites matching /utils\/activity.test.ts/i.
+
+--- tsc --noEmit ---
