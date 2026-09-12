@@ -1,6 +1,18 @@
 import { Platform } from "react-native";
 
-import { AUTH_FALLBACK_PALETTE, AUTH_FONT_FACES, fontFace, normalizeColor } from "./tokens";
+import {
+  AUTH_FALLBACK_PALETTE,
+  AUTH_FONT_FACES,
+  AUTH_PLACEHOLDER_COLOR,
+  fontFace,
+  normalizeColor,
+} from "./tokens";
+
+describe("AUTH_PLACEHOLDER_COLOR", () => {
+  it("locks the auth field placeholder hex", () => {
+    expect(AUTH_PLACEHOLDER_COLOR).toBe("#9a9896");
+  });
+});
 
 describe("normalizeColor", () => {
   const fallback = AUTH_FALLBACK_PALETTE.light["--color-ink"];
