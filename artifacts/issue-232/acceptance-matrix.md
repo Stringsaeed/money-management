@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `66352f3356bce6f47061255b4ee5e7298cbe2ff2` CREATE_SIZE stamp — product `de7a41058fd1bca1e45bedcea74341532cf13b28` (`CREATE_SIZE` **1/1** new; suite **3/3**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` PILL_PADDING stamp — product `3ac9ec59c258592278b597d2fcf5e5fe13aaf207` (`PILL_PADDING` **1/1** new; suite **4/4**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -96,6 +96,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Extended `apps/mobile/components/navigation/glass-tab-bar/constants.test.ts` — **1/1 new PASS** / suite **3/3** (`create-size-jest-2026-09-12.txt`): exact lock `CREATE_SIZE=58` (pure const surface).
 - Row 4 / row 6 glass-tab-bar create-button size seam → advances automated create chrome vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## PILL_PADDING Relates (2026-09-12, no device)
+
+- Updated `apps/mobile/components/navigation/glass-tab-bar/constants.test.ts` — **1/1 new PASS** / suite **4/4** (`pill-padding-jest-2026-09-12.txt`): exact lock `PILL_PADDING=6` (pure const surface).
+- Row 4 / row 6 seam → advances automated vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## DEFAULT_CATEGORY_ICON Relates (2026-09-12, no device)
