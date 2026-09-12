@@ -1,0 +1,16 @@
+date_utc=2026-09-12T05:47Z
+source=PlanetScale MCP execute_read_query (read-only)
+org=stringsaeed db=trove branch=main
+note=column presence only; no row payloads / secrets
+prior_confirm=planetscale-schema-ddl-confirm-2026-09-12.txt
+
+Confirmed columns (information_schema), 13 rows:
+  accounts.ledger_id text
+  deletion_operation.status text
+  household.create_request_id text
+  ledger.id / kind / personal_user_id / organization_id / created_at / updated_at
+  membership.status text (+ observed_at timestamptz, observed_event_id text)
+  user.memberships_reconciled_at timestamptz
+
+Verdict: PASS — DDL 0011–0015 surfaces still present on PlanetScale trove/main (second reconfirm).
+relates=#232 only

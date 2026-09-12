@@ -1,0 +1,18 @@
+date_utc=2026-09-12T05:47Z
+branch=cursor/workos-certify-migration-b3d1
+head_at_stamp=ded1e9700e2800734bd7da46c31c6fe56a8f6e14
+source=GitHub Actions check runs on PR #241 (Relates #232 only)
+note=no secret values; counts/status only
+
+Checks at tip ded1e97:
+  Typescript check  SUCCESS  run 34675791245  completed 2026-09-12T05:32:58Z
+  Jest              SUCCESS  run 34675791249  completed 2026-09-12T05:35:26Z
+  Preview with EAS  SUCCESS  run 34675791263  completed 2026-09-12T05:37:37Z
+  GitGuardian       FAILURE  run 103505296904 (pre-existing secret-scan gate; not treated as #232 product FAIL)
+
+Local prior capture still on branch: test-ci.txt (pnpm test:ci mobile Jest 742 + @trove/db cutover 3).
+
+Row 1 stamp: tsc + Jest CI PASS on tip; lint/format remain FAIL pre-existing (unchanged).
+GitGuardian FAILURE recorded; does not invent product PASS for security scan.
+relates=#232 only
+certified=false

@@ -1,0 +1,14 @@
+date_utc=2026-09-12T05:47Z
+target=https://auth.trove.ing
+note=no secrets; status/body text only
+
+POST /webhooks/workos (empty JSON body, no signature)
+  HTTP 503
+  body: Webhook receiver is disabled: WORKOS_WEBHOOK_SECRET is not configured.
+
+GET /
+  HTTP 200
+  body: OK
+
+Verdict: BLOCKED — prod WORKOS_WEBHOOK_SECRET still empty (unchanged).
+relates=#232 only

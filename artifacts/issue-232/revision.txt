@@ -1,18 +1,22 @@
 branch=cursor/workos-certify-migration-b3d1
 worktree=/workspace
 live_api=https://auth.trove.ing
-schema=0011-0015 reconfirmed trove/main via PlanetScale read-only
+schema=0011-0015 reconfirmed trove/main via PlanetScale read-only (05:47Z second stamp)
 device=none this write
 stim=not_used
+ci_stamp=PR241 tip ded1e97 Typescript+Jest+EAS SUCCESS (GitGuardian FAILURE recorded)
 post250_listmine=PASS HTTP 200 json=[]
 post_schema_sync_getManifest=PASS CF HTTP 200 (216ms/412ms) + UI upload offer
 personal_upload=PASS tip fb8c786
-create_account_roundtrip=BLOCKED after #254/#255/#256 Metro-MISS c9a3ca8 (cert 9e3f69f)
-next_candidate=#257 tip 75491fe Mac retest pending (self-hosted offline)
+create_account_roundtrip=BLOCKED after #254/#255/#256 Metro-MISS c9a3ca8; next #258 tip 709acf8 Mac ghosting — NOT PASS
 auth_gate_missing_token=PASS HTTP 401
 auth_gate_forged_jwt=PASS HTTP 401 invalid_token
 viewer_pipeline=PASS pipeline.test.ts 18/18
-live_dual_identity_isolation=BLOCKED absent CERT_USER_A_TOKEN CERT_USER_B_TOKEN WORKOS_API_KEY
-workos_webhook=BLOCKED owner must set WORKOS_WEBHOOK_SECRET
+live_dual_identity_isolation=BLOCKED absent CERT_USER_A_TOKEN CERT_USER_B_TOKEN
+android_runtime=BLOCKED not started (android-runtime-blocked.md)
+powersync_removal=BLOCKED absent POWERSYNC_URL POWERSYNC_JWT_PRIVATE_KEY POWERSYNC_JWT_KID
+disposable_reset=BLOCKED #231 skip + absent PLANETSCALE_* / DATABASE_URL
+ios_otp_ax=BLOCKED automation (ios-otp-ax-blocker.md)
+workos_webhook=BLOCKED owner must set WORKOS_WEBHOOK_SECRET (503 re-probe 05:47Z)
 relates=#232 only
 certified=false

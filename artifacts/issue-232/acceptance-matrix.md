@@ -20,14 +20,27 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip after API-only isolation/auth-gate Relates stamp (personal upload PASS; Create Account BLOCKED; live dual-identity isolation BLOCKED) |
+| HEAD | tip after non-device Relates stamp (CI + schema reconfirm + explicit BLOCKED docs; personal upload PASS; Create Account BLOCKED on #258 Mac ghosting; dual-identity BLOCKED) |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
-| Worktree | `/Users/saeed/Work/money-management-wt-232` |
-| Live API | `https://auth.trove.ing` — root **200 OK**; Sync `getManifest` CF Worker **200** post-DDL |
-| Device (this write) | **iPhone 17 Pro** `6E4BBB8A-790E-4DDD-995B-6A3D1D9101DB` — **no stim** |
+| Worktree | `/workspace` (this Relates write); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
+| Live API | `https://auth.trove.ing` — root **200 OK**; Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
+| Device (this write) | **none** — API/docs-only; no iOS/Android device; no Mac |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
-Recorded in `revision.txt` / `create-account-hittest-status.md` / `post-schema-sync-retest.md`.
+Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `post-schema-sync-retest.md`.
+
+## Non-device Relates advance (2026-09-12T05:47Z, no device / no Mac)
+
+- Schema DDL 0011–0015 **PASS** second reconfirm (`planetscale-schema-ddl-confirm-2026-09-12b.txt`).
+- CI stamp **PASS** (product gates): PR #241 tip `ded1e97` GitHub Actions **Typescript** + **Jest** + **EAS Preview** SUCCESS (`ci-stamp-2026-09-12.txt`). GitGuardian **FAILURE** recorded (not inventing security-scan PASS).
+- Explicit **BLOCKED** docs (env names only where applicable):
+  - Android runtime — `android-runtime-blocked.md` (device required; not started)
+  - AuthKit OTP AX — unchanged `ios-otp-ax-blocker.md`
+  - PowerSync removal + disposable reset — `powersync-disposable-reset-blocked.md` (`POWERSYNC_*`, `PLANETSCALE_*` / `DATABASE_URL`)
+- Create Account next candidate updated to [#258](https://github.com/Stringsaeed/money-management/pull/258) tip `709acf8` — still **BLOCKED** (Mac ghosting). **Not** claimed PASS. Do not merge #258 from this write.
+- Webhook re-probe still **503** empty `WORKOS_WEBHOOK_SECRET` (`workos-webhook-probe-2026-09-12b.txt`).
+- Dual-session isolation still **BLOCKED** (`CERT_USER_A_TOKEN`, `CERT_USER_B_TOKEN`, …).
+- Evidence: this section + files above. Relates to #232 only. Matrix still incomplete.
 
 ## API-only isolation / auth-gate Relates (2026-09-12, no device)
 
@@ -41,9 +54,10 @@ Recorded in `revision.txt` / `create-account-hittest-status.md` / `post-schema-s
 ## Create Account hit-test / one-device round-trip (2026-09-12)
 
 - Personal upload confirm: **PASS** at cert tip [`fb8c786`](https://github.com/Stringsaeed/money-management/commit/fb8c78656551a4e756061d81a15a9d21a783ce1f) (`post-pressable-upload-pass.md`).
-- Create Account / one-device round-trip: still **BLOCKED** on device after [#254](https://github.com/Stringsaeed/money-management/pull/254) / [#255](https://github.com/Stringsaeed/money-management/pull/255) / [#256](https://github.com/Stringsaeed/money-management/pull/256).
+- Create Account / one-device round-trip: still **BLOCKED** on device after [#254](https://github.com/Stringsaeed/money-management/pull/254) / [#255](https://github.com/Stringsaeed/money-management/pull/255) / [#256](https://github.com/Stringsaeed/money-management/pull/256). **Do not claim PASS.**
 - [#256](https://github.com/Stringsaeed/money-management/pull/256) Metro-confirmed **MISS** tip [`c9a3ca8`](https://github.com/Stringsaeed/money-management/commit/c9a3ca89c00b3a8059d5abb7c136b790d6a7a7ef) — cert evidence tip [`9e3f69f`](https://github.com/Stringsaeed/money-management/commit/9e3f69f63af70942d0e2990ec03b518d4814326d) (`create-account-fresh-mac-blocked.md`).
-- Next candidate: [#257](https://github.com/Stringsaeed/money-management/pull/257) tip [`75491fee94e06fd2a0ba60af54222c2574cacab7`](https://github.com/Stringsaeed/money-management/commit/75491fee94e06fd2a0ba60af54222c2574cacab7) — portals submit outside `ModalBottomSheet`; Jest+tsc+GG green; Mac device retest **pending** (self-hosted worker offline). Do **not** merge #257 from this cert write.
+- [#257](https://github.com/Stringsaeed/money-management/pull/257) / #256 / #255 **superseded** by [#258](https://github.com/Stringsaeed/money-management/pull/258).
+- Next candidate: [#258](https://github.com/Stringsaeed/money-management/pull/258) tip [`709acf85250c02c8f9746c544da67f0c49f99233`](https://github.com/Stringsaeed/money-management/commit/709acf85250c02c8f9746c544da67f0c49f99233) — Expo Router Create Account screen; Jest+tsc green; Mac device retest **BLOCKED** (self-hosted agents ghosting). Do **not** merge #258 from this cert write. Do **not** claim Create Account PASS.
 - WorkOS webhook: still **BLOCKED** — owner must set `WORKOS_WEBHOOK_SECRET` (prod) + redeploy. See webhook section below.
 - Evidence index: `create-account-hittest-status.md`. Relates to #232 only. Do not Closes #232/#224.
 
@@ -62,8 +76,9 @@ Recorded in `revision.txt` / `create-account-hittest-status.md` / `post-schema-s
   - `households/listMine`: **7** `200` responses in 01:00–01:10Z (no 500 in window) → **PASS**
   - `migration/getManifest`: `200` at 216ms and 412ms in 01:20–01:45Z → **PASS**
 - Follow-up API-only write: auth-gate forged/missing JWT **PASS**; viewer `pipeline.test.ts` **18/18** **PASS**; schema DDL reconfirm **PASS**; live dual-identity isolation **BLOCKED** (missing dual session token names) — `api-isolation-live-2026-09-12.md`.
+- 05:47Z non-device advance: CI stamp **PASS** (tsc/Jest/EAS); schema second reconfirm **PASS**; explicit BLOCKED docs for Android / PowerSync+reset; Create Account next → #258 still **BLOCKED**; webhook re-probe **503**.
 - iOS OTP AX: durable **BLOCKER** note for owner — `ios-otp-ax-blocker.md` (not a fake PASS).
-- Evidence: `api-matrix-non-device.md`, `cf-api-corroboration-2026-09-12.txt`, `api-isolation-live-2026-09-12.md`. Relates to #232 only. Matrix still incomplete.
+- Evidence: `api-matrix-non-device.md`, `cf-api-corroboration-2026-09-12.txt`, `api-isolation-live-2026-09-12.md`, `ci-stamp-2026-09-12.txt`. Relates to #232 only. Matrix still incomplete.
 
 ## Post-schema Sync retest (2026-09-12, schema 0011–0015)
 
@@ -96,20 +111,22 @@ Recorded in `revision.txt` / `create-account-hittest-status.md` / `post-schema-s
 
 ## Verdict (this write)
 
-**Incomplete / not certifiable yet** — Sync `getManifest` and Pressable personal upload are **PASS**; Create Account round-trip and WorkOS webhook remain **BLOCKED**. Live dual-identity isolation **BLOCKED** (no dual session tokens); auth-gate forged/missing JWT **PASS**; viewer pipeline **PASS**.
+**Incomplete / not certifiable yet** — Sync `getManifest` and Pressable personal upload are **PASS**; Create Account round-trip and WorkOS webhook remain **BLOCKED**. Live dual-identity isolation **BLOCKED** (no dual session tokens); auth-gate forged/missing JWT **PASS**; viewer pipeline **PASS**. Schema DDL **PASS** (reconfirmed). CI Jest/tsc **PASS** on tip (GitGuardian FAILURE noted).
 
-- Automated typecheck and focused package tests on this branch **pass** (prior write).
+- Automated typecheck and focused package tests on this branch **pass** (prior write + CI stamp).
 - Repo-wide `pnpm lint` and `pnpm format:check` **fail** on pre-existing findings.
-- Full `pnpm test:ci` **passed** previously: mobile Jest **742/742** + `@trove/db` cutover **3/3**.
-- **Row 2 iOS AuthKit UI (partial):** cancel PASS; hosted AuthKit email page + email-code challenge PARTIAL; OTP entry hard-stopped (agent-device AX unavailable inside ASWebAuthenticationSession).
+- Full `pnpm test:ci` **passed** previously: mobile Jest **742/742** + `@trove/db` cutover **3/3**; tip CI Jest/Typescript SUCCESS (`ci-stamp-2026-09-12.txt`).
+- **Row 2 iOS AuthKit UI (partial):** cancel PASS; hosted AuthKit email page + email-code challenge PARTIAL; OTP entry hard-stopped (agent-device AX unavailable inside ASWebAuthenticationSession) — `ios-otp-ax-blocker.md`.
 - **Post-login JWT verify:** **PASS** after #246 — prior `claim_iss` cleared (AuthKit `iss` accepted).
 - **Post-login `households.listMine`:** **PASS** after #250 — HTTP **200** `{"json":[]}`.
-- **Personal Sync / `migration/getManifest`:** **PASS** after DDL **0011–0015** — CF Worker `--> POST /rpc/migration/getManifest 200` (216ms, 412ms) in window 2026-09-12T01:20–01:45Z; iPhone 17 Pro UI → **Upload to your cloud?** (`post-schema-sync-retest.md`, `authkit-102-postschema-upload-offer.png`). Prior PG 42703 `accounts.ledger_id` cleared. **No stim**.
+- **Personal Sync / `migration/getManifest`:** **PASS** after DDL **0011–0015** — CF Worker `--> POST /rpc/migration/getManifest 200` (216ms, 412ms) in window 2026-09-12T01:20–01:45Z; iPhone 17 Pro UI → **Upload to your cloud?** (`post-schema-sync-retest.md`, `authkit-102-postschema-upload-offer.png`). Prior PG 42703 `accounts.ledger_id` cleared. Schema second reconfirm **PASS** (`planetscale-schema-ddl-confirm-2026-09-12b.txt`).
 - **Personal upload confirm (Pressable):** **PASS** at tip `fb8c786` (`post-pressable-upload-pass.md`).
-- **Create Account / one-device round-trip:** **BLOCKED** after #254/#255/#256 — Metro-confirmed MISS on #256 tip `c9a3ca8` (cert evidence `9e3f69f`). Next candidate #257 tip `75491fe` (Mac retest pending; self-hosted worker offline). See `create-account-hittest-status.md`.
+- **Create Account / one-device round-trip:** **BLOCKED** after #254/#255/#256 — Metro-confirmed MISS on #256 tip `c9a3ca8` (cert evidence `9e3f69f`). Next candidate #258 tip `709acf8` (Mac retest **BLOCKED** — self-hosted agents ghosting). **Not** PASS. See `create-account-hittest-status.md`.
 - **Row 5 auth-gate / viewer pipeline:** missing + forged JWT → **401** **PASS**; `pipeline.test.ts` viewer deny **18/18** **PASS**; live dual-identity isolation **BLOCKED** (`api-isolation-live-2026-09-12.md`).
-- **WorkOS webhook:** still **BLOCKED** — owner must set prod `WORKOS_WEBHOOK_SECRET`.
-- Android runtime **not started**. Disposable clean-setup after reset **blocked**. OTP/callback/two-device rows still open.
+- **WorkOS webhook:** still **BLOCKED** — owner must set prod `WORKOS_WEBHOOK_SECRET` (re-probe 05:47Z still **503**).
+- **Android runtime:** **BLOCKED** / not started (`android-runtime-blocked.md`).
+- **PowerSync removal / disposable reset:** **BLOCKED** — missing `POWERSYNC_*` / `PLANETSCALE_*` (or `DATABASE_URL`); #231 reset skipped (`powersync-disposable-reset-blocked.md`).
+- OTP/callback/two-device rows still open.
 
 Do not merge as certified. No production deploy. Parent #224 stays open. **Do not use Closes #232.**
 
@@ -174,15 +191,15 @@ A row is complete only when every required sub-criterion is `PASS` (or an explic
 
 | Sub-criterion | Status | Evidence |
 | --- | --- | --- |
-| `tsc --noEmit` `apps/mobile` | `PASS` | Reported exit 0 on this HEAD. No dedicated `tsc-*.txt` deposited under `artifacts/issue-232/`. |
-| `tsc --noEmit` `packages/api` | `PASS` | Same. |
+| `tsc --noEmit` `apps/mobile` | `PASS` | GitHub Actions **Typescript check** SUCCESS on tip `ded1e97` (`ci-stamp-2026-09-12.txt`, run 34675791245). Prior local exit 0 also reported. |
+| `tsc --noEmit` `packages/api` | `PASS` | Covered by same CI Typescript job + prior local exit 0. |
 | `tsc --noEmit` `packages/auth` | `PASS` | Same. |
 | `tsc --noEmit` `packages/db` | `PASS` | Same. |
 | `pnpm lint` / `pnpm lint:fix` | `FAIL` (pre-existing) | `lint.txt`, `lint-fix.txt`. **794** `error` lines (anti-slop / complexity). Not a #232 regression: product code unchanged on this branch. |
 | `pnpm format:check` | `FAIL` (pre-existing) | `format-check.txt`. 8 files: `apps/mobile/components/ui/input.tsx`, five `artifacts/powersync-planetscale*` paths, `internal/228-wip-gap-checklist.md`. Not a #232 regression. |
-| Full `pnpm test:ci` | `PASS` | `test-ci.txt`: Jest **742** passed; cutover lib **3** passed. |
+| Full `pnpm test:ci` / CI Jest | `PASS` | Prior `test-ci.txt` (Jest **742** + cutover **3**). Tip `ded1e97` GitHub Actions **Jest** SUCCESS (`ci-stamp-2026-09-12.txt`, run 34675791249). EAS Preview SUCCESS. GitGuardian FAILURE recorded (not product FAIL). |
 
-**Row status: `PARTIAL`.** Typecheck + `test:ci` pass; lint/format fail pre-existing (not #232 regressions).
+**Row status: `PARTIAL`.** Typecheck + Jest CI pass on tip; lint/format fail pre-existing (not #232 regressions). GitGuardian failure noted separately.
 
 ### 2. Email-code sign-in, cancel, callback validation, restart, refresh rotation, session expiry, transient network recovery — iOS and Android
 
@@ -200,7 +217,7 @@ A row is complete only when every required sub-criterion is `PASS` (or an explic
 | Post-login protected oRPC / bearer (`listMine`) | `PASS` (post-#250) | HTTP **200** `{"json":[]}` (`post-250-sync-retest.md`). |
 | Post-login Sync `migration/getManifest` | `PASS` (post-schema 0011–0015) | CF Worker **200** (216ms / 412ms); iPhone 17 Pro UI **Upload to your cloud?** (`post-schema-sync-retest.md`, `authkit-102-postschema-upload-offer.png`). Prior ledger_id **42703** cleared. |
 | iOS development build | prior FAIL then recovered | ExpoSQLite vendor + Metro `.rnrepo-cache` blockList on this branch; post-schema retest used **iPhone 17 Pro** (`simctl` / agent-device; **no stim**). |
-| Android development build | not started | No Android agent-device artifacts. **Do not claim Android pass.** |
+| Android development build | `BLOCKED` / not started | No Android agent-device artifacts. Explicit stamp: `android-runtime-blocked.md`. **Do not claim Android pass.** |
 
 **Row status: `PARTIAL` (cancel PASS; email challenge PARTIAL; OTP/callback hard-stopped; JWT verify PASS; `listMine` PASS; `getManifest` PASS post-DDL). Full row-2 still incomplete (OTP/Android/session rows).**
 
@@ -214,7 +231,7 @@ Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT
 | --- | --- | --- |
 | Personal ledger without a Household | `PARTIAL` (API seam) | `test-api-workos-seams.txt`: `personal-ledger.test.ts` **18** (creates/joins no Household; isolation; import on personal scope). `personal-budget-recurring.test.ts` **4**. `test-ledger-scope.txt` **5/5** (personal vs organization ledger ids). |
 | Confirmed first upload / import manifest | `PASS` (live getManifest + Pressable upload) | Live `POST /rpc/migration/getManifest` **200** after DDL 0011–0015 (`post-schema-sync-retest.md`). Pressable confirm → Uploading… → enabled at tip `fb8c786` (`post-pressable-upload-pass.md`). Automated: `import-bundle.test.ts` **15**, `manifest.test.ts` **13**; mobile hook tests **19/19**. Two-store / two-device proof still not certified. |
-| One-device personal sync round-trip (Create Account → txn → Synced) | `BLOCKED` | Add Account **Create Account** hit-test miss after #254/#255/#256. Metro-confirmed MISS tip `c9a3ca8` (`create-account-fresh-mac-blocked.md`; cert evidence `9e3f69f`). Next candidate #257 tip `75491fe` — Mac retest pending (self-hosted worker offline). `create-account-hittest-status.md`. |
+| One-device personal sync round-trip (Create Account → txn → Synced) | `BLOCKED` | Add Account **Create Account** hit-test miss after #254/#255/#256. Metro-confirmed MISS tip `c9a3ca8` (`create-account-fresh-mac-blocked.md`; cert evidence `9e3f69f`). Next candidate [#258](https://github.com/Stringsaeed/money-management/pull/258) tip `709acf8` — Mac retest **BLOCKED** (self-hosted agents ghosting). **Not** PASS. `create-account-hittest-status.md`. |
 | Anonymous local-only use | not evidenced | Requires device. No stim/agent-device proof. |
 | Populated cloud opens separately; device ledger preserved; no auto-merge | not evidenced live | Same mobile/API seams are not two-store device proof. |
 | Two-device personal core / budget / recurring sync, no orgs | not evidenced | No second-device run. `EXPO_PUBLIC_POWERSYNC_URL` absent locally; client may obtain the endpoint from the API token response when hitting `auth.trove.ing`. That does **not** certify two-device sync. |
@@ -255,8 +272,8 @@ Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT
 | Duplicate membership events | `PASS` (API seam) | `projectMembership ordering rule > applies the same event twice without changing anything`. |
 | Reordered / delayed / missed events + reconciliation | `PASS` (API seam) | Older-after-newer ignored; delayed newer wins; deletion tombstone vs stale created; bootstrap tombstones; `listMyHouseholds` drops a membership WorkOS no longer lists. |
 | Unknown Household/User refuse | `PASS` (API seam) | Projection refuses unknown Households/Users; households ignore unknown Organizations. |
-| PowerSync connection removal (measured bound) | `BLOCKED` | Not measured. Local worker mint blocked — absent: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`. GitHub Actions secrets **do** include `POWERSYNC_*` (names only; values not claimed). Stream **config** tests (`test-powersync-proper.txt` **9/9**) are not a live removal bound. |
-| Offline-device limitation (cannot observe remote removal until reconnect) | `BLOCKED` / not measured | No offline-device run. Do not promise remote erasure while disconnected. |
+| PowerSync connection removal (measured bound) | `BLOCKED` | Not measured. Local worker mint blocked — absent: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`. Explicit stamp: `powersync-disposable-reset-blocked.md`. GitHub Actions secrets **do** include `POWERSYNC_*` (names only; values not claimed). Stream **config** tests (`test-powersync-proper.txt` **9/9**) are not a live removal bound. |
+| Offline-device limitation (cannot observe remote removal until reconnect) | `BLOCKED` / not measured | No offline-device run. Same mint env hard-stop. Do not promise remote erasure while disconnected. |
 
 **Row status: `PARTIAL` (event seams) + `BLOCKED` (live PowerSync removal / offline measure).**
 
@@ -281,8 +298,8 @@ Note: `test-powersync.txt` is a **failed** `vitest run` (`No test suite found` /
 | --- | --- | --- |
 | Better Auth / custom Household removal on `main` | predecessor done | HEAD is the #240 squash that closed #231. This ticket certifies composition; it did not re-implement removal. |
 | Disposable env reset (DB, WorkOS env, PowerSync, device stores) | `SKIPPED` by #231/#240 | Reset was not performed. Cannot claim a clean start after reset. |
-| Local disposable DB / worker mint | `BLOCKED` | Absent locally: `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`); `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`. |
-| Webhook verify on local worker | `PARTIAL` local / `BLOCKED` prod | Local name may be present (value omitted). **Prod** `POST https://auth.trove.ing/webhooks/workos` → **503** disabled (`workos-webhook-blocked.md`). |
+| Local disposable DB / worker mint | `BLOCKED` | Absent locally: `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`); `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`. Explicit stamp: `powersync-disposable-reset-blocked.md`. |
+| Webhook verify on local worker | `PARTIAL` local / `BLOCKED` prod | Local name may be present (value omitted). **Prod** `POST https://auth.trove.ing/webhooks/workos` → **503** disabled (`workos-webhook-blocked.md`; re-probe `workos-webhook-probe-2026-09-12b.txt` 05:47Z). |
 | Live API reachable | `PASS` (health only) | `https://auth.trove.ing` health **200 OK**. Not a clean-install walkthrough. |
 | Clean-install anonymous + login + personal sync + Household select after reset | not evidenced | Requires the skipped reset plus device runs. |
 
@@ -307,7 +324,7 @@ Still BLOCKED for disposable mint/reset: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE
 | `@trove/powersync` via vitest | FAIL runner mismatch `test-powersync.txt` | ignore for product status |
 | Ledger-scope `node --test` | **5/5** `test-ledger-scope.txt` | 3, 5 |
 | Mobile jest `use-enable-sync`, `use-sync-worker`, manifest, initialize | **19/19** `test-mobile-sync.txt` | 3, 7 (hooks only) |
-| `pnpm test:ci` | not run | 1 pending |
+| `pnpm test:ci` / CI Jest | **PASS** tip stamp | 1 (`ci-stamp-2026-09-12.txt` + prior `test-ci.txt`) |
 
 API focused files in the 97: `powersync/token.test.ts` (4), `personal-budget-recurring.test.ts` (4), `deletion/service.test.ts` (5), `membership/projection.test.ts` (13), `migration/manifest.test.ts` (13), `import-bundle.test.ts` (15), `personal-ledger.test.ts` (18), `households/service.test.ts` (25).
 
@@ -323,7 +340,7 @@ API focused files in the 97: `powersync/token.test.ts` (4), `personal-budget-rec
 | agent-device (iOS AuthKit) | **PARTIAL** — cancel PASS; email + code challenge reached; OTP hard-stopped (AX unavailable). | `authkit-01-launch.png` … `authkit-21-signed-out-final.png`, `authkit-live-write.txt` |
 | Client id equality | **EQUAL** (names only) | `client-id-compare.txt` — `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) |
 | Post-login protected API | **PASS** (listMine + getManifest) | listMine **200** post-#250; getManifest CF **200** + iPhone 17 Pro UI upload offer (`post-schema-sync-retest.md`, `authkit-102-postschema-upload-offer.png`). **No stim**. Matrix still incomplete. |
-| `stim doctor android` / `stim android` / agent-device (Android) | not started | — |
+| `stim doctor android` / `stim android` / agent-device (Android) | `BLOCKED` / not started | `android-runtime-blocked.md` (prior `stim-doctor-android.txt` harness notes only) |
 | Maestro / verify-trove flows | not started | — |
 
 iOS email-code OTP completion, callback, restart, refresh, expiry, network recovery, and Android remain **uncertified**. Do not treat cancel PASS alone as row-2 complete.
@@ -395,8 +412,9 @@ pnpm --filter @trove/powersync test
 # lib/migration/manifest.test.ts
 # db/initialize.test.ts
 
-# NOT run
+# NOT run locally this write (CI stamp used instead)
 # pnpm test:ci
+# Local PowerSync mint / disposable reset (env absent — see powersync-disposable-reset-blocked.md)
 
 # Runtime harness (not a product pass)
 stim doctor ios    # -> stim-doctor-ios.txt
@@ -410,7 +428,12 @@ stim start --json  # -> stim-start.json (port 8083)
 | File | What it is |
 | --- | --- |
 | `acceptance-matrix.md` | This matrix. |
-| `create-account-hittest-status.md` | Create Account hit-test stamp: upload PASS; round-trip BLOCKED; #257 pending. |
+| `ci-stamp-2026-09-12.txt` | PR #241 tip CI: Typescript + Jest + EAS SUCCESS; GitGuardian FAILURE noted. |
+| `android-runtime-blocked.md` | Android runtime **BLOCKED** / not started (no device). |
+| `powersync-disposable-reset-blocked.md` | PowerSync removal + disposable reset **BLOCKED** (env names). |
+| `planetscale-schema-ddl-confirm-2026-09-12b.txt` | Second DDL 0011–0015 PlanetScale reconfirm **PASS**. |
+| `workos-webhook-probe-2026-09-12b.txt` | Webhook re-probe still **503** (05:47Z). |
+| `create-account-hittest-status.md` | Create Account hit-test stamp: upload PASS; round-trip BLOCKED; #258 Mac ghosting. |
 | `post-pressable-upload-pass.md` | Pressable personal upload **PASS** (tip `fb8c786`). |
 | `post-pressable-roundtrip-blocked.md` | One-device round-trip **BLOCKED** (Create Account NativeHost). |
 | `create-account-pressable-254-blocked.md` | #254 Pressable Create Account retest **BLOCKED**. |
@@ -445,10 +468,10 @@ stim start --json  # -> stim-start.json (port 8083)
 ## What would close #232
 
 1. Finish iOS OTP + callback (or alternate automation that can type into AuthKit digit boxes) and Android runtime rows 2–4 and 7 with artifact paths.
-2. Clear Create Account / one-device personal sync round-trip on device (next candidate #257 tip `75491fe` pending Mac retest) — keep Relates-only until PASS.
+2. Clear Create Account / one-device personal sync round-trip on device (next candidate #258 tip `709acf8` pending Mac retest after self-hosted unghost) — keep Relates-only until PASS. **Do not invent PASS.**
 3. Align `WORKOS_CLIENT_ID` with `EXPO_PUBLIC_WORKOS_CLIENT_ID` (names only), then retest one protected oRPC call against live `auth.trove.ing` (#242 already deployed).
 4. Keep lint/format classified as pre-existing unless a new regression appears.
-5. Measure PowerSync existing-connection removal and the offline-device limitation, or keep those sub-criteria `BLOCKED` with the env names above.
+5. Measure PowerSync existing-connection removal and the offline-device limitation, or keep those sub-criteria `BLOCKED` with the env names in `powersync-disposable-reset-blocked.md`.
 6. Either perform the skipped disposable reset and reproduce clean setup (row 8), or keep row 8 `BLOCKED` and **do not** claim #232 complete.
 7. Set prod `WORKOS_WEBHOOK_SECRET` from WorkOS dashboard signing secret, redeploy, confirm `POST /webhooks/workos` is no longer **503**, then re-certify membership webhook projection.
 8. Keep #224 open. Do not merge as certified. Do not deploy to production. **Do not use Closes #232** until certification is actually complete.

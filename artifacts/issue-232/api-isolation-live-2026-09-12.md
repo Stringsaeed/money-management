@@ -33,7 +33,7 @@ PlanetScale + Cloudflare Observability MCPs were **ready** (no local `PLANETSCAL
 | Live authenticated forged-org rejection after valid login | **BLOCKED** | Requires a valid bearer; gate stops at `invalid_token` |
 | Live viewer-write denial | **BLOCKED** | No viewer-role bearer |
 | WorkOS webhook apply | **BLOCKED** (unchanged) | `POST /webhooks/workos` → **503** empty `WORKOS_WEBHOOK_SECRET` |
-| Create Account / one-device round-trip | **BLOCKED** (unchanged) | Device path; #257 Mac retest pending — **not** claimed PASS |
+| Create Account / one-device round-trip | **BLOCKED** (unchanged) | Device path; #258 tip `709acf8` Mac ghosting — **not** claimed PASS |
 
 ## Matrix rows moved
 
