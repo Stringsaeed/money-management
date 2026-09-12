@@ -1,0 +1,10 @@
+PASS path: components/rejected-changes/readonly-field-keys.test.ts
+PASS components/rejected-changes/readonly-field-keys.test.ts
+  READONLY_FIELD_KEYS
+    ✓ locks envelope-internal payload keys (4 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.012 s
+Ran all test suites matching /components\/rejected-changes\/readonly-field-keys.test.ts/i.
