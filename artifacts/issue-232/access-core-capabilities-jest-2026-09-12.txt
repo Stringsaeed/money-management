@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=efa1310
+gap=modules/access/core-from-state.ts coreFromAccess + capabilities.ts attachCapabilities + route-param.ts firstRouteParam
+matrix_row=5/7 AccessCore projection + capability attach + Expo Router param normalize
+command=pnpm exec jest modules/access/core-from-state.test.ts modules/access/capabilities.test.ts modules/access/route-param.test.ts --runInBand
+result=PASS 11/11
+tsc=PASS exit 0
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
