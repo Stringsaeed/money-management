@@ -2,14 +2,18 @@ import { sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestDb } from "../../test-support/db";
-import { createFakeDirectory } from "../../test-support/fake-directory";
+import { type FakeDirectory, createFakeDirectory } from "../../test-support/fake-directory";
 import { ensureUserProjection } from "../commands/scope";
 import { hasPgCode } from "../pg-error";
-import { listMyHouseholds, type HouseholdDeps } from "./service";
+import { createHousehold, listMyHouseholds, type HouseholdDeps } from "./service";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 
+const ALICE = { id: "user_alice", email: "alice@example.com", name: "Alice" };
+const REQUEST = "11111111-1111-4111-8111-111111111111";
+
 let db: TestDb;
+let directory: FakeDirectory;
 let deps: HouseholdDeps;
 
 beforeEach(async () => {
@@ -18,9 +22,10 @@ beforeEach(async () => {
   await db.execute(sql`ALTER TABLE "user" DROP COLUMN IF EXISTS "memberships_reconciled_at"`);
   await db.execute(sql`ALTER TABLE "user" ALTER COLUMN "created_at" DROP DEFAULT`);
   await db.execute(sql`ALTER TABLE "user" ALTER COLUMN "updated_at" DROP DEFAULT`);
+  directory = createFakeDirectory();
   deps = {
     db,
-    directory: createFakeDirectory(),
+    directory,
     now: () => new Date("2026-09-12T00:00:00.000Z"),
   };
 });
@@ -64,7 +69,7 @@ describe("listMyHouseholds without stamp column or timestamp defaults", () => {
   });
 
   it("returns [] for first-login listMine after widened ensure-user insert", async () => {
-    const listSpy = vi.spyOn(deps.directory, "listUserMemberships");
+    const listSpy = vi.spyOn(directory, "listUserMemberships");
     await expect(
       listMyHouseholds(deps, {
         id: "user_01M28TK8JZ27ZQZ40DCMMFHJ26",
@@ -79,5 +84,49 @@ describe("listMyHouseholds without stamp column or timestamp defaults", () => {
     const actor = { id: "user_idempotent_drift", email: "", name: "" };
     await ensureUserProjection(db, actor);
     await ensureUserProjection(db, actor);
+  });
+});
+
+describe("listMyHouseholds without membership.status (prod 0013 drift)", () => {
+  async function dropMembershipStatusColumn() {
+    await db.execute(
+      sql`ALTER TABLE "membership" DROP CONSTRAINT IF EXISTS "membership_status_valid"`,
+    );
+    await db.execute(sql`DROP INDEX IF EXISTS "membership_household_status_idx"`);
+    await db.execute(sql`ALTER TABLE "membership" DROP COLUMN IF EXISTS "status"`);
+  }
+
+  it("reproduces drizzle 42703 when status is referenced after DROP COLUMN", async () => {
+    directory.seedUser(ALICE);
+    await createHousehold(deps, { actor: ALICE, name: "Home", requestId: REQUEST });
+    await dropMembershipStatusColumn();
+
+    let caught: Error | undefined;
+    try {
+      await db.execute(sql`
+        SELECT "household"."id"
+        FROM "membership"
+        INNER JOIN "household" ON "household"."id" = "membership"."household_id"
+        WHERE "membership"."user_id" = ${ALICE.id} AND "membership"."status" = ${"active"}
+      `);
+    } catch (error) {
+      if (error instanceof Error) caught = error;
+    }
+    expect(caught).toBeInstanceOf(Error);
+    expect(hasPgCode(caught!, "42703")).toBe(true);
+  });
+
+  it("returns projected Households after status column is dropped", async () => {
+    directory.seedUser(ALICE);
+    const home = await createHousehold(deps, { actor: ALICE, name: "Home", requestId: REQUEST });
+    await dropMembershipStatusColumn();
+
+    await expect(listMyHouseholds(deps, ALICE)).resolves.toEqual([
+      expect.objectContaining({
+        householdId: home.householdId,
+        name: "Home",
+        role: "admin",
+      }),
+    ]);
   });
 });
