@@ -42,3 +42,4 @@ new_deletion_operation_id_jest=PASS 2/2 product=e923503
 command_scope_precondition_schema_jest=PASS 4/4 product=e846aa3
 create_payload_schemas_jest=PASS 4/4 product=2558783
 recurring_change_payload_schema_jest=PASS 4/4 product=e977612
+update_archive_account_payload_schemas_jest=PASS 4/4 product=9344bd3
