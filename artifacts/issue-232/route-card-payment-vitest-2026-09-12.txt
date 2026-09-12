@@ -1,0 +1,11 @@
+PASS path: packages/domain/src/card-waterfall.test.ts
+
+ RUN  v3.2.7 /tmp/cert-232-relates-import
+
+ ✓ packages/domain/src/card-waterfall.test.ts (2 tests) 2ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  12:42:45
+   Duration  192ms (transform 32ms, setup 0ms, collect 29ms, tests 2ms, environment 0ms, prepare 50ms)
+
