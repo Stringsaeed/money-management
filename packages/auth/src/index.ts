@@ -37,6 +37,7 @@ export {
   verifyWorkOSWebhook,
 } from "./household-events";
 export type { HouseholdEvent } from "./household-events";
+export { signWorkOSWebhookPayload } from "./workos-webhook-sign";
 export {
   WIDGET_PAGE_PATH,
   WIDGET_RETURN_LINK,
