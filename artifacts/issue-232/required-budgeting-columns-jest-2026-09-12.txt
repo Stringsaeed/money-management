@@ -1,0 +1,10 @@
+PASS path: apps/mobile/db/required-budgeting-columns.test.ts
+PASS db/required-budgeting-columns.test.ts
+  REQUIRED_BUDGETING_COLUMNS
+    ✓ locks required columns per budgeting table (9 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.981 s
+Ran all test suites matching /db\/required-budgeting-columns.test.ts/i.
