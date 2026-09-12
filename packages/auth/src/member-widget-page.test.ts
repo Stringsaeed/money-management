@@ -1,12 +1,25 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  WIDGET_PAGE_PATH,
   WIDGET_RETURN_LINK,
+  WIDGET_SESSION_PATH,
   buildWidgetPageUrl,
   parseWidgetFragment,
   renderMemberWidgetPage,
   widgetPageSecurityHeaders,
 } from "./member-widget-page";
+
+describe("widget path consts", () => {
+  it("locks the member widget page and session paths", () => {
+    expect(WIDGET_PAGE_PATH).toBe("/widgets/members");
+    expect(WIDGET_SESSION_PATH).toBe("/widgets/session");
+  });
+
+  it("locks the app return deep link", () => {
+    expect(WIDGET_RETURN_LINK).toBe("trove://widget-return");
+  });
+});
 
 describe("member widget handoff page", () => {
   it("carries the handoff code only in the URL fragment", () => {
