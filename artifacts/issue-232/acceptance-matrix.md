@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip after sync-or-discard / identity-switch Jest Relates (row 7 automated PARTIAL; webhook still 503; Create Account still BLOCKED on #258; dual-identity BLOCKED) |
+| HEAD | tip `0298d6c` sync-or-discard / identity-switch Jest Relates (row 7 automated PARTIAL; webhook still 503; Create Account still BLOCKED on #258; dual-identity BLOCKED) |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/workspace` (this Relates write); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK**; Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
