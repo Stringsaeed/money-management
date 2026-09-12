@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `5104a5757199cc25ae797e3cfa50638e3049058b` mapPowerSyncCategory stamp — product `64ea0b8d52a0d1f0adaa775244ffcd17b470ef41` (`mapPowerSyncCategory` **4/4** new; suite **32/32**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | PENDING_DOCS — product `5af7904cf13d0c7090ee40bc27dd0159cfedccb1` (`mapPowerSyncTransaction` **4/4** new; suite **36/36**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -37,6 +37,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Live `GET /webhooks/workos` → **404** (POST-only).
 - Runner `WORKOS_WEBHOOK_SECRET` **ABSENT** — did not invent secrets. Verdict unchanged: **BLOCKED**.
 - Evidence: `workos-webhook-probe-2026-09-12e.txt` + `workos-webhook-blocked.md`. Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## mapPowerSyncTransaction Relates (2026-09-12, no device)
+
+- Extended `apps/mobile/modules/ledger-data-source/synced-mappers.test.ts` — **4/4 new PASS** / suite **36/36** (`map-powersync-transaction-jest-2026-09-12.txt`): snake_case→SyncedTransaction; is_recurring 0/1; transfer to_account_id; FX fields for `mapPowerSyncTransaction` (pure row mapper, no PowerSync DB).
+- Row 4 / row 6 PowerSync Transaction mapper seam → advances automated SQLite-row→domain mapping; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## mapPowerSyncCategory Relates (2026-09-12, no device)
 

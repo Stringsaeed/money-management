@@ -1,0 +1,54 @@
+PASS modules/ledger-data-source/synced-mappers.test.ts
+  calculateSyncedBalance
+    ✓ increases from initialBalance for income on the account (14 ms)
+    ✓ decreases for expense on the account (1 ms)
+    ✓ increases for transfer into the account via toAccountId
+    ✓ ignores transactions that do not touch the account
+  assertSupportedAccountUpdate
+    ✓ allows name, color, icon, excludeFromTotal, and sortOrder edits
+    ✓ rejects type edits (9 ms)
+    ✓ rejects currency edits (1 ms)
+    ✓ rejects initialBalance edits
+  assertSupportedTransactionUpdate
+    ✓ allows type, amount, date, account, category, and description edits
+    ✓ rejects currency edits (1 ms)
+    ✓ rejects original amount/currency and exchangeRate edits (1 ms)
+    ✓ rejects recurring lineage edits (1 ms)
+  mapSyncedAccount
+    ✓ maps bank wire type to checking and initialBalanceMinor to initialBalance
+    ✓ maps card wire type to credit_card (1 ms)
+    ✓ maps cash wire type to cash
+    ✓ coerces Date timestamps to ISO strings (1 ms)
+  mapSyncedCategory
+    ✓ copies wire category fields onto the domain Category
+    ✓ preserves parentId for nested categories
+    ✓ coerces Date timestamps to ISO strings (1 ms)
+    ✓ keeps null lifecycleChangedAt when unset
+  mapSyncedTransaction
+    ✓ maps amountMinor and joins matching account and category (1 ms)
+    ✓ uses Unknown account fallback when accountId is missing from the list
+    ✓ resolves toAccount for transfers and null category when unmatched (1 ms)
+    ✓ coerces Date timestamps to ISO strings
+  mapPowerSyncAccount
+    ✓ maps bank row type to checking and snake_case balance fields
+    ✓ maps card row type to credit_card
+    ✓ maps cash row type to cash (1 ms)
+    ✓ treats exclude_from_total=1 as excludeFromTotal true
+  mapPowerSyncCategory
+    ✓ maps snake_case row fields onto the domain Category
+    ✓ preserves parent_id as parentId for nested categories
+    ✓ passes through lifecycle_changed_at timestamps (1 ms)
+    ✓ keeps null lifecycle_changed_at when unset
+  mapPowerSyncTransaction
+    ✓ maps snake_case row fields onto SyncedTransaction
+    ✓ treats is_recurring=1 as isRecurring true and keeps recurring_rule_id
+    ✓ maps transfer to_account_id onto toAccountId (1 ms)
+    ✓ maps FX fields when present
+
+Test Suites: 1 passed, 1 total
+Tests:       36 passed, 36 total
+Snapshots:   0 total
+Time:        1.234 s, estimated 2 s
+Ran all test suites matching /modules\/ledger-data-source\/synced-mappers.test.ts/i.
+
+--- tsc --noEmit ---
