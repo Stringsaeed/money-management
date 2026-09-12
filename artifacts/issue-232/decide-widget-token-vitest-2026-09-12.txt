@@ -1,0 +1,24 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=b45082be6f39da2fc5896e71166645105bd89bcb
+matrix_tip=65bd21d1300b0bf43a0adee714a3cab3dffec402
+gap=decideWidgetToken admin mint / viewer deny
+command=pnpm exec vitest run src/verify-access-token.test.ts -t decideWidgetToken
+result=PASS 1/1 (2 assertions)
+tsc=skipped file-scoped only
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
+
+
+ RUN  v3.2.7 /workspace/.worktrees/cert-232-b3d1/packages/auth
+
+ ✓ src/verify-access-token.test.ts (8 tests | 7 skipped) 2ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 7 skipped (8)
+   Start at  13:45:35
+   Duration  387ms (transform 53ms, setup 0ms, collect 193ms, tests 2ms, environment 0ms, prepare 86ms)
+

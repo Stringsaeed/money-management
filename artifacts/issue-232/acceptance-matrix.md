@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Repo                | `Stringsaeed/money-management`                                                                                                                                                                                                                                                                                   |
 | Branch              | `cursor/workos-certify-migration-b3d1`                                                                                                                                                                                                                                                                           |
-| HEAD                | tip `eb8cb9c7833f8591049d6bc91497754293730771` widget-handoff + household-events stamp — product `b45082be6f39da2fc5896e71166645105bd89bcb` (`parseWidgetFragment` / `widgetPageSecurityHeaders` / `renderMemberWidgetPage` **5/5** vitest; `parseHouseholdEvent` **5/5** vitest; `buildAppleAppSiteAssociation` / `buildAssetLinks` / `parseCertFingerprints` **3/3** vitest; `normalizeAuthEmail` **1/1** jest; `isImportManifestEmpty` **2/2** jest); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD                | tip `65bd21d1300b0bf43a0adee714a3cab3dffec402` (prior widget-handoff stamp) → next stamp after access/sql/widget-token batch — product `b45082be6f39da2fc5896e71166645105bd89bcb`; remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance          | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`.   |
 | Worktree            | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232`                                                                                                                                                                               |
 | Live API            | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503**                                                                                                                                                                          |
@@ -371,6 +371,42 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Existing `packages/auth/src/member-widget-page.test.ts` — **5/5 PASS** / suite **5/5** (`member-widget-fragment-vitest-2026-09-12.txt`): fragment `#code=` parse/empty guards; CSP nonce headers; HTML erases fragment before session fetch; no auth token in markup
 - Row 4 admin widget browser handoff page seam → advances automated member-widget page lock (companion to stamped `buildWidgetPageUrl` / path consts); live widget mint/device return still **BLOCKED**; webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## queryRows Relates (2026-09-12, no device)
+
+- Existing `packages/api/src/lib/sql-rows.test.ts` — **3/3 PASS** / suite **3/3** (`query-rows-ledger-read-input-jest-2026-09-12.txt`): row array passthrough; empty rows; rejects non-array execute results
+- Row 6 SQL row boundary helper → advances automated DB read adapter lock (live DB/import still **BLOCKED**); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## ledgerReadInput Relates (2026-09-12, no device)
+
+- Existing `packages/api/src/lib/ledger-read-input.test.ts` — **5/5 PASS** / suite **5/5** (`query-rows-ledger-read-input-jest-2026-09-12.txt`): personal/org scoped reads accept; legacy `householdId`; empty input rejects; `ledgerReadFields` blank household + unknown scope reject
+- Row 4 / row 6 budget read-scope Zod seam → advances automated ledger read input lock (companion to composite command-shared stamp); live device reads still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## authFailureFromClient Relates (2026-09-12, no device)
+
+- Existing `apps/mobile/modules/access/client-error.test.ts` — **2/2 PASS** / suite **2/2** (`access-client-return-to-jest-2026-09-12.txt`): maps existing-profile signup to `account_exists`; invalid email vs password validation failures
+- Row 2 AuthKit client error normalization seam → advances automated signup failure vocabulary lock; live OTP/device AuthKit still **BLOCKED** (AX); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## hrefForInternal / parseReturnTo Relates (2026-09-12, no device)
+
+- Existing `apps/mobile/modules/access/return-to.test.ts` — **5/5 PASS** / suite **5/5** (`access-client-return-to-jest-2026-09-12.txt`): known screen href parse; unknown/missing → profile household; serialize + `returnTo` helpers; `hrefForInternal` maps settings/household and root fallback
+- Row 5 auth sheet return navigation seam → advances automated post-auth redirect lock; live device navigation still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## decideWidgetToken Relates (2026-09-12, no device)
+
+- Existing `packages/auth/src/verify-access-token.test.ts` (`decideWidgetToken`) — **1/1 PASS** (`decide-widget-token-vitest-2026-09-12.txt`): admin → mint; viewer → deny `not_admin`
+- Row 4 admin widget token boundary seam → advances automated widget mint policy lock (live widget mint/device return still **BLOCKED**); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## readBearerToken / jwksUrlForClient Relates (2026-09-12, no device)
+
+- Existing `packages/auth/src/verify-access-token.test.ts` (bearer/JWKS shape) — **1/1 PASS** (`read-bearer-jwks-vitest-2026-09-12.txt`): Bearer header parse; null authorization; WorkOS JWKS URL for client id
+- Row 2 AuthKit bearer + JWKS URL seam → advances automated access-token verify helpers lock; live verify still **BLOCKED** (env/device); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## formatPrice Relates (2026-09-12, no device)

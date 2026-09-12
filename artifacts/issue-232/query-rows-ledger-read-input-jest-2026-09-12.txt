@@ -1,0 +1,25 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=b45082be6f39da2fc5896e71166645105bd89bcb
+matrix_tip=65bd21d1300b0bf43a0adee714a3cab3dffec402
+gap=queryRows + ledgerReadInput (+ ledgerReadFields suite)
+command=pnpm exec vitest run src/lib/sql-rows.test.ts src/lib/ledger-read-input.test.ts
+result=PASS 8/8
+tsc=skipped file-scoped only
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
+
+
+ RUN  v3.2.7 /workspace/.worktrees/cert-232-b3d1/packages/api
+
+ ✓ src/lib/ledger-read-input.test.ts (5 tests) 5ms
+ ✓ src/lib/sql-rows.test.ts (3 tests) 3ms
+
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
+   Start at  13:45:51
+   Duration  395ms (transform 59ms, setup 0ms, collect 302ms, tests 8ms, environment 0ms, prepare 106ms)
+
