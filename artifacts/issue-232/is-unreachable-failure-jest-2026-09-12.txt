@@ -1,0 +1,31 @@
+branch=cursor/workos-certify-migration-b3d1
+gap=isUnreachableFailure
+command=cd apps/mobile && pnpm exec jest modules/access/session-probe.test.ts -t isUnreachableFailure --runInBand
+relates=#232 only
+closes=none
+certified=false
+
+PASS modules/access/session-probe.test.ts
+  mapSessionSnapshot
+    ○ skipped maps a live session user
+    ○ skipped stays unresolved while the first probe is in flight
+    ○ skipped maps an authoritative empty session
+    ○ skipped maps transport failure as unreachable, never no_session
+  isUnreachableFailure
+    ✓ treats 401 as reachable (2 ms)
+    ✓ treats network failures as unreachable
+  probeSession
+    ○ skipped returns a session identity when getSession has a user
+    ○ skipped returns no_session when getSession is empty
+    ○ skipped returns unreachable when getSession throws a transport failure
+    ○ skipped returns no_session when getSession throws a reachable auth failure
+  tryRemoteSignOut
+    ○ skipped returns ok when remote sign-out succeeds
+    ○ skipped returns unreachable when remote sign-out hits a transport failure
+    ○ skipped returns ok when remote sign-out fails with a reachable error
+
+Test Suites: 1 passed, 1 total
+Tests:       11 skipped, 2 passed, 13 total
+Snapshots:   0 total
+Time:        0.816 s, estimated 1 s
+Ran all test suites matching /modules\/access\/session-probe.test.ts/i with tests matching "isUnreachableFailure".

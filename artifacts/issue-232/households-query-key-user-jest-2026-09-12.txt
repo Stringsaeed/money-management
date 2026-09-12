@@ -1,0 +1,56 @@
+branch=cursor/workos-certify-migration-b3d1
+gap=householdsQueryKeyForUser / householdUserIdForQuery
+command=cd apps/mobile && pnpm exec jest modules/access/access.test.ts -t 'live session identity|cached household pages isolated' --runInBand
+relates=#232 only
+closes=none
+certified=false
+
+PASS modules/access/access.test.ts
+  resolveAccess
+    ○ skipped none x session
+    ○ skipped none x no_session
+    ○ skipped none x unreachable
+    ○ skipped held x session
+    ○ skipped held x no_session
+    ○ skipped held x unreachable
+    ○ skipped none x null probe
+    ○ skipped held x null probe
+    ○ skipped session x households pending
+    ○ skipped keeps signed_in when listMine fails instead of treating it as signed out
+    ○ skipped never turns unreachable into session_revoked
+  nextClaim
+    ○ skipped writes a held claim from a session probe
+    ○ skipped leaves the claim unchanged when the identity already matches
+    ○ skipped does not clear a held claim on an authoritative no_session
+    ○ skipped rewrites when the session identity changes
+  normalizeLedgerSelection
+    ○ skipped keeps Personal selection unchanged
+    ○ skipped keeps a Household selection that still has membership
+    ○ skipped falls back to Personal when the selected Household id is stale
+  pickActiveHousehold
+    ○ skipped returns the selected household when membership still exists
+    ○ skipped returns null for Personal selection or unknown household ids
+  resolveReturnDestination
+    ○ skipped returns the invoking screen when an active household exists
+    ○ skipped returns Profile & household when there is no active household
+    ○ skipped returns Profile & household for revoked and anonymous access
+  selectLedgerSourceForAccess
+    ○ skipped never full-screen-blocks on session_revoked
+    ○ skipped never full-screen-blocks when listMine is unavailable
+    ○ skipped selects a live synced ledger only for the migrated active household
+    ○ skipped keeps the migrated ledger selected while the session probe is in flight
+    ○ skipped syncs a Personal Ledger for a signed-in user who never joined a Household
+    ○ skipped does not degrade a Personal Ledger when the household list fails to load
+    ○ skipped marks the migrated ledger offline_cached when sync mode is kill_switch local_only
+    ○ skipped marks the migrated ledger offline_cached when sync mode is powersync local_only
+  householdReadFromQuery
+    ✓ uses the live session identity instead of a prior held claim (4 ms)
+    ✓ keeps cached household pages isolated by authenticated user (2 ms)
+    ○ skipped keeps cached memberships when the session probe disables the query
+    ○ skipped stays pending only before the first household page arrives
+
+Test Suites: 1 passed, 1 total
+Tests:       33 skipped, 2 passed, 35 total
+Snapshots:   0 total
+Time:        0.831 s, estimated 1 s
+Ran all test suites matching /modules\/access\/access.test.ts/i with tests matching "live session identity|cached household pages isolated".

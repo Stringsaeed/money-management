@@ -1,0 +1,17 @@
+branch=cursor/workos-certify-migration-b3d1
+gap=accountLifecyclePeriod
+command=cd apps/mobile && pnpm exec jest modules/accounts/account-ledger-date.test.ts --runInBand
+relates=#232 only
+closes=none
+certified=false
+
+PASS modules/accounts/account-ledger-date.test.ts
+  accountLifecyclePeriod
+    ✓ returns yyyy-MM for a valid local Ledger Date (5 ms)
+    ✓ rejects malformed Ledger Dates (4 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        1.394 s
+Ran all test suites matching /modules\/accounts\/account-ledger-date.test.ts/i.
