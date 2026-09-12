@@ -1,0 +1,14 @@
+PASS modules/ledger-data-source/synced-mappers.test.ts
+  calculateSyncedBalance
+    ✓ increases from initialBalance for income on the account (3 ms)
+    ✓ decreases for expense on the account
+    ✓ increases for transfer into the account via toAccountId (1 ms)
+    ✓ ignores transactions that do not touch the account
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        1.137 s, estimated 2 s
+Ran all test suites matching /modules\/ledger-data-source\/synced-mappers.test.ts/i.
+
+--- tsc --noEmit ---
