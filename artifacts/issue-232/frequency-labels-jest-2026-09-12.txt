@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/transaction/recurrence/frequency-labels.test.ts
+PASS components/transaction/recurrence/frequency-labels.test.ts
+  FREQUENCY_LABELS
+    ✓ locks day through year recurrence unit labels (9 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.979 s
+Ran all test suites matching /components\/transaction\/recurrence\/frequency-labels.test.ts/i.
