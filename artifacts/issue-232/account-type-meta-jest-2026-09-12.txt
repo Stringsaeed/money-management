@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/account/account-type-meta.test.ts
+PASS components/account/account-type-meta.test.ts
+  ACCOUNT_TYPE_META
+    ✓ indexes ACCOUNT_TYPE_OPTIONS by value (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.957 s
+Ran all test suites matching /components\/account\/account-type-meta.test.ts/i.
