@@ -1,0 +1,25 @@
+PASS modules/access/access.test.ts (9.246 s)
+PASS modules/access/claim-store.test.ts
+PASS modules/access/session-probe.test.ts
+PASS modules/access/ledger-selection-store.test.ts
+PASS modules/access/sign-out-session.test.ts
+PASS modules/access/capabilities.test.ts
+PASS modules/access/core-from-state.test.ts
+PASS modules/access/memberships.test.ts
+PASS modules/access/auth-sheet-session.test.ts
+PASS modules/access/return-to.test.ts
+PASS modules/access/actions.test.ts
+PASS modules/access/identity.test.ts
+PASS modules/access/client-error.test.ts
+PASS modules/access/route-param.test.ts
+PASS modules/access/households-key.test.ts
+PASS modules/access/no-sync-enrollment.test.ts
+PASS modules/access/email.test.ts
+PASS modules/access/profile-household-href.test.ts
+PASS constants/onboarding.test.ts
+
+Test Suites: 19 passed, 19 total
+Tests:       109 passed, 109 total
+Snapshots:   0 total
+Time:        12.276 s
+Ran all test suites matching /modules\/access|constants\/onboarding/i.

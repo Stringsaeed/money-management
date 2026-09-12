@@ -1,0 +1,41 @@
+# Local CI authority stamp (Relates #232 only)
+stamp_utc=2026-09-12T19:30:14Z
+branch=cursor/workos-certify-migration-b3d1
+tip_sha=50e8dfcc9c0dcd3d79c674b956cb78131f701072
+worktree=/tmp/wt-241/money-management
+workspace_main=/workspace @ 20271b21ec0e32623e3adf4f170152ea7e86c120 (left on main; not used for this stamp)
+install=pnpm install --frozen-lockfile → EXIT:0 (lockfile sha256=22ac9cf0d8154662b606009a26b02a4cb08007c26b30b6ddfe4976bbab08905d)
+
+## GitHub Actions (NOT claimed green)
+product_ci=BLOCKED (billing / spend limit — jobs do not start)
+check_runs_at_stamp=GitGuardian Security Checks only (conclusion=neutral); no Typescript/Jest/EAS product runs observed on tip
+prior_billing_evidence=artifacts/issue-232/ci-billing-blocked-2026-09-12.txt
+interim_authority=LOCAL runner only — do NOT claim Actions green
+
+## Commands + exit codes (this tip)
+
+pnpm --filter @trove/server run check-types     EXIT:0
+pnpm --filter @trove/auth run check-types       EXIT:0
+pnpm --filter @trove/api run check-types        EXIT:0
+pnpm --filter @trove/infra run check-types      EXIT:0
+pnpm --filter @trove/db run check-types         EXIT:0
+pnpm -C apps/mobile exec tsc --noEmit           EXIT:0
+
+pnpm --filter @trove/auth run test              EXIT:0  (vitest 10 files / 37 tests PASS)
+pnpm --filter @trove/api run test               EXIT:0  (vitest 65 files / 412 tests PASS)
+pnpm --filter @trove/db run cutover:test        EXIT:0  (node --test 3/3 PASS)
+pnpm -C apps/mobile exec jest --runInBand --ci --testPathPattern='modules/access|constants/onboarding'
+                                                EXIT:0  (19 suites / 109 tests PASS)
+
+pnpm format:check                               EXIT:2  FAIL (pre-existing; stim/*.json artifact noise + prior format debt — not treated as #232 product regression)
+pnpm lint                                       EXIT:1  FAIL (pre-existing; ~864 oxlint error lines — not treated as #232 product regression)
+
+## Scope note
+Full monorepo `pnpm test:ci` (turbo build + full mobile Jest + cutover) not required for this stamp; focused on apps/server + auth/api/infra/db + mobile tsc + access/onboarding Jest as interim local CI authority while Actions billing blocks product CI.
+
+## Governance
+relates=#232 only
+closes_or_fixes=#232|#224 → NOT USED
+certified=false
+do_not_merge_as_certified=true
+do_not_claim_actions_green=true

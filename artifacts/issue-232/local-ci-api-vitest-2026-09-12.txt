@@ -1,0 +1,301 @@
+$ vitest run
+
+ RUN  v3.2.7 /tmp/wt-241/money-management/packages/api
+
+stderr | src/lib/commands/import-bundle.test.ts > commands.apply — import_bundle chunk ordering > fails a transaction chunk referencing an account that hasn't landed yet
+commands.apply: atomic batch failed {
+  commandId: '4e4790ce-dddc-44b1-8a88-43d972331208',
+  ledgerId: 'household-1',
+  kind: 'import_bundle'
+}
+
+ ✓ src/lib/budget/projections.test.ts (13 tests) 11161ms
+   ✓ period projections > computes Available Money, Envelope Health, and Rollover accurately  2231ms
+   ✓ period projections > replays a historical server correction through every later projection  863ms
+   ✓ period projections > includes every household account in shared funding projections  764ms
+   ✓ period projections > routes card spending through availability without going negative, reporting Unfunded Card Spending  846ms
+   ✓ period projections > flags cash Envelope Overspending negatively and carries it forward  757ms
+   ✓ period projections > truncates positive carry for envelopes configured to start fresh  730ms
+   ✓ period projections > reconciles Assigned + Unassigned to the Funding Pool with reserves carved from assigned  709ms
+   ✓ period projections > stamps the cache with the household's current seq  716ms
+   ✓ period projections > invalidates stale cache rows when the seq advances and rebuilds on the next read  744ms
+   ✓ period projections > serves repeat reads from the cache without rebuilding  744ms
+   ✓ period projections > scopes projections by household membership  679ms
+   ✓ period projections > throws a helpful error when the workspace is not activated  662ms
+   ✓ period projections > enumerates periods inclusively across year boundaries  714ms
+ ✓ src/lib/commands/import-bundle.test.ts (15 tests) 12654ms
+   ✓ commands.apply — import_bundle authorization > rejects a user-member — only a Household admin may bulk-import  2288ms
+   ✓ commands.apply — import_bundle authorization > rejects a user-viewer — only a Household admin may bulk-import  799ms
+   ✓ commands.apply — import_bundle authorization > allows every admin (user-owner)  809ms
+   ✓ commands.apply — import_bundle authorization > allows every admin (user-admin)  731ms
+   ✓ commands.apply — import_bundle validation > rejects a malformed row as invalid_intent  752ms
+   ✓ commands.apply — import_bundle validation > rejects chunkIndex >= chunkCount  723ms
+   ✓ commands.apply — import_bundle chunk ordering > fails a transaction chunk referencing an account that hasn't landed yet  710ms
+   ✓ commands.apply — import_bundle chunk ordering > succeeds once accounts import before the transactions that reference them  710ms
+   ✓ commands.apply — import_bundle idempotency > resending the same rows under a fresh commandId never duplicates them  735ms
+   ✓ commands.apply — import_bundle idempotency > rejects a fresh command when an existing id has different content  665ms
+   ✓ commands.apply — import_bundle idempotency > returns a typed conflict for the same content under another household  668ms
+   ✓ commands.apply — import_bundle idempotency > accepts an exact transaction retry under a fresh commandId  665ms
+   ✓ import_bundle bind budget > applies a chunk with more than 100 bound values in one transaction  662ms
+   ✓ commands.apply — import_bundle end-to-end + manifest recompute > imports the full dependency-ordered chain and the manifest reconciles  750ms
+   ✓ commands.apply — import_bundle end-to-end + manifest recompute > imports recurring and budget facts in dependency order  986ms
+ ✓ src/lib/commands/ledger.test.ts (21 tests) 17001ms
+   ✓ ledger commands — accounts > creates an account with attribution and balances effects  2163ms
+   ✓ ledger commands — accounts > updates an account and bumps the version  804ms
+   ✓ ledger commands — accounts > archives instead of deleting (ADR-0009) and stamps lifecycleChangedAt  784ms
+   ✓ ledger commands — accounts > rejects a stale expectedVersion with stale_version  752ms
+   ✓ ledger commands — accounts > returns missing_entity for an unknown account  739ms
+   ✓ ledger commands — accounts > keeps structural writes owner/admin-only  660ms
+   ✓ ledger commands — accounts > refuses edits to archived accounts  632ms
+   ✓ ledger commands — categories > creates, updates, and archives categories  667ms
+   ✓ ledger commands — categories > rejects a parent from outside the household via missing_entity  745ms
+   ✓ ledger commands — categories > keeps category writes owner/admin-only  655ms
+   ✓ ledger commands — transactions > creates an expense and derives the currency from the account  692ms
+   ✓ ledger commands — transactions > rechecks live membership on apply after member→viewer demotion (queued write)  698ms
+   ✓ ledger commands — transactions > allocates contiguous change sequences for concurrent creates  764ms
+   ✓ ledger commands — transactions > validates transfer shape with typed rejections  733ms
+   ✓ ledger commands — transactions > requires a matching-type category  757ms
+   ✓ ledger commands — transactions > edits a transaction under optimistic concurrency  917ms
+   ✓ ledger commands — transactions > removes a transaction and guards against double removal  724ms
+   ✓ ledger commands — transactions > invalidates projection cache from the earliest affected period on historical edits (ADR-0005)  916ms
+   ✓ ledger commands — transactions > invalidates projections from the removed transaction's period  717ms
+   ✓ ledger commands — transactions > scopes every write by the envelope's household — cross-household ids are invisible  762ms
+   ✓ ledger sync accuracy > replays the stored result for a retried ledger command without re-executing  717ms
+ ✓ src/lib/commands/waterfall.test.ts (12 tests) 10303ms
+   ✓ funding pool calculation > sums initial balances plus activity of period-effective members only  1341ms
+   ✓ funding pool calculation > treats member-to-member transfers as neutral; cross-pool transfers move the pool  869ms
+   ✓ funding pool calculation > excludes accounts whose membership was tombstoned before the period  942ms
+   ✓ assignment.commit > commits a top-up atomically with waterfall routing in the applied payload  946ms
+   ✓ assignment.commit > rejects a top-up exceeding Unassigned Money without a predicate  832ms
+   ✓ assignment.commit > accepts the unassigned_money_gte predicate precondition  703ms
+   ✓ assignment.commit > returns conflict when a predicate precondition no longer holds  780ms
+   ✓ assignment.commit > moves between envelopes without consuming Unassigned Money  826ms
+   ✓ assignment.commit > reverses an assignment once with a linked opposite-direction row  753ms
+   ✓ interleaving safety — preconditions replace locks > aborts the second stale batch before it double-spends Unassigned Money  797ms
+   ✓ interleaving safety — preconditions replace locks > converges under randomized interleavings — Unassigned Money never goes negative (fuzz)  844ms
+   ✓ interleaving safety — preconditions replace locks > re-plans after a guard fire and surfaces the typed rejection to the loser  667ms
+ ✓ src/lib/migration/import-content.test.ts (14 tests) 5ms
+ ✓ src/lib/budget/budget.test.ts (11 tests) 8470ms
+   ✓ budget schema — append-only enforcement > rejects UPDATE and DELETE on category_mappings  1287ms
+   ✓ budget schema — append-only enforcement > rejects UPDATE and DELETE on funding_memberships  776ms
+   ✓ budget schema — append-only enforcement > rejects UPDATE and DELETE on rollover_settings and assignments  952ms
+   ✓ budget schema — append-only enforcement > rejects malformed Budget Periods at the schema level  694ms
+   ✓ budget schema — append-only enforcement > enforces assignment data integrity checks  653ms
+   ✓ period-effective timelines — derived effective_to_period > derives category mapping spans via LEAD and treats NULL targets as unmapped tombstones  646ms
+   ✓ period-effective timelines — derived effective_to_period > derives funding membership spans with exit tombstones  670ms
+   ✓ period-effective timelines — derived effective_to_period > derives rollover setting spans per envelope  803ms
+   ✓ budget reads — authorization > lets any member read, including the read-only viewer role  700ms
+   ✓ budget reads — authorization > rejects a non-member before any read  650ms
+   ✓ budget reads — authorization > keeps households isolated — another household's envelopes are invisible  636ms
+ ✓ src/lib/households/service.test.ts (25 tests) 18413ms
+   ✓ createHousehold > creates one Organization, one ledger, one household and an admin membership  1339ms
+   ✓ createHousehold > retries with the same requestId converge on the same Household  891ms
+   ✓ createHousehold > finishes a create whose membership step failed on the first attempt  793ms
+   ✓ createHousehold > finishes a create whose Organization was made but never recorded  787ms
+   ✓ createHousehold > refuses another User's requestId  697ms
+   ✓ listMyHouseholds > bootstraps memberships WorkOS knows about that Trove has not projected yet  806ms
+   ✓ listMyHouseholds > reuses a fresh bootstrap and refreshes a stale one  755ms
+   ✓ listMyHouseholds > drops a membership WorkOS no longer lists, even when the event was missed  893ms
+   ✓ listMyHouseholds > ignores Organizations Trove did not create  704ms
+   ✓ listMyHouseholds > hides memberships with a role slug Trove does not know  698ms
+   ✓ getHousehold > lists members and projects Users Trove has never seen  730ms
+   ✓ getHousehold > is invisible to non-members and to removed members  647ms
+   ✓ getHousehold > reports a Household left without an admin by a widget-side change  728ms
+   ✓ member administration > lets only admins invite, through WorkOS invitations  679ms
+   ✓ member administration > changes a role in WorkOS first and projects the result  640ms
+   ✓ member administration > keeps the last admin in place  653ms
+   ✓ member administration > removes a member: WorkOS deletion plus an immediate local tombstone  715ms
+   ✓ member administration > lets a non-admin leave and an admin leave once another admin exists  635ms
+   ✓ deleteHousehold > removes the Organization, the Household, and its ledger data; personal data stays  716ms
+   ✓ deleteHousehold > is admin-only  670ms
+   ✓ widget handoff > issues a single-use code to admins only and exchanges it for a bound token  643ms
+   ✓ widget handoff > rejects expired codes and codes whose admin was demoted in the meantime  659ms
+   ✓ applyHouseholdEvent > projects a created membership for a User Trove has never seen  658ms
+   ✓ applyHouseholdEvent > denies everyone when the Organization is deleted, keeping the data  637ms
+   ✓ applyHouseholdEvent > ignores events for Organizations Trove does not know  636ms
+ ✓ src/lib/commands/card-payments.test.ts (12 tests) 9150ms
+   ✓ routeCardPayment (pure waterfall) > consumes reserve first, then unassigned against unfunded debt  1295ms
+   ✓ routeCardPayment (pure waterfall) > never pays out of Unassigned when no unfunded spending exists  760ms
+   ✓ routeCardPayment (pure waterfall) > returns excess payment as Card Credit per ADR-0014  726ms
+   ✓ card payment reserve calculation > reserves categorized card spending capped by the envelope's assigned money  722ms
+   ✓ card payment reserve calculation > nets linked refunds out of the reserve (ADR-0008)  736ms
+   ✓ card payment reserve calculation > ignores unmapped and cash-account spending entirely  837ms
+   ✓ refund.link > attributes a refund to its own Budget Period (ADR-0008)  697ms
+   ✓ refund.link > enforces the cumulative cap across multiple refunds  680ms
+   ✓ refund.link > adopts the client Transaction id and replays the linked Refund exactly once  697ms
+   ✓ refund.link > rejects refunds of non-expense transactions  718ms
+   ✓ refund.link > requires card refunds to return to the original card  656ms
+   ✓ refund.link > aborts an interleaved over-refund through the in-batch cap guard  623ms
+ ✓ src/lib/recurring/settlement.test.ts (10 tests) 7951ms
+   ✓ settlement engine — identical results vs. client prior art > settles each occurrence once, even after its generated transaction is deleted  1333ms
+   ✓ settlement engine — identical results vs. client prior art > is idempotent across concurrent double-settlement via the occurrence PK  747ms
+   ✓ settlement engine — identical results vs. client prior art > applies the pre-edit state before a same-day pause and skips the paused interval on resume  743ms
+   ✓ settlement engine — identical results vs. client prior art > completes a rule after its endCount is reached and stops generating  682ms
+   ✓ settlement engine — revision & optimistic concurrency > increments the rule revision when settlement changes state  753ms
+   ✓ settlement engine — revision & optimistic concurrency > aborts the commit when another writer bumped the revision mid-settlement  634ms
+   ✓ settlement engine — order, sync effects, attention handling > settles independent rules in deterministic order and reports unexpected failures separately  720ms
+   ✓ settlement engine — order, sync effects, attention handling > appends one household_changes entry per settled rule with ledger effects  808ms
+   ✓ settlement engine — order, sync effects, attention handling > flags rules whose source account disappeared or changed currency  845ms
+   ✓ settlement engine — order, sync effects, attention handling > scopes sweeps by household — other households' rules are untouched  684ms
+ ✓ src/lib/recurring/scheduler.test.ts (6 tests) 5240ms
+   ✓ scheduled settlement sweep > evaluates each rule on its own time zone's local date  1474ms
+   ✓ scheduled settlement sweep > is idempotent under Cron Trigger retries  815ms
+   ✓ scheduled settlement sweep > isolates households — a paused household's rules never settle  787ms
+   ✓ scheduled settlement sweep > skips archived rules entirely  745ms
+   ✓ scheduled settlement sweep > includes personal ledgers in the hourly fan-out  720ms
+   ✓ scheduled settlement sweep > uses production-shaped identities without colliding across sweeps  696ms
+ ✓ src/lib/commands/personal-budget-recurring.test.ts (4 tests) 3759ms
+   ✓ personal budget and recurring — no Household required > configures a workspace, assigns, refunds, and creates a rule on the personal ledger  1355ms
+   ✓ personal budget and recurring — no Household required > rejects a second user addressing the first user's personal envelope  879ms
+   ✓ personal budget and recurring — no Household required > keeps personal budget rows invisible across users  754ms
+   ✓ personal budget and recurring — no Household required > settles a personal rule without a Household and is occurrence-idempotent  766ms
+ ✓ src/lib/commands/personal-ledger.test.ts (18 tests) 13819ms
+   ✓ personal ledger commands — no Household required > creates an account on a ledger provisioned by the first write  1468ms
+   ✓ personal ledger commands — no Household required > never creates or joins a Household  775ms
+   ✓ personal ledger commands — no Household required > carries categories and transactions on the same personal ledger  763ms
+   ✓ personal ledger commands — no Household required > replays a retried command instead of re-executing it  927ms
+   ✓ personal ledger commands — no Household required > projects the WorkOS identity so the first write can attribute itself  706ms
+   ✓ personal ledger commands — no Household required > accepts import_bundle on personal scope  689ms
+   ✓ personal ledger commands — no Household required > rejects an envelope that names no ledger at all  684ms
+   ✓ personal ledger isolation — one User cannot reach another's ledger > keeps each User's rows on their own ledger  696ms
+   ✓ personal ledger isolation — one User cannot reach another's ledger > cannot update another User's account — it is invisible, not forbidden  742ms
+   ✓ personal ledger isolation — one User cannot reach another's ledger > cannot archive another User's account  701ms
+   ✓ personal ledger isolation — one User cannot reach another's ledger > cannot book a transaction against another User's account  681ms
+   ✓ personal ledger isolation — one User cannot reach another's ledger > cannot link a category from another User's ledger  683ms
+   ✓ personal ledger isolation — one User cannot reach another's ledger > allocates change sequences per ledger, not globally  908ms
+   ✓ personal ledger isolation — one User cannot reach another's ledger > does not let a personal commandId collide across ledgers  732ms
+   ✓ organization scope — the Household path is unchanged > writes household rows for an explicit organization scope  631ms
+   ✓ organization scope — the Household path is unchanged > still accepts a bare householdId from older clients  679ms
+   ✓ organization scope — the Household path is unchanged > keeps a personal ledger separate from the Household the same User owns  696ms
+   ✓ organization scope — the Household path is unchanged > rejects a non-member naming the Household as an organization scope  657ms
+ ✓ src/lib/commands/pipeline.test.ts (18 tests) 13786ms
+   ✓ commands.apply — authorization > rejects a non-member with a null role  1541ms
+   ✓ commands.apply — authorization > rejects a member who lacks the capability, naming their role  777ms
+   ✓ commands.apply — authorization > rejects a viewer (read-only role) via the capability map  690ms
+   ✓ commands.apply — authorization > rejects a removed (inactive) admin exactly like a stranger  881ms
+   ✓ commands.apply — authorization > rejects a pending membership before the invitation is accepted  694ms
+   ✓ commands.apply — authorization > rejects a role slug Trove does not know  730ms
+   ✓ commands.apply — authorization > appends no change row when authorization fails  686ms
+   ✓ commands.apply — happy path > applies atomically and appends exactly one change row  738ms
+   ✓ commands.apply — happy path > allocates monotonically increasing per-household seq numbers  695ms
+   ✓ commands.apply — happy path > stores an idempotency record alongside the change row  682ms
+   ✓ commands.apply — idempotency > replays the stored result for a retried command_id without re-executing  702ms
+   ✓ commands.apply — idempotency > scopes idempotency per household — the same commandId in another household executes fresh  909ms
+   ✓ commands.apply — precondition validation > returns stale_version when expectedVersion does not match  691ms
+   ✓ commands.apply — precondition validation > applies when expectedVersion matches current state  704ms
+   ✓ commands.apply — intent validation > rejects malformed payloads as invalid_intent  668ms
+   ✓ commands.apply — intent validation > returns missing_entity for an unknown parent category  643ms
+   ✓ commands.apply — intent validation > rejects unsupported predicate preconditions instead of silently ignoring them  623ms
+   ✓ commands.apply — intent validation > rejects removed or unknown command kinds as invalid_intent  730ms
+ ✓ src/lib/published-row-identity.test.ts (6 tests) 2260ms
+   ✓ PowerSync published row identity > rejects cross-household account and category references in Postgres  1558ms
+   ✓ PowerSync published row identity > upgrades an already-applied legacy 0007 and is safe to replay  695ms
+ ✓ src/lib/activity/list.test.ts (10 tests) 7538ms
+   ✓ getActivity > rejects a non-member before reading any change data  1236ms
+   ✓ getActivity > returns entries newest-first with user attribution and decoded summaries  1181ms
+   ✓ getActivity > paginates by limit/offset and reports hasMore  851ms
+   ✓ getActivity > filters by user attribution  706ms
+   ✓ getActivity > filters to a date range inclusive of both bounds  866ms
+   ✓ getActivity > combines user and date filters  663ms
+   ✓ getActivity > never leaks another household's changes  690ms
+   ✓ getActivity > returns an empty page for a household with no changes  626ms
+   ✓ getActivity > caps the limit at MAX_ACTIVITY_LIMIT regardless of input  717ms
+ ✓ src/lib/migration/manifest.test.ts (13 tests) 10037ms
+   ✓ computeImportManifest > reads every aggregate and content row from one repeatable snapshot  1534ms
+   ✓ computeImportManifest > canonicalizes key order and equivalent timestamp offsets  732ms
+   ✓ computeImportManifest > normalizes PostgreSQL bigint aggregates at the database boundary  741ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value:   888ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: 10.5  795ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: invalid  656ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: -1  660ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: 10.5  637ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: -1  723ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: 9007199254740992n  736ms
+   ✓ computeImportManifest > rejects an unsafe numeric aggregate string  638ms
+   ✓ computeImportManifest > counts ledger facts and sums transactions by account, scoped to the household  652ms
+   ✓ computeImportManifest > returns zeroed counts and empty sums for a household with no imported rows  644ms
+ ✓ src/lib/deletion/service.test.ts (5 tests) 4193ms
+   ✓ requestHouseholdDeletion > requires confirmName and rejects non-admins  1269ms
+   ✓ requestHouseholdDeletion > removes shared ledger data, keeps personal ledgers, and tombstones the org  752ms
+   ✓ requestHouseholdDeletion > resumes after a WorkOS failure without duplicating local deletes  726ms
+   ✓ requestUserDeletion > blocks sole admins until they appoint another admin or delete the Household  699ms
+   ✓ requestUserDeletion > anonymizes attribution, clears personal data, and ignores delayed membership events  746ms
+ ✓ src/lib/observability/metrics.test.ts (9 tests) 10ms
+ ✓ src/lib/membership/projection.test.ts (13 tests) 9772ms
+   ✓ projectMembership ordering rule > projects a first observation and grants access  1323ms
+   ✓ projectMembership ordering rule > applies the same event twice without changing anything  795ms
+   ✓ projectMembership ordering rule > ignores an older observation that arrives after a newer one  707ms
+   ✓ projectMembership ordering rule > lets a delayed newer observation win over an older one already applied  765ms
+   ✓ projectMembership ordering rule > keeps a deletion tombstone ahead of a stale created event  669ms
+   ✓ projectMembership ordering rule > re-admits a User through a genuinely newer membership under a new id  800ms
+   ✓ projectMembership ordering rule > does not resolve two distinct events at the same instant in favor of the later arrival  695ms
+   ✓ projectMembership ordering rule > refuses to write for Households or Users Trove does not know  629ms
+   ✓ access decisions > denies pending and unknown-role memberships  665ms
+   ✓ bootstrap tombstones > tombstones memberships missing from the authoritative list, dated at the list request  643ms
+   ✓ bootstrap tombstones > leaves a membership created after the list was requested untouched  648ms
+   ✓ bootstrap tombstones > keeps listed memberships  734ms
+   ✓ bootstrap tombstones > tombstones every member when the Organization is deleted  698ms
+ ✓ src/lib/budget/period.test.ts (10 tests) 6ms
+ ✓ src/lib/commands/schema.test.ts (13 tests) 8ms
+ ✓ src/lib/commands/budget-configure.test.ts (2 tests) 2263ms
+   ✓ budget.configure > activates a workspace and creates then edits an envelope atomically  1256ms
+   ✓ assignment.correct > reverses and replaces one assignment in a single command  1007ms
+ ✓ src/routers/ledger.test.ts (3 tests) 3161ms
+   ✓ ledger reads > returns all household accounts and transactions to every member  1275ms
+   ✓ transaction detail > allows any member to read transactions on shared accounts  816ms
+   ✓ transaction pagination > does not skip rows that share the cursor date  1069ms
+ ✓ src/domain/assignment-waterfall.test.ts (8 tests) 3ms
+ ✓ src/lib/powersync/token.test.ts (4 tests) 17ms
+ ✓ src/lib/commands/recurring-change.test.ts (2 tests) 2279ms
+   ✓ recurring.change > creates and edits a recurring rule through the atomic command pipeline  1489ms
+   ✓ recurring.change > returns a typed stale result instead of overwriting a newer revision  790ms
+ ✓ src/lib/budget/reserve.test.ts (4 tests) 4ms
+ ✓ src/lib/require-member.test.ts (9 tests) 6ms
+ ✓ src/lib/commands/create-payload-schemas.test.ts (4 tests) 6ms
+ ✓ src/lib/membership/reconcile-freshness.test.ts (5 tests) 3ms
+ ✓ src/domain/pending-lifecycle-settlement.test.ts (4 tests) 5ms
+ ✓ src/lib/commands/recurring-change-payload-schema.test.ts (4 tests) 7ms
+ ✓ src/lib/powersync-publication.test.ts (23 tests) 7ms
+ ✓ src/lib/commands/handlers/shared.test.ts (4 tests) 6ms
+ ✓ src/lib/commands/create-update-category-payload-schemas.test.ts (4 tests) 5ms
+ ✓ src/lib/households/sole-admin-deletion-guard.test.ts (5 tests) 4283ms
+   ✓ listSoleAdminHouseholds > blocks deletion when the User is the sole active admin  1541ms
+   ✓ listSoleAdminHouseholds > allows deletion when another active admin remains  711ms
+   ✓ listSoleAdminHouseholds > ignores inactive and pending admins when deciding sole-admin  702ms
+   ✓ assertUserDeletionAllowed > resolves when no sole-admin Households remain  669ms
+   ✓ assertUserDeletionAllowed > throws SOLE_ADMIN with householdIds when deletion would leave a Household adminless  659ms
+ ✓ src/lib/commands/edit-remove-transaction-payload-schemas.test.ts (4 tests) 4ms
+ ✓ src/lib/ledger-read-input.test.ts (5 tests) 4ms
+ ✓ src/lib/commands/capabilities.test.ts (4 tests) 3ms
+ ✓ src/lib/activity/summary.test.ts (6 tests) 3ms
+ ✓ src/lib/budget/envelope-balance.test.ts (2 tests) 3ms
+ ✓ src/lib/households/admin-guard.test.ts (4 tests) 2ms
+ ✓ src/lib/commands/update-archive-account-payload-schemas.test.ts (4 tests) 4ms
+ ✓ src/lib/observability/kill-switch.test.ts (4 tests) 2ms
+ ✓ src/lib/households/widget-handoff.test.ts (3 tests) 5ms
+ ✓ src/lib/deletion/operation-id.test.ts (2 tests) 3ms
+ ✓ src/lib/commands/pipeline-guard.test.ts (2 tests) 2ms
+ ✓ src/lib/0007-tail.test.ts (1 test) 2ms
+ ✓ src/lib/sql-rows.test.ts (3 tests) 3ms
+ ✓ src/lib/commands/scope.test.ts (2 tests) 2ms
+ ✓ src/domain/settlement-effects.test.ts (2 tests) 2ms
+ ✓ src/lib/require-user.test.ts (2 tests) 2ms
+ ✓ src/lib/powersync/key.test.ts (2 tests) 3ms
+ ✓ src/lib/commands/budget-period-of.test.ts (3 tests) 3ms
+ ✓ src/lib/commands/archive-category-payload-schema.test.ts (2 tests) 3ms
+ ✓ src/lib/households/last-admin-message.test.ts (1 test) 2ms
+ ✓ src/domain/date-after.test.ts (3 tests) 4ms
+ ✓ src/lib/recurring/system-settlement-actor.test.ts (1 test) 1ms
+ ✓ src/lib/membership/household-reconcile-max-age-ms.test.ts (1 test) 1ms
+ ✓ src/lib/membership/token-reconcile-max-age-ms.test.ts (1 test) 2ms
+ ✓ src/lib/observability/kill-switch-flag.test.ts (1 test) 2ms
+ ✓ src/lib/membership/user-reconcile-max-age-ms.test.ts (1 test) 2ms
+ ✓ src/lib/households/invitation-expires.test.ts (1 test) 2ms
+ ✓ src/lib/powersync/powersync-jwt-algorithm.test.ts (1 test) 2ms
+ ✓ src/lib/households/widget-handoff-ttl-ms.test.ts (1 test) 1ms
+
+ Test Files  65 passed (65)
+      Tests  412 passed (412)
+   Start at  19:28:00
+   Duration  69.25s (transform 1.19s, setup 0ms, collect 19.13s, tests 177.66s, environment 11ms, prepare 3.59s)
+
