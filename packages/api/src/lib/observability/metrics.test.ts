@@ -5,6 +5,7 @@ import type { CommandResult } from "@trove/protocol";
 import {
   createBufferSink,
   createConsoleSink,
+  createMetricsSink,
   instrumentCommandApply,
   rejectionReason,
   type MetricEvent,
@@ -160,5 +161,56 @@ describe("metrics", () => {
       durationMs: 17,
       outcome: "applied",
     });
+  });
+
+  it("falls back to console JSON when Analytics Engine dataset is unbound", () => {
+    const lines: string[] = [];
+    const original = console.log;
+    console.log = (line: string) => {
+      lines.push(line);
+    };
+    try {
+      const sink = createMetricsSink(undefined);
+      sink.record({ event: "kill_switch_engaged" });
+    } finally {
+      console.log = original;
+    }
+
+    expect(lines).toHaveLength(1);
+    expect(JSON.parse(lines[0]!)).toEqual({ metric: true, event: "kill_switch_engaged" });
+  });
+
+  it("writes positional AE blobs and latency doubles when a dataset is bound", () => {
+    const points: Array<{
+      blobs?: ((ArrayBuffer | string) | null)[];
+      doubles?: number[];
+    }> = [];
+    const sink = createMetricsSink({
+      writeDataPoint(dataPoint) {
+        points.push(dataPoint);
+      },
+    });
+
+    sink.record({
+      event: "latency_sample",
+      operation: "commands.apply",
+      durationMs: 23,
+      outcome: "applied",
+    });
+    sink.record({
+      event: "command_rejection",
+      rejectionKind: "forbidden",
+      reason: "transaction.create",
+    });
+
+    expect(points).toEqual([
+      {
+        blobs: ["latency_sample", "commands.apply", "applied"],
+        doubles: [23],
+      },
+      {
+        blobs: ["command_rejection", "forbidden", "transaction.create"],
+      },
+    ]);
   });
 });
