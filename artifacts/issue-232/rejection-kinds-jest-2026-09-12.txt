@@ -1,0 +1,20 @@
+PASS modules/powersync/rejection.test.ts
+  REJECTION_KINDS
+    ✓ lists every typed rejection kind the inbox can render (3 ms)
+    ✓ does not include applied success (1 ms)
+  isRejectionKind
+    ✓ accepts every kind of the typed rejection union (1 ms)
+    ✓ rejects applied results and non-strings (1 ms)
+  parseRejection
+    ✓ round-trips every server rejection variant (1 ms)
+    ✓ fills safe defaults for malformed payloads instead of throwing (1 ms)
+  describeRejection
+    ✓ renders a precise sentence per rejection type (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       7 passed, 7 total
+Snapshots:   0 total
+Time:        1.183 s
+Ran all test suites matching /modules\/powersync\/rejection.test.ts/i.
+
+--- tsc --noEmit ---
