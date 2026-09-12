@@ -1,0 +1,10 @@
+PASS path: apps/mobile/modules/access/profile-household-href.test.ts
+PASS modules/access/profile-household-href.test.ts
+  PROFILE_HOUSEHOLD_HREF
+    ✓ locks the profile household settings href (10 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.009 s
+Ran all test suites matching /modules\/access\/profile-household-href.test.ts/i.
