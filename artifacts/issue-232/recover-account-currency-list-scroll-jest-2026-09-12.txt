@@ -1,0 +1,11 @@
+PASS path: apps/mobile/components/account/recover-account-currency-list-scroll.test.ts
+PASS components/account/recover-account-currency-list-scroll.test.ts
+  recoverAccountCurrencyListScroll
+    ✓ scrolls to the computed offset without animation (10 ms)
+    ✓ no-ops when the list ref is null (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        0.964 s
+Ran all test suites matching /components\/account\/recover-account-currency-list-scroll.test.ts/i.
