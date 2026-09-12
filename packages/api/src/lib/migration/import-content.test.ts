@@ -9,7 +9,7 @@ import type {
   fundingMembership,
   rolloverSetting,
 } from "@trove/db/schema/budget";
-import type { recurringOccurrence } from "@trove/db/schema/recurring";
+import type { recurringOccurrence, recurringRule } from "@trove/db/schema/recurring";
 
 import {
   accountContentRow,
@@ -20,6 +20,7 @@ import {
   envelopeContentRow,
   fundingMembershipContentRow,
   recurringOccurrenceContentRow,
+  recurringRuleContentRow,
   rolloverSettingContentRow,
   sha256Hex,
   transactionContentRow,
@@ -350,6 +351,119 @@ describe("assignmentContentRow", () => {
     expect(assignmentContentRow(row).row).toMatchObject({
       id: "asg-2",
       reversesAssignmentId: "asg-1",
+    });
+  });
+});
+
+describe("recurringRuleContentRow", () => {
+  it("maps rule fields and nulls absent change timestamps", () => {
+    // SAFETY: fixture only needs columns the pure content-row mapper reads.
+    const row = {
+      id: "rule-1",
+      name: "Rent",
+      type: "expense",
+      amountMinor: 120_000,
+      currency: "USD",
+      accountId: "account-1",
+      toAccountId: null,
+      categoryId: "category-1",
+      description: "Monthly rent",
+      frequency: "month",
+      intervalCount: 1,
+      startDate: "2026-01-01",
+      endDate: null,
+      endCount: null,
+      timeZone: "UTC",
+      lifecycle: "active",
+      health: "ready",
+      attentionReasons: "[]",
+      attentionDetails: null,
+      eligibilityFloor: "2026-01-01",
+      revision: 1,
+      lifecycleChangedAt: null,
+      healthChangedAt: null,
+      lastSettlementAttemptAt: null,
+      lastSettlementError: null,
+      createdAt,
+      updatedAt,
+    } as typeof recurringRule.$inferSelect;
+
+    expect(recurringRuleContentRow(row)).toEqual({
+      entityType: "recurring_rule",
+      row: {
+        id: "rule-1",
+        name: "Rent",
+        type: "expense",
+        amountMinor: 120_000,
+        currency: "USD",
+        accountId: "account-1",
+        toAccountId: null,
+        categoryId: "category-1",
+        description: "Monthly rent",
+        frequency: "month",
+        intervalCount: 1,
+        startDate: "2026-01-01",
+        endDate: null,
+        endCount: null,
+        timeZone: "UTC",
+        lifecycle: "active",
+        health: "ready",
+        attentionReasons: "[]",
+        attentionDetails: null,
+        eligibilityFloor: "2026-01-01",
+        revision: 1,
+        lifecycleChangedAt: null,
+        healthChangedAt: null,
+        lastSettlementAttemptAt: null,
+        lastSettlementError: null,
+        createdAt: "2026-09-01T12:00:00.000Z",
+        updatedAt: "2026-09-02T12:00:00.000Z",
+      },
+    });
+  });
+
+  it("serializes lifecycle, health, and settlement attempt timestamps when present", () => {
+    // SAFETY: fixture only needs columns the pure content-row mapper reads.
+    const healthChangedAt = new Date("2026-09-04T12:00:00.000Z");
+    const lastSettlementAttemptAt = new Date("2026-09-05T12:00:00.000Z");
+    const row = {
+      id: "rule-2",
+      name: "Paycheck",
+      type: "income",
+      amountMinor: 200_000,
+      currency: "USD",
+      accountId: "account-1",
+      toAccountId: null,
+      categoryId: null,
+      description: "",
+      frequency: "month",
+      intervalCount: 1,
+      startDate: "2026-01-15",
+      endDate: "2026-12-15",
+      endCount: 12,
+      timeZone: "America/New_York",
+      lifecycle: "paused",
+      health: "needs_attention",
+      attentionReasons: '["missing-source-account"]',
+      attentionDetails: "account gone",
+      eligibilityFloor: "2026-02-15",
+      revision: 3,
+      lifecycleChangedAt,
+      healthChangedAt,
+      lastSettlementAttemptAt,
+      lastSettlementError: "account missing",
+      createdAt,
+      updatedAt,
+    } as typeof recurringRule.$inferSelect;
+
+    expect(recurringRuleContentRow(row).row).toMatchObject({
+      id: "rule-2",
+      endDate: "2026-12-15",
+      endCount: 12,
+      lifecycleChangedAt: "2026-09-03T12:00:00.000Z",
+      healthChangedAt: "2026-09-04T12:00:00.000Z",
+      lastSettlementAttemptAt: "2026-09-05T12:00:00.000Z",
+      lastSettlementError: "account missing",
     });
   });
 });
