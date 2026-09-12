@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/household/enable-sync-idle-description.test.ts
+PASS components/household/enable-sync-idle-description.test.ts
+  ENABLE_SYNC_IDLE_DESCRIPTION
+    ✓ locks the idle enable-sync description (9 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.975 s
+Ran all test suites matching /components\/household\/enable-sync-idle-description.test.ts/i.
