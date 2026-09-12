@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `988f575b049a0842718b7ecdf081740b1ad11345` SYNCED_ERASE_REASON stamp — product `022531db31a7ba416b0b5b3fe2fab87e0dd37edb` (`SYNCED_ERASE_REASON` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` applyAssignmentToAvailability stamp — product `51b58dc25b9e0505ad65d8f302757c69d3d43ffe` (`applyAssignmentToAvailability` **2/2** new; suite **6/6**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -168,6 +168,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Added `apps/mobile/components/settings/synced-erase-reason.test.ts` — **1/1 new PASS** / suite **1/1** (`synced-erase-reason-jest-2026-09-12.txt`): exact lock of pure string const `SYNCED_ERASE_REASON` (hook file mocked; const-only surface).
 - Row 4 / row 6 synced-erase unavailable-reason seam → advances automated erase-gate copy lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## applyAssignmentToAvailability Relates (2026-09-12, no device)
+
+- Extended `packages/domain/src/assignment-waterfall.test.ts` — **2/2 new PASS** / suite **6/6** (`apply-assignment-to-availability-vitest-2026-09-12.txt`): pure lock for negative vs non-negative availability updates after waterfall routing.
+- Row 4 / row 6 assignment-availability seam → advances automated envelope availability vocabulary; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## DEFAULT_CATEGORY_ICON Relates (2026-09-12, no device)
