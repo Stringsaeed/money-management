@@ -8,6 +8,30 @@ import {
   isHouseholdRole,
 } from "../dist/command.js";
 
+test("COMMAND_KINDS lists every wire command kind in stable order", () => {
+  assert.deepEqual([...COMMAND_KINDS], [
+    "account.create",
+    "account.update",
+    "account.archive",
+    "category.create",
+    "category.update",
+    "category.archive",
+    "transaction.create",
+    "transaction.edit",
+    "transaction.remove",
+    "recurring.change",
+    "budget.configure",
+    "assignment.commit",
+    "assignment.correct",
+    "refund.link",
+    "import_bundle",
+  ]);
+});
+
+test("COMMAND_KINDS excludes retired member.role.change", () => {
+  assert.equal(COMMAND_KINDS.includes("member.role.change"), false);
+});
+
 test("isHouseholdRole accepts WorkOS role slugs Trove authorizes", () => {
   assert.deepEqual(HOUSEHOLD_ROLES, ["admin", "member", "viewer"]);
   for (const role of HOUSEHOLD_ROLES) {
