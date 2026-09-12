@@ -18,11 +18,16 @@ export function AuthSheetHost({
   readonly session: AuthSheetSession;
   readonly onDismiss: () => void;
 }) {
+  // Closed auth must unmount @expo/ui BottomSheet entirely. A parked
+  // isPresented=false Host can still steal UIKit hits on Create Account
+  // submit (hittable=true, coord/testID miss at AX center). Relates #232.
+  if (session.kind !== "open") {
+    return null;
+  }
+
   return (
-    <AuthBottomSheet isPresented={session.kind === "open"} onDismiss={onDismiss}>
-      {session.kind === "open" ? (
-        <AuthKitSignInPanel session={session} onDismiss={onDismiss} />
-      ) : null}
+    <AuthBottomSheet isPresented onDismiss={onDismiss}>
+      <AuthKitSignInPanel session={session} onDismiss={onDismiss} />
     </AuthBottomSheet>
   );
 }
