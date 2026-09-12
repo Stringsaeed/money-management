@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `ce2de383ed1f829fddebaf41a3103d6b6fa79bb4` resolveCommandScope stamp — product `6e4ef5058652c1c2345768c52bc65fbb579a40da` (`resolveCommandScope` **4/4** new; suite **4/4**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` commandLedgerId stamp — product `31e59c3226377f9e573a50409cbd6d19b095e0e1` (`commandLedgerId` **4/4** new; suite **4/4**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -186,6 +186,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Added `packages/protocol/src/resolve-command-scope.test.ts` — **4/4 new PASS** / suite **4/4** (`resolve-command-scope-node-2026-09-12.txt`): pure lock for personal / organization / householdId fallback / null resolution.
 - Row 4 / row 6 command-scope resolution seam → advances automated ledger-scope vocabulary; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## commandLedgerId Relates (2026-09-12, no device)
+
+- Added `packages/protocol/src/command-ledger-id.test.ts` — **4/4 new PASS** / suite **4/4** (`command-ledger-id-node-2026-09-12.txt`): pure lock for personal / organization / householdId / null ledger ids.
+- Row 4 / row 6 command-ledger-id seam → advances automated ledger-id vocabulary; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## DEFAULT_CATEGORY_ICON Relates (2026-09-12, no device)
