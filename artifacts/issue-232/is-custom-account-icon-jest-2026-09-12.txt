@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/account/is-custom-account-icon.test.ts
+PASS components/account/is-custom-account-icon.test.ts
+  isCustomAccountIcon
+    ✓ treats emoji icons as custom and SF Symbol names as system (10 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.98 s
+Ran all test suites matching /components\/account\/is-custom-account-icon.test.ts/i.

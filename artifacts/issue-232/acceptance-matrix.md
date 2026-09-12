@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `797def5351851efbc5dd9d8bf5ec108c4f5f9132` normalizeCryptoSymbol stamp — product `293a8d24652378146e6e08cf0d1c6b6cc64b4984` (`normalizeCryptoSymbol` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` isCustomAccountIcon stamp — product `09bd89f7163a4b10ea9b0db507547c9a4fd3b51a` (`isCustomAccountIcon` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -258,6 +258,13 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Added `apps/mobile/utils/activity-range-label.test.ts` — **1/1 new PASS** / suite **1/1** (`activity-range-label-jest-2026-09-12.txt`): exact lock of `activityRangeLabel` preset labels + fallback (pure helper)
 - Row 4 / row 6 activity range-label seam → advances automated activity filter vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+
+## isCustomAccountIcon Relates (2026-09-12, no device)
+
+- Added `apps/mobile/components/account/is-custom-account-icon.test.ts` — **1/1 new PASS** / suite **1/1** (`is-custom-account-icon-jest-2026-09-12.txt`): exact lock of `isCustomAccountIcon` emoji-vs-SF-Symbol rule (pure helper)
+- Row 4 / row 6 account custom-icon seam → advances automated account-icon vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 
