@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `13e2ec7e3e2cb697c29c1464f48339372262075b` calculateSyncedBalance stamp — product `72939b5e33213a95e31af46384a8845237cff05a` (`calculateSyncedBalance` **4/4** new; suite **4/4**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | PENDING_DOCS — product `60ebbc8aee11494c620506f39a2b1b53e0e9ad45` (`assertSupportedAccountUpdate` **4/4** new; suite **8/8**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -37,6 +37,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Live `GET /webhooks/workos` → **404** (POST-only).
 - Runner `WORKOS_WEBHOOK_SECRET` **ABSENT** — did not invent secrets. Verdict unchanged: **BLOCKED**.
 - Evidence: `workos-webhook-probe-2026-09-12e.txt` + `workos-webhook-blocked.md`. Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## assertSupportedAccountUpdate Relates (2026-09-12, no device)
+
+- Extended `apps/mobile/modules/ledger-data-source/synced-mappers.test.ts` — **4/4 new PASS** / suite **8/8** (`assert-supported-account-update-jest-2026-09-12.txt`): allowlist name/color/icon/excludeFromTotal/sortOrder; reject type/currency/initialBalance for `assertSupportedAccountUpdate` (pure guard, no PowerSync DB).
+- Row 4 / row 6 synced Account update seam → advances automated allowlist checks; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## calculateSyncedBalance Relates (2026-09-12, no device)
 
