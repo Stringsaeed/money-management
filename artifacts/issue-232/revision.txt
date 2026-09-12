@@ -56,3 +56,4 @@ envelope_category_mapping_content_jest=PASS 2/2 new suite=8/8 product=51a991e
 funding_rollover_content_jest=PASS 2/2 new suite=10/10 product=ba4bc93
 assignment_content_jest=PASS 2/2 new suite=12/12 product=99b1e16
 recurring_rule_content_jest=PASS 2/2 new suite=14/14 product=a6f4cdd
+ledger_read_fields_jest=PASS 2/2 new suite=5/5 product=27383f8
