@@ -1,6 +1,11 @@
 import { controlRecipe, fieldRecipe } from "./recipes";
-import { controlLabelStyle, fieldBoxStyle } from "./recipe-core";
-import { AUTH_CONTROL_SPECS, resolveColor } from "./roles";
+import { controlLabelStyle, fieldBoxStyle, textStyleForRole } from "./recipe-core";
+import {
+  AUTH_CONTROL_SPECS,
+  AUTH_TEXT_SPECS,
+  resolveColor,
+  type AuthTextSpec,
+} from "./roles";
 import { AUTH_FALLBACK_PALETTE, fontFace } from "./tokens";
 
 describe("controlLabelStyle", () => {
@@ -23,6 +28,36 @@ describe("controlLabelStyle", () => {
     expect(controlLabelStyle("primary", palette).color).toBe("#ffffff");
     expect(controlLabelStyle("secondary", palette).color).toBe(palette["--color-foreground"]);
     expect(controlLabelStyle("tertiary", palette).color).toBe(palette["--color-muted-foreground"]);
+  });
+});
+
+describe("textStyleForRole", () => {
+  const palette = AUTH_FALLBACK_PALETTE.light;
+
+  it("maps each AUTH_TEXT_SPECS role including optional letterSpacing", () => {
+    for (const role of Object.keys(AUTH_TEXT_SPECS) as (keyof typeof AUTH_TEXT_SPECS)[]) {
+      const spec: AuthTextSpec = AUTH_TEXT_SPECS[role];
+      const expected: Record<string, unknown> = {
+        fontFamily: fontFace(spec.weight),
+        fontSize: spec.size,
+        color: resolveColor(spec.color, palette),
+      };
+      if (spec.lineHeight != null) expected.lineHeight = spec.lineHeight;
+      if (spec.letterSpacing != null) expected.letterSpacing = spec.letterSpacing;
+      if (spec.align) expected.textAlign = spec.align;
+      expect(textStyleForRole(role, palette)).toEqual(expected);
+    }
+  });
+
+  it("applies title letterSpacing and notice colors without inventing italic/align", () => {
+    const title = textStyleForRole("title", palette);
+    expect(title.letterSpacing).toBe(AUTH_TEXT_SPECS.title.letterSpacing);
+    expect(title).not.toHaveProperty("fontStyle");
+    expect(title).not.toHaveProperty("textAlign");
+
+    expect(textStyleForRole("notice-error", palette).color).toBe(palette["--color-destructive"]);
+    expect(textStyleForRole("notice-success", palette).color).toBe(palette["--color-sage"]);
+    expect(textStyleForRole("subtitle", palette)).not.toHaveProperty("letterSpacing");
   });
 });
 
