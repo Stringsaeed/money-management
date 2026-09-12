@@ -1,0 +1,10 @@
+PASS path: apps/mobile/modules/budgeting/guided-setup-draft-id.test.ts
+PASS modules/budgeting/guided-setup-draft-id.test.ts
+  GUIDED_SETUP_DRAFT_ID
+    ✓ locks the guided envelope setup draft id (9 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.976 s
+Ran all test suites matching /modules\/budgeting\/guided-setup-draft-id.test.ts/i.
