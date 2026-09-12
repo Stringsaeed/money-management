@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/account/get-currency-display-name.test.ts
+PASS components/account/get-currency-display-name.test.ts
+  getCurrencyDisplayName
+    ✓ resolves en display names for common ISO codes (16 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.981 s
+Ran all test suites matching /components\/account\/get-currency-display-name.test.ts/i.
