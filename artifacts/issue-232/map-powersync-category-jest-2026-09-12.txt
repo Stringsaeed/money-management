@@ -1,0 +1,49 @@
+PASS modules/ledger-data-source/synced-mappers.test.ts
+  calculateSyncedBalance
+    ✓ increases from initialBalance for income on the account (17 ms)
+    ✓ decreases for expense on the account (1 ms)
+    ✓ increases for transfer into the account via toAccountId
+    ✓ ignores transactions that do not touch the account (1 ms)
+  assertSupportedAccountUpdate
+    ✓ allows name, color, icon, excludeFromTotal, and sortOrder edits (1 ms)
+    ✓ rejects type edits (13 ms)
+    ✓ rejects currency edits (1 ms)
+    ✓ rejects initialBalance edits (1 ms)
+  assertSupportedTransactionUpdate
+    ✓ allows type, amount, date, account, category, and description edits (1 ms)
+    ✓ rejects currency edits (1 ms)
+    ✓ rejects original amount/currency and exchangeRate edits (1 ms)
+    ✓ rejects recurring lineage edits (1 ms)
+  mapSyncedAccount
+    ✓ maps bank wire type to checking and initialBalanceMinor to initialBalance (1 ms)
+    ✓ maps card wire type to credit_card
+    ✓ maps cash wire type to cash (1 ms)
+    ✓ coerces Date timestamps to ISO strings (1 ms)
+  mapSyncedCategory
+    ✓ copies wire category fields onto the domain Category
+    ✓ preserves parentId for nested categories (1 ms)
+    ✓ coerces Date timestamps to ISO strings
+    ✓ keeps null lifecycleChangedAt when unset (1 ms)
+  mapSyncedTransaction
+    ✓ maps amountMinor and joins matching account and category (1 ms)
+    ✓ uses Unknown account fallback when accountId is missing from the list
+    ✓ resolves toAccount for transfers and null category when unmatched
+    ✓ coerces Date timestamps to ISO strings (1 ms)
+  mapPowerSyncAccount
+    ✓ maps bank row type to checking and snake_case balance fields
+    ✓ maps card row type to credit_card (1 ms)
+    ✓ maps cash row type to cash
+    ✓ treats exclude_from_total=1 as excludeFromTotal true
+  mapPowerSyncCategory
+    ✓ maps snake_case row fields onto the domain Category (1 ms)
+    ✓ preserves parent_id as parentId for nested categories
+    ✓ passes through lifecycle_changed_at timestamps (1 ms)
+    ✓ keeps null lifecycle_changed_at when unset
+
+Test Suites: 1 passed, 1 total
+Tests:       32 passed, 32 total
+Snapshots:   0 total
+Time:        1.207 s, estimated 2 s
+Ran all test suites matching /modules\/ledger-data-source\/synced-mappers.test.ts/i.
+
+--- tsc --noEmit ---
