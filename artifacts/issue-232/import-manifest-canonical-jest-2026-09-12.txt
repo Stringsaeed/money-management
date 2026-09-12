@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=0d5bb45
+gap=manifestsMatch + canonicalizeImportContent
+matrix_row=6 migration import integrity
+command=pnpm test (packages/protocol) — import.test.ts 3/3
+result=PASS 3/3 (suite 8/8 with ledger-scope)
+tsc=PASS packages/protocol --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
