@@ -1,0 +1,12 @@
+=== Relates #232 presetKeyFor Jest 2026-09-12T10:14:56Z ===
+PASS components/transaction/recurrence/presets.test.ts
+  presetKeyFor
+    ✓ maps each REPEAT_PRESETS frequency/interval pair to its key (3 ms)
+    ✓ returns custom when frequency or intervalCount do not match a preset (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        1.165 s
+Ran all test suites matching /components\/transaction\/recurrence\/presets.test.ts/i.
+=== tsc --noEmit ===
