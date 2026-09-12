@@ -1,6 +1,65 @@
 import { COMMAND_KINDS, type CommandEnvelope } from "@trove/protocol";
 
-import { parseCommandMetadata, serializeCommandMetadata } from "./command-metadata";
+import {
+  commandMetadataFor,
+  parseCommandMetadata,
+  serializeCommandMetadata,
+} from "./command-metadata";
+
+describe("commandMetadataFor", () => {
+  it("wraps the envelope with storageVersion 1 and matching commandId", () => {
+    const envelope: CommandEnvelope = {
+      commandId: "cmd-1",
+      householdId: "household-1",
+      kind: "transaction.create",
+      issuedAt: "2026-09-12T00:00:00.000Z",
+      payload: { amountMinor: 100 },
+    };
+
+    expect(commandMetadataFor(envelope)).toEqual({
+      storageVersion: 1,
+      commandId: "cmd-1",
+      envelope,
+    });
+  });
+
+  it("preserves personal and organization scopes on the nested envelope", () => {
+    const personal: CommandEnvelope = {
+      commandId: "cmd-personal",
+      scope: { type: "personal" },
+      kind: "budget.configure",
+      issuedAt: "2026-09-12T00:00:00.000Z",
+      payload: { action: "workspace.activate" },
+    };
+    const organization: CommandEnvelope = {
+      commandId: "cmd-org",
+      scope: { type: "organization", organizationId: "org-9" },
+      kind: "transaction.create",
+      issuedAt: "2026-09-12T00:00:00.000Z",
+      payload: { amountMinor: 50 },
+    };
+
+    expect(commandMetadataFor(personal).envelope).toEqual(personal);
+    expect(commandMetadataFor(organization).envelope.scope).toEqual({
+      type: "organization",
+      organizationId: "org-9",
+    });
+    expect(commandMetadataFor(organization).commandId).toBe("cmd-org");
+  });
+
+  it("keeps commandId aligned with envelope.commandId for JSON round-trips", () => {
+    const envelope: CommandEnvelope = {
+      commandId: "cmd-roundtrip",
+      householdId: "household-2",
+      kind: "transaction.create",
+      issuedAt: "2026-09-12T00:00:00.000Z",
+      payload: { amountMinor: 25 },
+    };
+    const metadata = commandMetadataFor(envelope);
+    expect(metadata.commandId).toBe(metadata.envelope.commandId);
+    expect(parseCommandMetadata(JSON.stringify(metadata))).toEqual(envelope);
+  });
+});
 
 describe("PowerSync command metadata", () => {
   it.each(COMMAND_KINDS)("round-trips the full %s envelope", (kind) => {
