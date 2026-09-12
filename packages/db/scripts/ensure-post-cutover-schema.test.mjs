@@ -12,6 +12,7 @@ import {
   isAlterPermissionDenied,
   isMissingSchemaObject,
   loadPostCutoverMigrations,
+  runPostCutoverStatements,
   splitMigrationStatements,
 } from "./ensure-post-cutover-schema-lib.mjs";
 
@@ -125,4 +126,83 @@ test("buildEnsureResult soft-oks on 42501 even when columns missing", () => {
     alreadyExists: [],
   });
   assert.equal(hardFail.ok, false);
+});
+
+test("runPostCutoverStatements soft-fails 42703/42P01 after 42501 and continues", async () => {
+  /** @type {Record<string, unknown>[]} */
+  const warnings = [];
+  const migrations = [
+    {
+      tag: "0011_ledger_scope",
+      statements: [
+        "ALTER TABLE accounts ADD COLUMN ledger_id",
+        "CREATE INDEX ON accounts (ledger_id)",
+      ],
+    },
+    {
+      tag: "0015_remove_legacy_auth_and_private_accounts",
+      statements: [
+        "ALTER TABLE accounts DROP COLUMN visibility",
+        "ALTER TABLE ledger ADD COLUMN x",
+      ],
+    },
+  ];
+
+  /** @type {Map<string, Error>} */
+  const failures = new Map([
+    [
+      "ALTER TABLE accounts ADD COLUMN ledger_id",
+      Object.assign(new Error("must be owner of table accounts"), { code: "42501" }),
+    ],
+    [
+      "CREATE INDEX ON accounts (ledger_id)",
+      Object.assign(new Error('column "ledger_id" does not exist'), { code: "42703" }),
+    ],
+    [
+      "ALTER TABLE accounts DROP COLUMN visibility",
+      Object.assign(new Error('column "visibility" does not exist'), { code: "42703" }),
+    ],
+    [
+      "ALTER TABLE ledger ADD COLUMN x",
+      Object.assign(new Error('relation "ledger" does not exist'), { code: "42P01" }),
+    ],
+  ]);
+
+  let executed = 0;
+  const outcome = await runPostCutoverStatements({
+    migrations,
+    executeStatement: async (statement) => {
+      executed += 1;
+      const failure = failures.get(statement);
+      if (failure) throw failure;
+    },
+    warn: (payload) => warnings.push(payload),
+  });
+
+  assert.equal(executed, 4, "loop must continue through all statements");
+  assert.equal(outcome.alterPermissionDenied, true);
+  assert.deepEqual(outcome.applied, []);
+  assert.equal(outcome.permissionDenied.length, 1);
+  assert.equal(outcome.permissionDenied[0].migration, "0011_ledger_scope");
+  assert.equal(outcome.missingAfterDenied.length, 3);
+  assert.deepEqual(
+    outcome.missingAfterDenied.map((entry) => entry.code),
+    ["42703", "42703", "42P01"],
+  );
+  assert.ok(warnings.some((w) => w.warning === "alter_permission_denied"));
+  assert.equal(
+    warnings.filter((w) => w.warning === "missing_schema_object_after_permission_denied").length,
+    3,
+  );
+
+  // Mirror the script's structured soft-ok payload field name.
+  const softOkPayload = {
+    ok: true,
+    alter_permission_denied: true,
+    code: "42501",
+    applied: outcome.applied,
+    missing_after_denied: outcome.missingAfterDenied,
+  };
+  assert.equal(softOkPayload.missing_after_denied.length, 3);
+  assert.equal(softOkPayload.missing_after_denied[2].code, "42P01");
 });

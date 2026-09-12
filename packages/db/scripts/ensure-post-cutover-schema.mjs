@@ -3,10 +3,8 @@ import postgres from "postgres";
 import {
   PRESENCE_CHECKS,
   buildEnsureResult,
-  isAlreadyExists,
-  isAlterPermissionDenied,
-  isMissingSchemaObject,
   loadPostCutoverMigrations,
+  runPostCutoverStatements,
 } from "./ensure-post-cutover-schema-lib.mjs";
 
 /**
@@ -85,66 +83,11 @@ const sql = postgres(connectionUrl.toString(), { max: 1, ssl: "prefer" });
 
 try {
   const migrations = loadPostCutoverMigrations();
-  /** @type {string[]} */
-  const applied = [];
-  /** @type {Array<{ migration: string, message: string }>} */
-  const permissionDenied = [];
-  /** @type {Array<{ migration: string, message: string }>} */
-  const alreadyExists = [];
-  /** @type {Array<{ migration: string, message: string, code: string }>} */
-  const missingAfterDenied = [];
-  let alterPermissionDenied = false;
-
-  for (const migration of migrations) {
-    let migrationApplied = false;
-    for (const statement of migration.statements) {
-      try {
-        await sql.unsafe(statement);
-        migrationApplied = true;
-      } catch (error) {
-        if (!(error instanceof Error)) throw error;
-        if (isAlterPermissionDenied(error)) {
-          alterPermissionDenied = true;
-          permissionDenied.push({ migration: migration.tag, message: error.message });
-          console.warn(
-            JSON.stringify({
-              warning: "alter_permission_denied",
-              code: "42501",
-              migration: migration.tag,
-              message: error.message,
-            }),
-          );
-          continue;
-        }
-        if (isAlreadyExists(error)) {
-          alreadyExists.push({ migration: migration.tag, message: error.message });
-          migrationApplied = true;
-          continue;
-        }
-        // Denied ADD/ALTER never created ledger_id / visibility / etc. Later
-        // statements then throw 42703/42P01 — soft-fail so Deploy still runs.
-        if (alterPermissionDenied && isMissingSchemaObject(error)) {
-          const code = "code" in error ? String(error.code) : "42703";
-          missingAfterDenied.push({
-            migration: migration.tag,
-            message: error.message,
-            code,
-          });
-          console.warn(
-            JSON.stringify({
-              warning: "missing_schema_object_after_permission_denied",
-              code,
-              migration: migration.tag,
-              message: error.message,
-            }),
-          );
-          continue;
-        }
-        throw error;
-      }
-    }
-    if (migrationApplied) applied.push(migration.tag);
-  }
+  const { applied, permissionDenied, alreadyExists, missingAfterDenied, alterPermissionDenied } =
+    await runPostCutoverStatements({
+      migrations,
+      executeStatement: (statement) => sql.unsafe(statement),
+    });
 
   const present = await readPresence(sql);
   const result = buildEnsureResult({
