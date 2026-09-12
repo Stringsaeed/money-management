@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Repo                | `Stringsaeed/money-management`                                                                                                                                                                                                                                                                                   |
 | Branch              | `cursor/workos-certify-migration-b3d1`                                                                                                                                                                                                                                                                           |
-| HEAD                | tip `e24b5c794c8f8b0e8c0e8f8b0e8c0e8f8b0e8c0e` buildJournalList stamp — product `b45082be6f39da2fc5896e71166645105bd89bcb` (`describeIntent` **6/6**; `formatUpcomingOccurrence` **1/1**; `groupByDay` **2/2**; `buildJournalList` **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD                | tip `HEAD_TIP_PLACEHOLDER` recurring-calendar stamp — product `b45082be6f39da2fc5896e71166645105bd89bcb` (`date.ts` helpers **9/9**; `scheduledDatesThrough` / `nextScheduledDateOnOrAfter` **4/4**; `organizationLedgerId` / `ledgerIdForScope` / `personalLedgerOwner` **7/7** node); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance          | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`.   |
 | Worktree            | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232`                                                                                                                                                                               |
 | Live API            | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503**                                                                                                                                                                          |
@@ -323,6 +323,24 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Existing `apps/mobile/utils/journal-list.test.ts` — **1/1 PASS** / suite **1/1** (`build-journal-list-jest-2026-09-12.txt`): exact lock of `buildJournalList` section headers and transaction rows (pure helper; factory fixtures only)
 - Row 4 / row 6 home journal list seam → advances automated journal flatten vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## parseDate / formatDayHeader / formatMonth / monthBounds / addMonths / monthsBetween / nextBudgetPeriod Relates (2026-09-12, no device)
+
+- Existing `apps/mobile/utils/date.test.ts` — **9/9 PASS** / suite **9/9** (`date-utils-jest-2026-09-12.txt`): pure lock for parse/format/bounds/month arithmetic and budget-period advance (`toDateString` / `clampDay` / fake-timer `today`+`nowIso` in same suite; already stamped separately where noted)
+- Row 4 / row 6 budget + journal date seam → advances automated local date-string vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## scheduledDatesThrough / nextScheduledDateOnOrAfter Relates (2026-09-12, no device)
+
+- Existing `apps/mobile/modules/recurring-rules/calendar.test.ts` — **4/4 PASS** / suite **4/4** (`recurring-calendar-jest-2026-09-12.txt`): pure lock for month-end anchors, inclusive end bounds, leap-year next occurrence, and non-positive interval guard (`@trove/domain/calendar`)
+- Row 4 / row 6 recurring schedule seam → advances automated recurrence calendar vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## organizationLedgerId / ledgerIdForScope / personalLedgerOwner Relates (2026-09-12, no device)
+
+- Existing `packages/protocol/src/ledger-scope.test.ts` — **7/7 PASS** / node suite **7/7** (`ledger-scope-helpers-node-2026-09-12.txt`): pure lock for organization ledger ids, scope→id mapping, and personal owner extraction (companion to stamped `PERSONAL_LEDGER_PREFIX` / `parseLedgerId` / `sameLedgerScope`)
+- Row 4 / row 6 ledger-scope id seam → advances automated WorkOS ledger id vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## formatPrice Relates (2026-09-12, no device)

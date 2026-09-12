@@ -1,0 +1,18 @@
+=== tsc --noEmit ===
+tsconfig.json(2,14): error TS6053: File '@trove/typescript-config/library.json' not found.
+=== node --test --experimental-strip-types src/ledger-scope.test.ts ===
+✔ PERSONAL_LEDGER_PREFIX is the personal ledger id prefix (0.529686ms)
+✔ personalLedgerId joins PERSONAL_LEDGER_PREFIX with the user id (0.106936ms)
+✔ a Personal Ledger id names its owning User (0.128739ms)
+✔ an Organization Ledger id is the organization id itself (0.109943ms)
+✔ parsing a ledger id round-trips both scopes (0.536347ms)
+✔ parsing rejects ids that name no owner (0.085477ms)
+✔ scopes match only when they address the same ledger (0.087349ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 74.258964

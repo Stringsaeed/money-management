@@ -1,0 +1,13 @@
+PASS path: apps/mobile/modules/recurring-rules/calendar.test.ts
+PASS modules/recurring-rules/calendar.test.ts (10.544 s)
+  Recurring Rule calendar
+    ✓ keeps the explicit month-end anchor instead of drifting after a clamp (9 ms)
+    ✓ treats start, end date, and end count as inclusive (1 ms)
+    ✓ finds the next anchored date without replaying the whole calendar
+    ✓ rejects a non-positive interval (5 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        11.931 s
+Ran all test suites matching /modules\/recurring-rules\/calendar.test.ts/i.

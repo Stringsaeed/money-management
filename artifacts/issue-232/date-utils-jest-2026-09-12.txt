@@ -1,0 +1,18 @@
+PASS path: apps/mobile/utils/date.test.ts
+PASS utils/date.test.ts (10.606 s)
+  date utils
+    ✓ parses and formats local date strings (17 ms)
+    ✓ formats day and month display values (51 ms)
+    ✓ returns month bounds (1 ms)
+    ✓ adds months across year edges
+    ✓ clamps leap-year and short-month days (1 ms)
+    ✓ returns months newest-first within a range (1 ms)
+    ✓ returns an empty array for missing or inverted ranges
+    ✓ returns the current local date and ISO timestamp (2 ms)
+    ✓ returns the next budget period
+
+Test Suites: 1 passed, 1 total
+Tests:       9 passed, 9 total
+Snapshots:   0 total
+Time:        11.925 s
+Ran all test suites matching /utils\/date.test.ts/i.
