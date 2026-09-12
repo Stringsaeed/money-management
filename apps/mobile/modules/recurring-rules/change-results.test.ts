@@ -1,5 +1,6 @@
 import {
   candidateFromDraft,
+  candidateFromExisting,
   changeEffects,
   invalidLifecycle,
   staleResult,
@@ -116,6 +117,48 @@ describe("invalidLifecycle", () => {
     expect(invalidLifecycle("restore", "archived")).toEqual({
       kind: "invalid_intent",
       issues: [{ field: "rule", message: "restore requires a archived Rule." }],
+    });
+  });
+});
+
+describe("candidateFromExisting", () => {
+  it("overlays draft fields onto the existing rule while keeping identity", () => {
+    const existing = candidateFromDraft("rule-4", draft(), "2026-06-01T00:00:00.000Z");
+    const next = candidateFromExisting(
+      existing,
+      draft({
+        name: "Rent (updated)",
+        amountMinor: 1300_00,
+        endDate: "2026-12-31",
+      }),
+      {},
+    );
+
+    expect(next).toMatchObject({
+      id: "rule-4",
+      revision: 1,
+      name: "Rent (updated)",
+      amountMinor: 1300_00,
+      endDate: "2026-12-31",
+      accountId: "account-1",
+      lifecycle: "active",
+    });
+  });
+
+  it("lets overrides win over both existing and draft fields", () => {
+    const existing = candidateFromDraft("rule-5", draft(), "2026-06-02T00:00:00.000Z");
+    const next = candidateFromExisting(
+      existing,
+      draft({ name: "From draft", amountMinor: 1400_00 }),
+      { revision: 7, lifecycle: "paused", name: "From overrides" },
+    );
+
+    expect(next).toMatchObject({
+      id: "rule-5",
+      name: "From overrides",
+      amountMinor: 1400_00,
+      revision: 7,
+      lifecycle: "paused",
     });
   });
 });
