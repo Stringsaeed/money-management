@@ -1,5 +1,8 @@
 branch=cursor/workos-certify-migration-b3d1
-worktree=/Users/saeed/Work/money-management-wt-232
+worktree=/tmp/wt-workos-certify-b3d1
 live_api=https://auth.trove.ing
 schema=0011-0015 reconfirmed trove/main via PlanetScale read-only
-device=iPhone 17 Pro Mac agent-device Create Account FAIL vs #260 tip ed1fc13b (hittable=false)
+webhook=POST /webhooks/workos still HTTP 503 after #259; Deploy 34713619532 billing hard-stop (0 steps); WORKOS_WEBHOOK_SECRET never reached prod
+issue_232=open (reopened after false close by #259)
+deploy_fix_pr=HARD-STOP (Actions billing / spending limit — not workflow/code)
+device=prior Mac Create Account FAIL evidence retained; this stamp is webhook-only no device

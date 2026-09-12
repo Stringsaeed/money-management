@@ -17,7 +17,7 @@ Out of scope here: personal upload UI, PowerSync removal bound, disposable reset
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| `GET https://auth.trove.ing/` | **PASS** | HTTP **200** body `OK` (re-probe `2026-09-12T14:19:32Z`) |
+| `GET https://auth.trove.ing/` | **PASS** | HTTP **200** body `OK` (re-probe `2026-09-12T19:23:27Z`) |
 | Worker | `money-management-server-prod-mfhkibosfd6z5ym5` | CF Observability service filter |
 
 ## Claims (non-device)
@@ -37,7 +37,7 @@ Out of scope here: personal upload UI, PowerSync removal bound, disposable reset
 | Disposable clean setup (row 8) | **BLOCKED** | #231 skipped reset + PlanetScale/PowerSync mint envs absent (`powersync-disposable-reset-blocked.md`) | unchanged |
 | iOS OTP / callback AX | **BLOCKED** (automation) | See `ios-otp-ax-blocker.md` — **not** a PASS | No device this write |
 | Android runtime | **BLOCKED** / not started | `android-runtime-blocked.md` | No device this write |
-| WorkOS webhook / membership projection | **BLOCKED** (prod) | `POST /webhooks/workos` → **503** empty `WORKOS_WEBHOOK_SECRET` (`workos-webhook-blocked.md`) | Re-probe `2026-09-12T14:19:32Z` still **503** (`workos-webhook-probe-2026-09-12T141932Z.txt`) |
+| WorkOS webhook / membership projection | **BLOCKED** (prod) | `POST /webhooks/workos` → **503**; #259 wiring merged but Deploy [34713619532](https://github.com/Stringsaeed/money-management/actions/runs/34713619532) **billing hard-stop** (0 steps) so secret never reached prod (`workos-webhook-after-259-still-503.md`) | Re-probe `2026-09-12T19:23:27Z` still **503**; annotation: payments failed / spending limit |
 | CI (tsc + Jest on tip) | **PASS** (product gates) | `ci-stamp-2026-09-12.txt` — Typescript + Jest + EAS SUCCESS on `ded1e97`; GitGuardian FAILURE noted | n/a |
 | Create Account next candidate | **BLOCKED** | #258 tip `709acf8` — Mac ghosting; **not** PASS (`create-account-hittest-status.md`) | n/a |
 

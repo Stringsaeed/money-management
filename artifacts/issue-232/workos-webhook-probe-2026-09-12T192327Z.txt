@@ -1,0 +1,29 @@
+# WorkOS webhook re-probe after #259 merge (Relates #232)
+stamp_utc=2026-09-12T19:23:27Z
+branch=cursor/workos-certify-migration-b3d1
+worktree=/tmp/wt-workos-certify-b3d1
+coordinator_root=/workspace (main, untouched)
+
+GET https://auth.trove.ing/ -> HTTP 200
+body: OK
+
+POST https://auth.trove.ing/webhooks/workos
+content-type: application/json
+body_sent: {}
+signature: none
+HTTP 503
+cache-control: no-store
+body: Webhook receiver is disabled: WORKOS_WEBHOOK_SECRET is not configured.
+
+context:
+- #259 MERGED to main at 2026-09-12T19:15:11Z (c1adeb4) — wires WORKOS_WEBHOOK_SECRET through Deploy Worker
+- Deploy Worker run 34713619532 after that merge: failure
+  - steps=0, runner empty, billable UBUNTU total_ms=0
+  - annotation: job was not started because recent account payments have failed or your spending limit needs to be increased
+  - HARD-STOP: not a workflow/code fix; no separate deploy-fix PR
+- Because the job never started, WORKOS_WEBHOOK_SECRET never reached prod
+- #232 state=open state_reason=reopened (falsely closed by #259 merge keywords; reopened)
+- runner WORKOS_WEBHOOK_SECRET: ABSENT (not invented)
+
+Verdict: BLOCKED — live still 503 until owner clears Actions billing, sets WORKOS_WEBHOOK_SECRET, and redeploys successfully.
+Relates to #232 only. Never Closes/Fixes #232 or #224.
