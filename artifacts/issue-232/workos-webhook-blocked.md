@@ -11,7 +11,7 @@ Not a certification PASS. No secret values recorded.
 | Endpoint | `POST https://auth.trove.ing/webhooks/workos` |
 | Live result | **HTTP 503** |
 | Body | `Webhook receiver is disabled: WORKOS_WEBHOOK_SECRET is not configured.` |
-| Probe stamp | `2026-09-12T03:16:04Z` UTC (initial); re-probe `2026-09-12T05:47Z` still **503** (`workos-webhook-probe-2026-09-12b.txt`) |
+| Probe stamp | `2026-09-12T03:16:04Z` UTC (initial); re-probe `2026-09-12T05:47Z` still **503** (`workos-webhook-probe-2026-09-12b.txt`); re-probe `2026-09-12T06:30:58Z` still **503** (`workos-webhook-probe-2026-09-12d.txt`) |
 | Worker | `money-management-server-prod-mfhkibosfd6z5ym5` (domain `auth.trove.ing`) |
 | Dashboard webhook | `we_01M2945R34XC28KTEABF24F4CD` (signing secret **not** pasted here) |
 

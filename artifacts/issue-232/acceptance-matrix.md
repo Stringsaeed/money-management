@@ -20,14 +20,22 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `0298d6c` sync-or-discard / identity-switch Jest Relates (row 7 automated PARTIAL; webhook still 503; Create Account still BLOCKED on #258; dual-identity BLOCKED) |
+| HEAD | tip pending this Relates push — isolation helper Jest + webhook re-probe (row 5/7 pure helpers; webhook still 503; Create Account still BLOCKED on #258; dual-identity BLOCKED) |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
-| Worktree | `/workspace` (this Relates write); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
-| Live API | `https://auth.trove.ing` — root **200 OK**; Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
+| Worktree | `/workspace/.wt-cert-232-relates` (this Relates write); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
+| Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T06:30:58Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
 | Device (this write) | **none** — API/docs-only; no iOS/Android device; no Mac |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
-Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `post-schema-sync-retest.md`.
+Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt`.
+
+## Isolation / identity helper Jest Relates (2026-09-12T06:33Z, no device)
+
+- Added `apps/mobile/modules/access/ledger-selection-store.test.ts`, `return-to.test.ts`, `identity.test.ts` — **17/17 PASS** (`isolation-helpers-jest-2026-09-12.txt`).
+- Live re-probe: `GET /` **200 OK**; `POST /webhooks/workos` still **503** empty `WORKOS_WEBHOOK_SECRET` (`workos-webhook-probe-2026-09-12d.txt`). Runner name **ABSENT**.
+- Row 5 multi-Household selection encode/decode + per-user SecureStore key isolation → **PASS (automated seam)**; live dual-identity still **BLOCKED** (`CERT_USER_A_TOKEN`, `CERT_USER_B_TOKEN`, … ABSENT).
+- Row 7 `sameIdentity` + return-to parse/serialize → **PASS (automated helpers)**; live device identity switch still **not** certified.
+- Create Account still **BLOCKED** on [#258](https://github.com/Stringsaeed/money-management/pull/258); webhook membership apply still **BLOCKED**. Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## Sync-or-discard / identity-switch Jest Relates (2026-09-12, no device)
 
@@ -142,7 +150,8 @@ Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026
 - **Personal upload confirm (Pressable):** **PASS** at tip `fb8c786` (`post-pressable-upload-pass.md`).
 - **Create Account / one-device round-trip:** **BLOCKED** after #254/#255/#256 — Metro-confirmed MISS on #256 tip `c9a3ca8` (cert evidence `9e3f69f`). Next candidate #258 tip `709acf8` (Mac retest **BLOCKED** — money-management worker offline; agents ghosting). **Not** PASS. See `create-account-hittest-status.md`. Goal-continue re-probe 06:03Z unchanged.
 - **Row 5 auth-gate / viewer pipeline:** missing + forged JWT → **401** **PASS**; `pipeline.test.ts` viewer deny **18/18** **PASS**; live dual-identity isolation **BLOCKED** (`api-isolation-live-2026-09-12.md`).
-- **WorkOS webhook:** still **BLOCKED** — owner must set prod `WORKOS_WEBHOOK_SECRET` (re-probe 05:47Z still **503**).
+- **WorkOS webhook:** still **BLOCKED** — owner must set prod `WORKOS_WEBHOOK_SECRET` (re-probe 06:30Z still **503**; runner name ABSENT).
+- **Isolation helpers (this tip):** ledger-selection encode/decode/clear + return-to parse/serialize + `sameIdentity` **17/17 PASS** — advances row 5/7 automated seams only; live dual-identity still **BLOCKED**.
 - **Android runtime:** **BLOCKED** / not started (`android-runtime-blocked.md`).
 - **PowerSync removal / disposable reset:** **BLOCKED** — missing `POWERSYNC_*` / `PLANETSCALE_*` (or `DATABASE_URL`); #231 reset skipped (`powersync-disposable-reset-blocked.md`).
 - OTP/callback/two-device rows still open.
@@ -262,12 +271,12 @@ Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT
 | Sub-criterion | Status | Evidence |
 | --- | --- | --- |
 | Explicit Household create (no implicit org on sign-in) | `PARTIAL` (API seam) | `households/service.test.ts` **25** in `test-api-workos-seams.txt` (`createHousehold`, retries, list/get, invite, roles, last-admin, delete, widget handoff). Personal-ledger tests assert sign-in/write does not create a Household. |
-| Multi-Household switch | not evidenced live | No device selector proof. |
+| Multi-Household switch | `PARTIAL` (encode/decode seam) / live not run | Per-user ledger selection encode/decode/clear **PASS** automated (`ledger-selection-store.test.ts`); live device selector switch still **not** evidenced. |
 | Invitations via WorkOS | `PARTIAL` (API seam) | `member administration > lets only admins invite, through WorkOS invitations`. No live invite acceptance. |
 | Management-page return (widget) | `PARTIAL` (API + auth) | Widget handoff + expired/demoted-admin codes in households tests; `@trove/auth` member-widget-page **3**. No iOS/Android return artifact. |
 | Admin / member / viewer | `PARTIAL` (API seam) | Import-bundle rejects member/viewer bulk-import; households role changes; PowerSync streams deny inactive/unknown roles (`test-powersync-proper.txt` **9/9**). Viewer command deny **PASS** in `pipeline.test.ts` **18/18** (`test-pipeline-viewer-deny.txt`). Device role UX not run; live viewer bearer absent. |
 | Personal data stays private on create/join | `PARTIAL` (API seam) | Personal vs Household isolation in personal-ledger + budget-recurring + PowerSync streams. No live create/join privacy proof. |
-| Webhook-driven membership apply | `BLOCKED` (prod) | Live `POST /webhooks/workos` on `auth.trove.ing` → **503** `WORKOS_WEBHOOK_SECRET is not configured.` (`workos-webhook-blocked.md`, `workos-webhook-probe-2026-09-12.txt`). Local name may be present; **prod binding empty**. Not 404/401/500. |
+| Webhook-driven membership apply | `BLOCKED` (prod) | Live `POST /webhooks/workos` on `auth.trove.ing` → **503** `WORKOS_WEBHOOK_SECRET is not configured.` (`workos-webhook-blocked.md`, `workos-webhook-probe-2026-09-12d.txt` 06:30Z). Runner name **ABSENT**. Local name may be present; **prod binding empty**. Not 404/401/500. |
 
 **Row status: `PARTIAL` automated / live not run / webhook apply `BLOCKED` (prod secret missing).**
 
@@ -279,7 +288,7 @@ Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT
 | Cross-Household / stream isolation | `PARTIAL` (API + streams) | Households `getHousehold` invisible to non-members; PowerSync “Personal Ledger and Household streams from bleeding”; household queries membership-guarded. Live dual-identity probe **BLOCKED** (same missing token names). |
 | Cross-scope financial-reference rejection | `PARTIAL` (API seam) | Personal-ledger rejects addressing another User’s account / category / envelope; organization-scope rejects a non-member. Viewer capability map now **PASS** in `pipeline.test.ts` **18/18** (`test-pipeline-viewer-deny.txt`). Live viewer bearer still absent. |
 | Queued writes after role downgrade | `PASS` (automated) | `ledger.test.ts` rechecks live membership after member→viewer demotion and forbids the drained `transaction.create`; `connector.test.ts` completes CRUD and records `forbidden` in `rejected_changes` (does not leave the batch stuck). Live multi-device demotion still not run. |
-| Stale-response handling | `PARTIAL` (events + client cleanup seam) | Membership projection stale/older/delayed observations (`test-deletion-projection.txt` **18/18**, also inside the 97). Client sign-out cleanup clears PowerSync + sync enrollment + claim/selection + query caches (`sign-out-session.test.ts` **2/2**) — automated only; live stale HTTP/sync after identity switch still **not** device-certified. |
+| Stale-response handling | `PARTIAL` (events + client cleanup + selection/identity helpers) | Membership projection stale/older/delayed observations (`test-deletion-projection.txt` **18/18**, also inside the 97). Client sign-out cleanup clears PowerSync + sync enrollment + claim/selection + query caches (`sign-out-session.test.ts` **2/2`). Per-user selection clear + `sameIdentity` mismatch helpers **PASS** (`ledger-selection-store.test.ts`, `identity.test.ts`) — automated only; live stale HTTP/sync after identity switch still **not** device-certified. |
 | Live API/stream isolation | `PARTIAL` (auth-gate) / dual-identity `BLOCKED` | Auth-gate **PASS**: missing → **401** `missing_token`; forged JWT + forged org/user body → **401** `invalid_token` (`live-auth-gate-probe-2026-09-12.txt`; CF **7**+**8**). Authenticated cross-tenant negatives **BLOCKED** without dual session tokens. |
 
 **Row status: `PARTIAL`.** Isolation seams + auth-gate + viewer pipeline + automated demotion-queue PASS; live dual-identity and client stale-response after identity switch are **not** certified.
@@ -306,7 +315,7 @@ Note: `test-powersync.txt` is a **failed** `vitest run` (`No test suite found` /
 | Last-admin / sole-admin User-deletion guard | `PASS` (API seam) | `requestUserDeletion > blocks sole admins until they appoint another admin or delete the Household`; households `keeps the last admin in place`. |
 | Recoverable Household deletion | `PASS` (API seam) | Confirm-name + admin-only; shared ledger removed, personal kept, org tombstoned; resumes after WorkOS failure without duplicating local deletes. |
 | Sync-or-discard sign-out | `PASS` (automated) / live not run | `use-sign-out.test.tsx` **4/4**: empty queue signs out immediately; pending uploads open sync-or-discard sheet; discard signs out without drain; sync-then-sign-out drains then signs out. Live hosted sheet on device still **not** run. |
-| Identity switching (cache / queue isolation) | `PASS` (automated cleanup) / live not run | `sign-out-session.test.ts` **2/2**: signed-out cleanup disconnects PowerSync, clears sync enrollment, sets `local_only`/`powersync_unavailable`, remote sign-out, clears ledger selection + claim, removes households/household/migration/sync queries. Live dual-identity switch still **BLOCKED** (tokens absent). |
+| Identity switching (cache / queue isolation) | `PASS` (automated cleanup + helpers) / live not run | `sign-out-session.test.ts` **2/2**: signed-out cleanup disconnects PowerSync, clears sync enrollment, sets `local_only`/`powersync_unavailable`, remote sign-out, clears ledger selection + claim, removes households/household/migration/sync queries. `sameIdentity` + per-user selection key isolation **PASS** (`identity.test.ts`, `ledger-selection-store.test.ts`). Live dual-identity switch still **BLOCKED** (tokens absent). |
 | Sign-out / deletion on iOS and Android | not evidenced | Runtime section empty of pass paths. |
 
 **Row status: `PARTIAL`.** Deletion/admin/household API seams + automated sync-or-discard / session-cleanup PASS; live device sign-out and identity switch still not certified.
@@ -318,8 +327,8 @@ Note: `test-powersync.txt` is a **failed** `vitest run` (`No test suite found` /
 | Better Auth / custom Household removal on `main` | predecessor done | HEAD is the #240 squash that closed #231. This ticket certifies composition; it did not re-implement removal. |
 | Disposable env reset (DB, WorkOS env, PowerSync, device stores) | `SKIPPED` by #231/#240 | Reset was not performed. Cannot claim a clean start after reset. |
 | Local disposable DB / worker mint | `BLOCKED` | Absent locally: `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`); `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`. Explicit stamp: `powersync-disposable-reset-blocked.md`. |
-| Webhook verify on local worker | `PARTIAL` local / `BLOCKED` prod | Local name may be present (value omitted). **Prod** `POST https://auth.trove.ing/webhooks/workos` → **503** disabled (`workos-webhook-blocked.md`; re-probe `workos-webhook-probe-2026-09-12b.txt` 05:47Z). |
-| Live API reachable | `PASS` (health only) | `https://auth.trove.ing` health **200 OK**. Not a clean-install walkthrough. |
+| Webhook verify on local worker | `PARTIAL` local / `BLOCKED` prod | Local name may be present (value omitted). **Prod** `POST https://auth.trove.ing/webhooks/workos` → **503** disabled (`workos-webhook-blocked.md`; re-probe `workos-webhook-probe-2026-09-12d.txt` 06:30Z). Runner `WORKOS_WEBHOOK_SECRET` **ABSENT**. |
+| Live API reachable | `PASS` (health only) | `https://auth.trove.ing` health **200 OK** (re-probe 06:30Z). Not a clean-install walkthrough. |
 | Clean-install anonymous + login + personal sync + Household select after reset | not evidenced | Requires the skipped reset plus device runs. |
 
 Still BLOCKED for disposable mint/reset: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`). Values are not claimed.
@@ -343,6 +352,7 @@ Still BLOCKED for disposable mint/reset: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE
 | `@trove/powersync` via vitest | FAIL runner mismatch `test-powersync.txt` | ignore for product status |
 | Ledger-scope `node --test` | **5/5** `test-ledger-scope.txt` | 3, 5 |
 | Mobile jest `use-enable-sync`, `use-sync-worker`, manifest, initialize | **19/19** `test-mobile-sync.txt` | 3, 7 (hooks only) |
+| Mobile jest ledger-selection / return-to / identity helpers | **17/17** `isolation-helpers-jest-2026-09-12.txt` | 4 (selection encode), 5 (per-user isolation), 7 (sameIdentity) |
 | `pnpm test:ci` / CI Jest | **PASS** tip stamp | 1 (`ci-stamp-2026-09-12.txt` + prior `test-ci.txt`) |
 
 API focused files in the 97: `powersync/token.test.ts` (4), `personal-budget-recurring.test.ts` (4), `deletion/service.test.ts` (5), `membership/projection.test.ts` (13), `migration/manifest.test.ts` (13), `import-bundle.test.ts` (15), `personal-ledger.test.ts` (18), `households/service.test.ts` (25).
@@ -452,6 +462,8 @@ stim start --json  # -> stim-start.json (port 8083)
 | `powersync-disposable-reset-blocked.md` | PowerSync removal + disposable reset **BLOCKED** (env names). |
 | `planetscale-schema-ddl-confirm-2026-09-12b.txt` | Second DDL 0011–0015 PlanetScale reconfirm **PASS**. |
 | `workos-webhook-probe-2026-09-12b.txt` | Webhook re-probe still **503** (05:47Z). |
+| `workos-webhook-probe-2026-09-12d.txt` | Webhook re-probe still **503** (06:30Z); health **200**. |
+| `isolation-helpers-jest-2026-09-12.txt` | ledger-selection / return-to / identity Jest **17/17** Relates stamp. |
 | `create-account-hittest-status.md` | Create Account hit-test stamp: upload PASS; round-trip BLOCKED; #258 Mac ghosting. |
 | `post-pressable-upload-pass.md` | Pressable personal upload **PASS** (tip `fb8c786`). |
 | `post-pressable-roundtrip-blocked.md` | One-device round-trip **BLOCKED** (Create Account NativeHost). |

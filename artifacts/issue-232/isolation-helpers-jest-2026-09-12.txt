@@ -1,0 +1,40 @@
+# Isolation / identity helper Jest (Relates #232)
+stamp_utc=2026-09-12T06:33:47Z
+branch=cursor/workos-certify-migration-b3d1
+base_tip=6691d2c
+device=none
+mac=none
+stim=none
+
+## Live re-probe (no secrets)
+GET https://auth.trove.ing/ -> HTTP 200 body OK
+POST https://auth.trove.ing/webhooks/workos (fake WorkOS-Signature) -> HTTP 503
+  body: Webhook receiver is disabled: WORKOS_WEBHOOK_SECRET is not configured.
+GET https://auth.trove.ing/webhooks/workos -> HTTP 404
+WORKOS_WEBHOOK_SECRET on runner: ABSENT (name only)
+
+## Dual-identity env names (ABSENT)
+CERT_USER_A_TOKEN ABSENT
+CERT_USER_B_TOKEN ABSENT
+TEST_USER_A_BEARER ABSENT
+TEST_USER_B_BEARER ABSENT
+TROVE_TEST_TOKEN_A ABSENT
+TROVE_TEST_TOKEN_B ABSENT
+API_BEARER_A ABSENT
+API_BEARER_B ABSENT
+
+## Jest (new pure-helper coverage)
+pnpm exec jest modules/access/ledger-selection-store.test.ts modules/access/return-to.test.ts modules/access/identity.test.ts --runInBand
+Result: 3 suites, 17 tests PASS
+- ledger-selection-store: encode/decode personal+household; malformed -> personal; per-user SecureStore key isolation; clear; read/delete failure soft-paths
+- return-to: parse known screens; unknown/missing -> profile_household; serialize; hrefForInternal fallback
+- identity: identityFromUser; sameIdentity equality + userId/email/displayName mismatch
+
+## tsc
+pnpm exec tsc --noEmit -p apps/mobile/tsconfig.json -> exit 0
+
+## Matrix honesty
+Row 5 multi-Household selection encode/decode + per-user clear: PASS (automated seam)
+Row 7 identity sameIdentity / return-to parse: PASS (automated helpers)
+Live dual-identity / webhook membership apply / Create Account device: still BLOCKED
+Do not Closes #232 or #224.
