@@ -1,6 +1,30 @@
 import { controlRecipe, fieldRecipe } from "./recipes";
-import { fieldBoxStyle } from "./recipe-core";
-import { AUTH_FALLBACK_PALETTE } from "./tokens";
+import { controlLabelStyle, fieldBoxStyle } from "./recipe-core";
+import { AUTH_CONTROL_SPECS, resolveColor } from "./roles";
+import { AUTH_FALLBACK_PALETTE, fontFace } from "./tokens";
+
+describe("controlLabelStyle", () => {
+  const palette = AUTH_FALLBACK_PALETTE.light;
+
+  it("maps each control role label from AUTH_CONTROL_SPECS", () => {
+    for (const role of ["primary", "secondary", "tertiary"] as const) {
+      const spec = AUTH_CONTROL_SPECS[role].label;
+      expect(controlLabelStyle(role, palette)).toEqual({
+        fontFamily: fontFace(spec.weight),
+        fontSize: spec.size,
+        color: resolveColor(spec.color, palette),
+        lineHeight: spec.lineHeight,
+        textAlign: "center",
+      });
+    }
+  });
+
+  it("resolves primary label color to white and secondary to palette foreground", () => {
+    expect(controlLabelStyle("primary", palette).color).toBe("#ffffff");
+    expect(controlLabelStyle("secondary", palette).color).toBe(palette["--color-foreground"]);
+    expect(controlLabelStyle("tertiary", palette).color).toBe(palette["--color-muted-foreground"]);
+  });
+});
 
 describe("fieldBoxStyle", () => {
   it("pairs borderWidth with borderColor so transformStyle keeps the stroke", () => {
