@@ -5,6 +5,7 @@ import {
   assignedThroughPeriodSql,
   fundingPoolSql,
   periodCeiling,
+  unassignedMoneySql,
 } from "./funding-pool";
 import { periodLastDate } from "./reserve";
 
@@ -70,6 +71,29 @@ describe("assignedThroughPeriodSql", () => {
     expect(built.sql).toContain("COALESCE((");
     expect(built.sql).toContain("SELECT SUM(");
     expect(built.params).toEqual(["ws_b", "EUR", "2026-12"]);
+  });
+});
+
+describe("unassignedMoneySql", () => {
+  it("subtracts assignedThroughPeriodSql from fundingPoolSql with composed params", () => {
+    const pool = fundingPoolSql("led1", "USD", "2026-09").toQuery(queryConfig);
+    const assigned = assignedThroughPeriodSql("led1", "USD", "2026-09").toQuery(queryConfig);
+    const built = unassignedMoneySql("led1", "USD", "2026-09").toQuery(queryConfig);
+
+    expect(built.params).toEqual([...pool.params, ...assigned.params]);
+    expect(built.sql).toContain("COALESCE(SUM(account_balance)");
+    expect(built.sql).toContain("FROM assignments g");
+    expect(built.sql).toContain(" - ");
+    expect(built.sql.startsWith("((")).toBe(true);
+  });
+
+  it("threads December period ceiling through the funding-pool side only", () => {
+    const built = unassignedMoneySql("ws_b", "EUR", "2026-12").toQuery(queryConfig);
+    expect(built.params).toContain(periodCeiling("2026-12"));
+    expect(periodCeiling("2026-12")).toBe("2027-01-01");
+    expect(built.params.filter((value) => value === "2026-12")).toHaveLength(2);
+    expect(built.sql).toContain("destination_envelope_id");
+    expect(built.sql).toContain("funding_memberships");
   });
 });
 
