@@ -1,7 +1,11 @@
 import { describe, expect, it } from "@jest/globals";
 
 import type { Account, Category } from "@/types";
-import type { PowerSyncAccountRow, PowerSyncCategoryRow } from "@/modules/ledger-db/types";
+import type {
+  PowerSyncAccountRow,
+  PowerSyncCategoryRow,
+  PowerSyncTransactionRow,
+} from "@/modules/ledger-db/types";
 
 import {
   assertSupportedAccountUpdate,
@@ -9,6 +13,7 @@ import {
   calculateSyncedBalance,
   mapPowerSyncAccount,
   mapPowerSyncCategory,
+  mapPowerSyncTransaction,
   mapSyncedAccount,
   mapSyncedCategory,
   mapSyncedTransaction,
@@ -530,5 +535,111 @@ describe("mapPowerSyncCategory", () => {
     expect(
       mapPowerSyncCategory(powerSyncCategory({ lifecycle_changed_at: null })).lifecycleChangedAt,
     ).toBeNull();
+  });
+});
+
+const powerSyncTransaction = (
+  overrides: Partial<PowerSyncTransactionRow> = {},
+): PowerSyncTransactionRow => ({
+  id: "ps-tx-1",
+  ledger_id: "led-1",
+  household_id: "hh-1",
+  type: "expense",
+  amount_minor: 4200,
+  currency: "USD",
+  original_amount_minor: null,
+  original_currency: null,
+  exchange_rate: null,
+  date: "2026-09-12",
+  account_id: "acct-a",
+  to_account_id: null,
+  category_id: "cat-1",
+  is_recurring: 0,
+  recurring_rule_id: null,
+  description: "Market",
+  version: 1,
+  created_by: "user-1",
+  updated_by: "user-1",
+  created_at: TIMESTAMP,
+  updated_at: TIMESTAMP,
+  ...overrides,
+});
+
+describe("mapPowerSyncTransaction", () => {
+  it("maps snake_case row fields onto SyncedTransaction", () => {
+    expect(mapPowerSyncTransaction(powerSyncTransaction())).toEqual(
+      expect.objectContaining({
+        id: "ps-tx-1",
+        ledgerId: "led-1",
+        householdId: "hh-1",
+        type: "expense",
+        amountMinor: 4200,
+        currency: "USD",
+        originalAmountMinor: null,
+        originalCurrency: null,
+        exchangeRate: null,
+        date: "2026-09-12",
+        accountId: "acct-a",
+        toAccountId: null,
+        categoryId: "cat-1",
+        isRecurring: false,
+        recurringRuleId: null,
+        description: "Market",
+        version: 1,
+        createdBy: "user-1",
+        updatedBy: "user-1",
+        createdAt: TIMESTAMP,
+        updatedAt: TIMESTAMP,
+      }),
+    );
+  });
+
+  it("treats is_recurring=1 as isRecurring true and keeps recurring_rule_id", () => {
+    expect(
+      mapPowerSyncTransaction(
+        powerSyncTransaction({ is_recurring: 1, recurring_rule_id: "rule-9" }),
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        isRecurring: true,
+        recurringRuleId: "rule-9",
+      }),
+    );
+  });
+
+  it("maps transfer to_account_id onto toAccountId", () => {
+    expect(
+      mapPowerSyncTransaction(
+        powerSyncTransaction({
+          type: "transfer",
+          to_account_id: "acct-b",
+          category_id: null,
+        }),
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        type: "transfer",
+        toAccountId: "acct-b",
+        categoryId: null,
+      }),
+    );
+  });
+
+  it("maps FX fields when present", () => {
+    expect(
+      mapPowerSyncTransaction(
+        powerSyncTransaction({
+          original_amount_minor: 5000,
+          original_currency: "EUR",
+          exchange_rate: 1084700,
+        }),
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        originalAmountMinor: 5000,
+        originalCurrency: "EUR",
+        exchangeRate: 1084700,
+      }),
+    );
   });
 });
