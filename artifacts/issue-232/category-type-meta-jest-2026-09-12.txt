@@ -1,0 +1,10 @@
+PASS path: components/category/category-type-meta.test.ts
+PASS components/category/category-type-meta.test.ts
+  CATEGORY_TYPE_META
+    ✓ locks expense and income category type metadata (9 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.956 s
+Ran all test suites matching /components\/category\/category-type-meta.test.ts/i.
