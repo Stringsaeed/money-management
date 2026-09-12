@@ -54,3 +54,4 @@ format_activity_full_timestamp_jest=PASS 2/2 new suite=12/12 product=fe4c6bd
 pending_lifecycle_settlement_jest=PASS 4/4 product=056faf4
 envelope_category_mapping_content_jest=PASS 2/2 new suite=8/8 product=51a991e
 funding_rollover_content_jest=PASS 2/2 new suite=10/10 product=ba4bc93
+assignment_content_jest=PASS 2/2 new suite=12/12 product=99b1e16

@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=99b1e16
+gap=assignmentContentRow
+matrix_row=4/6 import content row codec
+command=pnpm exec vitest run src/lib/migration/import-content.test.ts
+result=PASS 2/2 new (suite 12/12)
+tsc=PASS packages/api --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
