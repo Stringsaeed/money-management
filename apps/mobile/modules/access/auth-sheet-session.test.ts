@@ -1,6 +1,10 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { canPresentAuthSheet, openAuthSheetSession } from "./auth-sheet-session";
+import {
+  AUTH_SHEET_CLOSED,
+  canPresentAuthSheet,
+  openAuthSheetSession,
+} from "./auth-sheet-session";
 import { returnTo } from "./return-to";
 import type { AccessCore, Identity } from "./types";
 
@@ -9,6 +13,19 @@ const user: Identity = {
   email: "ada@trove.ing",
   displayName: "Ada",
 };
+
+describe("AUTH_SHEET_CLOSED", () => {
+  it("is the closed AuthSheetSession sentinel", () => {
+    expect(AUTH_SHEET_CLOSED).toEqual({ kind: "closed" });
+  });
+
+  it("is distinct from an opened session", () => {
+    const opened = openAuthSheetSession({ target: returnTo.profileHousehold() });
+    expect(AUTH_SHEET_CLOSED.kind).toBe("closed");
+    expect(opened.kind).toBe("open");
+    expect(AUTH_SHEET_CLOSED).not.toEqual(opened);
+  });
+});
 
 describe("canPresentAuthSheet", () => {
   it.each([
