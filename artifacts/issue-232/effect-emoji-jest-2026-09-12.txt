@@ -1,0 +1,10 @@
+PASS path: apps/mobile/utils/effect-emoji.test.ts
+PASS utils/effect-emoji.test.ts
+  effectEmoji
+    ✓ maps known tags and falls back for unknowns (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.028 s
+Ran all test suites matching /utils\/effect-emoji.test.ts/i.
