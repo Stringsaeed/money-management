@@ -28,11 +28,21 @@ Report implementation, automated verification, runtime verification, and publica
 
 Recorded in `revision.txt` / `authkit-live-write.txt` / `post-246-user-upsert-500.txt`.
 
+## Post-schema Sync retest (2026-09-12, DDL 0011–0015)
+
+- PlanetScale `trove/main` migrations **0011–0015** applied (ledger + `ledger_id`, `create_request_id`, `membership.status`, deletion tables; legacy session/account/verification dropped).
+- Cloudflare Worker `money-management-server-prod-mfhkibosfd6z5ym5`, window **2026-09-12T01:20–01:45Z**:
+  - `--> POST /rpc/migration/getManifest 200 216ms`
+  - `--> POST /rpc/migration/getManifest 200 412ms`
+- Personal Sync / `migration/getManifest` **PASS** (CF **200**). Prior PG **42703** missing `accounts.ledger_id` cleared.
+- `households/listMine` already **PASS** post-#250.
+- Evidence: `post-schema-sync-retest.md`. Relates to #232 only. Matrix still incomplete — **not certified**.
+
 ## Post-#250 Sync retest (2026-09-12)
 
 - Deploy Worker [34663345218](https://github.com/Stringsaeed/money-management/actions/runs/34663345218) **success** (`4171c2c`, #250).
 - Auth **PASS**. `households/listMine` **PASS** HTTP **200** `{"json":[]}`. Prior `42703 membership.status` cleared for this RPC.
-- Sync just for me still **FAIL** on `migration/getManifest` HTTP **500** client **`INTERNAL_SERVER_ERROR`** (`post-250-sync-retest.md`). Sanitized evidence only — no raw CDP dumps.
+- Sync just for me was **FAIL** on `migration/getManifest` HTTP **500** client **`INTERNAL_SERVER_ERROR`** at that tip (`post-250-sync-retest.md`). **Superseded:** getManifest **PASS** after DDL 0011–0015 (`post-schema-sync-retest.md`).
 - Relates to #232 only. Not certified.
 
 ## Post-#249 Sync retest (2026-09-12)
@@ -56,7 +66,8 @@ Recorded in `revision.txt` / `authkit-live-write.txt` / `post-246-user-upsert-50
 - Full `pnpm test:ci` **passed** previously: mobile Jest **742/742** + `@trove/db` cutover **3/3**.
 - **Row 2 iOS AuthKit UI (partial):** cancel PASS; hosted AuthKit email page + email-code challenge PARTIAL; OTP entry hard-stopped (agent-device AX unavailable inside ASWebAuthenticationSession). Still signed out afterward (`authkit-21-signed-out-final.png`).
 - **Post-login JWT verify:** **PASS** after #246 — prior `claim_iss` cleared (AuthKit `iss` accepted).
-- **Post-login `households.listMine`:** **FAIL** after #248 deploy — HTTP **500** client oRPC **`INTERNAL_SERVER_ERROR`** (`post-248-sync-retest.md`; CDP `cdp-listMine-500-bodies-post248.txt`). Ensure soft-fail **42501**; column still absent. Worker `pg_code`/Failed query not captured (CF Observability needsAuth). Prior post-#246 Worker signal was `orpc_error UNKNOWN` user INSERT; not re-confirmed at Worker log layer this run. Do not treat as certified.
+- **Post-login `households.listMine`:** **PASS** after #250 — HTTP **200** `{"json":[]}`.
+- **Personal Sync / `migration/getManifest`:** **PASS** after DDL **0011–0015** — CF Worker `--> POST /rpc/migration/getManifest 200` (216ms, 412ms) in window 2026-09-12T01:20–01:45Z (`post-schema-sync-retest.md`). Prior PG 42703 `accounts.ledger_id` cleared. Does **not** certify full #232.
 - Android runtime **not started**. Disposable clean-setup after reset **blocked**.
 
 Do not merge as certified. No production deploy. Parent #224 stays open. **Do not use Closes #232.**
@@ -160,7 +171,7 @@ Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT
 | Sub-criterion | Status | Evidence |
 | --- | --- | --- |
 | Personal ledger without a Household | `PARTIAL` (API seam) | `test-api-workos-seams.txt`: `personal-ledger.test.ts` **18** (creates/joins no Household; isolation; import on personal scope). `personal-budget-recurring.test.ts` **4**. `test-ledger-scope.txt` **5/5** (personal vs organization ledger ids). |
-| Confirmed first upload / import manifest | `PARTIAL` (API + mobile hook) | `import-bundle.test.ts` **15**, `manifest.test.ts` **13**; mobile `use-enable-sync` / `lib/migration/manifest` in `test-mobile-sync.txt` **19/19**. Hook tests are not a live confirm-upload. |
+| Confirmed first upload / import manifest | `PASS` (live getManifest) + `PARTIAL` (full upload) | Live `POST /rpc/migration/getManifest` **200** after DDL 0011–0015 (`post-schema-sync-retest.md`, CF Worker citations). Automated: `import-bundle.test.ts` **15**, `manifest.test.ts` **13**; mobile hook tests **19/19**. Confirmed first-upload UX / two-store proof still not fully certified. |
 | Anonymous local-only use | not evidenced | Requires device. No stim/agent-device proof. |
 | Populated cloud opens separately; device ledger preserved; no auto-merge | not evidenced live | Same mobile/API seams are not two-store device proof. |
 | Two-device personal core / budget / recurring sync, no orgs | not evidenced | No second-device run. `EXPO_PUBLIC_POWERSYNC_URL` absent locally; client may obtain the endpoint from the API token response when hitting `auth.trove.ing`. That does **not** certify two-device sync. |
@@ -267,7 +278,7 @@ API focused files in the 97: `powersync/token.test.ts` (4), `personal-budget-rec
 | `stim ios` | Prior build recovery on branch; **this AuthKit session did not rebuild** (`simctl launch` only). | `stim-ios-*.json` |
 | agent-device (iOS AuthKit) | **PARTIAL** — cancel PASS; email + code challenge reached; OTP hard-stopped (AX unavailable). | `authkit-01-launch.png` … `authkit-21-signed-out-final.png`, `authkit-live-write.txt` |
 | Client id equality | **EQUAL** (names only) | `client-id-compare.txt` — `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) |
-| Post-login protected API | **FAIL** (auth PASS) | Post-#246: `claim_iss` cleared; Sync / listMine HTTP **500** `orpc_error code=UNKNOWN` user upsert (`post-246-user-upsert-500.txt`; UI `authkit-72`; CFNetwork `cfnetwork-500-post246.txt`). |
+| Post-login protected API | **PASS** (listMine + getManifest) | listMine **200** post-#250; getManifest **200** after DDL 0011–0015 (`post-schema-sync-retest.md`). Matrix still incomplete. |
 | `stim doctor android` / `stim android` / agent-device (Android) | not started | — |
 | Maestro / verify-trove flows | not started | — |
 
@@ -355,6 +366,7 @@ stim start --json  # -> stim-start.json (port 8083)
 | File | What it is |
 | --- | --- |
 | `acceptance-matrix.md` | This matrix. |
+| `post-schema-sync-retest.md` | Post-DDL 0011–0015 getManifest **PASS** (CF Worker 200 citations). |
 | `revision.txt` | Earlier revision stamp. |
 | `authkit-live-write.txt` | This AuthKit write stamp (HEAD, #242 note, OTP hard-stop). |
 | `client-id-compare.txt` | `WORKOS_CLIENT_ID` vs `EXPO_PUBLIC_WORKOS_CLIENT_ID` equality result only. |
