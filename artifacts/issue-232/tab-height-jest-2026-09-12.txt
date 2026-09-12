@@ -1,0 +1,10 @@
+PASS path: components/navigation/glass-tab-bar/constants.test.ts
+PASS components/navigation/glass-tab-bar/constants.test.ts
+  TAB_HEIGHT
+    ✓ locks glass tab bar height to 44 (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.066 s
+Ran all test suites matching /components\/navigation\/glass-tab-bar\/constants.test.ts/i.
