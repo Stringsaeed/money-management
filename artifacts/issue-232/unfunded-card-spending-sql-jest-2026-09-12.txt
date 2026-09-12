@@ -1,0 +1,12 @@
+
+ RUN  v3.2.7 /tmp/cert-232-relates-0951/packages/api
+
+ ✓ src/lib/budget/reserve.test.ts (4 tests) 4ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  10:54:29
+   Duration  367ms (transform 40ms, setup 0ms, collect 205ms, tests 4ms, environment 0ms, prepare 54ms)
+
+
+--- tsc --noEmit ---
