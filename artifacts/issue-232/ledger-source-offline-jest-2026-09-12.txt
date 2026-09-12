@@ -1,0 +1,49 @@
+PASS modules/access/access.test.ts
+  resolveAccess
+    ✓ none x session (5 ms)
+    ✓ none x no_session
+    ✓ none x unreachable
+    ✓ held x session
+    ✓ held x no_session (1 ms)
+    ✓ held x unreachable
+    ✓ none x null probe
+    ✓ held x null probe (1 ms)
+    ✓ session x households pending
+    ✓ keeps signed_in when listMine fails instead of treating it as signed out
+    ✓ never turns unreachable into session_revoked (1 ms)
+  nextClaim
+    ✓ writes a held claim from a session probe
+    ✓ leaves the claim unchanged when the identity already matches (1 ms)
+    ✓ does not clear a held claim on an authoritative no_session
+    ✓ rewrites when the session identity changes
+  normalizeLedgerSelection
+    ✓ keeps Personal selection unchanged
+    ✓ keeps a Household selection that still has membership
+    ✓ falls back to Personal when the selected Household id is stale (1 ms)
+  pickActiveHousehold
+    ✓ returns the selected household when membership still exists
+    ✓ returns null for Personal selection or unknown household ids
+  resolveReturnDestination
+    ✓ returns the invoking screen when an active household exists
+    ✓ returns Profile & household when there is no active household
+    ✓ returns Profile & household for revoked and anonymous access
+  selectLedgerSourceForAccess
+    ✓ never full-screen-blocks on session_revoked
+    ✓ never full-screen-blocks when listMine is unavailable
+    ✓ selects a live synced ledger only for the migrated active household (1 ms)
+    ✓ keeps the migrated ledger selected while the session probe is in flight
+    ✓ syncs a Personal Ledger for a signed-in user who never joined a Household
+    ✓ does not degrade a Personal Ledger when the household list fails to load
+    ✓ marks the migrated ledger offline_cached when sync mode is kill_switch local_only (1 ms)
+    ✓ marks the migrated ledger offline_cached when sync mode is powersync local_only
+  householdReadFromQuery
+    ✓ uses the live session identity instead of a prior held claim
+    ✓ keeps cached household pages isolated by authenticated user
+    ✓ keeps cached memberships when the session probe disables the query
+    ✓ stays pending only before the first household page arrives
+
+Test Suites: 1 passed, 1 total
+Tests:       35 passed, 35 total
+Snapshots:   0 total
+Time:        0.787 s, estimated 10 s
+Ran all test suites matching /modules\/access\/access.test.ts/i.

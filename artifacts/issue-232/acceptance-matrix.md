@@ -20,14 +20,20 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `da77f90` session-probe docs stamp — product `d71a5b2` probeSession/tryRemoteSignOut Jest; **local** tsc+Jest PASS; GitHub Actions **BLOCKED** (billing/spend limit); webhook still **503**; Create Account still **BLOCKED** on #258; dual-identity **BLOCKED** |
+| HEAD | tip pending docs stamp — product `0e09809` `selectLedgerSourceForAccess` local_only/kill_switch offlineReason Jest; prior session-probe `d71a5b2`; **local** tsc+Jest PASS; GitHub Actions **BLOCKED** (billing/spend limit); webhook still **503**; Create Account still **BLOCKED** on #258; dual-identity **BLOCKED** |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/workspace/.wt-cert-232-relates` (this Relates write); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T06:30:58Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
 | Device (this write) | **none** — API/docs-only; no iOS/Android device; no Mac |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
-Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `ci-billing-blocked-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `session-probe-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt`.
+Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `ci-billing-blocked-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `session-probe-jest-2026-09-12.txt` / `ledger-source-offline-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt`.
+
+## Ledger-source local_only offlineReason Jest Relates (2026-09-12, no device)
+
+- Extended `apps/mobile/modules/access/access.test.ts` — **35/35 PASS** (`ledger-source-offline-jest-2026-09-12.txt`): prior `selectLedgerSourceForAccess` suite plus `local_only` + `kill_switch` → `offline_cached` reason `Sync is temporarily unavailable.`; `local_only` + `powersync_unavailable` → `PowerSync has been disconnected for over 10 minutes.`
+- Row 6 client offlineReason mapping for kill-switch / PowerSync disconnect → advances automated seam; live PowerSync removal + offline-device measure still **BLOCKED** (`POWERSYNC_*` ABSENT).
+- Create Account still **BLOCKED** on [#258](https://github.com/Stringsaeed/money-management/pull/258); webhook membership apply still **BLOCKED** (**503** empty prod `WORKOS_WEBHOOK_SECRET`); dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## Session-probe async Jest Relates (2026-09-12, no device)
 
@@ -331,8 +337,9 @@ Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT
 | Unknown Household/User refuse | `PASS` (API seam) | Projection refuses unknown Households/Users; households ignore unknown Organizations. |
 | PowerSync connection removal (measured bound) | `BLOCKED` | Not measured. Local worker mint blocked — absent: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`. Explicit stamp: `powersync-disposable-reset-blocked.md`. GitHub Actions secrets **do** include `POWERSYNC_*` (names only; values not claimed). Stream **config** tests (`test-powersync-proper.txt` **9/9**) are not a live removal bound. |
 | Offline-device limitation (cannot observe remote removal until reconnect) | `BLOCKED` / not measured | No offline-device run. Same mint env hard-stop. Do not promise remote erasure while disconnected. |
+| Client `local_only` / `kill_switch` → ledger `offline_cached` | `PASS` (automated) / live not run | `selectLedgerSourceForAccess` in `access.test.ts`: `kill_switch` → `Sync is temporarily unavailable.`; `powersync_unavailable` → `PowerSync has been disconnected for over 10 minutes.` (`ledger-source-offline-jest-2026-09-12.txt`, suite **35/35**). Not a live offline-device measure. |
 
-**Row status: `PARTIAL` (event seams) + `BLOCKED` (live PowerSync removal / offline measure).**
+**Row status: `PARTIAL` (event seams + client offlineReason) + `BLOCKED` (live PowerSync removal / offline measure).**
 
 Note: `test-powersync.txt` is a **failed** `vitest run` (`No test suite found` / `ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL`). The package script is `node --test sync-streams.test.ts`. The proper run is `test-powersync-proper.txt` **9/9**. The vitest miss is a runner mismatch, not a product regression.
 
@@ -384,6 +391,7 @@ Still BLOCKED for disposable mint/reset: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE
 | Mobile jest ledger-selection / return-to / identity helpers | **17/17** `isolation-helpers-jest-2026-09-12.txt` | 4 (selection encode), 5 (per-user isolation), 7 (sameIdentity) |
 | Mobile jest claim-store SecureStore seam | **8/8** `claim-store-jest-2026-09-12.txt` | 5 (claim persistence / stale client seam), 7 (identity switch claim keys) |
 | Mobile jest session-probe async | **13/13** `session-probe-jest-2026-09-12.txt` | 7 (`probeSession` / `tryRemoteSignOut` remote seam) |
+| Mobile jest `selectLedgerSourceForAccess` local_only offlineReason | **35/35** `ledger-source-offline-jest-2026-09-12.txt` | 6 (client kill_switch / powersync `offline_cached`) |
 | `pnpm test:ci` / CI Jest | **PASS** tip stamp | 1 (`ci-stamp-2026-09-12.txt` + prior `test-ci.txt`) |
 
 API focused files in the 97: `powersync/token.test.ts` (4), `personal-budget-recurring.test.ts` (4), `deletion/service.test.ts` (5), `membership/projection.test.ts` (13), `migration/manifest.test.ts` (13), `import-bundle.test.ts` (15), `personal-ledger.test.ts` (18), `households/service.test.ts` (25).
