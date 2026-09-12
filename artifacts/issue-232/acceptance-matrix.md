@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | PENDING_DOCS — product `d4e51e767f2608c1a3412df51c49acacfb29000f` (`DEFAULT_CATEGORY_ICON` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `7c47d103e8f5a9a1369d17e4c67a7a24407fe1e2` DEFAULT_CATEGORY_ICON stamp — product `d4e51e767f2608c1a3412df51c49acacfb29000f` (`DEFAULT_CATEGORY_ICON` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
