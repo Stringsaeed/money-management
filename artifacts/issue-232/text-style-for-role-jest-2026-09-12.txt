@@ -1,0 +1,22 @@
+=== Relates #232 textStyleForRole Jest ===
+2026-09-12T10:40:37Z
+PASS components/auth/ui/recipes.test.ts
+  controlLabelStyle
+    ✓ maps each control role label from AUTH_CONTROL_SPECS (3 ms)
+    ✓ resolves primary label color to white and secondary to palette foreground (1 ms)
+  textStyleForRole
+    ✓ maps each AUTH_TEXT_SPECS role including optional letterSpacing (1 ms)
+    ✓ applies title letterSpacing and notice colors without inventing italic/align (1 ms)
+  fieldBoxStyle
+    ✓ pairs borderWidth with borderColor so transformStyle keeps the stroke
+  fieldRecipe
+    ✓ paints the field with strokeBorder instead of clipShape border chrome (1 ms)
+  controlRecipe
+    ✓ puts width + label paint on the button (string label path) (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       7 passed, 7 total
+Snapshots:   0 total
+Time:        1.092 s
+Ran all test suites matching /components\/auth\/ui\/recipes.test.ts/i.
+=== tsc --noEmit ===
