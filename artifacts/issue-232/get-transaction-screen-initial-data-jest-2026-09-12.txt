@@ -1,0 +1,13 @@
+=== Relates #232 getTransactionScreenInitialData Jest ===
+2026-09-12T10:34:04Z
+PASS components/transaction/transaction-screen-initial-data.test.ts
+  getTransactionScreenInitialData
+    ✓ maps a recurring rule (preferring it over a transaction) into form data (4 ms)
+    ✓ maps a transaction when no rule is present, else undefined (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        1.105 s
+Ran all test suites matching /components\/transaction\/transaction-screen-initial-data.test.ts/i.
+=== tsc --noEmit ===
