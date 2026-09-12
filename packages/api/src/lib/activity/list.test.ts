@@ -7,7 +7,7 @@ import type { EffectTag } from "@trove/protocol";
 import { householdChange } from "@trove/db/schema/commands";
 
 import { createTestDb } from "../../test-support/db";
-import { getActivity } from "./list";
+import { DEFAULT_ACTIVITY_LIMIT, MAX_ACTIVITY_LIMIT, getActivity } from "./list";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 
@@ -19,12 +19,16 @@ const OTHER_HOUSEHOLD_ID = "household-2";
 
 let db: TestDb;
 
+describe("activity list limits", () => {
+  it("locks DEFAULT_ACTIVITY_LIMIT and MAX_ACTIVITY_LIMIT", () => {
+    expect(DEFAULT_ACTIVITY_LIMIT).toBe(50);
+    expect(MAX_ACTIVITY_LIMIT).toBe(200);
+    expect(MAX_ACTIVITY_LIMIT).toBeGreaterThan(DEFAULT_ACTIVITY_LIMIT);
+  });
+});
+
 /** 2026-08-24 noon UTC plus `minutes`. */
 const at = (minutes: number): Date => new Date(Date.UTC(2026, 7, 24, 12, minutes));
-
-beforeEach(async () => {
-  db = await setupHousehold();
-});
 
 async function setupHousehold(): Promise<TestDb> {
   const database = await createTestDb();
@@ -81,6 +85,10 @@ async function seedChanges(changes: readonly SeedChange[]): Promise<void> {
 }
 
 describe("getActivity", () => {
+  beforeEach(async () => {
+    db = await setupHousehold();
+  });
+
   it("rejects a non-member before reading any change data", async () => {
     await seedChanges([{ userId: OWNER }]);
     await expect(getActivity({ db, userId: OUTSIDER, householdId: HOUSEHOLD_ID })).rejects.toThrow(
