@@ -67,3 +67,4 @@ page_transactions_jest=PASS 2/2 new suite=6/6 product=3f4975c
 to_edit_date_jest=PASS 2/2 new suite=8/8 product=c89f267
 summarize_transactions_jest=PASS 2/2 new suite=10/10 product=dfea4da
 apply_move_to_projection_jest=PASS 2/2 product=5b92db2
+query_filters_to_ledger_jest=PASS 2/2 new suite=12/12 product=98fb0e3
