@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=c9d3593
+gap=commands/handlers/shared + ledger-read-input + powersync/key
+matrix_row=4/6 command validation + ledger read scope + PowerSync key gate
+command=pnpm exec vitest run src/lib/commands/handlers/shared.test.ts src/lib/ledger-read-input.test.ts src/lib/powersync/key.test.ts
+result=PASS 9/9
+tsc=PASS exit 0
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
