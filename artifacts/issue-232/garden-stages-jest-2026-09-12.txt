@@ -1,0 +1,10 @@
+PASS path: components/graphics/growing-garden-stages.test.ts
+PASS components/graphics/growing-garden-stages.test.ts
+  GARDEN_STAGES
+    ✓ locks garden growth stage count to 6 (10 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.04 s
+Ran all test suites matching /components\/graphics\/growing-garden-stages.test.ts/i.
