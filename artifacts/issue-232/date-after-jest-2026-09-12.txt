@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=c72546e
+gap=dateAfter
+matrix_row=4/6 domain calendar day helper
+command=pnpm exec vitest run src/domain/date-after.test.ts
+result=PASS 3/3
+tsc=PASS packages/api --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint

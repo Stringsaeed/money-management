@@ -48,3 +48,4 @@ create_update_category_payload_schemas_jest=PASS 4/4 product=03caae2
 archive_category_payload_schema_jest=PASS 2/2 product=de1ed8e
 to_wire_account_type_jest=PASS 3/3 product=9d1cff0
 budget_period_of_jest=PASS 3/3 product=305f12e
+date_after_jest=PASS 3/3 product=c72546e
