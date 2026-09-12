@@ -1,0 +1,11 @@
+PASS path: lib/migration/status-keys.test.ts
+PASS path: apps/mobile/lib/migration/status-keys.test.ts
+PASS lib/migration/status-keys.test.ts
+  COMPLETED_HOUSEHOLD_ID_KEY
+    ✓ locks migration completed-household setting key to "migration.completedHouseholdId" (9 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.957 s, estimated 1 s
+Ran all test suites matching /lib\/migration\/status-keys.test.ts/i.

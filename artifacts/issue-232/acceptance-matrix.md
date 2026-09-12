@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `ec86302c9eb39524c3f5a079704fad13a1a2c2a1` CATEGORY_TYPE_META stamp — product `8c5bd1795e7c75ef1a420efb5551f7334bf76c87` (`CATEGORY_TYPE_META` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` COMPLETED_HOUSEHOLD_ID_KEY stamp — product `e079925dcb127de19b4058d42392341267ceeb69` (`COMPLETED_HOUSEHOLD_ID_KEY` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -119,6 +119,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 ## CATEGORY_TYPE_META Relates (2026-09-12, no device)
 
 - Updated `apps/mobile/components/category/category-type-meta.test.ts` — **1/1 new PASS** / suite **1/1** (`category-type-meta-jest-2026-09-12.txt`): exact lock `CATEGORY_TYPE_META` expense/income vocabulary (pure const surface).
+- Row 4 / row 6 seam → advances automated vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## COMPLETED_HOUSEHOLD_ID_KEY Relates (2026-09-12, no device)
+
+- Updated `apps/mobile/lib/migration/status-keys.test.ts` — **1/1 new PASS** / suite **1/1** (`completed-household-id-key-jest-2026-09-12.txt`): exact lock `COMPLETED_HOUSEHOLD_ID_KEY="migration.completedHouseholdId"` (pure const surface).
 - Row 4 / row 6 seam → advances automated vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
