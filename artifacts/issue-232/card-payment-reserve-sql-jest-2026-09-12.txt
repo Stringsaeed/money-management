@@ -1,0 +1,13 @@
+=== Relates #232 cardPaymentReserveSql vitest ===
+2026-09-12T10:52:22Z
+
+ RUN  v3.2.7 /tmp/cert-232-relates-0951/packages/api
+
+ ✓ src/lib/budget/reserve.test.ts (2 tests) 3ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  10:52:22
+   Duration  363ms (transform 39ms, setup 0ms, collect 208ms, tests 3ms, environment 0ms, prepare 51ms)
+
+=== tsc --noEmit ===
