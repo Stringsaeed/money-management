@@ -3,11 +3,34 @@ import { format, parseISO } from "date-fns";
 import {
   ACTIVITY_RANGE_PRESETS,
   activityRangeLabel,
+  EFFECT_EMOJIS,
   effectEmoji,
   formatActivityFullTimestamp,
   formatActivityTimestamp,
   resolveActivityRange,
 } from "./activity";
+
+describe("EFFECT_EMOJIS", () => {
+  it("maps every lead effect tag to its emoji", () => {
+    expect(EFFECT_EMOJIS).toEqual({
+      rules: "🔁",
+      upcoming: "📅",
+      ledger: "🧾",
+      balances: "⚖️",
+      summaries: "🏷️",
+      envelopes: "✉️",
+      assignments: "📌",
+      projections: "📈",
+      members: "👥",
+    });
+  });
+
+  it("is the source of truth for effectEmoji known tags", () => {
+    for (const [tag, emoji] of Object.entries(EFFECT_EMOJIS)) {
+      expect(effectEmoji(tag)).toBe(emoji);
+    }
+  });
+});
 
 describe("effectEmoji", () => {
   it("maps known tags onto emojis", () => {
