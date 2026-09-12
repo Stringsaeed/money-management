@@ -1,0 +1,13 @@
+date_utc=2026-09-12T01:04:00Z
+deploy_worker_run=34663345218
+deploy_sha=4171c2c8951a0e154cb0a9abfc2735f02ada22f2
+rpc=POST /rpc/households/listMine
+auth=PASS
+http=200
+body={"json":[]}
+prior_42703_membership.status=cleared_for_listMine
+sync_getManifest_http=500
+sync_getManifest_client_code=INTERNAL_SERVER_ERROR
+relates=#232 only
+certified=false
+raw_cdp_committed=false

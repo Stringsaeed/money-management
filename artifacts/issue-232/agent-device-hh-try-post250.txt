@@ -1,0 +1,13 @@
+Tapped @e12 (201, 303)
+settled after 2159ms: +4 -7 (~26 unchanged)
+- @e9 [text] "Household sync is paused"
+- @e10 [text] "Your ledger on this device is still usable."
+- @e11 [other] "Try again"
+- @e12 [button] "Try again"
+- @e18 [other] "Try again"
+- @e19 [button] "Try again"
+- @e20 [text] "Internal server error"
++ @e14~s192383 [other] "Sync just for me"
++ @e15~s192383 [button] "Sync just for me"
++ @e21~s192383 [text] "Join a Household"
++ @e22~s192383 [text] "Accept the WorkOS invitation email (hosted AuthKit). Custom invite codes are gone — joining never moves your Personal ledger into the shared one."

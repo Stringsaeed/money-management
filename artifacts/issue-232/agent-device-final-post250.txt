@@ -1,0 +1,34 @@
+Page: com.stringsaeed.moneymanagement
+App: com.stringsaeed.moneymanagement
+Snapshot: 30 visible nodes (31 total)
+@e1 [application] "Trove (Dev)"
+@e2 [navigation-bar] "Settings"
+@e3 [button] "Settings"
+@e4 [text] "Profile"
+@e5 [scroll-area] "stringsaeed@gmail.com" [scrollable]
+  [content below scroll-area hidden]
+@e6 [other] "stringsaeed@gmail.com"
+@e7 [other] "Sign out"
+@e8 [button] "Sign out"
+@e9 [text] "LEDGER"
+@e10 [other] "Personal ✓"
+@e11 [button] "Personal ✓"
+@e12 [text] "Sync without a Household 🪪"
+@e13 [text] "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."
+@e14 [other] "Try again"
+@e15 [button] "Try again"
+@e16 [text] "Internal server error"
+@e17 [text] "Create a Household"
+@e18 [text] "Start a shared space — family accounts, budgets, and reports in one place."
+@e19 [text-field] "The speeds" [editable]
+@e20 [other] "🏠 Create household"
+@e21 [button] "🏠 Create household"
+@e22 [text] "Could not create the household. Check your connection and try again."
+@e24 [other] "Ledger"
+@e25 [button]
+@e26 [button] "Ledger"
+@e27 [button] "Money Movement"
+@e28 [button] "Inbox"
+@e29 [button] "Envelopes"
+@e30 [button] "Settings" [selected]
+@e31 [button] "Create account"

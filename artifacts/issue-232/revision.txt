@@ -1,10 +1,9 @@
 branch=cursor/workos-certify-migration-b3d1
 worktree=/Users/saeed/Work/money-management-wt-232
 live_api=https://auth.trove.ing
-deploy_worker_run=34662626320
-deploy_sha=79b83d6eeaaab7479f7c62ea0174343504d02cf6
-post249_listmine=FAIL INTERNAL_SERVER_ERROR 500
-owner_cf_pg_code=42703 membership.status
-ensure_softfail=42501 memberships_reconciled_at present=false
+deploy_worker_run=34663345218
+deploy_sha=4171c2c8951a0e154cb0a9abfc2735f02ada22f2
+post250_listmine=PASS HTTP 200 json=[]
+post250_sync_getManifest=FAIL INTERNAL_SERVER_ERROR 500
 relates=#232 only
 certified=false

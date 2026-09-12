@@ -28,6 +28,13 @@ Report implementation, automated verification, runtime verification, and publica
 
 Recorded in `revision.txt` / `authkit-live-write.txt` / `post-246-user-upsert-500.txt`.
 
+## Post-#250 Sync retest (2026-09-12)
+
+- Deploy Worker [34663345218](https://github.com/Stringsaeed/money-management/actions/runs/34663345218) **success** (`4171c2c`, #250).
+- Auth **PASS**. `households/listMine` **PASS** HTTP **200** `{"json":[]}`. Prior `42703 membership.status` cleared for this RPC.
+- Sync just for me still **FAIL** on `migration/getManifest` HTTP **500** client **`INTERNAL_SERVER_ERROR`** (`post-250-sync-retest.md`). Sanitized evidence only — no raw CDP dumps.
+- Relates to #232 only. Not certified.
+
 ## Post-#249 Sync retest (2026-09-12)
 
 - Deploy Worker [34662626320](https://github.com/Stringsaeed/money-management/actions/runs/34662626320) **success** for `79b83d6` (#249). Ensure ALTER still **soft-fail `42501`**; `memberships_reconciled_at` **absent**.

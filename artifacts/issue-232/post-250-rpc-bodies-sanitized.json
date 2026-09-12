@@ -1,0 +1,22 @@
+[
+  {
+    "id": "req_34",
+    "rpc": "listMine",
+    "body": "{\"json\":[]}"
+  },
+  {
+    "id": "req_33",
+    "rpc": "listMine",
+    "body": "{\"json\":[]}"
+  },
+  {
+    "id": "req_32",
+    "rpc": "listMine",
+    "body": "{\"json\":[]}"
+  },
+  {
+    "id": "req_35",
+    "rpc": "getManifest",
+    "body": "{\"json\":{\"defined\":false,\"code\":\"INTERNAL_SERVER_ERROR\",\"status\":500,\"message\":\"Internal server error\"}}"
+  }
+]
