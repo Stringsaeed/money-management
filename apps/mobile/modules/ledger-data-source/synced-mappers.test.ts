@@ -1,11 +1,13 @@
 import { describe, expect, it } from "@jest/globals";
 
 import type { Account, Category } from "@/types";
+import type { PowerSyncAccountRow } from "@/modules/ledger-db/types";
 
 import {
   assertSupportedAccountUpdate,
   assertSupportedTransactionUpdate,
   calculateSyncedBalance,
+  mapPowerSyncAccount,
   mapSyncedAccount,
   mapSyncedCategory,
   mapSyncedTransaction,
@@ -403,5 +405,62 @@ describe("mapSyncedTransaction", () => {
     );
     expect(mapped.createdAt).toBe("2026-06-01T11:00:00.000Z");
     expect(mapped.updatedAt).toBe("2026-06-01T11:00:00.000Z");
+  });
+});
+
+const powerSyncAccount = (overrides: Partial<PowerSyncAccountRow> = {}): PowerSyncAccountRow => ({
+  id: "ps-acct-a",
+  ledger_id: "led-1",
+  household_id: "hh-1",
+  name: "Checking",
+  type: "bank",
+  currency: "USD",
+  color: "#000000",
+  icon: "banknote.fill",
+  initial_balance_minor: 2500,
+  exclude_from_total: 0,
+  sort_order: 1,
+  lifecycle: "active",
+  lifecycle_changed_at: null,
+  owner_user_id: "user-1",
+  version: 1,
+  created_by: "user-1",
+  updated_by: "user-1",
+  created_at: TIMESTAMP,
+  updated_at: TIMESTAMP,
+  ...overrides,
+});
+
+describe("mapPowerSyncAccount", () => {
+  it("maps bank row type to checking and snake_case balance fields", () => {
+    expect(mapPowerSyncAccount(powerSyncAccount({ type: "bank", initial_balance_minor: 2500 }))).toEqual(
+      expect.objectContaining({
+        id: "ps-acct-a",
+        name: "Checking",
+        type: "checking",
+        initialBalance: 2500,
+        excludeFromTotal: false,
+        sortOrder: 1,
+        lifecycleChangedAt: null,
+        createdAt: TIMESTAMP,
+        updatedAt: TIMESTAMP,
+      }),
+    );
+  });
+
+  it("maps card row type to credit_card", () => {
+    expect(mapPowerSyncAccount(powerSyncAccount({ type: "card", name: "Visa" })).type).toBe(
+      "credit_card",
+    );
+  });
+
+  it("maps cash row type to cash", () => {
+    expect(mapPowerSyncAccount(powerSyncAccount({ type: "cash" })).type).toBe("cash");
+  });
+
+  it("treats exclude_from_total=1 as excludeFromTotal true", () => {
+    expect(
+      mapPowerSyncAccount(powerSyncAccount({ exclude_from_total: 1 })).excludeFromTotal,
+    ).toBe(true);
   });
 });
