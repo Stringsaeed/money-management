@@ -59,3 +59,4 @@ recurring_rule_content_jest=PASS 2/2 new suite=14/14 product=a6f4cdd
 ledger_read_fields_jest=PASS 2/2 new suite=5/5 product=27383f8
 create_console_sink_jest=PASS 2/2 new suite=7/7 product=32eed27
 create_metrics_sink_jest=PASS 2/2 new suite=9/9 product=520e266
+apply_ledger_filters_jest=PASS 2/2 new suite=2/2 product=7e507fe
