@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `4c7471a7f34cb103d9cb1b024d15d6943c320ef6` POWERSYNC_JWT_ALGORITHM stamp — product `c3fe01c4b44ee34ca28ce15fcb5929dd49c27109` (`POWERSYNC_JWT_ALGORITHM` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` WIDGET_HANDOFF_TTL_MS stamp — product `e8f4a136a1b84e10d71935d6054bfe5431b42c8a` (`WIDGET_HANDOFF_TTL_MS` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -239,6 +239,13 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Added `apps/mobile/components/transaction/recurrence/frequency-labels.test.ts` — **1/1 new PASS** / suite **1/1** (`frequency-labels-jest-2026-09-12.txt`): exact lock of `FREQUENCY_LABELS` day→year unit vocabulary (pure frozen table)
 - Row 4 / row 6 recurrence frequency-label seam → advances automated recurrence vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## WIDGET_HANDOFF_TTL_MS Relates (2026-09-12, no device)
+
+- Added `packages/api/src/lib/households/widget-handoff-ttl-ms.test.ts` — **1/1 new PASS** / suite **1/1** (`widget-handoff-ttl-ms-vitest-2026-09-12.txt`): exact lock `WIDGET_HANDOFF_TTL_MS=120000` (pure const)
+- Row 4 / row 6 widget handoff TTL seam → advances automated widget-handoff vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
 
 ## POWERSYNC_JWT_ALGORITHM Relates (2026-09-12, no device)
 
