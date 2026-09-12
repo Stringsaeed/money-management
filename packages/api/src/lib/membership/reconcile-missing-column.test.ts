@@ -17,6 +17,18 @@ describe("hasPgCode", () => {
     expect(hasPgCode(wrapped, "42703")).toBe(true);
     expect(hasPgCode(wrapped, "42501")).toBe(false);
   });
+
+  it("finds non-enumerable code and message-only undefined_column", () => {
+    const nonEnum = new Error("missing column");
+    Object.defineProperty(nonEnum, "code", { value: "42703", enumerable: false });
+    const wrapped = new Error("Failed query");
+    wrapped.cause = nonEnum;
+    expect(hasPgCode(wrapped, "42703")).toBe(true);
+
+    const messageOnly = new Error("Failed query");
+    messageOnly.cause = new Error("ERROR: undefined_column");
+    expect(hasPgCode(messageOnly, "42703")).toBe(true);
+  });
 });
 
 describe("reconcileUserMembershipsIfStale", () => {

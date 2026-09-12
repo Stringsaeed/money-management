@@ -37,9 +37,11 @@ export function bindLedgerScope(scope: LedgerScope): ScopeBinding {
  * verified claims only — keeps a first command from failing on a foreign key
  * the moment a User signs in on a fresh device.
  *
- * Inserts only id/name/email/email_verified so first-login works when prod is
- * missing later columns such as memberships_reconciled_at (0013). Drizzle's
- * table insert lists every schema column and throws PG 42703 before ON CONFLICT.
+ * Inserts id/name/email/email_verified plus created_at/updated_at = now() so
+ * first-login works when prod is missing later columns such as
+ * memberships_reconciled_at (0013) and when created_at/updated_at lack DB
+ * defaults after D1 cutover (NOT NULL 23502). Drizzle's table insert lists
+ * every schema column and throws PG 42703 before ON CONFLICT.
  */
 export async function ensureUserProjection(
   db: CommandDatabase,
@@ -53,8 +55,8 @@ export async function ensureUserProjection(
   const resolvedEmail = email || `${actor.id}@users.workos.invalid`;
   const name = actor.name?.trim() || email || actor.id;
   await db.execute(sql`
-    INSERT INTO "user" ("id", "name", "email", "email_verified")
-    VALUES (${actor.id}, ${name}, ${resolvedEmail}, ${true})
+    INSERT INTO "user" ("id", "name", "email", "email_verified", "created_at", "updated_at")
+    VALUES (${actor.id}, ${name}, ${resolvedEmail}, ${true}, now(), now())
     ON CONFLICT DO NOTHING
   `);
 }
