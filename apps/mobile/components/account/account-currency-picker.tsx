@@ -95,53 +95,62 @@ export function AccountCurrencyPicker({
         )}
       </Pressable>
 
-      <BottomSheet
-        containerColor={bgSurface}
-        contentPadding={{ top: 16, bottom: 8, left: 16, right: 16 }}
-        isPresented={isPresented}
-        onDismiss={dismiss}
-        snapPoints={["half", "full"]}
-        testID="account-currency-sheet"
-      >
-        <ExpoText>Currency</ExpoText>
-        <TextInput
-          autoCapitalize="none"
-          autoCorrect={false}
-          onChangeText={setQuery}
-          placeholder="Search by code or name"
-          returnKeyType="search"
-          testID="account-currency-search"
-          value={searchState}
-        />
-        <RNHostView style={{ height: 360, width: "100%" }}>
-          <FlatList
-            ListEmptyComponent={
-              <View className="items-center px-4 py-10">
-                <Text className="font-body-medium text-base text-ink/50">
-                  {`No currencies match "${query.trim()}". 🔍`}
-                </Text>
-              </View>
-            }
-            contentContainerClassName="pb-safe gap-2 pt-3"
-            data={results}
-            initialNumToRender={CURRENCY_OPTIONS.length}
-            keyExtractor={(item) => item.code}
-            keyboardDismissMode="on-drag"
-            keyboardShouldPersistTaps="handled"
-            onScrollToIndexFailed={(info) =>
-              recoverAccountCurrencyListScroll(listRef.current, info)
-            }
-            ref={listRef}
-            renderItem={({ item }) => (
-              <AccountCurrencyOptionRow
-                item={item}
-                onSelect={select}
-                selected={item.code === value}
-              />
-            )}
+      {/*
+        Mount the Expo UI sheet only while open. On iOS, @expo/ui BottomSheet
+        keeps an absolute Host in the tree even when isPresented=false; that
+        Host can steal UIKit hits while AX still reports sibling submit
+        controls as hittable (Create Account #258/#261 miss class). Android
+        already unmounts when closed — mirror that here.
+      */}
+      {isPresented ? (
+        <BottomSheet
+          containerColor={bgSurface}
+          contentPadding={{ top: 16, bottom: 8, left: 16, right: 16 }}
+          isPresented
+          onDismiss={dismiss}
+          snapPoints={["half", "full"]}
+          testID="account-currency-sheet"
+        >
+          <ExpoText>Currency</ExpoText>
+          <TextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            onChangeText={setQuery}
+            placeholder="Search by code or name"
+            returnKeyType="search"
+            testID="account-currency-search"
+            value={searchState}
           />
-        </RNHostView>
-      </BottomSheet>
+          <RNHostView style={{ height: 360, width: "100%" }}>
+            <FlatList
+              ListEmptyComponent={
+                <View className="items-center px-4 py-10">
+                  <Text className="font-body-medium text-base text-ink/50">
+                    {`No currencies match "${query.trim()}". 🔍`}
+                  </Text>
+                </View>
+              }
+              contentContainerClassName="pb-safe gap-2 pt-3"
+              data={results}
+              initialNumToRender={CURRENCY_OPTIONS.length}
+              keyExtractor={(item) => item.code}
+              keyboardDismissMode="on-drag"
+              keyboardShouldPersistTaps="handled"
+              onScrollToIndexFailed={(info) =>
+                recoverAccountCurrencyListScroll(listRef.current, info)
+              }
+              ref={listRef}
+              renderItem={({ item }) => (
+                <AccountCurrencyOptionRow
+                  item={item}
+                  onSelect={select}
+                  selected={item.code === value}
+                />
+              )}
+            />
+          </RNHostView>
+        </BottomSheet>
+      ) : null}
     </>
   );
 }

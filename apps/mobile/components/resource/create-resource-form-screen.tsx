@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 interface CreateResourceFormScreenProps {
   children: ReactNode;
@@ -9,38 +9,25 @@ interface CreateResourceFormScreenProps {
 /**
  * Expo Router create-resource screens (account/new, category/new).
  *
- * Keep the submit footer outside KeyboardAvoidingView. agent-device #260 kept
- * the footer as a KAV sibling of ScrollView and reported create-resource-submit
- * hittable=false (rect center ~201,802) until an in-scroll sibling was pressed.
- * KAV only wraps the scroll body; the footer is a flex sibling with pb-safe so
- * home-indicator inset does not shift the Pressable hit target.
+ * Device certs #258/#260/#261 kept create-resource-submit as a sticky footer
+ * outside the form ScrollView. In-scroll Pressables (e.g. the Savings account
+ * type chip) received taps; the sticky submit reported hittable=true but
+ * missed. Put the footer in the same ScrollView so submit shares that hit path.
  */
 export function CreateResourceFormScreen({ children, footer }: CreateResourceFormScreenProps) {
   return (
-    <View className="flex-1 bg-background" pointerEvents="box-none">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <View className="flex-1 bg-background">
+      <ScrollView
         className="flex-1"
-        pointerEvents="box-none"
-        testID="create-resource-form-kav"
+        contentContainerClassName="gap-4 px-5 py-4 pb-safe"
+        keyboardShouldPersistTaps="always"
+        testID="create-resource-form-scroll"
       >
-        <ScrollView
-          className="flex-1"
-          contentContainerClassName="gap-4 px-5 py-4"
-          keyboardShouldPersistTaps="handled"
-          testID="create-resource-form-scroll"
-        >
-          {children}
-        </ScrollView>
-      </KeyboardAvoidingView>
-      <View
-        className="z-10 bg-background pb-safe"
-        collapsable={false}
-        pointerEvents="box-none"
-        testID="create-resource-form-footer"
-      >
-        {footer}
-      </View>
+        {children}
+        <View collapsable={false} testID="create-resource-form-footer">
+          {footer}
+        </View>
+      </ScrollView>
     </View>
   );
 }

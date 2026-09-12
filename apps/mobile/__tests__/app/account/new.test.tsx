@@ -34,6 +34,9 @@ describe("app/account/new", () => {
     await render(<NewAccountScreen />);
 
     expect(screen.getByTestId("create-resource-submit")).toHaveTextContent("Create Account");
+    // Closed currency @expo/ui BottomSheet Host must not stay mounted — it can
+    // steal Create Account submit hits while AX still reports hittable=true.
+    expect(screen.queryByTestId("account-currency-sheet")).toBeNull();
   });
 
   it("creates an account and navigates back", async () => {

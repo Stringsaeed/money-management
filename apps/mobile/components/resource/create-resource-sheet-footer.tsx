@@ -17,6 +17,10 @@ interface CreateResourceSheetFooterProps {
  * Primary submit uses RN Pressable (not `@/components/ui/button`): agent-device
  * hit-testing still reported Create Account as hittable=false with the shared
  * Button wrapper — same miss class as pre-#253 personal-upload confirm.
+ *
+ * Hit delivery for Expo Router create screens depends on placing this footer
+ * inside the form ScrollView (see CreateResourceFormScreen), matching in-scroll
+ * controls like the Savings account-type chip.
  */
 export function CreateResourceSheetFooter({
   error,
@@ -40,7 +44,6 @@ export function CreateResourceSheetFooter({
         accessibilityRole="button"
         disabled={isSubmitting}
         onPress={onSubmit}
-        pointerEvents="auto"
         testID="create-resource-submit"
         className={cn(
           "min-h-12 items-center justify-center rounded-xl bg-ink px-4 py-3 active:opacity-80",
