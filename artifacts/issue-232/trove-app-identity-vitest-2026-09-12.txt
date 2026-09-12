@@ -1,0 +1,11 @@
+PASS path: packages/auth/src/trove-app-identity.test.ts
+
+ RUN  v3.2.7 /tmp/cert-232-relates-import/packages/auth
+
+ ✓ src/trove-app-identity.test.ts (1 test) 2ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  13:11:30
+   Duration  171ms (transform 27ms, setup 0ms, collect 25ms, tests 2ms, environment 0ms, prepare 51ms)
+
