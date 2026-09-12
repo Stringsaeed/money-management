@@ -20,15 +20,21 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `7b9e96e` widget-handoff Jest stamp — product `044307b` (`generateHandoffCode`/`hashHandoffCode` **3/3**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip pending reconcile-freshness Jest stamp — product `10d0bd9` (`isStale`/`requireUserId` **7/7**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/workspace/.wt-cert-232-relates` (this Relates write); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T06:30:58Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
 | Device (this write) | **none** — API/docs-only; no iOS/Android device; no Mac |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
-Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `ci-billing-blocked-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `session-probe-jest-2026-09-12.txt` / `ledger-source-offline-jest-2026-09-12.txt` / `memberships-role-jest-2026-09-12.txt` / `access-core-capabilities-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt` /  / `workos-verify-env-jest-2026-09-12.txt` / `widget-handoff-jest-2026-09-12.txt`.
+Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `ci-billing-blocked-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `session-probe-jest-2026-09-12.txt` / `ledger-source-offline-jest-2026-09-12.txt` / `memberships-role-jest-2026-09-12.txt` / `access-core-capabilities-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt` /  / `workos-verify-env-jest-2026-09-12.txt` / `widget-handoff-jest-2026-09-12.txt` / `reconcile-freshness-jest-2026-09-12.txt`.
 
+
+## Reconcile freshness + requireUserId Jest Relates (2026-09-12, no device)
+
+- Added `packages/api/src/lib/membership/reconcile-freshness.test.ts`, `require-user.test.ts` — **7/7 PASS** (`reconcile-freshness-jest-2026-09-12.txt`): `isStale` null/window edges; `observationFromDirectory` maps + webhook overrides; `requireUserId` session narrow / UNAUTHORIZED.
+- Row 5 / row 7 reconcile freshness + auth session seam → advances automated gates; live dual-identity and webhook apply still **BLOCKED** (**503**).
+- Create Account still **BLOCKED** on [#258](https://github.com/Stringsaeed/money-management/pull/258); GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## Widget handoff code Jest Relates (2026-09-12, no device)
 

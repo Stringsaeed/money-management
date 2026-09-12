@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=10d0bd9
+gap=membership/reconcile isStale+observationFromDirectory; require-user requireUserId
+matrix_row=5/7 reconcile freshness + auth session narrowing
+command=pnpm exec vitest run src/lib/membership/reconcile-freshness.test.ts src/lib/require-user.test.ts
+result=PASS 7/7
+tsc=PASS exit 0
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
