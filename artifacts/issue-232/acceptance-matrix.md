@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `b5e87518c3055113bc87c9f2c81be6532163dd20` routeAssignment stamp — product `d52cd99f049f4cea1cd4288d095a36716a5455c7` (`routeAssignment` **2/2** new; suite **2/2**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` computeUnassignedMoney stamp — product `56c7632ae61f487ec97d262cfa6ac74c54065315` (`computeUnassignedMoney` **2/2** new; suite **4/4**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -156,6 +156,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Added `packages/domain/src/assignment-waterfall.test.ts` — **2/2 new PASS** / suite **2/2** (`route-assignment-vitest-2026-09-12.txt`): pure waterfall lock for cash overspend → unfunded card spending → new availability.
 - Row 4 / row 6 assignment routing seam → advances automated ADR-0004 consumption vocabulary; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## computeUnassignedMoney Relates (2026-09-12, no device)
+
+- Extended `packages/domain/src/assignment-waterfall.test.ts` — **2/2 new PASS** / suite **4/4** (`compute-unassigned-money-vitest-2026-09-12.txt`): pure lock `fundingPool - assigned - reserves` (including negative shortfall).
+- Row 4 / row 6 unassigned-money arithmetic seam → advances automated funding-pool vocabulary; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## DEFAULT_CATEGORY_ICON Relates (2026-09-12, no device)
