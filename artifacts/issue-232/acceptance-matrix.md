@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `a320a71a2239f555584fa77f6a8e782857fe6668` WIDGET_SAFEGUARD_FINDINGS stamp — product `918d94409208ea634709f8200000809d2cc3d222` (`WIDGET_SAFEGUARD_FINDINGS` **2/2** new; suite **2/2**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | PENDING_DOCS — product `f4ec7e05e13aa3f5a3c8eb5adfa540a66b01e797` (`MAX_IMPORT_CHUNK_ROWS`/`MAX_IMPORT_APPLY_ROWS` **1/1** new; suite **6/6**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -37,6 +37,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Live `GET /webhooks/workos` → **404** (POST-only).
 - Runner `WORKOS_WEBHOOK_SECRET` **ABSENT** — did not invent secrets. Verdict unchanged: **BLOCKED**.
 - Evidence: `workos-webhook-probe-2026-09-12e.txt` + `workos-webhook-blocked.md`. Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## MAX_IMPORT_CHUNK_ROWS / MAX_IMPORT_APPLY_ROWS Relates (2026-09-12, no device)
+
+- Extended `packages/protocol/src/import.test.ts` — **1/1 new PASS** / suite **6/6** (`max-import-rows-jest-2026-09-12.txt`): exact value locks `MAX_IMPORT_CHUNK_ROWS=5` and `MAX_IMPORT_APPLY_ROWS=25`; apply limit stays above chunk size (pure const surface).
+- Row 4 / row 6 import batch-size seam → advances automated migration upload limit lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## WIDGET_SAFEGUARD_FINDINGS Relates (2026-09-12, no device)
 

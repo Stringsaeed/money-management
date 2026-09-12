@@ -1,0 +1,18 @@
+=== tsc --noEmit ===
+tsc exit: 0
+
+=== node --test --experimental-strip-types src/import.test.ts ===
+✔ IMPORT_ENTITY_TYPES lists every import entity kind in chunk order (0.924333ms)
+✔ IMPORT_ENTITY_TYPES membership is the ImportEntityType vocabulary (0.135146ms)
+✔ MAX_IMPORT_CHUNK_ROWS and MAX_IMPORT_APPLY_ROWS lock upload batch limits (0.085906ms)
+✔ manifestsMatch accepts equal aggregates and digests (0.168881ms)
+✔ manifestsMatch rejects row-count, amount, or digest drift (0.141935ms)
+✔ canonicalizeImportContent sorts entity type, id, and row keys stably (6.290215ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 85.070682
