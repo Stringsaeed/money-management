@@ -1,0 +1,10 @@
+PASS path: lib/migration/backup-suffix.test.ts
+PASS lib/migration/backup-suffix.test.ts
+  BACKUP_SUFFIX
+    ✓ locks pre-import backup suffix to ".backup" (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.069 s
+Ran all test suites matching /lib\/migration\/backup-suffix.test.ts/i.
