@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/auth/ui/auth-text-specs.test.ts
+PASS components/auth/ui/auth-text-specs.test.ts
+  AUTH_TEXT_SPECS
+    ✓ locks title through notice auth text vocabulary (9 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.949 s
+Ran all test suites matching /components\/auth\/ui\/auth-text-specs.test.ts/i.

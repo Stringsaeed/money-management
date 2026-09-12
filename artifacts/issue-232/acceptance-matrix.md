@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `d6b677398cfdfea0bceebba4b96e661e3477fff3` AUTH_CONTROL_SPECS stamp — product `7269d77b1cf319ef8cb0fde6145a7440ab5ce2e7` (`AUTH_CONTROL_SPECS` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` AUTH_TEXT_SPECS stamp — product `67e060763c58dd1d5c1d74d2a572e8a7cae071ed` (`AUTH_TEXT_SPECS` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -244,6 +244,13 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Added `apps/mobile/components/auth/ui/auth-field-kinds.test.ts` — **1/1 new PASS** / suite **1/1** (`auth-field-kinds-jest-2026-09-12.txt`): exact lock of `AUTH_FIELD_KINDS` email/name/password presets (pure frozen table)
 - Row 4 / row 6 auth field-kinds seam → advances automated auth-field vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+
+## AUTH_TEXT_SPECS Relates (2026-09-12, no device)
+
+- Added `apps/mobile/components/auth/ui/auth-text-specs.test.ts` — **1/1 new PASS** / suite **1/1** (`auth-text-specs-jest-2026-09-12.txt`): exact lock of `AUTH_TEXT_SPECS` title→notice vocabulary (pure frozen table)
+- Row 4 / row 6 auth text-spec seam → advances automated auth-typography vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 
