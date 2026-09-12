@@ -1,0 +1,10 @@
+PASS path: components/onboarding/motion.test.ts
+PASS components/onboarding/motion.test.ts
+  STAGGER_MS
+    ✓ locks staggered sibling delay to 55ms (9 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.021 s
+Ran all test suites matching /components\/onboarding\/motion.test.ts/i.
