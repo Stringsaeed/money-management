@@ -65,3 +65,4 @@ date_range_of_jest=PASS 2/2 new suite=4/4 product=7a3be69
 validate_move_request_jest=PASS 2/2 product=3b821bc
 page_transactions_jest=PASS 2/2 new suite=6/6 product=3f4975c
 to_edit_date_jest=PASS 2/2 new suite=8/8 product=c89f267
+summarize_transactions_jest=PASS 2/2 new suite=10/10 product=dfea4da
