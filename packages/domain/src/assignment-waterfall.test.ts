@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { routeAssignment } from "./assignment-waterfall";
+import { computeUnassignedMoney, routeAssignment } from "./assignment-waterfall";
 
 describe("routeAssignment", () => {
   it("covers cash overspending first, then unfunded card spending, then new availability", () => {
@@ -29,5 +29,27 @@ describe("routeAssignment", () => {
       unfundedCardSpendingMinor: 0,
       newAvailabilityMinor: 5_000,
     });
+  });
+});
+
+describe("computeUnassignedMoney", () => {
+  it("subtracts assigned money and reserves from the funding pool", () => {
+    expect(
+      computeUnassignedMoney({
+        fundingPoolMinor: 10_000,
+        assignedMinor: 4_000,
+        reservesMinor: 1_500,
+      }),
+    ).toBe(4_500);
+  });
+
+  it("returns a negative shortfall when assignments exceed funding", () => {
+    expect(
+      computeUnassignedMoney({
+        fundingPoolMinor: 1_000,
+        assignedMinor: 2_000,
+        reservesMinor: 500,
+      }),
+    ).toBe(-1_500);
   });
 });
