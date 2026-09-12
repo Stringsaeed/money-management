@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
 
 import type { category, ledgerAccount, transaction } from "@trove/db/schema/ledger";
-import type { budgetWorkspace, categoryMapping, envelope, fundingMembership, rolloverSetting } from "@trove/db/schema/budget";
+import type {
+  assignment,
+  budgetWorkspace,
+  categoryMapping,
+  envelope,
+  fundingMembership,
+  rolloverSetting,
+} from "@trove/db/schema/budget";
 import type { recurringOccurrence } from "@trove/db/schema/recurring";
 
 import {
   accountContentRow,
+  assignmentContentRow,
   budgetWorkspaceContentRow,
   categoryContentRow,
   categoryMappingContentRow,
@@ -293,6 +301,55 @@ describe("rolloverSettingContentRow", () => {
         positiveRollover: true,
         createdAt: "2026-09-01T12:00:00.000Z",
       },
+    });
+  });
+});
+
+describe("assignmentContentRow", () => {
+  it("maps assignment fields and nulls absent reversesAssignmentId", () => {
+    // SAFETY: fixture only needs columns the pure content-row mapper reads.
+    const row = {
+      id: "asg-1",
+      currency: "USD",
+      budgetPeriod: "2026-09",
+      sourceEnvelopeId: "env-source",
+      destinationEnvelopeId: "env-dest",
+      amountMinor: 2500,
+      reversesAssignmentId: null,
+      createdAt,
+    } as typeof assignment.$inferSelect;
+
+    expect(assignmentContentRow(row)).toEqual({
+      entityType: "assignment",
+      row: {
+        id: "asg-1",
+        currency: "USD",
+        budgetPeriod: "2026-09",
+        sourceEnvelopeId: "env-source",
+        destinationEnvelopeId: "env-dest",
+        amountMinor: 2500,
+        reversesAssignmentId: null,
+        createdAt: "2026-09-01T12:00:00.000Z",
+      },
+    });
+  });
+
+  it("preserves a reversing assignment id when present", () => {
+    // SAFETY: fixture only needs columns the pure content-row mapper reads.
+    const row = {
+      id: "asg-2",
+      currency: "USD",
+      budgetPeriod: "2026-09",
+      sourceEnvelopeId: "env-dest",
+      destinationEnvelopeId: "env-source",
+      amountMinor: 2500,
+      reversesAssignmentId: "asg-1",
+      createdAt,
+    } as typeof assignment.$inferSelect;
+
+    expect(assignmentContentRow(row).row).toMatchObject({
+      id: "asg-2",
+      reversesAssignmentId: "asg-1",
     });
   });
 });
