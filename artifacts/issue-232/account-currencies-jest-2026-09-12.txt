@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/account/account-currencies.test.ts
+PASS components/account/account-currencies.test.ts
+  ACCOUNT_CURRENCIES
+    ✓ locks the account currency code vocabulary (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.971 s
+Ran all test suites matching /components\/account\/account-currencies.test.ts/i.
