@@ -1,15 +1,19 @@
-import type { BuildQueryConfig } from "drizzle-orm";
+import { CasingCache } from "drizzle-orm/casing";
 import { describe, expect, it } from "vitest";
 
-import { fundingPoolSql, periodCeiling } from "./funding-pool";
+import {
+  assignedThroughPeriodSql,
+  fundingPoolSql,
+  periodCeiling,
+} from "./funding-pool";
 import { periodLastDate } from "./reserve";
 
-const sqlDialect = {
-  casing: {} as BuildQueryConfig["casing"],
+const queryConfig = {
+  casing: new CasingCache(),
   escapeName: (name: string) => `"${name}"`,
-  escapeParam: (index: number, _value: unknown) => `$${index + 1}`,
-  escapeString: (value: string) => `'${value.replaceAll("'", "''")}'`,
-} satisfies BuildQueryConfig;
+  escapeParam: (num: number, _value: unknown) => `$${num + 1}`,
+  escapeString: (str: string) => `"${str.replaceAll('"', '""')}"`,
+};
 
 describe("periodCeiling", () => {
   it("returns the first day of the following month", () => {
@@ -23,30 +27,49 @@ describe("periodCeiling", () => {
 });
 
 describe("fundingPoolSql", () => {
-  it("binds ledger/currency/period ceiling and membership params without a DB", () => {
-    const query = fundingPoolSql("led1", "USD", "2026-09").toQuery(sqlDialect);
-    expect(query.params).toEqual([
+  it("binds ledger/currency/ceiling params and keeps pool SUM shape without a DB", () => {
+    const built = fundingPoolSql("led1", "USD", "2026-09").toQuery(queryConfig);
+    expect(built.sql).toContain("COALESCE(SUM(account_balance)");
+    expect(built.params).toEqual([
       "led1",
       "USD",
-      "2026-10-01",
+      periodCeiling("2026-09"),
       "led1",
       "USD",
       "led1",
       "USD",
       "2026-09",
     ]);
-    expect(query.sql).toContain("AND t.date < $3");
-    expect(query.sql).toContain("funding_memberships");
+    expect(periodCeiling("2026-09")).toBe("2026-10-01");
+    expect(built.sql).toContain("funding_memberships");
   });
 
-  it("keeps pool arithmetic shape: member accounts, signed activity, December ceiling", () => {
-    const december = fundingPoolSql("workspace_a", "EUR", "2026-12").toQuery(sqlDialect);
+  it("keeps signed activity and December ceiling in the embeddable fragment", () => {
+    const december = fundingPoolSql("workspace_a", "EUR", "2026-12").toQuery(queryConfig);
     expect(december.params).toContain("2027-01-01");
     expect(december.params).toContain("2026-12");
     expect(december.sql).toContain("initial_balance_minor");
     expect(december.sql).toContain("jsonb_array_elements_text");
     expect(december.sql).toContain("WHEN t.type = 'transfer'");
     expect(december.sql).toContain("WHEN t.type = 'income'");
+  });
+});
+
+describe("assignedThroughPeriodSql", () => {
+  it("binds ledger/currency/period and nets destination minus source assignments", () => {
+    const built = assignedThroughPeriodSql("led1", "USD", "2026-09").toQuery(queryConfig);
+    expect(built.params).toEqual(["led1", "USD", "2026-09"]);
+    expect(built.sql).toContain("FROM assignments g");
+    expect(built.sql).toContain("destination_envelope_id");
+    expect(built.sql).toContain("source_envelope_id");
+    expect(built.sql).toContain("g.budget_period <= $3");
+  });
+
+  it("COALESCE-wraps the assignment SUM so empty ledgers read as zero", () => {
+    const built = assignedThroughPeriodSql("ws_b", "EUR", "2026-12").toQuery(queryConfig);
+    expect(built.sql).toContain("COALESCE((");
+    expect(built.sql).toContain("SELECT SUM(");
+    expect(built.params).toEqual(["ws_b", "EUR", "2026-12"]);
   });
 });
 
