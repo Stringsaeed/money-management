@@ -1,4 +1,9 @@
-import { candidateFromDraft, changeEffects, staleResult } from "./change-results";
+import {
+  candidateFromDraft,
+  changeEffects,
+  invalidLifecycle,
+  staleResult,
+} from "./change-results";
 import { settlementEffects } from "./settlement";
 import type { RecurringRuleDraft } from "./types";
 
@@ -95,6 +100,22 @@ describe("staleResult", () => {
       ruleId: "rule-3",
       expectedRevision: 2,
       actualRevision: 4,
+    });
+  });
+});
+
+describe("invalidLifecycle", () => {
+  it("returns invalid_intent when pause requires an active Rule", () => {
+    expect(invalidLifecycle("pause", "active")).toEqual({
+      kind: "invalid_intent",
+      issues: [{ field: "rule", message: "pause requires a active Rule." }],
+    });
+  });
+
+  it("returns invalid_intent when restore requires an archived Rule", () => {
+    expect(invalidLifecycle("restore", "archived")).toEqual({
+      kind: "invalid_intent",
+      issues: [{ field: "rule", message: "restore requires a archived Rule." }],
     });
   });
 });
