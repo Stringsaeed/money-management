@@ -17,6 +17,7 @@
     "cutover:test": "node --test scripts/d1-cutover-lib.test.mjs",
     "db:generate": "drizzle-kit generate",
     "apply:z6-publication": "node scripts/apply-z6-publication.mjs",
+    "ensure:user-memberships-reconciled-at": "node scripts/ensure-user-memberships-reconciled-at.mjs",
     "inspect:powersync-slots": "node scripts/inspect-powersync-slots.mjs"
   },
   "dependencies": {
