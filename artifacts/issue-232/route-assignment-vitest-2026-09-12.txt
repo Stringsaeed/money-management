@@ -1,0 +1,11 @@
+PASS path: packages/domain/src/assignment-waterfall.test.ts
+
+ RUN  v3.2.7 /tmp/cert-232-relates-import
+
+ ✓ packages/domain/src/assignment-waterfall.test.ts (2 tests) 2ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  12:43:43
+   Duration  186ms (transform 31ms, setup 0ms, collect 27ms, tests 2ms, environment 0ms, prepare 49ms)
+
