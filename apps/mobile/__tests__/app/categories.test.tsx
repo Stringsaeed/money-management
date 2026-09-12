@@ -1,8 +1,19 @@
 import { Alert } from "react-native";
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import CategoriesScreen from "@/app/categories";
 import { createCategory } from "@/tests/test-utils/factories";
+
+function renderCategoriesScreen() {
+  // CreateResourceBottomSheet mounts RNGH ScrollView; wrap like accounts tests /
+  // app _layout so GestureDetector has a root in Jest.
+  return render(
+    <GestureHandlerRootView>
+      <CategoriesScreen />
+    </GestureHandlerRootView>,
+  );
+}
 
 const mockActiveWithHistory = createCategory({ id: "category-used", name: "Dining" });
 const mockActiveUnused = createCategory({ id: "category-unused", name: "Unused" });
@@ -42,7 +53,7 @@ describe("app/categories", () => {
 
   it("offers Archive instead of permanent Delete for a Category with history", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
-    await render(<CategoriesScreen />);
+    await renderCategoriesScreen();
 
     await fireEvent.press(screen.getByRole("button", { name: "Dining" }));
 
@@ -62,7 +73,7 @@ describe("app/categories", () => {
 
   it("restores an archived Category without presenting an Archive action", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
-    await render(<CategoriesScreen />);
+    await renderCategoriesScreen();
 
     await fireEvent.press(screen.getByRole("button", { name: "Old Groceries, Archived" }));
 
@@ -81,7 +92,7 @@ describe("app/categories", () => {
 
   it("offers permanent Delete only for a Category without dependent history", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
-    await render(<CategoriesScreen />);
+    await renderCategoriesScreen();
 
     await fireEvent.press(screen.getByRole("button", { name: "Unused" }));
     await fireEvent.press(screen.getByRole("button", { name: "Permanently delete Unused" }));

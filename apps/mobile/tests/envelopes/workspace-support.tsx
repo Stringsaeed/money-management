@@ -2,6 +2,7 @@ import { jest } from "@jest/globals";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render } from "@testing-library/react-native";
 import type { ReactNode } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import type { SQLiteDatabase } from "@/db/sqlite";
 
 import BudgetWorkspaceScreen from "@/app/(tabs)/envelopes/workspace";
@@ -143,9 +144,13 @@ export async function renderWorkspaceRoute(
       queryFn: () => createBudgetingCoordinator(mockDatabase).getWorkspaceSelection(),
     });
   }
+  // CreateResourceBottomSheet uses RNGH ScrollView (sticky footer hit-test); Jest
+  // has no app _layout GestureHandlerRootView, so wrap the route the same way.
   return render(
-    <QueryClientProvider client={queryClient}>
-      <BudgetWorkspaceScreen />
-    </QueryClientProvider>,
+    <GestureHandlerRootView>
+      <QueryClientProvider client={queryClient}>
+        <BudgetWorkspaceScreen />
+      </QueryClientProvider>
+    </GestureHandlerRootView>,
   );
 }
