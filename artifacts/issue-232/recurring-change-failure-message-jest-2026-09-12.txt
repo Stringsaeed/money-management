@@ -1,0 +1,13 @@
+=== Relates #232 recurringChangeFailureMessage Jest ===
+2026-09-12T10:24:55Z
+PASS components/recurring/recurring-change-feedback.test.ts
+  recurringChangeFailureMessage
+    ✓ joins invalid_intent issues and returns fixed copy for stale/needs_attention (2 ms)
+    ✓ returns the unavailable fallback for missing and non-failure kinds
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        1.1 s
+Ran all test suites matching /components\/recurring\/recurring-change-feedback.test.ts/i.
+=== tsc --noEmit ===
