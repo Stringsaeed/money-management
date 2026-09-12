@@ -1,0 +1,15 @@
+PASS path: components/auth/ui/roles.test.ts
+PASS components/auth/ui/roles.test.ts
+  AUTH_SHELL_SPEC
+    ✓ locks auth shell spacing (10 ms)
+  AUTH_FIELD_KINDS
+    ✓ maps every AuthFieldKind onto its input preset (1 ms)
+    ✓ only exposes email, name, and password field kinds (1 ms)
+  resolveColor
+    ✓ resolves token, ring, and white refs
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        0.991 s, estimated 2 s
+Ran all test suites matching /components\/auth\/ui\/roles.test.ts/i.
