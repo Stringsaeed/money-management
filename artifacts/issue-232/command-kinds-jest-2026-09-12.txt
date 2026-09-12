@@ -1,0 +1,18 @@
+=== tsc --noEmit ===
+tsc exit: 0
+
+=== node --test --experimental-strip-types src/command.test.ts ===
+✔ COMMAND_KINDS lists every wire command kind in stable order (1.434468ms)
+✔ COMMAND_KINDS excludes retired member.role.change (0.189547ms)
+✔ isHouseholdRole accepts WorkOS role slugs Trove authorizes (0.182829ms)
+✔ isHouseholdRole rejects unknown role slugs (0.129013ms)
+✔ isCommandKind accepts every registered command kind (0.293956ms)
+✔ isCommandKind rejects unknown or retired kinds (0.151556ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 97.765451
