@@ -1,16 +1,10 @@
-PASS path: components/auth/ui/tokens.test.ts
-PASS components/auth/ui/tokens.test.ts
+PASS path: apps/mobile/components/auth/ui/auth-placeholder-color.test.ts
+PASS components/auth/ui/auth-placeholder-color.test.ts
   AUTH_PLACEHOLDER_COLOR
-    ✓ locks the auth field placeholder hex (9 ms)
-  normalizeColor
-    ✓ keeps hex, rgb, and named colors (1 ms)
-    ✓ rejects CSS functions the native color parser cannot read (1 ms)
-  fontFace
-    ✓ selects the ios face when Platform.select resolves ios
-    ✓ selects android faces on android and web faces via the default branch
+    ✓ locks the auth placeholder ink (9 ms)
 
 Test Suites: 1 passed, 1 total
-Tests:       5 passed, 5 total
+Tests:       1 passed, 1 total
 Snapshots:   0 total
-Time:        1.017 s
-Ran all test suites matching /components\/auth\/ui\/tokens.test.ts/i.
+Time:        0.972 s
+Ran all test suites matching /components\/auth\/ui\/auth-placeholder-color.test.ts/i.
