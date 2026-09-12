@@ -1,0 +1,10 @@
+PASS path: apps/mobile/utils/activity-range-label.test.ts
+PASS utils/activity-range-label.test.ts
+  activityRangeLabel
+    ✓ resolves preset labels with All Time fallback (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.011 s
+Ran all test suites matching /utils\/activity-range-label.test.ts/i.
