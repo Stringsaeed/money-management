@@ -20,14 +20,20 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `59020a6` docs stamp — product `8f0bc15` membership-revocation Jest; **local** tsc+Jest PASS; GitHub Actions **BLOCKED** (billing/spend limit); webhook still **503**; Create Account still **BLOCKED** on #258; dual-identity **BLOCKED** |
+| HEAD | tip TBD session-probe docs stamp — product `d71a5b2` probeSession/tryRemoteSignOut Jest; **local** tsc+Jest PASS; GitHub Actions **BLOCKED** (billing/spend limit); webhook still **503**; Create Account still **BLOCKED** on #258; dual-identity **BLOCKED** |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/workspace/.wt-cert-232-relates` (this Relates write); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T06:30:58Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
 | Device (this write) | **none** — API/docs-only; no iOS/Android device; no Mac |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
-Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `ci-billing-blocked-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt`.
+Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `ci-billing-blocked-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `session-probe-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt`.
+
+## Session-probe async Jest Relates (2026-09-12, no device)
+
+- Extended `apps/mobile/modules/access/session-probe.test.ts` — **13/13 PASS** (`session-probe-jest-2026-09-12.txt`): prior `mapSessionSnapshot` + `isUnreachableFailure`, plus async `probeSession` (session / no_session / unreachable transport / reachable Error → no_session) and `tryRemoteSignOut` (ok / unreachable TypeError / reachable Error → ok).
+- Row 7 identity-switch / sign-out remote seam → advances automated `probeSession` + best-effort remote sign-out; live device sign-out / dual-identity still **BLOCKED** (`CERT_USER_A_TOKEN`, `CERT_USER_B_TOKEN`, … ABSENT).
+- Create Account still **BLOCKED** on [#258](https://github.com/Stringsaeed/money-management/pull/258); webhook membership apply still **BLOCKED** (**503** empty prod `WORKOS_WEBHOOK_SECRET`); GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## GitHub Actions billing BLOCKED (2026-09-12T06:51Z)
 
@@ -173,7 +179,8 @@ Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026
 - **Row 5 auth-gate / viewer pipeline:** missing + forged JWT → **401** **PASS**; `pipeline.test.ts` viewer deny **18/18** **PASS**; live dual-identity isolation **BLOCKED** (`api-isolation-live-2026-09-12.md`).
 - **WorkOS webhook:** still **BLOCKED** — owner must set prod `WORKOS_WEBHOOK_SECRET` (re-probe 06:30Z still **503**; runner name ABSENT).
 - **Isolation helpers (prior tip):** ledger-selection encode/decode/clear + return-to parse/serialize + `sameIdentity` **17/17 PASS**.
-- **Claim-store persistence (this write):** `readClaim` / `writeClaim` / `clearClaim` SecureStore seam **8/8 PASS** — advances row 5/7 identity claim automated seams only; live dual-identity still **BLOCKED**.
+- **Claim-store persistence (prior write):** `readClaim` / `writeClaim` / `clearClaim` SecureStore seam **8/8 PASS** — advances row 5/7 identity claim automated seams only; live dual-identity still **BLOCKED**.
+- **Session-probe async (this write):** `probeSession` / `tryRemoteSignOut` **13/13 PASS** — advances row 7 remote session/sign-out seam only; live dual-identity still **BLOCKED**.
 - **Android runtime:** **BLOCKED** / not started (`android-runtime-blocked.md`).
 - **PowerSync removal / disposable reset:** **BLOCKED** — missing `POWERSYNC_*` / `PLANETSCALE_*` (or `DATABASE_URL`); #231 reset skipped (`powersync-disposable-reset-blocked.md`).
 - OTP/callback/two-device rows still open.
@@ -337,7 +344,7 @@ Note: `test-powersync.txt` is a **failed** `vitest run` (`No test suite found` /
 | Last-admin / sole-admin User-deletion guard | `PASS` (API seam) | `requestUserDeletion > blocks sole admins until they appoint another admin or delete the Household`; households `keeps the last admin in place`. |
 | Recoverable Household deletion | `PASS` (API seam) | Confirm-name + admin-only; shared ledger removed, personal kept, org tombstoned; resumes after WorkOS failure without duplicating local deletes. |
 | Sync-or-discard sign-out | `PASS` (automated) / live not run | `use-sign-out.test.tsx` **4/4**: empty queue signs out immediately; pending uploads open sync-or-discard sheet; discard signs out without drain; sync-then-sign-out drains then signs out. Live hosted sheet on device still **not** run. |
-| Identity switching (cache / queue isolation) | `PASS` (automated cleanup + helpers + claim persistence) / live not run | `sign-out-session.test.ts` **2/2**: signed-out cleanup disconnects PowerSync, clears sync enrollment, sets `local_only`/`powersync_unavailable`, remote sign-out, clears ledger selection + claim, removes households/household/migration/sync queries. Identity claim SecureStore seam **PASS** (`claim-store.test.ts` **8/8**). `sameIdentity` + per-user selection key isolation **PASS** (`identity.test.ts`, `ledger-selection-store.test.ts`). Live dual-identity switch still **BLOCKED** (tokens absent). |
+| Identity switching (cache / queue isolation) | `PASS` (automated cleanup + helpers + claim + session probe) / live not run | `sign-out-session.test.ts` **2/2**: signed-out cleanup disconnects PowerSync, clears sync enrollment, sets `local_only`/`powersync_unavailable`, remote sign-out, clears ledger selection + claim, removes households/household/migration/sync queries. Identity claim SecureStore seam **PASS** (`claim-store.test.ts` **8/8**). `sameIdentity` + per-user selection key isolation **PASS** (`identity.test.ts`, `ledger-selection-store.test.ts`). Async `probeSession` / `tryRemoteSignOut` **PASS** (`session-probe.test.ts` **13/13** including prior mapSnapshot). Live dual-identity switch still **BLOCKED** (tokens absent). |
 | Sign-out / deletion on iOS and Android | not evidenced | Runtime section empty of pass paths. |
 
 **Row status: `PARTIAL`.** Deletion/admin/household API seams + automated sync-or-discard / session-cleanup PASS; live device sign-out and identity switch still not certified.
@@ -376,6 +383,7 @@ Still BLOCKED for disposable mint/reset: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE
 | Mobile jest `use-enable-sync`, `use-sync-worker`, manifest, initialize | **19/19** `test-mobile-sync.txt` | 3, 7 (hooks only) |
 | Mobile jest ledger-selection / return-to / identity helpers | **17/17** `isolation-helpers-jest-2026-09-12.txt` | 4 (selection encode), 5 (per-user isolation), 7 (sameIdentity) |
 | Mobile jest claim-store SecureStore seam | **8/8** `claim-store-jest-2026-09-12.txt` | 5 (claim persistence / stale client seam), 7 (identity switch claim keys) |
+| Mobile jest session-probe async | **13/13** `session-probe-jest-2026-09-12.txt` | 7 (`probeSession` / `tryRemoteSignOut` remote seam) |
 | `pnpm test:ci` / CI Jest | **PASS** tip stamp | 1 (`ci-stamp-2026-09-12.txt` + prior `test-ci.txt`) |
 
 API focused files in the 97: `powersync/token.test.ts` (4), `personal-budget-recurring.test.ts` (4), `deletion/service.test.ts` (5), `membership/projection.test.ts` (13), `migration/manifest.test.ts` (13), `import-bundle.test.ts` (15), `personal-ledger.test.ts` (18), `households/service.test.ts` (25).
@@ -489,6 +497,7 @@ stim start --json  # -> stim-start.json (port 8083)
 | `isolation-helpers-jest-2026-09-12.txt` | ledger-selection / return-to / identity Jest **17/17** Relates stamp. |
 | `claim-store-jest-2026-09-12.txt` | claim-store SecureStore read/write/clear Jest **8/8** Relates stamp. |
 | `membership-revocation-jest-2026-09-12.txt` | plan-membership-revocation + normalizeLedgerSelection Jest Relates stamp (**38/38** with access suite). |
+| `session-probe-jest-2026-09-12.txt` | session-probe async `probeSession` / `tryRemoteSignOut` Jest **13/13** Relates stamp. |
 | `create-account-hittest-status.md` | Create Account hit-test stamp: upload PASS; round-trip BLOCKED; #258 Mac ghosting. |
 | `post-pressable-upload-pass.md` | Pressable personal upload **PASS** (tip `fb8c786`). |
 | `post-pressable-roundtrip-blocked.md` | One-device round-trip **BLOCKED** (Create Account NativeHost). |

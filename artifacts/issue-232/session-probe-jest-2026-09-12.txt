@@ -1,0 +1,24 @@
+PASS modules/access/session-probe.test.ts
+  mapSessionSnapshot
+    ✓ maps a live session user (2 ms)
+    ✓ stays unresolved while the first probe is in flight
+    ✓ maps an authoritative empty session (1 ms)
+    ✓ maps transport failure as unreachable, never no_session
+  isUnreachableFailure
+    ✓ treats 401 as reachable
+    ✓ treats network failures as unreachable
+  probeSession
+    ✓ returns a session identity when getSession has a user
+    ✓ returns no_session when getSession is empty (1 ms)
+    ✓ returns unreachable when getSession throws a transport failure
+    ✓ returns no_session when getSession throws a reachable auth failure (1 ms)
+  tryRemoteSignOut
+    ✓ returns ok when remote sign-out succeeds
+    ✓ returns unreachable when remote sign-out hits a transport failure
+    ✓ returns ok when remote sign-out fails with a reachable error
+
+Test Suites: 1 passed, 1 total
+Tests:       13 passed, 13 total
+Snapshots:   0 total
+Time:        1.004 s
+Ran all test suites matching /modules\/access\/session-probe.test.ts/i.
