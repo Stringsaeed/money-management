@@ -4,6 +4,7 @@ import {
   applyLedgerFilters,
   dateRangeOf,
   pageTransactions,
+  queryFiltersToLedger,
   summarizeTransactions,
   toEditDate,
 } from "./filters";
@@ -127,5 +128,44 @@ describe("summarizeTransactions", () => {
         createTransactionWithDetails({ id: "in-1", type: "income", amount: 10_00 }),
       ]),
     ).toEqual({ totalIncome: 10_00, totalExpense: 0, netAmount: 10_00 });
+  });
+});
+
+describe("queryFiltersToLedger", () => {
+  it("maps month bounds and optional fields into ledger filters", () => {
+    expect(
+      queryFiltersToLedger({
+        year: 2026,
+        month: 3,
+        accountId: "account-1",
+        type: "expense",
+        sort: "desc",
+        limit: 25,
+      }),
+    ).toEqual({
+      from: "2026-03-01",
+      to: "2026-03-31",
+      accountId: "account-1",
+      type: "expense",
+      sort: "desc",
+      limit: 25,
+    });
+  });
+
+  it("prefers the later of month start and startsOnOrAfter for from", () => {
+    expect(
+      queryFiltersToLedger({
+        year: 2026,
+        month: 3,
+        startsOnOrAfter: "2026-03-15",
+        categoryId: "category-1",
+        isRecurring: true,
+      }),
+    ).toEqual({
+      from: "2026-03-15",
+      to: "2026-03-31",
+      categoryId: "category-1",
+      isRecurring: true,
+    });
   });
 });
