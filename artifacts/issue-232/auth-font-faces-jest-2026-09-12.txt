@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/auth/ui/auth-font-faces.test.ts
+PASS components/auth/ui/auth-font-faces.test.ts
+  AUTH_FONT_FACES
+    ✓ locks Nunito face names for 400/500/600 weights (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.963 s
+Ran all test suites matching /components\/auth\/ui\/auth-font-faces.test.ts/i.
