@@ -1,9 +1,9 @@
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
-import { NativeHost, NativePrimaryButton } from "@/components/native-ui";
 import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
+import { cn } from "@/lib/utils";
 
 interface CreateResourceSheetFooterProps {
   error?: string;
@@ -14,10 +14,10 @@ interface CreateResourceSheetFooterProps {
 }
 
 /**
- * Primary submit uses Expo UI NativeHost button (not RN Pressable): #254 made
- * Create Account AX-hittable inside ModalBottomSheet, but sheet gesture/chrome
- * still swallowed Pressable onPress (coord + testID miss). NativeHost primary
- * matches the sign-out sheet pattern that does receive taps in this portal.
+ * RN Pressable submit (same control path as #253 personal-upload confirm that
+ * PASSed agent-device). #255 NativeHost stayed AX-hittable but ModalBottomSheet
+ * pan chrome still cancelled presses; combined with programmatic closed detent
+ * on the sheet so pan cannot begin while open.
  */
 export function CreateResourceSheetFooter({
   error,
@@ -37,14 +37,21 @@ export function CreateResourceSheetFooter({
           <Text className="text-center font-body-medium text-sm text-destructive">{error}</Text>
         </Animated.View>
       ) : null}
-      <NativeHost>
-        <NativePrimaryButton
-          disabled={isSubmitting}
-          label={isSubmitting ? submittingLabel : submitLabel}
-          onPress={onSubmit}
-          testID="create-resource-submit"
-        />
-      </NativeHost>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: isSubmitting }}
+        disabled={isSubmitting}
+        onPress={onSubmit}
+        testID="create-resource-submit"
+        className={cn(
+          "min-h-12 items-center justify-center rounded-xl bg-ink px-4 py-3 active:opacity-80",
+          isSubmitting && "opacity-50",
+        )}
+      >
+        <Text className="font-body-semibold text-base text-surface">
+          {isSubmitting ? submittingLabel : submitLabel}
+        </Text>
+      </Pressable>
     </View>
   );
 }

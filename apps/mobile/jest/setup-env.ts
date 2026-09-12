@@ -174,6 +174,8 @@ jest.mock("@swmansion/react-native-bottom-sheet", () => {
   return {
     BottomSheetProvider: Passthrough,
     ModalBottomSheet: Passthrough,
+    // Mirrors library helper: closed detent marked programmatic-only (no drag).
+    programmatic: (value: number | "content") => ({ value, programmatic: true }),
   };
 });
 

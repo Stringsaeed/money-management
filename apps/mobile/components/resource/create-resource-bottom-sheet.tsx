@@ -3,10 +3,10 @@ import type { PressableProps } from "react-native";
 import { Pressable, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { XIcon } from "phosphor-react-native";
+import { ModalBottomSheet, programmatic } from "@swmansion/react-native-bottom-sheet";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 
 interface CreateResourceBottomSheetProps {
   autoPresent?: boolean;
@@ -18,6 +18,13 @@ interface CreateResourceBottomSheetProps {
   title: string;
 }
 
+/**
+ * Closed detent is programmatic-only so the sheet pan recognizer has a single
+ * snap candidate while open. That is the SM-bottom-sheet equivalent of
+ * enableContentPanningGesture={false}: pan never begins, so it cannot
+ * cancelTouchesInView / flip RCTSurfaceTouchHandler mid-press on Create Account.
+ * Library has no footer slot; sticky footer stays outside RNGH ScrollView.
+ */
 export function CreateResourceBottomSheet({
   autoPresent = false,
   children,
@@ -49,6 +56,7 @@ export function CreateResourceBottomSheet({
     <>
       {renderTrigger()}
       <ModalBottomSheet
+        detents={[programmatic(0), "content"]}
         disableScrollableNegotiation
         scrimColor="rgba(0, 0, 0, 0.5)"
         index={index}
@@ -79,7 +87,7 @@ export function CreateResourceBottomSheet({
           >
             {content}
           </ScrollView>
-          {/* collapsable=false + z-10: footer stays above sheet/scroll chrome for agent taps */}
+          {/* Sticky submit outside scroll gesture content (no library footer prop). */}
           <View className="z-10 border-t border-ledger-outline bg-background" collapsable={false}>
             {footer}
           </View>
