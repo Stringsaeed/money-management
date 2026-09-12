@@ -2,7 +2,11 @@ import { describe, expect, it } from "@jest/globals";
 
 import type { Account } from "@/types";
 
-import { calculateSyncedBalance, type SyncedTransaction } from "./synced-mappers";
+import {
+  assertSupportedAccountUpdate,
+  calculateSyncedBalance,
+  type SyncedTransaction,
+} from "./synced-mappers";
 
 const TIMESTAMP = "2026-01-01T00:00:00.000Z";
 
@@ -98,5 +102,37 @@ describe("calculateSyncedBalance", () => {
         }),
       ]),
     ).toBe(1000);
+  });
+});
+
+describe("assertSupportedAccountUpdate", () => {
+  it("allows name, color, icon, excludeFromTotal, and sortOrder edits", () => {
+    expect(() =>
+      assertSupportedAccountUpdate({
+        name: "Renamed",
+        color: "#111111",
+        icon: "wallet.fill",
+        excludeFromTotal: true,
+        sortOrder: 2,
+      }),
+    ).not.toThrow();
+  });
+
+  it("rejects type edits", () => {
+    expect(() => assertSupportedAccountUpdate({ type: "cash" })).toThrow(
+      /Account type, currency, or opening balance edit is unavailable for the synced ledger/,
+    );
+  });
+
+  it("rejects currency edits", () => {
+    expect(() => assertSupportedAccountUpdate({ currency: "EUR" })).toThrow(
+      /Those fields remain unchanged/,
+    );
+  });
+
+  it("rejects initialBalance edits", () => {
+    expect(() => assertSupportedAccountUpdate({ initialBalance: 0 })).toThrow(
+      /Edit only the Account name, color, icon, exclude-from-total flag, or sort order/,
+    );
   });
 });
