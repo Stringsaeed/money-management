@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/transaction/recurrence/repeat-presets.test.ts
+PASS components/transaction/recurrence/repeat-presets.test.ts
+  REPEAT_PRESETS
+    ✓ locks daily through yearly recurrence preset vocabulary (11 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.131 s
+Ran all test suites matching /components\/transaction\/recurrence\/repeat-presets.test.ts/i.
