@@ -1,0 +1,11 @@
+PASS path: packages/db/src/schema/membership-statuses.test.ts
+
+ RUN  v3.2.7 /tmp/cert-232-relates-import
+
+ ✓ packages/db/src/schema/membership-statuses.test.ts (1 test) 2ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  12:40:04
+   Duration  451ms (transform 41ms, setup 0ms, collect 288ms, tests 2ms, environment 0ms, prepare 50ms)
+

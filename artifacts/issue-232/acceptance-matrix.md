@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `324c4bd332758d3c05e07b0c76af1f9bdaeeef07` PERSONAL_SYNC_USER_ID_KEY stamp — product `366c0770c3c5b0682492e97b64cd70ed96ae0bad` (`PERSONAL_SYNC_USER_ID_KEY` **1/1** new; suite **2/2**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` MEMBERSHIP_STATUSES stamp — product `2b35af4ecb03b1a61e65fcaaf1ee9786e5f01dcd` (`MEMBERSHIP_STATUSES` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -132,6 +132,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Updated `apps/mobile/lib/migration/status-keys.test.ts` — **1/1 new PASS** / suite **2/2** (`personal-sync-user-id-key-jest-2026-09-12.txt`): exact lock `PERSONAL_SYNC_USER_ID_KEY="sync.personalLedgerUserId"` (pure const surface).
 - Row 4 / row 6 seam → advances automated vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## MEMBERSHIP_STATUSES Relates (2026-09-12, no device)
+
+- Added `packages/db/src/schema/membership-statuses.test.ts` — **1/1 new PASS** / suite **1/1** (`membership-statuses-vitest-2026-09-12.txt`): exact lock `MEMBERSHIP_STATUSES=["active","inactive","pending"]` (pure const surface).
+- Row 4 / row 6 household membership-status vocabulary seam → advances automated membership status lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## DEFAULT_CATEGORY_ICON Relates (2026-09-12, no device)
