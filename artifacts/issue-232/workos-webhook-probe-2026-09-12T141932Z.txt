@@ -1,0 +1,9 @@
+# WorkOS webhook re-probe (Relates #232)
+stamp_utc=2026-09-12T14:19:32Z
+GET https://auth.trove.ing/ -> HTTP 200 OK
+POST https://auth.trove.ing/webhooks/workos -> HTTP 503
+body: Webhook receiver is disabled: WORKOS_WEBHOOK_SECRET is not configured.
+GET https://auth.trove.ing/webhooks/workos -> HTTP 404
+runner WORKOS_WEBHOOK_SECRET: ABSENT
+device: none
+Verdict: BLOCKED — prod WORKOS_WEBHOOK_SECRET still empty (unchanged).

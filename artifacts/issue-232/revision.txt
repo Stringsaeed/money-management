@@ -23,9 +23,9 @@ android_runtime=BLOCKED not started (android-runtime-blocked.md)
 powersync_removal=BLOCKED absent POWERSYNC_URL POWERSYNC_JWT_PRIVATE_KEY POWERSYNC_JWT_KID
 disposable_reset=BLOCKED #231 skip + absent PLANETSCALE_* / DATABASE_URL
 ios_otp_ax=BLOCKED automation (ios-otp-ax-blocker.md)
-workos_webhook=BLOCKED WORKOS_WEBHOOK_SECRET (503 re-probe 06:30Z; runner ABSENT)
+workos_webhook=BLOCKED WORKOS_WEBHOOK_SECRET (503 re-probe 14:19:32Z; runner ABSENT)
 gh_actions=BLOCKED billing/spend limit (ci-billing-blocked-2026-09-12.txt)
-health=PASS GET / 200 OK 06:30Z
+health=PASS GET / 200 OK 14:19:32Z
 relates=#232 only
 certified=false
 import_content_jest=PASS 6/6 product=eca3299
