@@ -20,14 +20,22 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `8f0bc15` membership-revocation planner Jest (row 5 stale-selection + client membership cleanup seam; webhook still **503**; Create Account still **BLOCKED** on #258; dual-identity **BLOCKED**) |
+| HEAD | tip `59020a6` docs stamp — product `8f0bc15` membership-revocation Jest; **local** tsc+Jest PASS; GitHub Actions **BLOCKED** (billing/spend limit); webhook still **503**; Create Account still **BLOCKED** on #258; dual-identity **BLOCKED** |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/workspace/.wt-cert-232-relates` (this Relates write); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T06:30:58Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
 | Device (this write) | **none** — API/docs-only; no iOS/Android device; no Mac |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
-Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt`.
+Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `ci-billing-blocked-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt`.
+
+## GitHub Actions billing BLOCKED (2026-09-12T06:51Z)
+
+- Tip `59020a6` / product `8f0bc15`: Actions jobs **Typescript**, **Jest**, **Preview with EAS** fail in ~2–4s **without starting**.
+- Annotation: *The job was not started because recent account payments have failed or your spending limit needs to be increased.*
+- Evidence: `ci-billing-blocked-2026-09-12.txt` (runs `34679141401` / `34679141409` / `34679141444`).
+- **Local** on cert worktree: `tsc --noEmit` exit 0; Jest plan-membership-revocation + access + claim-store **46/46 PASS**. Do **not** treat billing-failed jobs as product regressions.
+- Owner must fix org billing / raise Actions spend limit, then re-run checks on [#241](https://github.com/Stringsaeed/money-management/pull/241). Relates to #232 only. Matrix still incomplete.
 
 ## Membership-revocation / stale-selection Jest Relates (2026-09-12, no device)
 
