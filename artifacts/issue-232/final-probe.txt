@@ -1,0 +1,4 @@
+Error (COMMAND_FAILED): Selector did not match: id=enable-personal-sync
+Hint: Selector text/label values match exactly (quote multi-word values: text="Sign in"). Run snapshot -i to see current elements and refs, or use find <text> for contains matching.
+Diagnostic ID: mtxrv342-85cde8d1
+Diagnostics Log: /Users/saeed/.agent-device/sessions/issue-232-17pro/requests/4aaff2a154a78470.ndjson

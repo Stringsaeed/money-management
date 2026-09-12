@@ -1,0 +1,4 @@
+Error (COMMAND_FAILED): Selector did not match: id=select-ledger-personal
+Hint: Selector text/label values match exactly (quote multi-word values: text="Sign in"). Run snapshot -i to see current elements and refs, or use find <text> for contains matching.
+Diagnostic ID: mtxrv2j3-9abd8668
+Diagnostics Log: /Users/saeed/.agent-device/sessions/issue-232-17pro/requests/dd9d4605c0888535.ndjson

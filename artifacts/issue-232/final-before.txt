@@ -1,0 +1,36 @@
+Page: com.stringsaeed.moneymanagement
+App: com.stringsaeed.moneymanagement
+Snapshot: 32 visible nodes
+@e1 [application] "Trove (Dev)"
+@e2 [other] "gearshape.fill"
+@e3 [image] "gearshape.fill" [covered]
+@e4 [text] "Tools"
+@e5 [other] "Home"
+@e6 [navigation-bar] "Home"
+@e7 [button] "Filters"
+@e8 [scroll-area] "$0.00" [scrollable]
+  [content below scroll-area hidden]
+@e9 [other] "$0.00"
+@e10 [cell] "repeat 1"
+@e11 [image] "repeat 1"
+@e12 [text] "Upcoming payments"
+@e13 [button] "View all recurring rules"
+@e14 [cell] "🌱"
+@e15 [text] "Nothing scheduled yet"
+@e16 [button] "Add a recurring rule"
+@e17 [text] "Add a Recurring Rule to see what’s next."
+@e18 [other] "newspaper"
+@e19 [image] "newspaper"
+@e20 [text] "Recent Journal"
+@e21 [button] "View all recent transactions"
+@e22 [other] "No transactions"
+@e23 [text] "No transactions yet. Tap + Add Entry to get started."
+@e24 [image] "AdditionalDimmingOverlay"
+@e25 [other] "Ledger"
+@e26 [button] [selected]
+@e27 [button] "Ledger"
+@e28 [button] "Money Movement"
+@e29 [button] "Inbox"
+@e30 [button] "Envelopes"
+@e31 [button] "Settings"
+@e32 [button] "Create transaction"
