@@ -1,0 +1,16 @@
+=== Relates #232 newTransactionHeaderItems Jest ===
+2026-09-12T10:30:10Z
+PASS components/transaction/transaction-screen-header-items.test.ts
+  newTransactionHeaderItems
+    ✓ toggles recurring label/icon and appends save for one-time vs recurring (4 ms)
+    ✓ wires toggle and save presses to the provided callbacks (1 ms)
+  existingTransactionHeaderItems
+    ✓ returns a red delete button then a save button without shared background (1 ms)
+    ✓ wires delete and save presses to the provided callbacks (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        1.011 s
+Ran all test suites matching /components\/transaction\/transaction-screen-header-items.test.ts/i.
+=== tsc --noEmit ===
