@@ -1,0 +1,15 @@
+=== pnpm check-types ===
+$ tsc --noEmit
+check-types exit: 0
+
+=== vitest run src/household-events.test.ts ===
+
+ RUN  v3.2.7 /tmp/cert-232-relates-import/packages/auth
+
+ ✓ src/household-events.test.ts (5 tests) 3ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  11:52:28
+   Duration  267ms (transform 36ms, setup 0ms, collect 121ms, tests 3ms, environment 0ms, prepare 49ms)
+
