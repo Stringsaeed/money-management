@@ -1,0 +1,13 @@
+=== Relates #232 existingTransactionHeaderItems Jest ===
+2026-09-12T10:28:02Z
+PASS components/transaction/transaction-screen-header-items.test.ts
+  existingTransactionHeaderItems
+    ✓ returns a red delete button then a save button without shared background (3 ms)
+    ✓ wires delete and save presses to the provided callbacks (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        1.128 s
+Ran all test suites matching /components\/transaction\/transaction-screen-header-items.test.ts/i.
+=== tsc --noEmit ===
