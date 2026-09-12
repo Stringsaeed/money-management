@@ -1,0 +1,13 @@
+=== Relates #232 assignedThroughPeriodSql vitest (+ CasingCache fundingPoolSql) ===
+2026-09-12T10:47:34Z
+
+ RUN  v3.2.7 /tmp/cert-232-relates-0951/packages/api
+
+ ✓ src/lib/budget/period.test.ts (8 tests) 5ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  10:47:34
+   Duration  409ms (transform 45ms, setup 0ms, collect 240ms, tests 5ms, environment 0ms, prepare 55ms)
+
+=== tsc --noEmit ===
