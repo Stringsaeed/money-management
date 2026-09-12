@@ -1,0 +1,10 @@
+PASS path: apps/mobile/db/database-reset-version.test.ts
+PASS db/database-reset-version.test.ts
+  DATABASE_RESET_VERSION
+    ✓ locks the on-device database reset version (9 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.283 s
+Ran all test suites matching /db\/database-reset-version.test.ts/i.
