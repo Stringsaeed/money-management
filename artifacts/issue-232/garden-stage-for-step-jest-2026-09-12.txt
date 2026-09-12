@@ -1,0 +1,12 @@
+=== Relates #232 gardenStageForStep Jest 2026-09-12T10:17:56Z ===
+PASS components/onboarding/steps.test.ts
+  gardenStageForStep
+    ✓ starts one notch above the welcome stage at stepIndex 0 (2 ms)
+    ✓ advances one stage per form step index
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        1.036 s
+Ran all test suites matching /components\/onboarding\/steps.test.ts/i.
+=== tsc --noEmit ===
