@@ -1,0 +1,10 @@
+PASS path: apps/mobile/utils/format-recurrence.test.ts
+PASS utils/format-recurrence.test.ts
+  formatRecurrence
+    ✓ labels single-interval presets and every-N intervals (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.014 s
+Ran all test suites matching /utils\/format-recurrence.test.ts/i.
