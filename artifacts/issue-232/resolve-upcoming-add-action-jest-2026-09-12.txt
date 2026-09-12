@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=3a45e61
+gap=resolveUpcomingAddAction
+matrix_row=4/6 home upcoming add cta
+command=pnpm exec jest components/home/upcoming-add-action.test.ts --runInBand
+result=PASS 2/2 new (suite 2/2)
+tsc=PASS apps/mobile --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
