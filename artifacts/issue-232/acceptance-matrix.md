@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `7e8b768d2dfd7bbc991bd2403b8bc4fc33b0f240` currencyAffixes stamp — product `2dad7679eda70dcbb3c2b10cc4c894b3ab2f02a4` (`currencyAffixes` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` isMandatoryUpdateManifest stamp — product `ca139d31af2ccc87f164968de7f7aebcea4d56e1` (`isMandatoryUpdateManifest` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -265,6 +265,13 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Added `apps/mobile/components/account/account-display-icon.test.ts` — **1/1 new PASS** / suite **1/1** (`account-display-icon-jest-2026-09-12.txt`): exact lock of `accountDisplayIcon` custom-or-type-emoji resolution (pure helper)
 - Row 4 / row 6 account display-icon seam → advances automated account-icon vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+
+## isMandatoryUpdateManifest Relates (2026-09-12, no device)
+
+- Added `apps/mobile/components/updates/is-mandatory-update-manifest.test.ts` — **1/1 new PASS** / suite **1/1** (`is-mandatory-update-manifest-jest-2026-09-12.txt`): exact lock of `isMandatoryUpdateManifest` OTA mandatory detection (pure helper)
+- Row 4 / row 6 updates mandatory-manifest seam → advances automated OTA policy vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 

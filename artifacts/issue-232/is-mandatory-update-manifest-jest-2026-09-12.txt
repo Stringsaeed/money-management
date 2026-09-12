@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/updates/is-mandatory-update-manifest.test.ts
+PASS components/updates/is-mandatory-update-manifest.test.ts
+  isMandatoryUpdateManifest
+    ✓ detects mandatory OTA manifests and rejects everything else (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.033 s
+Ran all test suites matching /components\/updates\/is-mandatory-update-manifest.test.ts/i.
