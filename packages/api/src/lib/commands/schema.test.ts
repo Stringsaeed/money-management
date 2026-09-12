@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { commandLedgerId, personalLedgerId, resolveCommandScope } from "@trove/protocol";
 
-import { commandEnvelopeSchema } from "./schema";
+import { commandEnvelopeSchema, commandScopeSchema, preconditionSchema } from "./schema";
 
 const base = {
   commandId: "33333333-3333-4333-8333-333333333333",
@@ -88,5 +88,41 @@ describe("resolveCommandScope", () => {
   it("returns null when the envelope names no ledger", () => {
     expect(resolveCommandScope({}, "user-alice")).toBeNull();
     expect(commandLedgerId({}, "user-alice")).toBeNull();
+  });
+});
+
+describe("preconditionSchema", () => {
+  it("accepts empty and partially populated preconditions", () => {
+    expect(preconditionSchema.safeParse({}).success).toBe(true);
+    expect(
+      preconditionSchema.safeParse({
+        entityId: "acc_1",
+        expectedVersion: 3,
+        predicate: "account_exists",
+        args: { currency: "USD" },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects blank entityId/predicate and negative expectedVersion", () => {
+    expect(preconditionSchema.safeParse({ entityId: "" }).success).toBe(false);
+    expect(preconditionSchema.safeParse({ predicate: "" }).success).toBe(false);
+    expect(preconditionSchema.safeParse({ expectedVersion: -1 }).success).toBe(false);
+  });
+});
+
+describe("commandScopeSchema", () => {
+  it("accepts personal and organization scopes", () => {
+    expect(commandScopeSchema.safeParse({ type: "personal" }).success).toBe(true);
+    expect(
+      commandScopeSchema.safeParse({ type: "organization", organizationId: "org_1" }).success,
+    ).toBe(true);
+  });
+
+  it("rejects unknown types and blank organizationId", () => {
+    expect(commandScopeSchema.safeParse({ type: "shared" }).success).toBe(false);
+    expect(
+      commandScopeSchema.safeParse({ type: "organization", organizationId: "" }).success,
+    ).toBe(false);
   });
 });
