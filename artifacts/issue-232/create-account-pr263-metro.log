@@ -1,0 +1,15 @@
+env: load .env
+env: export EXPO_PUBLIC_FREECRYPTO_API_KEY EXPO_PUBLIC_METALS_DEV_API_KEY EXPO_PUBLIC_POSTHOG_API_KEY EXPO_PUBLIC_SERVER_URL EXPO_PUBLIC_TWELVE_DATA_API_KEY EXPO_PUBLIC_WORKOS_CLIENT_ID EXPO_PUBLIC_WORKOS_REDIRECT_URI ORG_ID ORG_NAME PIERRE_PRIVATE_KEY
+Starting project at /Users/saeed/Work/money-management/apps/mobile
+Logs: /Users/saeed/Work/money-management/apps/mobile/.expo/dev/logs/start.log
+(node:93692) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+React Compiler enabled
+Expo Autolinking module resolution enabled
+Starting Metro Bundler
+
+Waiting on http://localhost:8081
+
+An update for expo is available: 57.0.20 → ~57.0.22
+24 other packages may need updating. Run npx expo install --check for details.
+Logs for your project will appear below.
