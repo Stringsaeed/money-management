@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=cd19656
+gap=coversEffects
+matrix_row=4/6 command activity effect-tag coverage
+command=pnpm test (packages/protocol) — effects.test.ts 3/3
+result=PASS 3/3 (suite 15/15)
+tsc=PASS packages/protocol --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
