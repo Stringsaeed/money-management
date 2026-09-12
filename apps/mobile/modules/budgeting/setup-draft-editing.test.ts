@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 
 import {
+  moveSetupDraftCategory,
   removeSetupDraftCategory,
   toggleSetupDraftRollover,
   updateSetupDraftFundingAccounts,
@@ -114,6 +115,45 @@ describe("removeSetupDraftCategory", () => {
 
   it("rejects an Envelope that is missing from the currency workspace", () => {
     expect(() => removeSetupDraftCategory(draft(), "USD", "missing-env", "cat-1")).toThrow(
+      "Envelope missing-env is no longer in USD. Reload the Setup Draft.",
+    );
+  });
+});
+
+describe("moveSetupDraftCategory", () => {
+  it("moves a category onto the target Envelope and clears it from others", () => {
+    const base = draft({
+      workspaces: [
+        {
+          currency: "USD",
+          fundingAccountIds: ["cash"],
+          envelopes: [
+            envelope({ id: "env-usd", categoryIds: ["cat-1"] }),
+            envelope({ id: "env-other", categoryIds: ["cat-2", "cat-3"] }),
+          ],
+        },
+        {
+          currency: "AED",
+          fundingAccountIds: [],
+          envelopes: [envelope({ id: "env-aed", currency: "AED", categoryIds: ["cat-2"] })],
+        },
+      ],
+    });
+
+    const next = moveSetupDraftCategory(base, "USD", "cat-2", "env-usd");
+
+    expect(next.workspaces[0]?.envelopes).toEqual([
+      expect.objectContaining({ id: "env-usd", categoryIds: ["cat-1", "cat-2"] }),
+      expect.objectContaining({ id: "env-other", categoryIds: ["cat-3"] }),
+    ]);
+    // Implementation clears the category from every workspace envelope.
+    expect(next.workspaces[1]?.envelopes).toEqual([
+      expect.objectContaining({ id: "env-aed", categoryIds: [] }),
+    ]);
+  });
+
+  it("rejects an Envelope that is missing from the currency workspace", () => {
+    expect(() => moveSetupDraftCategory(draft(), "USD", "cat-1", "missing-env")).toThrow(
       "Envelope missing-env is no longer in USD. Reload the Setup Draft.",
     );
   });
