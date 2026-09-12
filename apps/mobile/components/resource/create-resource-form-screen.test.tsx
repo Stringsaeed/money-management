@@ -4,7 +4,7 @@ import { Pressable, Text } from "react-native";
 import { CreateResourceFormScreen } from "@/components/resource/create-resource-form-screen";
 
 describe("CreateResourceFormScreen", () => {
-  it("keeps the footer outside the scroll tree and forwards presses", async () => {
+  it("keeps the footer outside KeyboardAvoidingView and forwards presses", async () => {
     const onPress = jest.fn();
 
     await render(
@@ -24,12 +24,14 @@ describe("CreateResourceFormScreen", () => {
       </CreateResourceFormScreen>,
     );
 
+    const kav = screen.getByTestId("create-resource-form-kav");
     const scroll = screen.getByTestId("create-resource-form-scroll");
     const footer = screen.getByTestId("create-resource-form-footer");
 
     expect(scroll).toBeOnTheScreen();
     expect(footer).toBeOnTheScreen();
-    expect(within(scroll).queryByTestId("footer-submit")).toBeNull();
+    expect(within(kav).getByTestId("create-resource-form-scroll")).toBeOnTheScreen();
+    expect(within(kav).queryByTestId("create-resource-form-footer")).toBeNull();
     expect(within(footer).getByTestId("footer-submit")).toBeOnTheScreen();
 
     fireEvent.press(screen.getByTestId("footer-submit"));

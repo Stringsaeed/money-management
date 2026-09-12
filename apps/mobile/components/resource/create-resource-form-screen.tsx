@@ -22,6 +22,7 @@ export function CreateResourceFormScreen({ children, footer }: CreateResourceFor
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
         pointerEvents="box-none"
+        testID="create-resource-form-kav"
       >
         <ScrollView
           className="flex-1"
