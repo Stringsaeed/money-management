@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { SCROLL_FADE_OVERSCAN, TAB_HEIGHT } from "./constants";
+import { CREATE_SIZE, SCROLL_FADE_OVERSCAN, TAB_HEIGHT } from "./constants";
 
 describe("TAB_HEIGHT", () => {
   it("locks glass tab bar height to 44", () => {
@@ -11,5 +11,11 @@ describe("TAB_HEIGHT", () => {
 describe("SCROLL_FADE_OVERSCAN", () => {
   it("locks scroll fade overscan to 48", () => {
     expect(SCROLL_FADE_OVERSCAN).toBe(48);
+  });
+});
+
+describe("CREATE_SIZE", () => {
+  it("locks create tab button size to 58", () => {
+    expect(CREATE_SIZE).toBe(58);
   });
 });
