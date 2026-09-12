@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/account/account-currency-list-offset.test.ts
+PASS components/account/account-currency-list-offset.test.ts
+  accountCurrencyListOffset
+    ✓ offsets rows by list padding and gap (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.975 s
+Ran all test suites matching /components\/account\/account-currency-list-offset.test.ts/i.
