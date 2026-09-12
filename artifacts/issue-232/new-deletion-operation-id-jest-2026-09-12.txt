@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=e923503
+gap=newDeletionOperationId
+matrix_row=7 deletion operation id factory
+command=pnpm exec vitest run src/lib/deletion/operation-id.test.ts
+result=PASS 2/2
+tsc=PASS packages/api --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
