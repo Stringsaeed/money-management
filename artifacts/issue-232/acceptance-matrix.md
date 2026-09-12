@@ -20,15 +20,21 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `f22c36d` access-core capabilities Jest stamp — product `efa1310` (`coreFromAccess`/`attachCapabilities`/`firstRouteParam` **11/11**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip pending server capability/tenancy Jest stamp — product `bc2db55` (`canDropAdmin`/`can`/`requireLedgerAccess` **17/17**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/workspace/.wt-cert-232-relates` (this Relates write); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T06:30:58Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
 | Device (this write) | **none** — API/docs-only; no iOS/Android device; no Mac |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
-Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `ci-billing-blocked-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `session-probe-jest-2026-09-12.txt` / `ledger-source-offline-jest-2026-09-12.txt` / `memberships-role-jest-2026-09-12.txt` / `access-core-capabilities-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt`.
+Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `ci-billing-blocked-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `session-probe-jest-2026-09-12.txt` / `ledger-source-offline-jest-2026-09-12.txt` / `memberships-role-jest-2026-09-12.txt` / `access-core-capabilities-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt` / .
 
+
+## Server capability + tenancy Jest Relates (2026-09-12, no device)
+
+- Added , ,  — **17/17 PASS** ():  sole-admin guard; / admin/member/viewer matrix incl.  admin-only;  + personal/org  /  tenancy.
+- Row 4 / row 5 server role + isolation seams → advances automated capability/tenancy; live invite/device role UX and dual-identity still **BLOCKED**; webhook membership apply still **BLOCKED** (**503**).
+- Create Account still **BLOCKED** on [#258](https://github.com/Stringsaeed/money-management/pull/258); dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing); Android / OTP AX / PowerSync mint unchanged **BLOCKED**. Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## AccessCore projection + capabilities Jest Relates (2026-09-12, no device)
 

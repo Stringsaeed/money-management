@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=bc2db55
+gap=packages/api admin-guard canDropAdmin + commands/capabilities can/requiredCapability + require-member tenancy gates
+matrix_row=4/5 server role capability + last-admin + ledger tenancy
+command=pnpm exec vitest run src/lib/households/admin-guard.test.ts src/lib/commands/capabilities.test.ts src/lib/require-member.test.ts
+result=PASS 17/17
+tsc=PASS exit 0
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
