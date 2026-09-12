@@ -1,0 +1,10 @@
+PASS path: apps/mobile/utils/command-kind-label.test.ts
+PASS utils/command-kind-label.test.ts
+  commandKindLabel
+    ✓ maps every command kind to its human label (4 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.188 s
+Ran all test suites matching /utils\/command-kind-label.test.ts/i.

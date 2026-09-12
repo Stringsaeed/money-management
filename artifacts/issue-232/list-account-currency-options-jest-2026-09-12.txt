@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/account/list-account-currency-options.test.ts
+PASS components/account/list-account-currency-options.test.ts
+  listAccountCurrencyOptions
+    ✓ maps every account currency code to a labeled option with symbols when reliable (64 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.245 s
+Ran all test suites matching /components\/account\/list-account-currency-options.test.ts/i.

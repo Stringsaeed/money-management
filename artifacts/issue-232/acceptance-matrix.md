@@ -289,6 +289,27 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 
+## listAccountCurrencyOptions Relates (2026-09-12, no device)
+
+- Added `apps/mobile/components/account/list-account-currency-options.test.ts` — **1/1 new PASS** / suite **1/1** (`list-account-currency-options-jest-2026-09-12.txt`): exact lock of `listAccountCurrencyOptions` mapping `ACCOUNT_CURRENCIES` to labeled options (pure helper)
+- Row 4 / row 6 account currency picker seam → advances automated account-currency list vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+
+## formatCents Relates (2026-09-12, no device)
+
+- Added `apps/mobile/utils/format-cents.test.ts` — **1/1 new PASS** / suite **1/1** (`format-cents-jest-2026-09-12.txt`): exact lock of `formatCents` en-US USD formatting (pure helper)
+- Row 4 / row 6 money display formatCents seam → advances automated currency display vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+
+## commandKindLabel Relates (2026-09-12, no device)
+
+- Added `apps/mobile/utils/command-kind-label.test.ts` — **1/1 new PASS** / suite **1/1** (`command-kind-label-jest-2026-09-12.txt`): exact lock of `commandKindLabel` for every `CommandKind` (pure helper)
+- Row 4 / row 6 rejected-changes intent label seam → advances automated command-kind vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+
 ## formatPrice Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/money-movement/format-price.test.ts` — **1/1 new PASS** / suite **1/1** (`format-price-jest-2026-09-12.txt`): exact lock of `formatPrice` en-US currency formatting (pure helper)
