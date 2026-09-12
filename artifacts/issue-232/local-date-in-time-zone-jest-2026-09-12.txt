@@ -1,0 +1,12 @@
+PASS path: modules/recurring-rules/clock.test.ts
+PASS modules/recurring-rules/clock.test.ts
+  localDateInTimeZone
+    ✓ resolves the Rule-local date across a UTC day boundary (38 ms)
+    ✓ formats YYYY-MM-DD in UTC and Tokyo for a fixed noon instant (1 ms)
+    ✓ keeps the previous local calendar day when the instant is still evening in US Pacific (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       3 passed, 3 total
+Snapshots:   0 total
+Time:        1.094 s
+Ran all test suites matching /modules\/recurring-rules\/clock.test.ts/i.
