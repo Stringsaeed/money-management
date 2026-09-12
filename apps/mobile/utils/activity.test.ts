@@ -1,9 +1,10 @@
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 import {
   ACTIVITY_RANGE_PRESETS,
   activityRangeLabel,
   effectEmoji,
+  formatActivityFullTimestamp,
   formatActivityTimestamp,
   resolveActivityRange,
 } from "./activity";
@@ -16,6 +17,21 @@ describe("effectEmoji", () => {
 
   it("falls back to a generic emoji for unknown tags", () => {
     expect(effectEmoji("mystery")).toBe("📝");
+  });
+});
+
+describe("formatActivityFullTimestamp", () => {
+  it("renders an absolute MMM d, yyyy at h:mm a detail stamp", () => {
+    const iso = "2026-03-20T15:45:00.000Z";
+    expect(formatActivityFullTimestamp(iso)).toBe(
+      format(parseISO(iso), "MMM d, yyyy 'at' h:mm a"),
+    );
+  });
+
+  it("includes the year and an 'at' separator", () => {
+    const label = formatActivityFullTimestamp("2024-12-31T23:15:00.000Z");
+    expect(label).toContain("2024");
+    expect(label).toContain(" at ");
   });
 });
 
