@@ -1,0 +1,10 @@
+PASS path: constants/onboarding.test.ts
+PASS constants/onboarding.test.ts
+  ONBOARDING_ENABLED
+    ✓ keeps local-ledger onboarding skipped by default (8 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.95 s
+Ran all test suites matching /constants\/onboarding.test.ts/i.
