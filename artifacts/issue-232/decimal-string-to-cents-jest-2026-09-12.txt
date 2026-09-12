@@ -1,0 +1,10 @@
+PASS path: apps/mobile/utils/decimal-string-to-cents.test.ts
+PASS utils/decimal-string-to-cents.test.ts
+  decimalStringToCents
+    ✓ parses decimal money strings into integer cents (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.966 s
+Ran all test suites matching /utils\/decimal-string-to-cents.test.ts/i.
