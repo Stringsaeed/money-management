@@ -1,0 +1,10 @@
+PASS path: apps/mobile/db/budgeting-tables.test.ts
+PASS db/budgeting-tables.test.ts
+  BUDGETING_TABLES
+    ✓ locks budgeting table name vocabulary (9 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.976 s
+Ran all test suites matching /db\/budgeting-tables.test.ts/i.
