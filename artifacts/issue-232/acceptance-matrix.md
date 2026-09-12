@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `5254b8fd5a6af272524932d63240ab54f4653a9d` fieldTextStyle stamp — product `7b4bd6452bc195bf87e9484f1cebc5d0a59b484c` (`fieldTextStyle` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` ACCOUNT_TYPE_OPTIONS stamp — product `8e16c03a74a950d80e57bc8abc9373e87023adb4` (`ACCOUNT_TYPE_OPTIONS` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -210,6 +210,13 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Added `apps/mobile/components/transaction/ui/field-text-style.test.ts` — **1/1 new PASS** / suite **1/1** (`field-text-style-jest-2026-09-12.txt`): pure lock of Paper Ledger field typography (fontSize 15 / lineHeight 20 / ink / platform face).
 - Row 4 / row 6 transaction field textStyle seam → advances automated `@expo/ui` typography vocabulary; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+
+## ACCOUNT_TYPE_OPTIONS Relates (2026-09-12, no device)
+
+- Added `apps/mobile/components/account/account-type-options.test.ts` — **1/1 new PASS** / suite **1/1** (`account-type-options-jest-2026-09-12.txt`): exact lock of `ACCOUNT_TYPE_OPTIONS` checking→other vocabulary (pure frozen table).
+- Row 4 / row 6 account-type picker seam → advances automated account chrome vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## DEFAULT_CATEGORY_ICON Relates (2026-09-12, no device)

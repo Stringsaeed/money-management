@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/account/account-type-options.test.ts
+PASS components/account/account-type-options.test.ts
+  ACCOUNT_TYPE_OPTIONS
+    ✓ locks checking through other account type vocabulary (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.965 s
+Ran all test suites matching /components\/account\/account-type-options.test.ts/i.
