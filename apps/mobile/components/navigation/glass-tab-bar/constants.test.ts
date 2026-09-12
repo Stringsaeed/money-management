@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { CREATE_SIZE, PILL_PADDING, SCROLL_FADE_OVERSCAN, TAB_HEIGHT } from "./constants";
+import { CREATE_SIZE, PILL_PADDING, SCROLL_FADE_OVERSCAN, TAB_HEIGHT, TAB_WIDTH } from "./constants";
 
 describe("TAB_HEIGHT", () => {
   it("locks glass tab bar height to 44", () => {
@@ -23,5 +23,11 @@ describe("CREATE_SIZE", () => {
 describe("PILL_PADDING", () => {
   it("locks glass tab bar pill padding to 6", () => {
     expect(PILL_PADDING).toBe(6);
+  });
+});
+
+describe("TAB_WIDTH", () => {
+  it("locks glass tab bar width to 50", () => {
+    expect(TAB_WIDTH).toBe(50);
   });
 });
