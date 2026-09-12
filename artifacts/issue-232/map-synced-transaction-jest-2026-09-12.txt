@@ -1,0 +1,39 @@
+PASS modules/ledger-data-source/synced-mappers.test.ts
+  calculateSyncedBalance
+    ✓ increases from initialBalance for income on the account (12 ms)
+    ✓ decreases for expense on the account (1 ms)
+    ✓ increases for transfer into the account via toAccountId
+    ✓ ignores transactions that do not touch the account (1 ms)
+  assertSupportedAccountUpdate
+    ✓ allows name, color, icon, excludeFromTotal, and sortOrder edits
+    ✓ rejects type edits (8 ms)
+    ✓ rejects currency edits
+    ✓ rejects initialBalance edits (1 ms)
+  assertSupportedTransactionUpdate
+    ✓ allows type, amount, date, account, category, and description edits
+    ✓ rejects currency edits (1 ms)
+    ✓ rejects original amount/currency and exchangeRate edits (1 ms)
+    ✓ rejects recurring lineage edits
+  mapSyncedAccount
+    ✓ maps bank wire type to checking and initialBalanceMinor to initialBalance (1 ms)
+    ✓ maps card wire type to credit_card
+    ✓ maps cash wire type to cash (1 ms)
+    ✓ coerces Date timestamps to ISO strings
+  mapSyncedCategory
+    ✓ copies wire category fields onto the domain Category (1 ms)
+    ✓ preserves parentId for nested categories
+    ✓ coerces Date timestamps to ISO strings
+    ✓ keeps null lifecycleChangedAt when unset (1 ms)
+  mapSyncedTransaction
+    ✓ maps amountMinor and joins matching account and category
+    ✓ uses Unknown account fallback when accountId is missing from the list (1 ms)
+    ✓ resolves toAccount for transfers and null category when unmatched
+    ✓ coerces Date timestamps to ISO strings
+
+Test Suites: 1 passed, 1 total
+Tests:       24 passed, 24 total
+Snapshots:   0 total
+Time:        1.131 s, estimated 2 s
+Ran all test suites matching /modules\/ledger-data-source\/synced-mappers.test.ts/i.
+
+--- tsc --noEmit ---

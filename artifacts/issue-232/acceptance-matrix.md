@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `494080b6b5cdd5e0a3540d1b31c79e63d8744e4b` mapSyncedCategory stamp — product `8c7e321222f0a647ddb49b095fd8c91c431953b8` (`mapSyncedCategory` **4/4** new; suite **20/20**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | PENDING_DOCS — product `61249d211cb2afac79201bd9f6d236d5e3d22e25` (`mapSyncedTransaction` **4/4** new; suite **24/24**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -37,6 +37,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Live `GET /webhooks/workos` → **404** (POST-only).
 - Runner `WORKOS_WEBHOOK_SECRET` **ABSENT** — did not invent secrets. Verdict unchanged: **BLOCKED**.
 - Evidence: `workos-webhook-probe-2026-09-12e.txt` + `workos-webhook-blocked.md`. Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## mapSyncedTransaction Relates (2026-09-12, no device)
+
+- Extended `apps/mobile/modules/ledger-data-source/synced-mappers.test.ts` — **4/4 new PASS** / suite **24/24** (`map-synced-transaction-jest-2026-09-12.txt`): amountMinor→amount; account/category joins; Unknown account fallback; toAccount transfer join; Date→ISO for `mapSyncedTransaction` (pure mapper, no PowerSync DB).
+- Row 4 / row 6 synced Transaction mapper seam → advances automated wire→domain mapping; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## mapSyncedCategory Relates (2026-09-12, no device)
 
