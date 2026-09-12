@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `9d0e13e` newTransactionHeaderItems stamp — product `4a5dfc8` (`newTransactionHeaderItems` **2/2** new; suite **4/4**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` recurringRuleHeaderItems stamp — product `2186650` (`recurringRuleHeaderItems` **2/2** new; suite **6/6**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -37,6 +37,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Live `GET /webhooks/workos` → **404** (POST-only).
 - Runner `WORKOS_WEBHOOK_SECRET` **ABSENT** — did not invent secrets. Verdict unchanged: **BLOCKED**.
 - Evidence: `workos-webhook-probe-2026-09-12e.txt` + `workos-webhook-blocked.md`. Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## recurringRuleHeaderItems Relates (2026-09-12, no device)
+
+- Extended `apps/mobile/components/transaction/transaction-screen-header-items.test.ts` — **2/2 new PASS** / suite **6/6** (`recurring-rule-header-items-jest-2026-09-12.txt`): active pause+archive+save; archived restore without archive; paused resume for `recurringRuleHeaderItems`.
+- Row 4 / row 6 recurring-rule header seam → advances automated rule lifecycle chrome shaping; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## newTransactionHeaderItems Relates (2026-09-12, no device)
 

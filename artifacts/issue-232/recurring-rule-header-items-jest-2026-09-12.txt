@@ -1,0 +1,19 @@
+=== Relates #232 recurringRuleHeaderItems Jest ===
+2026-09-12T10:32:20Z
+PASS components/transaction/transaction-screen-header-items.test.ts
+  newTransactionHeaderItems
+    ✓ toggles recurring label/icon and appends save for one-time vs recurring (4 ms)
+    ✓ wires toggle and save presses to the provided callbacks (1 ms)
+  existingTransactionHeaderItems
+    ✓ returns a red delete button then a save button without shared background (1 ms)
+    ✓ wires delete and save presses to the provided callbacks (1 ms)
+  recurringRuleHeaderItems
+    ✓ for active rules returns pause, archive, and tinted save (1 ms)
+    ✓ for archived rules restores without archive and resumes when paused (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       6 passed, 6 total
+Snapshots:   0 total
+Time:        1.047 s
+Ran all test suites matching /components\/transaction\/transaction-screen-header-items.test.ts/i.
+=== tsc --noEmit ===
