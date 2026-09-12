@@ -20,14 +20,23 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip after non-device API matrix Relates docs (`api-matrix-non-device.md`, CF re-query 2026-09-12) |
+| HEAD | tip after Create Account hit-test Relates stamp (personal upload PASS; round-trip BLOCKED; #257 pending Mac retest) |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK**; Sync `getManifest` CF Worker **200** post-DDL |
 | Device (this write) | **iPhone 17 Pro** `6E4BBB8A-790E-4DDD-995B-6A3D1D9101DB` — **no stim** |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
-Recorded in `revision.txt` / `post-schema-sync-retest.md`.
+Recorded in `revision.txt` / `create-account-hittest-status.md` / `post-schema-sync-retest.md`.
+
+## Create Account hit-test / one-device round-trip (2026-09-12)
+
+- Personal upload confirm: **PASS** at cert tip [`fb8c786`](https://github.com/Stringsaeed/money-management/commit/fb8c78656551a4e756061d81a15a9d21a783ce1f) (`post-pressable-upload-pass.md`).
+- Create Account / one-device round-trip: still **BLOCKED** on device after [#254](https://github.com/Stringsaeed/money-management/pull/254) / [#255](https://github.com/Stringsaeed/money-management/pull/255) / [#256](https://github.com/Stringsaeed/money-management/pull/256).
+- [#256](https://github.com/Stringsaeed/money-management/pull/256) Metro-confirmed **MISS** tip [`c9a3ca8`](https://github.com/Stringsaeed/money-management/commit/c9a3ca89c00b3a8059d5abb7c136b790d6a7a7ef) — cert evidence tip [`9e3f69f`](https://github.com/Stringsaeed/money-management/commit/9e3f69f63af70942d0e2990ec03b518d4814326d) (`create-account-fresh-mac-blocked.md`).
+- Next candidate: [#257](https://github.com/Stringsaeed/money-management/pull/257) tip [`75491fee94e06fd2a0ba60af54222c2574cacab7`](https://github.com/Stringsaeed/money-management/commit/75491fee94e06fd2a0ba60af54222c2574cacab7) — portals submit outside `ModalBottomSheet`; Jest+tsc+GG green; Mac device retest **pending** (self-hosted worker offline). Do **not** merge #257 from this cert write.
+- WorkOS webhook: still **BLOCKED** — owner must set `WORKOS_WEBHOOK_SECRET` (prod) + redeploy. See webhook section below.
+- Evidence index: `create-account-hittest-status.md`. Relates to #232 only. Do not Closes #232/#224.
 
 ## WorkOS webhook prod probe (2026-09-12T03:16Z)
 
@@ -78,7 +87,7 @@ Recorded in `revision.txt` / `post-schema-sync-retest.md`.
 
 ## Verdict (this write)
 
-**Incomplete / not certifiable yet** — but Sync `getManifest` is now **PASS** post schema 0011–0015.
+**Incomplete / not certifiable yet** — Sync `getManifest` and Pressable personal upload are **PASS**; Create Account round-trip and WorkOS webhook remain **BLOCKED**.
 
 - Automated typecheck and focused package tests on this branch **pass** (prior write).
 - Repo-wide `pnpm lint` and `pnpm format:check` **fail** on pre-existing findings.
@@ -86,7 +95,10 @@ Recorded in `revision.txt` / `post-schema-sync-retest.md`.
 - **Row 2 iOS AuthKit UI (partial):** cancel PASS; hosted AuthKit email page + email-code challenge PARTIAL; OTP entry hard-stopped (agent-device AX unavailable inside ASWebAuthenticationSession).
 - **Post-login JWT verify:** **PASS** after #246 — prior `claim_iss` cleared (AuthKit `iss` accepted).
 - **Post-login `households.listMine`:** **PASS** after #250 — HTTP **200** `{"json":[]}`.
-- **Personal Sync / `migration/getManifest`:** **PASS** after DDL **0011–0015** — CF Worker `--> POST /rpc/migration/getManifest 200` (216ms, 412ms) in window 2026-09-12T01:20–01:45Z; iPhone 17 Pro UI → **Upload to your cloud?** (`post-schema-sync-retest.md`, `authkit-102-postschema-upload-offer.png`). Prior PG 42703 `accounts.ledger_id` cleared. **No stim**. Does **not** certify full #232.
+- **Personal Sync / `migration/getManifest`:** **PASS** after DDL **0011–0015** — CF Worker `--> POST /rpc/migration/getManifest 200` (216ms, 412ms) in window 2026-09-12T01:20–01:45Z; iPhone 17 Pro UI → **Upload to your cloud?** (`post-schema-sync-retest.md`, `authkit-102-postschema-upload-offer.png`). Prior PG 42703 `accounts.ledger_id` cleared. **No stim**.
+- **Personal upload confirm (Pressable):** **PASS** at tip `fb8c786` (`post-pressable-upload-pass.md`).
+- **Create Account / one-device round-trip:** **BLOCKED** after #254/#255/#256 — Metro-confirmed MISS on #256 tip `c9a3ca8` (cert evidence `9e3f69f`). Next candidate #257 tip `75491fe` (Mac retest pending; self-hosted worker offline). See `create-account-hittest-status.md`.
+- **WorkOS webhook:** still **BLOCKED** — owner must set prod `WORKOS_WEBHOOK_SECRET`.
 - Android runtime **not started**. Disposable clean-setup after reset **blocked**. OTP/callback/two-device rows still open.
 
 Do not merge as certified. No production deploy. Parent #224 stays open. **Do not use Closes #232.**
@@ -191,12 +203,13 @@ Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT
 | Sub-criterion | Status | Evidence |
 | --- | --- | --- |
 | Personal ledger without a Household | `PARTIAL` (API seam) | `test-api-workos-seams.txt`: `personal-ledger.test.ts` **18** (creates/joins no Household; isolation; import on personal scope). `personal-budget-recurring.test.ts` **4**. `test-ledger-scope.txt` **5/5** (personal vs organization ledger ids). |
-| Confirmed first upload / import manifest | `PASS` (live getManifest) + `PARTIAL` (full upload) | Live `POST /rpc/migration/getManifest` **200** after DDL 0011–0015 (`post-schema-sync-retest.md`, CF Worker citations). Automated: `import-bundle.test.ts` **15**, `manifest.test.ts` **13**; mobile hook tests **19/19**. Confirmed first-upload UX / two-store proof still not fully certified. |
+| Confirmed first upload / import manifest | `PASS` (live getManifest + Pressable upload) | Live `POST /rpc/migration/getManifest` **200** after DDL 0011–0015 (`post-schema-sync-retest.md`). Pressable confirm → Uploading… → enabled at tip `fb8c786` (`post-pressable-upload-pass.md`). Automated: `import-bundle.test.ts` **15**, `manifest.test.ts` **13**; mobile hook tests **19/19**. Two-store / two-device proof still not certified. |
+| One-device personal sync round-trip (Create Account → txn → Synced) | `BLOCKED` | Add Account **Create Account** hit-test miss after #254/#255/#256. Metro-confirmed MISS tip `c9a3ca8` (`create-account-fresh-mac-blocked.md`; cert evidence `9e3f69f`). Next candidate #257 tip `75491fe` — Mac retest pending (self-hosted worker offline). `create-account-hittest-status.md`. |
 | Anonymous local-only use | not evidenced | Requires device. No stim/agent-device proof. |
 | Populated cloud opens separately; device ledger preserved; no auto-merge | not evidenced live | Same mobile/API seams are not two-store device proof. |
 | Two-device personal core / budget / recurring sync, no orgs | not evidenced | No second-device run. `EXPO_PUBLIC_POWERSYNC_URL` absent locally; client may obtain the endpoint from the API token response when hitting `auth.trove.ing`. That does **not** certify two-device sync. |
 
-**Row status: `PARTIAL` automated / live not run.**
+**Row status: `PARTIAL` — personal upload PASS; Create Account round-trip `BLOCKED`; two-device not run.**
 
 ### 4. Explicit Household create, multi-Household switch, invitations, management return, admin/member/viewer, personal-data privacy
 
@@ -386,6 +399,12 @@ stim start --json  # -> stim-start.json (port 8083)
 | File | What it is |
 | --- | --- |
 | `acceptance-matrix.md` | This matrix. |
+| `create-account-hittest-status.md` | Create Account hit-test stamp: upload PASS; round-trip BLOCKED; #257 pending. |
+| `post-pressable-upload-pass.md` | Pressable personal upload **PASS** (tip `fb8c786`). |
+| `post-pressable-roundtrip-blocked.md` | One-device round-trip **BLOCKED** (Create Account NativeHost). |
+| `create-account-pressable-254-blocked.md` | #254 Pressable Create Account retest **BLOCKED**. |
+| `create-account-hittest255-blocked.md` | #255 NativeHost Create Account retest **BLOCKED**. |
+| `create-account-fresh-mac-blocked.md` | #256 Metro-confirmed Create Account MISS tip `c9a3ca8`. |
 | `api-matrix-non-device.md` | Non-device Relates summary: listMine / getManifest / claim_iss PASS + isolation PARTIAL + blocked rows. |
 | `cf-api-corroboration-2026-09-12.txt` | CF Observability re-query stamp (counts only; no secrets). |
 | `ios-otp-ax-blocker.md` | Durable iOS OTP AX **BLOCKER** for owner decision (not a PASS). |
@@ -411,12 +430,13 @@ stim start --json  # -> stim-start.json (port 8083)
 ## What would close #232
 
 1. Finish iOS OTP + callback (or alternate automation that can type into AuthKit digit boxes) and Android runtime rows 2–4 and 7 with artifact paths.
-2. Align `WORKOS_CLIENT_ID` with `EXPO_PUBLIC_WORKOS_CLIENT_ID` (names only), then retest one protected oRPC call against live `auth.trove.ing` (#242 already deployed).
-3. Keep lint/format classified as pre-existing unless a new regression appears.
-4. Measure PowerSync existing-connection removal and the offline-device limitation, or keep those sub-criteria `BLOCKED` with the env names above.
-5. Either perform the skipped disposable reset and reproduce clean setup (row 8), or keep row 8 `BLOCKED` and **do not** claim #232 complete.
-6. Set prod `WORKOS_WEBHOOK_SECRET` from WorkOS dashboard signing secret, redeploy, confirm `POST /webhooks/workos` is no longer **503**, then re-certify membership webhook projection.
-7. Keep #224 open. Do not merge as certified. Do not deploy to production. **Do not use Closes #232** until certification is actually complete.
+2. Clear Create Account / one-device personal sync round-trip on device (next candidate #257 tip `75491fe` pending Mac retest) — keep Relates-only until PASS.
+3. Align `WORKOS_CLIENT_ID` with `EXPO_PUBLIC_WORKOS_CLIENT_ID` (names only), then retest one protected oRPC call against live `auth.trove.ing` (#242 already deployed).
+4. Keep lint/format classified as pre-existing unless a new regression appears.
+5. Measure PowerSync existing-connection removal and the offline-device limitation, or keep those sub-criteria `BLOCKED` with the env names above.
+6. Either perform the skipped disposable reset and reproduce clean setup (row 8), or keep row 8 `BLOCKED` and **do not** claim #232 complete.
+7. Set prod `WORKOS_WEBHOOK_SECRET` from WorkOS dashboard signing secret, redeploy, confirm `POST /webhooks/workos` is no longer **503**, then re-certify membership webhook projection.
+8. Keep #224 open. Do not merge as certified. Do not deploy to production. **Do not use Closes #232** until certification is actually complete.
 
 ## Post-login Sync evidence (2026-09-11T21:44Z)
 

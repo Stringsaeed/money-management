@@ -6,5 +6,9 @@ device=iPhone 17 Pro 6E4BBB8A-790E-4DDD-995B-6A3D1D9101DB
 stim=not_used
 post250_listmine=PASS HTTP 200 json=[]
 post_schema_sync_getManifest=PASS CF HTTP 200 (216ms/412ms) + UI upload offer
+personal_upload=PASS tip fb8c786
+create_account_roundtrip=BLOCKED after #254/#255/#256 Metro-MISS c9a3ca8 (cert 9e3f69f)
+next_candidate=#257 tip 75491fe Mac retest pending (self-hosted offline)
+workos_webhook=BLOCKED owner must set WORKOS_WEBHOOK_SECRET
 relates=#232 only
 certified=false
