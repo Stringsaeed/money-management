@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  PERSONAL_LEDGER_PREFIX,
   isPersonalLedgerId,
   ledgerIdForScope,
   organizationLedgerId,
@@ -10,6 +11,15 @@ import {
   personalLedgerOwner,
   sameLedgerScope,
 } from "./ledger-scope.ts";
+
+test("PERSONAL_LEDGER_PREFIX is the personal ledger id prefix", () => {
+  assert.equal(PERSONAL_LEDGER_PREFIX, "personal:");
+});
+
+test("personalLedgerId joins PERSONAL_LEDGER_PREFIX with the user id", () => {
+  assert.equal(personalLedgerId("user_01"), `${PERSONAL_LEDGER_PREFIX}user_01`);
+  assert.equal(personalLedgerId("user_01").startsWith(PERSONAL_LEDGER_PREFIX), true);
+});
 
 test("a Personal Ledger id names its owning User", () => {
   assert.equal(personalLedgerId("user_01"), "personal:user_01");
