@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/rejected-changes/fields-to-payload.test.ts
+PASS components/rejected-changes/fields-to-payload.test.ts
+  fieldsToPayload
+    ✓ merges edited fields into the original payload with typed coercion (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.996 s
+Ran all test suites matching /components\/rejected-changes\/fields-to-payload.test.ts/i.
