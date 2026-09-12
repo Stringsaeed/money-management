@@ -1,0 +1,24 @@
+PASS modules/ledger-data-source/synced-mappers.test.ts
+  calculateSyncedBalance
+    ✓ increases from initialBalance for income on the account (2 ms)
+    ✓ decreases for expense on the account
+    ✓ increases for transfer into the account via toAccountId (1 ms)
+    ✓ ignores transactions that do not touch the account
+  assertSupportedAccountUpdate
+    ✓ allows name, color, icon, excludeFromTotal, and sortOrder edits (1 ms)
+    ✓ rejects type edits (7 ms)
+    ✓ rejects currency edits (1 ms)
+    ✓ rejects initialBalance edits (1 ms)
+  assertSupportedTransactionUpdate
+    ✓ allows type, amount, date, account, category, and description edits
+    ✓ rejects currency edits (1 ms)
+    ✓ rejects original amount/currency and exchangeRate edits (1 ms)
+    ✓ rejects recurring lineage edits
+
+Test Suites: 1 passed, 1 total
+Tests:       12 passed, 12 total
+Snapshots:   0 total
+Time:        1.19 s
+Ran all test suites matching /modules\/ledger-data-source\/synced-mappers.test.ts/i.
+
+--- tsc --noEmit ---
