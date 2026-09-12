@@ -7,7 +7,9 @@ import {
   assertSupportedTransactionUpdate,
   calculateSyncedBalance,
   mapSyncedAccount,
+  mapSyncedCategory,
   type SyncedAccount,
+  type SyncedCategory,
   type SyncedTransaction,
 } from "./synced-mappers";
 
@@ -240,5 +242,69 @@ describe("mapSyncedAccount", () => {
     expect(mapped.createdAt).toBe("2026-02-01T12:00:00.000Z");
     expect(mapped.updatedAt).toBe("2026-02-01T12:00:00.000Z");
     expect(mapped.lifecycleChangedAt).toBe("2026-03-01T08:30:00.000Z");
+  });
+});
+
+const syncedCategory = (overrides: Record<string, unknown> = {}): SyncedCategory =>
+  ({
+    id: "cat-1",
+    name: "Groceries",
+    type: "expense",
+    color: "#B48A7B",
+    icon: "🛒",
+    parentId: null,
+    sortOrder: 3,
+    lifecycle: "active",
+    lifecycleChangedAt: null,
+    createdAt: TIMESTAMP,
+    updatedAt: TIMESTAMP,
+    ...overrides,
+  }) as SyncedCategory;
+
+describe("mapSyncedCategory", () => {
+  it("copies wire category fields onto the domain Category", () => {
+    expect(mapSyncedCategory(syncedCategory())).toEqual(
+      expect.objectContaining({
+        id: "cat-1",
+        name: "Groceries",
+        type: "expense",
+        color: "#B48A7B",
+        icon: "🛒",
+        parentId: null,
+        sortOrder: 3,
+        lifecycle: "active",
+        lifecycleChangedAt: null,
+        createdAt: TIMESTAMP,
+        updatedAt: TIMESTAMP,
+      }),
+    );
+  });
+
+  it("preserves parentId for nested categories", () => {
+    expect(mapSyncedCategory(syncedCategory({ parentId: "cat-parent", type: "income" }))).toEqual(
+      expect.objectContaining({
+        parentId: "cat-parent",
+        type: "income",
+      }),
+    );
+  });
+
+  it("coerces Date timestamps to ISO strings", () => {
+    const created = new Date("2026-04-01T09:00:00.000Z");
+    const changed = new Date("2026-05-01T10:00:00.000Z");
+    const mapped = mapSyncedCategory(
+      syncedCategory({
+        createdAt: created,
+        updatedAt: created,
+        lifecycleChangedAt: changed,
+      }),
+    );
+    expect(mapped.createdAt).toBe("2026-04-01T09:00:00.000Z");
+    expect(mapped.updatedAt).toBe("2026-04-01T09:00:00.000Z");
+    expect(mapped.lifecycleChangedAt).toBe("2026-05-01T10:00:00.000Z");
+  });
+
+  it("keeps null lifecycleChangedAt when unset", () => {
+    expect(mapSyncedCategory(syncedCategory({ lifecycleChangedAt: null })).lifecycleChangedAt).toBeNull();
   });
 });
