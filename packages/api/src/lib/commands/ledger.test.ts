@@ -335,6 +335,47 @@ describe("ledger commands — transactions", () => {
     });
   });
 
+  it("rechecks live membership on apply after member→viewer demotion (queued write)", async () => {
+    expectApplied(
+      await applyAs(MEMBER, {
+        ...makeEnvelope("transaction.create"),
+        payload: {
+          type: "expense",
+          amountMinor: 1100,
+          date: "2026-02-10",
+          accountId: "acc-1",
+          categoryId: "cat-1",
+          description: "before demotion",
+        },
+      }),
+    );
+
+    await db
+      .update(membership)
+      .set({ role: "viewer" })
+      .where(eq(membership.userId, MEMBER));
+
+    // Simulates a PowerSync-queued command draining after the webhook demotion.
+    const queued = await applyAs(MEMBER, {
+      ...makeEnvelope("transaction.create"),
+      payload: {
+        type: "expense",
+        amountMinor: 2200,
+        date: "2026-02-11",
+        accountId: "acc-1",
+        categoryId: "cat-1",
+        description: "queued after demotion",
+      },
+    });
+
+    expect(queued).toEqual({
+      kind: "forbidden",
+      role: "viewer",
+      requiredCapability: "commands:transaction.create",
+    });
+    expect(await db.select().from(householdChange)).toHaveLength(1);
+  });
+
   it("allocates contiguous change sequences for concurrent creates", async () => {
     const results = await Promise.all(
       Array.from({ length: 20 }, (_, index) =>

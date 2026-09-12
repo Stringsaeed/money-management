@@ -71,6 +71,23 @@ describe("PowerSync connector uploadData", () => {
     expect(harness.complete).toHaveBeenCalledTimes(1);
   });
 
+  it("rejects a queued upload after role demotion (forbidden) without leaving it stuck", async () => {
+    const harness = createHarness();
+    harness.apply.mockResolvedValue({
+      kind: "forbidden",
+      role: "viewer",
+      requiredCapability: "commands:transaction.create",
+    });
+
+    await processPowerSyncUpload(harness.database, harness);
+
+    expect(harness.execute).toHaveBeenCalledWith(
+      expect.stringContaining("rejected_changes"),
+      expect.arrayContaining(["command-1", "household-1", "forbidden"]),
+    );
+    expect(harness.complete).toHaveBeenCalledTimes(1);
+  });
+
   it("disconnects and leaves the batch queued when the server engages local-only mode", async () => {
     const harness = createHarness();
     harness.apply.mockResolvedValue({ kind: "local_only", reason: "kill_switch_local_only" });
