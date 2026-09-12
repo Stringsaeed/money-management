@@ -14,9 +14,9 @@ interface CreateResourceSheetFooterProps {
 }
 
 /**
- * Primary submit uses RN Pressable (not `@/components/ui/button`): agent-device
- * hit-testing still reported Create Account as hittable=false with the shared
- * Button wrapper — same miss class as pre-#253 personal-upload confirm.
+ * Primary submit uses RN Pressable (not `@/components/ui/button`). The pressable
+ * must stay outside ModalBottomSheet / sheetContainer (see create-resource
+ * bottom sheet portal) — chrome swaps alone (#254/#255) stayed device-MISS.
  */
 export function CreateResourceSheetFooter({
   error,

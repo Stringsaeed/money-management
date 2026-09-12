@@ -34,6 +34,7 @@ import * as Haptics from "expo-haptics";
 
 import { AccessBanner } from "@/components/access/access-banner";
 import { LedgerToaster } from "@/components/banner/ledger-toaster";
+import { CREATE_RESOURCE_FOOTER_PORTAL_HOST } from "@/components/resource/create-resource-footer-portal";
 import { SyncWorker } from "@/components/sync/sync-worker";
 import { SyncModeBanner } from "@/components/sync/sync-mode-banner";
 import { AppUpdateProvider } from "@/components/updates/app-update-provider";
@@ -121,68 +122,71 @@ export default function RootLayout() {
                           }}
                           config={{ minScale: 0.7, activeOpacity: 0.6 }}
                         >
-                          <BottomSheetProvider>
-                            <ThemeProvider
-                              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-                            >
-                              <AppUpdateProvider>
-                                <SyncWorker />
-                                <Stack
-                                  screenOptions={{
-                                    headerTransparent: true,
-                                    headerShadowVisible: false,
-                                    headerBlurEffect: "none",
-                                    headerLargeTitleStyle: { fontFamily: "Nunito_400Regular" },
-                                    headerTitleStyle: { fontFamily: "Nunito_400Regular" },
-                                    headerBackButtonDisplayMode: "minimal",
-                                  }}
-                                >
-                                  <Stack.Screen name="splash" options={{ headerShown: false }} />
-                                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                                  <Stack.Screen
-                                    name="categories"
-                                    options={{ title: "Categories" }}
-                                  />
-                                  <Stack.Screen name="accounts" options={{ title: "Accounts" }} />
-                                  <Stack.Screen
-                                    name="activity"
-                                    options={{ title: "Activity Timeline" }}
-                                  />
-                                  <Stack.Screen
-                                    name="onboarding"
-                                    options={{ headerShown: false }}
-                                  />
-                                  <Stack.Screen
-                                    name="transaction/[id]"
-                                    options={{ presentation: "card" }}
-                                  />
-                                  <Stack.Screen
-                                    name="account/[id]"
-                                    options={{ headerShown: false }}
-                                  />
-                                  <Stack.Screen
-                                    name="category/new"
-                                    options={{
-                                      presentation: "modal",
-                                      title: "New Category",
-                                      headerTransparent: false,
+                          <>
+                            <BottomSheetProvider>
+                              <ThemeProvider
+                                value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+                              >
+                                <AppUpdateProvider>
+                                  <SyncWorker />
+                                  <Stack
+                                    screenOptions={{
+                                      headerTransparent: true,
+                                      headerShadowVisible: false,
+                                      headerBlurEffect: "none",
+                                      headerLargeTitleStyle: { fontFamily: "Nunito_400Regular" },
+                                      headerTitleStyle: { fontFamily: "Nunito_400Regular" },
+                                      headerBackButtonDisplayMode: "minimal",
                                     }}
-                                  />
-                                  <Stack.Screen
-                                    name="recurring/index"
-                                    options={{ title: "Recurring Rules" }}
-                                  />
-                                </Stack>
-                                <StatusBar style="auto" />
-                                <MandatoryUpdateGate />
-                                <RecurringSettlementBanner />
-                                <SyncModeBanner />
-                                <AccessBanner />
-                                <LedgerToaster />
-                                <PortalHost />
-                              </AppUpdateProvider>
-                            </ThemeProvider>
-                          </BottomSheetProvider>
+                                  >
+                                    <Stack.Screen name="splash" options={{ headerShown: false }} />
+                                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                                    <Stack.Screen
+                                      name="categories"
+                                      options={{ title: "Categories" }}
+                                    />
+                                    <Stack.Screen name="accounts" options={{ title: "Accounts" }} />
+                                    <Stack.Screen
+                                      name="activity"
+                                      options={{ title: "Activity Timeline" }}
+                                    />
+                                    <Stack.Screen
+                                      name="onboarding"
+                                      options={{ headerShown: false }}
+                                    />
+                                    <Stack.Screen
+                                      name="transaction/[id]"
+                                      options={{ presentation: "card" }}
+                                    />
+                                    <Stack.Screen
+                                      name="account/[id]"
+                                      options={{ headerShown: false }}
+                                    />
+                                    <Stack.Screen
+                                      name="category/new"
+                                      options={{
+                                        presentation: "modal",
+                                        title: "New Category",
+                                        headerTransparent: false,
+                                      }}
+                                    />
+                                    <Stack.Screen
+                                      name="recurring/index"
+                                      options={{ title: "Recurring Rules" }}
+                                    />
+                                  </Stack>
+                                  <StatusBar style="auto" />
+                                  <MandatoryUpdateGate />
+                                  <RecurringSettlementBanner />
+                                  <SyncModeBanner />
+                                  <AccessBanner />
+                                  <LedgerToaster />
+                                  <PortalHost />
+                                </AppUpdateProvider>
+                              </ThemeProvider>
+                            </BottomSheetProvider>
+                            <PortalHost name={CREATE_RESOURCE_FOOTER_PORTAL_HOST} />
+                          </>
                         </PressablesConfig>
                       </KeyboardProvider>
                     </GestureHandlerRootView>

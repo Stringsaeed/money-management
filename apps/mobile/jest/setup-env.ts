@@ -177,6 +177,13 @@ jest.mock("@swmansion/react-native-bottom-sheet", () => {
   };
 });
 
+jest.mock("@rn-primitives/portal", () => {
+  return {
+    Portal: ({ children }: { children?: React.ReactNode }) => children ?? null,
+    PortalHost: () => null,
+  };
+});
+
 jest.mock("@/lib/sonner", () => {
   const toast = Object.assign(
     jest.fn(() => "toast-id"),

@@ -2,10 +2,13 @@ import React from "react";
 import type { PressableProps } from "react-native";
 import { Pressable, ScrollView, View } from "react-native";
 import { XIcon } from "phosphor-react-native";
+import { Portal } from "@rn-primitives/portal";
+import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
+
+import { CREATE_RESOURCE_FOOTER_PORTAL_HOST } from "./create-resource-footer-portal";
 
 interface CreateResourceBottomSheetProps {
   autoPresent?: boolean;
@@ -17,6 +20,12 @@ interface CreateResourceBottomSheetProps {
   title: string;
 }
 
+/**
+ * Submit is portaled above ModalBottomSheet (not under sheetContainer) so the
+ * SM UIPanGestureRecognizer with cancelsTouchesInView cannot cancel Create
+ * Account presses. #254/#255/#256 kept submit inside the sheet host and stayed
+ * device-MISS on iPhone.
+ */
 export function CreateResourceBottomSheet({
   autoPresent = false,
   children,
@@ -27,6 +36,7 @@ export function CreateResourceBottomSheet({
   title,
 }: CreateResourceBottomSheetProps) {
   const [index, setIndex] = React.useState(autoPresent ? 1 : 0);
+  const isOpen = index === 1;
 
   function handleIndexChange(nextIndex: number) {
     setIndex(nextIndex);
@@ -68,10 +78,22 @@ export function CreateResourceBottomSheet({
             </Text>
             {headerRight ?? <View className="h-10 w-10" />}
           </View>
-          <ScrollView contentContainerClassName="gap-4 px-5 py-4 pb-8">{content}</ScrollView>
-          <View className="bg-background">{footer}</View>
+          <ScrollView contentContainerClassName="gap-4 px-5 py-4 pb-32">{content}</ScrollView>
         </View>
       </ModalBottomSheet>
+      {isOpen ? (
+        <Portal hostName={CREATE_RESOURCE_FOOTER_PORTAL_HOST} name="create-resource-sheet-footer">
+          <View className="absolute inset-0" collapsable={false} pointerEvents="box-none">
+            <View
+              className="absolute inset-x-0 bottom-0 mx-4 mb-safe overflow-hidden rounded-b-3xl bg-background"
+              collapsable={false}
+              pointerEvents="auto"
+            >
+              {footer}
+            </View>
+          </View>
+        </Portal>
+      ) : null}
     </>
   );
 }

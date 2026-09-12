@@ -64,6 +64,7 @@ jest.mock("@/lib/migration/status", () => ({
 }));
 
 jest.mock("@rn-primitives/portal", () => ({
+  Portal: ({ children }: { children?: React.ReactNode }) => children ?? null,
   PortalHost: () => {
     const React = require("react");
     const { Text } = require("react-native");
