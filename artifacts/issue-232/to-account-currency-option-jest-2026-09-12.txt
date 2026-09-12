@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/account/to-account-currency-option.test.ts
+PASS components/account/to-account-currency-option.test.ts
+  toAccountCurrencyOption
+    ✓ builds a searchable currency option for an ISO code (14 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.998 s
+Ran all test suites matching /components\/account\/to-account-currency-option.test.ts/i.
