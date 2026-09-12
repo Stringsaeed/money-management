@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `ab9eb32730d382b699adf44c013b301a465b5e20` HOUSEHOLD_RECONCILE_MAX_AGE_MS stamp — product `5942cd2b2b554f4bd9183b67d356cd250e78ff47` (`HOUSEHOLD_RECONCILE_MAX_AGE_MS` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` TOKEN_RECONCILE_MAX_AGE_MS stamp — product `85c05058a9494c9b44493472bbc78f5c3ea08b10` (`TOKEN_RECONCILE_MAX_AGE_MS` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -239,6 +239,13 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Added `apps/mobile/components/transaction/recurrence/frequency-labels.test.ts` — **1/1 new PASS** / suite **1/1** (`frequency-labels-jest-2026-09-12.txt`): exact lock of `FREQUENCY_LABELS` day→year unit vocabulary (pure frozen table)
 - Row 4 / row 6 recurrence frequency-label seam → advances automated recurrence vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## TOKEN_RECONCILE_MAX_AGE_MS Relates (2026-09-12, no device)
+
+- Added `packages/api/src/lib/membership/token-reconcile-max-age-ms.test.ts` — **1/1 new PASS** / suite **1/1** (`token-reconcile-max-age-ms-vitest-2026-09-12.txt`): exact lock `TOKEN_RECONCILE_MAX_AGE_MS=300000` (pure const)
+- Row 4 / row 6 token reconcile max-age seam → advances automated membership freshness vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
 
 ## HOUSEHOLD_RECONCILE_MAX_AGE_MS Relates (2026-09-12, no device)
 

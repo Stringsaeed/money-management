@@ -1,0 +1,11 @@
+PASS path: packages/api/src/lib/membership/token-reconcile-max-age-ms.test.ts
+
+ RUN  v3.2.7 /tmp/cert-232-relates-import/packages/api
+
+ ✓ src/lib/membership/token-reconcile-max-age-ms.test.ts (1 test) 1ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  13:11:28
+   Duration  496ms (transform 75ms, setup 0ms, collect 332ms, tests 1ms, environment 0ms, prepare 54ms)
+
