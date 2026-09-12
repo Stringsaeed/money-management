@@ -14,6 +14,7 @@ import {
   householdUserIdForQuery,
   householdsQueryKeyForUser,
   nextClaim,
+  normalizeLedgerSelection,
   pickActiveHousehold,
   resolveAccess,
   resolveReturnDestination,
@@ -211,6 +212,32 @@ describe("nextClaim", () => {
       user: other,
       establishedAt: now.toISOString(),
     });
+  });
+});
+
+describe("normalizeLedgerSelection", () => {
+  it("keeps Personal selection unchanged", () => {
+    expect(normalizeLedgerSelection([activeMembership], personalSelection)).toEqual(
+      personalSelection,
+    );
+  });
+
+  it("keeps a Household selection that still has membership", () => {
+    expect(normalizeLedgerSelection([activeMembership], householdSelection)).toEqual(
+      householdSelection,
+    );
+  });
+
+  it("falls back to Personal when the selected Household id is stale", () => {
+    expect(normalizeLedgerSelection([], { kind: "household", householdId: "hh-gone" })).toEqual(
+      personalSelection,
+    );
+    expect(
+      normalizeLedgerSelection([activeMembership], {
+        kind: "household",
+        householdId: "hh-gone",
+      }),
+    ).toEqual(personalSelection);
   });
 });
 

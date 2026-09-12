@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { planMembershipRevocation } from "@/components/sync/plan-membership-revocation";
 import { useDatabase } from "@/db/client";
 import { useMigratedHouseholdId } from "@/hooks/use-enable-sync";
 import { clearHouseholdSyncEnrollment } from "@/lib/migration/status";
@@ -11,6 +12,7 @@ import { disconnectAndClearPowerSync } from "@/modules/powersync/database";
  * When a selected or enrolled Household Membership disappears from listMine,
  * treat it as confirmed removal: stop uploads and clear that Household's
  * PowerSync cache/pending edits. Ordinary Personal selection does not clear.
+ * Identity claim stays until explicit sign-out (session_revoked cleanup).
  */
 export function MembershipRevocationCleanup() {
   const access = useAccess();
@@ -26,20 +28,23 @@ export function MembershipRevocationCleanup() {
     }
     const current = new Set(access.memberships.map((row) => row.householdId));
     const previous = previousMemberships.current;
-    const removed = [...previous].filter((id) => !current.has(id));
     previousMemberships.current = current;
 
-    const enrolled = migration.data;
-    const lostEnrollment = enrolled != null && !current.has(enrolled);
-    if (removed.length === 0 && !lostEnrollment) return;
+    const plan = planMembershipRevocation({
+      previousHouseholdIds: previous,
+      currentHouseholdIds: current,
+      enrolledHouseholdId: migration.data,
+      selection: access.selection,
+    });
+    if (plan == null) return;
 
     void (async () => {
-      if (lostEnrollment || (enrolled != null && removed.includes(enrolled))) {
+      if (plan.clearHouseholdSync) {
         await clearHouseholdSyncEnrollment(db);
         await disconnectAndClearPowerSync();
         await queryClient.invalidateQueries({ queryKey: ["migration"] });
       }
-      if (access.selection.kind === "household" && !current.has(access.selection.householdId)) {
+      if (plan.clearHouseholdSelection) {
         await access.setActiveHousehold(null);
       }
     })();
