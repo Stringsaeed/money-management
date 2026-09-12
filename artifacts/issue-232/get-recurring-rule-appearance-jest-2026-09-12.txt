@@ -1,0 +1,14 @@
+PASS path: apps/mobile/components/recurring/recurring-rule-appearance.test.ts
+PASS components/recurring/recurring-rule-appearance.test.ts
+  getRecurringRuleAppearance
+    ✓ maps active lifecycle to its screen and header treatment (3 ms)
+    ✓ maps paused lifecycle to its screen and header treatment
+    ✓ maps archived lifecycle to its screen and header treatment
+    ✓ maps completed lifecycle to its screen and header treatment
+    ✓ gives Needs Attention precedence over lifecycle (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       5 passed, 5 total
+Snapshots:   0 total
+Time:        1.399 s
+Ran all test suites matching /components\/recurring\/recurring-rule-appearance.test.ts/i.

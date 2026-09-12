@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `f745c8e989814f85617e27811d129943d6c02022` commandKindLabel stamp — product `5650c3b` (`listAccountCurrencyOptions` **1/1**; `formatCents` **1/1**; `commandKindLabel` **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` getRecurringRuleAppearance stamp — product `bc4f011` (pre-existing `recurring-rule-appearance.test.ts` **5/5** PASS; suite **5/5**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -307,6 +307,13 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Added `apps/mobile/utils/command-kind-label.test.ts` — **1/1 new PASS** / suite **1/1** (`command-kind-label-jest-2026-09-12.txt`): exact lock of `commandKindLabel` for every `CommandKind` (pure helper)
 - Row 4 / row 6 rejected-changes intent label seam → advances automated command-kind vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+
+## getRecurringRuleAppearance Relates (2026-09-12, no device)
+
+- Existing `apps/mobile/components/recurring/recurring-rule-appearance.test.ts` — **5/5 PASS** / suite **5/5** (`get-recurring-rule-appearance-jest-2026-09-12.txt`): exact lock of `getRecurringRuleAppearance` lifecycle surfaces and needs-attention override (pure helper; factory fixtures only)
+- Row 4 / row 6 recurring rule chrome seam → advances automated recurring-appearance vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 
