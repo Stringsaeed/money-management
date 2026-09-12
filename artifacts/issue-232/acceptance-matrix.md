@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `f2e5d3c8caef365cb41be21ee6abb3ddeb51f425` getCurrencySymbol stamp — product `98da190391067c3130b2d02638fc47c57f3155c4` (`getCurrencySymbol` **2/2** new; suite **2/2**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` changedCategoryIds stamp — product `985ca5ffd0eee9d2e34bba13dbbb4c5beb8446f5` (`changedCategoryIds` **2/2** new; suite **2/2**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -197,6 +197,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 ## getCurrencySymbol Relates (2026-09-12, no device)
 
 - Updated `apps/mobile/components/transaction/get-currency-symbol.test.ts` — **2/2 new PASS** / suite **2/2** (`get-currency-symbol-jest-2026-09-12.txt`): pure currency-code → symbol map lock (USD/EUR/GBP + AED fallback).
+- Row 4 / row 6 seam → advances automated vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## changedCategoryIds Relates (2026-09-12, no device)
+
+- Updated `apps/mobile/components/envelopes/envelope-form/changed-category-ids.test.ts` — **2/2 new PASS** / suite **2/2** (`changed-category-ids-jest-2026-09-12.txt`): pure set-diff of category ids between initial and current selection.
 - Row 4 / row 6 seam → advances automated vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 

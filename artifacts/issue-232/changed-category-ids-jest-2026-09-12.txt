@@ -1,0 +1,11 @@
+PASS path: apps/mobile/components/envelopes/envelope-form/changed-category-ids.test.ts
+PASS components/envelopes/envelope-form/changed-category-ids.test.ts
+  changedCategoryIds
+    ✓ returns ids added or removed between selections (2 ms)
+    ✓ returns an empty list when selections are identical
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        1.017 s
+Ran all test suites matching /components\/envelopes\/envelope-form\/changed-category-ids.test.ts/i.
