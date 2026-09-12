@@ -1,0 +1,10 @@
+PASS path: apps/mobile/modules/powersync/powersync-disconnect-threshold-ms.test.ts
+PASS modules/powersync/powersync-disconnect-threshold-ms.test.ts
+  POWERSYNC_DISCONNECT_THRESHOLD_MS
+    ✓ locks the PowerSync disconnect threshold at ten minutes (10 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.086 s
+Ran all test suites matching /modules\/powersync\/powersync-disconnect-threshold-ms.test.ts/i.
