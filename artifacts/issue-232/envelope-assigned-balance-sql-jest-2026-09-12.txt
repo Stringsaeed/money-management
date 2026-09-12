@@ -1,0 +1,13 @@
+=== Relates #232 envelopeAssignedBalanceSql vitest ===
+2026-09-12T10:50:23Z
+
+ RUN  v3.2.7 /tmp/cert-232-relates-0951/packages/api
+
+ ✓ src/lib/budget/envelope-balance.test.ts (2 tests) 3ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  10:50:24
+   Duration  340ms (transform 32ms, setup 0ms, collect 189ms, tests 3ms, environment 0ms, prepare 50ms)
+
+=== tsc --noEmit ===
