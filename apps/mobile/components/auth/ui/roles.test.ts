@@ -1,7 +1,17 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { AUTH_FIELD_KINDS, resolveColor } from "./roles";
+import { AUTH_FIELD_KINDS, AUTH_SHELL_SPEC, resolveColor } from "./roles";
 import { AUTH_FALLBACK_PALETTE } from "./tokens";
+
+describe("AUTH_SHELL_SPEC", () => {
+  it("locks auth shell spacing", () => {
+    expect(AUTH_SHELL_SPEC).toEqual({
+      headerSpacing: 8,
+      bodySpacing: 12,
+      bodyTopPadding: 32,
+    });
+  });
+});
 
 describe("AUTH_FIELD_KINDS", () => {
   it("maps every AuthFieldKind onto its input preset", () => {
