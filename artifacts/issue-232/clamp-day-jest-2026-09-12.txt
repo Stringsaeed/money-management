@@ -1,0 +1,10 @@
+PASS path: apps/mobile/utils/clamp-day.test.ts
+PASS utils/clamp-day.test.ts
+  clampDay
+    ✓ clamps day into the month length without touching the clock (4 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.04 s
+Ran all test suites matching /utils\/clamp-day.test.ts/i.
