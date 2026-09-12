@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `602524e5fcd8ec054481370691a6e3aa3a65fd9d` accessFingerprint stamp — product `d9a6e663bee2f6f529834b9497ecabf5bb6091f2` (`accessFingerprint` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` syncFingerprint stamp — product `1c2d924cfb7b918810308560041e04f7ccaf2feb` (`syncFingerprint` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -272,6 +272,13 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Added `apps/mobile/hooks/normalize-free-crypto-quotes.test.ts` — **1/1 new PASS** / suite **1/1** (`normalize-free-crypto-quotes-jest-2026-09-12.txt`): exact lock of `normalizeFreeCryptoQuotes` response shaping (pure helper)
 - Row 4 / row 6 market free-crypto-quotes seam → advances automated market-quote vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+
+## syncFingerprint Relates (2026-09-12, no device)
+
+- Added `apps/mobile/components/banner/sync-fingerprint.test.ts` — **1/1 new PASS** / suite **1/1** (`sync-fingerprint-jest-2026-09-12.txt`): exact lock of `syncFingerprint` local-only tokens (pure helper)
+- Row 4 / row 6 banner sync-fingerprint seam → advances automated banner identity vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 

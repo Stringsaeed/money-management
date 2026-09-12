@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/banner/sync-fingerprint.test.ts
+PASS components/banner/sync-fingerprint.test.ts
+  syncFingerprint
+    ✓ locks local-only sync fingerprints (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.96 s
+Ran all test suites matching /components\/banner\/sync-fingerprint.test.ts/i.
