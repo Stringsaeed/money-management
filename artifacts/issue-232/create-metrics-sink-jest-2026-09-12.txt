@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=520e266
+gap=createMetricsSink
+matrix_row=4/6 observability metrics sink wiring
+command=pnpm exec vitest run src/lib/observability/metrics.test.ts
+result=PASS 2/2 new (suite 9/9)
+tsc=PASS packages/api --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
