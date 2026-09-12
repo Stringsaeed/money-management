@@ -161,6 +161,14 @@ export default function RootLayout() {
                                     options={{ headerShown: false }}
                                   />
                                   <Stack.Screen
+                                    name="account/new"
+                                    options={{
+                                      presentation: "modal",
+                                      title: "Add Account",
+                                      headerTransparent: false,
+                                    }}
+                                  />
+                                  <Stack.Screen
                                     name="category/new"
                                     options={{
                                       presentation: "modal",

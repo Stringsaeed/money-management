@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
@@ -5,7 +6,6 @@ import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { PlusIcon } from "phosphor-react-native";
 
 import { AccountEditSheet } from "@/components/account/account-edit-sheet";
-import { AccountFormBottomSheet } from "@/components/account/account-form-sheet";
 import { CoinPlantGraphic } from "@/components/graphics/coin-plant";
 import { Card } from "@/components/settings/card";
 import { Divider } from "@/components/settings/divider";
@@ -53,11 +53,14 @@ export default function AccountsScreen() {
         )}
       </ScrollView>
 
-      <AccountFormBottomSheet>
-        <Button size="fab">
-          <Icon as={PlusIcon} size={24} />
-        </Button>
-      </AccountFormBottomSheet>
+      <Button
+        accessibilityLabel="Add Account"
+        onPress={() => router.push("/account/new")}
+        size="fab"
+        testID="add-account"
+      >
+        <Icon as={PlusIcon} size={24} />
+      </Button>
       {editingAccount ? (
         <AccountEditSheet
           account={editingAccount}

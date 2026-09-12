@@ -262,4 +262,16 @@ describe("app/accounts", () => {
 
     expect(mockDeleteAccount).toHaveBeenCalledWith("account-unused");
   });
+
+  it("opens Add Account via the Expo Router create screen", async () => {
+    await render(
+      <GestureHandlerRootView>
+        <AccountsScreen />
+      </GestureHandlerRootView>,
+    );
+
+    await fireEvent.press(screen.getByTestId("add-account"));
+
+    expect(mockPush).toHaveBeenCalledWith("/account/new");
+  });
 });
