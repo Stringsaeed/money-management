@@ -71,3 +71,4 @@ query_filters_to_ledger_jest=PASS 2/2 new suite=12/12 product=98fb0e3
 month_filter_jest=PASS 2/2 product=fc3fd1e
 apply_ledger_balance_jest=PASS 2/2 product=0738616
 require_category_ids_jest=PASS 2/2 product=7aa1468
+assert_source_has_money_jest=PASS 2/2 new suite=4/4 product=5de3a7f
