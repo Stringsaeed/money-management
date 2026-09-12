@@ -1,0 +1,17 @@
+=== tsc --noEmit ===
+tsc exit: 0
+
+=== node --test --experimental-strip-types src/effects.test.ts ===
+✔ EFFECT_TAGS lists every cache-invalidation effect tag (0.905304ms)
+✔ EFFECT_TAGS membership is unique and excludes unknown tags (0.11968ms)
+✔ coversEffects is true when subset is empty or fully included (0.100621ms)
+✔ coversEffects is false when any subset tag is missing (0.074792ms)
+✔ coversEffects treats coverage as unordered and allows extras (0.086826ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 76.359441

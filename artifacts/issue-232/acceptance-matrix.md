@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `95da1f1e0a24d471f7901bb037dc697cf832e50a` PERSONAL_LEDGER_PREFIX stamp — product `3f4f85635513a1404196c0b03f0e6b7d806ca70b` (`PERSONAL_LEDGER_PREFIX` **2/2** new; suite **7/7**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | PENDING_DOCS — product `1ff44a0908ed872f7f71350a808514e851268234` (`EFFECT_TAGS` **2/2** new; suite **5/5**; `coversEffects` already COVERED); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -37,6 +37,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Live `GET /webhooks/workos` → **404** (POST-only).
 - Runner `WORKOS_WEBHOOK_SECRET` **ABSENT** — did not invent secrets. Verdict unchanged: **BLOCKED**.
 - Evidence: `workos-webhook-probe-2026-09-12e.txt` + `workos-webhook-blocked.md`. Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## EFFECT_TAGS Relates (2026-09-12, no device)
+
+- Extended `packages/protocol/src/effects.test.ts` — **2/2 new PASS** / suite **5/5** (`effect-tags-jest-2026-09-12.txt`): exact 9-tag membership for `EFFECT_TAGS`; uniqueness + excludes unknown tags. `coversEffects` left as-is (already COVERED).
+- Row 4 / row 6 effect-tag vocabulary seam → advances automated cache-invalidation tag lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## PERSONAL_LEDGER_PREFIX Relates (2026-09-12, no device)
 
