@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `14f35af` ledger-source offlineReason docs stamp — product `0e09809` local_only/kill_switch Jest; prior session-probe `d71a5b2`; **local** tsc+Jest PASS; GitHub Actions **BLOCKED** (billing/spend limit); webhook still **503**; Create Account still **BLOCKED** on #258; dual-identity **BLOCKED** |
+| HEAD | tip pending docs stamp — ledger-source `local_only`/`kill_switch` already covered at product `0e09809` (suite **35/35** re-verified); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing; prior tip `d6e4340` |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/workspace/.wt-cert-232-relates` (this Relates write); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T06:30:58Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -28,6 +28,12 @@ Report implementation, automated verification, runtime verification, and publica
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
 Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `ci-billing-blocked-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `session-probe-jest-2026-09-12.txt` / `ledger-source-offline-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt`.
+
+## Ledger-source remaining-BLOCKED reaffirm (2026-09-12, docs-only)
+
+- Gap check: `selectLedgerSourceForAccess` `local_only` + `kill_switch` / `powersync_unavailable` offlineReason paths **already covered** at product `0e09809` (tip chain through `d6e4340`).
+- Re-verify this write (no new tests): `pnpm exec jest modules/access/access.test.ts --runInBand` → **35/35 PASS**; `tsc --noEmit` exit **0**. Evidence still `ledger-source-offline-jest-2026-09-12.txt`.
+- Remaining **BLOCKED** (unchanged; no CI PASS claimed): WorkOS webhook **503** (`WORKOS_WEBHOOK_SECRET`); Create Account one-device on [#258](https://github.com/Stringsaeed/money-management/pull/258); live dual-identity (`CERT_USER_A_TOKEN` / `CERT_USER_B_TOKEN` ABSENT); GH Actions billing/spend limit. Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## Ledger-source local_only offlineReason Jest Relates (2026-09-12, no device)
 

@@ -1,0 +1,12 @@
+branch=cursor/workos-certify-migration-b3d1
+base_tip=d6e4340
+product_tip=0e09809
+gap=selectLedgerSourceForAccess local_only/kill_switch offlineReason
+status=ALREADY_COVERED
+reverify_jest=PASS access.test.ts 35/35
+reverify_tsc=PASS exit 0
+new_tests=none (docs-only remaining-BLOCKED stamp)
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing
+relates=#232 only
+closes=none
+certified=false
