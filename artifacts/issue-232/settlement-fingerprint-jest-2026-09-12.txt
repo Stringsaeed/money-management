@@ -1,0 +1,11 @@
+PASS path: apps/mobile/components/banner/settlement-fingerprint.test.ts
+PASS components/banner/settlement-fingerprint.test.ts
+  settlementFingerprint
+    ✓ returns null when there is nothing unresolved and nothing generated (2 ms)
+    ✓ builds success and attention fingerprints from settlement reports
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        0.97 s
+Ran all test suites matching /components\/banner\/settlement-fingerprint.test.ts/i.
