@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/account/account-display-icon.test.ts
+PASS components/account/account-display-icon.test.ts
+  accountDisplayIcon
+    ✓ prefers custom icons and otherwise uses account-type emoji (8 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.949 s
+Ran all test suites matching /components\/account\/account-display-icon.test.ts/i.
