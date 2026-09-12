@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/household/enable-sync-status-label.test.ts
+PASS components/household/enable-sync-status-label.test.ts
+  ENABLE_SYNC_STATUS_LABEL
+    ✓ locks enable-sync status label vocabulary (12 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.134 s
+Ran all test suites matching /components\/household\/enable-sync-status-label.test.ts/i.

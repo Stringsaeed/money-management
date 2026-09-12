@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `c5d53b7331b132fd77e8142bedd6cd8efbc88287` WELCOME_GARDEN_STAGE stamp — product `d9ec7a0d6aaf1e912a92bbc04556dd0567af105a` (`WELCOME_GARDEN_STAGE` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` ENABLE_SYNC_STATUS_LABEL stamp — product `804ecd694c5f2a230504d3f3d39a14f0104aa22e` (`ENABLE_SYNC_STATUS_LABEL` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -239,6 +239,13 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Added `apps/mobile/components/transaction/recurrence/frequency-labels.test.ts` — **1/1 new PASS** / suite **1/1** (`frequency-labels-jest-2026-09-12.txt`): exact lock of `FREQUENCY_LABELS` day→year unit vocabulary (pure frozen table)
 - Row 4 / row 6 recurrence frequency-label seam → advances automated recurrence vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## ENABLE_SYNC_STATUS_LABEL Relates (2026-09-12, no device)
+
+- Added `apps/mobile/components/household/enable-sync-status-label.test.ts` — **1/1 new PASS** / suite **1/1** (`enable-sync-status-label-jest-2026-09-12.txt`): exact lock of `ENABLE_SYNC_STATUS_LABEL` idle→error vocabulary (pure frozen table)
+- Row 4 / row 6 enable-sync status-label seam → advances automated sync-status vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
 
 ## WELCOME_GARDEN_STAGE Relates (2026-09-12, no device)
 
