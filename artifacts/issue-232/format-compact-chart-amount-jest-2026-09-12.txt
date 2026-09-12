@@ -1,0 +1,11 @@
+PASS path: apps/mobile/components/settings/chart-utils.test.ts
+PASS components/settings/chart-utils.test.ts
+  formatCompactChartAmount
+    ✓ rounds sub-thousand values to whole numbers (6 ms)
+    ✓ formats thousands with compact labels
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        10.077 s
+Ran all test suites matching /components\/settings\/chart-utils.test.ts/i.
