@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/auth/ui/auth-fallback-palette.test.ts
+PASS components/auth/ui/auth-fallback-palette.test.ts
+  AUTH_FALLBACK_PALETTE
+    ✓ locks light and dark auth fallback palettes (8 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.961 s
+Ran all test suites matching /components\/auth\/ui\/auth-fallback-palette.test.ts/i.
