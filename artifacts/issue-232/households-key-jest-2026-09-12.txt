@@ -1,0 +1,14 @@
+PASS path: modules/access/households-key.test.ts
+PASS modules/access/households-key.test.ts (9.592 s)
+  HOUSEHOLDS_KEY
+    ✓ is the households query-key tuple (6 ms)
+    ✓ does not include other access resource keys (9 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        10.624 s
+Ran all test suites matching /modules\/access\/households-key.test.ts/i.
+
+--- tsc --noEmit (apps/mobile, if available) ---
+tsc exit: 0
