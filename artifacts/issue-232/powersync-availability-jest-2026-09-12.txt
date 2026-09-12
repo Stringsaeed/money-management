@@ -1,0 +1,16 @@
+branch=cursor/workos-certify-migration-b3d1
+gap=initialPowerSyncAvailability / recordPowerSyncConnection / isPowerSyncUnavailable
+command=cd apps/mobile && pnpm exec jest modules/powersync/availability.test.ts --runInBand
+relates=#232 only
+closes=none
+certified=false
+
+PASS modules/powersync/availability.test.ts
+  PowerSync availability
+    ✓ degrades only after ten continuous disconnected minutes
+    ✓ resets the outage window immediately after reconnect
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Ran all test suites matching /modules\/powersync\/availability.test.ts/i.

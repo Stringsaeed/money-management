@@ -1,0 +1,24 @@
+branch=cursor/workos-certify-migration-b3d1
+gap=parseSetupAssignment
+command=cd apps/mobile && pnpm exec jest modules/budgeting/setup-assignment.test.ts --runInBand
+relates=#232 only
+closes=none
+certified=false
+
+PASS modules/budgeting/setup-assignment.test.ts
+  parseSetupAssignment
+    ✓ parses "" into integer minor units
+    ✓ parses "0" into integer minor units
+    ✓ parses "12" into integer minor units
+    ✓ parses "12.3" into integer minor units
+    ✓ parses "12.34" into integer minor units
+    ✓ rejects invalid value "-1"
+    ✓ rejects invalid value "1.001"
+    ✓ rejects invalid value ".50"
+    ✓ rejects invalid value "money"
+    ✓ rejects invalid value "1,00"
+
+Test Suites: 1 passed, 1 total
+Tests:       10 passed, 10 total
+Snapshots:   0 total
+Ran all test suites matching /modules\/budgeting\/setup-assignment.test.ts/i.

@@ -1,0 +1,18 @@
+branch=cursor/workos-certify-migration-b3d1
+gap=evaluateCardBudgetState
+command=cd apps/mobile && pnpm exec jest modules/budgeting/card-dependency-evaluator.test.ts --runInBand
+relates=#232 only
+closes=none
+certified=false
+
+PASS modules/budgeting/card-dependency-evaluator.test.ts
+  card dependency evaluator validation
+    ✓ refuses unsupported Transaction discriminants
+    ✓ refuses unsafe minor-unit facts
+    ✓ excludes one-amount cross-currency Transfers from budget replay
+    ✓ refuses an unsafe aggregate of individually safe card deficits
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Ran all test suites matching /modules\/budgeting\/card-dependency-evaluator.test.ts/i.
