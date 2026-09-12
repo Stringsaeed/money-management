@@ -1,5 +1,24 @@
-import { changeEffects } from "./change-results";
+import { candidateFromDraft, changeEffects } from "./change-results";
 import { settlementEffects } from "./settlement";
+import type { RecurringRuleDraft } from "./types";
+
+const draft = (overrides: Partial<RecurringRuleDraft> = {}): RecurringRuleDraft => ({
+  name: "Rent",
+  type: "expense",
+  amountMinor: 1200_00,
+  currency: "USD",
+  accountId: "account-1",
+  toAccountId: null,
+  categoryId: "category-1",
+  description: "Monthly rent",
+  frequency: "month",
+  intervalCount: 1,
+  startDate: "2026-01-05",
+  endDate: null,
+  endCount: null,
+  timeZone: "Asia/Dubai",
+  ...overrides,
+});
 
 describe("changeEffects", () => {
   it("returns rules+upcoming only when nothing was generated", () => {
@@ -9,5 +28,52 @@ describe("changeEffects", () => {
   it("delegates to settlementEffects when generatedCount is positive", () => {
     expect(changeEffects(2)).toEqual(settlementEffects(2));
     expect(changeEffects(2)).toEqual(["rules", "upcoming", "ledger", "balances", "summaries"]);
+  });
+});
+
+describe("candidateFromDraft", () => {
+  it("activates a draft as revision 1 with eligibilityFloor from startDate", () => {
+    const now = "2026-03-28T10:00:00.000Z";
+    const rule = candidateFromDraft("rule-1", draft(), now);
+
+    expect(rule).toMatchObject({
+      id: "rule-1",
+      name: "Rent",
+      amountMinor: 1200_00,
+      accountId: "account-1",
+      lifecycle: "active",
+      health: "ready",
+      attentionReasons: [],
+      attentionDetails: null,
+      eligibilityFloor: "2026-01-05",
+      revision: 1,
+      createdAt: now,
+      updatedAt: now,
+    });
+  });
+
+  it("copies draft schedule fields and clears settlement/lifecycle timestamps", () => {
+    const rule = candidateFromDraft(
+      "rule-2",
+      draft({
+        endDate: "2026-12-31",
+        endCount: 12,
+        frequency: "week",
+        intervalCount: 2,
+      }),
+      "2026-04-01T00:00:00.000Z",
+    );
+
+    expect(rule).toMatchObject({
+      id: "rule-2",
+      endDate: "2026-12-31",
+      endCount: 12,
+      frequency: "week",
+      intervalCount: 2,
+      lifecycleChangedAt: null,
+      healthChangedAt: null,
+      lastSettlementAttemptAt: null,
+      lastSettlementError: null,
+    });
   });
 });
