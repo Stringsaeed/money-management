@@ -1,0 +1,13 @@
+=== Relates #232 toRecurringRuleDraft Jest ===
+2026-09-12T10:26:31Z
+PASS components/transaction/recurrence/to-recurring-rule.test.ts
+  toRecurringRuleDraft
+    ✓ maps form fields and prefers description as the draft name (3 ms)
+    ✓ falls back to category name then type label when description is empty (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        1.155 s
+Ran all test suites matching /components\/transaction\/recurrence\/to-recurring-rule.test.ts/i.
+=== tsc --noEmit ===
