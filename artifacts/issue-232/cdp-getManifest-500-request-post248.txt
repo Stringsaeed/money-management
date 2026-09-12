@@ -1,0 +1,6 @@
+req_2 POST https://auth.trove.ing/rpc/migration/getManifest
+State: completed 500
+Type: Other
+Duration: 639ms
+Transfer size: 104B
+Available: req-headers:yes res-headers:yes req-body:yes res-body:yes

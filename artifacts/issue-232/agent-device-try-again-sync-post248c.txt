@@ -1,0 +1,29 @@
+Tapped @e19 (201, 602)
+settled after 887ms: +2 -3 (~30 unchanged)
+- @e18 [other] "Try again"
+- @e19 [button] "Try again"
+- @e20 [text] "Internal server error"
++ @e18~s244222 [other] "Checking cloud…"
++ @e19~s244222 [button] "Checking cloud…" [disabled]
+unchanged interactive (20):
+= @e2~s244222 [navigation-bar] "Settings"
+= @e3~s244222 [button] "Settings"
+= @e4~s244222 [text] "Profile"
+= @e5~s244222 [scroll-area] "stringsaeed@gmail.com"
+= @e6~s244222 [other] "stringsaeed@gmail.com"
+= @e7~s244222 [other] "Sign out"
+= @e8~s244222 [button] "Sign out"
+= @e9~s244222 [text] "Household sync is paused"
+= @e10~s244222 [text] "Your ledger on this device is still usable."
+= @e11~s244222 [other] "Try again"
+= @e12~s244222 [button] "Try again"
+= @e13~s244222 [text] "LEDGER"
+= @e14~s244222 [other] "Personal ✓"
+= @e15~s244222 [button] "Personal ✓"
+= @e16~s244222 [text] "Sync without a Household 🪪"
+= @e17~s244222 [text] "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."
+= @e20~s244222 [text] "Create a Household"
+= @e21~s244222 [text] "Start a shared space — family accounts, budgets, and reports in one place."
+= @e22~s244222 [text-field]
+= @e23~s244222 [other] "🏠 Create household"
+… more interactive elements not shown, use snapshot -i

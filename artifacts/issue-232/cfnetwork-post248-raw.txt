@@ -1,0 +1,11 @@
+Filtering the log data using "subsystem CONTAINS "CFNetwork" OR composedMessage CONTAINS "auth.trove" OR composedMessage CONTAINS "listMine" OR composedMessage CONTAINS "orpc" OR composedMessage CONTAINS "response_status""
+Timestamp               Ty Process[PID:TID]
+2026-09-12 04:29:01.265 Df TroveDev[76826:1883e5b] [com.apple.CFNetwork:Default] Task <03A4809B-0621-4F02-B330-127E377BD4CB>.<15> resuming, timeouts(0.0, 604800.0) qos(0x19) voucher((null)) activity(00000000-0000-0000-0000-000000000000)
+2026-09-12 04:29:01.266 Df TroveDev[76826:185a615] [com.apple.CFNetwork:Default] Task <A3A04760-AD2F-4DD7-977A-C5CA3B1F493E>.<61> resuming, timeouts(0.0, 604800.0) qos(0x19) voucher((null)) activity(00000000-0000-0000-0000-000000000000)
+2026-09-12 04:29:01.268 Df TroveDev[76826:1883e5b] [com.apple.CFNetwork:Default] Task <A3A04760-AD2F-4DD7-977A-C5CA3B1F493E>.<61> now using Connection 191
+2026-09-12 04:29:01.848 Df TroveDev[76826:1884fde] [com.apple.CFNetwork:Default] Task <A3A04760-AD2F-4DD7-977A-C5CA3B1F493E>.<61> response ended
+2026-09-12 04:29:01.850 Df TroveDev[76826:1884fde] [com.apple.CFNetwork:Default] Task <A3A04760-AD2F-4DD7-977A-C5CA3B1F493E>.<61> done using Connection 191
+2026-09-12 04:29:01.850 Df TroveDev[76826:1883e5b] [com.apple.CFNetwork:Summary] Task <A3A04760-AD2F-4DD7-977A-C5CA3B1F493E>.<61> summary for task success {transaction_duration_ms=584, response_status=500, connection=191, reused=1, reused_after_ms=17213, request_start_ms=1, request_duration_ms=0, response_start_ms=581, response_duration_ms=2, request_bytes=800, request_throughput_kbps=8804, response_bytes=541, response_throughput_kbps=1810, cache_hit=false}
+2026-09-12 04:29:01.851 Df TroveDev[76826:1883e5b] [com.apple.CFNetwork:Default] Task <A3A04760-AD2F-4DD7-977A-C5CA3B1F493E>.<61> finished successfully
+2026-09-12 04:29:01.852 Df TroveDev[76826:1884fde] [com.apple.CFNetwork:Summary] Task <03A4809B-0621-4F02-B330-127E377BD4CB>.<15> summary for task success {transaction_duration_ms=586, response_status=500, cache_hit=true}
+2026-09-12 04:29:01.852 Df TroveDev[76826:1884fde] [com.apple.CFNetwork:Default] Task <03A4809B-0621-4F02-B330-127E377BD4CB>.<15> finished successfully

@@ -1,0 +1,33 @@
+date_utc=2026-09-12T00:36:00Z
+deploy_worker_run=34661563595
+deploy_conclusion=success
+deploy_sha=0ab55ac783e15d66a675591028689e89741e5088
+api=https://auth.trove.ing
+rpc_path=POST /rpc/households/listMine
+auth_jwt_verify=PASS
+http=500
+client_orpc_code=INTERNAL_SERVER_ERROR
+client_orpc_message=Internal server error
+client_body={"json":{"defined":false,"code":"INTERNAL_SERVER_ERROR","status":500,"message":"Internal server error"}}
+cdp_requests=req_5,req_6,req_7,req_8
+also_rpc=POST /rpc/migration/getManifest HTTP 500 same client body (req_2)
+cfnetwork_earlier=response_status=500 (cfnetwork-post248-hits.txt)
+ui=Household sync paused Try again; Sync path Internal server error / Checking cloud
+ui_screenshots=authkit-80-post248-profile.png; authkit-81-post248-after-sync.png; authkit-82-post248-after-checking.png; authkit-83-post248-final.png
+ensure_softfail_42501=true
+memberships_reconciled_at_present=false
+cf_worker_orpc_line=UNAVAILABLE (Cloudflare-observability MCP needsAuth; CLOUDFLARE_API_TOKEN absent; host curl WAF 1010)
+pg_code=UNAVAILABLE_FROM_CLIENT (sanitized body; Worker formatOrpcErrorLog not readable this run)
+prior_post246_worker_signal=orpc_error code=UNKNOWN Failed query insert into "user" ... on conflict do nothing
+signed_in=true
+signed_in_email=stringsaeed@gmail.com
+udid=F324175E-BCA2-4F20-857E-C2D9678D44F5
+metro=8083
+raw_jwt_logged=false
+pii_values_logged=false
+relates_to=#232 only (NEVER Closes)
+certified=false
+hypothesized_pg_code=23502
+hypothesized_failure=NOT NULL created_at/updated_at on narrow ensure-user INSERT (PR #249; not CF-log confirmed this run)
+followup_pr=#249
+idle_until=#249 Deploy Worker success then Sync retest

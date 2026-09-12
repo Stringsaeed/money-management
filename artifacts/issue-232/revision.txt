@@ -1,6 +1,11 @@
-revision=post-246-user-upsert-500
 branch=cursor/workos-certify-migration-b3d1
-note=post-#246 Sync retest: claim_iss cleared; auth PASS; listMine FAIL HTTP 500 orpc UNKNOWN user upsert; Relates to #232; #224 open
-deploy_sha=58997473f20bbe1ec9353334eb3ce44d2efbbb6b
-deploy_worker_run=34659057570
-date=2026-09-11T23:50:02Z
+worktree=/Users/saeed/Work/money-management-wt-232
+live_api=https://auth.trove.ing
+deploy_worker_run=34661563595
+deploy_sha=0ab55ac783e15d66a675591028689e89741e5088
+post248_listmine=FAIL INTERNAL_SERVER_ERROR 500
+ensure_softfail=42501 memberships_reconciled_at present=false
+relates=#232 only
+certified=false
+hypothesized_23502=PR249_not_cf_confirmed
+followup_pr=249

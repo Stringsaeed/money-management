@@ -1,0 +1,13 @@
+cf-ray: a39ad3fafd82775a-AMS
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+Server: cloudflare
+server-timing: cfExtPri
+Priority: u=3,i
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=XduzRcgS3uKgc58SpGccAyPiY15AMgHazrUQe5EF%2BnQ4wDxlJX3JnEHJ3QeTOQlH%2FY0mqc8Gt5w%2BsXxlqCk64aZer%2BekUZAm1LG2IInPlXnMbuku1aYYmofZjHDHBdeahnSEzuBcml9LN4ZGLA%3D%3D"}]}
+access-control-allow-credentials: true
+Vary: Origin
+Date: Sat, 12 Sep 2026 00:34:43 GMT
+Content-Type: application/json
+Alt-Svc: h3=":443"; ma=86400
+cf-placement: remote-
+Content-Length: 104

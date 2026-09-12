@@ -20,13 +20,19 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip after post-#246 Sync retest evidence (docs on certify branch; live API tip `5899747` / #246) |
+| HEAD | tip after post-#248 Sync retest evidence (docs on certify branch; live API tip `5899747` / #246) |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), and [#246](https://github.com/Stringsaeed/money-management/pull/246) (`5899747`) on `main` and live on `auth.trove.ing`. |
 | Worktree | `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK**; Deploy Worker **34659057570** success for `5899747` (#246 AuthKit `iss` accept) after #245 |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
 Recorded in `revision.txt` / `authkit-live-write.txt` / `post-246-user-upsert-500.txt`.
+
+## Post-#248 Sync retest (2026-09-12)
+
+- Deploy Worker [34661563595](https://github.com/Stringsaeed/money-management/actions/runs/34661563595) **success** for `0ab55ac` (#248). Ensure ALTER **soft-fail `42501`**; `memberships_reconciled_at` **still absent**.
+- Auth **PASS**. `POST /rpc/households/listMine` **FAIL** HTTP **500** client code **`INTERNAL_SERVER_ERROR`** (`post-248-sync-retest.md`, `cdp-listMine-500-bodies-post248.txt`). Worker `pg_code` not CF-confirmed here; **#249** attributes remaining failure to **`23502`** on ensure-user timestamps. Idle for #249 deploy before retest.
+- Relates to #232 only. Not certified. Parent #224 stays open.
 
 ## Verdict (this write)
 
@@ -37,7 +43,7 @@ Recorded in `revision.txt` / `authkit-live-write.txt` / `post-246-user-upsert-50
 - Full `pnpm test:ci` **passed** previously: mobile Jest **742/742** + `@trove/db` cutover **3/3**.
 - **Row 2 iOS AuthKit UI (partial):** cancel PASS; hosted AuthKit email page + email-code challenge PARTIAL; OTP entry hard-stopped (agent-device AX unavailable inside ASWebAuthenticationSession). Still signed out afterward (`authkit-21-signed-out-final.png`).
 - **Post-login JWT verify:** **PASS** after #246 — prior `claim_iss` cleared (AuthKit `iss` accepted).
-- **Post-login `households.listMine`:** **FAIL** — Sync just for me → UI **Internal server error** + HTTP **500**. Owner CF: `orpc_error code=UNKNOWN` — failed `insert into "user" … on conflict do nothing` (params shape: WorkOS user id, name=id, email `{id}@users.workos.invalid`, `email_verified=true`). See `post-246-user-upsert-500.txt`. Client ids EQUAL; #242+#245+#246 live. Do not treat as certified.
+- **Post-login `households.listMine`:** **FAIL** after #248 deploy — HTTP **500** client oRPC **`INTERNAL_SERVER_ERROR`** (`post-248-sync-retest.md`; CDP `cdp-listMine-500-bodies-post248.txt`). Ensure soft-fail **42501**; column still absent. Worker `pg_code`/Failed query not captured (CF Observability needsAuth). Prior post-#246 Worker signal was `orpc_error UNKNOWN` user INSERT; not re-confirmed at Worker log layer this run. Do not treat as certified.
 - Android runtime **not started**. Disposable clean-setup after reset **blocked**.
 
 Do not merge as certified. No production deploy. Parent #224 stays open. **Do not use Closes #232.**

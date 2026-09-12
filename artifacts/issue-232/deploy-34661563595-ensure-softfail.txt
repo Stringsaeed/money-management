@@ -1,0 +1,7 @@
+deploy_worker_run=34661563595
+conclusion=success
+head_sha=0ab55ac783e15d66a675591028689e89741e5088
+ensure_step=Ensure user.memberships_reconciled_at
+ensure_warning={"warning":"alter_permission_denied","code":"42501","column":"memberships_reconciled_at","message":"must be owner of table user"}
+ensure_result={"ok":true,"column":"memberships_reconciled_at","present":false,"alter_permission_denied":true}
+deploy_worker_step=success

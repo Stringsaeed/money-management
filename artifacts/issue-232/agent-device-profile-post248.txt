@@ -1,0 +1,38 @@
+Tapped @e6 (201, 226)
+settled after 2320ms: +22 -14 (~10 unchanged)
+- @e2 [other] "Settings"
+- @e4 [scroll-area] "Profile"
+- @e5 [other] "Profile"
+- @e6 [button] "Profile & household"
+- @e7 [text] "Manage 🛠️"
+- @e8 [button] "Accounts"
+- @e9 [button] "Categories"
+- @e10 [button] "Recurring Rules"
+- @e11 [button] "Activity Timeline"
+- @e12 [text] "Stats 📊"
+- @e13 [other] "🧾, Total Transactions, 0" [disabled]
+- @e14 [other] "🏦, Accounts, 0" [disabled]
+- @e15 [other] "🔁, Active Rules, 0" [disabled]
+- @e16 [text] "Software Update 🔄"
++ @e3~s244208 [button] "Settings"
++ @e4~s244208 [text] "Profile"
++ @e5~s244208 [scroll-area] "stringsaeed@gmail.com"
++ @e6~s244208 [other] "stringsaeed@gmail.com"
++ @e7~s244208 [other] "Sign out"
++ @e8~s244208 [button] "Sign out"
++ @e9~s244208 [text] "Household sync is paused"
++ @e10~s244208 [text] "Your ledger on this device is still usable."
++ @e11~s244208 [other] "Try again"
++ @e12~s244208 [button] "Try again"
++ @e13~s244208 [text] "LEDGER"
++ @e14~s244208 [other] "Personal ✓"
++ @e15~s244208 [button] "Personal ✓"
++ @e16~s244208 [text] "Sync without a Household 🪪"
++ @e17~s244208 [text] "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."
++ @e18~s244208 [other] "Sync just for me"
++ @e19~s244208 [button] "Sync just for me"
++ @e20~s244208 [text] "Create a Household"
++ @e21~s244208 [text] "Start a shared space — family accounts, budgets, and reports in one place."
++ @e22~s244208 [text-field]
++ @e23~s244208 [other] "🏠 Create household"
++ @e24~s244208 [button] "🏠 Create household" [disabled]

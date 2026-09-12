@@ -1,0 +1,36 @@
+==== req_5 body ====
+{"json":{"defined":false,"code":"INTERNAL_SERVER_ERROR","status":500,"message":"Internal server error"}}
+==== req_5 summary ====
+req_5 POST https://auth.trove.ing/rpc/households/listMine
+State: completed 500
+Type: Other
+Duration: 470ms
+Transfer size: 104B
+Available: req-headers:yes res-headers:yes req-body:yes res-body:yes
+==== req_6 body ====
+{"json":{"defined":false,"code":"INTERNAL_SERVER_ERROR","status":500,"message":"Internal server error"}}
+==== req_6 summary ====
+req_6 POST https://auth.trove.ing/rpc/households/listMine
+State: completed 500
+Type: Other
+Duration: 563ms
+Transfer size: 104B
+Available: req-headers:yes res-headers:yes req-body:yes res-body:yes
+==== req_7 body ====
+{"json":{"defined":false,"code":"INTERNAL_SERVER_ERROR","status":500,"message":"Internal server error"}}
+==== req_7 summary ====
+req_7 POST https://auth.trove.ing/rpc/households/listMine
+State: completed 500
+Type: Other
+Duration: 489ms
+Transfer size: 104B
+Available: req-headers:yes res-headers:yes req-body:yes res-body:yes
+==== req_8 body ====
+{"json":{"defined":false,"code":"INTERNAL_SERVER_ERROR","status":500,"message":"Internal server error"}}
+==== req_8 summary ====
+req_8 POST https://auth.trove.ing/rpc/households/listMine
+State: completed 500
+Type: Other
+Duration: 317ms
+Transfer size: 104B
+Available: req-headers:yes res-headers:yes req-body:yes res-body:yes

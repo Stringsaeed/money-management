@@ -1,0 +1,4 @@
+Error (COMMAND_FAILED): Ref @e12 needs a complete snapshot — the current frame only authorizes its emitted refs
+Hint: Capture a fresh interactive snapshot (snapshot -i) or use a stable selector, then retry.
+Diagnostic ID: mtxnlndb-6fd7fddc
+Diagnostics Log: /Users/saeed/.agent-device/sessions/issue-232/requests/d6590082015987e6.ndjson

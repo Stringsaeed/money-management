@@ -1,0 +1,2 @@
+req_2  POST  500  Other  639ms  104B  https://auth.trove.ing/rpc/migration/getManifest
+req_1  POST  200  Other  533ms  1.3KB  https://api.workos.com/user_management/authenticate
