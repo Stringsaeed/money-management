@@ -1,0 +1,33 @@
+Page: com.stringsaeed.moneymanagement
+App: com.stringsaeed.moneymanagement
+Snapshot: 29 visible nodes (30 total)
+@e1 [application] "Trove (Dev)"
+@e2 [other] "gearshape.fill"
+@e3 [image] "gearshape.fill"
+@e4 [other] "Profile"
+@e5 [navigation-bar] "Profile"
+@e6 [scroll-area] "stringsaeed@gmail.com" [scrollable]
+  [content below scroll-area hidden]
+@e7 [other] "stringsaeed@gmail.com"
+@e8 [other] "Sign out"
+@e9 [button] "Sign out"
+@e10 [text] "LEDGER"
+@e11 [other] "Personal ✓"
+@e12 [button] "Personal ✓"
+@e13 [other] "The Saeeds · admin"
+@e14 [button] "The Saeeds · admin"
+@e15 [text] "Upload to your cloud? ☁️"
+@e16 [text] "Your personal cloud is empty and this device has local accounts and transactions. Confirm once to copy them up — sign-in alone never uploads. Your on-device ledger stays here for local-only use anytime."
+@e17 [button] "Upload once to cloud"
+@e18 [button] "Not now"
+@e19 [text] "Create a Household"
+@e20 [text] "Start a shared space — family accounts, budgets, and reports in one place."
+@e21 [text-field] [editable]
+@e22 [other] "🏠 Create household"
+@e24 [other] "Ledger"
+@e25 [button]
+@e26 [button] "Ledger"
+@e27 [button] "Inbox"
+@e28 [button] "Envelopes"
+@e29 [button] "Settings" [selected]
+@e30 [button] "Create transaction"

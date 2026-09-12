@@ -1,0 +1,36 @@
+Page: com.stringsaeed.moneymanagement
+App: com.stringsaeed.moneymanagement
+Snapshot: 32 visible nodes
+@e1 [application] "Trove (Dev)"
+@e2 [other] "gearshape.fill"
+@e3 [image] "gearshape.fill"
+@e4 [navigation-bar] "Settings"
+@e5 [button] "Settings"
+@e6 [text] "Profile"
+@e7 [scroll-area] "stringsaeed@gmail.com" [scrollable]
+  [content below scroll-area hidden]
+@e8 [other] "stringsaeed@gmail.com"
+@e9 [other] "Sign out"
+@e10 [button] "Sign out"
+@e11 [text] "LEDGER"
+@e12 [other] "Personal ✓"
+@e13 [button] "Personal ✓"
+@e14 [other] "The Saeeds · admin"
+@e15 [button] "The Saeeds · admin"
+@e16 [text] "🪪 Your personal ledger syncs"
+@e17 [text] "Accounts, categories, and transactions follow you to every device you sign in on."
+@e18 [text] "Create a Household"
+@e19 [text] "Start a shared space — family accounts, budgets, and reports in one place."
+@e20 [text-field] [editable]
+@e21 [other] "🏠 Create household"
+@e22 [button] "🏠 Create household" [disabled]
+@e23 [text] "Join a Household"
+@e24 [text] "Accept the WorkOS invitation email (hosted AuthKit). Custom invite codes are gone — joining never moves your Personal ledger into the shared one."
+@e25 [other] "Ledger"
+@e26 [button]
+@e27 [button] "Ledger"
+@e28 [button] "Money Movement"
+@e29 [button] "Inbox"
+@e30 [button] "Envelopes"
+@e31 [button] "Settings" [selected]
+@e32 [button] "Create account"
