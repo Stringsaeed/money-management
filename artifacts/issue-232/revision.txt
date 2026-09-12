@@ -51,3 +51,4 @@ budget_period_of_jest=PASS 3/3 product=305f12e
 date_after_jest=PASS 3/3 product=c72546e
 settlement_effects_jest=PASS 2/2 product=808deb0
 format_activity_full_timestamp_jest=PASS 2/2 new suite=12/12 product=fe4c6bd
+pending_lifecycle_settlement_jest=PASS 4/4 product=056faf4
