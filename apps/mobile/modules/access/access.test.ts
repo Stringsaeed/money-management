@@ -417,6 +417,39 @@ describe("selectLedgerSourceForAccess", () => {
       userId: "user-1",
     });
   });
+
+  it("marks the migrated ledger offline_cached when sync mode is kill_switch local_only", () => {
+    expect(
+      selectLedgerSourceForAccess(signedInActive, migratedTo("hh-1"), "local_only", "kill_switch"),
+    ).toEqual({
+      kind: "synced",
+      ledger: householdLedgerBinding("hh-1"),
+      userId: "user-1",
+      offlineState: {
+        kind: "offline_cached",
+        reason: "Sync is temporarily unavailable.",
+      },
+    });
+  });
+
+  it("marks the migrated ledger offline_cached when sync mode is powersync local_only", () => {
+    expect(
+      selectLedgerSourceForAccess(
+        signedInActive,
+        migratedTo("hh-1"),
+        "local_only",
+        "powersync_unavailable",
+      ),
+    ).toEqual({
+      kind: "synced",
+      ledger: householdLedgerBinding("hh-1"),
+      userId: "user-1",
+      offlineState: {
+        kind: "offline_cached",
+        reason: "PowerSync has been disconnected for over 10 minutes.",
+      },
+    });
+  });
 });
 
 describe("householdReadFromQuery", () => {
