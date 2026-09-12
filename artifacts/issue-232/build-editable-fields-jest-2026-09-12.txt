@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/rejected-changes/build-editable-fields.test.ts
+PASS components/rejected-changes/build-editable-fields.test.ts
+  buildEditableFields
+    ✓ lists top-level scalars and skips readonly or nested entries (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.963 s
+Ran all test suites matching /components\/rejected-changes\/build-editable-fields.test.ts/i.
