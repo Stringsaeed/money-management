@@ -1,0 +1,10 @@
+PASS path: components/banner/banner-channel.test.ts
+PASS components/banner/banner-channel.test.ts
+  SUCCESS_TOAST_MS
+    ✓ locks the success toast duration to five seconds (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.992 s
+Ran all test suites matching /components\/banner\/banner-channel.test.ts/i.
