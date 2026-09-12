@@ -1,6 +1,6 @@
 branch=cursor/workos-certify-migration-b3d1
 product_tip=bc2db55
-gap=packages/api admin-guard canDropAdmin + commands/capabilities can/requiredCapability + require-member tenancy gates
+gap=packages/api canDropAdmin + can/requiredCapability + requireHouseholdMember/requireLedgerAccess/resolveReadLedgerId
 matrix_row=4/5 server role capability + last-admin + ledger tenancy
 command=pnpm exec vitest run src/lib/households/admin-guard.test.ts src/lib/commands/capabilities.test.ts src/lib/require-member.test.ts
 result=PASS 17/17
