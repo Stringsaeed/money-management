@@ -1,0 +1,10 @@
+PASS path: apps/mobile/hooks/normalize-free-crypto-quotes.test.ts
+PASS hooks/normalize-free-crypto-quotes.test.ts
+  normalizeFreeCryptoQuotes
+    ✓ pulls quote objects from symbols/data/result array or singleton shapes (11 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.981 s
+Ran all test suites matching /hooks\/normalize-free-crypto-quotes.test.ts/i.
