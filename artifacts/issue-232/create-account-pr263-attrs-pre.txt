@@ -1,0 +1,8 @@
+identifier=create-resource-submit
+enabled=true
+hittable=true
+rect={x:35.33333206176758,y:730.3333530426025,w:332,h:42}
+center=(201,751)
+label=Create Account
+name=RT Checking 1789235362
+tip=150cb4894e9e3e237f1ce29029e47747f4dc2e30
