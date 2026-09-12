@@ -1,0 +1,987 @@
+{
+  "success": true,
+  "data": {
+    "nodes": [
+      {
+        "index": 0,
+        "rect": {
+          "x": 0,
+          "width": 402,
+          "y": 0,
+          "height": 874
+        },
+        "label": "Trove (Dev)",
+        "depth": 0,
+        "hittable": true,
+        "enabled": true,
+        "type": "Application",
+        "ref": "e1"
+      },
+      {
+        "index": 1,
+        "rect": {
+          "x": 0,
+          "width": 402,
+          "y": 0,
+          "height": 874
+        },
+        "label": "gearshape.fill",
+        "depth": 1,
+        "hittable": true,
+        "enabled": true,
+        "type": "Other",
+        "parentIndex": 0,
+        "ref": "e2"
+      },
+      {
+        "index": 2,
+        "rect": {
+          "x": 348,
+          "width": 26,
+          "y": 403.66666666666663,
+          "height": 26
+        },
+        "label": "gearshape.fill",
+        "identifier": "gearshape.fill",
+        "hittable": true,
+        "depth": 2,
+        "enabled": true,
+        "type": "Image",
+        "parentIndex": 1,
+        "ref": "e3"
+      },
+      {
+        "index": 3,
+        "rect": {
+          "x": 0,
+          "width": 402,
+          "y": 62,
+          "height": 54
+        },
+        "label": "(tabs)",
+        "identifier": "Accounts",
+        "hittable": false,
+        "depth": 2,
+        "enabled": true,
+        "type": "NavigationBar",
+        "parentIndex": 0,
+        "ref": "e4"
+      },
+      {
+        "index": 4,
+        "rect": {
+          "x": 16,
+          "width": 44,
+          "y": 62,
+          "height": 44
+        },
+        "label": "(tabs)",
+        "identifier": "BackButton",
+        "hittable": false,
+        "depth": 3,
+        "enabled": true,
+        "type": "Button",
+        "parentIndex": 3,
+        "ref": "e5"
+      },
+      {
+        "index": 5,
+        "rect": {
+          "x": 165.66666666666666,
+          "width": 70.66666666666666,
+          "y": 72.33333333333334,
+          "height": 23.33333333333333
+        },
+        "label": "Accounts",
+        "depth": 3,
+        "hittable": false,
+        "enabled": true,
+        "type": "StaticText",
+        "parentIndex": 3,
+        "ref": "e6"
+      },
+      {
+        "index": 6,
+        "rect": {
+          "x": 0,
+          "width": 402,
+          "y": 116,
+          "height": 696
+        },
+        "label": "No accounts yet",
+        "depth": 4,
+        "hittable": false,
+        "enabled": true,
+        "type": "ScrollView",
+        "parentIndex": 0,
+        "hiddenContentBelow": true,
+        "ref": "e7"
+      },
+      {
+        "index": 7,
+        "rect": {
+          "x": 0,
+          "width": 402,
+          "y": 116,
+          "height": 394.3333435058594
+        },
+        "label": "No accounts yet",
+        "depth": 5,
+        "hittable": false,
+        "enabled": true,
+        "type": "Other",
+        "parentIndex": 6,
+        "ref": "e8"
+      },
+      {
+        "index": 8,
+        "rect": {
+          "x": 79,
+          "width": 243.66665649414062,
+          "y": 293,
+          "height": 15.333328247070312
+        },
+        "label": "Tap the + button to add your first account.",
+        "depth": 6,
+        "hittable": false,
+        "enabled": true,
+        "type": "StaticText",
+        "parentIndex": 7,
+        "ref": "e9"
+      },
+      {
+        "index": 9,
+        "rect": {
+          "x": 335.6666564941406,
+          "width": 49,
+          "y": 797,
+          "height": 49
+        },
+        "depth": 3,
+        "hittable": false,
+        "enabled": true,
+        "type": "Button",
+        "parentIndex": 0,
+        "ref": "e10"
+      },
+      {
+        "index": 10,
+        "rect": {
+          "height": 812,
+          "y": 62,
+          "width": 402,
+          "x": 0
+        },
+        "label": "Close",
+        "depth": 3,
+        "hittable": false,
+        "enabled": true,
+        "type": "Other",
+        "parentIndex": 0,
+        "ref": "e11"
+      },
+      {
+        "depth": 5,
+        "parentIndex": 10,
+        "enabled": true,
+        "hittable": false,
+        "rect": {
+          "height": 35,
+          "y": 72.6666669845581,
+          "width": 35,
+          "x": 24.666666984558105
+        },
+        "type": "Button",
+        "label": "Close",
+        "index": 11,
+        "ref": "e12"
+      },
+      {
+        "depth": 5,
+        "parentIndex": 10,
+        "enabled": true,
+        "hittable": false,
+        "rect": {
+          "height": 24.666664123535156,
+          "y": 77.6666669845581,
+          "width": 283,
+          "x": 59.33333206176758
+        },
+        "type": "StaticText",
+        "label": "Add Account",
+        "index": 12,
+        "ref": "e13"
+      },
+      {
+        "depth": 5,
+        "parentIndex": 10,
+        "enabled": true,
+        "hittable": false,
+        "rect": {
+          "height": 652,
+          "y": 118,
+          "width": 374,
+          "x": 14
+        },
+        "type": "Other",
+        "label": "Name",
+        "index": 13,
+        "ref": "e14"
+      },
+      {
+        "depth": 6,
+        "parentIndex": 13,
+        "enabled": true,
+        "hittable": false,
+        "rect": {
+          "height": 652,
+          "y": 118,
+          "width": 374,
+          "x": 14
+        },
+        "type": "ScrollView",
+        "label": "$0.00",
+        "index": 14,
+        "hiddenContentBelow": true,
+        "ref": "e15"
+      },
+      {
+        "depth": 7,
+        "parentIndex": 14,
+        "enabled": true,
+        "hittable": false,
+        "rect": {
+          "height": 610.6666870117188,
+          "y": 118,
+          "width": 374,
+          "x": 14
+        },
+        "type": "Other",
+        "label": "💳",
+        "index": 15,
+        "ref": "e16"
+      },
+      {
+        "depth": 9,
+        "parentIndex": 15,
+        "enabled": true,
+        "hittable": false,
+        "rect": {
+          "height": 21,
+          "y": 145.3333330154419,
+          "width": 219.33334350585938,
+          "x": 88.66666603088379
+        },
+        "type": "Other",
+        "label": "RT Checking rt-073109",
+        "index": 16,
+        "ref": "e17"
+      },
+      {
+        "depth": 9,
+        "parentIndex": 15,
+        "enabled": true,
+        "hittable": false,
+        "rect": {
+          "height": 21,
+          "y": 154,
+          "width": 37,
+          "x": 318.6666660308838
+        },
+        "type": "StaticText",
+        "label": "$0.00",
+        "index": 17,
+        "ref": "e18"
+      },
+      {
+        "depth": 9,
+        "parentIndex": 15,
+        "enabled": true,
+        "hittable": false,
+        "rect": {
+          "height": 16,
+          "y": 167.99999904632568,
+          "width": 219.66665649414062,
+          "x": 88.66666603088379
+        },
+        "type": "StaticText",
+        "label": "Checking · USD",
+        "index": 18,
+        "ref": "e19"
+      },
+      {
+        "index": 19,
+        "depth": 9,
+        "parentIndex": 15,
+        "enabled": true,
+        "hittable": false,
+        "rect": {
+          "height": 54,
+          "y": 234.66666984558105,
+          "width": 337,
+          "x": 32.66666603088379
+        },
+        "type": "TextField",
+        "label": "RT Checking rt-073109",
+        "value": "RT Checking rt-073109",
+        "ref": "e20"
+      },
+      {
+        "depth": 8,
+        "parentIndex": 15,
+        "enabled": true,
+        "hittable": false,
+        "rect": {
+          "height": 15.333343505859375,
+          "y": 307.33333587646484,
+          "width": 339,
+          "x": 31.66666603088379
+        },
+        "type": "StaticText",
+        "label": "Starting balance",
+        "index": 20,
+        "ref": "e21"
+      },
+      {
+        "depth": 8,
+        "enabled": true,
+        "hittable": false,
+        "rect": {
+          "height": 54,
+          "y": 330.66666984558105,
+          "width": 258,
+          "x": 32.66666603088379
+        },
+        "type": "TextField",
+        "parentIndex": 15,
+        "index": 21,
+        "ref": "e22"
+      },
+      {
+        "label": "Selected currency USD, USD",
+        "depth": 8,
+        "parentIndex": 15,
+        "enabled": true,
+        "hittable": false,
+        "rect": {
+          "height": 44,
+          "y": 329.66666984558105,
+          "width": 72,
+          "x": 298.6666660308838
+        },
+        "type": "Button",
+        "identifier": "account-currency-trigger",
+        "index": 22,
+        "ref": "e23"
+      },
+      {
+        "depth": 8,
+        "parentIndex": 15,
+        "enabled": true,
+        "hittable": false,
+        "rect": {
+          "height": 15.333343505859375,
+          "y": 403.00000762939453,
+          "width": 339,
+          "x": 31.66666603088379
+        },
+        "type": "StaticText",
+        "label": "Account type",
+        "index": 23,
+        "ref": "e24"
+      },
+      {
+        "parentIndex": 15,
+        "index": 24,
+        "label": "💳, Checking",
+        "type": "ScrollView",
+        "hittable": false,
+        "rect": {
+          "height": 31.333333333333314,
+          "y": 425.33334159851074,
+          "width": 374,
+          "x": 14.333332061767578
+        },
+        "depth": 9,
+        "enabled": true,
+        "hiddenContentBelow": true,
+        "ref": "e25"
+      },
+      {
+        "parentIndex": 24,
+        "index": 25,
+        "label": "💳, Checking",
+        "type": "Other",
+        "hittable": false,
+        "rect": {
+          "height": 31.33331298828125,
+          "y": 425.33334159851074,
+          "width": 673.3333129882812,
+          "x": 14.333332061767578
+        },
+        "depth": 10,
+        "enabled": true,
+        "ref": "e26"
+      },
+      {
+        "parentIndex": 25,
+        "index": 26,
+        "label": "🏦, Savings",
+        "type": "Other",
+        "hittable": false,
+        "rect": {
+          "height": 31.33331298828125,
+          "y": 425.33334159851074,
+          "width": 97.33332824707031,
+          "x": 144.33333206176758
+        },
+        "depth": 11,
+        "enabled": true,
+        "ref": "e27"
+      },
+      {
+        "parentIndex": 25,
+        "index": 27,
+        "label": "💵, Cash",
+        "type": "Other",
+        "hittable": false,
+        "rect": {
+          "height": 31.33331298828125,
+          "y": 425.33334159851074,
+          "width": 80.00001525878906,
+          "x": 248.6666603088379
+        },
+        "depth": 11,
+        "enabled": true,
+        "ref": "e28"
+      },
+      {
+        "parentIndex": 25,
+        "index": 28,
+        "label": "💳, Credit Card",
+        "type": "Other",
+        "hittable": false,
+        "rect": {
+          "height": 31.33331298828125,
+          "y": 425.33334159851074,
+          "width": 118.66665649414062,
+          "x": 335.66667556762695
+        },
+        "depth": 11,
+        "enabled": true,
+        "ref": "e29"
+      },
+      {
+        "parentIndex": 15,
+        "index": 29,
+        "label": "Icon",
+        "type": "StaticText",
+        "hittable": false,
+        "rect": {
+          "height": 15.333343505859375,
+          "y": 474.33333587646484,
+          "width": 339,
+          "x": 31.66666603088379
+        },
+        "depth": 8,
+        "enabled": true,
+        "ref": "e30"
+      },
+      {
+        "parentIndex": 15,
+        "selected": true,
+        "index": 30,
+        "label": "Emoji 💳",
+        "type": "Button",
+        "hittable": false,
+        "rect": {
+          "height": 35,
+          "y": 500.3333365917206,
+          "width": 35,
+          "x": 31.66666603088379
+        },
+        "depth": 8,
+        "enabled": true,
+        "ref": "e31"
+      },
+      {
+        "parentIndex": 15,
+        "index": 31,
+        "label": "Emoji 🏦",
+        "type": "Button",
+        "hittable": false,
+        "rect": {
+          "x": 73.66666603088379,
+          "y": 500.3333365917206,
+          "height": 35,
+          "width": 35
+        },
+        "depth": 8,
+        "enabled": true,
+        "ref": "e32"
+      },
+      {
+        "parentIndex": 15,
+        "index": 32,
+        "label": "Emoji 💵",
+        "type": "Button",
+        "hittable": false,
+        "rect": {
+          "x": 115.66666603088379,
+          "width": 35.00000762939453,
+          "y": 500.3333365917206,
+          "height": 35
+        },
+        "depth": 8,
+        "enabled": true,
+        "ref": "e33"
+      },
+      {
+        "parentIndex": 15,
+        "index": 33,
+        "label": "Emoji 💰",
+        "type": "Button",
+        "hittable": false,
+        "rect": {
+          "width": 35,
+          "height": 35,
+          "x": 157.6666660308838,
+          "y": 500.3333365917206
+        },
+        "depth": 8,
+        "enabled": true,
+        "ref": "e34"
+      },
+      {
+        "parentIndex": 15,
+        "index": 34,
+        "label": "Emoji 📈",
+        "type": "Button",
+        "hittable": false,
+        "rect": {
+          "width": 35,
+          "height": 35,
+          "x": 199.6666660308838,
+          "y": 500.3333365917206
+        },
+        "depth": 8,
+        "enabled": true,
+        "ref": "e35"
+      },
+      {
+        "parentIndex": 15,
+        "index": 35,
+        "label": "Emoji 🏧",
+        "type": "Button",
+        "hittable": false,
+        "rect": {
+          "width": 34.99998474121094,
+          "height": 35,
+          "x": 241.6666660308838,
+          "y": 500.3333365917206
+        },
+        "depth": 8,
+        "enabled": true,
+        "ref": "e36"
+      },
+      {
+        "parentIndex": 15,
+        "index": 36,
+        "label": "Emoji 💸",
+        "type": "Button",
+        "hittable": false,
+        "rect": {
+          "width": 35,
+          "height": 35,
+          "x": 283.6666660308838,
+          "y": 500.3333365917206
+        },
+        "depth": 8,
+        "enabled": true,
+        "ref": "e37"
+      },
+      {
+        "parentIndex": 15,
+        "index": 37,
+        "label": "Emoji 🪙",
+        "type": "Button",
+        "hittable": false,
+        "rect": {
+          "width": 35,
+          "height": 35,
+          "x": 325.6666660308838,
+          "y": 500.3333365917206
+        },
+        "depth": 8,
+        "enabled": true,
+        "ref": "e38"
+      },
+      {
+        "parentIndex": 15,
+        "index": 38,
+        "label": "Emoji 💴",
+        "type": "Button",
+        "hittable": false,
+        "rect": {
+          "width": 35,
+          "height": 35,
+          "x": 31.66666603088379,
+          "y": 542.3333377838135
+        },
+        "depth": 8,
+        "enabled": true,
+        "ref": "e39"
+      },
+      {
+        "parentIndex": 15,
+        "index": 39,
+        "label": "Emoji 💶",
+        "type": "Button",
+        "hittable": false,
+        "rect": {
+          "width": 35,
+          "height": 35,
+          "x": 73.66666603088379,
+          "y": 542.3333377838135
+        },
+        "depth": 8,
+        "enabled": true,
+        "ref": "e40"
+      },
+      {
+        "parentIndex": 15,
+        "index": 40,
+        "label": "Emoji 💷",
+        "type": "Button",
+        "hittable": false,
+        "rect": {
+          "width": 35.00000762939453,
+          "height": 35,
+          "x": 115.66666603088379,
+          "y": 542.3333377838135
+        },
+        "depth": 8,
+        "enabled": true,
+        "ref": "e41"
+      },
+      {
+        "parentIndex": 15,
+        "index": 41,
+        "label": "Emoji 💎",
+        "type": "Button",
+        "hittable": false,
+        "rect": {
+          "width": 35,
+          "height": 35,
+          "x": 157.6666660308838,
+          "y": 542.3333377838135
+        },
+        "depth": 8,
+        "enabled": true,
+        "ref": "e42"
+      },
+      {
+        "parentIndex": 15,
+        "index": 42,
+        "label": "Emoji 🏠",
+        "type": "Button",
+        "hittable": false,
+        "rect": {
+          "width": 35,
+          "height": 35,
+          "x": 199.6666660308838,
+          "y": 542.3333377838135
+        },
+        "depth": 8,
+        "enabled": true,
+        "ref": "e43"
+      },
+      {
+        "label": "Emoji 🚗",
+        "hittable": false,
+        "depth": 8,
+        "type": "Button",
+        "parentIndex": 15,
+        "enabled": true,
+        "rect": {
+          "width": 34.99998474121094,
+          "height": 35,
+          "x": 241.6666660308838,
+          "y": 542.3333377838135
+        },
+        "index": 43,
+        "ref": "e44"
+      },
+      {
+        "label": "Emoji ✈️",
+        "hittable": false,
+        "depth": 8,
+        "type": "Button",
+        "parentIndex": 15,
+        "enabled": true,
+        "rect": {
+          "width": 35,
+          "height": 35,
+          "x": 283.6666660308838,
+          "y": 542.3333377838135
+        },
+        "index": 44,
+        "ref": "e45"
+      },
+      {
+        "label": "Emoji 📱",
+        "hittable": false,
+        "depth": 8,
+        "type": "Button",
+        "parentIndex": 15,
+        "enabled": true,
+        "rect": {
+          "width": 35,
+          "height": 35,
+          "x": 325.6666660308838,
+          "y": 542.3333377838135
+        },
+        "index": 45,
+        "ref": "e46"
+      },
+      {
+        "label": "Emoji 💼",
+        "hittable": false,
+        "depth": 8,
+        "type": "Button",
+        "parentIndex": 15,
+        "enabled": true,
+        "rect": {
+          "width": 35,
+          "height": 35,
+          "x": 31.66666603088379,
+          "y": 584.3333339691162
+        },
+        "index": 46,
+        "ref": "e47"
+      },
+      {
+        "label": "Emoji 📊",
+        "hittable": false,
+        "depth": 8,
+        "type": "Button",
+        "parentIndex": 15,
+        "enabled": true,
+        "rect": {
+          "width": 35,
+          "height": 35,
+          "x": 73.66666603088379,
+          "y": 584.3333339691162
+        },
+        "index": 47,
+        "ref": "e48"
+      },
+      {
+        "label": "Emoji 🔐",
+        "hittable": false,
+        "depth": 8,
+        "type": "Button",
+        "parentIndex": 15,
+        "enabled": true,
+        "rect": {
+          "width": 35.00000762939453,
+          "height": 35,
+          "x": 115.66666603088379,
+          "y": 584.3333339691162
+        },
+        "index": 48,
+        "ref": "e49"
+      },
+      {
+        "label": "Emoji ✨",
+        "hittable": false,
+        "depth": 8,
+        "type": "Button",
+        "parentIndex": 15,
+        "enabled": true,
+        "rect": {
+          "width": 35,
+          "height": 35,
+          "x": 157.6666660308838,
+          "y": 584.3333339691162
+        },
+        "index": 49,
+        "ref": "e50"
+      },
+      {
+        "label": "Accent",
+        "hittable": false,
+        "depth": 8,
+        "type": "StaticText",
+        "parentIndex": 15,
+        "enabled": true,
+        "rect": {
+          "width": 339,
+          "height": 15.33331298828125,
+          "x": 31.66666603088379,
+          "y": 639.9999923706055
+        },
+        "index": 50,
+        "ref": "e51"
+      },
+      {
+        "label": "Color #8E44AD",
+        "hittable": false,
+        "depth": 8,
+        "type": "Button",
+        "parentIndex": 15,
+        "enabled": true,
+        "rect": {
+          "width": 31.33333396911621,
+          "height": 31.6666259765625,
+          "x": 31.66666603088379,
+          "y": 665.9999930858612
+        },
+        "index": 51,
+        "ref": "e52"
+      },
+      {
+        "label": "Color #3498DB",
+        "hittable": false,
+        "depth": 8,
+        "type": "Button",
+        "parentIndex": 15,
+        "enabled": true,
+        "rect": {
+          "width": 31.666671752929688,
+          "height": 31.6666259765625,
+          "x": 71.99999809265137,
+          "y": 665.9999930858612
+        },
+        "index": 52,
+        "ref": "e53"
+      },
+      {
+        "label": "Color #D62728",
+        "hittable": false,
+        "depth": 8,
+        "type": "Button",
+        "parentIndex": 15,
+        "enabled": true,
+        "rect": {
+          "width": 31.666671752929688,
+          "height": 31.6666259765625,
+          "x": 112.33333015441895,
+          "y": 665.9999930858612
+        },
+        "index": 53,
+        "ref": "e54"
+      },
+      {
+        "label": "Color #D35400",
+        "hittable": false,
+        "depth": 8,
+        "type": "Button",
+        "parentIndex": 15,
+        "enabled": true,
+        "rect": {
+          "width": 31.333343505859375,
+          "height": 31.6666259765625,
+          "x": 152.33333015441895,
+          "y": 665.9999930858612
+        },
+        "index": 54,
+        "ref": "e55"
+      },
+      {
+        "label": "Color #4A90D9",
+        "selected": true,
+        "hittable": false,
+        "depth": 8,
+        "type": "Button",
+        "parentIndex": 15,
+        "enabled": true,
+        "rect": {
+          "width": 31.333328247070312,
+          "height": 31.6666259765625,
+          "x": 192.6666660308838,
+          "y": 665.9999930858612
+        },
+        "index": 55,
+        "ref": "e56"
+      },
+      {
+        "label": "Color #2ECC71",
+        "hittable": false,
+        "depth": 8,
+        "type": "Button",
+        "parentIndex": 15,
+        "enabled": true,
+        "rect": {
+          "width": 31.666671752929688,
+          "height": 31.6666259765625,
+          "x": 232.9999942779541,
+          "y": 665.9999930858612
+        },
+        "index": 56,
+        "ref": "e57"
+      },
+      {
+        "label": "Color #F1C40F",
+        "hittable": false,
+        "depth": 8,
+        "type": "Button",
+        "parentIndex": 15,
+        "enabled": true,
+        "rect": {
+          "width": 31.666656494140625,
+          "height": 31.6666259765625,
+          "x": 273.3333377838135,
+          "y": 665.9999930858612
+        },
+        "index": 57,
+        "ref": "e58"
+      },
+      {
+        "label": "Create Account",
+        "hittable": false,
+        "depth": 5,
+        "type": "Button",
+        "parentIndex": 10,
+        "enabled": true,
+        "rect": {
+          "width": 339,
+          "height": 35,
+          "x": 31.66666603088379,
+          "y": 787.6666660308838
+        },
+        "index": 58,
+        "ref": "e59"
+      }
+    ],
+    "truncated": false,
+    "appName": "com.stringsaeed.moneymanagement",
+    "appBundleId": "com.stringsaeed.moneymanagement",
+    "visibility": {
+      "partial": true,
+      "visibleNodeCount": 59,
+      "totalNodeCount": 59,
+      "reasons": [
+        "scroll-hidden-below"
+      ]
+    },
+    "snapshotQuality": {
+      "state": "healthy",
+      "backend": "tree"
+    },
+    "snapshotDiagnostics": {
+      "stats": {
+        "count": 202,
+        "p50Ms": 152,
+        "p95Ms": 270,
+        "maxMs": 1458,
+        "slowThresholdMs": 1500,
+        "platform": "ios",
+        "backends": {
+          "xctest": 202
+        }
+      }
+    },
+    "refsGeneration": 823997
+  }
+}
