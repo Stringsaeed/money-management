@@ -1,0 +1,41 @@
+date_utc=2026-09-12T02:35:00Z
+agent=cert-api-matrix (non-device)
+worker=money-management-server-prod-mfhkibosfd6z5ym5
+live_api=https://auth.trove.ing
+health=GET / -> 200 OK
+relates=#232 only
+closes=none
+certified=false
+stim=not_used
+device=not_used
+
+# --- getManifest (window 2026-09-12T01:20:00Z .. 01:45:00Z) ---
+cf_query=calculations groupBy $metadata.message includes getManifest
+cf_result_lines=
+  POST https://auth.trove.ing/rpc/migration/getManifest = 2
+  <-- POST /rpc/migration/getManifest = 2
+  --> POST /rpc/migration/getManifest 200 216ms = 1
+  --> POST /rpc/migration/getManifest 200 412ms = 1
+verdict=PASS
+
+# --- listMine post-#250 (window 2026-09-12T01:00:00Z .. 01:10:00Z) ---
+cf_query=calculations groupBy $metadata.message includes /rpc/households/listMine
+cf_result_lines=
+  <-- POST /rpc/households/listMine = 6
+  POST https://auth.trove.ing/rpc/households/listMine = 7
+  --> POST /rpc/households/listMine 200 (37ms..141ms) = 7 distinct 200 response lines (no 500 in this window)
+verdict=PASS (matches post-250-listmine-pass.txt HTTP 200 {"json":[]})
+
+# --- claim_iss historical FAIL then cleared ---
+cf_query_pre=#246 window 2026-09-11T23:00:00Z .. 2026-09-12T00:30:00Z
+cf_result_pre=
+  access_token_verify_failed code=claim_iss hasAud=false hasClientId=true payloadDecoded=true = 22
+  orpc_error code=UNAUTHORIZED message=Unauthorized (claim_iss) = 22
+cf_query_post=2026-09-12T00:00:00Z .. 02:30:00Z includes claim_iss
+cf_result_post=count 0
+verdict=PASS path cleared post-#246 Deploy Worker 34659057570 (5899747)
+
+# --- env note for this agent ---
+local_CLOUDFLARE_API_TOKEN=absent
+cf_observability_mcp=ready (used for counts above)
+powersync_planetscale_mint_envs=absent (out of scope; rows 6/8 remain BLOCKED)

@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip after post-schema getManifest PASS (CF 200 + iPhone 17 Pro UI; docs on certify branch) |
+| HEAD | tip after non-device API matrix Relates docs (`api-matrix-non-device.md`, CF re-query 2026-09-12) |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK**; Sync `getManifest` CF Worker **200** post-DDL |
@@ -28,6 +28,16 @@ Report implementation, automated verification, runtime verification, and publica
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
 Recorded in `revision.txt` / `post-schema-sync-retest.md`.
+
+## Non-device API matrix Relates (2026-09-12, no iPhone)
+
+- Cloudflare Observability re-query on `money-management-server-prod-mfhkibosfd6z5ym5` corroborates:
+  - `claim_iss`: **22** failures pre-#246 window; **0** after 00:00Z Sep 12 → JWT issuer path **PASS**
+  - `households/listMine`: **7** `200` responses in 01:00–01:10Z (no 500 in window) → **PASS**
+  - `migration/getManifest`: `200` at 216ms and 412ms in 01:20–01:45Z → **PASS**
+- Isolation/deletion/PowerSync stream seams remain **PARTIAL** (automated suites only; live isolation not evidenced).
+- iOS OTP AX: durable **BLOCKER** note for owner — `ios-otp-ax-blocker.md` (not a fake PASS).
+- Evidence: `api-matrix-non-device.md`, `cf-api-corroboration-2026-09-12.txt`. Relates to #232 only. Matrix still incomplete.
 
 ## Post-schema Sync retest (2026-09-12, schema 0011–0015)
 
@@ -164,7 +174,7 @@ A row is complete only when every required sub-criterion is `PASS` (or an explic
 
 **Row status: `PARTIAL` (cancel PASS; email challenge PARTIAL; OTP/callback hard-stopped; JWT verify PASS; `listMine` PASS; `getManifest` PASS post-DDL). Full row-2 still incomplete (OTP/Android/session rows).**
 
-Notes: OTP automation blocked by AuthKit webview AX (not an env-name blocker). Client ids **EQUAL**. JWT issuer accept **PASS** (#246). `listMine` **FAIL** (user upsert 500; DB fix owned elsewhere). Still BLOCKED for live PowerSync/PlanetScale mint: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`) — `env-hardstop-absent.txt`. `WORKOS_WEBHOOK_SECRET` **present** locally (value omitted) — live webhook apply still not evidenced.
+Notes: OTP automation blocked by AuthKit webview AX (not an env-name blocker) — durable owner note `ios-otp-ax-blocker.md`. Client ids **EQUAL**. JWT issuer accept **PASS** (#246). `listMine` **PASS** (post-#250; CF re-query in `cf-api-corroboration-2026-09-12.txt` / `api-matrix-non-device.md`). Still BLOCKED for live PowerSync/PlanetScale mint: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`) — `env-hardstop-absent.txt`. `WORKOS_WEBHOOK_SECRET` **present** locally (value omitted) — live webhook apply still not evidenced.
 
 Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_REDIRECT_URI`, `WORKOS_CLAIM_TOKEN`, `WORKOS_COOKIE_PASSWORD`, `EXPO_PUBLIC_WORKOS_CLIENT_ID`, `EXPO_PUBLIC_WORKOS_REDIRECT_URI`, `EXPO_PUBLIC_SERVER_URL`.
 
@@ -368,6 +378,9 @@ stim start --json  # -> stim-start.json (port 8083)
 | File | What it is |
 | --- | --- |
 | `acceptance-matrix.md` | This matrix. |
+| `api-matrix-non-device.md` | Non-device Relates summary: listMine / getManifest / claim_iss PASS + isolation PARTIAL + blocked rows. |
+| `cf-api-corroboration-2026-09-12.txt` | CF Observability re-query stamp (counts only; no secrets). |
+| `ios-otp-ax-blocker.md` | Durable iOS OTP AX **BLOCKER** for owner decision (not a PASS). |
 | `post-schema-sync-retest.md` | Post-DDL 0011–0015 getManifest **PASS** (CF Worker 200 citations). |
 | `revision.txt` | Earlier revision stamp. |
 | `authkit-live-write.txt` | This AuthKit write stamp (HEAD, #242 note, OTP hard-stop). |
