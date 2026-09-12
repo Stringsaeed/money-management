@@ -6,6 +6,8 @@ import {
   assertSupportedAccountUpdate,
   assertSupportedTransactionUpdate,
   calculateSyncedBalance,
+  mapSyncedAccount,
+  type SyncedAccount,
   type SyncedTransaction,
 } from "./synced-mappers";
 
@@ -177,5 +179,66 @@ describe("assertSupportedTransactionUpdate", () => {
     expect(() => assertSupportedTransactionUpdate({ recurringRuleId: "rule-1" })).toThrow(
       /Edit only type, amount, date, Account, Category, or description/,
     );
+  });
+});
+
+const syncedAccount = (overrides: Record<string, unknown> = {}): SyncedAccount =>
+  ({
+    id: "acct-a",
+    name: "Checking",
+    type: "bank",
+    currency: "USD",
+    color: "#000000",
+    icon: "banknote.fill",
+    initialBalanceMinor: 2500,
+    excludeFromTotal: false,
+    sortOrder: 1,
+    lifecycle: "active",
+    lifecycleChangedAt: null,
+    createdAt: TIMESTAMP,
+    updatedAt: TIMESTAMP,
+    ...overrides,
+  }) as SyncedAccount;
+
+describe("mapSyncedAccount", () => {
+  it("maps bank wire type to checking and initialBalanceMinor to initialBalance", () => {
+    expect(mapSyncedAccount(syncedAccount({ type: "bank", initialBalanceMinor: 2500 }))).toEqual(
+      expect.objectContaining({
+        id: "acct-a",
+        name: "Checking",
+        type: "checking",
+        initialBalance: 2500,
+        excludeFromTotal: false,
+        sortOrder: 1,
+        lifecycleChangedAt: null,
+        createdAt: TIMESTAMP,
+        updatedAt: TIMESTAMP,
+      }),
+    );
+  });
+
+  it("maps card wire type to credit_card", () => {
+    expect(mapSyncedAccount(syncedAccount({ type: "card", name: "Visa" })).type).toBe(
+      "credit_card",
+    );
+  });
+
+  it("maps cash wire type to cash", () => {
+    expect(mapSyncedAccount(syncedAccount({ type: "cash" })).type).toBe("cash");
+  });
+
+  it("coerces Date timestamps to ISO strings", () => {
+    const created = new Date("2026-02-01T12:00:00.000Z");
+    const changed = new Date("2026-03-01T08:30:00.000Z");
+    const mapped = mapSyncedAccount(
+      syncedAccount({
+        createdAt: created,
+        updatedAt: created,
+        lifecycleChangedAt: changed,
+      }),
+    );
+    expect(mapped.createdAt).toBe("2026-02-01T12:00:00.000Z");
+    expect(mapped.updatedAt).toBe("2026-02-01T12:00:00.000Z");
+    expect(mapped.lifecycleChangedAt).toBe("2026-03-01T08:30:00.000Z");
   });
 });
