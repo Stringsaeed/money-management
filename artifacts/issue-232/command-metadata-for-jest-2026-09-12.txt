@@ -1,0 +1,31 @@
+PASS modules/powersync/command-metadata.test.ts
+  commandMetadataFor
+    ✓ wraps the envelope with storageVersion 1 and matching commandId (3 ms)
+    ✓ preserves personal and organization scopes on the nested envelope (1 ms)
+    ✓ keeps commandId aligned with envelope.commandId for JSON round-trips (2 ms)
+  PowerSync command metadata
+    ✓ round-trips the full account.create envelope (1 ms)
+    ✓ round-trips the full account.update envelope
+    ✓ round-trips the full account.archive envelope (1 ms)
+    ✓ round-trips the full category.create envelope
+    ✓ round-trips the full category.update envelope (1 ms)
+    ✓ round-trips the full category.archive envelope
+    ✓ round-trips the full transaction.create envelope (1 ms)
+    ✓ round-trips the full transaction.edit envelope
+    ✓ round-trips the full transaction.remove envelope (1 ms)
+    ✓ round-trips the full recurring.change envelope
+    ✓ round-trips the full budget.configure envelope
+    ✓ round-trips the full assignment.commit envelope
+    ✓ round-trips the full assignment.correct envelope
+    ✓ round-trips the full refund.link envelope
+    ✓ round-trips the full import_bundle envelope
+    ✓ round-trips a personal-scope envelope without a Household (1 ms)
+    ✓ rejects malformed JSON and mismatched command ids (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       20 passed, 20 total
+Snapshots:   0 total
+Time:        1.386 s
+Ran all test suites matching /modules\/powersync\/command-metadata.test.ts/i.
+
+--- tsc --noEmit ---
