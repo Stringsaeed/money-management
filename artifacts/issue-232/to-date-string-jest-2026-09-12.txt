@@ -1,0 +1,10 @@
+PASS path: apps/mobile/utils/to-date-string.test.ts
+PASS utils/to-date-string.test.ts
+  toDateString
+    ✓ formats a local Date as YYYY-MM-DD (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.993 s
+Ran all test suites matching /utils\/to-date-string.test.ts/i.
