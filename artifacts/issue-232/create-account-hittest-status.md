@@ -1,6 +1,6 @@
 # Create Account hit-test status (Relates #232)
 
-Updated: 2026-09-12T15:36:16Z
+Updated: 2026-09-12T16:01:21Z
 
 ## PASS (prior)
 
@@ -14,10 +14,11 @@ Updated: 2026-09-12T15:36:16Z
 | #255 NativeHost | draft | BLOCKED / superseded | |
 | #256 pan-disable | `c9a3ca89c00b3a8059d5abb7c136b790d6a7a7ef` | Metro-confirmed **MISS** | cert evidence `9e3f69f` |
 | #257 portal | superseded | not retested | |
-| **#258 screen route** | `709acf85250c02c8f9746c544da67f0c49f99233` | **FAIL** | Mac agent-device on iPhone 17 Pro; Metro from `apps/mobile`; 3/3 submit misses with `hittable=true`; other form taps work; evidence `create-account-pr258-fail.md`. **Not PASS.** Do not merge #258 from cert write. |
+| #258 screen route | `709acf85250c02c8f9746c544da67f0c49f99233` | **FAIL** | 3/3 miss with `hittable=true`; evidence `create-account-pr258-fail.md`. Do not merge #258. |
+| **#260 footer / card** | `ed1fc13bf8d291fc9a8ba0d49d15cecf5d8b6330` | **FAIL** | Mac agent-device iPhone 17 Pro; Metro `apps/mobile`; 3/3 miss with **`hittable=false`** (regression vs #258 `hittable=true`); sibling Savings worked; no SQLite row; evidence `create-account-pr260-fail.md`. **Not PASS.** Do not merge #260. |
 
 ## Owner next
 
-1. New Create Account hit-test approach beyond Expo Router modal screen (footer Pressable still no-ops under agent-device while sibling controls work).
+1. New Create Account hit-test fix must address **`hittable=false`** on `#260` footer (not only press-while-hittable=true miss from `#258`).
 2. On a future device PASS: Relates stamp on #241, then consider merge of the fixing PR.
 3. Keep #232/#224 open until full matrix acceptance.

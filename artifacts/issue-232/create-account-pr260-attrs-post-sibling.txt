@@ -1,0 +1,15 @@
+{
+  "index": 0,
+  "identifier": "create-resource-submit",
+  "hittable": true,
+  "rect": {
+    "width": 367,
+    "x": 17.66666603088379,
+    "y": 780.6666660308838,
+    "height": 42
+  },
+  "label": "Create Account",
+  "enabled": true,
+  "depth": 0,
+  "type": "Button"
+}
