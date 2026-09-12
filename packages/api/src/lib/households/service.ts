@@ -9,6 +9,7 @@ import { ledger } from "@trove/db/schema/ledger-scope";
 import { type HouseholdRole, isHouseholdRole } from "@trove/protocol";
 
 import { type CommandActor, ensureUserProjection } from "../commands/scope";
+import type { CommandDatabase } from "../commands/types";
 import { findActiveMembership } from "../membership/access";
 import { projectMembership, tombstoneMembership } from "../membership/projection";
 import {
@@ -19,6 +20,7 @@ import {
   reconcileHouseholdMembersIfStale,
   reconcileUserMembershipsIfStale,
 } from "../membership/reconcile";
+import { hasPgCode } from "../pg-error";
 import { LAST_ADMIN_MESSAGE, canDropAdmin } from "./admin-guard";
 import { consumeWidgetHandoff, issueWidgetHandoff } from "./widget-handoff";
 
@@ -151,23 +153,38 @@ async function ensureAdminMembership(
   return deps.directory.createMembership({ organizationId, userId, roleSlug: "admin" });
 }
 
+/**
+ * Lists Households for one User. Prefers `membership.status = 'active'`
+ * (0013). When prod never received that column (PG 42703), retries without
+ * the status predicate and treats every projected row as active.
+ */
+async function selectMyHouseholdRows(db: CommandDatabase, userId: string) {
+  const base = () =>
+    db
+      .select({
+        householdId: household.id,
+        name: household.name,
+        role: membership.role,
+        joinedAt: membership.createdAt,
+      })
+      .from(membership)
+      .innerJoin(household, eq(household.id, membership.householdId))
+      .orderBy(asc(household.createdAt));
+  try {
+    return await base().where(and(eq(membership.userId, userId), eq(membership.status, "active")));
+  } catch (error) {
+    if (!(error instanceof Error) || !hasPgCode(error, "42703")) throw error;
+    return base().where(eq(membership.userId, userId));
+  }
+}
+
 export async function listMyHouseholds(
   deps: HouseholdDeps,
   actor: CommandActor,
 ): Promise<readonly HouseholdSummary[]> {
   await ensureUserProjection(deps.db, actor);
   await reconcileUserMembershipsIfStale(deps, actor.id, USER_RECONCILE_MAX_AGE_MS);
-  const rows = await deps.db
-    .select({
-      householdId: household.id,
-      name: household.name,
-      role: membership.role,
-      joinedAt: membership.createdAt,
-    })
-    .from(membership)
-    .innerJoin(household, eq(household.id, membership.householdId))
-    .where(and(eq(membership.userId, actor.id), eq(membership.status, "active")))
-    .orderBy(asc(household.createdAt));
+  const rows = await selectMyHouseholdRows(deps.db, actor.id);
   return rows.flatMap((row) => (isHouseholdRole(row.role) ? [{ ...row, role: row.role }] : []));
 }
 
