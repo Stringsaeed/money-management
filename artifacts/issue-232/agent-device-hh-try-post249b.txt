@@ -1,0 +1,7 @@
+Tapped @e12 (201, 303)
+settled after 3347ms: +2 -3 (~30 unchanged)
+- @e18 [other] "Try again"
+- @e19 [button] "Try again"
+- @e20 [text] "Internal server error"
++ @e18~s614385 [other] "Sync just for me"
++ @e19~s614385 [button] "Sync just for me"

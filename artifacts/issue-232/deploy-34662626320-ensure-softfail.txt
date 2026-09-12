@@ -1,0 +1,8 @@
+deploy_worker_run=34662626320
+conclusion=success
+head_sha=79b83d6eeaaab7479f7c62ea0174343504d02cf6
+pr=#249
+ensure_step=Ensure user.memberships_reconciled_at
+ensure_softfail_code=42501
+memberships_reconciled_at_present=false
+deploy_worker_step=success

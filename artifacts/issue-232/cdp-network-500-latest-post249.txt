@@ -1,0 +1,5 @@
+req_29  POST  500  Other  288ms  104B  https://auth.trove.ing/rpc/households/listMine
+req_28  POST  500  Other  492ms  104B  https://auth.trove.ing/rpc/households/listMine
+req_27  POST  500  Other  284ms  104B  https://auth.trove.ing/rpc/households/listMine
+req_26  POST  500  Other  290ms  104B  https://auth.trove.ing/rpc/households/listMine
+req_25  POST  500  Other  626ms  104B  https://auth.trove.ing/rpc/migration/getManifest

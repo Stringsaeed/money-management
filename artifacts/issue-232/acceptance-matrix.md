@@ -28,6 +28,12 @@ Report implementation, automated verification, runtime verification, and publica
 
 Recorded in `revision.txt` / `authkit-live-write.txt` / `post-246-user-upsert-500.txt`.
 
+## Post-#249 Sync retest (2026-09-12)
+
+- Deploy Worker [34662626320](https://github.com/Stringsaeed/money-management/actions/runs/34662626320) **success** for `79b83d6` (#249). Ensure ALTER still **soft-fail `42501`**; `memberships_reconciled_at` **absent**.
+- Auth **PASS**. `POST /rpc/households/listMine` **FAIL** HTTP **500** client **`INTERNAL_SERVER_ERROR`**. Owner CF: **`pg_code=42703`** `column membership.status does not exist` (`post-249-sync-retest.md`).
+- Relates to #232 only. Not certified. Parent #224 stays open.
+
 ## Post-#248 Sync retest (2026-09-12)
 
 - Deploy Worker [34661563595](https://github.com/Stringsaeed/money-management/actions/runs/34661563595) **success** for `0ab55ac` (#248). Ensure ALTER **soft-fail `42501`**; `memberships_reconciled_at` **still absent**.

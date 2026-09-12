@@ -1,0 +1,24 @@
+Tapped @e28 (294, 804)
+settled after 781ms: +0 -0 (~29 unchanged)
+unchanged interactive (20):
+= @e2~s614364 [other] "Home"
+= @e3~s614364 [navigation-bar] "Home"
+= @e4~s614364 [button] "Filters"
+= @e5~s614364 [scroll-area] "$0.00"
+= @e6~s614364 [other] "$0.00"
+= @e7~s614364 [cell] "repeat 1"
+= @e8~s614364 [image] "repeat 1"
+= @e9~s614364 [text] "Upcoming payments"
+= @e10~s614364 [button] "View all recurring rules"
+= @e11~s614364 [cell] "Nothing scheduled yet"
+= @e12~s614364 [text] "🌱"
+= @e13~s614364 [text] "Add a Recurring Rule to see what’s next."
+= @e14~s614364 [button] "Create account"
+= @e15~s614364 [other] "newspaper"
+= @e16~s614364 [image] "newspaper"
+= @e17~s614364 [text] "Recent Journal"
+= @e18~s614364 [button] "View all recent transactions"
+= @e19~s614364 [other] "No transactions"
+= @e20~s614364 [text] "No transactions yet. Tap + Add Entry to get started."
+= @e21~s614364 [image] "AdditionalDimmingOverlay"
+… more interactive elements not shown, use snapshot -i

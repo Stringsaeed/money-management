@@ -1,0 +1,9 @@
+req_22  POST  200  Other  526ms  1.3KB  https://api.workos.com/user_management/authenticate
+req_18  POST  200  Other  229ms  15B  https://us.i.posthog.com/batch/
+req_17  POST  200  Other  227ms  15B  https://us.i.posthog.com/batch/
+req_15  POST  200  Other  206ms  1.6KB  https://us.i.posthog.com/flags/?v=2&config=true
+req_14  GET  200  Other  19ms  994B  https://us-assets.i.posthog.com/array/phc_q5coRLl1t8vl80ra8TiFgh1eFjK5bSXC4k3nFartak3/config
+req_13  POST  200  Other  621ms  1.6KB  https://us.i.posthog.com/flags/?v=2&config=true
+req_12  GET  200  Other  64ms  994B  https://us-assets.i.posthog.com/array/phc_q5coRLl1t8vl80ra8TiFgh1eFjK5bSXC4k3nFartak3/config
+req_11  GET  200  Other  308ms  27.4MB  http://127.0.0.1:8083/node_modules/expo-router/entry.bundle?platform=ios&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.bytecode=1&transform.routerRoot=app&transform.reactCompiler=true&unstable_transformProfile=hermes-stable
+req_9  POST  200  Other  679ms  1.3KB  https://api.workos.com/user_management/authenticate

@@ -1,0 +1,27 @@
+Page: com.stringsaeed.moneymanagement
+App: com.stringsaeed.moneymanagement
+Snapshot: 23 visible nodes (24 total)
+@e1 [application] "Trove (Dev)"
+@e2 [other] "Settings"
+@e3 [navigation-bar] "Settings"
+@e4 [scroll-area] "Profile" [scrollable]
+  [content below scroll-area hidden]
+@e5 [other] "Profile"
+@e6 [button] "Profile & household"
+@e7 [text] "Manage 🛠️"
+@e8 [button] "Accounts"
+@e9 [button] "Categories"
+@e10 [button] "Recurring Rules"
+@e11 [button] "Activity Timeline"
+@e12 [text] "Stats 📊"
+@e13 [other] "🧾, Total Transactions, 0" [disabled]
+@e14 [other] "🏦, Accounts, 0" [disabled]
+@e15 [other] "🔁, Active Rules, 0" [disabled]
+@e17 [other] "Ledger"
+@e18 [button]
+@e19 [button] "Ledger"
+@e20 [button] "Money Movement"
+@e21 [button] "Inbox"
+@e22 [button] "Envelopes"
+@e23 [button] "Settings" [selected]
+@e24 [button] "Create account"
