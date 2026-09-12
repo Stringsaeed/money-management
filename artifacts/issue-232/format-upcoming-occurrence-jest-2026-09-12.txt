@@ -1,0 +1,10 @@
+PASS path: apps/mobile/utils/format-upcoming-occurrence.test.ts
+PASS utils/format-upcoming-occurrence.test.ts
+  formatUpcomingOccurrence
+    ✓ formats tomorrow and later dates from fixed calendar strings (21 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.034 s
+Ran all test suites matching /utils\/format-upcoming-occurrence.test.ts/i.

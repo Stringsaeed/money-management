@@ -1,0 +1,15 @@
+PASS path: apps/mobile/utils/describe-intent.test.ts
+PASS utils/describe-intent.test.ts
+  describeIntent
+    ✓ summarizes amount and description for transactions (11 ms)
+    ✓ shows negative amounts with a sign (1 ms)
+    ✓ falls back to the name field for entities like accounts
+    ✓ truncates long descriptions (1 ms)
+    ✓ digests unknown payloads instead of rendering blank
+    ✓ uses just the label when there is no payload
+
+Test Suites: 1 passed, 1 total
+Tests:       6 passed, 6 total
+Snapshots:   0 total
+Time:        0.975 s
+Ran all test suites matching /utils\/describe-intent.test.ts/i.

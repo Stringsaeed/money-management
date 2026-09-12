@@ -1,34 +1,33 @@
 # Issue #232 — WorkOS migration acceptance matrix
 
-Certification matrix for [GitHub #232](https://github.com/Stringsaeed/money-management/issues/232) (*WorkOS: certify the complete migration on iOS and Android*). Evidence is from worktree `/Users/saeed/Work/money-management-wt-232` only. No secret values are recorded.
+Certification matrix for [GitHub #232](https://github.com/Stringsaeed/money-management/issues/232) (_WorkOS: certify the complete migration on iOS and Android_). Evidence is from worktree `/Users/saeed/Work/money-management-wt-232` only. No secret values are recorded.
 
 ## Publication / governance
 
-| Rule | State |
-| --- | --- |
-| Parent [#224](https://github.com/Stringsaeed/money-management/issues/224) | **Stays open** for owner review. Do not close or rewrite the spec. |
-| This issue #232 | **Open.** Certification is **not complete**. Do not count blocked required cases as passing. |
-| Merge | **Do not merge.** Issue implementation is not authorization to merge. |
-| Production deploy | **Do not deploy** to production. |
-| Development reset | [#231](https://github.com/Stringsaeed/money-management/issues/231) / [PR #240](https://github.com/Stringsaeed/money-management/pull/240) **skipped** the disposable-environment reset. Row 8 is blocked on that skip plus missing local env names. |
+| Rule                                                                      | State                                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parent [#224](https://github.com/Stringsaeed/money-management/issues/224) | **Stays open** for owner review. Do not close or rewrite the spec.                                                                                                                                                                                 |
+| This issue #232                                                           | **Open.** Certification is **not complete**. Do not count blocked required cases as passing.                                                                                                                                                       |
+| Merge                                                                     | **Do not merge.** Issue implementation is not authorization to merge.                                                                                                                                                                              |
+| Production deploy                                                         | **Do not deploy** to production.                                                                                                                                                                                                                   |
+| Development reset                                                         | [#231](https://github.com/Stringsaeed/money-management/issues/231) / [PR #240](https://github.com/Stringsaeed/money-management/pull/240) **skipped** the disposable-environment reset. Row 8 is blocked on that skip plus missing local env names. |
 
 Report implementation, automated verification, runtime verification, and publication **separately**. This document is the verification record; it does not authorize publication.
 
 ## Revision
 
-| Field | Value |
-| --- | --- |
-| Repo | `Stringsaeed/money-management` |
-| Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `8a9fb2f93fc04b7e7bda92a7c1cc5d82c190329a` getRecurringRuleAppearance stamp — product `bc4f011` (pre-existing `recurring-rule-appearance.test.ts` **5/5** PASS; suite **5/5**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
-| Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
-| Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
-| Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
-| Device (this write) | **none** — API/docs-only; no iOS/Android device; no Mac |
-| Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
+| Field               | Value                                                                                                                                                                                                                                                                                                            |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repo                | `Stringsaeed/money-management`                                                                                                                                                                                                                                                                                   |
+| Branch              | `cursor/workos-certify-migration-b3d1`                                                                                                                                                                                                                                                                           |
+| HEAD                | tip `PENDING_DOCS` buildJournalList stamp — product `PENDING_PRODUCT` (`describeIntent` **6/6**; `formatUpcomingOccurrence` **1/1**; `groupByDay` **2/2**; `buildJournalList` **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| Provenance          | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`.   |
+| Worktree            | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232`                                                                                                                                                                               |
+| Live API            | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503**                                                                                                                                                                          |
+| Device (this write) | **none** — API/docs-only; no iOS/Android device; no Mac                                                                                                                                                                                                                                                          |
+| Test mailbox        | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed.                                                                                                                                                                 |
 
 Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2026-09-12.txt` / `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `ci-billing-blocked-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `session-probe-jest-2026-09-12.txt` / `ledger-source-offline-jest-2026-09-12.txt` / `memberships-role-jest-2026-09-12.txt` / `access-core-capabilities-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12e.txt` / `workos-webhook-probe-2026-09-12d.txt` / `workos-verify-env-jest-2026-09-12.txt` / `widget-handoff-jest-2026-09-12.txt` / `reconcile-freshness-jest-2026-09-12.txt` / `command-shared-ledger-powersync-jest-2026-09-12.txt` / `sole-admin-budget-pure-jest-2026-09-12.txt` / `card-dependency-setup-draft-jest-2026-09-12.txt` / `import-content-jest-2026-09-12.txt` / `to-directory-membership-jest-2026-09-12.txt` / `import-manifest-canonical-jest-2026-09-12.txt` / `household-role-command-kind-jest-2026-09-12.txt` / `covers-effects-jest-2026-09-12.txt` / `period-helpers-jest-2026-09-12.txt` / `session-from-claims-jest-2026-09-12.txt` / `bind-ledger-scope-jest-2026-09-12.txt` / `is-plan-rejection-jest-2026-09-12.txt` / `household-import-binding-jest-2026-09-12.txt` / `new-deletion-operation-id-jest-2026-09-12.txt` / `command-scope-precondition-schema-jest-2026-09-12.txt` / `create-payload-schemas-jest-2026-09-12.txt` / `recurring-change-payload-schema-jest-2026-09-12.txt` / `update-archive-account-payload-schemas-jest-2026-09-12.txt` / `edit-remove-transaction-payload-schemas-jest-2026-09-12.txt` / `create-update-category-payload-schemas-jest-2026-09-12.txt` / `archive-category-payload-schema-jest-2026-09-12.txt` / `to-wire-account-type-jest-2026-09-12.txt` / `budget-period-of-jest-2026-09-12.txt` / `date-after-jest-2026-09-12.txt` / `settlement-effects-jest-2026-09-12.txt` / `format-activity-full-timestamp-jest-2026-09-12.txt` / `pending-lifecycle-settlement-jest-2026-09-12.txt` / `envelope-category-mapping-content-jest-2026-09-12.txt` / `funding-rollover-content-jest-2026-09-12.txt` / `assignment-content-jest-2026-09-12.txt` / `recurring-rule-content-jest-2026-09-12.txt` / `ledger-read-fields-jest-2026-09-12.txt` / `create-console-sink-jest-2026-09-12.txt` / `create-metrics-sink-jest-2026-09-12.txt` / `apply-ledger-filters-jest-2026-09-12.txt` / `change-effects-jest-2026-09-12.txt` / `date-range-of-jest-2026-09-12.txt` / `validate-move-request-jest-2026-09-12.txt` / `page-transactions-jest-2026-09-12.txt` / `to-edit-date-jest-2026-09-12.txt` / `summarize-transactions-jest-2026-09-12.txt` / `apply-move-to-projection-jest-2026-09-12.txt` / `query-filters-to-ledger-jest-2026-09-12.txt` / `month-filter-jest-2026-09-12.txt` / `apply-ledger-balance-jest-2026-09-12.txt` / `require-category-ids-jest-2026-09-12.txt` / `assert-source-has-money-jest-2026-09-12.txt` / `candidate-from-draft-jest-2026-09-12.txt` / `apply-budget-transaction-jest-2026-09-12.txt` / `stale-result-jest-2026-09-12.txt` / `invalid-lifecycle-jest-2026-09-12.txt` / `candidate-from-existing-jest-2026-09-12.txt` / `draft-from-rule-jest-2026-09-12.txt` / `require-envelope-fields-jest-2026-09-12.txt` / `require-changed-category-ids-jest-2026-09-12.txt` / `require-restored-category-confirmation-jest-2026-09-12.txt` / `update-setup-draft-funding-accounts-jest-2026-09-12.txt` / `toggle-setup-draft-rollover-jest-2026-09-12.txt` / `remove-setup-draft-category-jest-2026-09-12.txt`.
-
 
 ## WorkOS webhook live re-probe (2026-09-12T07:54:12Z, no device)
 
@@ -212,13 +211,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 transaction field textStyle seam → advances automated `@expo/ui` typography vocabulary; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## ACCOUNT_TYPE_OPTIONS Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/account/account-type-options.test.ts` — **1/1 new PASS** / suite **1/1** (`account-type-options-jest-2026-09-12.txt`): exact lock of `ACCOUNT_TYPE_OPTIONS` checking→other vocabulary (pure frozen table).
 - Row 4 / row 6 account-type picker seam → advances automated account chrome vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## ACCOUNT_CURRENCIES Relates (2026-09-12, no device)
 
@@ -226,13 +223,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 account form seam → advances automated account chrome vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## ACCOUNT_TYPE_META Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/account/account-type-meta.test.ts` — **1/1 new PASS** / suite **1/1** (`account-type-meta-jest-2026-09-12.txt`): exact lock that `ACCOUNT_TYPE_META` indexes `ACCOUNT_TYPE_OPTIONS` by value (pure derived table)
 - Row 4 / row 6 account form seam → advances automated account chrome vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## FREQUENCY_LABELS Relates (2026-09-12, no device)
 
@@ -246,13 +241,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 auth field-kinds seam → advances automated auth-field vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## clampDay Relates (2026-09-12, no device)
 
 - Added `apps/mobile/utils/clamp-day.test.ts` — **1/1 new PASS** / suite **1/1** (`clamp-day-jest-2026-09-12.txt`): exact lock of `clampDay` month-length clamping (pure helper; no clock)
 - Row 4 / row 6 date clamp-day seam → advances automated calendar vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## activityRangeLabel Relates (2026-09-12, no device)
 
@@ -260,13 +253,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 activity range-label seam → advances automated activity filter vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## accountDisplayIcon Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/account/account-display-icon.test.ts` — **1/1 new PASS** / suite **1/1** (`account-display-icon-jest-2026-09-12.txt`): exact lock of `accountDisplayIcon` custom-or-type-emoji resolution (pure helper)
 - Row 4 / row 6 account display-icon seam → advances automated account-icon vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## normalizeFreeCryptoQuotes Relates (2026-09-12, no device)
 
@@ -274,13 +265,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 market free-crypto-quotes seam → advances automated market-quote vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## formatRecurrence Relates (2026-09-12, no device)
 
 - Added `apps/mobile/utils/format-recurrence.test.ts` — **1/1 new PASS** / suite **1/1** (`format-recurrence-jest-2026-09-12.txt`): exact lock of `formatRecurrence` preset and every-N labels (pure helper)
 - Row 4 / row 6 recurrence formatRecurrence seam → advances automated recurrence vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## formatCompactChartAmount Relates (2026-09-12, no device)
 
@@ -288,13 +277,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 settings chart compact-amount seam → advances automated chart-axis vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## listAccountCurrencyOptions Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/account/list-account-currency-options.test.ts` — **1/1 new PASS** / suite **1/1** (`list-account-currency-options-jest-2026-09-12.txt`): exact lock of `listAccountCurrencyOptions` mapping `ACCOUNT_CURRENCIES` to labeled options (pure helper)
 - Row 4 / row 6 account currency picker seam → advances automated account-currency list vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## formatCents Relates (2026-09-12, no device)
 
@@ -302,13 +289,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 money display formatCents seam → advances automated currency display vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## commandKindLabel Relates (2026-09-12, no device)
 
 - Added `apps/mobile/utils/command-kind-label.test.ts` — **1/1 new PASS** / suite **1/1** (`command-kind-label-jest-2026-09-12.txt`): exact lock of `commandKindLabel` for every `CommandKind` (pure helper)
 - Row 4 / row 6 rejected-changes intent label seam → advances automated command-kind vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## getRecurringRuleAppearance Relates (2026-09-12, no device)
 
@@ -316,6 +301,29 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 recurring rule chrome seam → advances automated recurring-appearance vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
+## describeIntent Relates (2026-09-12, no device)
+
+- Added `apps/mobile/utils/describe-intent.test.ts` — **6/6 new PASS** / suite **6/6** (`describe-intent-jest-2026-09-12.txt`): exact lock of `describeIntent` payload summaries (pure helper; fixed strings only)
+- Row 4 / row 6 rejected-changes intent summary seam → advances automated command-intent vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## formatUpcomingOccurrence Relates (2026-09-12, no device)
+
+- Added `apps/mobile/utils/format-upcoming-occurrence.test.ts` — **1/1 new PASS** / suite **1/1** (`format-upcoming-occurrence-jest-2026-09-12.txt`): exact lock of `formatUpcomingOccurrence` Tomorrow vs weekday labels (pure helper; fixed calendar strings only)
+- Row 4 / row 6 home upcoming-recurring row seam → advances automated occurrence-label vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## groupByDay Relates (2026-09-12, no device)
+
+- Existing `apps/mobile/utils/transaction.test.ts` — **2/2 PASS** / suite **2/2** (`group-by-day-jest-2026-09-12.txt`): exact lock of `groupByDay` sort order and income/expense totals (pure helper; factory fixtures only)
+- Row 4 / row 6 home journal grouping seam → advances automated day-group vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## buildJournalList Relates (2026-09-12, no device)
+
+- Existing `apps/mobile/utils/journal-list.test.ts` — **1/1 PASS** / suite **1/1** (`build-journal-list-jest-2026-09-12.txt`): exact lock of `buildJournalList` section headers and transaction rows (pure helper; factory fixtures only)
+- Row 4 / row 6 home journal list seam → advances automated journal flatten vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## formatPrice Relates (2026-09-12, no device)
 
@@ -323,13 +331,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 market formatPrice seam → advances automated market-format vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## settlementFingerprint Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/banner/settlement-fingerprint.test.ts` — **1/1 new PASS** / suite **1/1** (`settlement-fingerprint-jest-2026-09-12.txt`): exact lock of `settlementFingerprint` success/attention tokens (pure helper)
 - Row 4 / row 6 banner settlement-fingerprint seam → advances automated banner identity vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## syncFingerprint Relates (2026-09-12, no device)
 
@@ -337,13 +343,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 banner sync-fingerprint seam → advances automated banner identity vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## accessFingerprint Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/banner/access-fingerprint.test.ts` — **1/1 new PASS** / suite **1/1** (`access-fingerprint-jest-2026-09-12.txt`): exact lock of `accessFingerprint` session-revoked token (pure helper)
 - Row 4 / row 6 banner access-fingerprint seam → advances automated banner identity vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## toAccountCurrencyOption Relates (2026-09-12, no device)
 
@@ -351,13 +355,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 account currency option seam → advances automated currency vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## getReliableCurrencySymbol Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/account/get-reliable-currency-symbol.test.ts` — **1/1 new PASS** / suite **1/1** (`get-reliable-currency-symbol-jest-2026-09-12.txt`): exact lock of `getReliableCurrencySymbol` narrow-symbol policy (pure helper)
 - Row 4 / row 6 account currency symbol seam → advances automated currency vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## getCurrencyDisplayName Relates (2026-09-12, no device)
 
@@ -365,13 +367,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 account currency display-name seam → advances automated currency vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## recoverAccountCurrencyListScroll Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/account/recover-account-currency-list-scroll.test.ts` — **1/1 new PASS** / suite **1/1** (`recover-account-currency-list-scroll-jest-2026-09-12.txt`): exact lock of `recoverAccountCurrencyListScroll` offset recovery (pure helper)
 - Row 4 / row 6 account currency-list recover seam → advances automated picker scroll vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## accountCurrencyListOffset Relates (2026-09-12, no device)
 
@@ -379,13 +379,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 account currency-list offset seam → advances automated picker scroll vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## buildEditableFields Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/rejected-changes/build-editable-fields.test.ts` — **1/1 new PASS** / suite **1/1** (`build-editable-fields-jest-2026-09-12.txt`): exact lock of `buildEditableFields` scalar extraction (pure helper)
 - Row 4 / row 6 rejected-changes buildEditableFields seam → advances automated re-edit vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## fieldsToPayload Relates (2026-09-12, no device)
 
@@ -393,13 +391,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 rejected-changes fieldsToPayload seam → advances automated re-edit vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## isMandatoryUpdateManifest Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/updates/is-mandatory-update-manifest.test.ts` — **1/1 new PASS** / suite **1/1** (`is-mandatory-update-manifest-jest-2026-09-12.txt`): exact lock of `isMandatoryUpdateManifest` OTA mandatory detection (pure helper)
 - Row 4 / row 6 updates mandatory-manifest seam → advances automated OTA policy vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## currencyAffixes Relates (2026-09-12, no device)
 
@@ -407,13 +403,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 currency affixes seam → advances automated money-format vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## toDateString Relates (2026-09-12, no device)
 
 - Added `apps/mobile/utils/to-date-string.test.ts` — **1/1 new PASS** / suite **1/1** (`to-date-string-jest-2026-09-12.txt`): exact lock of `toDateString` local YYYY-MM-DD formatting (pure helper)
 - Row 4 / row 6 date toDateString seam → advances automated date-format vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## filterAccountCurrencyOptions Relates (2026-09-12, no device)
 
@@ -421,13 +415,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 account currency-filter seam → advances automated currency-picker vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## isCustomAccountIcon Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/account/is-custom-account-icon.test.ts` — **1/1 new PASS** / suite **1/1** (`is-custom-account-icon-jest-2026-09-12.txt`): exact lock of `isCustomAccountIcon` emoji-vs-SF-Symbol rule (pure helper)
 - Row 4 / row 6 account custom-icon seam → advances automated account-icon vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## normalizeCryptoSymbol Relates (2026-09-12, no device)
 
@@ -435,13 +427,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 market crypto-symbol seam → advances automated market-symbol vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## formatSignedPercent Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/money-movement/format-signed-percent.test.ts` — **1/1 new PASS** / suite **1/1** (`format-signed-percent-jest-2026-09-12.txt`): exact lock of `formatSignedPercent` signed percent formatting (pure helper)
 - Row 4 / row 6 market signed-percent seam → advances automated market-format vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## normalizeColor Relates (2026-09-12, no device)
 
@@ -449,13 +439,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 auth normalize-color seam → advances automated color-sanitize vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## ACTIVITY_RANGE_PRESETS Relates (2026-09-12, no device)
 
 - Added `apps/mobile/utils/activity-range-presets.test.ts` — **1/1 new PASS** / suite **1/1** (`activity-range-presets-jest-2026-09-12.txt`): exact lock of `ACTIVITY_RANGE_PRESETS` vocabulary (pure frozen table)
 - Row 4 / row 6 activity range-preset seam → advances automated activity filter vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## effectEmoji Relates (2026-09-12, no device)
 
@@ -463,13 +451,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 activity effect-emoji helper seam → advances automated activity vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## EFFECT_EMOJIS Relates (2026-09-12, no device)
 
 - Added `apps/mobile/utils/effect-emojis.test.ts` — **1/1 new PASS** / suite **1/1** (`effect-emojis-jest-2026-09-12.txt`): exact lock of `EFFECT_EMOJIS` tag vocabulary (pure frozen table)
 - Row 4 / row 6 activity effect-emoji table seam → advances automated activity vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## decimalStringToCents Relates (2026-09-12, no device)
 
@@ -477,13 +463,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 currency decimal→cents seam → advances automated money-parse vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## MARKET_ASSETS Relates (2026-09-12, no device)
 
 - Added `apps/mobile/hooks/market-assets.test.ts` — **1/1 new PASS** / suite **1/1** (`market-assets-jest-2026-09-12.txt`): exact lock of `MARKET_ASSETS` watchlist vocabulary (pure frozen table)
 - Row 4 / row 6 market assets seam → advances automated market-watchlist vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## AUTH_FONT_FACES Relates (2026-09-12, no device)
 
@@ -491,13 +475,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 auth font-face seam → advances automated auth-typography vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## centsToDecimalString Relates (2026-09-12, no device)
 
 - Added `apps/mobile/utils/cents-to-decimal-string.test.ts` — **1/1 new PASS** / suite **1/1** (`cents-to-decimal-string-jest-2026-09-12.txt`): exact lock of `centsToDecimalString` fixed two-decimal formatting (pure helper)
 - Row 4 / row 6 currency cents→decimal seam → advances automated money-format vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## NATIVE_CONTROL_SPECS Relates (2026-09-12, no device)
 
@@ -505,13 +487,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 native control-spec seam → advances automated native-control vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## AUTH_TEXT_SPECS Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/auth/ui/auth-text-specs.test.ts` — **1/1 new PASS** / suite **1/1** (`auth-text-specs-jest-2026-09-12.txt`): exact lock of `AUTH_TEXT_SPECS` title→notice vocabulary (pure frozen table)
 - Row 4 / row 6 auth text-spec seam → advances automated auth-typography vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## AUTH_CONTROL_SPECS Relates (2026-09-12, no device)
 
@@ -519,13 +499,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 auth control-spec seam → advances automated auth-control vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## AUTH_FIELD_SPEC Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/auth/ui/auth-field-spec.test.ts` — **1/1 new PASS** / suite **1/1** (`auth-field-spec-jest-2026-09-12.txt`): exact lock of `AUTH_FIELD_SPEC` field chrome vocabulary (pure frozen table)
 - Row 4 / row 6 auth field-spec seam → advances automated auth-field vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## AUTH_SHELL_SPEC Relates (2026-09-12, no device)
 
@@ -533,13 +511,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 auth shell-spec seam → advances automated auth-layout vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## AUTH_PLACEHOLDER_COLOR Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/auth/ui/auth-placeholder-color.test.ts` — **1/1 new PASS** / suite **1/1** (`auth-placeholder-color-jest-2026-09-12.txt`): exact lock `AUTH_PLACEHOLDER_COLOR="#9a9896"` (pure const)
 - Row 4 / row 6 auth placeholder-color seam → advances automated auth-theme vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## REQUIRED_BUDGETING_COLUMNS Relates (2026-09-12, no device)
 
@@ -547,13 +523,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 budgeting required-columns seam → advances automated ledger-schema vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## BUDGETING_TABLES Relates (2026-09-12, no device)
 
 - Added `apps/mobile/db/budgeting-tables.test.ts` — **1/1 new PASS** / suite **1/1** (`budgeting-tables-jest-2026-09-12.txt`): exact lock of `BUDGETING_TABLES` name vocabulary (pure frozen table)
 - Row 4 / row 6 budgeting table-name seam → advances automated ledger-schema vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## AUTH_FALLBACK_PALETTE Relates (2026-09-12, no device)
 
@@ -561,13 +535,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 auth fallback-palette seam → advances automated auth-theme vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## AUTH_TOKEN_NAMES Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/auth/ui/auth-token-names.test.ts` — **1/1 new PASS** / suite **1/1** (`auth-token-names-jest-2026-09-12.txt`): exact lock of `AUTH_TOKEN_NAMES` CSS token vocabulary (pure frozen table)
 - Row 4 / row 6 auth token-name seam → advances automated auth-theme vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## TROVE_APP_IDENTITY Relates (2026-09-12, no device)
 
@@ -575,13 +547,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 app-identity seam → advances automated native association vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## WIDGET_RETURN_LINK Relates (2026-09-12, no device)
 
 - Added `packages/auth/src/widget-return-link.test.ts` — **1/1 new PASS** / suite **1/1** (`widget-return-link-vitest-2026-09-12.txt`): exact lock `WIDGET_RETURN_LINK="trove://widget-return"` (pure const)
 - Row 4 / row 6 widget return-link seam → advances automated widget deep-link vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## TOKEN_RECONCILE_MAX_AGE_MS Relates (2026-09-12, no device)
 
@@ -589,13 +559,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 token reconcile max-age seam → advances automated membership freshness vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## HOUSEHOLD_RECONCILE_MAX_AGE_MS Relates (2026-09-12, no device)
 
 - Added `packages/api/src/lib/membership/household-reconcile-max-age-ms.test.ts` — **1/1 new PASS** / suite **1/1** (`household-reconcile-max-age-ms-vitest-2026-09-12.txt`): exact lock `HOUSEHOLD_RECONCILE_MAX_AGE_MS=60000` (pure const)
 - Row 4 / row 6 household reconcile max-age seam → advances automated membership freshness vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## USER_RECONCILE_MAX_AGE_MS Relates (2026-09-12, no device)
 
@@ -603,13 +571,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 user reconcile max-age seam → advances automated membership freshness vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## WIDGET_HANDOFF_TTL_MS Relates (2026-09-12, no device)
 
 - Added `packages/api/src/lib/households/widget-handoff-ttl-ms.test.ts` — **1/1 new PASS** / suite **1/1** (`widget-handoff-ttl-ms-vitest-2026-09-12.txt`): exact lock `WIDGET_HANDOFF_TTL_MS=120000` (pure const)
 - Row 4 / row 6 widget handoff TTL seam → advances automated widget-handoff vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## POWERSYNC_JWT_ALGORITHM Relates (2026-09-12, no device)
 
@@ -617,13 +583,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 PowerSync JWT algorithm seam → advances automated sync-token vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## KILL_SWITCH_FLAG Relates (2026-09-12, no device)
 
 - Added `packages/api/src/lib/observability/kill-switch-flag.test.ts` — **1/1 new PASS** / suite **1/1** (`kill-switch-flag-vitest-2026-09-12.txt`): exact lock `KILL_SWITCH_FLAG="KILL_SWITCH_LOCAL_ONLY"` (pure const)
 - Row 4 / row 6 kill-switch flag seam → advances automated observability vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## LAST_ADMIN_MESSAGE Relates (2026-09-12, no device)
 
@@ -631,13 +595,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 last-admin guard copy seam → advances automated household-admin vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## HOUSEHOLD_ROLES Relates (2026-09-12, no device)
 
 - Added `packages/protocol/src/household-roles.test.ts` — **1/1 new PASS** / suite **1/1** (`household-roles-node-test-2026-09-12.txt`): exact lock of `HOUSEHOLD_ROLES` admin/member/viewer vocabulary (pure frozen table)
 - Row 4 / row 6 household-role vocabulary seam → advances automated authorization role lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## NO_SYNC_ENROLLMENT Relates (2026-09-12, no device)
 
@@ -645,13 +607,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 access no-sync-enrollment seam → advances automated enrollment vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## POWERSYNC_DISCONNECT_THRESHOLD_MS Relates (2026-09-12, no device)
 
 - Added `apps/mobile/modules/powersync/powersync-disconnect-threshold-ms.test.ts` — **1/1 new PASS** / suite **1/1** (`powersync-disconnect-threshold-ms-jest-2026-09-12.txt`): exact lock `POWERSYNC_DISCONNECT_THRESHOLD_MS=600000` (pure const)
 - Row 4 / row 6 PowerSync disconnect-threshold seam → advances automated availability vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## DATABASE_RESET_VERSION Relates (2026-09-12, no device)
 
@@ -659,13 +619,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 database reset-version seam → advances automated reset vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## PROFILE_HOUSEHOLD_HREF Relates (2026-09-12, no device)
 
 - Added `apps/mobile/modules/access/profile-household-href.test.ts` — **1/1 new PASS** / suite **1/1** (`profile-household-href-jest-2026-09-12.txt`): exact lock of `PROFILE_HOUSEHOLD_HREF` settings path (pure const)
 - Row 4 / row 6 profile household href seam → advances automated deep-link vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## GUIDED_SETUP_DRAFT_ID Relates (2026-09-12, no device)
 
@@ -673,13 +631,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 guided-setup draft-id seam → advances automated setup-draft vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## ENABLE_SYNC_MISMATCH_DESCRIPTION Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/household/enable-sync-mismatch-description.test.ts` — **1/1 new PASS** / suite **1/1** (`enable-sync-mismatch-description-jest-2026-09-12.txt`): exact lock of `ENABLE_SYNC_MISMATCH_DESCRIPTION` copy (pure string const)
 - Row 4 / row 6 enable-sync mismatch-copy seam → advances automated sync-copy vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## ENABLE_SYNC_MATCHED_DESCRIPTION Relates (2026-09-12, no device)
 
@@ -687,13 +643,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 enable-sync matched-copy seam → advances automated sync-copy vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## ENABLE_SYNC_IDLE_DESCRIPTION Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/household/enable-sync-idle-description.test.ts` — **1/1 new PASS** / suite **1/1** (`enable-sync-idle-description-jest-2026-09-12.txt`): exact lock of `ENABLE_SYNC_IDLE_DESCRIPTION` copy (pure string const)
 - Row 4 / row 6 enable-sync idle-copy seam → advances automated sync-copy vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## ENABLE_SYNC_STATUS_LABEL Relates (2026-09-12, no device)
 
@@ -701,13 +655,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 enable-sync status-label seam → advances automated sync-status vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## WELCOME_GARDEN_STAGE Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/onboarding/welcome-garden-stage.test.ts` — **1/1 new PASS** / suite **1/1** (`welcome-garden-stage-jest-2026-09-12.txt`): exact lock `WELCOME_GARDEN_STAGE=2` (pure const surface)
 - Row 4 / row 6 onboarding welcome-garden seam → advances automated garden progress vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## FORM_STEPS Relates (2026-09-12, no device)
 
@@ -715,13 +667,11 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 4 / row 6 onboarding form-step seam → advances automated onboarding vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
-
 ## REPEAT_PRESETS Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/transaction/recurrence/repeat-presets.test.ts` — **1/1 new PASS** / suite **1/1** (`repeat-presets-jest-2026-09-12.txt`): exact lock of `REPEAT_PRESETS` daily→yearly vocabulary (pure frozen table)
 - Row 4 / row 6 recurrence preset seam → advances automated recurrence vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
-
 
 ## DEFAULT_CATEGORY_ICON Relates (2026-09-12, no device)
 
@@ -1277,7 +1227,7 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 ## formatActivityFullTimestamp Relates (2026-09-12, no device)
 
-- Extended `apps/mobile/utils/activity.test.ts` — **2/2 new PASS** / suite **12/12** (`format-activity-full-timestamp-jest-2026-09-12.txt`): absolute `MMM d, yyyy at h:mm a` detail stamp; year + ` at ` separator for `@/utils/activity` `formatActivityFullTimestamp`.
+- Extended `apps/mobile/utils/activity.test.ts` — **2/2 new PASS** / suite **12/12** (`format-activity-full-timestamp-jest-2026-09-12.txt`): absolute `MMM d, yyyy at h:mm a` detail stamp; year + `at` separator for `@/utils/activity` `formatActivityFullTimestamp`.
 - Row 4 / row 6 mobile activity absolute timestamp helper seam → advances automated activity UI copy validation; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
@@ -1488,7 +1438,7 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 ## GitHub Actions billing BLOCKED (2026-09-12T06:51Z)
 
 - Tip `59020a6` / product `8f0bc15`: Actions jobs **Typescript**, **Jest**, **Preview with EAS** fail in ~2–4s **without starting**.
-- Annotation: *The job was not started because recent account payments have failed or your spending limit needs to be increased.*
+- Annotation: _The job was not started because recent account payments have failed or your spending limit needs to be increased._
 - Evidence: `ci-billing-blocked-2026-09-12.txt` (runs `34679141401` / `34679141409` / `34679141444`).
 - **Local** on cert worktree: `tsc --noEmit` exit 0; Jest plan-membership-revocation + access + claim-store **46/46 PASS**. Do **not** treat billing-failed jobs as product regressions.
 - Owner must fix org billing / raise Actions spend limit, then re-run checks on [#241](https://github.com/Stringsaeed/money-management/pull/241). Relates to #232 only. Matrix still incomplete.
@@ -1646,7 +1596,6 @@ Do not merge as certified. No production deploy. Parent #224 stays open. **Do no
 - Callback / signed-in session / protected oRPC: **not evidenced** on the OTP path (AX hard-stop). Client-id mismatch **cleared** (now EQUAL). Post-login protected oRPC **not retested** on the finish pass (sim signed out).
 - #242 live on `auth.trove.ing` (`44fde92`).
 
-
 ## Rebase onto main + #242 (2026-09-11T20:45Z)
 
 - Rebased `cursor/workos-certify-migration-b3d1` onto `origin/main` @ `44fde92` (merge of [#242](https://github.com/Stringsaeed/money-management/pull/242)).
@@ -1657,10 +1606,9 @@ Do not merge as certified. No production deploy. Parent #224 stays open. **Do no
 
 ### Client-id equality (Mac evidence)
 
-| Sub-criterion | Status | Evidence |
-| --- | --- | --- |
+| Sub-criterion                                          | Status | Evidence                                                                                                                |
+| ------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------- |
 | Mobile public client id matches API `WORKOS_CLIENT_ID` | `PASS` | Names only: `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (**EQUAL**; values omitted) (`client-id-compare.txt`). |
-
 
 ## Matrix honesty pass (2026-09-11T21:08Z)
 
@@ -1680,13 +1628,13 @@ Do not merge as certified. No production deploy. Parent #224 stays open. **Do no
 
 ## Status legend
 
-| Status | Meaning |
-| --- | --- |
-| `PASS` | Required evidence exists and the case succeeded. |
-| `FAIL` | Required check ran and failed. Call out pre-existing vs regression. |
-| `PARTIAL` | Some sub-criteria have evidence; others are missing, blocked, or not in the captured suite. |
-| `BLOCKED` | Cannot run a required case. Missing env **names** listed; no values. |
-| `SKIPPED` | Intentionally not run, or predecessor skipped the work. |
+| Status        | Meaning                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------- |
+| `PASS`        | Required evidence exists and the case succeeded.                                                  |
+| `FAIL`        | Required check ran and failed. Call out pre-existing vs regression.                               |
+| `PARTIAL`     | Some sub-criteria have evidence; others are missing, blocked, or not in the captured suite.       |
+| `BLOCKED`     | Cannot run a required case. Missing env **names** listed; no values.                              |
+| `SKIPPED`     | Intentionally not run, or predecessor skipped the work.                                           |
 | `IN PROGRESS` | Harness started. **Do not treat as pass.** Parent fills the Runtime section when artifacts exist. |
 
 A row is complete only when every required sub-criterion is `PASS` (or an explicitly accepted skip with evidence). `PARTIAL` / `BLOCKED` / `IN PROGRESS` / `SKIPPED` are **not** completion.
@@ -1697,35 +1645,35 @@ A row is complete only when every required sub-criterion is `PASS` (or an explic
 
 ### 1. Type / lint / format / CI on the integrated revision
 
-| Sub-criterion | Status | Evidence |
-| --- | --- | --- |
-| `tsc --noEmit` `apps/mobile` | `PASS` | GitHub Actions **Typescript check** SUCCESS on tip `ded1e97` (`ci-stamp-2026-09-12.txt`, run 34675791245). Prior local exit 0 also reported. |
-| `tsc --noEmit` `packages/api` | `PASS` | Covered by same CI Typescript job + prior local exit 0. |
-| `tsc --noEmit` `packages/auth` | `PASS` | Same. |
-| `tsc --noEmit` `packages/db` | `PASS` | Same. |
-| `pnpm lint` / `pnpm lint:fix` | `FAIL` (pre-existing) | `lint.txt`, `lint-fix.txt`. **794** `error` lines (anti-slop / complexity). Not a #232 regression: product code unchanged on this branch. |
-| `pnpm format:check` | `FAIL` (pre-existing) | `format-check.txt`. 8 files: `apps/mobile/components/ui/input.tsx`, five `artifacts/powersync-planetscale*` paths, `internal/228-wip-gap-checklist.md`. Not a #232 regression. |
-| Full `pnpm test:ci` / CI Jest | `PASS` | Prior `test-ci.txt` (Jest **742** + cutover **3**). Tip `ded1e97` GitHub Actions **Jest** SUCCESS (`ci-stamp-2026-09-12.txt`, run 34675791249). EAS Preview SUCCESS. GitGuardian FAILURE recorded (not product FAIL). |
+| Sub-criterion                  | Status                | Evidence                                                                                                                                                                                                              |
+| ------------------------------ | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tsc --noEmit` `apps/mobile`   | `PASS`                | GitHub Actions **Typescript check** SUCCESS on tip `ded1e97` (`ci-stamp-2026-09-12.txt`, run 34675791245). Prior local exit 0 also reported.                                                                          |
+| `tsc --noEmit` `packages/api`  | `PASS`                | Covered by same CI Typescript job + prior local exit 0.                                                                                                                                                               |
+| `tsc --noEmit` `packages/auth` | `PASS`                | Same.                                                                                                                                                                                                                 |
+| `tsc --noEmit` `packages/db`   | `PASS`                | Same.                                                                                                                                                                                                                 |
+| `pnpm lint` / `pnpm lint:fix`  | `FAIL` (pre-existing) | `lint.txt`, `lint-fix.txt`. **794** `error` lines (anti-slop / complexity). Not a #232 regression: product code unchanged on this branch.                                                                             |
+| `pnpm format:check`            | `FAIL` (pre-existing) | `format-check.txt`. 8 files: `apps/mobile/components/ui/input.tsx`, five `artifacts/powersync-planetscale*` paths, `internal/228-wip-gap-checklist.md`. Not a #232 regression.                                        |
+| Full `pnpm test:ci` / CI Jest  | `PASS`                | Prior `test-ci.txt` (Jest **742** + cutover **3**). Tip `ded1e97` GitHub Actions **Jest** SUCCESS (`ci-stamp-2026-09-12.txt`, run 34675791249). EAS Preview SUCCESS. GitGuardian FAILURE recorded (not product FAIL). |
 
 **Row status: `PARTIAL`.** Typecheck + Jest CI pass on tip; lint/format fail pre-existing (not #232 regressions). GitGuardian failure noted separately.
 
 ### 2. Email-code sign-in, cancel, callback validation, restart, refresh rotation, session expiry, transient network recovery — iOS and Android
 
-| Sub-criterion | Status | Evidence |
-| --- | --- | --- |
-| Access-token verify (issuer / audience / expiry / bearer) | `PARTIAL` (automated only) | `@trove/auth` vitest **14/14** in `test-auth.txt`. Does **not** prove hosted AuthKit PKCE return on device. #242 (`44fde92`) is live on `auth.trove.ing` (aud/`client_id` fix). |
-| Email-code sign-in (live iOS) | `PARTIAL` / hard-stopped | Reached WorkOS AuthKit staging email page + **Check your email** / 6-box challenge (`authkit-07-workos-page.png`, `authkit-08-email-filled.png`, `authkit-09-code-challenge.png`). OTP entry **BLOCKED**: agent-device reports AX-unavailable inside ASWebAuthenticationSession; `fill` selects page text instead of digit boxes. Final UI still signed out (`authkit-21-signed-out-final.png`). Android not started. |
-| Cancel abandoned sign-in | `PASS` (iOS) | Sheet open → Cancel → Settings (`authkit-03-sheet-open.png`, `authkit-04-cancel.png`). |
-| Callback / state validation on return | not evidenced on device | OTP not completed; no PKCE callback artifact. |
-| Restart survives session | not evidenced | No signed-in session. |
-| Refresh rotation | not evidenced | No signed-in session. |
-| Session expiry | not evidenced on device | Automated expired-token coverage in `@trove/auth` only. |
-| Transient network recovery | not evidenced | No runtime artifact. |
-| Post-login JWT verify (issuer) | `PASS` (post-#246) | #246 Deploy Worker [34659057570](https://github.com/Stringsaeed/money-management/actions/runs/34659057570) on `5899747` cleared prior `claim_iss`. Sync progresses past JWT verify. |
-| Post-login protected oRPC / bearer (`listMine`) | `PASS` (post-#250) | HTTP **200** `{"json":[]}` (`post-250-sync-retest.md`). |
-| Post-login Sync `migration/getManifest` | `PASS` (post-schema 0011–0015) | CF Worker **200** (216ms / 412ms); iPhone 17 Pro UI **Upload to your cloud?** (`post-schema-sync-retest.md`, `authkit-102-postschema-upload-offer.png`). Prior ledger_id **42703** cleared. |
-| iOS development build | prior FAIL then recovered | ExpoSQLite vendor + Metro `.rnrepo-cache` blockList on this branch; post-schema retest used **iPhone 17 Pro** (`simctl` / agent-device; **no stim**). |
-| Android development build | `BLOCKED` / not started | No Android agent-device artifacts. Explicit stamp: `android-runtime-blocked.md`. **Do not claim Android pass.** |
+| Sub-criterion                                             | Status                         | Evidence                                                                                                                                                                                                                                                                                                                                                                                                              |
+| --------------------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Access-token verify (issuer / audience / expiry / bearer) | `PARTIAL` (automated only)     | `@trove/auth` vitest **14/14** in `test-auth.txt`. Does **not** prove hosted AuthKit PKCE return on device. #242 (`44fde92`) is live on `auth.trove.ing` (aud/`client_id` fix).                                                                                                                                                                                                                                       |
+| Email-code sign-in (live iOS)                             | `PARTIAL` / hard-stopped       | Reached WorkOS AuthKit staging email page + **Check your email** / 6-box challenge (`authkit-07-workos-page.png`, `authkit-08-email-filled.png`, `authkit-09-code-challenge.png`). OTP entry **BLOCKED**: agent-device reports AX-unavailable inside ASWebAuthenticationSession; `fill` selects page text instead of digit boxes. Final UI still signed out (`authkit-21-signed-out-final.png`). Android not started. |
+| Cancel abandoned sign-in                                  | `PASS` (iOS)                   | Sheet open → Cancel → Settings (`authkit-03-sheet-open.png`, `authkit-04-cancel.png`).                                                                                                                                                                                                                                                                                                                                |
+| Callback / state validation on return                     | not evidenced on device        | OTP not completed; no PKCE callback artifact.                                                                                                                                                                                                                                                                                                                                                                         |
+| Restart survives session                                  | not evidenced                  | No signed-in session.                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Refresh rotation                                          | not evidenced                  | No signed-in session.                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Session expiry                                            | not evidenced on device        | Automated expired-token coverage in `@trove/auth` only.                                                                                                                                                                                                                                                                                                                                                               |
+| Transient network recovery                                | not evidenced                  | No runtime artifact.                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Post-login JWT verify (issuer)                            | `PASS` (post-#246)             | #246 Deploy Worker [34659057570](https://github.com/Stringsaeed/money-management/actions/runs/34659057570) on `5899747` cleared prior `claim_iss`. Sync progresses past JWT verify.                                                                                                                                                                                                                                   |
+| Post-login protected oRPC / bearer (`listMine`)           | `PASS` (post-#250)             | HTTP **200** `{"json":[]}` (`post-250-sync-retest.md`).                                                                                                                                                                                                                                                                                                                                                               |
+| Post-login Sync `migration/getManifest`                   | `PASS` (post-schema 0011–0015) | CF Worker **200** (216ms / 412ms); iPhone 17 Pro UI **Upload to your cloud?** (`post-schema-sync-retest.md`, `authkit-102-postschema-upload-offer.png`). Prior ledger_id **42703** cleared.                                                                                                                                                                                                                           |
+| iOS development build                                     | prior FAIL then recovered      | ExpoSQLite vendor + Metro `.rnrepo-cache` blockList on this branch; post-schema retest used **iPhone 17 Pro** (`simctl` / agent-device; **no stim**).                                                                                                                                                                                                                                                                 |
+| Android development build                                 | `BLOCKED` / not started        | No Android agent-device artifacts. Explicit stamp: `android-runtime-blocked.md`. **Do not claim Android pass.**                                                                                                                                                                                                                                                                                                       |
 
 **Row status: `PARTIAL` (cancel PASS; email challenge PARTIAL; OTP/callback hard-stopped; JWT verify PASS; `listMine` PASS; `getManifest` PASS post-DDL). Full row-2 still incomplete (OTP/Android/session rows).**
 
@@ -1735,54 +1683,54 @@ Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT
 
 ### 3. Anonymous use, confirmed first upload, populated cloud + separate device data, two-device personal sync without orgs
 
-| Sub-criterion | Status | Evidence |
-| --- | --- | --- |
-| Personal ledger without a Household | `PARTIAL` (API seam) | `test-api-workos-seams.txt`: `personal-ledger.test.ts` **18** (creates/joins no Household; isolation; import on personal scope). `personal-budget-recurring.test.ts` **4**. `test-ledger-scope.txt` **5/5** (personal vs organization ledger ids). |
-| Confirmed first upload / import manifest | `PASS` (live getManifest + Pressable upload) | Live `POST /rpc/migration/getManifest` **200** after DDL 0011–0015 (`post-schema-sync-retest.md`). Pressable confirm → Uploading… → enabled at tip `fb8c786` (`post-pressable-upload-pass.md`). Automated: `import-bundle.test.ts` **15**, `manifest.test.ts` **13**; mobile hook tests **19/19**. Two-store / two-device proof still not certified. |
-| One-device personal sync round-trip (Create Account → txn → Synced) | `BLOCKED` | Add Account **Create Account** hit-test miss after #254/#255/#256. Metro-confirmed MISS tip `c9a3ca8` (`create-account-fresh-mac-blocked.md`; cert evidence `9e3f69f`). Next candidate [#258](https://github.com/Stringsaeed/money-management/pull/258) tip `709acf8` — Mac retest **BLOCKED** (self-hosted agents ghosting). **Not** PASS. `create-account-hittest-status.md`. |
-| Anonymous local-only use | not evidenced | Requires device. No stim/agent-device proof. |
-| Populated cloud opens separately; device ledger preserved; no auto-merge | not evidenced live | Same mobile/API seams are not two-store device proof. |
-| Two-device personal core / budget / recurring sync, no orgs | not evidenced | No second-device run. `EXPO_PUBLIC_POWERSYNC_URL` absent locally; client may obtain the endpoint from the API token response when hitting `auth.trove.ing`. That does **not** certify two-device sync. |
+| Sub-criterion                                                            | Status                                       | Evidence                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------------------------ | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Personal ledger without a Household                                      | `PARTIAL` (API seam)                         | `test-api-workos-seams.txt`: `personal-ledger.test.ts` **18** (creates/joins no Household; isolation; import on personal scope). `personal-budget-recurring.test.ts` **4**. `test-ledger-scope.txt` **5/5** (personal vs organization ledger ids).                                                                                                                              |
+| Confirmed first upload / import manifest                                 | `PASS` (live getManifest + Pressable upload) | Live `POST /rpc/migration/getManifest` **200** after DDL 0011–0015 (`post-schema-sync-retest.md`). Pressable confirm → Uploading… → enabled at tip `fb8c786` (`post-pressable-upload-pass.md`). Automated: `import-bundle.test.ts` **15**, `manifest.test.ts` **13**; mobile hook tests **19/19**. Two-store / two-device proof still not certified.                            |
+| One-device personal sync round-trip (Create Account → txn → Synced)      | `BLOCKED`                                    | Add Account **Create Account** hit-test miss after #254/#255/#256. Metro-confirmed MISS tip `c9a3ca8` (`create-account-fresh-mac-blocked.md`; cert evidence `9e3f69f`). Next candidate [#258](https://github.com/Stringsaeed/money-management/pull/258) tip `709acf8` — Mac retest **BLOCKED** (self-hosted agents ghosting). **Not** PASS. `create-account-hittest-status.md`. |
+| Anonymous local-only use                                                 | not evidenced                                | Requires device. No stim/agent-device proof.                                                                                                                                                                                                                                                                                                                                    |
+| Populated cloud opens separately; device ledger preserved; no auto-merge | not evidenced live                           | Same mobile/API seams are not two-store device proof.                                                                                                                                                                                                                                                                                                                           |
+| Two-device personal core / budget / recurring sync, no orgs              | not evidenced                                | No second-device run. `EXPO_PUBLIC_POWERSYNC_URL` absent locally; client may obtain the endpoint from the API token response when hitting `auth.trove.ing`. That does **not** certify two-device sync.                                                                                                                                                                          |
 
 **Row status: `PARTIAL` — personal upload PASS; Create Account round-trip `BLOCKED`; two-device not run.**
 
 ### 4. Explicit Household create, multi-Household switch, invitations, management return, admin/member/viewer, personal-data privacy
 
-| Sub-criterion | Status | Evidence |
-| --- | --- | --- |
-| Explicit Household create (no implicit org on sign-in) | `PARTIAL` (API seam) | `households/service.test.ts` **25** in `test-api-workos-seams.txt` (`createHousehold`, retries, list/get, invite, roles, last-admin, delete, widget handoff). Personal-ledger tests assert sign-in/write does not create a Household. |
-| Multi-Household switch | `PARTIAL` (encode/decode seam) / live not run | Per-user ledger selection encode/decode/clear **PASS** automated (`ledger-selection-store.test.ts`); live device selector switch still **not** evidenced. |
-| Invitations via WorkOS | `PARTIAL` (API seam) | `member administration > lets only admins invite, through WorkOS invitations`. No live invite acceptance. |
-| Management-page return (widget) | `PARTIAL` (API + auth) | Widget handoff + expired/demoted-admin codes in households tests; `@trove/auth` member-widget-page **3**. No iOS/Android return artifact. |
-| Admin / member / viewer | `PARTIAL` (API + client role map) | Import-bundle rejects member/viewer bulk-import; households role changes; PowerSync streams deny inactive/unknown roles (`test-powersync-proper.txt` **9/9**). Viewer command deny **PASS** in `pipeline.test.ts` **18/18** (`test-pipeline-viewer-deny.txt`). Client `toMembershipSummary` / `roleLabel` **PASS** (`memberships.test.ts` **4/4**) — unknown slugs dropped; admin/member/viewer mapped. Device role UX not run; live viewer bearer absent. |
-| Personal data stays private on create/join | `PARTIAL` (API seam) | Personal vs Household isolation in personal-ledger + budget-recurring + PowerSync streams. No live create/join privacy proof. |
-| Webhook-driven membership apply | `BLOCKED` (prod) | Live `POST /webhooks/workos` on `auth.trove.ing` → **503** `WORKOS_WEBHOOK_SECRET is not configured.` (`workos-webhook-blocked.md`, `workos-webhook-probe-2026-09-12d.txt` 06:30Z). Runner name **ABSENT**. Local name may be present; **prod binding empty**. Not 404/401/500. |
+| Sub-criterion                                          | Status                                        | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------ | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Explicit Household create (no implicit org on sign-in) | `PARTIAL` (API seam)                          | `households/service.test.ts` **25** in `test-api-workos-seams.txt` (`createHousehold`, retries, list/get, invite, roles, last-admin, delete, widget handoff). Personal-ledger tests assert sign-in/write does not create a Household.                                                                                                                                                                                                                      |
+| Multi-Household switch                                 | `PARTIAL` (encode/decode seam) / live not run | Per-user ledger selection encode/decode/clear **PASS** automated (`ledger-selection-store.test.ts`); live device selector switch still **not** evidenced.                                                                                                                                                                                                                                                                                                  |
+| Invitations via WorkOS                                 | `PARTIAL` (API seam)                          | `member administration > lets only admins invite, through WorkOS invitations`. No live invite acceptance.                                                                                                                                                                                                                                                                                                                                                  |
+| Management-page return (widget)                        | `PARTIAL` (API + auth)                        | Widget handoff + expired/demoted-admin codes in households tests; `@trove/auth` member-widget-page **3**. No iOS/Android return artifact.                                                                                                                                                                                                                                                                                                                  |
+| Admin / member / viewer                                | `PARTIAL` (API + client role map)             | Import-bundle rejects member/viewer bulk-import; households role changes; PowerSync streams deny inactive/unknown roles (`test-powersync-proper.txt` **9/9**). Viewer command deny **PASS** in `pipeline.test.ts` **18/18** (`test-pipeline-viewer-deny.txt`). Client `toMembershipSummary` / `roleLabel` **PASS** (`memberships.test.ts` **4/4**) — unknown slugs dropped; admin/member/viewer mapped. Device role UX not run; live viewer bearer absent. |
+| Personal data stays private on create/join             | `PARTIAL` (API seam)                          | Personal vs Household isolation in personal-ledger + budget-recurring + PowerSync streams. No live create/join privacy proof.                                                                                                                                                                                                                                                                                                                              |
+| Webhook-driven membership apply                        | `BLOCKED` (prod)                              | Live `POST /webhooks/workos` on `auth.trove.ing` → **503** `WORKOS_WEBHOOK_SECRET is not configured.` (`workos-webhook-blocked.md`, `workos-webhook-probe-2026-09-12d.txt` 06:30Z). Runner name **ABSENT**. Local name may be present; **prod binding empty**. Not 404/401/500.                                                                                                                                                                            |
 
 **Row status: `PARTIAL` automated / live not run / webhook apply `BLOCKED` (prod secret missing).**
 
 ### 5. Cross-User/Household API/stream isolation, cross-scope financial-ref rejection, queued writes after role downgrade, stale-response handling
 
-| Sub-criterion | Status | Evidence |
-| --- | --- | --- |
-| Cross-User personal isolation | `PARTIAL` (API + streams) | Personal-ledger isolation (invisible, not merely forbidden); personal budget/recurring cross-user reject; PowerSync personal stream scoped by owner (`test-powersync-proper.txt`). Live dual-identity probe **BLOCKED** — absent `CERT_USER_A_TOKEN` / `CERT_USER_B_TOKEN` (and WorkOS mint names). |
-| Cross-Household / stream isolation | `PARTIAL` (API + streams) | Households `getHousehold` invisible to non-members; PowerSync “Personal Ledger and Household streams from bleeding”; household queries membership-guarded. Live dual-identity probe **BLOCKED** (same missing token names). |
-| Cross-scope financial-reference rejection | `PARTIAL` (API seam) | Personal-ledger rejects addressing another User’s account / category / envelope; organization-scope rejects a non-member. Viewer capability map now **PASS** in `pipeline.test.ts` **18/18** (`test-pipeline-viewer-deny.txt`). Live viewer bearer still absent. |
-| Queued writes after role downgrade | `PASS` (automated) | `ledger.test.ts` rechecks live membership after member→viewer demotion and forbids the drained `transaction.create`; `connector.test.ts` completes CRUD and records `forbidden` in `rejected_changes` (does not leave the batch stuck). Live multi-device demotion still not run. |
-| Stale-response handling | `PARTIAL` (events + client cleanup + selection/identity/claim helpers) | Membership projection stale/older/delayed observations (`test-deletion-projection.txt` **18/18**, also inside the 97). Client sign-out cleanup clears PowerSync + sync enrollment + claim/selection + query caches (`sign-out-session.test.ts` **2/2`). Membership-revocation planner **PASS** (`plan-membership-revocation.test.ts` **5/5**): enrollment-loss → sync clear plan; stale Household selection clear; Personal untouched; claim untouched. `normalizeLedgerSelection` stale id → Personal **PASS** (`access.test.ts`). Per-user selection clear + `sameIdentity` mismatch helpers **PASS** (`ledger-selection-store.test.ts`, `identity.test.ts`) — automated only; live stale HTTP/sync after identity switch still **not** device-certified. |
-| Live API/stream isolation | `PARTIAL` (auth-gate) / dual-identity `BLOCKED` | Auth-gate **PASS**: missing → **401** `missing_token`; forged JWT + forged org/user body → **401** `invalid_token` (`live-auth-gate-probe-2026-09-12.txt`; CF **7**+**8**). Authenticated cross-tenant negatives **BLOCKED** without dual session tokens. |
+| Sub-criterion                             | Status                                                                 | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ----------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cross-User personal isolation             | `PARTIAL` (API + streams)                                              | Personal-ledger isolation (invisible, not merely forbidden); personal budget/recurring cross-user reject; PowerSync personal stream scoped by owner (`test-powersync-proper.txt`). Live dual-identity probe **BLOCKED** — absent `CERT_USER_A_TOKEN` / `CERT_USER_B_TOKEN` (and WorkOS mint names).                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Cross-Household / stream isolation        | `PARTIAL` (API + streams)                                              | Households `getHousehold` invisible to non-members; PowerSync “Personal Ledger and Household streams from bleeding”; household queries membership-guarded. Live dual-identity probe **BLOCKED** (same missing token names).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Cross-scope financial-reference rejection | `PARTIAL` (API seam)                                                   | Personal-ledger rejects addressing another User’s account / category / envelope; organization-scope rejects a non-member. Viewer capability map now **PASS** in `pipeline.test.ts` **18/18** (`test-pipeline-viewer-deny.txt`). Live viewer bearer still absent.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Queued writes after role downgrade        | `PASS` (automated)                                                     | `ledger.test.ts` rechecks live membership after member→viewer demotion and forbids the drained `transaction.create`; `connector.test.ts` completes CRUD and records `forbidden` in `rejected_changes` (does not leave the batch stuck). Live multi-device demotion still not run.                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Stale-response handling                   | `PARTIAL` (events + client cleanup + selection/identity/claim helpers) | Membership projection stale/older/delayed observations (`test-deletion-projection.txt` **18/18**, also inside the 97). Client sign-out cleanup clears PowerSync + sync enrollment + claim/selection + query caches (`sign-out-session.test.ts` **2/2`). Membership-revocation planner **PASS** (`plan-membership-revocation.test.ts`**5/5**): enrollment-loss → sync clear plan; stale Household selection clear; Personal untouched; claim untouched.`normalizeLedgerSelection` stale id → Personal **PASS** (`access.test.ts`). Per-user selection clear + `sameIdentity` mismatch helpers **PASS** (`ledger-selection-store.test.ts`, `identity.test.ts`) — automated only; live stale HTTP/sync after identity switch still **not** device-certified. |
+| Live API/stream isolation                 | `PARTIAL` (auth-gate) / dual-identity `BLOCKED`                        | Auth-gate **PASS**: missing → **401** `missing_token`; forged JWT + forged org/user body → **401** `invalid_token` (`live-auth-gate-probe-2026-09-12.txt`; CF **7**+**8**). Authenticated cross-tenant negatives **BLOCKED** without dual session tokens.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 **Row status: `PARTIAL`.** Isolation seams + auth-gate + viewer pipeline + automated demotion-queue PASS; live dual-identity and client stale-response after identity switch are **not** certified.
 
 ### 6. Duplicated / reordered / missed events + reconciliation; PowerSync removal / offline-device limitation
 
-| Sub-criterion | Status | Evidence |
-| --- | --- | --- |
-| Duplicate membership events | `PASS` (API seam) | `projectMembership ordering rule > applies the same event twice without changing anything`. |
-| Reordered / delayed / missed events + reconciliation | `PASS` (API seam) | Older-after-newer ignored; delayed newer wins; deletion tombstone vs stale created; bootstrap tombstones; `listMyHouseholds` drops a membership WorkOS no longer lists. |
-| Unknown Household/User refuse | `PASS` (API seam) | Projection refuses unknown Households/Users; households ignore unknown Organizations. |
-| PowerSync connection removal (measured bound) | `BLOCKED` | Not measured. Local worker mint blocked — absent: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`. Explicit stamp: `powersync-disposable-reset-blocked.md`. GitHub Actions secrets **do** include `POWERSYNC_*` (names only; values not claimed). Stream **config** tests (`test-powersync-proper.txt` **9/9**) are not a live removal bound. |
-| Offline-device limitation (cannot observe remote removal until reconnect) | `BLOCKED` / not measured | No offline-device run. Same mint env hard-stop. Do not promise remote erasure while disconnected. |
-| Client `local_only` / `kill_switch` → ledger `offline_cached` | `PASS` (automated) / live not run | `selectLedgerSourceForAccess` in `access.test.ts`: `kill_switch` → `Sync is temporarily unavailable.`; `powersync_unavailable` → `PowerSync has been disconnected for over 10 minutes.` (`ledger-source-offline-jest-2026-09-12.txt`, suite **35/35**). Not a live offline-device measure. |
+| Sub-criterion                                                             | Status                            | Evidence                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Duplicate membership events                                               | `PASS` (API seam)                 | `projectMembership ordering rule > applies the same event twice without changing anything`.                                                                                                                                                                                                                                                                     |
+| Reordered / delayed / missed events + reconciliation                      | `PASS` (API seam)                 | Older-after-newer ignored; delayed newer wins; deletion tombstone vs stale created; bootstrap tombstones; `listMyHouseholds` drops a membership WorkOS no longer lists.                                                                                                                                                                                         |
+| Unknown Household/User refuse                                             | `PASS` (API seam)                 | Projection refuses unknown Households/Users; households ignore unknown Organizations.                                                                                                                                                                                                                                                                           |
+| PowerSync connection removal (measured bound)                             | `BLOCKED`                         | Not measured. Local worker mint blocked — absent: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`. Explicit stamp: `powersync-disposable-reset-blocked.md`. GitHub Actions secrets **do** include `POWERSYNC_*` (names only; values not claimed). Stream **config** tests (`test-powersync-proper.txt` **9/9**) are not a live removal bound. |
+| Offline-device limitation (cannot observe remote removal until reconnect) | `BLOCKED` / not measured          | No offline-device run. Same mint env hard-stop. Do not promise remote erasure while disconnected.                                                                                                                                                                                                                                                               |
+| Client `local_only` / `kill_switch` → ledger `offline_cached`             | `PASS` (automated) / live not run | `selectLedgerSourceForAccess` in `access.test.ts`: `kill_switch` → `Sync is temporarily unavailable.`; `powersync_unavailable` → `PowerSync has been disconnected for over 10 minutes.` (`ledger-source-offline-jest-2026-09-12.txt`, suite **35/35**). Not a live offline-device measure.                                                                      |
 
 **Row status: `PARTIAL` (event seams + client offlineReason) + `BLOCKED` (live PowerSync removal / offline measure).**
 
@@ -1790,27 +1738,27 @@ Note: `test-powersync.txt` is a **failed** `vitest run` (`No test suite found` /
 
 ### 7. Sync-or-discard sign-out, identity switching, User deletion preserving shared history, last-admin guard, recoverable Household deletion
 
-| Sub-criterion | Status | Evidence |
-| --- | --- | --- |
-| User deletion anonymizes attribution, clears personal data, ignores delayed membership events | `PASS` (API seam) | `deletion/service.test.ts` in `test-api-workos-seams.txt` and `test-deletion-projection.txt`. |
-| Last-admin / sole-admin User-deletion guard | `PASS` (API seam) | `requestUserDeletion > blocks sole admins until they appoint another admin or delete the Household`; households `keeps the last admin in place`. |
-| Recoverable Household deletion | `PASS` (API seam) | Confirm-name + admin-only; shared ledger removed, personal kept, org tombstoned; resumes after WorkOS failure without duplicating local deletes. |
-| Sync-or-discard sign-out | `PASS` (automated) / live not run | `use-sign-out.test.tsx` **4/4**: empty queue signs out immediately; pending uploads open sync-or-discard sheet; discard signs out without drain; sync-then-sign-out drains then signs out. Live hosted sheet on device still **not** run. |
-| Identity switching (cache / queue isolation) | `PASS` (automated cleanup + helpers + claim + session probe) / live not run | `sign-out-session.test.ts` **2/2**: signed-out cleanup disconnects PowerSync, clears sync enrollment, sets `local_only`/`powersync_unavailable`, remote sign-out, clears ledger selection + claim, removes households/household/migration/sync queries. Identity claim SecureStore seam **PASS** (`claim-store.test.ts` **8/8**). `sameIdentity` + per-user selection key isolation **PASS** (`identity.test.ts`, `ledger-selection-store.test.ts`). Async `probeSession` / `tryRemoteSignOut` **PASS** (`session-probe.test.ts` **13/13** including prior mapSnapshot). Live dual-identity switch still **BLOCKED** (tokens absent). |
-| Sign-out / deletion on iOS and Android | not evidenced | Runtime section empty of pass paths. |
+| Sub-criterion                                                                                 | Status                                                                      | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| User deletion anonymizes attribution, clears personal data, ignores delayed membership events | `PASS` (API seam)                                                           | `deletion/service.test.ts` in `test-api-workos-seams.txt` and `test-deletion-projection.txt`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Last-admin / sole-admin User-deletion guard                                                   | `PASS` (API seam)                                                           | `requestUserDeletion > blocks sole admins until they appoint another admin or delete the Household`; households `keeps the last admin in place`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Recoverable Household deletion                                                                | `PASS` (API seam)                                                           | Confirm-name + admin-only; shared ledger removed, personal kept, org tombstoned; resumes after WorkOS failure without duplicating local deletes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Sync-or-discard sign-out                                                                      | `PASS` (automated) / live not run                                           | `use-sign-out.test.tsx` **4/4**: empty queue signs out immediately; pending uploads open sync-or-discard sheet; discard signs out without drain; sync-then-sign-out drains then signs out. Live hosted sheet on device still **not** run.                                                                                                                                                                                                                                                                                                                                                                                             |
+| Identity switching (cache / queue isolation)                                                  | `PASS` (automated cleanup + helpers + claim + session probe) / live not run | `sign-out-session.test.ts` **2/2**: signed-out cleanup disconnects PowerSync, clears sync enrollment, sets `local_only`/`powersync_unavailable`, remote sign-out, clears ledger selection + claim, removes households/household/migration/sync queries. Identity claim SecureStore seam **PASS** (`claim-store.test.ts` **8/8**). `sameIdentity` + per-user selection key isolation **PASS** (`identity.test.ts`, `ledger-selection-store.test.ts`). Async `probeSession` / `tryRemoteSignOut` **PASS** (`session-probe.test.ts` **13/13** including prior mapSnapshot). Live dual-identity switch still **BLOCKED** (tokens absent). |
+| Sign-out / deletion on iOS and Android                                                        | not evidenced                                                               | Runtime section empty of pass paths.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 **Row status: `PARTIAL`.** Deletion/admin/household API seams + automated sync-or-discard / session-cleanup PASS; live device sign-out and identity switch still not certified.
 
 ### 8. Clean development setup after removal/reset using live or disposable services
 
-| Sub-criterion | Status | Evidence |
-| --- | --- | --- |
-| Better Auth / custom Household removal on `main` | predecessor done | HEAD is the #240 squash that closed #231. This ticket certifies composition; it did not re-implement removal. |
-| Disposable env reset (DB, WorkOS env, PowerSync, device stores) | `SKIPPED` by #231/#240 | Reset was not performed. Cannot claim a clean start after reset. |
-| Local disposable DB / worker mint | `BLOCKED` | Absent locally: `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`); `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`. Explicit stamp: `powersync-disposable-reset-blocked.md`. |
-| Webhook verify on local worker | `PARTIAL` local / `BLOCKED` prod | Local name may be present (value omitted). **Prod** `POST https://auth.trove.ing/webhooks/workos` → **503** disabled (`workos-webhook-blocked.md`; re-probe `workos-webhook-probe-2026-09-12d.txt` 06:30Z). Runner `WORKOS_WEBHOOK_SECRET` **ABSENT**. |
-| Live API reachable | `PASS` (health only) | `https://auth.trove.ing` health **200 OK** (re-probe 06:30Z). Not a clean-install walkthrough. |
-| Clean-install anonymous + login + personal sync + Household select after reset | not evidenced | Requires the skipped reset plus device runs. |
+| Sub-criterion                                                                  | Status                           | Evidence                                                                                                                                                                                                                                                |
+| ------------------------------------------------------------------------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Better Auth / custom Household removal on `main`                               | predecessor done                 | HEAD is the #240 squash that closed #231. This ticket certifies composition; it did not re-implement removal.                                                                                                                                           |
+| Disposable env reset (DB, WorkOS env, PowerSync, device stores)                | `SKIPPED` by #231/#240           | Reset was not performed. Cannot claim a clean start after reset.                                                                                                                                                                                        |
+| Local disposable DB / worker mint                                              | `BLOCKED`                        | Absent locally: `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`); `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`. Explicit stamp: `powersync-disposable-reset-blocked.md`. |
+| Webhook verify on local worker                                                 | `PARTIAL` local / `BLOCKED` prod | Local name may be present (value omitted). **Prod** `POST https://auth.trove.ing/webhooks/workos` → **503** disabled (`workos-webhook-blocked.md`; re-probe `workos-webhook-probe-2026-09-12d.txt` 06:30Z). Runner `WORKOS_WEBHOOK_SECRET` **ABSENT**.  |
+| Live API reachable                                                             | `PASS` (health only)             | `https://auth.trove.ing` health **200 OK** (re-probe 06:30Z). Not a clean-install walkthrough.                                                                                                                                                          |
+| Clean-install anonymous + login + personal sync + Household select after reset | not evidenced                    | Requires the skipped reset plus device runs.                                                                                                                                                                                                            |
 
 Still BLOCKED for disposable mint/reset: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`, `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`). Values are not claimed.
 
@@ -1820,25 +1768,25 @@ Still BLOCKED for disposable mint/reset: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE
 
 ## Automated seam → row map
 
-| Captured suite | Result | Rows it partially satisfies |
-| --- | --- | --- |
-| `tsc --noEmit` mobile / api / auth / db | exit 0 | 1 |
-| `pnpm lint` / `lint:fix` | FAIL, 794 errors, pre-existing | 1 (not a #232 regression) |
-| `pnpm format:check` | FAIL, 8 pre-existing files | 1 (not a #232 regression) |
-| `@trove/auth` `vitest run` | **14/14** `test-auth.txt` | 2 (token/callback contract), 4 (widget page) |
-| `@trove/api` focused vitest (8 files) | **97/97** `test-api-workos-seams.txt` | 3, 4, 5, 6, 7 |
-| `@trove/api` `pipeline.test.ts` | **18/18** `test-pipeline-viewer-deny.txt` | 4 (viewer), 5 (capability / cross-scope) |
-| `@trove/api` deletion + projection | **18/18** `test-deletion-projection.txt` | 6, 7 |
-| `@trove/powersync` `pnpm test` (`node --test`) | **9/9** `test-powersync-proper.txt` | 3, 4, 5 |
-| `@trove/powersync` via vitest | FAIL runner mismatch `test-powersync.txt` | ignore for product status |
-| Ledger-scope `node --test` | **5/5** `test-ledger-scope.txt` | 3, 5 |
-| Mobile jest `use-enable-sync`, `use-sync-worker`, manifest, initialize | **19/19** `test-mobile-sync.txt` | 3, 7 (hooks only) |
-| Mobile jest ledger-selection / return-to / identity helpers | **17/17** `isolation-helpers-jest-2026-09-12.txt` | 4 (selection encode), 5 (per-user isolation), 7 (sameIdentity) |
-| Mobile jest claim-store SecureStore seam | **8/8** `claim-store-jest-2026-09-12.txt` | 5 (claim persistence / stale client seam), 7 (identity switch claim keys) |
-| Mobile jest session-probe async | **13/13** `session-probe-jest-2026-09-12.txt` | 7 (`probeSession` / `tryRemoteSignOut` remote seam) |
-| Mobile jest `selectLedgerSourceForAccess` local_only offlineReason | **35/35** `ledger-source-offline-jest-2026-09-12.txt` | 6 (client kill_switch / powersync `offline_cached`) |
-| Mobile jest memberships `toMembershipSummary` / `roleLabel` | **4/4** `memberships-role-jest-2026-09-12.txt` | 4 (client admin/member/viewer role boundary) |
-| `pnpm test:ci` / CI Jest | **PASS** tip stamp | 1 (`ci-stamp-2026-09-12.txt` + prior `test-ci.txt`) |
+| Captured suite                                                         | Result                                                | Rows it partially satisfies                                               |
+| ---------------------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------- |
+| `tsc --noEmit` mobile / api / auth / db                                | exit 0                                                | 1                                                                         |
+| `pnpm lint` / `lint:fix`                                               | FAIL, 794 errors, pre-existing                        | 1 (not a #232 regression)                                                 |
+| `pnpm format:check`                                                    | FAIL, 8 pre-existing files                            | 1 (not a #232 regression)                                                 |
+| `@trove/auth` `vitest run`                                             | **14/14** `test-auth.txt`                             | 2 (token/callback contract), 4 (widget page)                              |
+| `@trove/api` focused vitest (8 files)                                  | **97/97** `test-api-workos-seams.txt`                 | 3, 4, 5, 6, 7                                                             |
+| `@trove/api` `pipeline.test.ts`                                        | **18/18** `test-pipeline-viewer-deny.txt`             | 4 (viewer), 5 (capability / cross-scope)                                  |
+| `@trove/api` deletion + projection                                     | **18/18** `test-deletion-projection.txt`              | 6, 7                                                                      |
+| `@trove/powersync` `pnpm test` (`node --test`)                         | **9/9** `test-powersync-proper.txt`                   | 3, 4, 5                                                                   |
+| `@trove/powersync` via vitest                                          | FAIL runner mismatch `test-powersync.txt`             | ignore for product status                                                 |
+| Ledger-scope `node --test`                                             | **5/5** `test-ledger-scope.txt`                       | 3, 5                                                                      |
+| Mobile jest `use-enable-sync`, `use-sync-worker`, manifest, initialize | **19/19** `test-mobile-sync.txt`                      | 3, 7 (hooks only)                                                         |
+| Mobile jest ledger-selection / return-to / identity helpers            | **17/17** `isolation-helpers-jest-2026-09-12.txt`     | 4 (selection encode), 5 (per-user isolation), 7 (sameIdentity)            |
+| Mobile jest claim-store SecureStore seam                               | **8/8** `claim-store-jest-2026-09-12.txt`             | 5 (claim persistence / stale client seam), 7 (identity switch claim keys) |
+| Mobile jest session-probe async                                        | **13/13** `session-probe-jest-2026-09-12.txt`         | 7 (`probeSession` / `tryRemoteSignOut` remote seam)                       |
+| Mobile jest `selectLedgerSourceForAccess` local_only offlineReason     | **35/35** `ledger-source-offline-jest-2026-09-12.txt` | 6 (client kill_switch / powersync `offline_cached`)                       |
+| Mobile jest memberships `toMembershipSummary` / `roleLabel`            | **4/4** `memberships-role-jest-2026-09-12.txt`        | 4 (client admin/member/viewer role boundary)                              |
+| `pnpm test:ci` / CI Jest                                               | **PASS** tip stamp                                    | 1 (`ci-stamp-2026-09-12.txt` + prior `test-ci.txt`)                       |
 
 API focused files in the 97: `powersync/token.test.ts` (4), `personal-budget-recurring.test.ts` (4), `deletion/service.test.ts` (5), `membership/projection.test.ts` (13), `migration/manifest.test.ts` (13), `import-bundle.test.ts` (15), `personal-ledger.test.ts` (18), `households/service.test.ts` (25).
 
@@ -1846,16 +1794,16 @@ API focused files in the 97: `powersync/token.test.ts` (4), `personal-budget-rec
 
 ## Runtime (stim / agent-device)
 
-| Step | Status | Artifact |
-| --- | --- | --- |
-| `stim doctor ios` | Ran (stim 1.0.0-rc.21). Notes only — not a product pass. | `stim-doctor-ios.txt` |
-| `stim start` | Metro **200** on **8083** | `stim-start.json` / `metro-health-*.txt` |
-| `stim ios` | Prior build recovery on branch; **this AuthKit session did not rebuild** (`simctl launch` only). | `stim-ios-*.json` |
-| agent-device (iOS AuthKit) | **PARTIAL** — cancel PASS; email + code challenge reached; OTP hard-stopped (AX unavailable). | `authkit-01-launch.png` … `authkit-21-signed-out-final.png`, `authkit-live-write.txt` |
-| Client id equality | **EQUAL** (names only) | `client-id-compare.txt` — `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted) |
-| Post-login protected API | **PASS** (listMine + getManifest) | listMine **200** post-#250; getManifest CF **200** + iPhone 17 Pro UI upload offer (`post-schema-sync-retest.md`, `authkit-102-postschema-upload-offer.png`). **No stim**. Matrix still incomplete. |
-| `stim doctor android` / `stim android` / agent-device (Android) | `BLOCKED` / not started | `android-runtime-blocked.md` (prior `stim-doctor-android.txt` harness notes only) |
-| Maestro / verify-trove flows | not started | — |
+| Step                                                            | Status                                                                                           | Artifact                                                                                                                                                                                            |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stim doctor ios`                                               | Ran (stim 1.0.0-rc.21). Notes only — not a product pass.                                         | `stim-doctor-ios.txt`                                                                                                                                                                               |
+| `stim start`                                                    | Metro **200** on **8083**                                                                        | `stim-start.json` / `metro-health-*.txt`                                                                                                                                                            |
+| `stim ios`                                                      | Prior build recovery on branch; **this AuthKit session did not rebuild** (`simctl launch` only). | `stim-ios-*.json`                                                                                                                                                                                   |
+| agent-device (iOS AuthKit)                                      | **PARTIAL** — cancel PASS; email + code challenge reached; OTP hard-stopped (AX unavailable).    | `authkit-01-launch.png` … `authkit-21-signed-out-final.png`, `authkit-live-write.txt`                                                                                                               |
+| Client id equality                                              | **EQUAL** (names only)                                                                           | `client-id-compare.txt` — `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` (EQUAL; values omitted)                                                                                              |
+| Post-login protected API                                        | **PASS** (listMine + getManifest)                                                                | listMine **200** post-#250; getManifest CF **200** + iPhone 17 Pro UI upload offer (`post-schema-sync-retest.md`, `authkit-102-postschema-upload-offer.png`). **No stim**. Matrix still incomplete. |
+| `stim doctor android` / `stim android` / agent-device (Android) | `BLOCKED` / not started                                                                          | `android-runtime-blocked.md` (prior `stim-doctor-android.txt` harness notes only)                                                                                                                   |
+| Maestro / verify-trove flows                                    | not started                                                                                      | —                                                                                                                                                                                                   |
 
 iOS email-code OTP completion, callback, restart, refresh, expiry, network recovery, and Android remain **uncertified**. Do not treat cancel PASS alone as row-2 complete.
 
@@ -1871,23 +1819,23 @@ iOS email-code OTP completion, callback, restart, refresh, expiry, network recov
 
 ### Equality checks (no values)
 
-| Check | Result |
-| --- | --- |
+| Check                                                | Result                                                                                          |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `WORKOS_CLIENT_ID` == `EXPO_PUBLIC_WORKOS_CLIENT_ID` | **EQUAL** (`client-id-compare.txt`) — mismatch cleared; does **not** block post-login by itself |
 
 ### Present for webhook (names only)
 
-| Name | Notes |
-| --- | --- |
+| Name                    | Notes                                                                                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `WORKOS_WEBHOOK_SECRET` | **Present** locally (value omitted). **Prod** Alchemy/env binding is **empty** → live receiver **503** (`workos-webhook-blocked.md`). |
 
 ### Absent locally (block the named capability)
 
-| Absent name(s) | Blocks |
-| --- | --- |
-| `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID` | Local worker mint; live PowerSync removal-bound measure from this machine. |
-| `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`) | Local disposable DB reset / mint. |
-| `EXPO_PUBLIC_POWERSYNC_URL` | Not required if the client takes the endpoint from the API token response against `auth.trove.ing`. Still not two-device proof. |
+| Absent name(s)                                                                                             | Blocks                                                                                                                          |
+| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`                                          | Local worker mint; live PowerSync removal-bound measure from this machine.                                                      |
+| `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`) | Local disposable DB reset / mint.                                                                                               |
+| `EXPO_PUBLIC_POWERSYNC_URL`                                                                                | Not required if the client takes the endpoint from the API token response against `auth.trove.ing`. Still not two-device proof. |
 
 Do not claim secret values.
 
@@ -1939,50 +1887,50 @@ stim start --json  # -> stim-start.json (port 8083)
 
 ## Artifact index (`artifacts/issue-232/`)
 
-| File | What it is |
-| --- | --- |
-| `acceptance-matrix.md` | This matrix. |
-| `ci-stamp-2026-09-12.txt` | PR #241 tip CI: Typescript + Jest + EAS SUCCESS; GitGuardian FAILURE noted. |
-| `android-runtime-blocked.md` | Android runtime **BLOCKED** / not started (no device). |
-| `powersync-disposable-reset-blocked.md` | PowerSync removal + disposable reset **BLOCKED** (env names). |
-| `planetscale-schema-ddl-confirm-2026-09-12b.txt` | Second DDL 0011–0015 PlanetScale reconfirm **PASS**. |
-| `workos-webhook-probe-2026-09-12b.txt` | Webhook re-probe still **503** (05:47Z). |
-| `workos-webhook-probe-2026-09-12d.txt` | Webhook re-probe still **503** (06:30Z); health **200**. |
-| `isolation-helpers-jest-2026-09-12.txt` | ledger-selection / return-to / identity Jest **17/17** Relates stamp. |
-| `claim-store-jest-2026-09-12.txt` | claim-store SecureStore read/write/clear Jest **8/8** Relates stamp. |
-| `membership-revocation-jest-2026-09-12.txt` | plan-membership-revocation + normalizeLedgerSelection Jest Relates stamp (**38/38** with access suite). |
-| `session-probe-jest-2026-09-12.txt` | session-probe async `probeSession` / `tryRemoteSignOut` Jest **13/13** Relates stamp. |
-| `ledger-source-offline-jest-2026-09-12.txt` | `selectLedgerSourceForAccess` local_only offlineReason Jest **35/35** Relates stamp. |
-| `memberships-role-jest-2026-09-12.txt` | memberships `toMembershipSummary` / `roleLabel` Jest **4/4** Relates stamp. |
-| `create-account-hittest-status.md` | Create Account hit-test stamp: upload PASS; round-trip BLOCKED; #258 Mac ghosting. |
-| `post-pressable-upload-pass.md` | Pressable personal upload **PASS** (tip `fb8c786`). |
-| `post-pressable-roundtrip-blocked.md` | One-device round-trip **BLOCKED** (Create Account NativeHost). |
-| `create-account-pressable-254-blocked.md` | #254 Pressable Create Account retest **BLOCKED**. |
-| `create-account-hittest255-blocked.md` | #255 NativeHost Create Account retest **BLOCKED**. |
-| `create-account-fresh-mac-blocked.md` | #256 Metro-confirmed Create Account MISS tip `c9a3ca8`. |
-| `api-matrix-non-device.md` | Non-device Relates summary: listMine / getManifest / claim_iss PASS + isolation PARTIAL + blocked rows. |
-| `api-isolation-live-2026-09-12.md` | API-only auth-gate + viewer pipeline + schema reconfirm; live dual-identity **BLOCKED**. |
-| `live-auth-gate-probe-2026-09-12.txt` | Live curl: missing/forged JWT → **401**; webhook still **503**. |
-| `planetscale-schema-ddl-confirm-2026-09-12.txt` | PlanetScale read-only DDL 0011–0015 column reconfirm. |
-| `test-pipeline-viewer-deny.txt` | `pipeline.test.ts` **18/18** (viewer capability map). |
-| `cf-api-corroboration-2026-09-12.txt` | CF Observability re-query stamp (counts only; no secrets). |
-| `ios-otp-ax-blocker.md` | Durable iOS OTP AX **BLOCKER** for owner decision (not a PASS). |
-| `workos-webhook-blocked.md` | Prod webhook **BLOCKED** — empty `WORKOS_WEBHOOK_SECRET` → **503**. |
-| `workos-webhook-probe-2026-09-12.txt` | Live curl transcript (no secrets). |
-| `post-schema-sync-retest.md` | Post-DDL 0011–0015 getManifest **PASS** (CF Worker 200 citations). |
-| `revision.txt` | Earlier revision stamp. |
-| `authkit-live-write.txt` | This AuthKit write stamp (HEAD, #242 note, OTP hard-stop). |
-| `client-id-compare.txt` | `WORKOS_CLIENT_ID` vs `EXPO_PUBLIC_WORKOS_CLIENT_ID` equality result only. |
-| `authkit-01-launch.png` … `authkit-21-signed-out-final.png` | iOS AuthKit live screenshots (cancel, email, code challenge, signed-out final). |
-| `lint.txt` / `lint-fix.txt` / `format-check.txt` | Pre-existing lint/format failures. |
-| `test-auth.txt` | `@trove/auth` 14/14. |
-| `test-api-workos-seams.txt` | `@trove/api` focused 97/97. |
-| `test-deletion-projection.txt` | deletion + projection 18/18. |
-| `test-powersync-proper.txt` | `node --test` 9/9. |
-| `test-ledger-scope.txt` | ledger-scope 5/5. |
-| `test-mobile-sync.txt` | mobile jest 19/19. |
-| `test-ci.txt` | full `pnpm test:ci` pass (prior). |
-| `stim-doctor-ios.txt` / `stim-start.json` | harness notes / Metro. |
+| File                                                        | What it is                                                                                              |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `acceptance-matrix.md`                                      | This matrix.                                                                                            |
+| `ci-stamp-2026-09-12.txt`                                   | PR #241 tip CI: Typescript + Jest + EAS SUCCESS; GitGuardian FAILURE noted.                             |
+| `android-runtime-blocked.md`                                | Android runtime **BLOCKED** / not started (no device).                                                  |
+| `powersync-disposable-reset-blocked.md`                     | PowerSync removal + disposable reset **BLOCKED** (env names).                                           |
+| `planetscale-schema-ddl-confirm-2026-09-12b.txt`            | Second DDL 0011–0015 PlanetScale reconfirm **PASS**.                                                    |
+| `workos-webhook-probe-2026-09-12b.txt`                      | Webhook re-probe still **503** (05:47Z).                                                                |
+| `workos-webhook-probe-2026-09-12d.txt`                      | Webhook re-probe still **503** (06:30Z); health **200**.                                                |
+| `isolation-helpers-jest-2026-09-12.txt`                     | ledger-selection / return-to / identity Jest **17/17** Relates stamp.                                   |
+| `claim-store-jest-2026-09-12.txt`                           | claim-store SecureStore read/write/clear Jest **8/8** Relates stamp.                                    |
+| `membership-revocation-jest-2026-09-12.txt`                 | plan-membership-revocation + normalizeLedgerSelection Jest Relates stamp (**38/38** with access suite). |
+| `session-probe-jest-2026-09-12.txt`                         | session-probe async `probeSession` / `tryRemoteSignOut` Jest **13/13** Relates stamp.                   |
+| `ledger-source-offline-jest-2026-09-12.txt`                 | `selectLedgerSourceForAccess` local_only offlineReason Jest **35/35** Relates stamp.                    |
+| `memberships-role-jest-2026-09-12.txt`                      | memberships `toMembershipSummary` / `roleLabel` Jest **4/4** Relates stamp.                             |
+| `create-account-hittest-status.md`                          | Create Account hit-test stamp: upload PASS; round-trip BLOCKED; #258 Mac ghosting.                      |
+| `post-pressable-upload-pass.md`                             | Pressable personal upload **PASS** (tip `fb8c786`).                                                     |
+| `post-pressable-roundtrip-blocked.md`                       | One-device round-trip **BLOCKED** (Create Account NativeHost).                                          |
+| `create-account-pressable-254-blocked.md`                   | #254 Pressable Create Account retest **BLOCKED**.                                                       |
+| `create-account-hittest255-blocked.md`                      | #255 NativeHost Create Account retest **BLOCKED**.                                                      |
+| `create-account-fresh-mac-blocked.md`                       | #256 Metro-confirmed Create Account MISS tip `c9a3ca8`.                                                 |
+| `api-matrix-non-device.md`                                  | Non-device Relates summary: listMine / getManifest / claim_iss PASS + isolation PARTIAL + blocked rows. |
+| `api-isolation-live-2026-09-12.md`                          | API-only auth-gate + viewer pipeline + schema reconfirm; live dual-identity **BLOCKED**.                |
+| `live-auth-gate-probe-2026-09-12.txt`                       | Live curl: missing/forged JWT → **401**; webhook still **503**.                                         |
+| `planetscale-schema-ddl-confirm-2026-09-12.txt`             | PlanetScale read-only DDL 0011–0015 column reconfirm.                                                   |
+| `test-pipeline-viewer-deny.txt`                             | `pipeline.test.ts` **18/18** (viewer capability map).                                                   |
+| `cf-api-corroboration-2026-09-12.txt`                       | CF Observability re-query stamp (counts only; no secrets).                                              |
+| `ios-otp-ax-blocker.md`                                     | Durable iOS OTP AX **BLOCKER** for owner decision (not a PASS).                                         |
+| `workos-webhook-blocked.md`                                 | Prod webhook **BLOCKED** — empty `WORKOS_WEBHOOK_SECRET` → **503**.                                     |
+| `workos-webhook-probe-2026-09-12.txt`                       | Live curl transcript (no secrets).                                                                      |
+| `post-schema-sync-retest.md`                                | Post-DDL 0011–0015 getManifest **PASS** (CF Worker 200 citations).                                      |
+| `revision.txt`                                              | Earlier revision stamp.                                                                                 |
+| `authkit-live-write.txt`                                    | This AuthKit write stamp (HEAD, #242 note, OTP hard-stop).                                              |
+| `client-id-compare.txt`                                     | `WORKOS_CLIENT_ID` vs `EXPO_PUBLIC_WORKOS_CLIENT_ID` equality result only.                              |
+| `authkit-01-launch.png` … `authkit-21-signed-out-final.png` | iOS AuthKit live screenshots (cancel, email, code challenge, signed-out final).                         |
+| `lint.txt` / `lint-fix.txt` / `format-check.txt`            | Pre-existing lint/format failures.                                                                      |
+| `test-auth.txt`                                             | `@trove/auth` 14/14.                                                                                    |
+| `test-api-workos-seams.txt`                                 | `@trove/api` focused 97/97.                                                                             |
+| `test-deletion-projection.txt`                              | deletion + projection 18/18.                                                                            |
+| `test-powersync-proper.txt`                                 | `node --test` 9/9.                                                                                      |
+| `test-ledger-scope.txt`                                     | ledger-scope 5/5.                                                                                       |
+| `test-mobile-sync.txt`                                      | mobile jest 19/19.                                                                                      |
+| `test-ci.txt`                                               | full `pnpm test:ci` pass (prior).                                                                       |
+| `stim-doctor-ios.txt` / `stim-start.json`                   | harness notes / Metro.                                                                                  |
 
 ---
 

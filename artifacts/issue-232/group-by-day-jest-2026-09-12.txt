@@ -1,0 +1,11 @@
+PASS path: apps/mobile/utils/transaction.test.ts (groupByDay)
+PASS utils/transaction.test.ts
+  groupByDay
+    ✓ groups transactions by date and sorts newest-first (10 ms)
+    ✓ does not count transfer rows toward income or expense totals
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        0.843 s, estimated 1 s
+Ran all test suites matching /utils\/transaction.test.ts/i with tests matching "groupByDay".
