@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=8f12bc2
+gap=periodCeiling + periodLastDate
+matrix_row=3/6 budget period boundary helpers
+command=pnpm exec vitest run src/lib/budget/period.test.ts
+result=PASS 4/4
+tsc=PASS packages/api --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
