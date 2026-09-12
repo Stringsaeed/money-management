@@ -20,5 +20,6 @@ disposable_reset=BLOCKED #231 skip + absent PLANETSCALE_* / DATABASE_URL
 ios_otp_ax=BLOCKED automation (ios-otp-ax-blocker.md)
 workos_webhook=BLOCKED WORKOS_WEBHOOK_SECRET (503 re-probe 06:30Z; runner ABSENT)
 health=PASS GET / 200 OK 06:30Z
+membership_revocation_jest=PASS plan-membership-revocation 5/5 + normalizeLedgerSelection stale id (access suite 38/38)
 relates=#232 only
 certified=false

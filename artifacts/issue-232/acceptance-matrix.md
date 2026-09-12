@@ -20,14 +20,21 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `d845eb5` claim-store SecureStore Jest **8/8** (row 5/7 identity persistence seam; webhook still **503**; Create Account still **BLOCKED** on #258; dual-identity **BLOCKED**) |
+| HEAD | tip pending membership-revocation planner Jest (row 5 stale-selection + client membership cleanup seam; webhook still **503**; Create Account still **BLOCKED** on #258; dual-identity **BLOCKED**) |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/workspace/.wt-cert-232-relates` (this Relates write); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T06:30:58Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
 | Device (this write) | **none** — API/docs-only; no iOS/Android device; no Mac |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
-Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt`.
+Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt`.
+
+## Membership-revocation / stale-selection Jest Relates (2026-09-12, no device)
+
+- Added `apps/mobile/components/sync/plan-membership-revocation.ts` + `plan-membership-revocation.test.ts` (**5/5**); wired `membership-revocation-cleanup.tsx` through the planner; extended `access.test.ts` with `normalizeLedgerSelection` stale-id → Personal (**3** cases). Combined suite with existing access tests: **38/38 PASS** (`membership-revocation-jest-2026-09-12.txt`).
+- Confirmed-removal seam: clears Household sync enrollment/PowerSync plan when enrollment is lost; clears stale Household selection; **does not** clear Personal selection or identity claim (claim clear remains on explicit sign-out / `sign-out-session.test.ts` **2/2** for `session_revoked` cleanup).
+- Row 5 stale-response client cleanup → advances automated membership-revocation + selection normalize seam; live stale HTTP/sync after identity switch still **not** device-certified.
+- Create Account still **BLOCKED** on [#258](https://github.com/Stringsaeed/money-management/pull/258); webhook membership apply still **BLOCKED** (**503** empty prod `WORKOS_WEBHOOK_SECRET`); dual-identity still **BLOCKED**. Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## Claim-store SecureStore Jest Relates (2026-09-12, no device)
 
@@ -295,7 +302,7 @@ Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT
 | Cross-Household / stream isolation | `PARTIAL` (API + streams) | Households `getHousehold` invisible to non-members; PowerSync “Personal Ledger and Household streams from bleeding”; household queries membership-guarded. Live dual-identity probe **BLOCKED** (same missing token names). |
 | Cross-scope financial-reference rejection | `PARTIAL` (API seam) | Personal-ledger rejects addressing another User’s account / category / envelope; organization-scope rejects a non-member. Viewer capability map now **PASS** in `pipeline.test.ts` **18/18** (`test-pipeline-viewer-deny.txt`). Live viewer bearer still absent. |
 | Queued writes after role downgrade | `PASS` (automated) | `ledger.test.ts` rechecks live membership after member→viewer demotion and forbids the drained `transaction.create`; `connector.test.ts` completes CRUD and records `forbidden` in `rejected_changes` (does not leave the batch stuck). Live multi-device demotion still not run. |
-| Stale-response handling | `PARTIAL` (events + client cleanup + selection/identity/claim helpers) | Membership projection stale/older/delayed observations (`test-deletion-projection.txt` **18/18**, also inside the 97). Client sign-out cleanup clears PowerSync + sync enrollment + claim/selection + query caches (`sign-out-session.test.ts` **2/2`). Per-user selection clear + `sameIdentity` mismatch helpers **PASS** (`ledger-selection-store.test.ts`, `identity.test.ts`) — automated only; live stale HTTP/sync after identity switch still **not** device-certified. |
+| Stale-response handling | `PARTIAL` (events + client cleanup + selection/identity/claim helpers) | Membership projection stale/older/delayed observations (`test-deletion-projection.txt` **18/18**, also inside the 97). Client sign-out cleanup clears PowerSync + sync enrollment + claim/selection + query caches (`sign-out-session.test.ts` **2/2`). Membership-revocation planner **PASS** (`plan-membership-revocation.test.ts` **5/5**): enrollment-loss → sync clear plan; stale Household selection clear; Personal untouched; claim untouched. `normalizeLedgerSelection` stale id → Personal **PASS** (`access.test.ts`). Per-user selection clear + `sameIdentity` mismatch helpers **PASS** (`ledger-selection-store.test.ts`, `identity.test.ts`) — automated only; live stale HTTP/sync after identity switch still **not** device-certified. |
 | Live API/stream isolation | `PARTIAL` (auth-gate) / dual-identity `BLOCKED` | Auth-gate **PASS**: missing → **401** `missing_token`; forged JWT + forged org/user body → **401** `invalid_token` (`live-auth-gate-probe-2026-09-12.txt`; CF **7**+**8**). Authenticated cross-tenant negatives **BLOCKED** without dual session tokens. |
 
 **Row status: `PARTIAL`.** Isolation seams + auth-gate + viewer pipeline + automated demotion-queue PASS; live dual-identity and client stale-response after identity switch are **not** certified.
@@ -473,6 +480,7 @@ stim start --json  # -> stim-start.json (port 8083)
 | `workos-webhook-probe-2026-09-12d.txt` | Webhook re-probe still **503** (06:30Z); health **200**. |
 | `isolation-helpers-jest-2026-09-12.txt` | ledger-selection / return-to / identity Jest **17/17** Relates stamp. |
 | `claim-store-jest-2026-09-12.txt` | claim-store SecureStore read/write/clear Jest **8/8** Relates stamp. |
+| `membership-revocation-jest-2026-09-12.txt` | plan-membership-revocation + normalizeLedgerSelection Jest Relates stamp (**38/38** with access suite). |
 | `create-account-hittest-status.md` | Create Account hit-test stamp: upload PASS; round-trip BLOCKED; #258 Mac ghosting. |
 | `post-pressable-upload-pass.md` | Pressable personal upload **PASS** (tip `fb8c786`). |
 | `post-pressable-roundtrip-blocked.md` | One-device round-trip **BLOCKED** (Create Account NativeHost). |

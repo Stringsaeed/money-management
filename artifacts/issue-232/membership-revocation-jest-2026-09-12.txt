@@ -1,0 +1,51 @@
+Scope: all 12 workspace projects
+✓ Lockfile passes supply-chain policies (verified 2h ago)
+../..                                    |    +1715 ++++++++++++++++++++++++++++
+../..                                    | Progress: resolved 0, reused 1, downloaded 0, added 0
+../..                                    | Progress: resolved 0, reused 68, downloaded 0, added 0
+../..                                    | Progress: resolved 0, reused 111, downloaded 0, added 0
+Packages are hard linked from the content-addressable store to the virtual store.
+  Content-addressable store is at: /home/ubuntu/.local/share/pnpm/store/v11
+  Virtual store is at:             ../../node_modules/.pnpm
+../..                                    | Progress: resolved 0, reused 1573, downloaded 0, added 71
+../..                                    | Progress: resolved 0, reused 1573, downloaded 0, added 277
+../..                                    | Progress: resolved 0, reused 1573, downloaded 0, added 1462
+../..                                    | Progress: resolved 0, reused 1573, downloaded 0, added 1715
+../..                                    | Progress: resolved 0, reused 1573, downloaded 0, added 1715, done
+../../node_modules/tree-sitter install$ node-gyp-build
+../../node_modules/sharp install$ node install/check.js || npm run build
+../../node_modules/tree-sitter install: Done
+../../node_modules/sharp install: Done
+.../node_modules/tree-sitter-javascript install$ node-gyp-build
+.../node_modules/tree-sitter-javascript install: Done
+.../node_modules/tree-sitter-typescript install$ node-gyp-build
+.../node_modules/tree-sitter-typescript install: Done
+
+dependencies:
++ @trove/domain 0.0.0 <- ../../packages/domain
++ @trove/protocol 0.0.0 <- ../../packages/protocol
+
+devDependencies:
++ @trove/api 0.0.0 <- ../../packages/api
+
+../.. postinstall$ node ./scripts/ensure-expo-sqlite-ios-vendor.mjs
+../.. postinstall: [ensure-expo-sqlite-ios-vendor] synced vendor/sqlite3 → ios/sqlite3.{c,h}
+../.. postinstall: Done
+../../packages/protocol postinstall$ pnpm build
+../../packages/protocol postinstall: $ tsc --project tsconfig.json
+../../packages/protocol postinstall: Done
+../../packages/domain postinstall$ pnpm build
+../../packages/domain postinstall: $ tsc --project tsconfig.json
+../../packages/domain postinstall: Done
+. postinstall$ node ../../scripts/ensure-expo-sqlite-ios-vendor.mjs
+. postinstall: [ensure-expo-sqlite-ios-vendor] synced vendor/sqlite3 → ios/sqlite3.{c,h}
+. postinstall: Done
+Done in 9.4s using pnpm v11.24.0
+PASS modules/access/access.test.ts (8.766 s)
+PASS components/sync/plan-membership-revocation.test.ts
+
+Test Suites: 2 passed, 2 total
+Tests:       38 passed, 38 total
+Snapshots:   0 total
+Time:        9.787 s
+Ran all test suites matching /components\/sync\/plan-membership-revocation.test.ts|modules\/access\/access.test.ts/i.
