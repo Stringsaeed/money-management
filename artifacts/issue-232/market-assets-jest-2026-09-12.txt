@@ -1,0 +1,10 @@
+PASS path: apps/mobile/hooks/market-assets.test.ts
+PASS hooks/market-assets.test.ts
+  MARKET_ASSETS
+    ✓ locks the market asset watchlist vocabulary (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.063 s
+Ran all test suites matching /hooks\/market-assets.test.ts/i.

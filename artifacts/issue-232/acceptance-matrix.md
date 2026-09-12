@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `de73f4679e984dd00af278b23509ed037213f435` AUTH_FONT_FACES stamp — product `75f46f942d7e43e1e546f5264c88d6f7e21099bb` (`AUTH_FONT_FACES` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` MARKET_ASSETS stamp — product `1597e69284f1547f192bd18bcf21a5100975b83b` (`MARKET_ASSETS` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -251,6 +251,13 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Added `apps/mobile/utils/clamp-day.test.ts` — **1/1 new PASS** / suite **1/1** (`clamp-day-jest-2026-09-12.txt`): exact lock of `clampDay` month-length clamping (pure helper; no clock)
 - Row 4 / row 6 date clamp-day seam → advances automated calendar vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+
+## MARKET_ASSETS Relates (2026-09-12, no device)
+
+- Added `apps/mobile/hooks/market-assets.test.ts` — **1/1 new PASS** / suite **1/1** (`market-assets-jest-2026-09-12.txt`): exact lock of `MARKET_ASSETS` watchlist vocabulary (pure frozen table)
+- Row 4 / row 6 market assets seam → advances automated market-watchlist vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 
