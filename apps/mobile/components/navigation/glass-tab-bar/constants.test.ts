@@ -1,6 +1,13 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { CREATE_SIZE, PILL_PADDING, SCROLL_FADE_OVERSCAN, TAB_HEIGHT, TAB_WIDTH } from "./constants";
+import {
+  BACKGROUND_COLORS,
+  CREATE_SIZE,
+  PILL_PADDING,
+  SCROLL_FADE_OVERSCAN,
+  TAB_HEIGHT,
+  TAB_WIDTH,
+} from "./constants";
 
 describe("TAB_HEIGHT", () => {
   it("locks glass tab bar height to 44", () => {
@@ -29,5 +36,14 @@ describe("PILL_PADDING", () => {
 describe("TAB_WIDTH", () => {
   it("locks glass tab bar width to 50", () => {
     expect(TAB_WIDTH).toBe(50);
+  });
+});
+
+describe("BACKGROUND_COLORS", () => {
+  it("locks scroll-fade theme backgrounds", () => {
+    expect(BACKGROUND_COLORS).toEqual({
+      light: "#f5f5f0",
+      dark: "#0f1a14",
+    });
   });
 });
