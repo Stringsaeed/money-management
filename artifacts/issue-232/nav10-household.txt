@@ -1,0 +1,36 @@
+Page: com.stringsaeed.moneymanagement
+App: com.stringsaeed.moneymanagement
+Snapshot: 32 visible nodes (34 total)
+@e1 [application] "Trove (Dev)"
+@e2 [other] "gearshape.fill"
+@e3 [image] "gearshape.fill" [covered]
+@e4 [navigation-bar] "Settings"
+@e5 [button] "Settings"
+@e6 [text] "Profile"
+@e7 [scroll-area] "stringsaeed@gmail.com" [scrollable]
+  [content below scroll-area hidden]
+@e8 [other] "stringsaeed@gmail.com"
+@e9 [other] "Sign out"
+@e10 [button] "Sign out"
+@e11 [text] "LEDGER"
+@e12 [other] "Personal ✓"
+@e13 [button] "Personal ✓"
+@e14 [other] "The Saeeds · admin"
+@e15 [button] "The Saeeds · admin"
+@e16 [text] "Sync without a Household 🪪"
+@e17 [text] "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."
+@e18 [other] "Sync just for me"
+@e19 [button] "Sync just for me"
+@e20 [text] "Create a Household"
+@e21 [text] "Start a shared space — family accounts, budgets, and reports in one place."
+@e22 [text-field] [editable]
+@e23 [other] "🏠 Create household"
+@e24 [button] "🏠 Create household" [disabled]
+@e27 [other] "Ledger"
+@e28 [button]
+@e29 [button] "Ledger"
+@e30 [button] "Money Movement"
+@e31 [button] "Inbox"
+@e32 [button] "Envelopes"
+@e33 [button] "Settings" [selected]
+@e34 [button] "Create transaction"

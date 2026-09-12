@@ -1,0 +1,39 @@
+Tapped role=button text="Profile & household" (201, 226)
+settled after 4621ms: +22 -15 (~12 unchanged)
+- @e4 [text] "Tools"
+- @e5 [other] "Settings"
+- @e7 [scroll-area] "Profile"
+- @e8 [other] "Profile"
+- @e9 [button] "Profile & household"
+- @e10 [text] "Manage 🛠️"
+- @e11 [button] "Accounts"
+- @e12 [button] "Categories"
+- @e13 [button] "Recurring Rules"
+- @e14 [button] "Activity Timeline"
+- @e15 [text] "Stats 📊"
+- @e16 [other] "🧾, Total Transactions, 0" [disabled]
+- @e17 [other] "🏦, Accounts, 1" [disabled]
+- @e18 [other] "🔁, Active Rules, 0" [disabled]
+- @e19 [text] "Software Update 🔄"
++ @e5~s286649 [button] "Settings"
++ @e6~s286649 [text] "Profile"
++ @e7~s286649 [scroll-area] "stringsaeed@gmail.com"
++ @e8~s286649 [other] "stringsaeed@gmail.com"
++ @e9~s286649 [other] "Sign out"
++ @e10~s286649 [button] "Sign out"
++ @e11~s286649 [text] "LEDGER"
++ @e12~s286649 [other] "Personal ✓"
++ @e13~s286649 [button] "Personal ✓"
++ @e14~s286649 [other] "The Saeeds · admin"
++ @e15~s286649 [button] "The Saeeds · admin"
++ @e16~s286649 [text] "Sync without a Household 🪪"
++ @e17~s286649 [text] "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."
++ @e18~s286649 [other] "Sync just for me"
++ @e19~s286649 [button] "Sync just for me"
++ @e20~s286649 [text] "Create a Household"
++ @e21~s286649 [text] "Start a shared space — family accounts, budgets, and reports in one place."
++ @e22~s286649 [text-field]
++ @e23~s286649 [other] "🏠 Create household"
++ @e24~s286649 [button] "🏠 Create household" [disabled]
++ @e25~s286649 [text] "Join a Household"
++ @e26~s286649 [text] "Accept the WorkOS invitation email (hosted AuthKit). Custom invite codes are gone — joining never moves your Personal ledger into the shared one."

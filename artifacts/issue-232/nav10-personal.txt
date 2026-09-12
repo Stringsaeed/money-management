@@ -1,0 +1,24 @@
+Tapped id=select-ledger-personal (201, 284)
+settled after 872ms: +0 -0 (~34 unchanged)
+unchanged interactive (20):
+= @e2~s286654 [other] "gearshape.fill"
+= @e4~s286654 [navigation-bar] "Settings"
+= @e5~s286654 [button] "Settings"
+= @e6~s286654 [text] "Profile"
+= @e7~s286654 [scroll-area] "stringsaeed@gmail.com"
+= @e8~s286654 [other] "stringsaeed@gmail.com"
+= @e9~s286654 [other] "Sign out"
+= @e10~s286654 [button] "Sign out"
+= @e11~s286654 [text] "LEDGER"
+= @e12~s286654 [other] "Personal ✓"
+= @e13~s286654 [button] "Personal ✓"
+= @e14~s286654 [other] "The Saeeds · admin"
+= @e15~s286654 [button] "The Saeeds · admin"
+= @e16~s286654 [text] "Sync without a Household 🪪"
+= @e17~s286654 [text] "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."
+= @e18~s286654 [other] "Sync just for me"
+= @e19~s286654 [button] "Sync just for me"
+= @e20~s286654 [text] "Create a Household"
+= @e21~s286654 [text] "Start a shared space — family accounts, budgets, and reports in one place."
+= @e22~s286654 [text-field]
+… more interactive elements not shown, use snapshot -i
