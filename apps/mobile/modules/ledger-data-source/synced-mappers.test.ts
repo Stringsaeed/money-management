@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 
-import type { Account } from "@/types";
+import type { Account, Category } from "@/types";
 
 import {
   assertSupportedAccountUpdate,
@@ -8,6 +8,7 @@ import {
   calculateSyncedBalance,
   mapSyncedAccount,
   mapSyncedCategory,
+  mapSyncedTransaction,
   type SyncedAccount,
   type SyncedCategory,
   type SyncedTransaction,
@@ -306,5 +307,101 @@ describe("mapSyncedCategory", () => {
 
   it("keeps null lifecycleChangedAt when unset", () => {
     expect(mapSyncedCategory(syncedCategory({ lifecycleChangedAt: null })).lifecycleChangedAt).toBeNull();
+  });
+});
+
+const category = (overrides: Partial<Category> = {}): Category => ({
+  id: "cat-1",
+  name: "Groceries",
+  type: "expense",
+  color: "#B48A7B",
+  icon: "🛒",
+  parentId: null,
+  sortOrder: 0,
+  lifecycle: "active",
+  lifecycleChangedAt: null,
+  createdAt: TIMESTAMP,
+  updatedAt: TIMESTAMP,
+  ...overrides,
+});
+
+describe("mapSyncedTransaction", () => {
+  it("maps amountMinor and joins matching account and category", () => {
+    const mapped = mapSyncedTransaction(
+      tx({
+        type: "expense",
+        amountMinor: 4200,
+        accountId: "acct-a",
+        categoryId: "cat-1",
+        description: "Market",
+      }),
+      [account()],
+      [category()],
+    );
+    expect(mapped).toEqual(
+      expect.objectContaining({
+        amount: 4200,
+        type: "expense",
+        accountId: "acct-a",
+        categoryId: "cat-1",
+        description: "Market",
+        account: {
+          id: "acct-a",
+          name: "Checking",
+          color: "#000000",
+          icon: "banknote.fill",
+          currency: "USD",
+        },
+        category: { id: "cat-1", name: "Groceries", color: "#B48A7B", icon: "🛒" },
+        toAccount: null,
+      }),
+    );
+  });
+
+  it("uses Unknown account fallback when accountId is missing from the list", () => {
+    const mapped = mapSyncedTransaction(
+      tx({ accountId: "acct-missing", currency: "EUR" }),
+      [account()],
+      [category()],
+    );
+    expect(mapped.account).toEqual({
+      id: "acct-missing",
+      name: "Unknown",
+      color: "#ccc",
+      icon: "banknote.fill",
+      currency: "EUR",
+    });
+  });
+
+  it("resolves toAccount for transfers and null category when unmatched", () => {
+    const mapped = mapSyncedTransaction(
+      tx({
+        type: "transfer",
+        accountId: "acct-a",
+        toAccountId: "acct-b",
+        categoryId: "cat-missing",
+      }),
+      [account(), account({ id: "acct-b", name: "Savings", color: "#111111", icon: "tray.fill" })],
+      [category()],
+    );
+    expect(mapped.toAccount).toEqual({
+      id: "acct-b",
+      name: "Savings",
+      color: "#111111",
+      icon: "tray.fill",
+      currency: "USD",
+    });
+    expect(mapped.category).toBeNull();
+  });
+
+  it("coerces Date timestamps to ISO strings", () => {
+    const created = new Date("2026-06-01T11:00:00.000Z");
+    const mapped = mapSyncedTransaction(
+      tx({ createdAt: created, updatedAt: created }),
+      [account()],
+      [category()],
+    );
+    expect(mapped.createdAt).toBe("2026-06-01T11:00:00.000Z");
+    expect(mapped.updatedAt).toBe("2026-06-01T11:00:00.000Z");
   });
 });
