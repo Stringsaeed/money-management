@@ -1,0 +1,14 @@
+PASS modules/access/identity.test.ts
+  identityFromUser
+    ✓ maps WorkOS user fields onto Identity (2 ms)
+    ✓ uses an empty display name when name is absent
+  sameIdentity
+    ✓ matches only when userId, email, and displayName all equal (1 ms)
+    ✓ rejects a different userId (identity switch)
+    ✓ rejects email or displayName drift for the same userId (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       5 passed, 5 total
+Snapshots:   0 total
+Time:        1.048 s
+Ran all test suites matching /modules\/access\/identity.test.ts/i.

@@ -1,0 +1,14 @@
+PASS components/native-ui/recipes.test.ts
+  resolveNativeColor
+    ○ skipped resolves token, ring, destructive ring, and white refs
+  NATIVE_CONTROL_SPECS
+    ○ skipped includes primary, secondary, tertiary, and destructive roles
+  controlRecipe
+    ✓ puts width + label paint on the primary button (string label path) (3 ms)
+    ✓ paints destructive with solid fill modifiers (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       2 skipped, 2 passed, 4 total
+Snapshots:   0 total
+Time:        0.845 s, estimated 11 s
+Ran all test suites matching /components\/native-ui\/recipes.test.ts/i with tests matching "controlRecipe".

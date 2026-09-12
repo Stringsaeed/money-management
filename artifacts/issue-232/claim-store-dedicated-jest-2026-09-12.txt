@@ -1,0 +1,17 @@
+PASS modules/access/claim-store.test.ts
+  claimFromFields
+    ✓ reads none when any required field is missing (3 ms)
+    ✓ reads a held identity claim (1 ms)
+  claim SecureStore seam
+    ✓ writeClaim held round-trips through readClaim (1 ms)
+    ✓ writeClaim none clears persisted claim (1 ms)
+    ✓ clearClaim removes all identity claim keys (10 ms)
+    ✓ writeClaim skips redundant SecureStore writes when identity is unchanged
+    ✓ writeClaim persists when establishedAt changes for the same user (1 ms)
+    ✓ readClaim soft-fails to none when SecureStore throws
+
+Test Suites: 1 passed, 1 total
+Tests:       8 passed, 8 total
+Snapshots:   0 total
+Time:        1.007 s
+Ran all test suites matching /modules\/access\/claim-store.test.ts/i.

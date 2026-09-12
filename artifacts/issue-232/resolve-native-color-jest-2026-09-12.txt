@@ -1,0 +1,58 @@
+Scope: all 12 workspace projects
+✓ Lockfile passes supply-chain policies (verified 9h ago)
+../..                                    |    +1715 ++++++++++++++++++++++++++++
+../..                                    | Progress: resolved 0, reused 1, downloaded 0, added 0
+../..                                    | Progress: resolved 0, reused 43, downloaded 0, added 0
+../..                                    | Progress: resolved 0, reused 93, downloaded 0, added 0
+../..                                    | Progress: resolved 0, reused 464, downloaded 0, added 0
+Packages are hard linked from the content-addressable store to the virtual store.
+  Content-addressable store is at: /home/ubuntu/.local/share/pnpm/store/v11
+  Virtual store is at:             ../../node_modules/.pnpm
+../..                                    | Progress: resolved 0, reused 1573, downloaded 0, added 121
+../..                                    | Progress: resolved 0, reused 1573, downloaded 0, added 656
+../..                                    | Progress: resolved 0, reused 1573, downloaded 0, added 1714
+../..                                    | Progress: resolved 0, reused 1573, downloaded 0, added 1715
+../..                                    | Progress: resolved 0, reused 1573, downloaded 0, added 1715, done
+../../node_modules/sharp install$ node install/check.js || npm run build
+../../node_modules/tree-sitter install$ node-gyp-build
+../../node_modules/tree-sitter install: Done
+../../node_modules/sharp install: Done
+.../node_modules/tree-sitter-javascript install$ node-gyp-build
+.../node_modules/tree-sitter-javascript install: Done
+.../node_modules/tree-sitter-typescript install$ node-gyp-build
+.../node_modules/tree-sitter-typescript install: Done
+
+dependencies:
++ @trove/domain 0.0.0 <- ../../packages/domain
++ @trove/protocol 0.0.0 <- ../../packages/protocol
+
+devDependencies:
++ @trove/api 0.0.0 <- ../../packages/api
+
+../.. postinstall$ node ./scripts/ensure-expo-sqlite-ios-vendor.mjs
+../.. postinstall: [ensure-expo-sqlite-ios-vendor] synced vendor/sqlite3 → ios/sqlite3.{c,h}
+../.. postinstall: Done
+../../packages/protocol postinstall$ pnpm build
+../../packages/protocol postinstall: $ tsc --project tsconfig.json
+../../packages/protocol postinstall: Done
+../../packages/domain postinstall$ pnpm build
+../../packages/domain postinstall: $ tsc --project tsconfig.json
+../../packages/domain postinstall: Done
+. postinstall$ node ../../scripts/ensure-expo-sqlite-ios-vendor.mjs
+. postinstall: [ensure-expo-sqlite-ios-vendor] synced vendor/sqlite3 → ios/sqlite3.{c,h}
+. postinstall: Done
+Done in 10.3s using pnpm v11.24.0
+PASS components/native-ui/recipes.test.ts (10.242 s)
+  resolveNativeColor
+    ✓ resolves token, ring, destructive ring, and white refs (9 ms)
+  NATIVE_CONTROL_SPECS
+    ○ skipped includes primary, secondary, tertiary, and destructive roles
+  controlRecipe
+    ○ skipped puts width + label paint on the primary button (string label path)
+    ○ skipped paints destructive with solid fill modifiers
+
+Test Suites: 1 passed, 1 total
+Tests:       3 skipped, 1 passed, 4 total
+Snapshots:   0 total
+Time:        11.18 s
+Ran all test suites matching /components\/native-ui\/recipes.test.ts/i with tests matching "resolveNativeColor".

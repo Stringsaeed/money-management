@@ -20,9 +20,9 @@ Report implementation, automated verification, runtime verification, and publica
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Repo                | `Stringsaeed/money-management`                                                                                                                                                                                                                                                                                   |
 | Branch              | `cursor/workos-certify-migration-b3d1`                                                                                                                                                                                                                                                                           |
-| HEAD                | `84e78fa` — dedicated `planMembershipRevocation` **5/5** jest; `normalizeLedgerSelection` **3/3** jest; auth `fieldBoxStyle` / `fieldRecipe` / `controlRecipe` **3/3** jest; `resolveColor` **1/1** jest; prior `9011095` / `ea7e7fa` access batch; remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD                | _(pending push)_ — `resolveNativeColor` **1/1** jest; `identityFromUser` / `sameIdentity` **5/5** jest; native-ui `controlRecipe` **2/2** jest; `claim-store` **8/8** jest; prior `84e78fa` membership/auth recipe titles; remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance          | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`.   |
-| Worktree            | `/tmp/wt232` (cloud re-verify dedicated Relates titles); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232`                                                                                                                                                                                     |
+| Worktree            | `/tmp/wt232` (cloud native-ui + identity claim dedicated Relates titles); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232`                                                                                                                                                                    |
 | Live API            | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503**                                                                                                                                                                          |
 | Device (this write) | **none** — API/docs-only; no iOS/Android device; no Mac                                                                                                                                                                                                                                                          |
 | Test mailbox        | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed.                                                                                                                                                                 |
@@ -486,6 +486,30 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Re-verify `apps/mobile/components/auth/ui/roles.test.ts` (`-t resolveColor`) — **1/1 PASS** (`resolve-color-jest-2026-09-12.txt`): palette token, ring, and white refs resolve to expected colors.
 - Row 4 AuthKit role color resolver seam → dedicated title; live device theming still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## resolveNativeColor Relates (2026-09-12, no device)
+
+- Re-verify `apps/mobile/components/native-ui/recipes.test.ts` (`-t resolveNativeColor`) — **1/1 PASS** (`resolve-native-color-jest-2026-09-12.txt`): palette token, kumo ring, destructive ring, and white refs resolve to expected colors (native-ui seam, separate from AuthKit `resolveColor`).
+- Row 4 / row 6 native control color resolver seam → dedicated title; live device theming still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## identityFromUser / sameIdentity Relates (2026-09-12, no device)
+
+- Re-verify `apps/mobile/modules/access/identity.test.ts` — **5/5 PASS** (`identity-sameIdentity-jest-2026-09-12.txt`): WorkOS user → Identity mapping; empty display name; triple-field equality; userId switch rejection; email/displayName drift rejection.
+- Row 7 identity switch / stale-client seam → dedicated title (separate from composite isolation batch); live dual-identity still **BLOCKED** (tokens absent); webhook still **BLOCKED** (**503**).
+- GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## native-ui controlRecipe Relates (2026-09-12, no device)
+
+- Re-verify `apps/mobile/components/native-ui/recipes.test.ts` (`-t controlRecipe`) — **2/2 PASS** (`native-ui-control-recipe-jest-2026-09-12.txt`): primary frame/fixedSize/font/foregroundStyle modifiers; destructive background/strokeBorder/opacity modifiers (SwiftUI recipe path, not AuthKit `controlRecipe`).
+- Row 4 / row 6 native button recipe seam → dedicated title; live device native controls still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## claimFromFields / claim-store Relates (2026-09-12, no device)
+
+- Re-verify `apps/mobile/modules/access/claim-store.test.ts` — **8/8 PASS** (`claim-store-dedicated-jest-2026-09-12.txt`): partial-field → none; held round-trip; none clear; key removal; redundant-write skip; establishedAt bump; SecureStore throw → none.
+- Row 5 / row 7 identity claim persistence seam → dedicated title (separate from composite access row prose); live dual-identity still **BLOCKED**; webhook still **BLOCKED** (**503**).
+- GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## formatPrice Relates (2026-09-12, no device)
 
