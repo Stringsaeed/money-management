@@ -1,0 +1,11 @@
+PASS path: apps/mobile/components/transaction/get-currency-symbol.test.ts
+PASS components/transaction/get-currency-symbol.test.ts
+  getCurrencySymbol
+    ✓ maps known ISO currencies to symbols (3 ms)
+    ✓ falls back to the currency code when unmapped
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        1.042 s
+Ran all test suites matching /components\/transaction\/get-currency-symbol.test.ts/i.
