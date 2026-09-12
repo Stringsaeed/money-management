@@ -3,6 +3,8 @@ import test from "node:test";
 
 import {
   IMPORT_ENTITY_TYPES,
+  MAX_IMPORT_APPLY_ROWS,
+  MAX_IMPORT_CHUNK_ROWS,
   canonicalizeImportContent,
   manifestsMatch,
   type ImportEntityType,
@@ -32,6 +34,12 @@ test("IMPORT_ENTITY_TYPES membership is the ImportEntityType vocabulary", () => 
     assert.equal(kinds.has(kind), true);
   }
   assert.equal(kinds.has("unknown_entity"), false);
+});
+
+test("MAX_IMPORT_CHUNK_ROWS and MAX_IMPORT_APPLY_ROWS lock upload batch limits", () => {
+  assert.equal(MAX_IMPORT_CHUNK_ROWS, 5);
+  assert.equal(MAX_IMPORT_APPLY_ROWS, 25);
+  assert.equal(MAX_IMPORT_APPLY_ROWS > MAX_IMPORT_CHUNK_ROWS, true);
 });
 
 function emptyRowCounts(overrides: Partial<Record<ImportEntityType, number>> = {}) {
