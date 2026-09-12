@@ -1,0 +1,19 @@
+=== tsc --noEmit ===
+tsc exit: 0
+
+=== node --test --experimental-strip-types src/ledger-scope.test.ts ===
+✔ PERSONAL_LEDGER_PREFIX is the personal ledger id prefix (0.556731ms)
+✔ personalLedgerId joins PERSONAL_LEDGER_PREFIX with the user id (0.118169ms)
+✔ a Personal Ledger id names its owning User (0.127207ms)
+✔ an Organization Ledger id is the organization id itself (0.089283ms)
+✔ parsing a ledger id round-trips both scopes (0.525754ms)
+✔ parsing rejects ids that name no owner (0.086545ms)
+✔ scopes match only when they address the same ledger (0.092365ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 74.436274
