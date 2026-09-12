@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/account/get-reliable-currency-symbol.test.ts
+PASS components/account/get-reliable-currency-symbol.test.ts
+  getReliableCurrencySymbol
+    ✓ returns short distinct symbols and null when the symbol is the code (12 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.984 s
+Ran all test suites matching /components\/account\/get-reliable-currency-symbol.test.ts/i.
