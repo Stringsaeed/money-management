@@ -20,14 +20,20 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `89e388c` ledger-source remaining-BLOCKED reaffirm — `local_only`/`kill_switch` already covered at product `0e09809` (suite **35/35** re-verified); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing; prior tip `d6e4340` |
+| HEAD | tip `860c3ce` memberships role Jest — `toMembershipSummary` / `roleLabel` **4/4**; prior remaining-BLOCKED tip `124e243`; remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/workspace/.wt-cert-232-relates` (this Relates write); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T06:30:58Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
 | Device (this write) | **none** — API/docs-only; no iOS/Android device; no Mac |
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
-Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `ci-billing-blocked-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `session-probe-jest-2026-09-12.txt` / `ledger-source-offline-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt`.
+Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `ci-billing-blocked-2026-09-12.txt` / `post-schema-sync-retest.md` / `isolation-helpers-jest-2026-09-12.txt` / `claim-store-jest-2026-09-12.txt` / `membership-revocation-jest-2026-09-12.txt` / `session-probe-jest-2026-09-12.txt` / `ledger-source-offline-jest-2026-09-12.txt` / `memberships-role-jest-2026-09-12.txt` / `workos-webhook-probe-2026-09-12d.txt`.
+
+## Memberships role summary Jest Relates (2026-09-12, no device)
+
+- Added `apps/mobile/modules/access/memberships.test.ts` — **4/4 PASS** (`memberships-role-jest-2026-09-12.txt`): `toMembershipSummary` maps admin/member/viewer + Date→ISO / string joinedAt; unknown role slug → `null`; `roleLabel` Admin/Member/Viewer literals.
+- Row 4 Admin / member / viewer **client** role boundary (listMine → typed membership, refuse unknown roles) → advances automated seam; live invite acceptance / device role UX still **not** run; webhook membership apply still **BLOCKED** (**503**).
+- Create Account still **BLOCKED** on [#258](https://github.com/Stringsaeed/money-management/pull/258); dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing); Android / OTP AX / PowerSync mint unchanged **BLOCKED**. Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## Ledger-source remaining-BLOCKED reaffirm (2026-09-12, docs-only)
 
@@ -192,7 +198,8 @@ Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026
 - **WorkOS webhook:** still **BLOCKED** — owner must set prod `WORKOS_WEBHOOK_SECRET` (re-probe 06:30Z still **503**; runner name ABSENT).
 - **Isolation helpers (prior tip):** ledger-selection encode/decode/clear + return-to parse/serialize + `sameIdentity` **17/17 PASS**.
 - **Claim-store persistence (prior write):** `readClaim` / `writeClaim` / `clearClaim` SecureStore seam **8/8 PASS** — advances row 5/7 identity claim automated seams only; live dual-identity still **BLOCKED**.
-- **Session-probe async (this write):** `probeSession` / `tryRemoteSignOut` **13/13 PASS** — advances row 7 remote session/sign-out seam only; live dual-identity still **BLOCKED**.
+- **Session-probe async (prior write):** `probeSession` / `tryRemoteSignOut` **13/13 PASS** — advances row 7 remote session/sign-out seam only; live dual-identity still **BLOCKED**.
+- **Memberships role summary (this write):** `toMembershipSummary` / `roleLabel` **4/4 PASS** — advances row 4 client role boundary only; live invite / device role UX still **not** run.
 - **Android runtime:** **BLOCKED** / not started (`android-runtime-blocked.md`).
 - **PowerSync removal / disposable reset:** **BLOCKED** — missing `POWERSYNC_*` / `PLANETSCALE_*` (or `DATABASE_URL`); #231 reset skipped (`powersync-disposable-reset-blocked.md`).
 - OTP/callback/two-device rows still open.
@@ -315,7 +322,7 @@ Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT
 | Multi-Household switch | `PARTIAL` (encode/decode seam) / live not run | Per-user ledger selection encode/decode/clear **PASS** automated (`ledger-selection-store.test.ts`); live device selector switch still **not** evidenced. |
 | Invitations via WorkOS | `PARTIAL` (API seam) | `member administration > lets only admins invite, through WorkOS invitations`. No live invite acceptance. |
 | Management-page return (widget) | `PARTIAL` (API + auth) | Widget handoff + expired/demoted-admin codes in households tests; `@trove/auth` member-widget-page **3**. No iOS/Android return artifact. |
-| Admin / member / viewer | `PARTIAL` (API seam) | Import-bundle rejects member/viewer bulk-import; households role changes; PowerSync streams deny inactive/unknown roles (`test-powersync-proper.txt` **9/9**). Viewer command deny **PASS** in `pipeline.test.ts` **18/18** (`test-pipeline-viewer-deny.txt`). Device role UX not run; live viewer bearer absent. |
+| Admin / member / viewer | `PARTIAL` (API + client role map) | Import-bundle rejects member/viewer bulk-import; households role changes; PowerSync streams deny inactive/unknown roles (`test-powersync-proper.txt` **9/9**). Viewer command deny **PASS** in `pipeline.test.ts` **18/18** (`test-pipeline-viewer-deny.txt`). Client `toMembershipSummary` / `roleLabel` **PASS** (`memberships.test.ts` **4/4**) — unknown slugs dropped; admin/member/viewer mapped. Device role UX not run; live viewer bearer absent. |
 | Personal data stays private on create/join | `PARTIAL` (API seam) | Personal vs Household isolation in personal-ledger + budget-recurring + PowerSync streams. No live create/join privacy proof. |
 | Webhook-driven membership apply | `BLOCKED` (prod) | Live `POST /webhooks/workos` on `auth.trove.ing` → **503** `WORKOS_WEBHOOK_SECRET is not configured.` (`workos-webhook-blocked.md`, `workos-webhook-probe-2026-09-12d.txt` 06:30Z). Runner name **ABSENT**. Local name may be present; **prod binding empty**. Not 404/401/500. |
 
@@ -398,6 +405,7 @@ Still BLOCKED for disposable mint/reset: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE
 | Mobile jest claim-store SecureStore seam | **8/8** `claim-store-jest-2026-09-12.txt` | 5 (claim persistence / stale client seam), 7 (identity switch claim keys) |
 | Mobile jest session-probe async | **13/13** `session-probe-jest-2026-09-12.txt` | 7 (`probeSession` / `tryRemoteSignOut` remote seam) |
 | Mobile jest `selectLedgerSourceForAccess` local_only offlineReason | **35/35** `ledger-source-offline-jest-2026-09-12.txt` | 6 (client kill_switch / powersync `offline_cached`) |
+| Mobile jest memberships `toMembershipSummary` / `roleLabel` | **4/4** `memberships-role-jest-2026-09-12.txt` | 4 (client admin/member/viewer role boundary) |
 | `pnpm test:ci` / CI Jest | **PASS** tip stamp | 1 (`ci-stamp-2026-09-12.txt` + prior `test-ci.txt`) |
 
 API focused files in the 97: `powersync/token.test.ts` (4), `personal-budget-recurring.test.ts` (4), `deletion/service.test.ts` (5), `membership/projection.test.ts` (13), `migration/manifest.test.ts` (13), `import-bundle.test.ts` (15), `personal-ledger.test.ts` (18), `households/service.test.ts` (25).
@@ -512,6 +520,8 @@ stim start --json  # -> stim-start.json (port 8083)
 | `claim-store-jest-2026-09-12.txt` | claim-store SecureStore read/write/clear Jest **8/8** Relates stamp. |
 | `membership-revocation-jest-2026-09-12.txt` | plan-membership-revocation + normalizeLedgerSelection Jest Relates stamp (**38/38** with access suite). |
 | `session-probe-jest-2026-09-12.txt` | session-probe async `probeSession` / `tryRemoteSignOut` Jest **13/13** Relates stamp. |
+| `ledger-source-offline-jest-2026-09-12.txt` | `selectLedgerSourceForAccess` local_only offlineReason Jest **35/35** Relates stamp. |
+| `memberships-role-jest-2026-09-12.txt` | memberships `toMembershipSummary` / `roleLabel` Jest **4/4** Relates stamp. |
 | `create-account-hittest-status.md` | Create Account hit-test stamp: upload PASS; round-trip BLOCKED; #258 Mac ghosting. |
 | `post-pressable-upload-pass.md` | Pressable personal upload **PASS** (tip `fb8c786`). |
 | `post-pressable-roundtrip-blocked.md` | One-device round-trip **BLOCKED** (Create Account NativeHost). |

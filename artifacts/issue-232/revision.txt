@@ -18,6 +18,7 @@ claim_store_jest=PASS 8/8
 membership_revocation_jest=PASS plan-membership-revocation 5/5 + normalizeLedgerSelection stale id (access suite 38/38)
 session_probe_jest=PASS session-probe.test.ts 13/13 (probeSession + tryRemoteSignOut)
 ledger_source_offline_jest=PASS access.test.ts 35/35 (local_only kill_switch + powersync offlineReason)
+memberships_role_jest=PASS memberships.test.ts 4/4 (toMembershipSummary + roleLabel)
 android_runtime=BLOCKED not started (android-runtime-blocked.md)
 powersync_removal=BLOCKED absent POWERSYNC_URL POWERSYNC_JWT_PRIVATE_KEY POWERSYNC_JWT_KID
 disposable_reset=BLOCKED #231 skip + absent PLANETSCALE_* / DATABASE_URL
