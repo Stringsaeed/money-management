@@ -1,9 +1,9 @@
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
+import { NativeHost, NativePrimaryButton } from "@/components/native-ui";
 import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
 
 interface CreateResourceSheetFooterProps {
   error?: string;
@@ -14,9 +14,10 @@ interface CreateResourceSheetFooterProps {
 }
 
 /**
- * Primary submit uses RN Pressable (not `@/components/ui/button`): agent-device
- * hit-testing still reported Create Account as hittable=false with the shared
- * Button wrapper — same miss class as pre-#253 personal-upload confirm.
+ * Primary submit uses Expo UI NativeHost button (not RN Pressable): #254 made
+ * Create Account AX-hittable inside ModalBottomSheet, but sheet gesture/chrome
+ * still swallowed Pressable onPress (coord + testID miss). NativeHost primary
+ * matches the sign-out sheet pattern that does receive taps in this portal.
  */
 export function CreateResourceSheetFooter({
   error,
@@ -26,7 +27,7 @@ export function CreateResourceSheetFooter({
   submittingLabel = "Creating…",
 }: CreateResourceSheetFooterProps) {
   return (
-    <View className="gap-3 p-5">
+    <View className="gap-3 p-5" collapsable={false}>
       {error ? (
         <Animated.View
           entering={FadeIn.duration(200)}
@@ -36,20 +37,14 @@ export function CreateResourceSheetFooter({
           <Text className="text-center font-body-medium text-sm text-destructive">{error}</Text>
         </Animated.View>
       ) : null}
-      <Pressable
-        accessibilityRole="button"
-        disabled={isSubmitting}
-        onPress={onSubmit}
-        testID="create-resource-submit"
-        className={cn(
-          "min-h-12 items-center justify-center rounded-xl bg-ink px-4 py-3 active:opacity-80",
-          isSubmitting && "opacity-50",
-        )}
-      >
-        <Text className="font-body-semibold text-base text-surface">
-          {isSubmitting ? submittingLabel : submitLabel}
-        </Text>
-      </Pressable>
+      <NativeHost>
+        <NativePrimaryButton
+          disabled={isSubmitting}
+          label={isSubmitting ? submittingLabel : submitLabel}
+          onPress={onSubmit}
+          testID="create-resource-submit"
+        />
+      </NativeHost>
     </View>
   );
 }

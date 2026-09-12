@@ -1,6 +1,7 @@
 import React from "react";
 import type { PressableProps } from "react-native";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import { XIcon } from "phosphor-react-native";
 
 import { Icon } from "@/components/ui/icon";
@@ -48,6 +49,7 @@ export function CreateResourceBottomSheet({
     <>
       {renderTrigger()}
       <ModalBottomSheet
+        disableScrollableNegotiation
         scrimColor="rgba(0, 0, 0, 0.5)"
         index={index}
         onIndexChange={handleIndexChange}
@@ -68,8 +70,19 @@ export function CreateResourceBottomSheet({
             </Text>
             {headerRight ?? <View className="h-10 w-10" />}
           </View>
-          <ScrollView contentContainerClassName="gap-4 px-5 py-4 pb-8">{content}</ScrollView>
-          <View className="bg-background">{footer}</View>
+          {/* flex-1 keeps the scroll region from expanding over the sticky footer hit target */}
+          <ScrollView
+            className="flex-1"
+            contentContainerClassName="grow gap-4 px-5 py-4 pb-8"
+            keyboardDismissMode="on-drag"
+            keyboardShouldPersistTaps="handled"
+          >
+            {content}
+          </ScrollView>
+          {/* collapsable=false + z-10: footer stays above sheet/scroll chrome for agent taps */}
+          <View className="z-10 border-t border-ledger-outline bg-background" collapsable={false}>
+            {footer}
+          </View>
         </View>
       </ModalBottomSheet>
     </>
