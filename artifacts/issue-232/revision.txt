@@ -57,3 +57,4 @@ funding_rollover_content_jest=PASS 2/2 new suite=10/10 product=ba4bc93
 assignment_content_jest=PASS 2/2 new suite=12/12 product=99b1e16
 recurring_rule_content_jest=PASS 2/2 new suite=14/14 product=a6f4cdd
 ledger_read_fields_jest=PASS 2/2 new suite=5/5 product=27383f8
+create_console_sink_jest=PASS 2/2 new suite=7/7 product=32eed27
