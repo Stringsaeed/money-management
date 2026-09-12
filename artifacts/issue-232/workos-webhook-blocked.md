@@ -1,50 +1,47 @@
-# WorkOS webhook receiver — BLOCKED (prod)
+# WorkOS webhook receiver — secret LIVE; signature gate (prod)
 
 Relates to #232 only. **Never** Closes/Fixes #232 or parent #224.
-Not a certification PASS. No secret values recorded.
+Not a full membership-apply certification PASS. No secret values recorded.
 
 ## Verdict
 
 | Field | Value |
 | --- | --- |
-| Status | **BLOCKED** |
+| Status | **PROGRESS** (secret configured; unsigned/bad-sig → 400/401) |
 | Endpoint | `POST https://auth.trove.ing/webhooks/workos` |
-| Live result | **HTTP 503** |
-| Body | `Webhook receiver is disabled: WORKOS_WEBHOOK_SECRET is not configured.` |
-| Probe stamp | `2026-09-12T03:16:04Z` UTC (initial); re-probe `2026-09-12T05:47Z` still **503** (`workos-webhook-probe-2026-09-12b.txt`); re-probe `2026-09-12T06:30:58Z` still **503** (`workos-webhook-probe-2026-09-12d.txt`); re-probe `2026-09-12T07:54:12Z` still **503** (`workos-webhook-probe-2026-09-12e.txt`); re-probe `2026-09-12T14:19:32Z` still **503** (`workos-webhook-probe-2026-09-12T141932Z.txt`); **post-#259** re-probe `2026-09-12T19:23:27Z` still **503** (`workos-webhook-probe-2026-09-12T192327Z.txt`) |
+| Live result (no sig) | **HTTP 400** `Missing WorkOS-Signature header.` |
+| Live result (fake sig) | **HTTP 401** `Signature verification failed.` |
+| Prior | **HTTP 503** secret-missing (through post-#259) |
+| Probe stamp | `2026-09-12T20:06:41Z` UTC (`workos-webhook-probe-2026-09-12T200641Z.txt`); earlier 503 probes retained for history |
 | Worker | `money-management-server-prod-mfhkibosfd6z5ym5` (domain `auth.trove.ing`) |
 | Dashboard webhook | `we_01M2945R34XC28KTEABF24F4CD` (signing secret **not** pasted here) |
 
-Route is mounted correctly. This is **not** 404 / 401 / 500 / timeout.
+Route is mounted correctly. Secret gate no longer disables the receiver.
 
 ## Live probe (this write)
 
 | Request | Result |
 | --- | --- |
 | `GET https://auth.trove.ing/` | **200** `OK` |
-| `GET /webhooks/workos` | **404** (POST-only) |
-| `POST /webhooks/workos` (no signature) | **503** + disabled body |
-| `POST /webhooks/workos` + fake `WorkOS-Signature` | **503** + same body (secret gate runs before verify) |
+| `POST /webhooks/workos` (no signature) | **400** `Missing WorkOS-Signature header.` |
+| `POST /webhooks/workos` + fake `WorkOS-Signature` | **401** `Signature verification failed.` |
+| Signed delivery | **SKIPPED** — agent `WORKOS_WEBHOOK_SECRET` MISSING; do not invent |
 
-Raw transcript: `workos-webhook-probe-2026-09-12.txt`.
+## Post-#266 / Deploy note (`2026-09-12T20:03–20:06Z`)
 
-## Cause
+[#266](https://github.com/Stringsaeed/money-management/pull/266) **merged** (`33a8ba23`) — soft-fail ensure after `42501`/`42703`/`42P01`. Deploy Worker [34715924235](https://github.com/Stringsaeed/money-management/actions/runs/34715924235) **SUCCESS**: ensure step exit 0 despite `42501` (+ soft-fail `42703` on missing `visibility`); Deploy continued; `workos_webhook_secret_set=yes`; Alchemy updated `[server/WORKOS_WEBHOOK_SECRET]`. Live left **503** → **400/401**. See `post-266-deploy-webhook-progress-2026-09-12T2006Z.md`.
 
-Prod Alchemy/env `WORKOS_WEBHOOK_SECRET` is empty (`Config.withDefault` empty string). Handler treats falsy secret as receiver disabled → **503**. Local `.env` may still list the name as present; **prod binding is empty**.
+## Historical (pre-#266)
 
-## Post-#259 note (`2026-09-12T19:23:27Z`)
+- Post-#259: Deploy [34713619532](https://github.com/Stringsaeed/money-management/actions/runs/34713619532) billing/0-steps then later schema-ensure hard-fail — secret never reached prod → **503**. See `workos-webhook-after-259-still-503.md`.
 
-[#259](https://github.com/Stringsaeed/money-management/pull/259) **merged** wiring to `main` (`c1adeb4`), but Deploy Worker [34713619532](https://github.com/Stringsaeed/money-management/actions/runs/34713619532) **failed with 0 steps** — annotation: *job was not started because recent account payments have failed or your spending limit needs to be increased*. `WORKOS_WEBHOOK_SECRET` never reached prod; live still **503**. [#232](https://github.com/Stringsaeed/money-management/issues/232) was falsely closed by that merge and **reopened**. Hard-stop: no deploy-workflow code-fix PR. See `workos-webhook-after-259-still-503.md`.
+## Owner still needed for membership-apply PASS
 
-## Owner unblock
-
-1. Clear GitHub Actions billing / spending-limit block (payments or spending limit).
-2. Copy endpoint signing secret from WorkOS Dashboard webhook `we_01M2945R34XC28KTEABF24F4CD`.
-3. Set GitHub Actions / production `WORKOS_WEBHOOK_SECRET` (do not invent or commit the value).
-4. Redeploy prod server worker (Deploy Worker must succeed after #259 wiring).
-5. Confirm: `POST /webhooks/workos` without valid signature returns **400/401**, **not** 503.
-6. Retry failed WorkOS deliveries; then re-certify membership projection / reconcile rows.
+1. Retry failed WorkOS Dashboard deliveries (or send a real signed event).
+2. Optionally supply agent-env `WORKOS_WEBHOOK_SECRET` for a signed probe Relates stamp (do not invent).
+3. Continue #232 matrix: Create Account / `CERT_USER_*` / PowerSync / Android / OTP — separate blockers.
+4. Keep #232/#224 open until owner acceptance.
 
 ## Out of scope
 
-Setting the secret, personal upload UI, closing #232/#224.
+Inventing the secret, closing #232/#224, claiming full webhook membership apply PASS.

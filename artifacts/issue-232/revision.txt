@@ -1,7 +1,9 @@
 branch=cursor/workos-certify-migration-b3d1
-worktree=/Users/saeed/Work/money-management-wt-232
+worktree=/tmp/wt-241-post266
 live_api=https://auth.trove.ing
-schema=0011-0015 reconfirmed trove/main via PlanetScale read-only
+schema=0011-0015 reconfirmed trove/main; Deploy ensure soft-fail 42501/42703 exit 0
+webhook=400 missing sig / 401 bad sig (secret live post-#266 Deploy 34715924235)
 device=iPhone 17 Pro Mac agent-device anonymous local-only PASS (2026-09-12)
-matrix_base_tip=ad7cf561cb17b49091e5056d8bf483f3d9498fc6
+matrix_base_tip=0c0aea66e1f77921cfdd42eeae7b4b17bb60b48a
 app_capture_tip=50e8dfcc9c0dcd3d79c674b956cb78131f701072
+deploy_main_sha=33a8ba23e4cb1959d24dd3eb47f39e7f62e71d8f

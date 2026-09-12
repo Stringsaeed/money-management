@@ -37,7 +37,7 @@ Out of scope here: personal upload UI, PowerSync removal bound, disposable reset
 | Disposable clean setup (row 8) | **BLOCKED** | #231 skipped reset + PlanetScale/PowerSync mint envs absent (`powersync-disposable-reset-blocked.md`) | unchanged |
 | iOS OTP / callback AX | **BLOCKED** (automation) | See `ios-otp-ax-blocker.md` — **not** a PASS | No device this write |
 | Android runtime | **BLOCKED** / not started | `android-runtime-blocked.md` | No device this write |
-| WorkOS webhook / membership projection | **BLOCKED** (prod) | `POST /webhooks/workos` → **503**; #259 wiring merged but Deploy [34713619532](https://github.com/Stringsaeed/money-management/actions/runs/34713619532) **billing hard-stop** (0 steps) so secret never reached prod (`workos-webhook-after-259-still-503.md`) | Re-probe `2026-09-12T19:23:27Z` still **503**; annotation: payments failed / spending limit |
+| WorkOS webhook / membership projection | **PROGRESS** (secret live; apply not PASS) | #266 + Deploy [34715924235](https://github.com/Stringsaeed/money-management/actions/runs/34715924235) **SUCCESS**; `POST /webhooks/workos` → **400** missing sig / **401** bad sig (`post-266-deploy-webhook-progress-2026-09-12T2006Z.md`) | Re-probe `2026-09-12T20:06:41Z`; signed delivery SKIPPED (agent secret MISSING) |
 | CI (tsc + Jest on tip) | **PASS** (product gates) | `ci-stamp-2026-09-12.txt` — Typescript + Jest + EAS SUCCESS on `ded1e97`; GitGuardian FAILURE noted | n/a |
 | Create Account next candidate | **BLOCKED** | #258 tip `709acf8` — Mac ghosting; **not** PASS (`create-account-hittest-status.md`) | n/a |
 
@@ -48,7 +48,7 @@ Out of scope here: personal upload UI, PowerSync removal bound, disposable reset
 | 1 CI | **PARTIAL** | Tip `ded1e97` GH Actions Typescript + Jest + EAS **SUCCESS** (`ci-stamp-2026-09-12.txt`); lint/format FAIL pre-existing; GitGuardian FAILURE noted. |
 | 2 AuthKit | **PARTIAL** | JWT/`listMine`/`getManifest` live **PASS**; cancel **PASS** (prior); OTP/callback **BLOCKED** (`ios-otp-ax-blocker.md`); Android **BLOCKED** (`android-runtime-blocked.md`). |
 | 3 Personal sync | **PARTIAL** | getManifest + personal upload **PASS**; Create Account round-trip **BLOCKED** (#258 Mac ghosting — not PASS); two-device still open. |
-| 4 Households | **PARTIAL** + webhook **BLOCKED** | API seams only; live create/switch/invite not evidenced; prod webhook **503** (re-probe `2026-09-12T14:19:32Z`). |
+| 4 Households | **PARTIAL** + webhook **PROGRESS** | API seams only; live create/switch/invite not evidenced; prod webhook secret live → **400/401** (re-probe `2026-09-12T20:06:41Z`); membership apply still needs signed delivery. |
 | 5 Isolation | **PARTIAL** | Auth-gate forged/missing JWT **PASS**; viewer pipeline **PASS**; live dual-identity **BLOCKED**. |
 | 6 Events + PowerSync removal | **PARTIAL** + **BLOCKED** | Event seams PASS; removal/offline **BLOCKED** (`powersync-disposable-reset-blocked.md`). |
 | 7 Sign-out / deletion | **PARTIAL** | Deletion API seams PASS; live sign-out/identity switch not evidenced. |
@@ -68,7 +68,7 @@ No secret values recorded. No raw CDP/HAR.
 
 1. Accept iOS OTP AX automation **BLOCKER** (see `ios-otp-ax-blocker.md`) vs require alternate OTP path before row-2 completion.
 2. Keep PowerSync removal / disposable reset **BLOCKED** until mint envs + reset policy (already documented).
-3. Set prod `WORKOS_WEBHOOK_SECRET` + redeploy so webhook is no longer **503**; then re-certify membership projection.
+3. Retry WorkOS deliveries / signed membership apply (secret already live post-#266 Deploy); optional agent-env secret for signed probe (do not invent).
 4. Device slices remain: confirmed upload, Household UX, two-device, Android, sign-out.
 
 ## Governance

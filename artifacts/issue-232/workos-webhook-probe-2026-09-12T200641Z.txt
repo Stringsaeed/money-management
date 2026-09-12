@@ -1,0 +1,27 @@
+probe_utc=2026-09-12T20:06:41Z
+endpoint=https://auth.trove.ing/webhooks/workos
+agent_WORKOS_WEBHOOK_SECRET=MISSING
+deploy_run=https://github.com/Stringsaeed/money-management/actions/runs/34715924235
+deploy_sha=33a8ba23e4cb1959d24dd3eb47f39e7f62e71d8f
+merge=#266 squash 33a8ba23
+signed_delivery=SKIPPED (agent env secret MISSING; do not invent)
+
+GET https://auth.trove.ing/
+http=200
+body=OK
+
+POST https://auth.trove.ing/webhooks/workos
+Content-Type: application/json
+body={}
+http=400
+body=Missing WorkOS-Signature header.
+
+POST https://auth.trove.ing/webhooks/workos
+Content-Type: application/json
+WorkOS-Signature: t=1,v1=deadbeef
+body={"id":"evt_probe"}
+http=401
+body=Signature verification failed.
+
+Verdict: secret LIVE in prod (no longer 503). Unsigned → 400; bad sig → 401.
+Relates #232 only. Never Closes/Fixes #232/#224.
