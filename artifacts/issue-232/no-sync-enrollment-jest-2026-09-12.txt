@@ -1,0 +1,10 @@
+PASS path: apps/mobile/modules/access/no-sync-enrollment.test.ts
+PASS modules/access/no-sync-enrollment.test.ts
+  NO_SYNC_ENROLLMENT
+    ✓ locks the empty sync enrollment sentinel (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.097 s
+Ran all test suites matching /modules\/access\/no-sync-enrollment.test.ts/i.
