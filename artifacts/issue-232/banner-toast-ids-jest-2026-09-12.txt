@@ -1,0 +1,10 @@
+PASS path: components/banner/banner-toast-ids.test.ts
+PASS components/banner/banner-toast-ids.test.ts
+  BANNER_TOAST_IDS
+    ✓ locks banner toast id vocabulary (9 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.996 s
+Ran all test suites matching /components\/banner\/banner-toast-ids.test.ts/i.
