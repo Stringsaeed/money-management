@@ -47,6 +47,17 @@ export function isAlterPermissionDenied(error) {
 }
 
 /**
+ * Undefined column (42703) or undefined table (42P01). After a 42501 soft-fail,
+ * later statements often reference objects the denied ALTER never created.
+ * @param {Error} error
+ * @returns {boolean}
+ */
+export function isMissingSchemaObject(error) {
+  const code = "code" in error ? String(error.code) : "";
+  return code === "42703" || code === "42P01";
+}
+
+/**
  * Idempotent re-runs hit duplicate_object / duplicate_table / duplicate_column,
  * or PG messages like "already exists" / "multiple primary keys".
  * @param {Error} error
@@ -127,5 +138,122 @@ export function buildEnsureResult(input) {
     code: input.alterPermissionDenied ? "42501" : undefined,
     permission_denied: input.permissionDenied,
     already_exists: input.alreadyExists,
+  };
+}
+
+/**
+ * Soft-fail classification for one statement error during post-cutover ensure.
+ * @param {Error} error
+ * @param {boolean} alterPermissionDenied
+ * @returns {"permission_denied" | "already_exists" | "missing_after_denied" | null}
+ */
+export function classifyEnsureStatementError(error, alterPermissionDenied) {
+  if (isAlterPermissionDenied(error)) return "permission_denied";
+  if (isAlreadyExists(error)) return "already_exists";
+  if (alterPermissionDenied && isMissingSchemaObject(error)) return "missing_after_denied";
+  return null;
+}
+
+/**
+ * @typedef {{
+ *   alterPermissionDenied: boolean,
+ *   permissionDenied: Array<{ migration: string, message: string }>,
+ *   alreadyExists: Array<{ migration: string, message: string }>,
+ *   missingAfterDenied: Array<{ migration: string, message: string, code: string }>,
+ * }} EnsureStatementRunState
+ */
+
+/**
+ * Record a soft-failed statement error onto run state.
+ * @param {Error} error
+ * @param {string} migrationTag
+ * @param {EnsureStatementRunState} state
+ * @param {(payload: Record<string, unknown>) => void} warn
+ * @returns {boolean} whether the migration counts as applied
+ */
+function recordEnsureStatementFailure(error, migrationTag, state, warn) {
+  const kind = classifyEnsureStatementError(error, state.alterPermissionDenied);
+  if (kind === "permission_denied") {
+    state.alterPermissionDenied = true;
+    state.permissionDenied.push({ migration: migrationTag, message: error.message });
+    warn({
+      warning: "alter_permission_denied",
+      code: "42501",
+      migration: migrationTag,
+      message: error.message,
+    });
+    return false;
+  }
+  if (kind === "already_exists") {
+    state.alreadyExists.push({ migration: migrationTag, message: error.message });
+    return true;
+  }
+  // Denied ADD/ALTER never created ledger_id / visibility / etc. Later
+  // statements then throw 42703/42P01 — soft-fail so Deploy still runs.
+  if (kind === "missing_after_denied") {
+    const code = "code" in error ? String(error.code) : "42703";
+    state.missingAfterDenied.push({
+      migration: migrationTag,
+      message: error.message,
+      code,
+    });
+    warn({
+      warning: "missing_schema_object_after_permission_denied",
+      code,
+      migration: migrationTag,
+      message: error.message,
+    });
+    return false;
+  }
+  throw error;
+}
+
+/**
+ * Run post-cutover migration statements with soft-fail semantics.
+ * Injectable `executeStatement` keeps the SQL loop unit-testable without a DB.
+ *
+ * @param {{
+ *   migrations: Array<{ tag: string, statements: string[] }>,
+ *   executeStatement: (statement: string) => Promise<void>,
+ *   warn?: (payload: Record<string, unknown>) => void,
+ * }} options
+ */
+export async function runPostCutoverStatements({
+  migrations,
+  executeStatement,
+  warn = (payload) => console.warn(JSON.stringify(payload)),
+}) {
+  /** @type {string[]} */
+  const applied = [];
+  /** @type {EnsureStatementRunState} */
+  const state = {
+    alterPermissionDenied: false,
+    permissionDenied: [],
+    alreadyExists: [],
+    missingAfterDenied: [],
+  };
+
+  for (const migration of migrations) {
+    let migrationApplied = false;
+    for (const statement of migration.statements) {
+      try {
+        await executeStatement(statement);
+        migrationApplied = true;
+      } catch (error) {
+        if (!(error instanceof Error)) throw error;
+        if (recordEnsureStatementFailure(error, migration.tag, state, warn)) {
+          migrationApplied = true;
+        }
+      }
+    }
+    if (migrationApplied) applied.push(migration.tag);
+  }
+
+  return {
+    applied,
+    permissionDenied: state.permissionDenied,
+    alreadyExists: state.alreadyExists,
+    missingAfterDenied: state.missingAfterDenied,
+    alterPermissionDenied: state.alterPermissionDenied,
   };
 }

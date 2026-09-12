@@ -3,9 +3,8 @@ import postgres from "postgres";
 import {
   PRESENCE_CHECKS,
   buildEnsureResult,
-  isAlreadyExists,
-  isAlterPermissionDenied,
   loadPostCutoverMigrations,
+  runPostCutoverStatements,
 } from "./ensure-post-cutover-schema-lib.mjs";
 
 /**
@@ -15,9 +14,11 @@ import {
  *
  * PLANETSCALE_* deploy credentials may lack table-owner ALTER/CREATE
  * privilege (42501). Soft-fail like ensure-user-memberships-reconciled-at so
- * Alchemy deploy still ships Worker code. Sync/create stay broken until a
- * table-owner role can apply this DDL — this script only makes that apply
- * automatic once ownership is fixed.
+ * Alchemy deploy still ships Worker code. After a 42501, later statements that
+ * reference missing columns/tables (42703 / 42P01) are also soft-failed —
+ * otherwise cascade PostgresError aborts before buildEnsureResult can soft-ok.
+ * Sync/create stay broken until a table-owner role can apply this DDL — this
+ * script only makes that apply automatic once ownership is fixed.
  */
 if (process.env.APPROVE_USER_SCHEMA_ENSURE !== "listmine-500") {
   throw new Error(
@@ -82,45 +83,11 @@ const sql = postgres(connectionUrl.toString(), { max: 1, ssl: "prefer" });
 
 try {
   const migrations = loadPostCutoverMigrations();
-  /** @type {string[]} */
-  const applied = [];
-  /** @type {Array<{ migration: string, message: string }>} */
-  const permissionDenied = [];
-  /** @type {Array<{ migration: string, message: string }>} */
-  const alreadyExists = [];
-  let alterPermissionDenied = false;
-
-  for (const migration of migrations) {
-    let migrationApplied = false;
-    for (const statement of migration.statements) {
-      try {
-        await sql.unsafe(statement);
-        migrationApplied = true;
-      } catch (error) {
-        if (!(error instanceof Error)) throw error;
-        if (isAlterPermissionDenied(error)) {
-          alterPermissionDenied = true;
-          permissionDenied.push({ migration: migration.tag, message: error.message });
-          console.warn(
-            JSON.stringify({
-              warning: "alter_permission_denied",
-              code: "42501",
-              migration: migration.tag,
-              message: error.message,
-            }),
-          );
-          continue;
-        }
-        if (isAlreadyExists(error)) {
-          alreadyExists.push({ migration: migration.tag, message: error.message });
-          migrationApplied = true;
-          continue;
-        }
-        throw error;
-      }
-    }
-    if (migrationApplied) applied.push(migration.tag);
-  }
+  const { applied, permissionDenied, alreadyExists, missingAfterDenied, alterPermissionDenied } =
+    await runPostCutoverStatements({
+      migrations,
+      executeStatement: (statement) => sql.unsafe(statement),
+    });
 
   const present = await readPresence(sql);
   const result = buildEnsureResult({
@@ -140,6 +107,7 @@ try {
         applied,
         present,
         permission_denied: permissionDenied,
+        missing_after_denied: missingAfterDenied,
       }),
     );
   }
