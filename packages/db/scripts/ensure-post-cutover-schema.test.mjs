@@ -10,6 +10,7 @@ import {
   buildEnsureResult,
   isAlreadyExists,
   isAlterPermissionDenied,
+  isMissingSchemaObject,
   loadPostCutoverMigrations,
   splitMigrationStatements,
 } from "./ensure-post-cutover-schema-lib.mjs";
@@ -23,6 +24,31 @@ test("isAlterPermissionDenied matches Postgres 42501", () => {
   );
   assert.equal(
     isAlterPermissionDenied(Object.assign(new Error("undefined column"), { code: "42703" })),
+    false,
+  );
+});
+
+test("isMissingSchemaObject matches undefined column/table", () => {
+  assert.equal(
+    isMissingSchemaObject(
+      Object.assign(new Error('column "ledger_id" does not exist'), { code: "42703" }),
+    ),
+    true,
+  );
+  assert.equal(
+    isMissingSchemaObject(
+      Object.assign(new Error('column "visibility" does not exist'), { code: "42703" }),
+    ),
+    true,
+  );
+  assert.equal(
+    isMissingSchemaObject(
+      Object.assign(new Error('relation "ledger" does not exist'), { code: "42P01" }),
+    ),
+    true,
+  );
+  assert.equal(
+    isMissingSchemaObject(Object.assign(new Error("must be owner"), { code: "42501" })),
     false,
   );
 });

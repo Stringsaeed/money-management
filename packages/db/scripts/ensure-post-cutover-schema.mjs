@@ -5,6 +5,7 @@ import {
   buildEnsureResult,
   isAlreadyExists,
   isAlterPermissionDenied,
+  isMissingSchemaObject,
   loadPostCutoverMigrations,
 } from "./ensure-post-cutover-schema-lib.mjs";
 
@@ -15,9 +16,11 @@ import {
  *
  * PLANETSCALE_* deploy credentials may lack table-owner ALTER/CREATE
  * privilege (42501). Soft-fail like ensure-user-memberships-reconciled-at so
- * Alchemy deploy still ships Worker code. Sync/create stay broken until a
- * table-owner role can apply this DDL — this script only makes that apply
- * automatic once ownership is fixed.
+ * Alchemy deploy still ships Worker code. After a 42501, later statements that
+ * reference missing columns/tables (42703 / 42P01) are also soft-failed —
+ * otherwise cascade PostgresError aborts before buildEnsureResult can soft-ok.
+ * Sync/create stay broken until a table-owner role can apply this DDL — this
+ * script only makes that apply automatic once ownership is fixed.
  */
 if (process.env.APPROVE_USER_SCHEMA_ENSURE !== "listmine-500") {
   throw new Error(
@@ -88,6 +91,8 @@ try {
   const permissionDenied = [];
   /** @type {Array<{ migration: string, message: string }>} */
   const alreadyExists = [];
+  /** @type {Array<{ migration: string, message: string, code: string }>} */
+  const missingAfterDenied = [];
   let alterPermissionDenied = false;
 
   for (const migration of migrations) {
@@ -116,6 +121,25 @@ try {
           migrationApplied = true;
           continue;
         }
+        // Denied ADD/ALTER never created ledger_id / visibility / etc. Later
+        // statements then throw 42703/42P01 — soft-fail so Deploy still runs.
+        if (alterPermissionDenied && isMissingSchemaObject(error)) {
+          const code = "code" in error ? String(error.code) : "42703";
+          missingAfterDenied.push({
+            migration: migration.tag,
+            message: error.message,
+            code,
+          });
+          console.warn(
+            JSON.stringify({
+              warning: "missing_schema_object_after_permission_denied",
+              code,
+              migration: migration.tag,
+              message: error.message,
+            }),
+          );
+          continue;
+        }
         throw error;
       }
     }
@@ -140,6 +164,7 @@ try {
         applied,
         present,
         permission_denied: permissionDenied,
+        missing_after_denied: missingAfterDenied,
       }),
     );
   }

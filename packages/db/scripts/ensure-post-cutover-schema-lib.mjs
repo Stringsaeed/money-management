@@ -47,6 +47,17 @@ export function isAlterPermissionDenied(error) {
 }
 
 /**
+ * Undefined column (42703) or undefined table (42P01). After a 42501 soft-fail,
+ * later statements often reference objects the denied ALTER never created.
+ * @param {Error} error
+ * @returns {boolean}
+ */
+export function isMissingSchemaObject(error) {
+  const code = "code" in error ? String(error.code) : "";
+  return code === "42703" || code === "42P01";
+}
+
+/**
  * Idempotent re-runs hit duplicate_object / duplicate_table / duplicate_column,
  * or PG messages like "already exists" / "multiple primary keys".
  * @param {Error} error
