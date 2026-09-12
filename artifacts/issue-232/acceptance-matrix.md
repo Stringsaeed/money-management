@@ -409,6 +409,42 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Row 2 AuthKit bearer + JWKS URL seam → advances automated access-token verify helpers lock; live verify still **BLOCKED** (env/device); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
+## firstRouteParam Relates (2026-09-12, no device)
+
+- Re-verify `apps/mobile/modules/access/route-param.test.ts` — **4/4 PASS** (`firstRouteParam-coreFromAccess-jest-2026-09-12.txt`): string param; array first element; undefined / empty array → undefined
+- Row 5 / row 7 Expo Router param normalize seam → advances automated `firstRouteParam` lock (composite batch unchanged); live device routing still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## coreFromAccess Relates (2026-09-12, no device)
+
+- Re-verify `apps/mobile/modules/access/core-from-state.test.ts` — **3/3 PASS** (`firstRouteParam-coreFromAccess-jest-2026-09-12.txt`): signed_in projection strips capability fns; unavailable retains `retry`; anonymous / resolving / session_revoked shapes
+- Row 5 / row 7 AccessCore ↔ AccessState projection seam → advances automated `coreFromAccess` lock; live device identity switch still **BLOCKED**; webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## canDropAdmin Relates (2026-09-12, no device)
+
+- Re-verify `packages/api/src/lib/households/admin-guard.test.ts` (`canDropAdmin`) — **3/3 PASS** (`canDropAdmin-resolveReadLedgerId-vitest-2026-09-12.txt`): sole admin cannot drop; co-admin can; member-only roster allows drop
+- Row 4 sole-admin guard seam → advances automated last-admin protection lock; live invite/device role UX still **BLOCKED**; webhook membership apply still **BLOCKED** (**503**).
+- Create Account still **BLOCKED** on [#258](https://github.com/Stringsaeed/money-management/pull/258); dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## resolveReadLedgerId Relates (2026-09-12, no device)
+
+- Re-verify `packages/api/src/lib/require-member.test.ts` (`resolveReadLedgerId`) — **4/4 PASS** (`canDropAdmin-resolveReadLedgerId-vitest-2026-09-12.txt`): personal scope → `personalLedgerOwner`; org scope → household id; legacy `householdId`; missing scope throws
+- Row 4 / row 5 read-path tenancy seam → advances automated ledger id resolution lock; live dual-identity bearer still **BLOCKED**; webhook still **BLOCKED** (**503**).
+- Create Account still **BLOCKED** on [#258](https://github.com/Stringsaeed/money-management/pull/258); GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## parseImportAggregate Relates (2026-09-12, no device)
+
+- Re-verify pure cases in `packages/api/src/lib/migration/manifest.test.ts` (vitest `-t` aggregate filter; **9** cases, no `computeImportManifest` integration cases) — **9/9 PASS** (`parseImportAggregate-vitest-2026-09-12.txt`): bigint string/number/bigint normalize; rejects unsafe decimals/negatives/MAX_SAFE+1
+- Row 8 import manifest aggregate boundary seam → advances automated PostgreSQL aggregate parser lock; live disposable reset + import apply still **BLOCKED** (#231/#240 skip); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## enumeratePeriods Relates (2026-09-12, no device)
+
+- Re-verify `packages/api/src/lib/budget/projections.test.ts` (`enumeratePeriods`) — **1/1 PASS** (`enumeratePeriods-vitest-2026-09-12.txt`): inclusive month walk across year boundary; single-month degenerate range
+- Row 6 budget projection period enumeration seam → advances automated period list lock; live device budget UX still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
 ## formatPrice Relates (2026-09-12, no device)
 
 - Added `apps/mobile/components/money-movement/format-price.test.ts` — **1/1 new PASS** / suite **1/1** (`format-price-jest-2026-09-12.txt`): exact lock of `formatPrice` en-US currency formatting (pure helper)

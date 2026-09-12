@@ -1,0 +1,32 @@
+branch=cursor/workos-certify-migration-b3d1
+prior_tip=d50a4099db0e42c2177080869cf21d17e54208a6
+gap=parseImportAggregate dedicated Relates title (re-verify pure aggregate cases)
+command=cd packages/api && pnpm exec vitest run src/lib/migration/manifest.test.ts -t "normalizes PostgreSQL|rejects an unsafe"
+result=PASS 9/9
+tsc=skipped file-scoped only
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
+
+
+ RUN  v3.2.7 /tmp/wt232/packages/api
+
+ ✓ src/lib/migration/manifest.test.ts (13 tests | 4 skipped) 6010ms
+   ✓ computeImportManifest > normalizes PostgreSQL bigint aggregates at the database boundary  976ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value:   632ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: 10.5  615ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: invalid  605ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: -1  672ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: 10.5  670ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: -1  659ms
+   ✓ computeImportManifest > rejects an unsafe aggregate value: 9007199254740992n  584ms
+   ✓ computeImportManifest > rejects an unsafe numeric aggregate string  595ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed | 4 skipped (13)
+   Start at  13:50:51
+   Duration  6.77s (transform 147ms, setup 0ms, collect 521ms, tests 6.01s, environment 0ms, prepare 77ms)
+

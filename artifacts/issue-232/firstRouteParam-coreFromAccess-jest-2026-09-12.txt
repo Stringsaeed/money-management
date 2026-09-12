@@ -1,0 +1,21 @@
+branch=cursor/workos-certify-migration-b3d1
+prior_tip=d50a4099db0e42c2177080869cf21d17e54208a6
+gap=firstRouteParam + coreFromAccess dedicated Relates titles (re-verify)
+command=cd apps/mobile && pnpm exec jest modules/access/route-param.test.ts modules/access/core-from-state.test.ts --runInBand
+result=PASS 7/7 (firstRouteParam 4/4 + coreFromAccess 3/3)
+tsc=skipped file-scoped only
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
+
+PASS modules/access/core-from-state.test.ts
+PASS modules/access/route-param.test.ts
+
+Test Suites: 2 passed, 2 total
+Tests:       7 passed, 7 total
+Snapshots:   0 total
+Time:        1.117 s, estimated 10 s
+Ran all test suites matching /modules\/access\/route-param.test.ts|modules\/access\/core-from-state.test.ts/i.

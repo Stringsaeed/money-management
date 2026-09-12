@@ -1,0 +1,24 @@
+branch=cursor/workos-certify-migration-b3d1
+prior_tip=d50a4099db0e42c2177080869cf21d17e54208a6
+gap=canDropAdmin + resolveReadLedgerId dedicated Relates titles (re-verify)
+command=cd packages/api && pnpm exec vitest run src/lib/households/admin-guard.test.ts src/lib/require-member.test.ts -t "canDropAdmin|resolveReadLedgerId"
+result=PASS 7/7 (canDropAdmin 3/3 + resolveReadLedgerId 4/4)
+tsc=skipped file-scoped only
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
+
+
+ RUN  v3.2.7 /tmp/wt232/packages/api
+
+ ✓ src/lib/households/admin-guard.test.ts (4 tests | 1 skipped) 2ms
+ ✓ src/lib/require-member.test.ts (9 tests | 5 skipped) 2ms
+
+ Test Files  2 passed (2)
+      Tests  7 passed | 6 skipped (13)
+   Start at  13:50:51
+   Duration  361ms (transform 124ms, setup 0ms, collect 167ms, tests 4ms, environment 1ms, prepare 138ms)
+
