@@ -1,0 +1,11 @@
+=== vitest run src/lib/recurring/system-settlement-actor.test.ts ===
+
+ RUN  v3.2.7 /tmp/cert-232-relates-import/packages/api
+
+ ✓ src/lib/recurring/system-settlement-actor.test.ts (1 test) 2ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  12:09:59
+   Duration  662ms (transform 79ms, setup 0ms, collect 505ms, tests 2ms, environment 0ms, prepare 53ms)
+

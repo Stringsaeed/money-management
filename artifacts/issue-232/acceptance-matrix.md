@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `3ee3be173596970437b938f136e3b0679e68c0a9` INVITATION_EXPIRES_IN_DAYS stamp — product `764d6a378428aea64d23921d6f3a1b0ee9e7a050` (`INVITATION_EXPIRES_IN_DAYS` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | PENDING_DOCS — product `c784a0b458f2fcc65af0c484270073a7f7a0bb66` (`SYSTEM_SETTLEMENT_ACTOR_ID` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -37,6 +37,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 - Live `GET /webhooks/workos` → **404** (POST-only).
 - Runner `WORKOS_WEBHOOK_SECRET` **ABSENT** — did not invent secrets. Verdict unchanged: **BLOCKED**.
 - Evidence: `workos-webhook-probe-2026-09-12e.txt` + `workos-webhook-blocked.md`. Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## SYSTEM_SETTLEMENT_ACTOR_ID Relates (2026-09-12, no device)
+
+- Added `packages/api/src/lib/recurring/system-settlement-actor.test.ts` — **1/1 new PASS** / suite **1/1** (`system-settlement-actor-jest-2026-09-12.txt`): exact value lock `SYSTEM_SETTLEMENT_ACTOR_ID="user-system-settlement"` (pure const surface).
+- Row 4 / row 6 recurring settlement-actor seam → advances automated system-actor identity lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## INVITATION_EXPIRES_IN_DAYS Relates (2026-09-12, no device)
 
