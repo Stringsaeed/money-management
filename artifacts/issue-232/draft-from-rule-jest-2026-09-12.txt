@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=748b771
+gap=draftFromRule
+matrix_row=4/6 recurring rule to draft mapper
+command=pnpm exec jest modules/recurring-rules/change-results.test.ts --runInBand
+result=PASS 2/2 new (suite 12/12)
+tsc=PASS apps/mobile --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
