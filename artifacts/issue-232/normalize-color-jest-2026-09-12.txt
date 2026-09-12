@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/auth/ui/normalize-color.test.ts
+PASS components/auth/ui/normalize-color.test.ts
+  normalizeColor
+    ✓ keeps valid colors and otherwise returns the fallback (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.953 s
+Ran all test suites matching /components\/auth\/ui\/normalize-color.test.ts/i.
