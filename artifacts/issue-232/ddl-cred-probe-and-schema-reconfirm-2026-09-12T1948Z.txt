@@ -1,0 +1,25 @@
+date_utc=2026-09-12T19:48Z
+source=PlanetScale MCP execute_read_query (read-only, use_replica=false)
+org=stringsaeed db=trove branch=main
+agent_env_DATABASE_URL=MISSING
+agent_env_PLANETSCALE_*=MISSING
+agent_env_WORKOS_WEBHOOK_SECRET=MISSING
+ddl_apply_via_agent_env=HARD_STOP
+planetscale_write_used=false
+confirm_destructive=not_requested
+
+presence_counts:
+  accounts_ledger_id=1
+  accounts_visibility=0
+  has_ledger=1
+  has_legacy_session=0
+  has_legacy_account=0
+  has_legacy_verification=0
+  membership_status=1
+  membership_is_active=0
+
+table_owners=postgres (accounts,membership,household,ledger,user,widget_handoff,deletion_operation)
+
+verdict=PASS schema 0011-0015 already on trove/main
+note=Deploy ensure 42501/42703 is deploy-role ALTER denial cascade; not missing privileged schema
+relates=#232 only
