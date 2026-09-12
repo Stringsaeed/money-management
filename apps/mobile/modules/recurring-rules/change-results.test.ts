@@ -1,4 +1,4 @@
-import { candidateFromDraft, changeEffects } from "./change-results";
+import { candidateFromDraft, changeEffects, staleResult } from "./change-results";
 import { settlementEffects } from "./settlement";
 import type { RecurringRuleDraft } from "./types";
 
@@ -74,6 +74,27 @@ describe("candidateFromDraft", () => {
       healthChangedAt: null,
       lastSettlementAttemptAt: null,
       lastSettlementError: null,
+    });
+  });
+});
+
+describe("staleResult", () => {
+  it("returns missing_rule when the rule is absent", () => {
+    expect(staleResult(null, 3, "rule-missing")).toEqual({
+      kind: "missing_rule",
+      ruleId: "rule-missing",
+    });
+  });
+
+  it("returns null when revision matches and stale_revision when it does not", () => {
+    const rule = candidateFromDraft("rule-3", draft(), "2026-05-01T00:00:00.000Z");
+
+    expect(staleResult(rule, 1, "rule-3")).toBeNull();
+    expect(staleResult({ ...rule, revision: 4 }, 2, "rule-3")).toEqual({
+      kind: "stale_revision",
+      ruleId: "rule-3",
+      expectedRevision: 2,
+      actualRevision: 4,
     });
   });
 });
