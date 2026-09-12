@@ -45,3 +45,4 @@ recurring_change_payload_schema_jest=PASS 4/4 product=e977612
 update_archive_account_payload_schemas_jest=PASS 4/4 product=9344bd3
 edit_remove_transaction_payload_schemas_jest=PASS 4/4 product=4dea07e
 create_update_category_payload_schemas_jest=PASS 4/4 product=03caae2
+archive_category_payload_schema_jest=PASS 2/2 product=de1ed8e

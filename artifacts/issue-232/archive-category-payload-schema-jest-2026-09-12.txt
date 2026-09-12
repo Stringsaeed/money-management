@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=de1ed8e
+gap=archiveCategoryPayloadSchema
+matrix_row=4/6 command archive category payload wire schema
+command=pnpm exec vitest run src/lib/commands/archive-category-payload-schema.test.ts
+result=PASS 2/2
+tsc=PASS packages/api --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
