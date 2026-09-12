@@ -2,6 +2,7 @@ import {
   candidateFromDraft,
   candidateFromExisting,
   changeEffects,
+  draftFromRule,
   invalidLifecycle,
   staleResult,
 } from "./change-results";
@@ -160,5 +161,48 @@ describe("candidateFromExisting", () => {
       revision: 7,
       lifecycle: "paused",
     });
+  });
+});
+
+describe("draftFromRule", () => {
+  it("maps an editable rule into a draft with schedule and money fields", () => {
+    const rule = candidateFromDraft(
+      "rule-6",
+      draft({
+        endDate: "2026-11-30",
+        endCount: 6,
+        frequency: "week",
+        intervalCount: 2,
+      }),
+      "2026-07-01T00:00:00.000Z",
+    );
+
+    expect(draftFromRule(rule)).toEqual({
+      name: "Rent",
+      type: "expense",
+      amountMinor: 1200_00,
+      currency: "USD",
+      accountId: "account-1",
+      toAccountId: null,
+      categoryId: "category-1",
+      description: "Monthly rent",
+      frequency: "week",
+      intervalCount: 2,
+      startDate: "2026-01-05",
+      endDate: "2026-11-30",
+      endCount: 6,
+      timeZone: "Asia/Dubai",
+    });
+  });
+
+  it("throws when amountMinor or accountId is missing and needs repair", () => {
+    const rule = candidateFromDraft("rule-7", draft(), "2026-07-02T00:00:00.000Z");
+
+    expect(() => draftFromRule({ ...rule, amountMinor: null })).toThrow(
+      "Recurring Rule rule-7 requires repair before ordinary editing.",
+    );
+    expect(() => draftFromRule({ ...rule, accountId: null })).toThrow(
+      "Recurring Rule rule-7 requires repair before ordinary editing.",
+    );
   });
 });
