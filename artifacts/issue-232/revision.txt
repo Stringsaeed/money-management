@@ -35,3 +35,4 @@ household_role_command_kind_jest=PASS 4/4 product=5bf4dc4
 covers_effects_jest=PASS 3/3 product=cd19656
 period_helpers_jest=PASS 4/4 product=8f12bc2
 session_from_claims_jest=PASS 6/6 product=30abaff
+bind_ledger_scope_jest=PASS 2/2 product=05ce0ed
