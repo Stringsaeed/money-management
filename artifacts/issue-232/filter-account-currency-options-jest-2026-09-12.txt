@@ -1,0 +1,11 @@
+PASS path: apps/mobile/components/account/filter-account-currency-options.test.ts
+PASS components/account/filter-account-currency-options.test.ts
+  filterAccountCurrencyOptions
+    ✓ returns a copy when the query is blank (2 ms)
+    ✓ matches currency code or display name case-insensitively
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        1.004 s
+Ran all test suites matching /components\/account\/filter-account-currency-options.test.ts/i.
