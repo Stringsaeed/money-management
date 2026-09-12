@@ -1,4 +1,21 @@
-import { describeRejection, isRejectionKind, parseRejection } from "./rejection";
+import { describeRejection, isRejectionKind, parseRejection, REJECTION_KINDS } from "./rejection";
+
+describe("REJECTION_KINDS", () => {
+  it("lists every typed rejection kind the inbox can render", () => {
+    expect([...REJECTION_KINDS]).toEqual([
+      "stale_version",
+      "invalid_intent",
+      "preview_required",
+      "missing_entity",
+      "forbidden",
+      "conflict",
+    ]);
+  });
+
+  it("does not include applied success", () => {
+    expect(REJECTION_KINDS).not.toContain("applied");
+  });
+});
 
 describe("isRejectionKind", () => {
   it("accepts every kind of the typed rejection union", () => {
