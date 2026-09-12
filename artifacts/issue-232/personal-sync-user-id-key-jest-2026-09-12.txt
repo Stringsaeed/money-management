@@ -1,0 +1,12 @@
+PASS path: lib/migration/status-keys.test.ts
+PASS lib/migration/status-keys.test.ts
+  COMPLETED_HOUSEHOLD_ID_KEY
+    ✓ locks migration completed-household setting key to "migration.completedHouseholdId" (8 ms)
+  PERSONAL_SYNC_USER_ID_KEY
+    ✓ locks personal-sync user setting key to "sync.personalLedgerUserId"
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        0.968 s, estimated 1 s
+Ran all test suites matching /lib\/migration\/status-keys.test.ts/i.
