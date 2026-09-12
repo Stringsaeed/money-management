@@ -1,7 +1,23 @@
 import type { Event } from "@workos-inc/node";
 import { describe, expect, it } from "vitest";
 
-import { parseHouseholdEvent } from "./household-events";
+import { HOUSEHOLD_WEBHOOK_EVENTS, parseHouseholdEvent } from "./household-events";
+
+describe("HOUSEHOLD_WEBHOOK_EVENTS", () => {
+  it("lists every WorkOS event kind the household projection handles", () => {
+    expect([...HOUSEHOLD_WEBHOOK_EVENTS]).toEqual([
+      "organization_membership.created",
+      "organization_membership.updated",
+      "organization_membership.deleted",
+      "organization.deleted",
+    ]);
+  });
+
+  it("does not include ignored or unrelated WorkOS events", () => {
+    expect(HOUSEHOLD_WEBHOOK_EVENTS).not.toContain("user.created");
+    expect(HOUSEHOLD_WEBHOOK_EVENTS).not.toContain("session.created");
+  });
+});
 
 const membershipData = {
   object: "organization_membership" as const,
