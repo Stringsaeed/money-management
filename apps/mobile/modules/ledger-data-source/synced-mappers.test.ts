@@ -4,6 +4,7 @@ import type { Account } from "@/types";
 
 import {
   assertSupportedAccountUpdate,
+  assertSupportedTransactionUpdate,
   calculateSyncedBalance,
   type SyncedTransaction,
 } from "./synced-mappers";
@@ -133,6 +134,48 @@ describe("assertSupportedAccountUpdate", () => {
   it("rejects initialBalance edits", () => {
     expect(() => assertSupportedAccountUpdate({ initialBalance: 0 })).toThrow(
       /Edit only the Account name, color, icon, exclude-from-total flag, or sort order/,
+    );
+  });
+});
+
+describe("assertSupportedTransactionUpdate", () => {
+  it("allows type, amount, date, account, category, and description edits", () => {
+    expect(() =>
+      assertSupportedTransactionUpdate({
+        type: "expense",
+        amount: 4200,
+        date: "2026-09-12",
+        accountId: "acct-a",
+        categoryId: "cat-1",
+        description: "Coffee",
+      }),
+    ).not.toThrow();
+  });
+
+  it("rejects currency edits", () => {
+    expect(() => assertSupportedTransactionUpdate({ currency: "EUR" })).toThrow(
+      /This Transaction edit is unavailable for the synced ledger/,
+    );
+  });
+
+  it("rejects original amount/currency and exchangeRate edits", () => {
+    expect(() => assertSupportedTransactionUpdate({ originalAmount: 100 })).toThrow(
+      /Unsupported fields remain unchanged/,
+    );
+    expect(() => assertSupportedTransactionUpdate({ originalCurrency: "JPY" })).toThrow(
+      /Unsupported fields remain unchanged/,
+    );
+    expect(() => assertSupportedTransactionUpdate({ exchangeRate: 1084700 })).toThrow(
+      /Unsupported fields remain unchanged/,
+    );
+  });
+
+  it("rejects recurring lineage edits", () => {
+    expect(() => assertSupportedTransactionUpdate({ isRecurring: true })).toThrow(
+      /Edit only type, amount, date, Account, Category, or description/,
+    );
+    expect(() => assertSupportedTransactionUpdate({ recurringRuleId: "rule-1" })).toThrow(
+      /Edit only type, amount, date, Account, Category, or description/,
     );
   });
 });
