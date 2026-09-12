@@ -1,0 +1,10 @@
+PASS path: apps/mobile/components/transaction/ui/field-text-style.test.ts
+PASS components/transaction/ui/field-text-style.test.ts
+  fieldTextStyle
+    ✓ locks Paper Ledger body-medium typography at 15/20 with the given ink (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.973 s
+Ran all test suites matching /components\/transaction\/ui\/field-text-style.test.ts/i.
