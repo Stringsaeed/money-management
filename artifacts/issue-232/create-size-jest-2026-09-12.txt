@@ -1,0 +1,14 @@
+PASS path: components/navigation/glass-tab-bar/constants.test.ts
+PASS components/navigation/glass-tab-bar/constants.test.ts
+  TAB_HEIGHT
+    ✓ locks glass tab bar height to 44 (9 ms)
+  SCROLL_FADE_OVERSCAN
+    ✓ locks scroll fade overscan to 48
+  CREATE_SIZE
+    ✓ locks create tab button size to 58
+
+Test Suites: 1 passed, 1 total
+Tests:       3 passed, 3 total
+Snapshots:   0 total
+Time:        1.019 s
+Ran all test suites matching /components\/navigation\/glass-tab-bar\/constants.test.ts/i.

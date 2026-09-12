@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `c7a2fb2c3b63f58258e3e02d626dcc34ed9341c7` READONLY_FIELD_KEYS stamp — product `2122b9bbcd125b96e30d54c3dfdb722529b2e80a` (`READONLY_FIELD_KEYS` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` CREATE_SIZE stamp — product `de7a41058fd1bca1e45bedcea74341532cf13b28` (`CREATE_SIZE` **1/1** new; suite **3/3**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -90,6 +90,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Added `apps/mobile/components/rejected-changes/readonly-field-keys.test.ts` — **1/1 new PASS** / suite **1/1** (`readonly-field-keys-jest-2026-09-12.txt`): exact lock `READONLY_FIELD_KEYS=["commandId","householdId"]` (pure const surface).
 - Row 4 / row 6 rejected-changes envelope-key seam → advances automated readonly-key vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## CREATE_SIZE Relates (2026-09-12, no device)
+
+- Extended `apps/mobile/components/navigation/glass-tab-bar/constants.test.ts` — **1/1 new PASS** / suite **3/3** (`create-size-jest-2026-09-12.txt`): exact lock `CREATE_SIZE=58` (pure const surface).
+- Row 4 / row 6 glass-tab-bar create-button size seam → advances automated create chrome vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## DEFAULT_CATEGORY_ICON Relates (2026-09-12, no device)
