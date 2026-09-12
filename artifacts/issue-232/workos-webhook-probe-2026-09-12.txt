@@ -1,0 +1,22 @@
+# WorkOS webhook live probe — Relates #232 (no secrets)
+# Stamp: 2026-09-12T03:16:04Z UTC
+# Host: https://auth.trove.ing
+# Note: fake WorkOS-Signature is not a real signing secret.
+
+=== GET /
+HTTP_CODE=200
+body=OK
+
+=== GET /webhooks/workos
+HTTP_CODE=404
+body=404 Not Found
+
+=== POST /webhooks/workos (Content-Type: application/json; no WorkOS-Signature)
+HTTP_CODE=503
+body=Webhook receiver is disabled: WORKOS_WEBHOOK_SECRET is not configured.
+
+=== POST /webhooks/workos (fake WorkOS-Signature: t=1,v1=deadbeef)
+HTTP_CODE=503
+body=Webhook receiver is disabled: WORKOS_WEBHOOK_SECRET is not configured.
+
+# Verdict: BLOCKED — prod WORKOS_WEBHOOK_SECRET empty; route exists (not 404 for POST).

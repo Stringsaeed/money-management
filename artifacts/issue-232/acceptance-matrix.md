@@ -29,6 +29,14 @@ Report implementation, automated verification, runtime verification, and publica
 
 Recorded in `revision.txt` / `post-schema-sync-retest.md`.
 
+## WorkOS webhook prod probe (2026-09-12T03:16Z)
+
+- `POST https://auth.trove.ing/webhooks/workos` → **HTTP 503** body `Webhook receiver is disabled: WORKOS_WEBHOOK_SECRET is not configured.`
+- `GET /` → **200** `OK`; `GET /webhooks/workos` → **404** (POST-only). Fake signature still **503** (secret gate before verify).
+- Prod binding empty — not 404/401/500/timeout. Dashboard webhook id `we_01M2945R34XC28KTEABF24F4CD` (signing secret not recorded).
+- Membership webhook apply / live projection: **BLOCKED** until owner sets `WORKOS_WEBHOOK_SECRET` + redeploy.
+- Evidence: `workos-webhook-blocked.md`, `workos-webhook-probe-2026-09-12.txt`. Relates to #232 only. Do not Closes #232/#224.
+
 ## Non-device API matrix Relates (2026-09-12, no iPhone)
 
 - Cloudflare Observability re-query on `money-management-server-prod-mfhkibosfd6z5ym5` corroborates:
@@ -200,9 +208,9 @@ Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT
 | Management-page return (widget) | `PARTIAL` (API + auth) | Widget handoff + expired/demoted-admin codes in households tests; `@trove/auth` member-widget-page **3**. No iOS/Android return artifact. |
 | Admin / member / viewer | `PARTIAL` (API seam) | Import-bundle rejects member/viewer bulk-import; households role changes; PowerSync streams deny inactive/unknown roles (`test-powersync-proper.txt` **9/9**). Device role UX not run. |
 | Personal data stays private on create/join | `PARTIAL` (API seam) | Personal vs Household isolation in personal-ledger + budget-recurring + PowerSync streams. No live create/join privacy proof. |
-| Webhook-driven membership apply | `PARTIAL` / not evidenced live | `WORKOS_WEBHOOK_SECRET` **present** locally (value omitted). Signature verify / live membership apply against WorkOS deliveries **not yet evidenced** on this tip. |
+| Webhook-driven membership apply | `BLOCKED` (prod) | Live `POST /webhooks/workos` on `auth.trove.ing` → **503** `WORKOS_WEBHOOK_SECRET is not configured.` (`workos-webhook-blocked.md`, `workos-webhook-probe-2026-09-12.txt`). Local name may be present; **prod binding empty**. Not 404/401/500. |
 
-**Row status: `PARTIAL` automated / live not run / webhook secret present but live verify not evidenced.**
+**Row status: `PARTIAL` automated / live not run / webhook apply `BLOCKED` (prod secret missing).**
 
 ### 5. Cross-User/Household API/stream isolation, cross-scope financial-ref rejection, queued writes after role downgrade, stale-response handling
 
@@ -251,7 +259,7 @@ Note: `test-powersync.txt` is a **failed** `vitest run` (`No test suite found` /
 | Better Auth / custom Household removal on `main` | predecessor done | HEAD is the #240 squash that closed #231. This ticket certifies composition; it did not re-implement removal. |
 | Disposable env reset (DB, WorkOS env, PowerSync, device stores) | `SKIPPED` by #231/#240 | Reset was not performed. Cannot claim a clean start after reset. |
 | Local disposable DB / worker mint | `BLOCKED` | Absent locally: `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, `PLANETSCALE_PASSWORD` (or `DATABASE_URL`); `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID`. |
-| Webhook verify on local worker | `PARTIAL` | `WORKOS_WEBHOOK_SECRET` **present** locally (value omitted). Live signed-delivery verify / membership apply **not evidenced** this tip. |
+| Webhook verify on local worker | `PARTIAL` local / `BLOCKED` prod | Local name may be present (value omitted). **Prod** `POST https://auth.trove.ing/webhooks/workos` → **503** disabled (`workos-webhook-blocked.md`). |
 | Live API reachable | `PASS` (health only) | `https://auth.trove.ing` health **200 OK**. Not a clean-install walkthrough. |
 | Clean-install anonymous + login + personal sync + Household select after reset | not evidenced | Requires the skipped reset plus device runs. |
 
@@ -316,7 +324,7 @@ iOS email-code OTP completion, callback, restart, refresh, expiry, network recov
 
 | Name | Notes |
 | --- | --- |
-| `WORKOS_WEBHOOK_SECRET` | **Present** locally (value omitted). Live signed-delivery verify still not evidenced. |
+| `WORKOS_WEBHOOK_SECRET` | **Present** locally (value omitted). **Prod** Alchemy/env binding is **empty** → live receiver **503** (`workos-webhook-blocked.md`). |
 
 ### Absent locally (block the named capability)
 
@@ -381,6 +389,8 @@ stim start --json  # -> stim-start.json (port 8083)
 | `api-matrix-non-device.md` | Non-device Relates summary: listMine / getManifest / claim_iss PASS + isolation PARTIAL + blocked rows. |
 | `cf-api-corroboration-2026-09-12.txt` | CF Observability re-query stamp (counts only; no secrets). |
 | `ios-otp-ax-blocker.md` | Durable iOS OTP AX **BLOCKER** for owner decision (not a PASS). |
+| `workos-webhook-blocked.md` | Prod webhook **BLOCKED** — empty `WORKOS_WEBHOOK_SECRET` → **503**. |
+| `workos-webhook-probe-2026-09-12.txt` | Live curl transcript (no secrets). |
 | `post-schema-sync-retest.md` | Post-DDL 0011–0015 getManifest **PASS** (CF Worker 200 citations). |
 | `revision.txt` | Earlier revision stamp. |
 | `authkit-live-write.txt` | This AuthKit write stamp (HEAD, #242 note, OTP hard-stop). |
@@ -405,7 +415,8 @@ stim start --json  # -> stim-start.json (port 8083)
 3. Keep lint/format classified as pre-existing unless a new regression appears.
 4. Measure PowerSync existing-connection removal and the offline-device limitation, or keep those sub-criteria `BLOCKED` with the env names above.
 5. Either perform the skipped disposable reset and reproduce clean setup (row 8), or keep row 8 `BLOCKED` and **do not** claim #232 complete.
-6. Keep #224 open. Do not merge as certified. Do not deploy to production. **Do not use Closes #232** until certification is actually complete.
+6. Set prod `WORKOS_WEBHOOK_SECRET` from WorkOS dashboard signing secret, redeploy, confirm `POST /webhooks/workos` is no longer **503**, then re-certify membership webhook projection.
+7. Keep #224 open. Do not merge as certified. Do not deploy to production. **Do not use Closes #232** until certification is actually complete.
 
 ## Post-login Sync evidence (2026-09-11T21:44Z)
 

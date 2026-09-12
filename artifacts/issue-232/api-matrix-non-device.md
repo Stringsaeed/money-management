@@ -34,6 +34,7 @@ Out of scope here: personal upload UI, PowerSync removal bound, disposable reset
 | PowerSync removal bound | **BLOCKED** | Absent mint env names: `POWERSYNC_URL`, `POWERSYNC_JWT_PRIVATE_KEY`, `POWERSYNC_JWT_KID` | unchanged |
 | Disposable clean setup (row 8) | **BLOCKED** | #231 skipped reset + PlanetScale/PowerSync mint envs absent | unchanged |
 | iOS OTP / callback AX | **BLOCKED** (automation) | See `ios-otp-ax-blocker.md` — **not** a PASS | No device this write |
+| WorkOS webhook / membership projection | **BLOCKED** (prod) | `POST /webhooks/workos` → **503** empty `WORKOS_WEBHOOK_SECRET` (`workos-webhook-blocked.md`) | Re-probe `2026-09-12T03:16:04Z` |
 
 ## Row roll-up (non-device lens)
 
@@ -42,7 +43,7 @@ Out of scope here: personal upload UI, PowerSync removal bound, disposable reset
 | 1 CI | **PARTIAL** | Prior: tsc + `test:ci` PASS; lint/format FAIL pre-existing. Not re-run this docs-only write. |
 | 2 AuthKit | **PARTIAL** | JWT/`listMine`/`getManifest` live **PASS**; cancel **PASS** (prior); OTP/callback **BLOCKED** for automation; Android not started. |
 | 3 Personal sync | **PARTIAL** | getManifest live **PASS**; confirmed first upload UX / two-device still open (device). |
-| 4 Households | **PARTIAL** | API seams only; live create/switch/invite not evidenced. |
+| 4 Households | **PARTIAL** + webhook **BLOCKED** | API seams only; live create/switch/invite not evidenced; prod webhook **503**. |
 | 5 Isolation | **PARTIAL** | Automated seams PASS; live isolation **not** evidenced. |
 | 6 Events + PowerSync removal | **PARTIAL** + **BLOCKED** | Event seams PASS; removal/offline **BLOCKED**. |
 | 7 Sign-out / deletion | **PARTIAL** | Deletion API seams PASS; live sign-out/identity switch not evidenced. |
@@ -62,7 +63,8 @@ No secret values recorded. No raw CDP/HAR.
 
 1. Accept iOS OTP AX automation **BLOCKER** (see `ios-otp-ax-blocker.md`) vs require alternate OTP path before row-2 completion.
 2. Keep PowerSync removal / disposable reset **BLOCKED** until mint envs + reset policy (already documented).
-3. Device slices remain: confirmed upload, Household UX, two-device, Android, sign-out.
+3. Set prod `WORKOS_WEBHOOK_SECRET` + redeploy so webhook is no longer **503**; then re-certify membership projection.
+4. Device slices remain: confirmed upload, Household UX, two-device, Android, sign-out.
 
 ## Governance
 
