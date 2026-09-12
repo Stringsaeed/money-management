@@ -61,3 +61,4 @@ create_console_sink_jest=PASS 2/2 new suite=7/7 product=32eed27
 create_metrics_sink_jest=PASS 2/2 new suite=9/9 product=520e266
 apply_ledger_filters_jest=PASS 2/2 new suite=2/2 product=7e507fe
 change_effects_jest=PASS 2/2 product=f57ae8c
+date_range_of_jest=PASS 2/2 new suite=4/4 product=7a3be69
