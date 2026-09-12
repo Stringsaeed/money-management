@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=044307b
+gap=packages/api/src/lib/households/widget-handoff.ts generateHandoffCode/hashHandoffCode
+matrix_row=4 admin widget handoff code seam
+command=pnpm exec vitest run src/lib/households/widget-handoff.test.ts
+result=PASS 3/3
+tsc=PASS exit 0
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
