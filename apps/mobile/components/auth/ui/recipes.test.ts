@@ -1,5 +1,10 @@
 import { controlRecipe, fieldRecipe } from "./recipes";
-import { controlLabelStyle, fieldBoxStyle, textStyleForRole } from "./recipe-core";
+import {
+  androidControlStyle,
+  controlLabelStyle,
+  fieldBoxStyle,
+  textStyleForRole,
+} from "./recipe-core";
 import {
   AUTH_CONTROL_SPECS,
   AUTH_TEXT_SPECS,
@@ -58,6 +63,44 @@ describe("textStyleForRole", () => {
     expect(textStyleForRole("notice-error", palette).color).toBe(palette["--color-destructive"]);
     expect(textStyleForRole("notice-success", palette).color).toBe(palette["--color-sage"]);
     expect(textStyleForRole("subtitle", palette)).not.toHaveProperty("letterSpacing");
+  });
+});
+
+describe("androidControlStyle", () => {
+  const palette = AUTH_FALLBACK_PALETTE.light;
+
+  it("paints primary gradient end + ring, and secondary solid fill + border ring", () => {
+    const primary = androidControlStyle("primary", palette, false);
+    expect(primary).toEqual({
+      borderRadius: AUTH_CONTROL_SPECS.primary.radius,
+      opacity: 1,
+      height: AUTH_CONTROL_SPECS.primary.height,
+      borderWidth: 1,
+      borderColor: palette.kumoRing,
+      backgroundColor: palette["--color-kumo-brand-emphasis-end"],
+    });
+
+    const secondary = androidControlStyle("secondary", palette, true);
+    expect(secondary).toEqual({
+      borderRadius: AUTH_CONTROL_SPECS.secondary.radius,
+      opacity: AUTH_CONTROL_SPECS.secondary.disabledOpacity,
+      height: AUTH_CONTROL_SPECS.secondary.height,
+      borderWidth: 1,
+      borderColor: palette["--color-border"],
+      backgroundColor: palette["--color-background"],
+    });
+  });
+
+  it("uses paddingVertical for tertiary and omits fill/ring", () => {
+    const tertiary = androidControlStyle("tertiary", palette, false);
+    expect(tertiary).toEqual({
+      borderRadius: AUTH_CONTROL_SPECS.tertiary.radius,
+      opacity: 1,
+      paddingVertical: AUTH_CONTROL_SPECS.tertiary.paddingVertical,
+    });
+    expect(tertiary).not.toHaveProperty("height");
+    expect(tertiary).not.toHaveProperty("backgroundColor");
+    expect(tertiary).not.toHaveProperty("borderWidth");
   });
 });
 
