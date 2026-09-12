@@ -163,7 +163,7 @@ export default function RootLayout() {
                                   <Stack.Screen
                                     name="account/new"
                                     options={{
-                                      presentation: "modal",
+                                      presentation: "card",
                                       title: "Add Account",
                                       headerTransparent: false,
                                     }}
