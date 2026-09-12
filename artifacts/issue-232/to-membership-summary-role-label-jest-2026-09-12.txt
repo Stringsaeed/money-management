@@ -1,0 +1,20 @@
+branch=cursor/workos-certify-migration-b3d1
+gap=toMembershipSummary / roleLabel
+command=cd apps/mobile && pnpm exec jest modules/access/memberships.test.ts --runInBand
+relates=#232 only
+closes=none
+certified=false
+
+PASS modules/access/memberships.test.ts
+  toMembershipSummary
+    ✓ maps a valid admin row and ISO-serializes Date joinedAt (3 ms)
+    ✓ keeps string joinedAt and accepts member and viewer roles (1 ms)
+    ✓ returns null for unknown role slugs so listMine cannot invent capabilities (1 ms)
+  roleLabel
+    ✓ labels each HouseholdRole for membership UI
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        1.045 s
+Ran all test suites matching /modules\/access\/memberships.test.ts/i.
