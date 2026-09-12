@@ -1,0 +1,11 @@
+PASS path: packages/auth/src/widget-return-link.test.ts
+
+ RUN  v3.2.7 /tmp/cert-232-relates-import/packages/auth
+
+ ✓ src/widget-return-link.test.ts (1 test) 2ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  13:11:29
+   Duration  173ms (transform 31ms, setup 0ms, collect 26ms, tests 2ms, environment 0ms, prepare 54ms)
+
