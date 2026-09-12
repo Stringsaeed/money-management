@@ -1,0 +1,23 @@
+branch=cursor/workos-certify-migration-b3d1
+prior_tip=8eb805babdba3f3f4e4aab70bced12c4866ae3e8
+gap=can + requiredCapability dedicated Relates titles (re-verify)
+command=cd packages/api && pnpm exec vitest run src/lib/commands/capabilities.test.ts
+result=PASS 4/4
+tsc=skipped file-scoped only
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
+
+
+ RUN  v3.2.7 /tmp/wt232/packages/api
+
+ ✓ src/lib/commands/capabilities.test.ts (4 tests) 3ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  13:52:11
+   Duration  191ms (transform 44ms, setup 0ms, collect 48ms, tests 3ms, environment 0ms, prepare 48ms)
+

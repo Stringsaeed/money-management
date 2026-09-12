@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Repo                | `Stringsaeed/money-management`                                                                                                                                                                                                                                                                                   |
 | Branch              | `cursor/workos-certify-migration-b3d1`                                                                                                                                                                                                                                                                           |
-| HEAD                | tip `f346e88541a511b60a2c78db9c84d5f6d9a348f8` dedicated access/tenancy/import/period Relates titles (prior `d50a4099db0e42c2177080869cf21d17e54208a6`) — `firstRouteParam` / `coreFromAccess` **7/7** jest; `canDropAdmin` / `resolveReadLedgerId` **7/7** vitest; `parseImportAggregate` **9/9** vitest; `enumeratePeriods` **1/1** vitest; remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD                | tip `ed8c097` align (product `f346e88541a511b60a2c78db9c84d5f6d9a348f8`) dedicated access/tenancy/import/period Relates titles — `firstRouteParam` / `coreFromAccess` **7/7** jest; `canDropAdmin` / `resolveReadLedgerId` **7/7** vitest; `parseImportAggregate` **9/9** vitest; `enumeratePeriods` **1/1** vitest; remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance          | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`.   |
 | Worktree            | `/tmp/wt232` (cloud re-verify dedicated Relates titles); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232`                                                                                                                                                                                     |
 | Live API            | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503**                                                                                                                                                                          |
@@ -443,6 +443,24 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Re-verify `packages/api/src/lib/budget/projections.test.ts` (`enumeratePeriods`) — **1/1 PASS** (`enumeratePeriods-vitest-2026-09-12.txt`): inclusive month walk across year boundary; single-month degenerate range
 - Row 6 budget projection period enumeration seam → advances automated period list lock; live device budget UX still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## attachCapabilities Relates (2026-09-12, no device)
+
+- Re-verify `apps/mobile/modules/access/capabilities.test.ts` — **4/4 PASS** (`attachCapabilities-jest-2026-09-12.txt`): anonymous/resolving passthrough; session_revoked reauth+signOut; signed_in actions; unavailable household retry wrapper
+- Row 5 / row 7 AccessState capability attach seam → advances automated `attachCapabilities` lock; live device identity switch still **BLOCKED**; webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## can / requiredCapability Relates (2026-09-12, no device)
+
+- Re-verify `packages/api/src/lib/commands/capabilities.test.ts` — **4/4 PASS** (`can-requiredCapability-vitest-2026-09-12.txt`): admin all kinds; member write-only; viewer read-only; `requiredCapability` maps kinds to admin/member/viewer
+- Row 4 server command capability matrix seam → advances automated role/kind lock; live device role UX still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## resolveWorkOSVerifyEnv Relates (2026-09-12, no device)
+
+- Re-verify `packages/auth/src/workos-env.test.ts` — **4/4 PASS** (`resolveWorkOSVerifyEnv-vitest-2026-09-12.txt`): default audience=clientId / issuer=api.workos.com; overrides; rejects blank credentials; empty audience → client id fallback
+- Row 2 AuthKit verify-env resolution seam → advances automated WorkOS JWT env lock; live OTP/device verify still **BLOCKED** (AX); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## formatPrice Relates (2026-09-12, no device)

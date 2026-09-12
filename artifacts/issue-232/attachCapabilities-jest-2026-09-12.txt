@@ -1,0 +1,25 @@
+branch=cursor/workos-certify-migration-b3d1
+prior_tip=8eb805babdba3f3f4e4aab70bced12c4866ae3e8
+gap=attachCapabilities dedicated Relates title (re-verify)
+command=cd apps/mobile && pnpm exec jest modules/access/capabilities.test.ts --runInBand
+result=PASS 4/4
+tsc=skipped file-scoped only
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
+
+PASS modules/access/capabilities.test.ts
+  attachCapabilities
+    ✓ passes resolving and anonymous cores through with beginAuth only on anonymous (2 ms)
+    ✓ reattaches reauthenticate + signOut on session_revoked (1 ms)
+    ✓ reattaches signed_in actions and preserves active household
+    ✓ wraps unavailable household with retry from deps
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        0.778 s, estimated 1 s
+Ran all test suites matching /modules\/access\/capabilities.test.ts/i.
