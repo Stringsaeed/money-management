@@ -1,6 +1,6 @@
 import { createTransactionWithDetails } from "@/tests/test-utils/factories";
 
-import { applyLedgerFilters, dateRangeOf } from "./filters";
+import { applyLedgerFilters, dateRangeOf, pageTransactions } from "./filters";
 import type { LedgerTransaction } from "./types";
 
 const row = (overrides: Parameters<typeof createTransactionWithDetails>[0]): LedgerTransaction => ({
@@ -55,5 +55,39 @@ describe("dateRangeOf", () => {
     ];
 
     expect(dateRangeOf(rows)).toEqual({ minDate: "2026-03-01", maxDate: "2026-03-28" });
+  });
+});
+
+describe("pageTransactions", () => {
+  it("returns the first page with hasMore and nextCursor when more rows remain", () => {
+    const rows = [
+      row({ id: "oldest", date: "2026-03-01" }),
+      row({ id: "newest", date: "2026-03-28" }),
+      row({ id: "middle", date: "2026-03-15" }),
+    ];
+
+    const page = pageTransactions(rows, { limit: 2 });
+
+    expect(page.transactions.map((item) => item.id)).toEqual(["newest", "middle"]);
+    expect(page.hasMore).toBe(true);
+    expect(page.nextCursor).toEqual({ date: "2026-03-15", id: "middle" });
+  });
+
+  it("continues from the cursor and clears hasMore on the final page", () => {
+    const rows = [
+      row({ id: "oldest", date: "2026-03-01" }),
+      row({ id: "newest", date: "2026-03-28" }),
+      row({ id: "middle", date: "2026-03-15" }),
+    ];
+
+    const page = pageTransactions(rows, {
+      limit: 2,
+      beforeDate: "2026-03-15",
+      beforeId: "middle",
+    });
+
+    expect(page.transactions.map((item) => item.id)).toEqual(["oldest"]);
+    expect(page.hasMore).toBe(false);
+    expect(page.nextCursor).toBeNull();
   });
 });
