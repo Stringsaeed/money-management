@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=30abaff
+gap=sessionFromClaims + assertTokenBinding
+matrix_row=2 AuthKit claim session + token binding
+command=pnpm exec vitest run src/session-from-claims.test.ts
+result=PASS 6/6
+tsc=PASS packages/auth --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
