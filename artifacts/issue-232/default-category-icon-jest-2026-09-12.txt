@@ -1,0 +1,10 @@
+PASS path: components/category/category-form-options.test.ts
+PASS components/category/category-form-options.test.ts
+  DEFAULT_CATEGORY_ICON
+    ✓ locks the default category emoji (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.106 s
+Ran all test suites matching /components\/category\/category-form-options.test.ts/i.
