@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import type { category, ledgerAccount, transaction } from "@trove/db/schema/ledger";
-import type { budgetWorkspace } from "@trove/db/schema/budget";
+import type { budgetWorkspace, categoryMapping, envelope } from "@trove/db/schema/budget";
 import type { recurringOccurrence } from "@trove/db/schema/recurring";
 
 import {
   accountContentRow,
   budgetWorkspaceContentRow,
   categoryContentRow,
+  categoryMappingContentRow,
+  envelopeContentRow,
   recurringOccurrenceContentRow,
   sha256Hex,
   transactionContentRow,
@@ -182,6 +184,62 @@ describe("recurringOccurrenceContentRow", () => {
         scheduledDate: "2026-09-01",
         transactionId: "txn-1",
         settledAt: "2026-09-01T12:00:00.000Z",
+      },
+    });
+  });
+});
+
+describe("envelopeContentRow", () => {
+  it("maps envelope display fields and ISO timestamps", () => {
+    // SAFETY: fixture only needs columns the pure content-row mapper reads.
+    const row = {
+      id: "env-1",
+      currency: "USD",
+      name: "Groceries",
+      icon: "cart",
+      color: "#abcdef",
+      lifecycle: "active",
+      sortOrder: 2,
+      createdAt,
+      updatedAt,
+    } as typeof envelope.$inferSelect;
+
+    expect(envelopeContentRow(row)).toEqual({
+      entityType: "envelope",
+      row: {
+        id: "env-1",
+        currency: "USD",
+        name: "Groceries",
+        icon: "cart",
+        color: "#abcdef",
+        lifecycle: "active",
+        sortOrder: 2,
+        createdAt: "2026-09-01T12:00:00.000Z",
+        updatedAt: "2026-09-02T12:00:00.000Z",
+      },
+    });
+  });
+});
+
+describe("categoryMappingContentRow", () => {
+  it("maps category-to-envelope effective period binding", () => {
+    // SAFETY: fixture only needs columns the pure content-row mapper reads.
+    const row = {
+      id: "map-1",
+      categoryId: "category-1",
+      envelopeId: "env-1",
+      effectiveFromPeriod: "2026-09",
+      createdAt,
+    } as typeof categoryMapping.$inferSelect;
+
+    expect(categoryMappingContentRow(row)).toEqual({
+      entityType: "category_mapping",
+      row: {
+        id: "map-1",
+        categoryId: "category-1",
+        envelopeId: "env-1",
+        effectiveFromPeriod: "2026-09",
+        createdAt: "2026-09-01T12:00:00.000Z",
       },
     });
   });
