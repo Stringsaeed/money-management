@@ -4,6 +4,7 @@ import type { CommandResult } from "@trove/protocol";
 
 import {
   createBufferSink,
+  createConsoleSink,
   instrumentCommandApply,
   rejectionReason,
   type MetricEvent,
@@ -125,5 +126,39 @@ describe("metrics", () => {
     expect(rejectionReason({ kind: "local_only", reason: "kill_switch_local_only" })).toBe(
       "kill_switch_local_only",
     );
+  });
+
+  it("logs flat single-line JSON with metric:true for kill_switch_engaged", () => {
+    const lines: string[] = [];
+    const sink = createConsoleSink((line) => {
+      lines.push(line);
+    });
+
+    sink.record({ event: "kill_switch_engaged" });
+
+    expect(lines).toHaveLength(1);
+    expect(JSON.parse(lines[0]!)).toEqual({ metric: true, event: "kill_switch_engaged" });
+  });
+
+  it("spreads latency_sample fields into the logged metric object", () => {
+    const lines: string[] = [];
+    const sink = createConsoleSink((line) => {
+      lines.push(line);
+    });
+
+    sink.record({
+      event: "latency_sample",
+      operation: "commands.apply",
+      durationMs: 17,
+      outcome: "applied",
+    });
+
+    expect(JSON.parse(lines[0]!)).toEqual({
+      metric: true,
+      event: "latency_sample",
+      operation: "commands.apply",
+      durationMs: 17,
+      outcome: "applied",
+    });
   });
 });
