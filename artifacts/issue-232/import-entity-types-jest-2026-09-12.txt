@@ -1,0 +1,17 @@
+=== node --test --experimental-strip-types src/import.test.ts ===
+✔ IMPORT_ENTITY_TYPES lists every import entity kind in chunk order (0.942801ms)
+✔ IMPORT_ENTITY_TYPES membership is the ImportEntityType vocabulary (0.132277ms)
+✔ manifestsMatch accepts equal aggregates and digests (0.170602ms)
+✔ manifestsMatch rejects row-count, amount, or digest drift (0.13479ms)
+✔ canonicalizeImportContent sorts entity type, id, and row keys stably (5.698641ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 85.956652
+
+--- tsc --noEmit ---
+tsc exit: 0
