@@ -1,0 +1,10 @@
+PASS path: apps/mobile/utils/activity-range-presets.test.ts
+PASS utils/activity-range-presets.test.ts
+  ACTIVITY_RANGE_PRESETS
+    ✓ locks activity range preset vocabulary (4 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.996 s
+Ran all test suites matching /utils\/activity-range-presets.test.ts/i.
