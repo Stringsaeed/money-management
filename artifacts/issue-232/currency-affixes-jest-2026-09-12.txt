@@ -1,0 +1,10 @@
+PASS path: apps/mobile/utils/currency-affixes.test.ts
+PASS utils/currency-affixes.test.ts
+  currencyAffixes
+    ✓ splits USD and EUR currency formatting for en-US (14 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.981 s
+Ran all test suites matching /utils\/currency-affixes.test.ts/i.
