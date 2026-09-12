@@ -2,11 +2,37 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  IMPORT_ENTITY_TYPES,
   canonicalizeImportContent,
   manifestsMatch,
   type ImportEntityType,
   type ImportManifest,
 } from "./import.ts";
+
+test("IMPORT_ENTITY_TYPES lists every import entity kind in chunk order", () => {
+  assert.deepEqual([...IMPORT_ENTITY_TYPES], [
+    "account",
+    "category",
+    "recurring_rule",
+    "budget_workspace",
+    "envelope",
+    "category_mapping",
+    "funding_membership",
+    "rollover_setting",
+    "assignment",
+    "transaction",
+    "recurring_occurrence",
+  ]);
+});
+
+test("IMPORT_ENTITY_TYPES membership is the ImportEntityType vocabulary", () => {
+  const kinds = new Set<string>(IMPORT_ENTITY_TYPES);
+  assert.equal(kinds.size, IMPORT_ENTITY_TYPES.length);
+  for (const kind of IMPORT_ENTITY_TYPES) {
+    assert.equal(kinds.has(kind), true);
+  }
+  assert.equal(kinds.has("unknown_entity"), false);
+});
 
 function emptyRowCounts(overrides: Partial<Record<ImportEntityType, number>> = {}) {
   return {
