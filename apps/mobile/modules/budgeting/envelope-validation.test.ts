@@ -1,6 +1,10 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { requireCategoryIds, requireEnvelopeFields } from "./envelope-validation";
+import {
+  requireCategoryIds,
+  requireChangedCategoryIds,
+  requireEnvelopeFields,
+} from "./envelope-validation";
 
 describe("requireCategoryIds", () => {
   it("returns distinct non-empty category ids", () => {
@@ -36,5 +40,24 @@ describe("requireEnvelopeFields", () => {
     expect(() =>
       requireEnvelopeFields({ name: "Groceries", icon: "🛒", color: "\t" }),
     ).toThrow("Envelope color is required.");
+  });
+});
+
+describe("requireChangedCategoryIds", () => {
+  it("returns distinct non-empty changed category ids", () => {
+    expect(requireChangedCategoryIds(["category-a", "category-b"])).toEqual([
+      "category-a",
+      "category-b",
+    ]);
+    expect(requireChangedCategoryIds([])).toEqual([]);
+  });
+
+  it("rejects duplicate or blank changed category ids", () => {
+    expect(() => requireChangedCategoryIds(["category-a", "category-a"])).toThrow(
+      "Changed Envelope Category IDs must be distinct and non-empty strings.",
+    );
+    expect(() => requireChangedCategoryIds(["category-a", "  "])).toThrow(
+      "Changed Envelope Category IDs must be distinct and non-empty strings.",
+    );
   });
 });
