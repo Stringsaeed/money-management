@@ -1,6 +1,6 @@
 import { createTransactionWithDetails } from "@/tests/test-utils/factories";
 
-import { applyLedgerFilters, dateRangeOf, pageTransactions } from "./filters";
+import { applyLedgerFilters, dateRangeOf, pageTransactions, toEditDate } from "./filters";
 import type { LedgerTransaction } from "./types";
 
 const row = (overrides: Parameters<typeof createTransactionWithDetails>[0]): LedgerTransaction => ({
@@ -89,5 +89,16 @@ describe("pageTransactions", () => {
     expect(page.transactions.map((item) => item.id)).toEqual(["oldest"]);
     expect(page.hasMore).toBe(false);
     expect(page.nextCursor).toBeNull();
+  });
+});
+
+describe("toEditDate", () => {
+  it("returns undefined when the date is omitted", () => {
+    expect(toEditDate(undefined)).toBeUndefined();
+  });
+
+  it("passes through string dates and formats Date instances", () => {
+    expect(toEditDate("2026-03-28")).toBe("2026-03-28");
+    expect(toEditDate(new Date(2026, 2, 28))).toBe("2026-03-28");
   });
 });
