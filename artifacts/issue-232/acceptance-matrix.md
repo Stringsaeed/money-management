@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip `edd5877378c9a2ceea3fefb638e8bb2d0c8fc663` applyAssignmentToAvailability stamp — product `51b58dc25b9e0505ad65d8f302757c69d3d43ffe` (`applyAssignmentToAvailability` **2/2** new; suite **6/6**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
+| HEAD | tip `PENDING_DOCS` CATEGORY_TYPE_OPTIONS stamp — product `da488141c8c41a1f84fba7c6c6769db84e5d04df` (`CATEGORY_TYPE_OPTIONS` **1/1** new; suite **1/1**); remaining **BLOCKED**: webhook **503**, #258 Create Account, dual-token, GH Actions billing, Android, OTP AX, PowerSync mint |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/tmp/wt-workos-certify-b3d1` (this Relates webhook re-probe); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK** (2026-09-12T07:54:12Z); Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -174,6 +174,12 @@ Recorded in `garden-stage-for-step-jest-2026-09-12.txt` / `preset-key-for-jest-2
 
 - Extended `packages/domain/src/assignment-waterfall.test.ts` — **2/2 new PASS** / suite **6/6** (`apply-assignment-to-availability-vitest-2026-09-12.txt`): pure lock for negative vs non-negative availability updates after waterfall routing.
 - Row 4 / row 6 assignment-availability seam → advances automated envelope availability vocabulary; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
+- Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
+
+## CATEGORY_TYPE_OPTIONS Relates (2026-09-12, no device)
+
+- Added `apps/mobile/components/category/category-type-options.test.ts` — **1/1 new PASS** / suite **1/1** (`category-type-options-jest-2026-09-12.txt`): exact lock of expense/income `CATEGORY_TYPE_OPTIONS` array (pure const surface).
+- Row 4 / row 6 category-type options seam → advances automated category vocabulary lock; live create/device still **BLOCKED** (#258); webhook still **BLOCKED** (**503**).
 - Dual-identity still **BLOCKED**; GH Actions still **BLOCKED** (billing). Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## DEFAULT_CATEGORY_ICON Relates (2026-09-12, no device)
