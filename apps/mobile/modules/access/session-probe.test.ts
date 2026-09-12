@@ -1,9 +1,18 @@
-import { describe, expect, it } from "@jest/globals";
+import { beforeEach, describe, expect, it } from "@jest/globals";
 
 import { isUnreachableFailure } from "./client-error";
-import { mapSessionSnapshot } from "./session-probe";
+import { mapSessionSnapshot, probeSession, tryRemoteSignOut } from "./session-probe";
 
 const user = { id: "user-1", email: "ada@trove.ing", name: "Ada" };
+
+// Global authClient mock lives in jest/setup-env.ts; drive outcomes here.
+// SAFETY: Jest mock module shape is fixed by jest/setup-env.ts.
+const { authClient } = jest.requireMock("@/lib/auth-client") as {
+  authClient: {
+    getSession: jest.Mock;
+    signOut: jest.Mock;
+  };
+};
 
 describe("mapSessionSnapshot", () => {
   it("maps a live session user", () => {
@@ -46,5 +55,55 @@ describe("isUnreachableFailure", () => {
   it("treats network failures as unreachable", () => {
     expect(isUnreachableFailure(new TypeError("Failed to fetch"))).toBe(true);
     expect(isUnreachableFailure({ message: "Network request failed" })).toBe(true);
+  });
+});
+
+describe("probeSession", () => {
+  beforeEach(() => {
+    authClient.getSession.mockReset();
+  });
+
+  it("returns a session identity when getSession has a user", async () => {
+    authClient.getSession.mockResolvedValue({ data: { user }, isPending: false });
+    await expect(probeSession()).resolves.toEqual({
+      kind: "session",
+      user: { userId: "user-1", email: "ada@trove.ing", displayName: "Ada" },
+    });
+  });
+
+  it("returns no_session when getSession is empty", async () => {
+    authClient.getSession.mockResolvedValue({ data: null, isPending: false });
+    await expect(probeSession()).resolves.toEqual({ kind: "no_session" });
+  });
+
+  it("returns unreachable when getSession throws a transport failure", async () => {
+    authClient.getSession.mockRejectedValue(new TypeError("Failed to fetch"));
+    await expect(probeSession()).resolves.toEqual({ kind: "unreachable" });
+  });
+
+  it("returns no_session when getSession throws a reachable auth failure", async () => {
+    authClient.getSession.mockRejectedValue(new Error("UNAUTHORIZED"));
+    await expect(probeSession()).resolves.toEqual({ kind: "no_session" });
+  });
+});
+
+describe("tryRemoteSignOut", () => {
+  beforeEach(() => {
+    authClient.signOut.mockReset();
+  });
+
+  it("returns ok when remote sign-out succeeds", async () => {
+    authClient.signOut.mockResolvedValue(undefined);
+    await expect(tryRemoteSignOut()).resolves.toBe("ok");
+  });
+
+  it("returns unreachable when remote sign-out hits a transport failure", async () => {
+    authClient.signOut.mockRejectedValue(new TypeError("Failed to fetch"));
+    await expect(tryRemoteSignOut()).resolves.toBe("unreachable");
+  });
+
+  it("returns ok when remote sign-out fails with a reachable error", async () => {
+    authClient.signOut.mockRejectedValue(new Error("UNAUTHORIZED"));
+    await expect(tryRemoteSignOut()).resolves.toBe("ok");
   });
 });
