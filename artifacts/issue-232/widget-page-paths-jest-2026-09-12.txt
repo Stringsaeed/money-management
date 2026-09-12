@@ -1,0 +1,15 @@
+=== pnpm check-types ===
+$ tsc --noEmit
+check-types exit: 0
+
+=== vitest run src/member-widget-page.test.ts ===
+
+ RUN  v3.2.7 /tmp/cert-232-relates-import/packages/auth
+
+ ✓ src/member-widget-page.test.ts (5 tests) 2ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  11:50:10
+   Duration  224ms (transform 40ms, setup 0ms, collect 28ms, tests 2ms, environment 0ms, prepare 89ms)
+
