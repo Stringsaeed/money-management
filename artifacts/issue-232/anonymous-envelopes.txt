@@ -1,0 +1,26 @@
+Tapped text=Envelopes (244, 804)
+settled after 1750ms: +7 -17 (~9 unchanged)
+- @e4 [other] "Settings"
+- @e5 [navigation-bar] "Settings"
+- @e6 [scroll-area] "Profile"
+- @e7 [other] "Profile"
+- @e8 [button] "Profile & household"
+- @e9 [text] "Manage 🛠️"
+- @e10 [button] "Accounts"
+- @e11 [button] "Categories"
+- @e12 [button] "Recurring Rules"
+- @e13 [button] "Activity Timeline"
+- @e14 [text] "Stats 📊"
+- @e15 [other] "🧾, Total Transactions, 0" [disabled]
+- @e16 [other] "🏦, Accounts, 0" [disabled]
+- @e17 [other] "🔁, Active Rules, 0" [disabled]
+- @e18 [text] "Software Update 🔄"
++ @e4~s560145 [other] "Envelopes"
++ @e5~s560145 [navigation-bar] "Envelopes"
++ @e6~s560145 [other] "No currency workspace yet"
++ @e7~s560145 [text] "Set up Envelopes to choose a Funding Pool and start budgeting."
++ @e8~s560145 [link] "Set up Envelopes"
+- @e24 [button] "Envelopes"
+- @e25 [button] "Settings"
++ @e14~s560145 [button] "Envelopes"
++ @e15~s560145 [button] "Settings"

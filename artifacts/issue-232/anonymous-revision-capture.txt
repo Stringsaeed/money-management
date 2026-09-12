@@ -1,0 +1,11 @@
+revision=50e8dfcc9c0dcd3d79c674b956cb78131f701072
+branch=cursor/workos-certify-migration-b3d1
+device=iPhone 17 Pro
+udid=6E4BBB8A-790E-4DDD-995B-6A3D1D9101DB
+bundle=com.stringsaeed.moneymanagement
+captured_at=2026-09-12T19:30:34Z
+CERT_USER_A_TOKEN=ABSENT
+CERT_USER_B_TOKEN=ABSENT
+POWERSYNC_URL=ABSENT
+POWERSYNC_JWT_PRIVATE_KEY=ABSENT
+POWERSYNC_JWT_KID=ABSENT

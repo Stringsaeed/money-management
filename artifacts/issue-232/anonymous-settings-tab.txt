@@ -1,0 +1,41 @@
+Tapped @e30 (294, 804)
+settled after 1894ms: +17 -22 (~9 unchanged)
+- @e4 [other] "Home"
+- @e5 [navigation-bar] "Home"
+- @e6 [button] "Filters"
+- @e7 [scroll-area] "$0.00"
+- @e8 [other] "$0.00"
+- @e9 [cell] "repeat 1"
+- @e10 [image] "repeat 1"
+- @e11 [text] "Upcoming payments"
+- @e12 [button] "View all recurring rules"
+- @e13 [cell] "Nothing scheduled yet"
+- @e14 [text] "🌱"
+- @e15 [text] "Add a Recurring Rule to see what’s next."
+- @e16 [button] "Create account"
+- @e17 [cell] "newspaper"
+- @e18 [image] "newspaper"
+- @e19 [text] "Recent Journal"
+- @e20 [button] "View all recent transactions"
+- @e21 [cell] "In progress"
+- @e22 [activity-indicator] "In progress"
+- @e23 [image] "AdditionalDimmingOverlay"
++ @e4~s560126 [other] "Settings"
++ @e5~s560126 [navigation-bar] "Settings"
++ @e6~s560126 [scroll-area] "Profile"
++ @e7~s560126 [other] "Profile"
++ @e8~s560126 [button] "Profile & household"
++ @e9~s560126 [text] "Manage 🛠️"
++ @e10~s560126 [button] "Accounts"
++ @e11~s560126 [button] "Categories"
++ @e12~s560126 [button] "Recurring Rules"
++ @e13~s560126 [button] "Activity Timeline"
++ @e14~s560126 [text] "Stats 📊"
++ @e15~s560126 [other] "🧾, Total Transactions, 0" [disabled]
++ @e16~s560126 [other] "🏦, Accounts, 0" [disabled]
++ @e17~s560126 [other] "🔁, Active Rules, 0" [disabled]
++ @e18~s560126 [text] "Software Update 🔄"
+- @e25 [button]
++ @e20~s560126 [button]
+- @e30 [button] "Settings"
++ @e25~s560126 [button] "Settings"

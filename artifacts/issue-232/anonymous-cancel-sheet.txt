@@ -1,0 +1,35 @@
+Tapped text=Cancel (201, 731)
+settled after 1720ms: +23 -10 (~3 unchanged)
+- @e4 [window] "dismiss popup"
+- @e5 [other] "dismiss popup"
+- @e6 [other] "Sheet Grabber"
+- @e7 [button] "Sheet Grabber"
+- @e8 [scroll-area] "Sign in with email code"
+- @e9 [other] "Sign in with email code"
+- @e10 [text] "We open WorkOS AuthKit. No password. Your local ledger stays on this device."
+- @e11 [text] "Signing in does not create a Household and does not upload device records."
+- @e12 [button] "Continue with email code"
+- @e13 [button] "Cancel"
++ @e4~s560138 [other] "Settings"
++ @e5~s560138 [navigation-bar] "Settings"
++ @e6~s560138 [scroll-area] "Profile"
++ @e7~s560138 [other] "Profile"
++ @e8~s560138 [button] "Profile & household"
++ @e9~s560138 [text] "Manage 🛠️"
++ @e10~s560138 [button] "Accounts"
++ @e11~s560138 [button] "Categories"
++ @e12~s560138 [button] "Recurring Rules"
++ @e13~s560138 [button] "Activity Timeline"
++ @e14~s560138 [text] "Stats 📊"
++ @e15~s560138 [other] "🧾, Total Transactions, 0" [disabled]
++ @e16~s560138 [other] "🏦, Accounts, 0" [disabled]
++ @e17~s560138 [other] "🔁, Active Rules, 0" [disabled]
++ @e18~s560138 [text] "Software Update 🔄"
++ @e19~s560138 [other] "Ledger"
++ @e20~s560138 [button]
++ @e21~s560138 [button] "Ledger"
++ @e22~s560138 [button] "Money Movement"
++ @e23~s560138 [button] "Inbox"
++ @e24~s560138 [button] "Envelopes"
++ @e25~s560138 [button] "Settings"
++ @e26~s560138 [button] "Create account"

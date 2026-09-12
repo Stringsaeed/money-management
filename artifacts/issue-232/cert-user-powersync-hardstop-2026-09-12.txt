@@ -1,0 +1,20 @@
+captured_at=2026-09-12T19:30:34Z
+device=iPhone 17 Pro
+bundle=com.stringsaeed.moneymanagement
+under_test_tip_at_capture=50e8dfcc9c0dcd3d79c674b956cb78131f701072
+matrix_base_tip=ad7cf561cb17b49091e5056d8bf483f3d9498fc6
+
+ABSENT (process env + apps/mobile/.env names):
+CERT_USER_EMAIL
+CERT_USER_PASSWORD
+CERT_USER_A_TOKEN
+CERT_USER_B_TOKEN
+POWERSYNC_URL
+POWERSYNC_JWT_PRIVATE_KEY
+POWERSYNC_JWT_KID
+
+Consequence:
+- Live dual-identity / cross-User isolation = BLOCKED (not PASS)
+- PowerSync mint / removal bound = BLOCKED (not PASS)
+- Live Household create/switch/invite on device = BLOCKED (no signed-in session; OTP AX blocked; no CERT_* bearer)
+- Live sync-or-discard sign-out on device = BLOCKED (no signed-in session)

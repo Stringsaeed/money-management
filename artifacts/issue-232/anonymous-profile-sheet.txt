@@ -1,0 +1,35 @@
+Tapped @e8 (201, 226)
+settled after 1769ms: +10 -23 (~3 unchanged)
+- @e4 [other] "Settings"
+- @e5 [navigation-bar] "Settings"
+- @e6 [scroll-area] "Profile"
+- @e7 [other] "Profile"
+- @e8 [button] "Profile & household"
+- @e9 [text] "Manage 🛠️"
+- @e10 [button] "Accounts"
+- @e11 [button] "Categories"
+- @e12 [button] "Recurring Rules"
+- @e13 [button] "Activity Timeline"
+- @e14 [text] "Stats 📊"
+- @e15 [other] "🧾, Total Transactions, 0" [disabled]
+- @e16 [other] "🏦, Accounts, 0" [disabled]
+- @e17 [other] "🔁, Active Rules, 0" [disabled]
+- @e18 [text] "Software Update 🔄"
+- @e19 [other] "Ledger"
+- @e20 [button]
+- @e21 [button] "Ledger"
+- @e22 [button] "Money Movement"
+- @e23 [button] "Inbox"
+- @e24 [button] "Envelopes"
+- @e25 [button] "Settings"
+- @e26 [button] "Create account"
++ @e4~s560132 [window] "dismiss popup"
++ @e5~s560132 [other] "dismiss popup"
++ @e6~s560132 [other] "Sheet Grabber"
++ @e7~s560132 [button] "Sheet Grabber"
++ @e8~s560132 [scroll-area] "Sign in with email code"
++ @e9~s560132 [other] "Sign in with email code"
++ @e10~s560132 [text] "We open WorkOS AuthKit. No password. Your local ledger stays on this device."
++ @e11~s560132 [text] "Signing in does not create a Household and does not upload device records."
++ @e12~s560132 [button] "Continue with email code"
++ @e13~s560132 [button] "Cancel"

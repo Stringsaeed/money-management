@@ -1,0 +1,16 @@
+Opened: com.stringsaeed.moneymanagement
+Session state: /Users/saeed/.agent-device/sessions/issue-232-17pro
+Page: com.stringsaeed.moneymanagement
+App: com.stringsaeed.moneymanagement
+Snapshot: 10 visible nodes
+@e1 [application] "Trove (Dev)"
+@e2 [other] "gearshape.fill"
+@e3 [image] "gearshape.fill"
+@e4 [navigation-bar] "(tabs)"
+@e5 [button] "(tabs)"
+@e6 [text] "Accounts"
+@e7 [scroll-area] "No accounts yet" [scrollable]
+  [content below scroll-area hidden]
+@e8 [other] "No accounts yet"
+@e9 [text] "Tap the + button to add your first account."
+@e10 [button]
