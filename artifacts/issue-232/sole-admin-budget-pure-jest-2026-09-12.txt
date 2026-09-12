@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=bef1e07
+gap=sole-admin-deletion-guard + budgeting validation/funding eligibility + accountLifecyclePeriod
+matrix_row=7 deletion sole-admin + budget funding pure seams
+command=pnpm exec vitest run src/lib/households/sole-admin-deletion-guard.test.ts; pnpm exec jest modules/budgeting/validation.test.ts modules/budgeting/funding-account-eligibility.test.ts modules/accounts/account-ledger-date.test.ts --runInBand
+result=PASS 5/5 vitest + 11/11 jest
+tsc=local api tsc not re-run this stamp; prior tip tsc green
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
