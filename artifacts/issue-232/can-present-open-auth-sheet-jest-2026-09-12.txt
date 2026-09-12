@@ -1,0 +1,25 @@
+branch=cursor/workos-certify-migration-b3d1
+gap=canPresentAuthSheet / openAuthSheetSession
+command=cd apps/mobile && pnpm exec jest modules/access/auth-sheet-session.test.ts -t 'canPresentAuthSheet|openAuthSheetSession' --runInBand
+relates=#232 only
+closes=none
+certified=false
+
+PASS modules/access/auth-sheet-session.test.ts
+  AUTH_SHEET_CLOSED
+    ○ skipped is the closed AuthSheetSession sentinel
+    ○ skipped is distinct from an opened session
+  canPresentAuthSheet
+    ✓ allows anonymous (2 ms)
+    ✓ allows session_revoked
+    ✓ blocks resolving
+    ✓ blocks signed_in (1 ms)
+  openAuthSheetSession
+    ✓ opens with a target only (1 ms)
+    ✓ opens with a reset grant
+
+Test Suites: 1 passed, 1 total
+Tests:       2 skipped, 6 passed, 8 total
+Snapshots:   0 total
+Time:        0.997 s
+Ran all test suites matching /modules\/access\/auth-sheet-session.test.ts/i with tests matching "canPresentAuthSheet|openAuthSheetSession".

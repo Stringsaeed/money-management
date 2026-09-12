@@ -1,0 +1,21 @@
+branch=cursor/workos-certify-migration-b3d1
+gap=serializeReturnTo / returnTo
+command=cd apps/mobile && pnpm exec jest modules/access/return-to.test.ts -t 'parseReturnTo / serializeReturnTo' --runInBand
+relates=#232 only
+closes=none
+certified=false
+
+PASS modules/access/return-to.test.ts
+  parseReturnTo / serializeReturnTo
+    ✓ accepts known screen hrefs (3 ms)
+    ✓ defaults unknown or missing targets to profile household (1 ms)
+    ✓ serializes screen targets as href and profile as household path (1 ms)
+    ✓ exposes returnTo helpers for sheet open targets (1 ms)
+  hrefForInternal
+    ○ skipped maps known internal hrefs and falls back to root
+
+Test Suites: 1 passed, 1 total
+Tests:       1 skipped, 4 passed, 5 total
+Snapshots:   0 total
+Time:        1.026 s
+Ran all test suites matching /modules\/access\/return-to.test.ts/i with tests matching "parseReturnTo / serializeReturnTo".

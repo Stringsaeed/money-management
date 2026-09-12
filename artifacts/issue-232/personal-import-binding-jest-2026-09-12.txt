@@ -1,0 +1,18 @@
+branch=cursor/workos-certify-migration-b3d1
+gap=personalImportBinding
+command=cd apps/mobile && pnpm exec jest lib/migration/import-binding.test.ts -t personalImportBinding --runInBand
+relates=#232 only
+closes=none
+certified=false
+
+PASS lib/migration/import-binding.test.ts
+  householdImportBinding
+    ○ skipped targets the household ledger with matching householdId and ledgerId
+  personalImportBinding
+    ✓ targets the personal ledger id for the user (12 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 skipped, 1 passed, 2 total
+Snapshots:   0 total
+Time:        1.11 s
+Ran all test suites matching /lib\/migration\/import-binding.test.ts/i with tests matching "personalImportBinding".

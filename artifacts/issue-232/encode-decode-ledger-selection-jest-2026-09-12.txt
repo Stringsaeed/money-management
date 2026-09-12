@@ -1,0 +1,23 @@
+branch=cursor/workos-certify-migration-b3d1
+gap=encodeLedgerSelection / decodeLedgerSelection
+command=cd apps/mobile && pnpm exec jest modules/access/ledger-selection-store.test.ts -t 'encodeLedgerSelection / decodeLedgerSelection' --runInBand
+relates=#232 only
+closes=none
+certified=false
+
+PASS modules/access/ledger-selection-store.test.ts (9.695 s)
+  encodeLedgerSelection / decodeLedgerSelection
+    ✓ round-trips personal selection (18 ms)
+    ✓ round-trips household selection keyed by id
+    ✓ falls back to personal for null, empty, or malformed payloads (1 ms)
+  ledger selection SecureStore seam
+    ○ skipped reads and writes under a per-user key (isolation across identities)
+    ○ skipped clears only the named user's selection key
+    ○ skipped treats SecureStore read failures as personal
+    ○ skipped swallows SecureStore delete failures on clear
+
+Test Suites: 1 passed, 1 total
+Tests:       4 skipped, 3 passed, 7 total
+Snapshots:   0 total
+Time:        10.645 s
+Ran all test suites matching /modules\/access\/ledger-selection-store.test.ts/i with tests matching "encodeLedgerSelection / decodeLedgerSelection".

@@ -1,0 +1,17 @@
+branch=cursor/workos-certify-migration-b3d1
+gap=sha256Hex
+command=cd packages/api && pnpm exec vitest run src/lib/migration/import-content.test.ts -t sha256Hex
+relates=#232 only
+closes=none
+certified=false
+
+
+ RUN  v3.2.7 /tmp/wt232/packages/api
+
+ ✓ src/lib/migration/import-content.test.ts (14 tests | 13 skipped) 3ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 13 skipped (14)
+   Start at  14:02:19
+   Duration  194ms (transform 40ms, setup 0ms, collect 37ms, tests 3ms, environment 0ms, prepare 55ms)
+
