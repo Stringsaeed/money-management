@@ -72,3 +72,4 @@ month_filter_jest=PASS 2/2 product=fc3fd1e
 apply_ledger_balance_jest=PASS 2/2 product=0738616
 require_category_ids_jest=PASS 2/2 product=7aa1468
 assert_source_has_money_jest=PASS 2/2 new suite=4/4 product=5de3a7f
+candidate_from_draft_jest=PASS 2/2 new suite=4/4 product=6f7a4fa
