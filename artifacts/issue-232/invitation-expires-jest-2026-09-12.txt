@@ -1,0 +1,11 @@
+=== vitest run src/lib/households/invitation-expires.test.ts ===
+
+ RUN  v3.2.7 /tmp/cert-232-relates-import/packages/api
+
+ ✓ src/lib/households/invitation-expires.test.ts (1 test) 1ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  12:08:18
+   Duration  637ms (transform 122ms, setup 0ms, collect 478ms, tests 1ms, environment 0ms, prepare 53ms)
+
