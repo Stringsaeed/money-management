@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { category, ledgerAccount, transaction } from "@trove/db/schema/ledger";
-import type { budgetWorkspace, categoryMapping, envelope } from "@trove/db/schema/budget";
+import type { budgetWorkspace, categoryMapping, envelope, fundingMembership, rolloverSetting } from "@trove/db/schema/budget";
 import type { recurringOccurrence } from "@trove/db/schema/recurring";
 
 import {
@@ -10,7 +10,9 @@ import {
   categoryContentRow,
   categoryMappingContentRow,
   envelopeContentRow,
+  fundingMembershipContentRow,
   recurringOccurrenceContentRow,
+  rolloverSettingContentRow,
   sha256Hex,
   transactionContentRow,
 } from "./import-content";
@@ -239,6 +241,56 @@ describe("categoryMappingContentRow", () => {
         categoryId: "category-1",
         envelopeId: "env-1",
         effectiveFromPeriod: "2026-09",
+        createdAt: "2026-09-01T12:00:00.000Z",
+      },
+    });
+  });
+});
+
+describe("fundingMembershipContentRow", () => {
+  it("maps account funding membership period binding", () => {
+    // SAFETY: fixture only needs columns the pure content-row mapper reads.
+    const row = {
+      id: "fund-1",
+      accountId: "account-1",
+      currency: "USD",
+      active: true,
+      effectiveFromPeriod: "2026-09",
+      createdAt,
+    } as typeof fundingMembership.$inferSelect;
+
+    expect(fundingMembershipContentRow(row)).toEqual({
+      entityType: "funding_membership",
+      row: {
+        id: "fund-1",
+        accountId: "account-1",
+        currency: "USD",
+        active: true,
+        effectiveFromPeriod: "2026-09",
+        createdAt: "2026-09-01T12:00:00.000Z",
+      },
+    });
+  });
+});
+
+describe("rolloverSettingContentRow", () => {
+  it("maps envelope rollover setting period binding", () => {
+    // SAFETY: fixture only needs columns the pure content-row mapper reads.
+    const row = {
+      id: "roll-1",
+      envelopeId: "env-1",
+      effectiveFromPeriod: "2026-09",
+      positiveRollover: true,
+      createdAt,
+    } as typeof rolloverSetting.$inferSelect;
+
+    expect(rolloverSettingContentRow(row)).toEqual({
+      entityType: "rollover_setting",
+      row: {
+        id: "roll-1",
+        envelopeId: "env-1",
+        effectiveFromPeriod: "2026-09",
+        positiveRollover: true,
         createdAt: "2026-09-01T12:00:00.000Z",
       },
     });
