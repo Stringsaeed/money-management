@@ -9,10 +9,9 @@ interface CreateResourceFormScreenProps {
 /**
  * Expo Router create-resource screens (account/new, category/new).
  *
- * Device certs #258/#260/#261 kept create-resource-submit as a sticky footer
- * outside the form ScrollView. In-scroll Pressables (e.g. the Savings account
- * type chip) received taps; the sticky submit reported hittable=true but
- * missed. Put the footer in the same ScrollView so submit shares that hit path.
+ * Keep create-resource-submit inside this ScrollView (#262). Sticky siblings
+ * missed device taps. Pair with a currency picker that mounts no @expo/ui Host
+ * while closed — #262 still failed coord taps at the submit AX frame.
  */
 export function CreateResourceFormScreen({ children, footer }: CreateResourceFormScreenProps) {
   return (

@@ -30,13 +30,15 @@ describe("app/account/new", () => {
     mockMutateAsync.mockResolvedValue(undefined);
   });
 
-  it("exposes create-resource-submit outside ModalBottomSheet", async () => {
+  it("keeps create-resource-submit visible with no currency sheet Host mounted", async () => {
     await render(<NewAccountScreen />);
 
     expect(screen.getByTestId("create-resource-submit")).toHaveTextContent("Create Account");
-    // Closed currency @expo/ui BottomSheet Host must not stay mounted — it can
-    // steal Create Account submit hits while AX still reports hittable=true.
+    expect(screen.getByTestId("create-resource-form-footer")).toBeOnTheScreen();
+    // Closed currency sheet must not stay mounted — absolute Host/sheet overlays
+    // can eat UIKit hits at the submit AX frame while hittable=true (#262).
     expect(screen.queryByTestId("account-currency-sheet")).toBeNull();
+    expect(screen.queryByTestId("account-currency-search")).toBeNull();
   });
 
   it("creates an account and navigates back", async () => {

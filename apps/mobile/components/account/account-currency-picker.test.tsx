@@ -75,7 +75,16 @@ describe("AccountCurrencyPicker", () => {
     await fireEvent.press(screen.getByLabelText("Dismiss sheet"));
 
     expect(screen.queryByTestId("account-currency-sheet")).toBeNull();
+    expect(screen.queryByTestId("account-currency-search")).toBeNull();
     expect(screen.getByTestId("account-currency-trigger")).toHaveTextContent("CAD");
+  });
+
+  it("keeps the currency sheet unmounted while closed", async () => {
+    await render(<CurrencyPickerHarness />);
+
+    expect(screen.queryByTestId("account-currency-sheet")).toBeNull();
+    expect(screen.queryByTestId("account-currency-search")).toBeNull();
+    expect(screen.getByTestId("account-currency-trigger")).toBeOnTheScreen();
   });
 
   it("announces the selected currency when reopened", async () => {

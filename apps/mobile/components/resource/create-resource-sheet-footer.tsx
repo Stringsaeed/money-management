@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { layoutTransition } from "@/components/transaction/constants";
@@ -14,13 +14,11 @@ interface CreateResourceSheetFooterProps {
 }
 
 /**
- * Primary submit uses RN Pressable (not `@/components/ui/button`): agent-device
- * hit-testing still reported Create Account as hittable=false with the shared
- * Button wrapper — same miss class as pre-#253 personal-upload confirm.
- *
- * Hit delivery for Expo Router create screens depends on placing this footer
- * inside the form ScrollView (see CreateResourceFormScreen), matching in-scroll
- * controls like the Savings account-type chip.
+ * Primary submit uses RN TouchableOpacity (not `@/components/ui/button` or
+ * Pressable): device certs kept reporting create-resource-submit hittable while
+ * coord taps at the AX frame missed. TouchableOpacity is the secondary harden
+ * after removing Expo UI Hosts from the create path; keep this footer inside
+ * CreateResourceFormScreen's ScrollView.
  */
 export function CreateResourceSheetFooter({
   error,
@@ -30,7 +28,7 @@ export function CreateResourceSheetFooter({
   submittingLabel = "Creating…",
 }: CreateResourceSheetFooterProps) {
   return (
-    <View className="gap-3 p-5">
+    <View className="gap-3 p-5" collapsable={false}>
       {error ? (
         <Animated.View
           entering={FadeIn.duration(200)}
@@ -40,20 +38,22 @@ export function CreateResourceSheetFooter({
           <Text className="text-center font-body-medium text-sm text-destructive">{error}</Text>
         </Animated.View>
       ) : null}
-      <Pressable
+      <TouchableOpacity
+        accessibilityLabel={submitLabel}
         accessibilityRole="button"
+        activeOpacity={0.8}
         disabled={isSubmitting}
         onPress={onSubmit}
         testID="create-resource-submit"
         className={cn(
-          "min-h-12 items-center justify-center rounded-xl bg-ink px-4 py-3 active:opacity-80",
+          "min-h-12 items-center justify-center rounded-xl bg-ink px-4 py-3",
           isSubmitting && "opacity-50",
         )}
       >
         <Text className="font-body-semibold text-base text-surface">
           {isSubmitting ? submittingLabel : submitLabel}
         </Text>
-      </Pressable>
+      </TouchableOpacity>
     </View>
   );
 }

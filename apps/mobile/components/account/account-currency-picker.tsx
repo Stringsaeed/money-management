@@ -1,7 +1,6 @@
-import { BottomSheet, RNHostView, Text as ExpoText, TextInput, useNativeState } from "@expo/ui";
 import { useEffect, useRef, useState } from "react";
-import { FlatList, Keyboard, Pressable, View } from "react-native";
-import { useNativeVariable } from "react-native-css/native";
+import { FlatList, Keyboard, Pressable, TextInput, View } from "react-native";
+import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 
 import { recoverAccountCurrencyListScroll } from "@/components/account/account-currency-list-scroll";
 import { AccountCurrencyOptionRow } from "@/components/account/account-currency-option-row";
@@ -22,6 +21,12 @@ interface AccountCurrencyPickerProps {
 
 const CURRENCY_OPTIONS = listAccountCurrencyOptions();
 
+/**
+ * Currency picker for account forms. Uses SM ModalBottomSheet (not @expo/ui
+ * BottomSheet/Host). Device certs #258–#262 showed Create Account submit at
+ * ~(201,802) hittable=true while coord taps still missed — residual Expo UI
+ * Host overlays can eat UIKit hits. Keep zero Expo UI Hosts on /account/new.
+ */
 export function AccountCurrencyPicker({
   value,
   onChange,
@@ -29,21 +34,17 @@ export function AccountCurrencyPicker({
 }: AccountCurrencyPickerProps) {
   const [isPresented, setIsPresented] = useState(false);
   const [query, setQuery] = useState("");
-  const searchState = useNativeState("");
   const listRef = useRef<FlatList<AccountCurrencyOption>>(null);
-  const bgSurface = useNativeVariable("--color-surface");
   const selected = toAccountCurrencyOption(value);
   const results = filterAccountCurrencyOptions(CURRENCY_OPTIONS, query);
 
   const open = () => {
-    searchState.value = "";
     setQuery("");
     setIsPresented(true);
   };
 
   const dismiss = () => {
     Keyboard.dismiss();
-    searchState.value = "";
     setQuery("");
     setIsPresented(false);
   };
@@ -95,61 +96,68 @@ export function AccountCurrencyPicker({
         )}
       </Pressable>
 
-      {/*
-        Mount the Expo UI sheet only while open. On iOS, @expo/ui BottomSheet
-        keeps an absolute Host in the tree even when isPresented=false; that
-        Host can steal UIKit hits while AX still reports sibling submit
-        controls as hittable (Create Account #258/#261 miss class). Android
-        already unmounts when closed — mirror that here.
-      */}
       {isPresented ? (
-        <BottomSheet
-          containerColor={bgSurface}
-          contentPadding={{ top: 16, bottom: 8, left: 16, right: 16 }}
-          isPresented
-          onDismiss={dismiss}
-          snapPoints={["half", "full"]}
-          testID="account-currency-sheet"
+        <ModalBottomSheet
+          index={1}
+          onIndexChange={(nextIndex) => {
+            if (nextIndex <= 0) dismiss();
+          }}
+          scrimColor="rgba(0, 0, 0, 0.5)"
+          surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
         >
-          <ExpoText>Currency</ExpoText>
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            onChangeText={setQuery}
-            placeholder="Search by code or name"
-            returnKeyType="search"
-            testID="account-currency-search"
-            value={searchState}
-          />
-          <RNHostView style={{ height: 360, width: "100%" }}>
-            <FlatList
-              ListEmptyComponent={
-                <View className="items-center px-4 py-10">
-                  <Text className="font-body-medium text-base text-ink/50">
-                    {`No currencies match "${query.trim()}". 🔍`}
-                  </Text>
-                </View>
-              }
-              contentContainerClassName="pb-safe gap-2 pt-3"
-              data={results}
-              initialNumToRender={CURRENCY_OPTIONS.length}
-              keyExtractor={(item) => item.code}
-              keyboardDismissMode="on-drag"
-              keyboardShouldPersistTaps="handled"
-              onScrollToIndexFailed={(info) =>
-                recoverAccountCurrencyListScroll(listRef.current, info)
-              }
-              ref={listRef}
-              renderItem={({ item }) => (
-                <AccountCurrencyOptionRow
-                  item={item}
-                  onSelect={select}
-                  selected={item.code === value}
-                />
-              )}
+          <View className="gap-3 pb-safe px-5 pt-5" testID="account-currency-sheet">
+            <View className="flex-row items-center justify-between">
+              <Text className="font-heading-normal text-xl italic text-ink">Currency</Text>
+              <Pressable
+                accessibilityLabel="Dismiss sheet"
+                accessibilityRole="button"
+                className="rounded-lg px-2 py-1 active:bg-surface-dim"
+                onPress={dismiss}
+              >
+                <Text className="font-body-medium text-sm text-ink/50">Close</Text>
+              </Pressable>
+            </View>
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              className="rounded-xl border border-ledger-outline bg-surface-container px-4 py-3 font-body-normal text-base text-ink"
+              onChangeText={setQuery}
+              placeholder="Search by code or name"
+              placeholderTextColor="#9a9896"
+              returnKeyType="search"
+              testID="account-currency-search"
+              value={query}
             />
-          </RNHostView>
-        </BottomSheet>
+            <View className="h-96">
+              <FlatList
+                ListEmptyComponent={
+                  <View className="items-center px-4 py-10">
+                    <Text className="font-body-medium text-base text-ink/50">
+                      {`No currencies match "${query.trim()}". 🔍`}
+                    </Text>
+                  </View>
+                }
+                contentContainerClassName="gap-2 pb-4 pt-1"
+                data={results}
+                initialNumToRender={CURRENCY_OPTIONS.length}
+                keyExtractor={(item) => item.code}
+                keyboardDismissMode="on-drag"
+                keyboardShouldPersistTaps="handled"
+                onScrollToIndexFailed={(info) =>
+                  recoverAccountCurrencyListScroll(listRef.current, info)
+                }
+                ref={listRef}
+                renderItem={({ item }) => (
+                  <AccountCurrencyOptionRow
+                    item={item}
+                    onSelect={select}
+                    selected={item.code === value}
+                  />
+                )}
+              />
+            </View>
+          </View>
+        </ModalBottomSheet>
       ) : null}
     </>
   );
