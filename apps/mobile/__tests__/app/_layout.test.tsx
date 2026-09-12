@@ -172,7 +172,8 @@ describe("app/_layout", () => {
     await render(<RootLayout />);
 
     expect(screen.getByText("stack-ready")).toBeOnTheScreen();
-    expect(screen.getByText("portal-host")).toBeOnTheScreen();
+    // Default host + create-resource footer host (above ModalBottomSheet).
+    expect(screen.getAllByText("portal-host")).toHaveLength(2);
     expect(screen.getByText("status-bar")).toBeOnTheScreen();
     await waitFor(() => {
       expect(mockHideAsync).toHaveBeenCalled();
