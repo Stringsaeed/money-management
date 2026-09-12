@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=5b92db2
+gap=applyMoveToProjection
+matrix_row=4/6 move-money projection helper
+command=pnpm exec jest modules/budgeting/assignment-preview.test.ts --runInBand
+result=PASS 2/2
+tsc=PASS apps/mobile --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
