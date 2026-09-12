@@ -1,0 +1,4 @@
+Error (INVALID_ARGS): Flag --timeout is not supported for command wait.
+Hint: Check command arguments and run --help for usage examples.
+Diagnostic ID: mtxr6sae-e4befc31
+Diagnostics Log: /Users/saeed/.agent-device/logs/issue-232-17pro/2026-09-12/2026-09-12T02-15-47-896Z-mtxr6sae-e4befc31.ndjson
