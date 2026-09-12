@@ -1,0 +1,15 @@
+Relates to #232 only (not Closes).
+Date: 2026-09-12
+Scope: automated sync-or-discard sign-out + signed-out session cleanup (identity-switch cache wipe)
+
+Commands:
+  cd apps/mobile && pnpm exec jest hooks/use-sign-out.test.tsx modules/access/sign-out-session.test.ts --runInBand
+Result: 2 suites / 6 tests PASS
+
+tsc:
+  apps/mobile pnpm exec tsc --noEmit -p tsconfig.json (tests typecheck clean after mock arity fix)
+
+Honesty:
+  - Automated only; no iOS/Android device run
+  - Does not certify live hosted sign-out sheet or dual-session identity switch
+  - Create Account device still BLOCKED (#258); webhook still 503; dual tokens absent

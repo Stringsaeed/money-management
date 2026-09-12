@@ -20,7 +20,7 @@ Report implementation, automated verification, runtime verification, and publica
 | --- | --- |
 | Repo | `Stringsaeed/money-management` |
 | Branch | `cursor/workos-certify-migration-b3d1` |
-| HEAD | tip after goal-continue Relates re-probe (webhook still 503; #241 product CI PASS / GG historical fail; Create Account still BLOCKED on #258; dual-identity BLOCKED) |
+| HEAD | tip after sync-or-discard / identity-switch Jest Relates (row 7 automated PARTIAL; webhook still 503; Create Account still BLOCKED on #258; dual-identity BLOCKED) |
 | Provenance | Squash merge of #240 / closes #231 on `main`, plus [#242](https://github.com/Stringsaeed/money-management/pull/242), [#245](https://github.com/Stringsaeed/money-management/pull/245), [#246](https://github.com/Stringsaeed/money-management/pull/246), and schema **0011–0015** on PlanetScale `trove/main`. |
 | Worktree | `/workspace` (this Relates write); prior Mac evidence from `/Users/saeed/Work/money-management-wt-232` |
 | Live API | `https://auth.trove.ing` — root **200 OK**; Sync `getManifest` CF Worker **200** post-DDL; webhook still **503** |
@@ -28,6 +28,14 @@ Report implementation, automated verification, runtime verification, and publica
 | Test mailbox | Gmail MCP `stringsaeed@gmail.com` (WorkOS staging codes observed). Available for live email-code runs; **not** proof that OTP completion passed. |
 
 Recorded in `revision.txt` / `create-account-hittest-status.md` / `ci-stamp-2026-09-12.txt` / `post-schema-sync-retest.md`.
+
+## Sync-or-discard / identity-switch Jest Relates (2026-09-12, no device)
+
+- Added `apps/mobile/hooks/use-sign-out.test.tsx` (**4/4**) and `apps/mobile/modules/access/sign-out-session.test.ts` (**2/2**).
+- Row 7 sync-or-discard + identity-switch cleanup → **PASS (automated)**; live device sign-out / dual-identity still **not** certified.
+- Row 5 stale-response note updated for client cleanup seam (still not live stale-HTTP certification).
+- Create Account still **BLOCKED** on [#258](https://github.com/Stringsaeed/money-management/pull/258) device PASS; webhook still **503**; Mac workers offline — no ghost spawns.
+- Relates to #232 only. Do not Closes #232/#224. Matrix still incomplete.
 
 ## Goal-continue Relates re-probe (2026-09-12T06:03:43Z, no device / no Mac)
 
@@ -270,11 +278,11 @@ Env present (names only) that this row can use: `WORKOS_API_KEY`, `WORKOS_CLIENT
 | Cross-User personal isolation | `PARTIAL` (API + streams) | Personal-ledger isolation (invisible, not merely forbidden); personal budget/recurring cross-user reject; PowerSync personal stream scoped by owner (`test-powersync-proper.txt`). Live dual-identity probe **BLOCKED** — absent `CERT_USER_A_TOKEN` / `CERT_USER_B_TOKEN` (and WorkOS mint names). |
 | Cross-Household / stream isolation | `PARTIAL` (API + streams) | Households `getHousehold` invisible to non-members; PowerSync “Personal Ledger and Household streams from bleeding”; household queries membership-guarded. Live dual-identity probe **BLOCKED** (same missing token names). |
 | Cross-scope financial-reference rejection | `PARTIAL` (API seam) | Personal-ledger rejects addressing another User’s account / category / envelope; organization-scope rejects a non-member. Viewer capability map now **PASS** in `pipeline.test.ts` **18/18** (`test-pipeline-viewer-deny.txt`). Live viewer bearer still absent. |
-| Queued writes after role downgrade | not in captured suite | No focused test file in `test-api-workos-seams.txt` covers queued Commands after a live demotion. Widget handoff rejects codes after admin demotion — **not** the same criterion. |
-| Stale-response handling | `PARTIAL` (events only) | Membership projection stale/older/delayed observations (`test-deletion-projection.txt` **18/18**, also inside the 97). Client stale HTTP/sync responses after sign-out or identity switch: **not** in the captured mobile 19. |
+| Queued writes after role downgrade | `PASS` (automated) | `ledger.test.ts` rechecks live membership after member→viewer demotion and forbids the drained `transaction.create`; `connector.test.ts` completes CRUD and records `forbidden` in `rejected_changes` (does not leave the batch stuck). Live multi-device demotion still not run. |
+| Stale-response handling | `PARTIAL` (events + client cleanup seam) | Membership projection stale/older/delayed observations (`test-deletion-projection.txt` **18/18**, also inside the 97). Client sign-out cleanup clears PowerSync + sync enrollment + claim/selection + query caches (`sign-out-session.test.ts` **2/2**) — automated only; live stale HTTP/sync after identity switch still **not** device-certified. |
 | Live API/stream isolation | `PARTIAL` (auth-gate) / dual-identity `BLOCKED` | Auth-gate **PASS**: missing → **401** `missing_token`; forged JWT + forged org/user body → **401** `invalid_token` (`live-auth-gate-probe-2026-09-12.txt`; CF **7**+**8**). Authenticated cross-tenant negatives **BLOCKED** without dual session tokens. |
 
-**Row status: `PARTIAL`.** Isolation seams + auth-gate + viewer pipeline pass; live dual-identity and downgrade-queued writes / client stale-response are **not** certified.
+**Row status: `PARTIAL`.** Isolation seams + auth-gate + viewer pipeline + automated demotion-queue PASS; live dual-identity and client stale-response after identity switch are **not** certified.
 
 ### 6. Duplicated / reordered / missed events + reconciliation; PowerSync removal / offline-device limitation
 
@@ -297,11 +305,11 @@ Note: `test-powersync.txt` is a **failed** `vitest run` (`No test suite found` /
 | User deletion anonymizes attribution, clears personal data, ignores delayed membership events | `PASS` (API seam) | `deletion/service.test.ts` in `test-api-workos-seams.txt` and `test-deletion-projection.txt`. |
 | Last-admin / sole-admin User-deletion guard | `PASS` (API seam) | `requestUserDeletion > blocks sole admins until they appoint another admin or delete the Household`; households `keeps the last admin in place`. |
 | Recoverable Household deletion | `PASS` (API seam) | Confirm-name + admin-only; shared ledger removed, personal kept, org tombstoned; resumes after WorkOS failure without duplicating local deletes. |
-| Sync-or-discard sign-out | not evidenced live | Mobile `use-sync-worker` / `use-enable-sync` (**19/19**) cover connect/disconnect/import hooks, not the hosted sign-out choice on device. |
-| Identity switching (cache / queue isolation) | not evidenced live | No device identity-switch artifact. |
+| Sync-or-discard sign-out | `PASS` (automated) / live not run | `use-sign-out.test.tsx` **4/4**: empty queue signs out immediately; pending uploads open sync-or-discard sheet; discard signs out without drain; sync-then-sign-out drains then signs out. Live hosted sheet on device still **not** run. |
+| Identity switching (cache / queue isolation) | `PASS` (automated cleanup) / live not run | `sign-out-session.test.ts` **2/2**: signed-out cleanup disconnects PowerSync, clears sync enrollment, sets `local_only`/`powersync_unavailable`, remote sign-out, clears ledger selection + claim, removes households/household/migration/sync queries. Live dual-identity switch still **BLOCKED** (tokens absent). |
 | Sign-out / deletion on iOS and Android | not evidenced | Runtime section empty of pass paths. |
 
-**Row status: `PARTIAL` automated / live not run.**
+**Row status: `PARTIAL`.** Deletion/admin/household API seams + automated sync-or-discard / session-cleanup PASS; live device sign-out and identity switch still not certified.
 
 ### 8. Clean development setup after removal/reset using live or disposable services
 
