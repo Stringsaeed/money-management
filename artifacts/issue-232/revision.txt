@@ -31,3 +31,4 @@ certified=false
 import_content_jest=PASS 6/6 product=eca3299
 to_directory_membership_jest=PASS 2/2
 import_manifest_canonical_jest=PASS 3/3 product=0d5bb45
+household_role_command_kind_jest=PASS 4/4 product=5bf4dc4

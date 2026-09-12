@@ -1,0 +1,13 @@
+branch=cursor/workos-certify-migration-b3d1
+product_tip=5bf4dc4
+gap=isHouseholdRole + isCommandKind
+matrix_row=4 WorkOS role slug / command kind gate
+command=pnpm test (packages/protocol) — command.test.ts 4/4
+result=PASS 4/4 (suite 12/12)
+tsc=PASS packages/protocol --noEmit
+device=none
+secrets=none
+relates=#232 only
+closes=none
+certified=false
+remaining_blocked=workos_webhook_503,create_account_258,dual_token,gh_actions_billing,android_runtime,ios_otp_ax,powersync_mint
