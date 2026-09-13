@@ -10,28 +10,33 @@ type SignedInAccess = Extract<AccessState, { kind: "signed_in" }>;
 
 /** Personal + Household picker; selection is local and validated against Memberships. */
 export function LedgerSelector({ access }: { readonly access: SignedInAccess }) {
+  if (access.memberships.length === 0) return null;
   return (
     <Card>
       <View className="gap-3 p-4">
         <Text className="font-body-semibold text-xs uppercase text-ink/40">Ledger</Text>
-        <View className="gap-2">
-          <NativeHost>
-            {access.selection.kind === "personal" ? (
-              <NativePrimaryButton
-                label="Personal ✓"
-                onPress={() => access.setActiveHousehold(null)}
-                testID="select-ledger-personal"
-              />
-            ) : (
-              <NativeSecondaryButton
-                label="Personal"
-                onPress={() => access.setActiveHousehold(null)}
-                testID="select-ledger-personal"
-              />
-            )}
-          </NativeHost>
+        <View className="flex-row flex-wrap gap-2">
+          <View className="min-w-30 flex-1">
+            <NativeHost>
+              {access.selection.kind === "personal" ? (
+                <NativePrimaryButton
+                  label="Personal ✓"
+                  onPress={() => access.setActiveHousehold(null)}
+                  testID="select-ledger-personal"
+                />
+              ) : (
+                <NativeSecondaryButton
+                  label="Personal"
+                  onPress={() => access.setActiveHousehold(null)}
+                  testID="select-ledger-personal"
+                />
+              )}
+            </NativeHost>
+          </View>
           {access.memberships.map((household) => (
-            <HouseholdOption key={household.householdId} access={access} household={household} />
+            <View key={household.householdId} className="min-w-[120px] flex-1">
+              <HouseholdOption access={access} household={household} />
+            </View>
           ))}
         </View>
       </View>

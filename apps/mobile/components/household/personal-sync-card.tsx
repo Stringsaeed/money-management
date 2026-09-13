@@ -1,8 +1,9 @@
 import { View } from "react-native";
 
-import { NativeHost, NativePrimaryButton, NativeSecondaryButton } from "@/components/native-ui";
 import { Text } from "@/components/ui/text";
+import type { PersonalSyncStatus } from "@/hooks/use-enable-sync";
 import { useEnablePersonalSync } from "@/hooks/use-enable-sync";
+import { Button } from "../ui/button";
 
 const BUTTON_LABEL = {
   idle: "Sync just for me",
@@ -16,10 +17,13 @@ const BUTTON_LABEL = {
   error: "Try again",
 } as const;
 
-/**
- * Personal Ledger sync (#226 / #229): empty cloud with local rows needs a
- * one-time confirm upload; a populated cloud opens without touching device SQLite.
- */
+const getIsBusy = (status: PersonalSyncStatus) =>
+  status === "probing" ||
+  status === "backing_up" ||
+  status === "uploading" ||
+  status === "verifying" ||
+  status === "connecting";
+
 export function PersonalSyncCard({ alreadyEnabled }: { readonly alreadyEnabled: boolean }) {
   const {
     status,
@@ -49,31 +53,20 @@ export function PersonalSyncCard({ alreadyEnabled }: { readonly alreadyEnabled: 
         </Text>
         <Text className="font-body-normal text-xs text-ink/40">
           Your personal cloud is empty and this device has local accounts and transactions. Confirm
-          once to copy them up — sign-in alone never uploads. Your on-device ledger stays here for
+          once to copy them up - sign-in alone never uploads. Your on-device ledger stays here for
           local-only use anytime.
         </Text>
-        <NativeHost>
-          <NativePrimaryButton
-            label={BUTTON_LABEL.confirm_upload}
-            onPress={confirmPersonalUpload}
-            testID="confirm-personal-upload"
-          />
-          <NativeSecondaryButton
-            label="Not now"
-            onPress={cancelPersonalUpload}
-            testID="cancel-personal-upload"
-          />
-        </NativeHost>
+        <Button onPress={confirmPersonalUpload} testID="confirm-personal-upload">
+          <Text>{BUTTON_LABEL.confirm_upload}</Text>
+        </Button>
+        <Button variant="secondary" onPress={cancelPersonalUpload} testID="cancel-personal-upload">
+          <Text>Not now</Text>
+        </Button>
       </View>
     );
   }
 
-  const busy =
-    status === "probing" ||
-    status === "backing_up" ||
-    status === "uploading" ||
-    status === "verifying" ||
-    status === "connecting";
+  const busy = getIsBusy(status);
 
   return (
     <View className="gap-3 px-4 py-4">
@@ -85,14 +78,9 @@ export function PersonalSyncCard({ alreadyEnabled }: { readonly alreadyEnabled: 
           ? "Your personal cloud already has data. Opening sync reads that ledger — everything on this device stays on this device, with no merge step."
           : "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."}
       </Text>
-      <NativeHost>
-        <NativePrimaryButton
-          label={BUTTON_LABEL[status]}
-          onPress={enablePersonalSync}
-          disabled={busy}
-          testID="enable-personal-sync"
-        />
-      </NativeHost>
+      <Button disabled={busy} onPress={enablePersonalSync} testID="enable-personal-sync">
+        <Text>{BUTTON_LABEL[status]}</Text>
+      </Button>
       {status === "error" && error ? (
         <Text
           accessibilityLiveRegion="assertive"
