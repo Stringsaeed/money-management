@@ -10,16 +10,16 @@ tags:
 - launchApp
 - openLink: trove:///
 - evalScript: ${output.categoryName = 'Maestro Groceries ' + new Date().getTime()}
+- openLink: trove://settings/household
+- extendedWaitUntil:
+    timeout: 15000
+    visible:
+      id: "profile-sign-in"
+- openLink: trove:///
 - extendedWaitUntil:
     timeout: 45000
     visible: "Upcoming payments"
-- tapOn: "Settings"
-- extendedWaitUntil:
-    timeout: 15000
-    visible: "Profile & household"
-- tapOn:
-    text: "^Categories$"
-    index: 0
+- openLink: trove://categories
 - extendedWaitUntil:
     timeout: 15000
     visible: "Categories"
@@ -37,7 +37,9 @@ tags:
 - extendedWaitUntil:
     timeout: 15000
     notVisible: "Add Category"
-- extendedWaitUntil:
+- scrollUntilVisible:
+    element: ${output.categoryName}
+    direction: DOWN
     timeout: 15000
-    visible: ${output.categoryName}
-- assertVisible: ${output.categoryName}
+    visibilityPercentage: 50
+- assertVisible: ".*${output.categoryName}.*"

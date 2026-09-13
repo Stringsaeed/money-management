@@ -24,6 +24,11 @@ do not depend on an empty local ledger. The Transaction flow requires an
 existing local Account; run the Account flow once, and close its sheet if it
 remains open.
 
+These flows assert the anonymous profile button before writing. Sign out on
+the simulator first if that assertion fails; sign-out preserves local ledger
+data and does not alter a session on any physical device. The flows never
+discard pending synced changes as an automatic setup step.
+
 ## Coverage and limits
 
 | Flow                                | Expected result                                                                 |

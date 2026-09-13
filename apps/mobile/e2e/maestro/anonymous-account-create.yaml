@@ -10,16 +10,16 @@ tags:
 - launchApp
 - openLink: trove:///
 - evalScript: ${output.accountName = 'Maestro Checking ' + new Date().getTime()}
+- openLink: trove://settings/household
+- extendedWaitUntil:
+    timeout: 15000
+    visible:
+      id: "profile-sign-in"
+- openLink: trove:///
 - extendedWaitUntil:
     timeout: 45000
     visible: "Upcoming payments"
-- tapOn: "Settings"
-- extendedWaitUntil:
-    timeout: 15000
-    visible: "Profile & household"
-- tapOn:
-    text: "^Accounts$"
-    index: 0
+- openLink: trove://accounts
 - extendedWaitUntil:
     timeout: 15000
     visible: "Accounts"
@@ -36,7 +36,9 @@ tags:
 - extendedWaitUntil:
     timeout: 15000
     notVisible: "Add Account"
-- extendedWaitUntil:
+- scrollUntilVisible:
+    element: ${output.accountName}
+    direction: DOWN
     timeout: 15000
-    visible: ${output.accountName}
-- assertVisible: ${output.accountName}
+    visibilityPercentage: 50
+- assertVisible: ".*${output.accountName}.*"

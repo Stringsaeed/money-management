@@ -10,7 +10,13 @@ tags:
 # `clearState`: it opens the Expo dev-client shell on this build.
 - launchApp
 - openLink: trove:///
-- evalScript: ${output.transactionNote = 'MTX ' + (new Date().getTime() % 1000000)}
+- evalScript: ${output.transactionNote = 'MTX ' + new Date().getTime()}
+- openLink: trove://settings/household
+- extendedWaitUntil:
+    timeout: 15000
+    visible:
+      id: "profile-sign-in"
+- openLink: trove:///
 - extendedWaitUntil:
     timeout: 45000
     visible: "Create transaction"
