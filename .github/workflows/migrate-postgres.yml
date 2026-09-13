@@ -1,0 +1,82 @@
+name: Migrate production Postgres schema
+
+concurrency:
+  group: production-postgres-schema
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+    inputs:
+      migration_tag:
+        description: "Exact allowlisted Drizzle journal tag (for example, 0016_add_feature)"
+        required: true
+        type: string
+
+jobs:
+  migrate:
+    name: Apply allowlisted migration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: prod-schema
+    permissions:
+      contents: read
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v7
+
+      - name: Setup pscale
+        uses: planetscale/setup-pscale-action@v1
+        with:
+          version: v0.327.0
+
+      - name: Check migration credentials
+        env:
+          PLANETSCALE_SERVICE_TOKEN_ID: ${{ secrets.PLANETSCALE_SERVICE_TOKEN_ID }}
+          PLANETSCALE_SERVICE_TOKEN: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
+          PLANETSCALE_ORG: ${{ vars.PLANETSCALE_ORG }}
+          PLANETSCALE_DATABASE: ${{ vars.PLANETSCALE_DATABASE }}
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF_NAME:-}" != "main" ]; then
+            echo "::error::Production migrations may only run from the main branch."
+            exit 1
+          fi
+          for name in \
+            PLANETSCALE_SERVICE_TOKEN_ID \
+            PLANETSCALE_SERVICE_TOKEN \
+            PLANETSCALE_ORG \
+            PLANETSCALE_DATABASE; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Missing $name. Configure it in the protected prod-schema environment before running migrations."
+              exit 1
+            fi
+          done
+          echo "Migration credentials and target metadata are present."
+
+      - name: Prove scoped admin access (read-only)
+        env:
+          PLANETSCALE_SERVICE_TOKEN_ID: ${{ secrets.PLANETSCALE_SERVICE_TOKEN_ID }}
+          PLANETSCALE_SERVICE_TOKEN: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
+          PLANETSCALE_ORG: ${{ vars.PLANETSCALE_ORG }}
+          PLANETSCALE_DATABASE: ${{ vars.PLANETSCALE_DATABASE }}
+        run: |
+          set -euo pipefail
+          pscale sql "$PLANETSCALE_DATABASE" main \
+            --org "$PLANETSCALE_ORG" \
+            --format json \
+            --role admin \
+            --dbname postgres \
+            --query 'SELECT 1'
+
+      - name: Apply migration in one transaction
+        working-directory: packages/db
+        env:
+          PLANETSCALE_SERVICE_TOKEN_ID: ${{ secrets.PLANETSCALE_SERVICE_TOKEN_ID }}
+          PLANETSCALE_SERVICE_TOKEN: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
+          PLANETSCALE_ORG: ${{ vars.PLANETSCALE_ORG }}
+          PLANETSCALE_DATABASE: ${{ vars.PLANETSCALE_DATABASE }}
+          PLANETSCALE_BRANCH: main
+          PLANETSCALE_DBNAME: postgres
+          PLANETSCALE_MIGRATION_TAG: ${{ inputs.migration_tag }}
+        run: node scripts/run-postgres-migration.mjs
