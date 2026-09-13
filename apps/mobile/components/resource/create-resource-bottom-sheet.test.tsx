@@ -1,7 +1,7 @@
 // oxlint-disable anti-slop/no-module-mocking -- isolate mutation and native sheet boundaries.
 import React from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { AccountFormBottomSheet } from "@/components/account/account-form-sheet";
 import { CategoryFormBottomSheet } from "@/components/category/category-form-sheet";
@@ -117,5 +117,28 @@ describe("create resource sheet dismissal", () => {
     await fireEvent.press(screen.getByTestId("dismiss-create-resource-modal"));
 
     expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it("notifies once on each close after reopening", async () => {
+    const onDismiss = jest.fn();
+
+    await render(
+      <CreateResourceBottomSheet
+        content={<View />}
+        footer={null}
+        onDismiss={onDismiss}
+        title="Test resource"
+      >
+        <Pressable testID="open-resource-sheet" />
+      </CreateResourceBottomSheet>,
+    );
+
+    await fireEvent.press(screen.getByTestId("open-resource-sheet"));
+    await fireEvent.press(screen.getByTestId("dismiss-create-resource-modal"));
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+
+    await fireEvent.press(screen.getByTestId("open-resource-sheet"));
+    await fireEvent.press(screen.getByTestId("dismiss-create-resource-modal"));
+    expect(onDismiss).toHaveBeenCalledTimes(2);
   });
 });

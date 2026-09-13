@@ -53,7 +53,7 @@ export const CreateResourceBottomSheet = React.forwardRef<
 
     return React.cloneElement(children, {
       onPress: (event) => {
-        setIndex(1);
+        handleIndexChange(1);
         children.props.onPress?.(event);
       },
     });
