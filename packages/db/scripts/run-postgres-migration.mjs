@@ -72,6 +72,73 @@ export function containsDestructiveSql(source) {
 }
 
 /**
+ * @param {unknown} value
+ * @returns {string}
+ */
+function journalTag(value) {
+  const tag = String(value ?? "");
+  if (tag !== value || !MIGRATION_TAG_PATTERN.test(tag)) {
+    throw new Error(`Invalid Postgres migration tag in journal: ${String(value)}.`);
+  }
+  return tag;
+}
+
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
+function inputTag(value) {
+  const tag = String(value ?? "");
+  if (tag !== value || !MIGRATION_TAG_PATTERN.test(tag)) {
+    throw new Error("PLANETSCALE_MIGRATION_TAG must be an exact journal tag, not SQL input.");
+  }
+  return tag;
+}
+
+/**
+ * @param {string} tag
+ * @param {number} version
+ * @param {string} root
+ */
+function loadFutureMigration(tag, version, root) {
+  const fileName = `${tag}.sql`;
+  const filePath = resolve(root, fileName);
+  if (basename(fileName) !== fileName || !filePath.startsWith(`${root}/`)) {
+    throw new Error(`Migration ${tag} resolves outside the migrations directory.`);
+  }
+  const source = readFileSync(filePath, "utf8");
+  assertTransactionalSource(source, tag);
+  return {
+    version,
+    tag,
+    fileName,
+    sha256: sha256(source),
+    statements: splitMigrationStatements(source),
+    destructive: containsDestructiveSql(source),
+  };
+}
+
+/**
+ * @param {{ tag?: unknown }} entry
+ * @param {string} root
+ * @param {number} previousVersion
+ * @param {Set<string>} seenTags
+ */
+function loadJournalEntry(entry, root, previousVersion, seenTags) {
+  const tag = journalTag(entry?.tag);
+  const version = Number(tag.slice(0, 4));
+  if (!Number.isInteger(version) || version <= previousVersion) {
+    throw new Error(`Postgres migration journal tags must be strictly increasing: ${tag}.`);
+  }
+  if (seenTags.has(tag)) throw new Error(`Duplicate Postgres migration tag: ${tag}.`);
+  seenTags.add(tag);
+  return {
+    version,
+    migration: version < MIN_MIGRATION_VERSION ? null : loadFutureMigration(tag, version, root),
+  };
+}
+
+/**
  * Read the Drizzle journal and expose only future, exact tags. Existing
  * 0007–0015 entries are intentionally ignored and can never be replayed by
  * this production runner.
@@ -98,36 +165,9 @@ export function loadJournalMigrations({
   const migrations = [];
 
   for (const entry of journal.entries) {
-    const tag = entry?.tag;
-    if (typeof tag !== "string" || !MIGRATION_TAG_PATTERN.test(tag)) {
-      throw new Error(`Invalid Postgres migration tag in journal: ${String(tag)}.`);
-    }
-    const version = Number(tag.slice(0, 4));
-    if (!Number.isInteger(version) || version <= previousVersion) {
-      throw new Error(`Postgres migration journal tags must be strictly increasing: ${tag}.`);
-    }
-    previousVersion = version;
-    if (seenTags.has(tag)) throw new Error(`Duplicate Postgres migration tag: ${tag}.`);
-    seenTags.add(tag);
-    if (version < MIN_MIGRATION_VERSION) continue;
-
-    const fileName = `${tag}.sql`;
-    if (basename(fileName) !== fileName)
-      throw new Error(`Invalid migration filename: ${fileName}.`);
-    const filePath = resolve(root, fileName);
-    if (!filePath.startsWith(`${root}/`)) {
-      throw new Error(`Migration ${tag} resolves outside the migrations directory.`);
-    }
-    const source = readFileSync(filePath, "utf8");
-    assertTransactionalSource(source, tag);
-    migrations.push({
-      version,
-      tag,
-      fileName,
-      sha256: sha256(source),
-      statements: splitMigrationStatements(source),
-      destructive: containsDestructiveSql(source),
-    });
+    const loaded = loadJournalEntry(entry, root, previousVersion, seenTags);
+    previousVersion = loaded.version;
+    if (loaded.migration) migrations.push(loaded.migration);
   }
 
   return migrations;
@@ -138,14 +178,12 @@ export function loadJournalMigrations({
  * @param {string} tag
  */
 export function selectMigration(migrations, tag) {
-  if (typeof tag !== "string" || !MIGRATION_TAG_PATTERN.test(tag)) {
-    throw new Error("PLANETSCALE_MIGRATION_TAG must be an exact journal tag, not SQL input.");
-  }
-  const migration = migrations.find((candidate) => candidate.tag === tag);
+  const selectedTag = inputTag(tag);
+  const migration = migrations.find((candidate) => candidate.tag === selectedTag);
   if (!migration) {
     const allowed = migrations.map((candidate) => candidate.tag).join(", ");
     throw new Error(
-      `Migration ${tag} is not allowlisted in the journal. Allowed: ${allowed || "none"}.`,
+      `Migration ${selectedTag} is not allowlisted in the journal. Allowed: ${allowed || "none"}.`,
     );
   }
   return migration;
@@ -242,6 +280,16 @@ export function buildPscaleArgs({
 }
 
 /**
+ * @param {Record<string, unknown> | null} payload
+ * @returns {string}
+ */
+function payloadErrorDetail(payload) {
+  const error = payload?.error;
+  const detail = String(error ?? "");
+  return detail === error && detail.length > 0 ? ` ${detail}` : "";
+}
+
+/**
  * @param {string[]} args
  * @param {NodeJS.ProcessEnv} environment
  * @returns {Promise<Record<string, unknown>>}
@@ -265,8 +313,8 @@ export function executePscale(args, environment) {
         reject(new Error(`pscale returned invalid JSON (exit ${code ?? "unknown"}).`));
         return;
       }
-      if (code !== 0 || payload.status !== "ok") {
-        const detail = typeof payload.error === "string" ? ` ${payload.error}` : "";
+      if (code !== 0 || payload?.status !== "ok") {
+        const detail = payloadErrorDetail(payload);
         reject(new Error(`pscale migration command failed.${detail}`));
         return;
       }
