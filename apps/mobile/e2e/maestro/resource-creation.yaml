@@ -5,8 +5,8 @@ tags:
   - smoke
 ---
 # This is the single resource suite used before auth and again after personal
-# sync. Pass EXPECTED_PROFILE_ID and RUN_LABEL through the Maestro CLI; the
-# nested flows inherit both values and generate unique names independently.
+# sync. Pass EXPECTED_PROFILE_ID, RUN_LABEL, and a unique numeric RUN_ID; the
+# same RUN_ID makes the exact cloud rows independently verifiable.
 #
 # The sweep is intentionally sequential and stops at the first red resource.
 # Run account-create.yaml, category-create.yaml, or transaction-create.yaml
@@ -17,13 +17,16 @@ tags:
     env:
       EXPECTED_PROFILE_ID: ${EXPECTED_PROFILE_ID}
       RUN_LABEL: ${RUN_LABEL}
+      RUN_ID: ${RUN_ID}
 - runFlow:
     file: category-create.yaml
     env:
       EXPECTED_PROFILE_ID: ${EXPECTED_PROFILE_ID}
       RUN_LABEL: ${RUN_LABEL}
+      RUN_ID: ${RUN_ID}
 - runFlow:
     file: transaction-create.yaml
     env:
       EXPECTED_PROFILE_ID: ${EXPECTED_PROFILE_ID}
       RUN_LABEL: ${RUN_LABEL}
+      RUN_ID: ${RUN_ID}

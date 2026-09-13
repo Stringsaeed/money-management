@@ -1,0 +1,8 @@
+appId: com.stringsaeed.moneymanagement
+---
+- openLink: ${APP_LINK}
+- runFlow:
+    when:
+      visible: ".*Open in.*Trove.*"
+    commands:
+      - tapOn: "Open"

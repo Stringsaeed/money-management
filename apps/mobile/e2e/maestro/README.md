@@ -31,13 +31,16 @@ own authentication or sync setup.
 
 ## Run the reusable sweep
 
-From the repository root, pass the expected profile control and a harmless
-label for the unique generated names:
+From the repository root, choose one numeric run ID and reuse it for the local
+and personal passes. The same ID identifies exact rows in the read-only cloud
+checks:
 
 ```sh
+RUN_ID=$(node -p 'Date.now()')
 maestro test --udid <SIMULATOR_UDID> \
   -e EXPECTED_PROFILE_ID=profile-sign-in \
   -e RUN_LABEL=local \
+  -e RUN_ID="$RUN_ID" \
   apps/mobile/e2e/maestro/resource-creation.yaml
 ```
 
@@ -48,11 +51,13 @@ same file again with the signed-in selector:
 maestro test --udid <SIMULATOR_UDID> \
   -e EXPECTED_PROFILE_ID=profile-sign-out \
   -e RUN_LABEL=personal \
+  -e RUN_ID="$RUN_ID" \
   apps/mobile/e2e/maestro/resource-creation.yaml
 ```
 
-`RUN_LABEL` is only a visible prefix. Each resource appends the current time,
-so repeated runs do not rely on an empty ledger or duplicate a fixed name.
+`RUN_LABEL` identifies the phase; `RUN_ID` makes its records unique. The same
+`open-trove-link.yaml` helper accepts the iOS first-use deep-link confirmation
+on a fresh simulator.
 Never put an email code, API key, refresh token, or device database in this
 directory.
 
@@ -67,16 +72,19 @@ per-resource result, using the same mode arguments:
 maestro test --udid <SIMULATOR_UDID> \
   -e EXPECTED_PROFILE_ID=profile-sign-in \
   -e RUN_LABEL=local-account \
+  -e RUN_ID="$RUN_ID" \
   apps/mobile/e2e/maestro/account-create.yaml
 
 maestro test --udid <SIMULATOR_UDID> \
   -e EXPECTED_PROFILE_ID=profile-sign-in \
   -e RUN_LABEL=local-category \
+  -e RUN_ID="$RUN_ID" \
   apps/mobile/e2e/maestro/category-create.yaml
 
 maestro test --udid <SIMULATOR_UDID> \
   -e EXPECTED_PROFILE_ID=profile-sign-in \
   -e RUN_LABEL=local-transaction \
+  -e RUN_ID="$RUN_ID" \
   apps/mobile/e2e/maestro/transaction-create.yaml
 ```
 
@@ -97,10 +105,31 @@ normalized tap point after asserting the destination screen. This is a selector
 limitation, not a substitute for checking the saved row. The Transaction flow
 keeps its distinct amount, note, save, form-close, and journal assertions.
 
-The existing local evidence intentionally has red Account and Category
-sheet-close assertions after their rows save, while Transaction is green. Keep
-those checks hard and visible. Do not mark a resource optional or remove the
-close assertion just to make the sweep green.
+The initial main build had red Account and Category sheet-close assertions
+after their rows saved. The sheet fix has since been merged, and the complete
+anonymous sweep passed against its simulator build. Keep those checks hard
+and visible; do not make a resource optional merely to turn the suite green.
+
+## Hosted sign-in and cloud evidence
+
+`auth.yaml` uses the real hosted WorkOS email-code path through the local
+`scripts/maestro-workos-auth.js` runner. The runner keeps the WorkOS API key
+outside Maestro and its debug output. It is not a mock login and it has not
+yet been run against the hosted service, so its selectors remain unverified.
+Use a dedicated test identity, never a person's inbox or a production user.
+
+After sign-in, `personal-sync.yaml` asserts the app's signed-in personal-sync
+path. A first upload requires `UPLOAD_CHOICE=confirm`; omitting it must not
+silently upload local data. Do not substitute Household sync for this step.
+
+`scripts/maestro-verify-cloud.mjs` performs read-only PlanetScale checks for
+the exact run labels before authentication and for the authenticated personal
+ledger afterward. Its post-auth check requires the WorkOS user ID, verifies
+the labels belong to that personal ledger, and rejects duplicate or
+out-of-scope rows. A database hit proves the upload reached PlanetScale; it
+does **not** independently prove PowerSync downloaded the same rows. Do not
+report the full sync path as passing until a hosted run and PowerSync download
+check have both succeeded.
 
 Maestro 2.10.0 was used for the initial local run. On another Mac, follow the
 [official CLI installation guide](https://docs.maestro.dev/maestro-cli/how-to-install-maestro-cli).

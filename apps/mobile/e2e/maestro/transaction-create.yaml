@@ -7,18 +7,27 @@ tags:
 ---
 # Reusable in either ledger mode. Pass EXPECTED_PROFILE_ID as
 # `profile-sign-in` before auth or `profile-sign-out` after personal sync.
-# Pass RUN_LABEL to keep the generated record easy to identify.
+# Pass RUN_LABEL and RUN_ID to identify the exact record in cloud checks.
 # Preconditions: launch through `stim ios` and have at least one Account in the
 # selected ledger. Do not use `clearState`: it opens the Expo dev-client shell.
 - launchApp
-- openLink: trove:///
-- evalScript: ${output.transactionNote = RUN_LABEL.slice(0, 1).toUpperCase() + 'TX ' + new Date().getTime()}
-- openLink: trove://settings/household
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove:///
+- evalScript: ${output.transactionNote = RUN_LABEL.slice(0, 1).toUpperCase() + 'TX ' + RUN_ID}
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove://settings/household
 - extendedWaitUntil:
     timeout: 15000
     visible:
       id: ${EXPECTED_PROFILE_ID}
-- openLink: trove:///
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove:///
 - extendedWaitUntil:
     timeout: 45000
     visible: "Create transaction"
