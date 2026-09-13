@@ -1,0 +1,54 @@
+appId: com.stringsaeed.moneymanagement
+name: Personal ledger sync
+tags:
+  - sync
+  - personal
+  - smoke
+---
+# Run after the separate hosted WorkOS AuthKit flow. The profile selector is
+# the signed-in proof; this flow never creates or joins a Household.
+#
+# If the personal cloud is empty while this device has local rows, the app
+# shows a one-time upload prompt. UPLOAD_CHOICE must explicitly be `confirm`
+# before this flow will tap that control. An absent or other choice fails
+# visibly rather than silently uploading local data.
+- launchApp
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove://settings/household
+- extendedWaitUntil:
+    timeout: 15000
+    visible:
+      id: profile-sign-out
+- assertVisible:
+    id: profile-sign-out
+- runFlow:
+    when:
+      visible:
+        id: enable-personal-sync
+    commands:
+      - tapOn:
+          id: enable-personal-sync
+- repeat:
+    # A probe/upload can take longer than Maestro's default assertion window.
+    # The condition and iteration bound keep a stalled sync from hanging.
+    times: 60
+    while:
+      notVisible: "Your personal ledger syncs"
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: confirm-personal-upload
+          commands:
+            - assertTrue:
+                condition: ${UPLOAD_CHOICE == "confirm"}
+                label: "Set UPLOAD_CHOICE=confirm to approve the one-time upload"
+            - tapOn:
+                id: confirm-personal-upload
+      - wait: 1000
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Your personal ledger syncs"
+- assertVisible: "Your personal ledger syncs"
