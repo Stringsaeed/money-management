@@ -256,7 +256,8 @@ function createMagicAuthHelper({
     !isText(apiKey) ||
     !isExampleEmail(expectedEmail) ||
     !isText(expectedClientId) ||
-    !isText(nonce)
+    !isText(nonce) ||
+    nonce.length < 32
   ) {
     throw fail("INVALID_HELPER_CONFIGURATION");
   }
