@@ -1,0 +1,43 @@
+appId: com.stringsaeed.moneymanagement
+name: Anonymous local Category creation
+tags:
+  - anonymous
+  - local
+  - smoke
+---
+# Precondition: launch the Expo dev client through `stim ios` before this flow.
+# `clearState` would reset the dev-client shell rather than only Trove's ledger.
+- launchApp
+- openLink: trove:///
+- evalScript: ${output.categoryName = 'Maestro Groceries ' + new Date().getTime()}
+- extendedWaitUntil:
+    timeout: 45000
+    visible: "Upcoming payments"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Profile & household"
+- tapOn:
+    text: "^Categories$"
+    index: 0
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Categories"
+# The Categories FAB currently has no accessibility identifier or testID.
+- tapOn:
+    point: "84%, 92%"
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Add Category"
+- tapOn: "e.g. Groceries"
+- inputText: ${output.categoryName}
+- hideKeyboard
+- tapOn:
+    id: "create-resource-submit"
+- extendedWaitUntil:
+    timeout: 15000
+    notVisible: "Add Category"
+- extendedWaitUntil:
+    timeout: 15000
+    visible: ${output.categoryName}
+- assertVisible: ${output.categoryName}

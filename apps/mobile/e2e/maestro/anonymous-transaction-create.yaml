@@ -1,0 +1,34 @@
+appId: com.stringsaeed.moneymanagement
+name: Anonymous local Transaction creation
+tags:
+  - anonymous
+  - local
+  - smoke
+---
+# Precondition: launch through `stim ios` and have at least one local Account.
+# Run the Account flow once and close its sheet if needed. Do not use
+# `clearState`: it opens the Expo dev-client shell on this build.
+- launchApp
+- openLink: trove:///
+- evalScript: ${output.transactionNote = 'MTX ' + (new Date().getTime() % 1000000)}
+- extendedWaitUntil:
+    timeout: 45000
+    visible: "Create transaction"
+- tapOn: "Create transaction"
+- extendedWaitUntil:
+    timeout: 15000
+    visible:
+      id: "transaction-note-field"
+- tapOn: "5"
+- tapOn:
+    id: "transaction-note-field"
+- inputText: ${output.transactionNote}
+- tapOn: "save"
+- extendedWaitUntil:
+    timeout: 25000
+    notVisible:
+      id: "transaction-note-field"
+- extendedWaitUntil:
+    timeout: 25000
+    visible: ".*${output.transactionNote}.*"
+- assertVisible: ".*${output.transactionNote}.*"

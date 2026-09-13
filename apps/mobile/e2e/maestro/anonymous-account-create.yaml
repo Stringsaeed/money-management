@@ -1,0 +1,42 @@
+appId: com.stringsaeed.moneymanagement
+name: Anonymous local Account creation
+tags:
+  - anonymous
+  - local
+  - smoke
+---
+# Precondition: launch the Expo dev client through `stim ios` before this flow.
+# `clearState` would reset the dev-client shell rather than only Trove's ledger.
+- launchApp
+- openLink: trove:///
+- evalScript: ${output.accountName = 'Maestro Checking ' + new Date().getTime()}
+- extendedWaitUntil:
+    timeout: 45000
+    visible: "Upcoming payments"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Profile & household"
+- tapOn:
+    text: "^Accounts$"
+    index: 0
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Accounts"
+- tapOn:
+    point: "84%, 92%"
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Add Account"
+- tapOn: "e.g. Main Checking"
+- inputText: ${output.accountName}
+- hideKeyboard
+- tapOn:
+    id: "create-resource-submit"
+- extendedWaitUntil:
+    timeout: 15000
+    notVisible: "Add Account"
+- extendedWaitUntil:
+    timeout: 15000
+    visible: ${output.accountName}
+- assertVisible: ${output.accountName}
