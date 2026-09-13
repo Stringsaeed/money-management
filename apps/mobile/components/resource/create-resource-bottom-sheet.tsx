@@ -17,21 +17,36 @@ interface CreateResourceBottomSheetProps {
   title: string;
 }
 
-export function CreateResourceBottomSheet({
-  autoPresent = false,
-  children,
-  content,
-  footer,
-  headerRight,
-  onDismiss,
-  title,
-}: CreateResourceBottomSheetProps) {
+export interface CreateResourceBottomSheetRef {
+  dismiss: VoidFunction;
+}
+
+export const CreateResourceBottomSheet = React.forwardRef<
+  CreateResourceBottomSheetRef,
+  CreateResourceBottomSheetProps
+>(function CreateResourceBottomSheet(
+  { autoPresent = false, children, content, footer, headerRight, onDismiss, title },
+  ref,
+) {
   const [index, setIndex] = React.useState(autoPresent ? 1 : 0);
+  const didDismissRef = React.useRef(false);
 
   function handleIndexChange(nextIndex: number) {
     setIndex(nextIndex);
-    if (nextIndex === 0) onDismiss?.();
+    if (nextIndex > 0) {
+      didDismissRef.current = false;
+      return;
+    }
+
+    if (didDismissRef.current) return;
+
+    didDismissRef.current = true;
+    onDismiss?.();
   }
+
+  React.useImperativeHandle(ref, () => ({
+    dismiss: () => handleIndexChange(0),
+  }));
 
   function renderTrigger() {
     if (!children) return null;
@@ -74,4 +89,4 @@ export function CreateResourceBottomSheet({
       </ModalBottomSheet>
     </>
   );
-}
+});

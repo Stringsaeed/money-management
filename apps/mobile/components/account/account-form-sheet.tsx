@@ -3,7 +3,10 @@ import type { PressableProps } from "react-native";
 
 import { AccountFormContent } from "@/components/account/account-form-content";
 import { ACCOUNT_TYPE_META } from "@/components/account/account-form-options";
-import { CreateResourceBottomSheet } from "@/components/resource/create-resource-bottom-sheet";
+import {
+  CreateResourceBottomSheet,
+  type CreateResourceBottomSheetRef,
+} from "@/components/resource/create-resource-bottom-sheet";
 import { CreateResourceSheetFooter } from "@/components/resource/create-resource-sheet-footer";
 import type { AccountType } from "@/types";
 
@@ -22,12 +25,14 @@ export function AccountFormBottomSheet({
 }: AccountFormBottomSheetProps) {
   const [hasCustomColor, setHasCustomColor] = useState(false);
   const [hasCustomIcon, setHasCustomIcon] = useState(false);
+  const sheetRef = React.useRef<CreateResourceBottomSheetRef>(null);
 
   const form = useAccountForm({
     onCreated: () => {
       form.reset();
       setHasCustomColor(false);
       setHasCustomIcon(false);
+      sheetRef.current?.dismiss();
       onCreated?.();
     },
   });
@@ -70,6 +75,7 @@ export function AccountFormBottomSheet({
           )}
         </form.Subscribe>
       }
+      ref={sheetRef}
       title="Add Account"
     >
       {children}
