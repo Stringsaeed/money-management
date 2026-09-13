@@ -89,30 +89,17 @@ jobs:
       - name: 🧰 Setup project
         uses: ./.github/actions/setup
 
-      # D1 cutover import historically stopped at 0010; WorkOS user projection
-      # needs memberships_reconciled_at from 0013. Idempotent ADD COLUMN.
-      - name: 🛢 Ensure user.memberships_reconciled_at
+      # Schema changes run only through the protected migration workflow. This
+      # deploy gate is deliberately read-only and fails closed when the tip
+      # schema is not present.
+      - name: 🔎 Verify post-cutover schema (read-only)
         working-directory: packages/db
         env:
-          APPROVE_USER_SCHEMA_ENSURE: listmine-500
           PLANETSCALE_HOST: ${{ secrets.PLANETSCALE_HOST }}
           PLANETSCALE_DATABASE: ${{ secrets.PLANETSCALE_DATABASE }}
           PLANETSCALE_USER: ${{ secrets.PLANETSCALE_USER }}
           PLANETSCALE_PASSWORD: ${{ secrets.PLANETSCALE_PASSWORD }}
-        run: node scripts/ensure-user-memberships-reconciled-at.mjs
-
-      # Same cutover gap: tip needs 0011–0015 (ledger_id, create_request_id, …).
-      # Soft-fails Postgres 42501 (not table owner) so Deploy still ships Worker.
-      # Sync/create stay broken until Deploy uses a table-owner role.
-      - name: 🛢 Ensure post-cutover schema (0011–0015)
-        working-directory: packages/db
-        env:
-          APPROVE_USER_SCHEMA_ENSURE: listmine-500
-          PLANETSCALE_HOST: ${{ secrets.PLANETSCALE_HOST }}
-          PLANETSCALE_DATABASE: ${{ secrets.PLANETSCALE_DATABASE }}
-          PLANETSCALE_USER: ${{ secrets.PLANETSCALE_USER }}
-          PLANETSCALE_PASSWORD: ${{ secrets.PLANETSCALE_PASSWORD }}
-        run: node scripts/ensure-post-cutover-schema.mjs
+        run: node scripts/verify-post-cutover-schema.mjs
 
       - name: 🚀 Deploy Worker
         working-directory: packages/infra
