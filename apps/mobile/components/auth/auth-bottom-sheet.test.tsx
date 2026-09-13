@@ -41,4 +41,24 @@ describe("AuthBottomSheet", () => {
 
     expect(screen.queryByText("Sheet body")).toBeNull();
   });
+
+  it("unmounts Expo BottomSheet when closed instead of parking isPresented=false", async () => {
+    await render(
+      <AuthBottomSheet isPresented={false} onDismiss={() => undefined}>
+        <Text>Sheet body</Text>
+      </AuthBottomSheet>,
+    );
+
+    expect(screen.queryByTestId("auth-bottom-sheet")).toBeNull();
+  });
+
+  it("mounts Expo BottomSheet only while presented", async () => {
+    await render(
+      <AuthBottomSheet isPresented onDismiss={() => undefined}>
+        <Text>Sheet body</Text>
+      </AuthBottomSheet>,
+    );
+
+    expect(screen.getByTestId("auth-bottom-sheet")).toBeOnTheScreen();
+  });
 });

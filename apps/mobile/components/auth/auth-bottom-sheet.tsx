@@ -40,15 +40,18 @@ export function AuthBottomSheet({
   return (
     <>
       {renderTrigger()}
-      <BottomSheet
-        snapPoints={["half"]}
-        isPresented={isPresented}
-        onDismiss={handleDismiss}
-        containerColor={bgSurface}
-        contentPadding={{ top: 24, bottom: 24, left: 24, right: 24 }}
-      >
-        <AuthSurfaceProvider surface="sheet">{children}</AuthSurfaceProvider>
-      </BottomSheet>
+      {isPresented ? (
+        <BottomSheet
+          snapPoints={["half"]}
+          isPresented
+          onDismiss={handleDismiss}
+          containerColor={bgSurface}
+          contentPadding={{ top: 24, bottom: 24, left: 24, right: 24 }}
+          testID="auth-bottom-sheet"
+        >
+          <AuthSurfaceProvider surface="sheet">{children}</AuthSurfaceProvider>
+        </BottomSheet>
+      ) : null}
     </>
   );
 }
