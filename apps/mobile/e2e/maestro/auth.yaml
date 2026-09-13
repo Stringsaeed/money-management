@@ -1,0 +1,56 @@
+appId: com.stringsaeed.moneymanagement
+name: Hosted WorkOS AuthKit authentication
+tags:
+  - auth
+  - hosted
+  - smoke
+jsEngine: graaljs
+onFlowComplete:
+  - evalScript: ${output.authMagicAuthCode = ""}
+  - evalScript: ${output.authRunStartedAtMs = 0}
+---
+# Preconditions: run this flow through scripts/maestro-workos-auth.js with a
+# stable reserved example.com address, a WorkOS client ID, and the Staging API
+# key in WORKOS_API_KEY. The runner keeps the key out of Maestro's environment.
+# The first successful run may provision that dedicated WorkOS test user.
+# Leave the app signed out and do not use launchApp.clearState with the Expo
+# development client.
+- launchApp
+- evalScript: ${output.authRunStartedAtMs = new Date().getTime()}
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove://settings/household
+- extendedWaitUntil:
+    timeout: 15000
+    visible:
+      id: profile-sign-in
+- tapOn:
+    id: profile-sign-in
+- extendedWaitUntil:
+    timeout: 15000
+    visible:
+      id: auth-bottom-sheet
+- tapOn: "Continue with email code"
+- extendedWaitUntil:
+    timeout: 30000
+    visible: "Email"
+- tapOn: "Email"
+- eraseText
+- inputText: ${MAESTRO_WORKOS_TEST_EMAIL}
+- tapOn: "Continue"
+- extendedWaitUntil:
+    timeout: 30000
+    visible: "(?i).*code.*"
+- tapOn: "(?i).*code.*"
+- runScript: auth-code.js
+- eraseText
+- inputText: ${output.authMagicAuthCode}
+- evalScript: ${output.authMagicAuthCode = ""}
+- tapOn: "Continue|Verify"
+- extendedWaitUntil:
+    timeout: 30000
+    visible:
+      id: profile-sign-out
+- assertVisible:
+    id: profile-sign-out
