@@ -1,11 +1,11 @@
 /*
- * Usage (export values in the shell, never put the API key in CLI arguments):
- *   export WORKOS_API_KEY=...
- *   export WORKOS_TEST_EMAIL=trove-maestro@example.com
- *   export WORKOS_CLIENT_ID=client_...
- *   export WORKOS_TARGET=staging
- *   export WORKOS_USER_ID_OUTPUT=/tmp/trove-workos-user-id
- *   node scripts/maestro-workos-auth.js --udid <simulator> apps/mobile/e2e/maestro/auth.yaml
+ * Usage: load an operator-held local env file into this Node process only.
+ * The file must define WORKOS_API_KEY, WORKOS_TEST_EMAIL, WORKOS_CLIENT_ID,
+ * and WORKOS_TARGET=staging. Set WORKOS_USER_ID_OUTPUT to a new absolute path
+ * for the optional user-ID handoff.
+ *   node --env-file=<LOCAL_TEST_ENV_FILE> scripts/maestro-workos-auth.js \
+ *     --udid <simulator> apps/mobile/e2e/maestro/auth.yaml
+ * Do not export WORKOS_API_KEY into a shell that runs ordinary Maestro flows.
  *
  * WORKOS_TARGET is intentionally required and must be staging. The runner
  * does not infer an environment from a key prefix or endpoint name.

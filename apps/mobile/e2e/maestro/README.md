@@ -131,5 +131,52 @@ does **not** independently prove PowerSync downloaded the same rows. Do not
 report the full sync path as passing until a hosted run and PowerSync download
 check have both succeeded.
 
+Keep WorkOS and database credentials in separate operator-held local env
+files, outside the repository. Load each file into only the Node process that
+needs it; do not export either secret into the shell that runs plain `maestro`
+commands. The WorkOS file defines `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`,
+`WORKOS_TEST_EMAIL` (a dedicated reserved `example.com` identity), and
+`WORKOS_TARGET=staging`. The database file defines either `DATABASE_URL` or
+the `PLANETSCALE_*` connection values. Neither file is committed.
+
+For one test run, use the same `RUN_ID` and simulator in this order:
+
+1. Run the anonymous resource sweep above with `RUN_LABEL=local`.
+2. Assert the local labels are absent from PlanetScale:
+
+   ```sh
+   RUN_ID="$RUN_ID" RUN_LABEL=local node --env-file="$DB_TEST_ENV_FILE" \
+     scripts/maestro-verify-cloud.mjs --phase pre-auth
+   ```
+
+3. Run the hosted auth flow without a human inbox. The output path must not
+   exist yet; the runner creates it with owner-only permissions:
+
+   ```sh
+   QA_RUN_DIR=$(mktemp -d)
+   RUN_ID="$RUN_ID" WORKOS_USER_ID_OUTPUT="$QA_RUN_DIR/user-id" \
+     node --env-file="$WORKOS_TEST_ENV_FILE" scripts/maestro-workos-auth.js \
+     --udid "$SIMULATOR_UDID" apps/mobile/e2e/maestro/auth.yaml
+   ```
+
+4. Run `personal-sync.yaml` on that simulator with `UPLOAD_CHOICE=confirm`
+   only when this run is authorized to upload its local QA records. Then run
+   the same resource sweep with `RUN_LABEL=personal` and
+   `EXPECTED_PROFILE_ID=profile-sign-out`.
+5. Verify the signed-in resource labels belong to the authenticated personal
+   ledger. The user ID comes from the runner output file, not a manual WorkOS
+   lookup:
+
+   ```sh
+   RUN_ID="$RUN_ID" RUN_LABEL=personal \
+     PERSONAL_USER_ID="$(< "$QA_RUN_DIR/user-id")" \
+     node --env-file="$DB_TEST_ENV_FILE" \
+     scripts/maestro-verify-cloud.mjs --phase post-auth
+   ```
+
+This is a manual local sequence today, not a scheduled production test. The
+first hosted run can create the dedicated WorkOS test user, and personal sync
+can upload the QA ledger data; review the target before running either step.
+
 Maestro 2.10.0 was used for the initial local run. On another Mac, follow the
 [official CLI installation guide](https://docs.maestro.dev/maestro-cli/how-to-install-maestro-cli).
