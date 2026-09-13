@@ -1,0 +1,29 @@
+appId: com.stringsaeed.moneymanagement
+name: Resource creation sweep
+tags:
+  - resource
+  - smoke
+---
+# This is the single resource suite used before auth and again after personal
+# sync. Pass EXPECTED_PROFILE_ID and RUN_LABEL through the Maestro CLI; the
+# nested flows inherit both values and generate unique names independently.
+#
+# The sweep is intentionally sequential and stops at the first red resource.
+# Run account-create.yaml, category-create.yaml, or transaction-create.yaml
+# alone when diagnosing one resource so a sheet-close regression cannot hide
+# the result of a later resource.
+- runFlow:
+    file: account-create.yaml
+    env:
+      EXPECTED_PROFILE_ID: ${EXPECTED_PROFILE_ID}
+      RUN_LABEL: ${RUN_LABEL}
+- runFlow:
+    file: category-create.yaml
+    env:
+      EXPECTED_PROFILE_ID: ${EXPECTED_PROFILE_ID}
+      RUN_LABEL: ${RUN_LABEL}
+- runFlow:
+    file: transaction-create.yaml
+    env:
+      EXPECTED_PROFILE_ID: ${EXPECTED_PROFILE_ID}
+      RUN_LABEL: ${RUN_LABEL}

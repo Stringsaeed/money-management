@@ -1,20 +1,23 @@
 appId: com.stringsaeed.moneymanagement
-name: Anonymous local Category creation
+name: Resource Category creation
 tags:
-  - anonymous
-  - local
+  - resource
+  - category
   - smoke
 ---
-# Precondition: launch the Expo dev client through `stim ios` before this flow.
-# `clearState` would reset the dev-client shell rather than only Trove's ledger.
+# Reusable in either ledger mode. Pass EXPECTED_PROFILE_ID as
+# `profile-sign-in` before auth or `profile-sign-out` after personal sync.
+# Pass RUN_LABEL to keep the generated record easy to identify.
+# Preconditions: launch the Expo dev client through `stim ios`; do not use
+# `clearState`, which resets the dev-client shell rather than Trove's ledger.
 - launchApp
 - openLink: trove:///
-- evalScript: ${output.categoryName = 'Maestro Groceries ' + new Date().getTime()}
+- evalScript: ${output.categoryName = RUN_LABEL + ' Groceries ' + new Date().getTime()}
 - openLink: trove://settings/household
 - extendedWaitUntil:
     timeout: 15000
     visible:
-      id: "profile-sign-in"
+      id: ${EXPECTED_PROFILE_ID}
 - openLink: trove:///
 - extendedWaitUntil:
     timeout: 45000
