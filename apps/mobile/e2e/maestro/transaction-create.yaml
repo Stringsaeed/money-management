@@ -12,7 +12,7 @@ tags:
 # selected ledger. Do not use `clearState`: it opens the Expo dev-client shell.
 - launchApp
 - openLink: trove:///
-- evalScript: ${output.transactionNote = RUN_LABEL + ' MTX ' + new Date().getTime()}
+- evalScript: ${output.transactionNote = RUN_LABEL.slice(0, 1).toUpperCase() + 'TX ' + new Date().getTime()}
 - openLink: trove://settings/household
 - extendedWaitUntil:
     timeout: 15000
