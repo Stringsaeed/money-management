@@ -1,0 +1,52 @@
+name: WorkOS webhook signed probe
+
+concurrency:
+  group: workos-webhook-signed-probe
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    name: Signed membership apply probe
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup project
+        uses: ./.github/actions/setup
+
+      - name: Require WorkOS secrets
+        env:
+          WORKOS_WEBHOOK_SECRET: ${{ secrets.WORKOS_WEBHOOK_SECRET }}
+          WORKOS_API_KEY: ${{ secrets.WORKOS_API_KEY }}
+        run: |
+          if [ -z "${WORKOS_WEBHOOK_SECRET}" ]; then
+            echo "HARD STOP: WORKOS_WEBHOOK_SECRET is empty. Do not invent secrets."
+            exit 2
+          fi
+          if [ -z "${WORKOS_API_KEY}" ]; then
+            echo "HARD STOP: WORKOS_API_KEY is empty. Do not invent secrets."
+            exit 2
+          fi
+          echo "WorkOS secrets are present (values not printed)."
+
+      - name: Run signed webhook probe
+        env:
+          WORKOS_WEBHOOK_SECRET: ${{ secrets.WORKOS_WEBHOOK_SECRET }}
+          WORKOS_API_KEY: ${{ secrets.WORKOS_API_KEY }}
+          WORKOS_WEBHOOK_URL: https://auth.trove.ing/webhooks/workos
+          PROBE_OUT_DIR: artifacts/workos-webhook-signed-probe
+        run: node packages/auth/scripts/workos-webhook-signed-probe.mjs
+
+      - name: Upload probe artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workos-webhook-signed-probe
+          path: artifacts/workos-webhook-signed-probe/
+          if-no-files-found: warn
