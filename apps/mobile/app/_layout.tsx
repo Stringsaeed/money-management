@@ -1,4 +1,5 @@
 import "@azure/core-asynciterator-polyfill";
+import "@/lib/secure-random-polyfill";
 import { useFonts } from "expo-font";
 import {
   Nunito_200ExtraLight,
