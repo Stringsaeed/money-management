@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "check-types": "tsc --noEmit",
-    "check:cutover": "node --test hyperdrive-name.test.mjs no-d1-money.test.mjs && bash scripts/check-production-cutover.test.sh && bash ../../artifacts/powersync-planetscale-spike/teardown-safety.test.sh",
+    "check:cutover": "node --test __tests__/hyperdrive-name.test.mjs __tests__/no-d1-money.test.mjs && bash scripts/__tests__/check-production-cutover.test.sh && bash ../../artifacts/powersync-planetscale-spike/__tests__/teardown-safety.test.sh",
     "dev": "alchemy dev",
     "deploy": "alchemy deploy",
     "deploy:prod": "alchemy deploy --stage prod --yes",

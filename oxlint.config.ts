@@ -36,6 +36,7 @@ export default defineConfig({
     "anti-slop/no-widen-then-assert": "error",
     "anti-slop/require-safety-comment-for-type-assertion": "error",
     "anti-slop-effect/no-service-constructor-imports": "error",
+    "test-location/require-tests-dir": "error",
     complexity: ["error", { max: 10 }],
     "import/namespace": "error",
     "import/export": "error",
@@ -147,6 +148,10 @@ export default defineConfig({
     {
       name: "ledger-boundary",
       specifier: "./tools/oxlint/ledger-boundary/index.ts",
+    },
+    {
+      name: "test-location",
+      specifier: "./tools/oxlint/test-location/index.ts",
     },
   ],
   overrides: [
