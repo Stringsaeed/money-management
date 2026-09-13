@@ -101,7 +101,6 @@ export const powerSyncAccountRowSchema = z.object({
   sort_order: z.number().int(),
   lifecycle: z.enum(["active", "archived"]),
   lifecycle_changed_at: z.string().nullable(),
-  visibility: z.enum(["public", "private"]),
   owner_user_id: z.string().nullable(),
   version: z.number().int().nonnegative(),
   created_by: z.string(),

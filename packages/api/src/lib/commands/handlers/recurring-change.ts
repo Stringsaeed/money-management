@@ -7,7 +7,6 @@ import { category, ledgerAccount } from "@trove/db/schema/ledger";
 import type { CommandPlan, PlanContext, PlanRejection, PlanRequest } from "../pipeline";
 import type { BatchStatement } from "../statements";
 import { issuesFromZod, scopeColumns } from "./shared";
-import { privateAccountAccessRejection } from "./private-account";
 
 const recurringDraftSchema = z
   .object({
@@ -292,8 +291,6 @@ async function validateDependencies(
       .limit(1);
     const account = rows[0];
     if (!account) return { kind: "missing_entity", entityType: "account", entityId: accountId };
-    const privateRejection = privateAccountAccessRejection(ctx, account);
-    if (privateRejection) return privateRejection;
     if (account.lifecycle !== "active" || account.currency !== rule.currency) {
       return {
         kind: "invalid_intent",

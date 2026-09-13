@@ -17,6 +17,14 @@ const BUTTON_LABEL = {
   error: "Try again",
 } as const;
 
+/**
+ * Personal Ledger sync (#226 / #229): empty cloud with local rows needs a
+ * one-time confirm upload; a populated cloud opens without touching device SQLite.
+ *
+ * All buttons use the themed RN Button (not Expo UI Host buttons): separate
+ * NativeHosts used to collapse the primary host so agent-device taps on confirm
+ * hit cancel → idle.
+ */
 const getIsBusy = (status: PersonalSyncStatus) =>
   status === "probing" ||
   status === "backing_up" ||

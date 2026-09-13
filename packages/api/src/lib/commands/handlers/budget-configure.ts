@@ -328,7 +328,6 @@ async function validateFundingAccounts(
     if (!account) return { kind: "missing_entity", entityType: "account", entityId: accountId };
     if (
       account.lifecycle !== "active" ||
-      account.visibility !== "public" ||
       account.currency !== currency ||
       account.type === "card"
     ) {

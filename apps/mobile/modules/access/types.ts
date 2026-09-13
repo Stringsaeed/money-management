@@ -87,21 +87,6 @@ export type AccessState =
       readonly signOut: () => Promise<void>;
     };
 
-export type AuthLinkKind = "magic" | "reset";
-
-export type LinkGrant =
-  | { readonly kind: "sign_in_token"; readonly token: string }
-  | { readonly kind: "reset_token"; readonly token: string };
-
-export type LinkOperation = "sign_in" | "password_reset";
-
-export type LinkOutcome =
-  | { readonly kind: "signed_in"; readonly user: Identity }
-  | { readonly kind: "needs_password"; readonly grant: { readonly token: string } }
-  | { readonly kind: "unusable"; readonly operation: LinkOperation }
-  | { readonly kind: "no_account" }
-  | { readonly kind: "offline" };
-
 export interface ResolveAccessInput {
   readonly claim: IdentityClaim;
   readonly probe: SessionProbe | null;

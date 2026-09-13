@@ -191,7 +191,6 @@ async function getEnvelopeMonthDeltas(
       WHERE t.ledger_id = ${ledgerId}
         AND t.type = 'expense'
         AND t.currency = ${currency}
-        AND ca.visibility = 'public'
         AND t.date >= ${floor}
         AND t.date < ${ceiling}
       GROUP BY cm.envelope_id, substr(t.date, 1, 7), (ca.type = 'card')`,

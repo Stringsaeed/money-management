@@ -89,7 +89,6 @@ streams:
                 SELECT id FROM ledger
                 WHERE personal_user_id = auth.user_id()
               )
-                AND (visibility = 'public' OR owner_user_id = auth.user_id())
             )
           )
           AND (
@@ -99,7 +98,6 @@ streams:
                 SELECT id FROM ledger
                 WHERE personal_user_id = auth.user_id()
               )
-                AND (visibility = 'public' OR owner_user_id = auth.user_id())
             )
           )
       - |
@@ -121,7 +119,6 @@ streams:
                     SELECT id FROM ledger
                     WHERE personal_user_id = auth.user_id()
                   )
-                    AND (visibility = 'public' OR owner_user_id = auth.user_id())
                 )
               )
               AND (
@@ -131,7 +128,6 @@ streams:
                     SELECT id FROM ledger
                     WHERE personal_user_id = auth.user_id()
                   )
-                    AND (visibility = 'public' OR owner_user_id = auth.user_id())
                 )
               )
           )
@@ -148,7 +144,6 @@ streams:
               AND status = 'active'
               AND role IN ('admin', 'member', 'viewer')
           )
-          AND (visibility = 'public' OR owner_user_id = auth.user_id())
       - |
         SELECT * FROM categories
         WHERE household_id = subscription.parameter('household_id')
@@ -170,13 +165,11 @@ streams:
           AND account_id IN (
             SELECT id FROM accounts
             WHERE household_id = subscription.parameter('household_id')
-              AND (visibility = 'public' OR owner_user_id = auth.user_id())
           )
           AND (
             to_account_id IS NULL OR to_account_id IN (
               SELECT id FROM accounts
               WHERE household_id = subscription.parameter('household_id')
-                AND (visibility = 'public' OR owner_user_id = auth.user_id())
             )
           )
 
@@ -263,14 +256,12 @@ streams:
             account_id IS NULL OR account_id IN (
               SELECT id FROM accounts
               WHERE household_id = subscription.parameter('household_id')
-                AND (visibility = 'public' OR owner_user_id = auth.user_id())
             )
           )
           AND (
             to_account_id IS NULL OR to_account_id IN (
               SELECT id FROM accounts
               WHERE household_id = subscription.parameter('household_id')
-                AND (visibility = 'public' OR owner_user_id = auth.user_id())
             )
           )
       - |
@@ -289,14 +280,12 @@ streams:
                 account_id IS NULL OR account_id IN (
                   SELECT id FROM accounts
                   WHERE household_id = subscription.parameter('household_id')
-                    AND (visibility = 'public' OR owner_user_id = auth.user_id())
                 )
               )
               AND (
                 to_account_id IS NULL OR to_account_id IN (
                   SELECT id FROM accounts
                   WHERE household_id = subscription.parameter('household_id')
-                    AND (visibility = 'public' OR owner_user_id = auth.user_id())
                 )
               )
           )

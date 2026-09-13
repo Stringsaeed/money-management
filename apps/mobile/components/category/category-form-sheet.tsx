@@ -3,7 +3,10 @@ import type { PressableProps } from "react-native";
 
 import { CategoryFormContent } from "@/components/category/category-form-content";
 import { CATEGORY_TYPE_META, type CategoryType } from "@/components/category/category-form-options";
-import { CreateResourceBottomSheet } from "@/components/resource/create-resource-bottom-sheet";
+import {
+  CreateResourceBottomSheet,
+  type CreateResourceBottomSheetRef,
+} from "@/components/resource/create-resource-bottom-sheet";
 import { CreateResourceSheetFooter } from "@/components/resource/create-resource-sheet-footer";
 
 import { useCategoryForm } from "./form";
@@ -22,12 +25,14 @@ export function CategoryFormBottomSheet({
   onCreated,
 }: CategoryFormBottomSheetProps) {
   const [hasCustomColor, setHasCustomColor] = useState(false);
+  const sheetRef = React.useRef<CreateResourceBottomSheetRef>(null);
 
   const form = useCategoryForm({
     initialType,
     onCreated: () => {
       form.reset();
       setHasCustomColor(false);
+      sheetRef.current?.dismiss();
       onCreated?.();
     },
   });
@@ -63,6 +68,7 @@ export function CategoryFormBottomSheet({
           )}
         </form.Subscribe>
       }
+      ref={sheetRef}
       title="Add Category"
     >
       {children}

@@ -171,9 +171,12 @@ describe("requestUserDeletion", () => {
     await requestUserDeletion(deps, { userId: ALICE.id });
 
     expect(directory.users.has(ALICE.id)).toBe(false);
-    expect(await db.select().from(ledger).where(eq(ledger.id, personalLedgerId(ALICE.id)))).toEqual(
-      [],
-    );
+    expect(
+      await db
+        .select()
+        .from(ledger)
+        .where(eq(ledger.id, personalLedgerId(ALICE.id))),
+    ).toEqual([]);
     const alice = await db.select().from(user).where(eq(user.id, ALICE.id));
     expect(alice[0]).toMatchObject({
       name: "Deleted User",

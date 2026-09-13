@@ -95,7 +95,7 @@ Phase 0 shipped on the **Better-T Stack**, replacing the original Supabase + sta
 | Supabase Postgres + RLS as durable store            | **PlanetScale Postgres** via drizzle `postgres-js` over cache-disabled Hyperdrive `HYPERDRIVE_FRESH`. Tenancy stays in oRPC middleware; PowerSync publishes every synced domain table |
 | `apps/api` standalone containerized Hono service    | **`apps/server`** — Hono entry on Cloudflare Workers; business logic in oRPC routers in `packages/api`                                                                                |
 | `POST /commands` / `GET /sync` REST routes          | Protected oRPC command/status procedures plus `powersync.token`; PowerSync Sync Streams deliver ledger rows                                                                           |
-| Supabase Auth + JWT verification                    | **better-auth** (`packages/auth`) with the Expo plugin; session-based, household/role resolved from membership tables                                                                 |
+| Supabase Auth + JWT verification                    | **WorkOS AuthKit** (`packages/auth`) with the Expo plugin; session-based, household/role resolved from membership tables                                                              |
 | `pg_advisory_xact_lock` per `(household, currency)` | One `db.transaction` per command with `pg_advisory_xact_lock(hashtext(householdId))`; optimistic version preconditions stay the safety net                                            |
 | Supabase Realtime (logical replication)             | PowerSync Sync Streams over the `powersync` publication, with an SDK-managed local database and upload queue                                                                          |
 | pgTAP RLS negative tests                            | oRPC authorization audit — integration tests over shipped procedures (#97)                                                                                                            |
@@ -108,7 +108,7 @@ The original "don't run business logic in Edge Functions" concern now applies _t
 
 - **PlanetScale Postgres** — the durable store. Workers reach it through cache-disabled Hyperdrive `HYPERDRIVE_FRESH` (`trove-ledger-fresh`). Migrations live in `packages/db` as a Postgres baseline. The `powersync` publication includes membership, ledger, recurring, workspace, envelope, period-effective, assignment, and refund-link facts.
 - **Authorization at the API boundary** — household tenancy and role capability checks live in oRPC middleware plus household-scoped query filters.
-- **Auth** — better-auth on the same Postgres database (`packages/auth`, provider `pg`), with the Expo client plugin. Households/memberships/invite codes already modeled in `packages/db/src/schema/household.ts`.
+- **Auth** — WorkOS AuthKit on the same Postgres database (`packages/auth`, provider `pg`), with the Expo client plugin. Households/memberships/invite codes already modeled in `packages/db/src/schema/household.ts`.
 - **Domain synchronization** — PowerSync Sync Streams publish authorized ledger, recurring, and budget facts into TanStack DB collections backed by op-sqlite. `household_changes` remains the ordered activity log, not a client replication feed.
 
 ### Compute: `apps/server` on Cloudflare Workers
@@ -152,12 +152,12 @@ The repository is a pnpm workspace (`apps/*`, `packages/*`) with `nodeLinker: ho
 ### Target layout
 
 - `apps/mobile` — the existing Expo app, moved as-is (`app/`, `components/`, `hooks/`, `modules/`, `stores/`, `utils/`, `types/`, `db/` [the on-device SQLite layer stays app-local — it's Expo-SQLite-specific], `lib/`, `constants/`, `assets/`, `ios/`, `android/`).
-- `apps/server` — Hono entry on Cloudflare Workers: better-auth handler, oRPC RPC + OpenAPI routes; deployed via `packages/infra` (alchemy).
+- `apps/server` — Hono entry on Cloudflare Workers: WorkOS AuthKit handler, oRPC RPC + OpenAPI routes; deployed via `packages/infra` (alchemy).
 - `packages/domain` — pure business logic (waterfalls, projections, settlement engine, calendar math), no I/O, Hermes- and Node-compatible. Built as a **compiled package**: its own `tsc` build to `dist/`, cacheable by Turborepo, `exports` field with subpath exports rather than one barrel. (Turborepo's own documentation recommends this pattern for anything needing build caching, over "just-in-time" raw-source packages, and explicitly advises against TypeScript project references — "another point of configuration as well as another caching layer" — in favor of per-package `tsconfig.json` extending a shared base.)
 - `packages/protocol` — command/result/effect type contracts shared by `apps/mobile` and the server packages.
 - `packages/db` — Drizzle **Postgres** schema/migrations over Hyperdrive, distinct from `apps/mobile`'s local SQLite `drizzle.config.ts`, which is untouched — two stores, two configs, never merged.
 - `packages/typescript-config` — shared `tsconfig` bases.
-- `packages/auth` — better-auth on Postgres with the Expo client plugin.
+- `packages/auth` — WorkOS AuthKit on Postgres with the Expo client plugin.
 - `packages/infra` — alchemy stack deploying `apps/server` + cache-disabled Hyperdrive.
 
 _(The original layout's `apps/api` and `supabase/` entries are superseded; see [Stack revision](#stack-revision-2026-08-23-post-104).)_
@@ -195,7 +195,7 @@ Moves server-side largely as-is: the settlement engine (`modules/recurring-rules
 
 ## Delivery sequence
 
-1. **Phase 0 — Foundations.** ✅ Shipped (#78–#82, #101–#105): the monorepo migration; `calendar.ts` extracted to `packages/domain` as a no-behavior-change proof; Better-T Stack foundations (D1 + better-auth + oRPC + alchemy); households/members/invites schema and the household/auth server shell with opt-in mobile sign-in. _(The original Supabase/pgTAP/`apps/api` shape of this phase was superseded by #104.)_ Ledger sync now exists for accounts, categories, and transactions.
+1. **Phase 0 — Foundations.** ✅ Shipped (#78–#82, #101–#105): the monorepo migration; `calendar.ts` extracted to `packages/domain` as a no-behavior-change proof; Better-T Stack foundations (D1 + WorkOS AuthKit + oRPC + alchemy); households/members/invites schema and the household/auth server shell with opt-in mobile sign-in. _(The original Supabase/pgTAP/`apps/api` shape of this phase was superseded by #104.)_ Ledger sync now exists for accounts, categories, and transactions.
 2. **Phase 1 — Sync substrate and ledger.** Accounts, categories, and transactions become server-authoritative: `household_changes` + per-household seq, `commands.apply`, PowerSync Sync Streams, SDK upload queue, and typed rejected changes.
 3. **Phase 2 — Recurring Rules server-side.** Port the settlement engine behind the Postgres persistence adapter; a Workers Cron Trigger runs per-rule-timezone settlement.
 4. **Phase 3 — Envelope/budget domain server-side** _(parallelizable with Phase 2)_. The full schema, waterfalls, and projections from this document; commands for mapping changes, funding membership changes, assignments, card payments, refunds, and budget reset.

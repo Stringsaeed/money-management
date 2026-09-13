@@ -80,21 +80,20 @@ export const server = Cloudflare.Worker(
         WORKOS_TOKEN_ISSUER: Config.string("WORKOS_TOKEN_ISSUER").pipe(
           Config.withDefault("https://api.workos.com"),
         ),
+        // Custom AuthKit auth domain hostname → access-token `iss` is https://{host}.
+        // Without this, jose rejects live tokens with claim_iss while defaulting to api.workos.com.
+        WORKOS_AUTH_HOSTNAME: Config.string("WORKOS_AUTH_HOSTNAME").pipe(
+          Config.withDefault(AUTH_HOSTNAME),
+        ),
         // Signing secret of the WorkOS webhook endpoint that feeds the Membership
         // projection. Empty disables the route (503) rather than accepting
         // unsigned events.
         WORKOS_WEBHOOK_SECRET: Config.redacted("WORKOS_WEBHOOK_SECRET").pipe(
           Config.withDefault(Redacted.make("")),
         ),
-        // Retained until #231 removes Better Auth cutover checks; unused on the active auth path.
-        BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
-        BETTER_AUTH_URL: Cloudflare.Worker.URL,
         POWERSYNC_URL: Config.string("POWERSYNC_URL"),
         POWERSYNC_JWT_PRIVATE_KEY: Config.redacted("POWERSYNC_JWT_PRIVATE_KEY"),
         POWERSYNC_JWT_KID: Config.string("POWERSYNC_JWT_KID"),
-        EMAIL: Cloudflare.Email.SendEmail("EMAIL", {
-          allowedSenderAddresses: ["noreply@trove.ing"],
-        }),
         KILL_SWITCH_LOCAL_ONLY: Config.string("KILL_SWITCH_LOCAL_ONLY").pipe(
           Config.withDefault("off"),
         ),

@@ -35,7 +35,11 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          WORKOS_API_KEY: ${{ secrets.WORKOS_API_KEY }}
+          WORKOS_CLIENT_ID: ${{ secrets.WORKOS_CLIENT_ID }}
+          # Signing secret for POST /webhooks/workos (Membership projection).
+          # Empty keeps the route disabled (503); must match WorkOS Dashboard.
+          WORKOS_WEBHOOK_SECRET: ${{ secrets.WORKOS_WEBHOOK_SECRET }}
           PLANETSCALE_HOST: ${{ secrets.PLANETSCALE_HOST }}
           PLANETSCALE_DATABASE: ${{ secrets.PLANETSCALE_DATABASE }}
           PLANETSCALE_USER: ${{ secrets.PLANETSCALE_USER }}
@@ -85,13 +89,35 @@ jobs:
       - name: 🧰 Setup project
         uses: ./.github/actions/setup
 
+      # Schema changes run only through the protected migration workflow. This
+      # deploy gate is deliberately read-only and fails closed when the tip
+      # schema is not present.
+      - name: 🔎 Verify post-cutover schema (read-only)
+        working-directory: packages/db
+        env:
+          PLANETSCALE_HOST: ${{ secrets.PLANETSCALE_HOST }}
+          PLANETSCALE_DATABASE: ${{ secrets.PLANETSCALE_DATABASE }}
+          PLANETSCALE_USER: ${{ secrets.PLANETSCALE_USER }}
+          PLANETSCALE_PASSWORD: ${{ secrets.PLANETSCALE_PASSWORD }}
+        run: node scripts/verify-post-cutover-schema.mjs
+
       - name: 🚀 Deploy Worker
         working-directory: packages/infra
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          WORKOS_API_KEY: ${{ secrets.WORKOS_API_KEY }}
+          WORKOS_CLIENT_ID: ${{ secrets.WORKOS_CLIENT_ID }}
+          # Optional. Empty clears sticky custom audiences from older Alchemy/CF
+          # binds so no-aud AuthKit session tokens are not rejected as claim_aud.
+          # Set the GH secret only when a JWT template requires a custom aud.
+          WORKOS_TOKEN_AUDIENCE: ${{ secrets.WORKOS_TOKEN_AUDIENCE }}
+          WORKOS_TOKEN_ISSUER: ${{ secrets.WORKOS_TOKEN_ISSUER }}
+          # Required for Membership webhook projection. Alchemy defaults to ""
+          # (route returns 503) when unset — export explicitly so a GH secret
+          # actually reaches the Worker binding WORKOS_WEBHOOK_SECRET.
+          WORKOS_WEBHOOK_SECRET: ${{ secrets.WORKOS_WEBHOOK_SECRET }}
           PLANETSCALE_HOST: ${{ secrets.PLANETSCALE_HOST }}
           PLANETSCALE_DATABASE: ${{ secrets.PLANETSCALE_DATABASE }}
           PLANETSCALE_USER: ${{ secrets.PLANETSCALE_USER }}
@@ -113,7 +139,29 @@ jobs:
           if [ -z "$KILL_SWITCH_LOCAL_ONLY" ]; then
             export KILL_SWITCH_LOCAL_ONLY=off
           fi
+          # Always export so Alchemy writes plain_text "" / default issuer and
+          # overwrites sticky custom WORKOS_TOKEN_* from older deploys.
+          export WORKOS_TOKEN_AUDIENCE="${WORKOS_TOKEN_AUDIENCE:-}"
+          export WORKOS_TOKEN_ISSUER="${WORKOS_TOKEN_ISSUER:-https://api.workos.com}"
+          if [ -n "$WORKOS_TOKEN_AUDIENCE" ]; then
+            echo "workos_token_audience_set=yes"
+          else
+            echo "workos_token_audience_set=empty"
+          fi
+          if [ "$WORKOS_TOKEN_ISSUER" = "https://api.workos.com" ]; then
+            echo "workos_token_issuer_custom=default"
+          else
+            echo "workos_token_issuer_custom=yes"
+          fi
+          # Presence only — never echo the secret value.
+          if [ -n "${WORKOS_WEBHOOK_SECRET:-}" ]; then
+            echo "workos_webhook_secret_set=yes"
+          else
+            echo "workos_webhook_secret_set=empty"
+          fi
           # Strip UI paste newlines so Alchemy sees the same bytes as curl.
           export CLOUDFLARE_API_TOKEN=$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '\r\n')
           export CLOUDFLARE_ACCOUNT_ID=$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '\r\n' | tr '[:upper:]' '[:lower:]')
+          # WorkOS Dashboard pastes can include a trailing newline; trim before Alchemy.
+          export WORKOS_WEBHOOK_SECRET=$(printf '%s' "${WORKOS_WEBHOOK_SECRET:-}" | tr -d '\r\n')
           pnpm exec alchemy deploy --stage "$STAGE" --yes

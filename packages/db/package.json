@@ -15,8 +15,14 @@
     "check-types": "tsc --noEmit",
     "cutover:import": "node scripts/import-d1-cutover.mjs",
     "cutover:test": "node --test scripts/d1-cutover-lib.test.mjs",
+    "ensure:user-memberships-reconciled-at:test": "node --test scripts/ensure-user-memberships-reconciled-at.test.mjs",
+    "ensure:post-cutover-schema:test": "node --test scripts/ensure-post-cutover-schema.test.mjs",
+    "verify:post-cutover-schema": "node scripts/verify-post-cutover-schema.mjs",
+    "verify:post-cutover-schema:test": "node --test scripts/verify-post-cutover-schema.test.mjs",
     "db:generate": "drizzle-kit generate",
     "apply:z6-publication": "node scripts/apply-z6-publication.mjs",
+    "ensure:user-memberships-reconciled-at": "node scripts/ensure-user-memberships-reconciled-at.mjs",
+    "ensure:post-cutover-schema": "node scripts/ensure-post-cutover-schema.mjs",
     "inspect:powersync-slots": "node scripts/inspect-powersync-slots.mjs"
   },
   "dependencies": {

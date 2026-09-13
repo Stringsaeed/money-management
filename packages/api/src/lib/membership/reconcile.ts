@@ -6,6 +6,7 @@ import { household } from "@trove/db/schema/household";
 
 import { ensureUserProjection } from "../commands/scope";
 import type { CommandDatabase } from "../commands/types";
+import { hasPgCode } from "../pg-error";
 import {
   type MembershipObservation,
   type ProjectionOutcome,
@@ -102,7 +103,16 @@ export async function reconcileUserMemberships(
     }
   }
   await tombstoneUnlistedUserMemberships(deps.db, userId, organizationIds, listedAt);
-  await deps.db.update(user).set({ membershipsReconciledAt: listedAt }).where(eq(user.id, userId));
+  try {
+    await deps.db
+      .update(user)
+      .set({ membershipsReconciledAt: listedAt })
+      .where(eq(user.id, userId));
+  } catch (error) {
+    // Stamp column from 0013 may be missing on drifted prod; skip rather than 500.
+    if (error instanceof Error && hasPgCode(error, "42703")) return;
+    throw error;
+  }
 }
 
 export async function reconcileUserMembershipsIfStale(
@@ -110,13 +120,19 @@ export async function reconcileUserMembershipsIfStale(
   userId: string,
   maxAgeMs: number,
 ): Promise<void> {
-  const rows = await deps.db
-    .select({ reconciledAt: user.membershipsReconciledAt })
-    .from(user)
-    .where(eq(user.id, userId))
-    .limit(1);
-  const row = rows[0];
-  if (row && !isStale(row.reconciledAt, deps.now(), maxAgeMs)) return;
+  try {
+    const rows = await deps.db
+      .select({ reconciledAt: user.membershipsReconciledAt })
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1);
+    const row = rows[0];
+    if (row && !isStale(row.reconciledAt, deps.now(), maxAgeMs)) return;
+  } catch (error) {
+    // Without the stamp column we cannot gate freshness — skip reconcile for Sync unblock.
+    if (error instanceof Error && hasPgCode(error, "42703")) return;
+    throw error;
+  }
   await reconcileUserMemberships(deps, userId);
 }
 

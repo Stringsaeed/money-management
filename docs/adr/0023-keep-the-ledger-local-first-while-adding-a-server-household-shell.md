@@ -2,7 +2,7 @@
 
 **Status:** Enable Sync and the server-authoritative ledger superseded the local-only claim.
 
-Household and authentication now exist server-side (better-auth on Cloudflare D1, oRPC procedures for households, memberships, and invite codes), while every financial record — Accounts, Categories, Transactions, Recurring Rules, budgets — remains local-only in device SQLite. Local tables gain a nullable `owner_user_id` column as forward-prep, but no data is backfilled or uploaded.
+Household and authentication now exist server-side (WorkOS AuthKit on Cloudflare Workers, oRPC procedures for households, memberships, and WorkOS invitations), while every financial record — Accounts, Categories, Transactions, Recurring Rules, budgets — remains local-only in device SQLite. Local tables gain a nullable `owner_user_id` column as forward-prep, but no data is backfilled or uploaded.
 
 Moving ledger data server-authoritatively now would force an entire sync architecture (outbox, change feed, conflict resolution) before any user value exists, and would break the offline-first guarantee the app is built on. Deferring sharing keeps this milestone small while leaving the path open: `packages/protocol` already defines the command envelope, effect tags, and sync watermark that a future shared-ledger milestone will adopt, and the nullable ownership columns let existing local rows be claimed by their signing-in User without migration.
 

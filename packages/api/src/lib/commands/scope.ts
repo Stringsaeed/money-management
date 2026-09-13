@@ -1,7 +1,7 @@
+import { sql } from "drizzle-orm";
 import type { LedgerScope } from "@trove/protocol";
 import { ledgerIdForScope, personalLedgerId } from "@trove/protocol";
 
-import { user } from "@trove/db/schema/auth";
 import { ledger } from "@trove/db/schema/ledger-scope";
 
 import type { CommandDatabase } from "./types";
@@ -36,23 +36,29 @@ export function bindLedgerScope(scope: LedgerScope): ScopeBinding {
  * `updated_by` to a local user row. Writing the projection here — from
  * verified claims only — keeps a first command from failing on a foreign key
  * the moment a User signs in on a fresh device.
+ *
+ * Inserts id/name/email/email_verified plus created_at/updated_at = now() so
+ * first-login works when prod is missing later columns such as
+ * memberships_reconciled_at (0013) and when created_at/updated_at lack DB
+ * defaults after D1 cutover (NOT NULL 23502). Drizzle's table insert lists
+ * every schema column and throws PG 42703 before ON CONFLICT.
  */
 export async function ensureUserProjection(
   db: CommandDatabase,
   actor: CommandActor,
 ): Promise<void> {
   const email = actor.email?.trim();
-  await db
-    .insert(user)
-    .values({
-      id: actor.id,
-      name: actor.name?.trim() || email || actor.id,
-      // WorkOS verifies the address before it issues a session; the local row
-      // only mirrors that fact for display.
-      email: email || `${actor.id}@users.workos.invalid`,
-      emailVerified: true,
-    })
-    .onConflictDoNothing();
+  // WorkOS verifies the address before it issues a session; the local row
+  // only mirrors that fact for display. AuthKit access tokens often omit
+  // `email`, so fall back to a stable placeholder until a claim or
+  // directory read supplies one.
+  const resolvedEmail = email || `${actor.id}@users.workos.invalid`;
+  const name = actor.name?.trim() || email || actor.id;
+  await db.execute(sql`
+    INSERT INTO "user" ("id", "name", "email", "email_verified", "created_at", "updated_at")
+    VALUES (${actor.id}, ${name}, ${resolvedEmail}, ${true}, now(), now())
+    ON CONFLICT DO NOTHING
+  `);
 }
 
 /**

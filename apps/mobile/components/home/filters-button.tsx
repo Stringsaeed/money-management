@@ -79,84 +79,86 @@ export function FiltersButton() {
         ) : null}
       </Pressable>
 
-      <ModalBottomSheet
-        index={sheetIndex}
-        onIndexChange={setSheetIndex}
-        scrimColor="rgba(0, 0, 0, 0.5)"
-        surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
-      >
-        <View className="p-4.5 pb-safe gap-4">
-          <View className="flex-row items-center justify-between">
-            <Text className="font-heading-normal text-2xl italic text-ink">Filters</Text>
-            {activeFilterCount > 0 ? (
-              <Pressable
-                onPress={resetFilters}
-                className="flex-row items-center gap-1.5 rounded-full bg-surface-container px-3 py-1.5"
-              >
-                <Icon as={ArrowCounterClockwiseIcon} size={14} className="text-ink" />
-                <Text className="font-body-medium text-[13px] text-ink">Reset</Text>
-              </Pressable>
-            ) : null}
-          </View>
+      {sheetIndex > 0 ? (
+        <ModalBottomSheet
+          index={sheetIndex}
+          onIndexChange={setSheetIndex}
+          scrimColor="rgba(0, 0, 0, 0.5)"
+          surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
+        >
+          <View className="p-4.5 pb-safe gap-4">
+            <View className="flex-row items-center justify-between">
+              <Text className="font-heading-normal text-2xl italic text-ink">Filters</Text>
+              {activeFilterCount > 0 ? (
+                <Pressable
+                  onPress={resetFilters}
+                  className="flex-row items-center gap-1.5 rounded-full bg-surface-container px-3 py-1.5"
+                >
+                  <Icon as={ArrowCounterClockwiseIcon} size={14} className="text-ink" />
+                  <Text className="font-body-medium text-[13px] text-ink">Reset</Text>
+                </Pressable>
+              ) : null}
+            </View>
 
-          <FilterSection title="Account">
-            <FilterRow
-              label="All Accounts"
-              selected={activeAccountId === null}
-              onPress={() => setActiveAccountId(null)}
-            />
-            {accounts.map((account) => (
+            <FilterSection title="Account">
               <FilterRow
-                key={account.id}
-                label={account.name}
-                selected={activeAccountId === account.id}
-                onPress={() =>
-                  setActiveAccountId(activeAccountId === account.id ? null : account.id)
-                }
+                label="All Accounts"
+                selected={activeAccountId === null}
+                onPress={() => setActiveAccountId(null)}
               />
-            ))}
-          </FilterSection>
-
-          <FilterSection title="Period">
-            <FilterRow
-              label="All Time"
-              selected={selectedMonth === null}
-              onPress={() => setSelectedMonth(null, null)}
-            />
-            {availableMonths.map(({ year, month }) => {
-              const selected = year === selectedYear && month === selectedMonth;
-              return (
+              {accounts.map((account) => (
                 <FilterRow
-                  key={`${year}-${month}`}
-                  label={formatMonth(year, month)}
-                  selected={selected}
+                  key={account.id}
+                  label={account.name}
+                  selected={activeAccountId === account.id}
                   onPress={() =>
-                    selected ? setSelectedMonth(null, null) : setSelectedMonth(year, month)
+                    setActiveAccountId(activeAccountId === account.id ? null : account.id)
                   }
                 />
-              );
-            })}
-          </FilterSection>
+              ))}
+            </FilterSection>
 
-          <FilterSection title="Category">
-            <FilterRow
-              label="All Categories"
-              selected={selectedCategoryId === null}
-              onPress={() => setSelectedCategoryId(null)}
-            />
-            {allCategories.map((category) => (
+            <FilterSection title="Period">
               <FilterRow
-                key={category.id}
-                label={category.name}
-                selected={selectedCategoryId === category.id}
-                onPress={() =>
-                  setSelectedCategoryId(selectedCategoryId === category.id ? null : category.id)
-                }
+                label="All Time"
+                selected={selectedMonth === null}
+                onPress={() => setSelectedMonth(null, null)}
               />
-            ))}
-          </FilterSection>
-        </View>
-      </ModalBottomSheet>
+              {availableMonths.map(({ year, month }) => {
+                const selected = year === selectedYear && month === selectedMonth;
+                return (
+                  <FilterRow
+                    key={`${year}-${month}`}
+                    label={formatMonth(year, month)}
+                    selected={selected}
+                    onPress={() =>
+                      selected ? setSelectedMonth(null, null) : setSelectedMonth(year, month)
+                    }
+                  />
+                );
+              })}
+            </FilterSection>
+
+            <FilterSection title="Category">
+              <FilterRow
+                label="All Categories"
+                selected={selectedCategoryId === null}
+                onPress={() => setSelectedCategoryId(null)}
+              />
+              {allCategories.map((category) => (
+                <FilterRow
+                  key={category.id}
+                  label={category.name}
+                  selected={selectedCategoryId === category.id}
+                  onPress={() =>
+                    setSelectedCategoryId(selectedCategoryId === category.id ? null : category.id)
+                  }
+                />
+              ))}
+            </FilterSection>
+          </View>
+        </ModalBottomSheet>
+      ) : null}
     </>
   );
 }

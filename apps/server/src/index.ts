@@ -1,6 +1,7 @@
 import { createContext } from "@trove/api/context";
 import { createSettlementIdentity, settleDueRules } from "@trove/api/lib/recurring/scheduler";
 import { createPowerSyncJwksResponse } from "@trove/api/lib/powersync/jwks";
+import { formatOrpcErrorLog } from "@trove/api/orpc-error-log";
 import { createDb, withDbScope } from "@trove/db";
 import { appRouter } from "@trove/api/routers/index";
 import { env, getPowerSyncServerConfig } from "@trove/env/server";
@@ -36,7 +37,9 @@ app.get("/api/powersync/jwks.json", () => createPowerSyncJwksResponse(getPowerSy
 export const rpcHandler = new RPCHandler(appRouter, {
   interceptors: [
     onError((error) => {
-      console.error(error);
+      // Plain string — CF Observability often shows raw Error as stack-only.
+      const logged = error instanceof Error ? error : new Error(String(error));
+      console.error(formatOrpcErrorLog(logged));
     }),
   ],
 });

@@ -191,7 +191,7 @@ export const assertSupportedAccountUpdate = (data: AccountUpdate): void => {
     throw unsupportedSyncedOperation(
       "Account type, currency, or opening balance edit",
       "Those fields remain unchanged.",
-      "Edit only the Account name, color, icon, total visibility, or sort order.",
+      "Edit only the Account name, color, icon, exclude-from-total flag, or sort order.",
     );
   }
 };

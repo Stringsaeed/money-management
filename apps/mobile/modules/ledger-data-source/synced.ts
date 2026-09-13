@@ -141,7 +141,6 @@ export const createSyncedLedgerDataSource = ({
                 sort_order: data.sortOrder,
                 lifecycle: "active",
                 lifecycle_changed_at: null,
-                visibility: "public",
                 owner_user_id: userId,
                 version: 0,
                 created_by: userId,
@@ -171,7 +170,6 @@ export const createSyncedLedgerDataSource = ({
                 excludeFromTotal: data.excludeFromTotal,
               }),
               ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
-              ...(data.visibility !== undefined && { visibility: data.visibility }),
             },
             preconditions: [{ entityId: id, expectedVersion: current.version }],
           });
@@ -184,7 +182,6 @@ export const createSyncedLedgerDataSource = ({
                 draft.exclude_from_total = data.excludeFromTotal ? 1 : 0;
               }
               if (data.sortOrder !== undefined) draft.sort_order = data.sortOrder;
-              if (data.visibility !== undefined) draft.visibility = data.visibility;
               draft.version = current.version + 1;
               draft.updated_by = userId;
               draft.updated_at = command.issuedAt ?? nowIso();

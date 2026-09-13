@@ -8,7 +8,9 @@ common=(
   CLOUDFLARE_API_TOKEN=test
   CLOUDFLARE_ACCOUNT_ID=00000000000000000000000000000000
   CORS_ORIGIN=http://localhost:8081
-  BETTER_AUTH_SECRET=test
+  WORKOS_API_KEY=test
+  WORKOS_CLIENT_ID=client_test
+  WORKOS_WEBHOOK_SECRET=whsec_test
   PLANETSCALE_HOST=postgres.example.test
   PLANETSCALE_DATABASE=postgres
   PLANETSCALE_USER=test
@@ -29,6 +31,11 @@ fi
 
 if env "${common[@]}" PLANETSCALE_PASSWORD= ALCHEMY_STAGE=dev bash "$check" >/dev/null 2>&1; then
   printf 'expected deployment preflight to reject a missing PlanetScale password\n' >&2
+  exit 1
+fi
+
+if env "${common[@]}" WORKOS_WEBHOOK_SECRET= ALCHEMY_STAGE=dev bash "$check" >/dev/null 2>&1; then
+  printf 'expected deployment preflight to reject a missing WorkOS webhook secret\n' >&2
   exit 1
 fi
 
