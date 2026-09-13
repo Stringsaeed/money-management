@@ -6,6 +6,8 @@ import {
   LEDGER_SCOPED_0012_TABLES,
   LEDGER_SCOPED_TABLES,
   MIGRATION_TRACKING_TABLE,
+  POSTGRES_IDENTIFIER_ALIASES,
+  catalogIdentifier,
   POWERSYNC_PUBLICATION_TABLES,
   SCHEMA_CHECKS,
   buildSchemaVerificationResult,
@@ -23,13 +25,13 @@ const SNAPSHOT_BUILDERS = {
   constraint: (snapshot, check) =>
     snapshot.constraints.push({
       table_name: check.table,
-      constraint_name: check.name,
+      constraint_name: catalogIdentifier(check.name),
       definition: check.definitionIncludes?.join(" ") ?? "",
     }),
   index: (snapshot, check) =>
     snapshot.indexes.push({
       tablename: check.table,
-      indexname: check.name,
+      indexname: catalogIdentifier(check.name),
       indexdef: check.definitionIncludes?.join(" ") ?? "CREATE INDEX",
     }),
   "publication-table": (snapshot, check) =>
@@ -73,6 +75,56 @@ test("complete 0011-0015 catalog passes strict verification", () => {
   assert.equal(result.checked, SCHEMA_CHECKS.length);
   assert.equal(result.present["publication:powersync.public.ledger"], true);
   assert.equal(result.present["absent-table:session"], true);
+});
+
+test("long 0012 FK names match the observed PostgreSQL catalog aliases", () => {
+  const longForeignKeys = SCHEMA_CHECKS.filter(
+    (check) => check.type === "constraint" && check.name.length > 63,
+  );
+  const result = buildSchemaVerificationResult(completeSnapshot());
+
+  assert.equal(longForeignKeys.length, 7);
+  assert.deepEqual(Object.values(POSTGRES_IDENTIFIER_ALIASES), [
+    "category_mappings_ledger_id_envelope_id_envelopes_ledger_id_id_",
+    "category_mappings_ledger_id_category_id_categories_ledger_id_id",
+    "funding_memberships_ledger_id_account_id_accounts_ledger_id_id_",
+    "rollover_settings_ledger_id_envelope_id_envelopes_ledger_id_id_",
+    "assignments_ledger_id_source_envelope_id_envelopes_ledger_id_id",
+    "assignments_ledger_id_destination_envelope_id_envelopes_ledger_",
+    "recurring_occurrences_ledger_id_rule_id_recurring_rules_ledger_",
+  ]);
+  assert.equal(
+    new Set(Object.values(POSTGRES_IDENTIFIER_ALIASES)).size,
+    Object.keys(POSTGRES_IDENTIFIER_ALIASES).length,
+  );
+  for (const check of longForeignKeys) {
+    assert.equal(check.name in POSTGRES_IDENTIFIER_ALIASES, true);
+    assert.equal(check.key, `constraint:${check.table}.${catalogIdentifier(check.name)}`);
+    assert.equal(result.present[check.key], true);
+  }
+});
+
+test("long 0012 FK with wrong columns fails closed despite matching truncated name", () => {
+  const snapshot = completeSnapshot();
+  const check = SCHEMA_CHECKS.find(
+    (candidate) =>
+      candidate.type === "constraint" &&
+      candidate.name === "assignments_ledger_id_source_envelope_id_envelopes_ledger_id_id_fk",
+  );
+  assert.ok(check, "expected long assignments FK check");
+  const catalogName = catalogIdentifier(check.name);
+  const row = snapshot.constraints.find((candidate) => candidate.constraint_name === catalogName);
+  assert.ok(row, "expected truncated catalog FK row");
+  row.definition =
+    "FOREIGN KEY (ledger_id, source_envelope_id) REFERENCES public.envelopes(ledger_id, id)";
+  assert.equal(buildSchemaVerificationResult(snapshot).present[check.key], true);
+
+  row.definition = "FOREIGN KEY (ledger_id, destination_envelope_id) REFERENCES envelopes";
+
+  const result = buildSchemaVerificationResult(snapshot);
+
+  assert.equal(result.present[check.key], false);
+  assert.ok(result.missing.includes(check.key));
 });
 
 test("future migration markers must match the checked-in tag and checksum", () => {

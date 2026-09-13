@@ -22,15 +22,15 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: 🏗 Setup repo
+      - name: Setup repo
         uses: actions/checkout@v7
 
-      - name: 🧰 Setup pscale
+      - name: Setup pscale
         uses: planetscale/setup-pscale-action@v1
         with:
           version: v0.327.0
 
-      - name: 🔐 Check migration credentials
+      - name: Check migration credentials
         env:
           PLANETSCALE_SERVICE_TOKEN_ID: ${{ secrets.PLANETSCALE_SERVICE_TOKEN_ID }}
           PLANETSCALE_SERVICE_TOKEN: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
@@ -54,7 +54,22 @@ jobs:
           done
           echo "Migration credentials and target metadata are present."
 
-      - name: 🛢 Apply migration in one transaction
+      - name: Prove scoped admin access (read-only)
+        env:
+          PLANETSCALE_SERVICE_TOKEN_ID: ${{ secrets.PLANETSCALE_SERVICE_TOKEN_ID }}
+          PLANETSCALE_SERVICE_TOKEN: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
+          PLANETSCALE_ORG: ${{ vars.PLANETSCALE_ORG }}
+          PLANETSCALE_DATABASE: ${{ vars.PLANETSCALE_DATABASE }}
+        run: |
+          set -euo pipefail
+          pscale sql "$PLANETSCALE_DATABASE" main \
+            --org "$PLANETSCALE_ORG" \
+            --format json \
+            --role admin \
+            --dbname postgres \
+            --query 'SELECT 1'
+
+      - name: Apply migration in one transaction
         working-directory: packages/db
         env:
           PLANETSCALE_SERVICE_TOKEN_ID: ${{ secrets.PLANETSCALE_SERVICE_TOKEN_ID }}

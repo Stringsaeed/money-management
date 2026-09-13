@@ -50,6 +50,49 @@ export const POWERSYNC_PUBLICATION_TABLES = Object.freeze([
 ]);
 
 export const MIGRATION_TRACKING_TABLE = "trove_schema_migrations";
+export const POSTGRES_IDENTIFIER_MAX_BYTES = 63;
+
+/**
+ * PostgreSQL stores identifiers in NAMEDATALEN - 1 bytes. All checked-in
+ * migration identifiers are ASCII, so a character slice is byte-accurate and
+ * mirrors the catalog names exposed by pg_constraint and pg_indexes.
+ *
+ * @param {string} identifier
+ * @returns {string}
+ */
+export function normalizePostgresIdentifier(identifier) {
+  return String(identifier).slice(0, POSTGRES_IDENTIFIER_MAX_BYTES);
+}
+
+// PostgreSQL catalog names observed on the production branch for the seven
+// overlong 0012 foreign-key declarations. Keep this allowlist explicit so a
+// similarly named but different constraint cannot satisfy a deploy check.
+export const POSTGRES_IDENTIFIER_ALIASES = Object.freeze({
+  category_mappings_ledger_id_envelope_id_envelopes_ledger_id_id_fk:
+    "category_mappings_ledger_id_envelope_id_envelopes_ledger_id_id_",
+  category_mappings_ledger_id_category_id_categories_ledger_id_id_fk:
+    "category_mappings_ledger_id_category_id_categories_ledger_id_id",
+  funding_memberships_ledger_id_account_id_accounts_ledger_id_id_fk:
+    "funding_memberships_ledger_id_account_id_accounts_ledger_id_id_",
+  rollover_settings_ledger_id_envelope_id_envelopes_ledger_id_id_fk:
+    "rollover_settings_ledger_id_envelope_id_envelopes_ledger_id_id_",
+  assignments_ledger_id_source_envelope_id_envelopes_ledger_id_id_fk:
+    "assignments_ledger_id_source_envelope_id_envelopes_ledger_id_id",
+  assignments_ledger_id_destination_envelope_id_envelopes_ledger_id_id_fk:
+    "assignments_ledger_id_destination_envelope_id_envelopes_ledger_",
+  recurring_occurrences_ledger_id_rule_id_recurring_rules_ledger_id_id_fk:
+    "recurring_occurrences_ledger_id_rule_id_recurring_rules_ledger_",
+});
+
+/**
+ * Resolve an expected migration identifier to the exact catalog spelling.
+ *
+ * @param {string} identifier
+ * @returns {string}
+ */
+export function catalogIdentifier(identifier) {
+  return POSTGRES_IDENTIFIER_ALIASES[identifier] ?? normalizePostgresIdentifier(identifier);
+}
 
 const table = (tableName) => ({
   key: `table:${tableName}`,
@@ -66,7 +109,7 @@ const column = (tableName, columnName, isNullable) => ({
 });
 
 const constraint = (tableName, constraintName, definitionIncludes) => ({
-  key: `constraint:${tableName}.${constraintName}`,
+  key: `constraint:${tableName}.${catalogIdentifier(constraintName)}`,
   type: "constraint",
   table: tableName,
   name: constraintName,
@@ -74,7 +117,7 @@ const constraint = (tableName, constraintName, definitionIncludes) => ({
 });
 
 const index = (tableName, indexName, definitionIncludes) => ({
-  key: `index:${tableName}.${indexName}`,
+  key: `index:${tableName}.${catalogIdentifier(indexName)}`,
   type: "index",
   table: tableName,
   name: indexName,
@@ -190,27 +233,36 @@ const ledgerScope0012ConstraintChecks = [
   constraint(
     "category_mappings",
     "category_mappings_ledger_id_envelope_id_envelopes_ledger_id_id_fk",
+    ["foreign key (ledger_id, envelope_id)", "references envelopes(ledger_id, id)"],
   ),
   constraint(
     "category_mappings",
     "category_mappings_ledger_id_category_id_categories_ledger_id_id_fk",
+    ["foreign key (ledger_id, category_id)", "references categories(ledger_id, id)"],
   ),
   constraint(
     "funding_memberships",
     "funding_memberships_ledger_id_account_id_accounts_ledger_id_id_fk",
+    ["foreign key (ledger_id, account_id)", "references accounts(ledger_id, id)"],
   ),
   constraint(
     "rollover_settings",
     "rollover_settings_ledger_id_envelope_id_envelopes_ledger_id_id_fk",
+    ["foreign key (ledger_id, envelope_id)", "references envelopes(ledger_id, id)"],
   ),
-  constraint("assignments", "assignments_ledger_id_source_envelope_id_envelopes_ledger_id_id_fk"),
+  constraint("assignments", "assignments_ledger_id_source_envelope_id_envelopes_ledger_id_id_fk", [
+    "foreign key (ledger_id, source_envelope_id)",
+    "references envelopes(ledger_id, id)",
+  ]),
   constraint(
     "assignments",
     "assignments_ledger_id_destination_envelope_id_envelopes_ledger_id_id_fk",
+    ["foreign key (ledger_id, destination_envelope_id)", "references envelopes(ledger_id, id)"],
   ),
   constraint(
     "recurring_occurrences",
     "recurring_occurrences_ledger_id_rule_id_recurring_rules_ledger_id_id_fk",
+    ["foreign key (ledger_id, rule_id)", "references recurring_rules(ledger_id, id)"],
   ),
   constraint(
     "period_projection_cache",
@@ -456,6 +508,7 @@ function valueOf(row, ...names) {
 function normalized(value) {
   return String(value ?? "")
     .replaceAll('"', "")
+    .replace(/\bpublic\./g, "")
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
@@ -473,7 +526,7 @@ function hasNamedRow(collection, tableName, objectName) {
       "trigger_name",
       "name",
     );
-    return (!tableName || rowTable === tableName) && rowName === objectName;
+    return (!tableName || rowTable === tableName) && rowName === catalogIdentifier(objectName);
   });
 }
 
@@ -481,7 +534,9 @@ function hasIndex(snapshot, check) {
   return rows(snapshot.indexes).some((row) => {
     const rowTable = valueOf(row, "table_name", "table", "tablename");
     const rowName = valueOf(row, "index_name", "indexname", "name");
-    if (rowTable !== check.table || rowName !== check.name) return false;
+    if (rowTable !== check.table || rowName !== catalogIdentifier(check.name)) {
+      return false;
+    }
     return (check.definitionIncludes ?? []).every((part) =>
       normalized(valueOf(row, "indexdef", "definition")).includes(normalized(part)),
     );
@@ -510,7 +565,9 @@ function hasConstraint(snapshot, check) {
   return rows(snapshot.constraints).some((row) => {
     const rowTable = valueOf(row, "table_name", "table");
     const rowName = valueOf(row, "constraint_name", "name");
-    if (rowTable !== check.table || rowName !== check.name) return false;
+    if (rowTable !== check.table || rowName !== catalogIdentifier(check.name)) {
+      return false;
+    }
     return (check.definitionIncludes ?? []).every((part) =>
       normalized(valueOf(row, "definition", "constraint_definition")).includes(normalized(part)),
     );

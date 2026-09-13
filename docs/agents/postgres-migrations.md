@@ -11,11 +11,15 @@ Complete this setup before dispatching the workflow:
 1. In [PlanetScale service tokens](https://planetscale.com/docs/cli/service-tokens),
    create a token from **Settings -> Service tokens**.
    Copy both the token ID and plaintext token when they are shown, and set an
-   expiry/TTL. Grant only database access to the production database with
-   `connect_production_branch`. Do not grant organization-wide database access,
-   role-management access, or access to another database. PlanetScale documents
-   this as a database-scoped permission in its [service-token API
-   reference](https://planetscale.com/docs/api/reference/service-tokens).
+   expiry/TTL. Grant only these permissions on the production database:
+   `connect_production_branch`,
+   `create_production_branch_password` (the ephemeral admin role), and
+   `delete_production_branch_password` (cleanup). PlanetScale documents the
+   latter two on the [create role](https://planetscale.com/docs/api/reference/create_role)
+   and [delete role](https://planetscale.com/docs/api/reference/delete_role)
+   endpoints. Do not grant organization-wide database access, role-management
+   access, or access to another database. The complete permission list is in the
+   [service-token API reference](https://planetscale.com/docs/api/reference/service-tokens).
 2. In GitHub, create the `prod-schema` environment. Add the maintainer as a
    required reviewer and restrict deployments to `main`. Leave GitHub's
    **Prevent self-review** option off for a solo maintainer so the run can be
@@ -49,6 +53,10 @@ After the reviewed change is merged to `main`:
 2. Enter the exact journal tag, such as `0016_add_feature` (without `.sql`).
 3. Review the migration diff and `prod-schema` approval request before
    approving it.
+
+Before applying DDL, the workflow uses the same service token to run a
+read-only `SELECT 1` through `pscale sql --role admin`. If that scope proof
+fails, the workflow stops before the migration transaction.
 
 The action accepts a tag only; it accepts no SQL text or branch input. The
 runner reads the matching journal file, computes its SHA-256, and invokes:
