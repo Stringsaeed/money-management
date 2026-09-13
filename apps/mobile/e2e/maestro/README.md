@@ -114,9 +114,11 @@ and visible; do not make a resource optional merely to turn the suite green.
 
 `auth.yaml` uses the real hosted WorkOS email-code path through the local
 `scripts/maestro-workos-auth.js` runner. The runner keeps the WorkOS API key
-outside Maestro and its debug output. It is not a mock login and it has not
-yet been run against the hosted service, so its selectors remain unverified.
-Use a dedicated test identity, never a person's inbox or a production user.
+outside Maestro and its debug output. An iOS simulator run signed in with the
+approved Gmail plus alias: the runner retrieved the matching WorkOS Staging
+Email Code from the event API and no one opened the inbox. The six AuthKit
+code boxes require separate digit input; a single `inputText` dropped digits
+in the first live run. The base Gmail address remains forbidden by the runner.
 
 After sign-in, `personal-sync.yaml` asserts the app's signed-in personal-sync
 path. A first upload requires `UPLOAD_CHOICE=confirm`; omitting it must not
@@ -127,15 +129,19 @@ the exact run labels before authentication and for the authenticated personal
 ledger afterward. Its post-auth check requires the WorkOS user ID, verifies
 the labels belong to that personal ledger, and rejects duplicate or
 out-of-scope rows. A database hit proves the upload reached PlanetScale; it
-does **not** independently prove PowerSync downloaded the same rows. Do not
-report the full sync path as passing until a hosted run and PowerSync download
-check have both succeeded.
+does **not** independently prove PowerSync downloaded the same rows. A hosted
+run signed in, uploaded the approved QA inventory to PlanetScale, and the
+Production personal stream downloaded two accounts, twelve categories, and
+one transaction into the simulator. The Ledger screen displayed that
+transaction. The Home Recent Journal remained in a loading state even after
+a Metro JavaScript reload, so the full resource-and-sync flow is not yet
+certified.
 
 Keep WorkOS and database credentials in separate operator-held local env
 files, outside the repository. Load each file into only the Node process that
 needs it; do not export either secret into the shell that runs plain `maestro`
 commands. The WorkOS file defines `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`,
-`WORKOS_TEST_EMAIL` (a dedicated reserved `example.com` identity), and
+`WORKOS_TEST_EMAIL` (the approved dedicated plus alias), and
 `WORKOS_TARGET=staging`. The database file defines either `DATABASE_URL` or
 the `PLANETSCALE_*` connection values. Neither file is committed.
 
@@ -175,8 +181,9 @@ For one test run, use the same `RUN_ID` and simulator in this order:
    ```
 
 This is a manual local sequence today, not a scheduled production test. The
-first hosted run can create the dedicated WorkOS test user, and personal sync
-can upload the QA ledger data; review the target before running either step.
+runner does not create a WorkOS User; provision the dedicated Staging User
+once if needed. Personal sync can upload QA ledger data, so review the target
+before confirming it.
 
 Maestro 2.10.0 was used for the initial local run. On another Mac, follow the
 [official CLI installation guide](https://docs.maestro.dev/maestro-cli/how-to-install-maestro-cli).

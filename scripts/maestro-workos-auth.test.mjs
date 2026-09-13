@@ -172,6 +172,52 @@ test("serves one validated code and closes the loopback endpoint", async () => {
   }
 });
 
+test("serves the approved Gmail QA alias but rejects the personal root address", async () => {
+  const email = "stringsaeed+trove_testing@gmail.com";
+  const event = magicAuthEvent({ data: { ...magicAuthEvent().data, email, user_id: "user_qa" } });
+  const details = {
+    id: event.data.id,
+    email,
+    expires_at: event.data.expires_at,
+    code: "123456",
+    user_id: "user_qa",
+  };
+  const responses = [
+    { ok: true, status: 200, json: async () => ({ data: [event] }) },
+    { ok: true, status: 200, json: async () => details },
+  ];
+  const configuration = {
+    apiKey: "synthetic-api-key",
+    expectedClientId: criteria.clientId,
+    nonce: "n".repeat(32),
+    now: () => Date.parse("2026-09-13T08:01:00.000Z"),
+    fetchImpl: async () => responses.shift(),
+  };
+  assert.throws(
+    () => createMagicAuthHelper({ ...configuration, expectedEmail: "stringsaeed@gmail.com" }),
+    { code: "INVALID_HELPER_CONFIGURATION" },
+  );
+
+  const helper = createMagicAuthHelper({ ...configuration, expectedEmail: email });
+  try {
+    const url = await helper.listen();
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_id: criteria.clientId,
+        email,
+        nonce: configuration.nonce,
+        run_started_at_ms: criteria.runStartedAtMs,
+      }),
+    });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { code: "123456" });
+  } finally {
+    await helper.close();
+  }
+});
+
 test("keeps the child environment narrow and owns debug output cleanup", () => {
   const environment = buildMaestroEnvironment({
     expectedClientId: criteria.clientId,

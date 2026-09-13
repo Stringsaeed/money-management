@@ -7,12 +7,14 @@ tags:
 jsEngine: graaljs
 onFlowComplete:
   - evalScript: ${output.authMagicAuthCode = ""}
+  - evalScript: ${output.authMagicAuthDigits = []}
   - evalScript: ${output.authRunStartedAtMs = 0}
 ---
 # Preconditions: run this flow through scripts/maestro-workos-auth.js with a
-# stable reserved example.com address, a WorkOS client ID, and the Staging API
+# approved dedicated QA address, a WorkOS client ID, and the Staging API
 # key in WORKOS_API_KEY. The runner keeps the key out of Maestro's environment.
-# The first successful run may provision that dedicated WorkOS test user.
+# Provision the dedicated WorkOS Staging User before this flow; the runner
+# retrieves a hosted code but does not create a User.
 # Leave the app signed out and do not use launchApp.clearState with the Expo
 # development client.
 - launchApp
@@ -46,15 +48,22 @@ onFlowComplete:
 - tapOn: "Continue with email"
 - extendedWaitUntil:
     timeout: 30000
-    visible: "(?i).*code.*"
-- tapOn: "(?i).*code.*"
+    visible: "Enter the code sent to"
 - runScript: auth-code.js
+- evalScript: ${output.authMagicAuthDigits = output.authMagicAuthCode.split("")}
+- tapOn:
+    point: "50%, 50%"
 - eraseText
-- inputText: ${output.authMagicAuthCode}
+- inputText: ${output.authMagicAuthDigits[0]}
+- inputText: ${output.authMagicAuthDigits[1]}
+- inputText: ${output.authMagicAuthDigits[2]}
+- inputText: ${output.authMagicAuthDigits[3]}
+- inputText: ${output.authMagicAuthDigits[4]}
+- inputText: ${output.authMagicAuthDigits[5]}
 - evalScript: ${output.authMagicAuthCode = ""}
-- tapOn: "Continue|Verify"
+- evalScript: ${output.authMagicAuthDigits = []}
 - extendedWaitUntil:
-    timeout: 30000
+    timeout: 60000
     visible:
       id: profile-sign-out
 - assertVisible:

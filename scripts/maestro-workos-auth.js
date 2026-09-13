@@ -27,6 +27,7 @@ const EVENT_POLL_INTERVAL_MS = 500;
 const EVENT_POLL_TIMEOUT_MS = 30_000;
 const REQUEST_TIMEOUT_MS = 10_000;
 const MAX_REQUEST_BYTES = 16 * 1024;
+const APPROVED_GMAIL_QA_ALIAS = "stringsaeed+trove_testing@gmail.com";
 const AUTH_FLOW_PATH = resolve(
   dirname(require.resolve("./maestro-workos-auth.js")),
   "../apps/mobile/e2e/maestro/auth.yaml",
@@ -55,6 +56,10 @@ function isExampleEmail(value) {
   return isText(value) && /^\S+@example\.com$/.test(value);
 }
 
+function isApprovedAutomationEmail(value) {
+  return isExampleEmail(value) || value === APPROVED_GMAIL_QA_ALIAS;
+}
+
 function parseTimestamp(value) {
   if (!isText(value)) return null;
   const milliseconds = Date.parse(value);
@@ -69,7 +74,7 @@ function normalizeRequest(value) {
   const nonce = value.nonce;
   const runStartedAtMs = value.run_started_at_ms;
   if (
-    !isExampleEmail(email) ||
+    !isApprovedAutomationEmail(email) ||
     !isText(clientId) ||
     !isText(nonce) ||
     nonce.length < 32 ||
@@ -285,7 +290,7 @@ function createMagicAuthHelper({
 }) {
   if (
     !isText(apiKey) ||
-    !isExampleEmail(expectedEmail) ||
+    !isApprovedAutomationEmail(expectedEmail) ||
     !isText(expectedClientId) ||
     !isText(nonce) ||
     nonce.length < 32
