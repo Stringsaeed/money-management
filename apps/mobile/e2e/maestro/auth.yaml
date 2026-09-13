@@ -29,16 +29,21 @@ onFlowComplete:
     id: profile-sign-in
 - extendedWaitUntil:
     timeout: 15000
-    visible:
-      id: auth-bottom-sheet
+    visible: "Sign in with email code"
 - tapOn: "Continue with email code"
+- runFlow:
+    when:
+      visible: ".*Wants to Use.*to Sign In"
+    commands:
+      - tapOn: "Continue"
 - extendedWaitUntil:
     timeout: 30000
     visible: "Email"
 - tapOn: "Email"
 - eraseText
 - inputText: ${MAESTRO_WORKOS_TEST_EMAIL}
-- tapOn: "Continue"
+- hideKeyboard
+- tapOn: "Continue with email"
 - extendedWaitUntil:
     timeout: 30000
     visible: "(?i).*code.*"
