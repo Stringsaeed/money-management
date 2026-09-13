@@ -1,5 +1,11 @@
 import assert from "node:assert/strict";
+import { Buffer } from "node:buffer";
+import { chmod, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
@@ -9,9 +15,14 @@ const {
   eventMatches,
   maestroArgs,
   normalizeRunId,
+  requireStagingTarget,
   selectMagicAuthEvent,
   validateMagicAuthDetails,
+  writeUserIdOutput,
 } = require("./maestro-workos-auth.js");
+
+const RUNNER_PATH = fileURLToPath(new URL("./maestro-workos-auth.js", import.meta.url));
+const AUTH_FLOW_PATH = "apps/mobile/e2e/maestro/auth.yaml";
 
 const criteria = {
   email: "trove-maestro@example.com",
@@ -175,17 +186,25 @@ test("keeps the child environment narrow and owns debug output cleanup", () => {
   assert.equal(environment.MAESTRO_WORKOS_TEST_EMAIL, criteria.email);
   assert.equal(environment.RUN_ID, "123");
   assert.equal(environment.MAESTRO_RUN_ID, "123");
-  assert.deepEqual(maestroArgs(["--udid", "simulator", "flow.yaml"], "/tmp/auth-debug"), [
+  assert.deepEqual(maestroArgs(["--udid", "simulator", AUTH_FLOW_PATH], "/tmp/auth-debug"), [
     "test",
     "--debug-output",
     "/tmp/auth-debug",
     "--udid",
     "simulator",
-    "flow.yaml",
+    AUTH_FLOW_PATH,
   ]);
   assert.throws(() => maestroArgs(["test", "--debug-output", "/persisted"], "/tmp/auth-debug"), {
     code: "DEBUG_OUTPUT_OVERRIDE_FORBIDDEN",
   });
+  assert.throws(
+    () =>
+      maestroArgs(
+        ["--udid", "simulator", "-e", "WORKOS_API_KEY=secret", AUTH_FLOW_PATH],
+        "/tmp/auth-debug",
+      ),
+    { code: "INVALID_MAESTRO_ARGUMENTS" },
+  );
 });
 
 test("accepts only positive safe integer run IDs", () => {
@@ -193,4 +212,110 @@ test("accepts only positive safe integer run IDs", () => {
   assert.equal(normalizeRunId(undefined), null);
   assert.throws(() => normalizeRunId("0"), { code: "INVALID_RUN_ID" });
   assert.throws(() => normalizeRunId("not-a-number"), { code: "INVALID_RUN_ID" });
+});
+
+test("requires an explicit staging target", () => {
+  assert.equal(requireStagingTarget("staging"), "staging");
+  assert.throws(() => requireStagingTarget(undefined), { code: "MISSING_WORKOS_TARGET" });
+  assert.throws(() => requireStagingTarget("production"), {
+    code: "WORKOS_TARGET_MUST_BE_STAGING",
+  });
+});
+
+test("writes only the authenticated WorkOS user id with owner-only permissions", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "maestro-auth-user-id-test-"));
+  const outputPath = join(directory, "user-id");
+
+  try {
+    await writeUserIdOutput(outputPath, "user_1");
+    assert.equal(await readFile(outputPath, "utf8"), "user_1\n");
+    assert.equal((await stat(outputPath)).mode & 0o777, 0o600);
+    await assert.rejects(() => writeUserIdOutput(outputPath, "user_2"), {
+      code: "USER_ID_OUTPUT_FAILED",
+    });
+  } finally {
+    await rm(directory, { force: true, recursive: true });
+  }
+});
+
+test("main runner gives Maestro only an allowlisted environment and redacted logs", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "maestro-auth-runner-test-"));
+  const probePath = join(directory, "probe.json");
+  const fakeMaestroPath = join(directory, "fake-maestro");
+  const fakeMaestroSource = `#!/usr/bin/env node
+const fs = require("node:fs");
+fs.writeFileSync(${JSON.stringify(probePath)}, JSON.stringify({
+  args: process.argv.slice(2),
+  env: {
+    apiKey: process.env.WORKOS_API_KEY ?? null,
+    cloudflareToken: process.env.CLOUDFLARE_API_TOKEN ?? null,
+    databaseUrl: process.env.DATABASE_URL ?? null,
+    helperNonce: process.env.MAESTRO_WORKOS_HELPER_NONCE ?? null,
+    helperUrl: process.env.MAESTRO_WORKOS_HELPER_URL ?? null,
+    prefixedApiKey: process.env.MAESTRO_WORKOS_STAGING_API_KEY ?? null,
+    planetscalePassword: process.env.PLANETSCALE_PASSWORD ?? null,
+  }
+}));
+console.log("fake-maestro-ok");
+`;
+
+  try {
+    await writeFile(fakeMaestroPath, fakeMaestroSource, "utf8");
+    await chmod(fakeMaestroPath, 0o755);
+
+    const childEnvironment = {
+      ...process.env,
+      CLOUDFLARE_API_TOKEN: "cloud-secret",
+      DATABASE_URL: "postgresql://user:database-secret@example.test/trove",
+      MAESTRO_BIN: fakeMaestroPath,
+      MAESTRO_WORKOS_STAGING_API_KEY: "prefixed-secret",
+      PLANETSCALE_PASSWORD: "planet-secret",
+      WORKOS_API_KEY: "workos-secret",
+      WORKOS_CLIENT_ID: "client_staging",
+      WORKOS_TARGET: "staging",
+      WORKOS_TEST_EMAIL: "trove-maestro@example.com",
+    };
+    delete childEnvironment.WORKOS_USER_ID_OUTPUT;
+
+    const child = spawn(process.execPath, [RUNNER_PATH, "--udid", "simulator", AUTH_FLOW_PATH], {
+      cwd: process.cwd(),
+      env: childEnvironment,
+    });
+    const stdout = [];
+    const stderr = [];
+    child.stdout.on("data", (chunk) => stdout.push(chunk));
+    child.stderr.on("data", (chunk) => stderr.push(chunk));
+    const result = await new Promise((resolve, reject) => {
+      child.once("error", reject);
+      child.once("close", (code, signal) => resolve({ code, signal }));
+    });
+
+    assert.deepEqual(result, { code: 0, signal: null });
+    const logs = Buffer.concat([...stdout, ...stderr]).toString("utf8");
+    for (const secret of [
+      "workos-secret",
+      "cloud-secret",
+      "database-secret",
+      "planet-secret",
+      "prefixed-secret",
+    ]) {
+      assert.doesNotMatch(logs, new RegExp(secret));
+    }
+    const probe = JSON.parse(await readFile(probePath, "utf8"));
+    assert.equal(probe.env.apiKey, null);
+    assert.equal(probe.env.cloudflareToken, null);
+    assert.equal(probe.env.databaseUrl, null);
+    assert.equal(probe.env.prefixedApiKey, null);
+    assert.equal(probe.env.planetscalePassword, null);
+    assert.match(probe.env.helperUrl, /^http:\/\/127\.0\.0\.1:\d+\/magic-auth-code$/);
+    assert.match(probe.env.helperNonce, /^[a-f0-9]{64}$/);
+    assert.equal(probe.args[0], "test");
+    assert.equal(probe.args[1], "--debug-output");
+    assert.equal(probe.args[3], "--udid");
+    assert.equal(probe.args[4], "simulator");
+    assert.equal(probe.args[5], AUTH_FLOW_PATH);
+    assert.equal(await stat(probe.args[2]).catch(() => null), null);
+  } finally {
+    await rm(directory, { force: true, recursive: true });
+  }
 });

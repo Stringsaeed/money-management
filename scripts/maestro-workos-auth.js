@@ -3,16 +3,21 @@
  *   export WORKOS_API_KEY=...
  *   export WORKOS_TEST_EMAIL=trove-maestro@example.com
  *   export WORKOS_CLIENT_ID=client_...
+ *   export WORKOS_TARGET=staging
+ *   export WORKOS_USER_ID_OUTPUT=/tmp/trove-workos-user-id
  *   node scripts/maestro-workos-auth.js --udid <simulator> apps/mobile/e2e/maestro/auth.yaml
+ *
+ * WORKOS_TARGET is intentionally required and must be staging. The runner
+ * does not infer an environment from a key prefix or endpoint name.
  */
 
 const { Buffer } = require("node:buffer");
 const { randomBytes, timingSafeEqual } = require("node:crypto");
 const { spawn } = require("node:child_process");
-const { mkdtemp, rm } = require("node:fs/promises");
+const { mkdtemp, open, rm } = require("node:fs/promises");
 const { createServer } = require("node:http");
 const { tmpdir } = require("node:os");
-const { join } = require("node:path");
+const { dirname, isAbsolute, join, resolve } = require("node:path");
 
 const WORKOS_API_ORIGIN = "https://api.workos.com";
 const MAGIC_AUTH_EVENT = "magic_auth.created";
@@ -22,6 +27,10 @@ const EVENT_POLL_INTERVAL_MS = 500;
 const EVENT_POLL_TIMEOUT_MS = 30_000;
 const REQUEST_TIMEOUT_MS = 10_000;
 const MAX_REQUEST_BYTES = 16 * 1024;
+const AUTH_FLOW_PATH = resolve(
+  dirname(require.resolve("./maestro-workos-auth.js")),
+  "../apps/mobile/e2e/maestro/auth.yaml",
+);
 
 class AuthHelperError extends Error {
   constructor(code) {
@@ -243,6 +252,28 @@ function nonceMatches(received, expected) {
   return timingSafeEqual(Buffer.from(received), Buffer.from(expected));
 }
 
+async function writeUserIdOutput(filePath, userId) {
+  if (
+    !isText(filePath) ||
+    !isAbsolute(filePath) ||
+    !isText(userId) ||
+    !/^user_[A-Za-z0-9]+$/.test(userId)
+  ) {
+    throw fail("INVALID_USER_ID_OUTPUT");
+  }
+
+  let handle;
+  try {
+    handle = await open(filePath, "wx", 0o600);
+    await handle.writeFile(`${userId}\n`, "utf8");
+    await handle.chmod(0o600);
+  } catch {
+    throw fail("USER_ID_OUTPUT_FAILED");
+  } finally {
+    if (handle) await handle.close().catch(() => undefined);
+  }
+}
+
 function createMagicAuthHelper({
   apiKey,
   expectedEmail,
@@ -360,6 +391,18 @@ function requiredEnvironment(name, value) {
   return value.trim();
 }
 
+function requireStagingTarget(value) {
+  const target = requiredEnvironment("WORKOS_TARGET", value);
+  if (target !== "staging") throw fail("WORKOS_TARGET_MUST_BE_STAGING");
+  return target;
+}
+
+function optionalUserIdOutput(value) {
+  if (!isText(value)) return null;
+  if (!isAbsolute(value)) throw fail("USER_ID_OUTPUT_MUST_BE_ABSOLUTE");
+  return value.trim();
+}
+
 function copyEnvironmentValue(target, name, value) {
   if (isText(value)) target[name] = value;
 }
@@ -424,14 +467,55 @@ function normalizeRunId(value) {
   return String(runId);
 }
 
+function parseMaestroArgs(args) {
+  const input = args[0] === "test" ? args.slice(1) : args;
+  let flow;
+  let udid;
+  for (let index = 0; index < input.length; index += 1) {
+    const argument = input[index];
+    const device = parseDeviceArgument(input, index);
+    if (device) {
+      if (udid) throw fail("INVALID_MAESTRO_ARGUMENTS");
+      udid = device.udid;
+      index = device.nextIndex;
+      continue;
+    }
+    if (resolve(argument) === AUTH_FLOW_PATH) {
+      if (flow) throw fail("INVALID_MAESTRO_ARGUMENTS");
+      flow = argument;
+      continue;
+    }
+    throw fail("INVALID_MAESTRO_ARGUMENTS");
+  }
+  if (!udid || !flow) throw fail("AUTH_FLOW_AND_UDID_REQUIRED");
+  return { flow, udid };
+}
+
+function parseDeviceArgument(input, index) {
+  const argument = input[index];
+  if (argument === "--udid" || argument === "--device") {
+    const udid = input[index + 1];
+    if (!isText(udid) || udid.startsWith("-") || udid.includes(",")) {
+      throw fail("INVALID_MAESTRO_ARGUMENTS");
+    }
+    return { nextIndex: index + 1, udid };
+  }
+  if (argument.startsWith("--udid=") || argument.startsWith("--device=")) {
+    const udid = argument.slice(argument.indexOf("=") + 1);
+    if (!isText(udid) || udid.includes(",")) throw fail("INVALID_MAESTRO_ARGUMENTS");
+    return { nextIndex: index, udid };
+  }
+  return null;
+}
+
 function maestroArgs(args, debugOutput) {
   if (
     args.some((argument) => argument === "--debug-output" || argument.startsWith("--debug-output="))
   ) {
     throw fail("DEBUG_OUTPUT_OVERRIDE_FORBIDDEN");
   }
-  const testArgs = args[0] === "test" ? args : ["test", ...args];
-  return [testArgs[0], "--debug-output", debugOutput, ...testArgs.slice(1)];
+  const { flow, udid } = parseMaestroArgs(args);
+  return ["test", "--debug-output", debugOutput, "--udid", udid, flow];
 }
 
 function spawnMaestro(args, environment, debugOutput) {
@@ -450,7 +534,9 @@ async function run() {
   const apiKey = requiredEnvironment("WORKOS_API_KEY", process.env.WORKOS_API_KEY);
   const expectedEmail = requiredEnvironment("WORKOS_TEST_EMAIL", process.env.WORKOS_TEST_EMAIL);
   const expectedClientId = requiredEnvironment("WORKOS_CLIENT_ID", process.env.WORKOS_CLIENT_ID);
+  requireStagingTarget(process.env.WORKOS_TARGET);
   const runId = normalizeRunId(process.env.RUN_ID);
+  const userIdOutput = optionalUserIdOutput(process.env.WORKOS_USER_ID_OUTPUT);
   const nonce = randomBytes(32).toString("hex");
   const helper = createMagicAuthHelper({ apiKey, expectedClientId, expectedEmail, nonce });
 
@@ -475,6 +561,11 @@ async function run() {
       runId,
     });
     const result = await spawnMaestro(process.argv.slice(2), environment, debugOutput);
+    if (!result.signal && result.code === 0 && userIdOutput) {
+      const identity = helper.getAuthenticatedUser();
+      if (!identity?.userId) throw fail("AUTHENTICATED_USER_ID_MISSING");
+      await writeUserIdOutput(userIdOutput, identity.userId);
+    }
     if (result.signal) process.exitCode = 1;
     else if (result.code !== 0) process.exitCode = result.code ?? 1;
   } finally {
@@ -490,8 +581,10 @@ module.exports = {
   eventMatches,
   maestroArgs,
   normalizeRunId,
+  requireStagingTarget,
   selectMagicAuthEvent,
   validateMagicAuthDetails,
+  writeUserIdOutput,
 };
 
 if (require.main === module) {
