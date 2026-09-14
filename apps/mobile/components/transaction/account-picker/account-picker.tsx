@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import type { PressableProps } from "react-native";
 import { Pressable, View } from "react-native";
 import { CheckIcon } from "phosphor-react-native";
-import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
+import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
@@ -16,11 +16,11 @@ export default function AccountPicker({
   onChange,
   children,
 }: AccountPickerProps) {
-  const [sheetIndex, setSheetIndex] = useState(0);
+  const [open, setOpen] = useState(false);
   const selectableAccounts = accounts.filter((account) => account.lifecycle !== "archived");
 
   const onOpen = () => {
-    setSheetIndex(1);
+    setOpen(true);
   };
 
   const renderTrigger = () => {
@@ -36,12 +36,7 @@ export default function AccountPicker({
   return (
     <>
       {renderTrigger()}
-      <ModalBottomSheet
-        index={sheetIndex}
-        onIndexChange={setSheetIndex}
-        scrimColor="rgba(0, 0, 0, 0.5)"
-        surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
-      >
+      <ModalBottomSheet open={open} onDismiss={() => setOpen(false)}>
         <View className="pb-safe px-5 pt-5 gap-4">
           <Text className="font-heading-normal text-xl italic text-ink">Account</Text>
 
@@ -53,7 +48,7 @@ export default function AccountPicker({
                   key={acc.id}
                   onPress={() => {
                     onChange(acc.id);
-                    setSheetIndex(0);
+                    setOpen(false);
                   }}
                   className={cn(
                     "flex-row items-center gap-3 px-4 py-3.5 rounded-xl",

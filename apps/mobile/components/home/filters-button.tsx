@@ -1,9 +1,9 @@
 import { ArrowCounterClockwiseIcon, FunnelSimpleIcon } from "phosphor-react-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
-import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 
 import { Icon } from "@/components/ui/icon";
+import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
 import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useAllCategories } from "@/hooks/use-categories";
@@ -42,7 +42,7 @@ function FilterSection({ title, children }: { title: string; children: React.Rea
 }
 
 export function FiltersButton() {
-  const [sheetIndex, setSheetIndex] = useState(0);
+  const [open, setOpen] = useState(false);
 
   const {
     activeAccountId,
@@ -68,7 +68,7 @@ export function FiltersButton() {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Filters"
-        onPress={() => setSheetIndex(1)}
+        onPress={() => setOpen(true)}
         className="mr-1 h-9 w-9 items-center justify-center"
       >
         <Icon as={FunnelSimpleIcon} size={22} className="text-foreground" />
@@ -79,86 +79,79 @@ export function FiltersButton() {
         ) : null}
       </Pressable>
 
-      {sheetIndex > 0 ? (
-        <ModalBottomSheet
-          index={sheetIndex}
-          onIndexChange={setSheetIndex}
-          scrimColor="rgba(0, 0, 0, 0.5)"
-          surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
-        >
-          <View className="p-4.5 pb-safe gap-4">
-            <View className="flex-row items-center justify-between">
-              <Text className="font-heading-normal text-2xl italic text-ink">Filters</Text>
-              {activeFilterCount > 0 ? (
-                <Pressable
-                  onPress={resetFilters}
-                  className="flex-row items-center gap-1.5 rounded-full bg-surface-container px-3 py-1.5"
-                >
-                  <Icon as={ArrowCounterClockwiseIcon} size={14} className="text-ink" />
-                  <Text className="font-body-medium text-[13px] text-ink">Reset</Text>
-                </Pressable>
-              ) : null}
-            </View>
-
-            <FilterSection title="Account">
-              <FilterRow
-                label="All Accounts"
-                selected={activeAccountId === null}
-                onPress={() => setActiveAccountId(null)}
-              />
-              {accounts.map((account) => (
-                <FilterRow
-                  key={account.id}
-                  label={account.name}
-                  selected={activeAccountId === account.id}
-                  onPress={() =>
-                    setActiveAccountId(activeAccountId === account.id ? null : account.id)
-                  }
-                />
-              ))}
-            </FilterSection>
-
-            <FilterSection title="Period">
-              <FilterRow
-                label="All Time"
-                selected={selectedMonth === null}
-                onPress={() => setSelectedMonth(null, null)}
-              />
-              {availableMonths.map(({ year, month }) => {
-                const selected = year === selectedYear && month === selectedMonth;
-                return (
-                  <FilterRow
-                    key={`${year}-${month}`}
-                    label={formatMonth(year, month)}
-                    selected={selected}
-                    onPress={() =>
-                      selected ? setSelectedMonth(null, null) : setSelectedMonth(year, month)
-                    }
-                  />
-                );
-              })}
-            </FilterSection>
-
-            <FilterSection title="Category">
-              <FilterRow
-                label="All Categories"
-                selected={selectedCategoryId === null}
-                onPress={() => setSelectedCategoryId(null)}
-              />
-              {allCategories.map((category) => (
-                <FilterRow
-                  key={category.id}
-                  label={category.name}
-                  selected={selectedCategoryId === category.id}
-                  onPress={() =>
-                    setSelectedCategoryId(selectedCategoryId === category.id ? null : category.id)
-                  }
-                />
-              ))}
-            </FilterSection>
+      <ModalBottomSheet open={open} onDismiss={() => setOpen(false)}>
+        <View className="p-4.5 pb-safe gap-4">
+          <View className="flex-row items-center justify-between">
+            <Text className="font-heading-normal text-2xl italic text-ink">Filters</Text>
+            {activeFilterCount > 0 ? (
+              <Pressable
+                onPress={resetFilters}
+                className="flex-row items-center gap-1.5 rounded-full bg-surface-container px-3 py-1.5"
+              >
+                <Icon as={ArrowCounterClockwiseIcon} size={14} className="text-ink" />
+                <Text className="font-body-medium text-[13px] text-ink">Reset</Text>
+              </Pressable>
+            ) : null}
           </View>
-        </ModalBottomSheet>
-      ) : null}
+
+          <FilterSection title="Account">
+            <FilterRow
+              label="All Accounts"
+              selected={activeAccountId === null}
+              onPress={() => setActiveAccountId(null)}
+            />
+            {accounts.map((account) => (
+              <FilterRow
+                key={account.id}
+                label={account.name}
+                selected={activeAccountId === account.id}
+                onPress={() =>
+                  setActiveAccountId(activeAccountId === account.id ? null : account.id)
+                }
+              />
+            ))}
+          </FilterSection>
+
+          <FilterSection title="Period">
+            <FilterRow
+              label="All Time"
+              selected={selectedMonth === null}
+              onPress={() => setSelectedMonth(null, null)}
+            />
+            {availableMonths.map(({ year, month }) => {
+              const selected = year === selectedYear && month === selectedMonth;
+              return (
+                <FilterRow
+                  key={`${year}-${month}`}
+                  label={formatMonth(year, month)}
+                  selected={selected}
+                  onPress={() =>
+                    selected ? setSelectedMonth(null, null) : setSelectedMonth(year, month)
+                  }
+                />
+              );
+            })}
+          </FilterSection>
+
+          <FilterSection title="Category">
+            <FilterRow
+              label="All Categories"
+              selected={selectedCategoryId === null}
+              onPress={() => setSelectedCategoryId(null)}
+            />
+            {allCategories.map((category) => (
+              <FilterRow
+                key={category.id}
+                label={category.name}
+                selected={selectedCategoryId === category.id}
+                onPress={() =>
+                  setSelectedCategoryId(selectedCategoryId === category.id ? null : category.id)
+                }
+              />
+            ))}
+          </FilterSection>
+        </View>
+      </ModalBottomSheet>
     </>
   );
 }

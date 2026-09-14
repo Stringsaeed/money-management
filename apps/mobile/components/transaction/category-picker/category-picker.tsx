@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import type { PressableProps } from "react-native";
 import { Pressable, View } from "react-native";
-import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
+import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
@@ -54,19 +54,19 @@ export default function CategoryPicker({
   onChange,
   children,
 }: CategoryPickerProps) {
-  const [sheetIndex, setSheetIndex] = useState(0);
+  const [open, setOpen] = useState(false);
 
   const selectableCategories = categories.filter((category) => category.lifecycle !== "archived");
   const incomeCategories = selectableCategories.filter((category) => category.type === "income");
   const expenseCategories = selectableCategories.filter((category) => category.type === "expense");
 
   const onOpen = () => {
-    setSheetIndex(1);
+    setOpen(true);
   };
 
   const handleSelect = (id: string) => {
     onChange(id);
-    setSheetIndex(0);
+    setOpen(false);
   };
 
   const renderTrigger = () => {
@@ -82,12 +82,7 @@ export default function CategoryPicker({
   return (
     <>
       {renderTrigger()}
-      <ModalBottomSheet
-        index={sheetIndex}
-        onIndexChange={setSheetIndex}
-        scrimColor="rgba(0, 0, 0, 0.5)"
-        surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
-      >
+      <ModalBottomSheet open={open} onDismiss={() => setOpen(false)}>
         <View className="pb-safe px-5 pt-5 gap-5">
           <Text className="font-heading-normal text-xl italic text-ink">Category</Text>
 

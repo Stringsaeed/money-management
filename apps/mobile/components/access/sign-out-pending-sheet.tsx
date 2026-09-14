@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 
 import { NativeHost, NativePrimaryButton, NativeSecondaryButton } from "@/components/native-ui";
+import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
 
 interface SignOutPendingSheetProps {
@@ -24,22 +23,8 @@ export function SignOutPendingSheet({
   onDiscardAndSignOut,
   onCancel,
 }: SignOutPendingSheetProps) {
-  const [sheetIndex, setSheetIndex] = useState(0);
-
-  useEffect(() => {
-    setSheetIndex(open ? 1 : 0);
-  }, [open]);
-
   return (
-    <ModalBottomSheet
-      index={sheetIndex}
-      onIndexChange={(index) => {
-        setSheetIndex(index);
-        if (index === 0) onCancel();
-      }}
-      scrimColor="rgba(0, 0, 0, 0.5)"
-      surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
-    >
+    <ModalBottomSheet open={open} onDismiss={onCancel}>
       <View className="gap-4 px-4 pb-safe">
         <Text className="font-heading-normal text-lg italic text-ink">
           Edits still uploading ⏳

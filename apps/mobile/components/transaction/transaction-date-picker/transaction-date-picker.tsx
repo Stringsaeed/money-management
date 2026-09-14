@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { PressableScale } from "pressto";
 import type { PressableProps } from "react-native";
 import { View } from "react-native";
 import { useNativeVariable } from "react-native-css";
 
 import { Button } from "@/components/ui/button";
+import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
 import type { TransactionDatePickerProps } from "./types";
 import { getDisplayDateLabel } from "../utils";
@@ -20,7 +20,7 @@ export default function TransactionDatePicker({
   onChange,
   children,
 }: ExtendedDatePickerProps) {
-  const [sheetIndex, setSheetIndex] = useState(0);
+  const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Date>(date);
   // @ts-expect-error: useNativeVariable is not typed correctly
   const colorInk = useNativeVariable("--color-ink");
@@ -32,7 +32,7 @@ export default function TransactionDatePicker({
   };
 
   const onOpen = () => {
-    setSheetIndex(1);
+    setOpen(true);
   };
 
   const renderTrigger = () => {
@@ -62,12 +62,7 @@ export default function TransactionDatePicker({
   return (
     <>
       {renderTrigger()}
-      <ModalBottomSheet
-        index={sheetIndex}
-        onIndexChange={setSheetIndex}
-        scrimColor="rgba(0, 0, 0, 0.5)"
-        surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
-      >
+      <ModalBottomSheet open={open} onDismiss={() => setOpen(false)}>
         <View className="pb-safe w-full px-5 pt-5 gap-4">
           <DateTimePicker
             value={selected}
@@ -82,7 +77,7 @@ export default function TransactionDatePicker({
             size="xl"
             className="mx-8"
             onPress={() => {
-              setSheetIndex(0);
+              setOpen(false);
               onChange?.(selected);
             }}
           >

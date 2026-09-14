@@ -166,10 +166,33 @@ jest.mock("@tanstack/devtools-event-client", () => ({
 
 jest.mock("@swmansion/react-native-bottom-sheet", () => {
   const React = require("react");
-  const { View } = require("react-native");
+  const { Pressable, View } = require("react-native");
 
-  const Passthrough = ({ children }: { children?: React.ReactNode }) =>
-    React.createElement(View, null, children);
+  const Passthrough = ({
+    children,
+    onIndexChange,
+    testID,
+  }: {
+    children?: React.ReactNode;
+    onIndexChange?: (index: number) => void;
+    testID?: string;
+  }) =>
+    React.createElement(
+      View,
+      { testID },
+      children,
+      onIndexChange
+        ? React.createElement(
+            Pressable,
+            {
+              accessibilityLabel: "Dismiss sheet",
+              accessibilityRole: "button",
+              onPress: () => onIndexChange(0),
+            },
+            null,
+          )
+        : null,
+    );
 
   return {
     BottomSheetProvider: Passthrough,

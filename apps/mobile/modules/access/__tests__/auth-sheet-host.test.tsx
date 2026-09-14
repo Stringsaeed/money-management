@@ -50,5 +50,7 @@ describe("AuthSheetHost", () => {
 
     expect(screen.getByTestId("auth-sheet-mounted")).toBeOnTheScreen();
     expect(screen.getByText("Sign in with email code")).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Continue with email code" })).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeOnTheScreen();
   });
 });

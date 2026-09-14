@@ -4,8 +4,8 @@ import { Pressable, ScrollView, View } from "react-native";
 import { XIcon } from "phosphor-react-native";
 
 import { Icon } from "@/components/ui/icon";
+import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
-import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 
 interface CreateResourceBottomSheetProps {
   autoPresent?: boolean;
@@ -28,24 +28,18 @@ export const CreateResourceBottomSheet = React.forwardRef<
   { autoPresent = false, children, content, footer, headerRight, onDismiss, title },
   ref,
 ) {
-  const [index, setIndex] = React.useState(autoPresent ? 1 : 0);
+  const [open, setOpen] = React.useState(autoPresent);
   const didDismissRef = React.useRef(false);
 
-  function handleIndexChange(nextIndex: number) {
-    setIndex(nextIndex);
-    if (nextIndex > 0) {
-      didDismissRef.current = false;
-      return;
-    }
-
+  function handleDismiss() {
     if (didDismissRef.current) return;
-
     didDismissRef.current = true;
+    setOpen(false);
     onDismiss?.();
   }
 
   React.useImperativeHandle(ref, () => ({
-    dismiss: () => handleIndexChange(0),
+    dismiss: handleDismiss,
   }));
 
   function renderTrigger() {
@@ -53,7 +47,8 @@ export const CreateResourceBottomSheet = React.forwardRef<
 
     return React.cloneElement(children, {
       onPress: (event) => {
-        handleIndexChange(1);
+        didDismissRef.current = false;
+        setOpen(true);
         children.props.onPress?.(event);
       },
     });
@@ -62,11 +57,7 @@ export const CreateResourceBottomSheet = React.forwardRef<
   return (
     <>
       {renderTrigger()}
-      <ModalBottomSheet
-        scrimColor="rgba(0, 0, 0, 0.5)"
-        index={index}
-        onIndexChange={handleIndexChange}
-      >
+      <ModalBottomSheet open={open} onDismiss={handleDismiss}>
         <View className="mx-4 mb-safe flex-1 rounded-3xl overflow-hidden bg-background">
           <View className="flex-row items-center px-3 py-3">
             <Pressable
@@ -74,7 +65,7 @@ export const CreateResourceBottomSheet = React.forwardRef<
               accessibilityRole="button"
               className="h-10 w-10 items-center justify-center rounded-full active:bg-surface-dim"
               hitSlop={8}
-              onPress={() => handleIndexChange(0)}
+              onPress={handleDismiss}
             >
               <Icon as={XIcon} size={20} className="text-ink" />
             </Pressable>

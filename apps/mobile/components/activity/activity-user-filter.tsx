@@ -1,11 +1,11 @@
 import { Children, cloneElement, useState } from "react";
 import type { ReactElement, ReactNode } from "react";
-import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { Pressable, View } from "react-native";
 import { CheckIcon } from "phosphor-react-native";
 import type { PressableProps } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
+import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 
@@ -30,19 +30,19 @@ export function ActivityUserFilter({
   onChange,
   children,
 }: ActivityUserFilterProps) {
-  const [sheetIndex, setSheetIndex] = useState(0);
+  const [open, setOpen] = useState(false);
 
   const options: readonly (ActivityUserOption | null)[] = [null, ...members];
 
-  const open = () => setSheetIndex(1);
+  const handleOpen = () => setOpen(true);
 
   const renderTrigger = () => {
     if (children) {
       const child = Children.only(children);
-      return cloneElement(child as ReactElement<PressableProps>, { onPress: open });
+      return cloneElement(child as ReactElement<PressableProps>, { onPress: handleOpen });
     }
     return (
-      <Pressable onPress={open} className="active:opacity-70">
+      <Pressable onPress={handleOpen} className="active:opacity-70">
         <View className="flex-row items-center gap-1.5 rounded-xl px-3 py-1.5 bg-surface-container">
           <Text className="text-sm">👤</Text>
           <Text className="font-body-medium text-sm text-ink">
@@ -56,12 +56,7 @@ export function ActivityUserFilter({
   return (
     <>
       {renderTrigger()}
-      <ModalBottomSheet
-        index={sheetIndex}
-        onIndexChange={setSheetIndex}
-        scrimColor="rgba(0, 0, 0, 0.5)"
-        surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
-      >
+      <ModalBottomSheet open={open} onDismiss={() => setOpen(false)}>
         <View className="pb-safe w-full px-5 pt-5 gap-1">
           <Text className="font-heading-medium italic text-lg text-ink mb-2">Filter by member</Text>
           {options.map((option, i) => {
@@ -73,7 +68,7 @@ export function ActivityUserFilter({
                   accessibilityRole="button"
                   accessibilityLabel={option?.userName ?? "Everyone"}
                   onPress={() => {
-                    setSheetIndex(0);
+                    setOpen(false);
                     onChange(option?.userId ?? null);
                   }}
                   className={cn(

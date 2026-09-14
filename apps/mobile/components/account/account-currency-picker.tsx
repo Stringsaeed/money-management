@@ -1,7 +1,5 @@
-import { BottomSheet, RNHostView, Text as ExpoText, TextInput, useNativeState } from "@expo/ui";
 import { useEffect, useRef, useState } from "react";
 import { FlatList, Keyboard, Pressable, View } from "react-native";
-import { useNativeVariable } from "react-native-css/native";
 
 import { recoverAccountCurrencyListScroll } from "@/components/account/account-currency-list-scroll";
 import { AccountCurrencyOptionRow } from "@/components/account/account-currency-option-row";
@@ -11,6 +9,8 @@ import {
   type AccountCurrencyOption,
   toAccountCurrencyOption,
 } from "@/components/account/account-currency-utils";
+import { Input } from "@/components/ui/input";
+import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 
@@ -29,21 +29,17 @@ export function AccountCurrencyPicker({
 }: AccountCurrencyPickerProps) {
   const [isPresented, setIsPresented] = useState(false);
   const [query, setQuery] = useState("");
-  const searchState = useNativeState("");
   const listRef = useRef<FlatList<AccountCurrencyOption>>(null);
-  const bgSurface = useNativeVariable("--color-surface");
   const selected = toAccountCurrencyOption(value);
   const results = filterAccountCurrencyOptions(CURRENCY_OPTIONS, query);
 
   const open = () => {
-    searchState.value = "";
     setQuery("");
     setIsPresented(true);
   };
 
   const dismiss = () => {
     Keyboard.dismiss();
-    searchState.value = "";
     setQuery("");
     setIsPresented(false);
   };
@@ -95,55 +91,47 @@ export function AccountCurrencyPicker({
         )}
       </Pressable>
 
-      {isPresented ? (
-        <BottomSheet
-          containerColor={bgSurface}
-          contentPadding={{ top: 16, bottom: 8, left: 16, right: 16 }}
-          isPresented
-          onDismiss={dismiss}
-          snapPoints={["half", "full"]}
-          testID="account-currency-sheet"
-        >
-          <ExpoText>Currency</ExpoText>
-          <TextInput
+      <ModalBottomSheet open={isPresented} onDismiss={dismiss} testID="account-currency-sheet">
+        <View className="gap-2 px-4 pb-2 pt-4">
+          <Text className="font-body-semibold text-base text-ink">Currency</Text>
+          <Input
             autoCapitalize="none"
             autoCorrect={false}
             onChangeText={setQuery}
             placeholder="Search by code or name"
             returnKeyType="search"
             testID="account-currency-search"
-            value={searchState}
+            value={query}
           />
-          <RNHostView style={{ height: 360, width: "100%" }}>
-            <FlatList
-              ListEmptyComponent={
-                <View className="items-center px-4 py-10">
-                  <Text className="font-body-medium text-base text-ink/50">
-                    {`No currencies match "${query.trim()}". 🔍`}
-                  </Text>
-                </View>
-              }
-              contentContainerClassName="pb-safe gap-2 pt-3"
-              data={results}
-              initialNumToRender={CURRENCY_OPTIONS.length}
-              keyExtractor={(item) => item.code}
-              keyboardDismissMode="on-drag"
-              keyboardShouldPersistTaps="handled"
-              onScrollToIndexFailed={(info) =>
-                recoverAccountCurrencyListScroll(listRef.current, info)
-              }
-              ref={listRef}
-              renderItem={({ item }) => (
-                <AccountCurrencyOptionRow
-                  item={item}
-                  onSelect={select}
-                  selected={item.code === value}
-                />
-              )}
-            />
-          </RNHostView>
-        </BottomSheet>
-      ) : null}
+          <FlatList
+            className="h-96 w-full"
+            ListEmptyComponent={
+              <View className="items-center px-4 py-10">
+                <Text className="font-body-medium text-base text-ink/50">
+                  {`No currencies match "${query.trim()}". 🔍`}
+                </Text>
+              </View>
+            }
+            contentContainerClassName="pb-safe gap-2 pt-3"
+            data={results}
+            initialNumToRender={CURRENCY_OPTIONS.length}
+            keyExtractor={(item) => item.code}
+            keyboardDismissMode="on-drag"
+            keyboardShouldPersistTaps="handled"
+            onScrollToIndexFailed={(info) =>
+              recoverAccountCurrencyListScroll(listRef.current, info)
+            }
+            ref={listRef}
+            renderItem={({ item }) => (
+              <AccountCurrencyOptionRow
+                item={item}
+                onSelect={select}
+                selected={item.code === value}
+              />
+            )}
+          />
+        </View>
+      </ModalBottomSheet>
     </>
   );
 }
