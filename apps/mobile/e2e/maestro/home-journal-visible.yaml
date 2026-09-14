@@ -6,10 +6,20 @@ tags:
   - smoke
 ---
 # Read-only regression check. EXPECTED_NOTE must name a Transaction already
-# visible in Ledger; this flow must not create or upload another row.
-# Currently red on a fresh signed-in Home launch when readiness changes
-# without updating the mounted journal. Keep it out of the passing sweep.
+# visible in the signed-in Personal Ledger; this flow must not create or upload
+# another row.
 - launchApp
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove:///
+- assertVisible: "Upcoming payments"
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove://settings/household
+- assertVisible:
+    id: profile-sign-out
 - runFlow:
     file: open-trove-link.yaml
     env:

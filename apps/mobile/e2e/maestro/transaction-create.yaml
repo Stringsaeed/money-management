@@ -39,7 +39,9 @@ tags:
 - tapOn: "5"
 - tapOn:
     id: "transaction-note-field"
-- inputText: ${output.transactionNote}
+- setClipboard: ${output.transactionNote}
+- pasteText
+- assertVisible: ".*${output.transactionNote}.*"
 - tapOn: "save"
 - extendedWaitUntil:
     timeout: 25000

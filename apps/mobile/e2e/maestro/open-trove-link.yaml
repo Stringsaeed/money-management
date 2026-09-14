@@ -6,3 +6,12 @@ appId: com.stringsaeed.moneymanagement
       visible: ".*Open in.*Trove.*"
     commands:
       - tapOn: "Open"
+# A known PostHog remote-config 404 can raise Expo's debug LogBox above the
+# app in this development client. Dismiss only that telemetry error so it
+# cannot intercept a resource tap; other LogBox errors remain hard failures.
+- runFlow:
+    when:
+      visible: ".*Log [0-9]+ of [0-9]+.*"
+    commands:
+      - assertVisible: ".*PostHog.*Remote config could not be loaded.*"
+      - tapOn: "Dismiss"

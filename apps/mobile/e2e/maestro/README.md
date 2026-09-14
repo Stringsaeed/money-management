@@ -94,16 +94,20 @@ sheet-close assertion does not hide the next resource's result.
 
 ## Coverage and known limits
 
-| Flow                      | Expected result                                                                 |
-| ------------------------- | ------------------------------------------------------------------------------- |
-| `account-create.yaml`     | Account saves, the Add Account sheet closes, and the unique row appears.        |
-| `category-create.yaml`    | Category saves, the Add Category sheet closes, and the unique row appears.      |
-| `transaction-create.yaml` | Transaction saves, the form closes, and the unique note appears in the journal. |
+| Flow                        | Expected result                                                                         |
+| --------------------------- | --------------------------------------------------------------------------------------- |
+| `account-create.yaml`       | Account saves, the Add Account sheet closes, and the unique row appears.                |
+| `category-create.yaml`      | Category saves, the Add Category sheet closes, and the unique row appears.              |
+| `transaction-create.yaml`   | Transaction saves, the form closes, and the unique note appears in the journal.         |
+| `home-journal-visible.yaml` | A previously saved personal Transaction appears on Home after a fresh signed-in launch. |
 
 The Account and Category FABs currently lack test IDs, so those flows use a
 normalized tap point after asserting the destination screen. This is a selector
 limitation, not a substitute for checking the saved row. The Transaction flow
 keeps its distinct amount, note, save, form-close, and journal assertions.
+It uses Maestro's internal clipboard to paste the note and asserts the exact
+text before saving; iOS keyboard entry once dropped a character without
+failing `inputText`.
 
 The initial main build had red Account and Category sheet-close assertions
 after their rows saved. The sheet fix has since been merged, and the complete
@@ -129,13 +133,17 @@ the exact run labels before authentication and for the authenticated personal
 ledger afterward. Its post-auth check requires the WorkOS user ID, verifies
 the labels belong to that personal ledger, and rejects duplicate or
 out-of-scope rows. A database hit proves the upload reached PlanetScale; it
-does **not** independently prove PowerSync downloaded the same rows. A hosted
-run signed in, uploaded the approved QA inventory to PlanetScale, and the
-Production personal stream downloaded two accounts, twelve categories, and
-one transaction into the simulator. The Ledger screen displayed that
-transaction. The Home Recent Journal remained in a loading state even after
-a Metro JavaScript reload, so the full resource-and-sync flow is not yet
-certified.
+does **not** independently prove PowerSync downloaded the same rows. The
+approved first upload reached PlanetScale and the Production personal stream
+downloaded its rows to the simulator. On a later run, the anonymous sweep
+passed and its exact Account, Category, and Transaction labels remained absent
+from PlanetScale after sign-in. Hosted AuthKit sign-in passed again; the
+authenticated sweep then passed all three resource flows. PlanetScale held
+exactly one of each new label in the same Personal Ledger, and the signed-in
+Transaction returned to PowerSync with an empty upload queue. The read-only
+Home regression was red on fresh signed-in launches, then passed twice after
+the transaction hook's targeted React Compiler opt-out. Issue #277 tracks a
+longer-term immutable-snapshot replacement for that opt-out.
 
 Keep WorkOS and database credentials in separate operator-held local env
 files, outside the repository. Load each file into only the Node process that
@@ -165,10 +173,12 @@ For one test run, use the same `RUN_ID` and simulator in this order:
      --udid "$SIMULATOR_UDID" apps/mobile/e2e/maestro/auth.yaml
    ```
 
-4. Run `personal-sync.yaml` on that simulator with `UPLOAD_CHOICE=confirm`
-   only when this run is authorized to upload its local QA records. Then run
-   the same resource sweep with `RUN_LABEL=personal` and
-   `EXPECTED_PROFILE_ID=profile-sign-out`.
+4. For an empty personal cloud, run `personal-sync.yaml` with
+   `UPLOAD_CHOICE=confirm` only when this run is authorized to upload its local
+   QA records. For an already populated personal cloud, use Profile's
+   `Sync just for me` path and verify `Your personal ledger syncs`; do not run
+   the first-upload flow or merge anonymous rows. Then run the same resource
+   sweep with `RUN_LABEL=personal` and `EXPECTED_PROFILE_ID=profile-sign-out`.
 5. Verify the signed-in resource labels belong to the authenticated personal
    ledger. The user ID comes from the runner output file, not a manual WorkOS
    lookup:
