@@ -29,8 +29,11 @@ export const CreateResourceBottomSheet = React.forwardRef<
   ref,
 ) {
   const [open, setOpen] = React.useState(autoPresent);
+  const didDismissRef = React.useRef(false);
 
   function handleDismiss() {
+    if (didDismissRef.current) return;
+    didDismissRef.current = true;
     setOpen(false);
     onDismiss?.();
   }
@@ -44,6 +47,7 @@ export const CreateResourceBottomSheet = React.forwardRef<
 
     return React.cloneElement(children, {
       onPress: (event) => {
+        didDismissRef.current = false;
         setOpen(true);
         children.props.onPress?.(event);
       },

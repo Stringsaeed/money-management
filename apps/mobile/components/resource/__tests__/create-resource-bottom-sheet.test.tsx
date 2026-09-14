@@ -88,7 +88,7 @@ describe("create resource sheet dismissal", () => {
     await waitFor(() => expect(screen.queryByTestId("create-resource-modal")).toBeNull());
   });
 
-  it("calls onDismiss once when imperative dismiss precedes the native close callback", async () => {
+  it("calls onDismiss once when imperatively dismissed twice", async () => {
     const onDismiss = jest.fn();
     const sheetRef = React.createRef<CreateResourceBottomSheetRef>();
 
@@ -104,6 +104,7 @@ describe("create resource sheet dismissal", () => {
     );
 
     await act(async () => {
+      sheetRef.current?.dismiss();
       sheetRef.current?.dismiss();
     });
 
