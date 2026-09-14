@@ -1,9 +1,7 @@
-import { Host } from "@expo/ui";
 import { Children, cloneElement, useState, type ReactElement, type ReactNode } from "react";
 import type { PressableProps } from "react-native";
 import { View } from "react-native";
 
-import { AuthSurfaceProvider } from "@/components/auth/ui";
 import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 
 export function AuthBottomSheet({
@@ -41,11 +39,7 @@ export function AuthBottomSheet({
     <>
       {renderTrigger()}
       <ModalBottomSheet open={isPresented} onDismiss={handleDismiss} testID="auth-bottom-sheet">
-        <View className="p-6">
-          <Host useViewportSizeMeasurement>
-            <AuthSurfaceProvider surface="sheet">{children}</AuthSurfaceProvider>
-          </Host>
-        </View>
+        <View className="p-6">{children}</View>
       </ModalBottomSheet>
     </>
   );

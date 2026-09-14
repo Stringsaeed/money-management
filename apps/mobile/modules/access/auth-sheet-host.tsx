@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
+import { View } from "react-native";
 
 import { AuthBottomSheet } from "@/components/auth/auth-bottom-sheet";
-import { AuthLinkButton, AuthNote, AuthPrimaryButton, AuthScreenShell } from "@/components/auth/ui";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
 import { beginHostedSignIn } from "@/modules/access/actions";
 import { resolveReturnDestination } from "@/modules/access/access";
 import { coreFromAccess } from "@/modules/access/core-from-state";
@@ -18,9 +20,8 @@ export function AuthSheetHost({
   readonly session: AuthSheetSession;
   readonly onDismiss: () => void;
 }) {
-  // Closed auth must unmount @expo/ui BottomSheet entirely. A parked
-  // isPresented=false Host can still steal UIKit hits on Create Account
-  // submit (hittable=true, coord/testID miss at AX center). Relates #232.
+  // Closed auth must unmount the native sheet entirely. A parked closed sheet
+  // can still steal UIKit hits on Create Account submit. Relates #232.
   if (session.kind !== "open") {
     return null;
   }
@@ -64,22 +65,31 @@ function AuthKitSignInPanel({
   }
 
   return (
-    <AuthScreenShell
-      title="Sign in with email code"
-      subtitle="We open WorkOS AuthKit. No password. Your local ledger stays on this device."
-    >
-      <AuthNote>
-        Signing in does not create a Household and does not upload device records.
-      </AuthNote>
-      {failed ? (
-        <AuthNote>Could not finish sign-in. Check your connection and try again.</AuthNote>
-      ) : null}
-      <AuthPrimaryButton
-        label={busy ? "Opening AuthKit…" : "Continue with email code"}
-        onPress={onContinue}
-        disabled={busy}
-      />
-      <AuthLinkButton label="Cancel" onPress={onDismiss} disabled={busy} />
-    </AuthScreenShell>
+    <View className="gap-6">
+      <View className="gap-2">
+        <Text className="font-heading-normal text-2xl italic text-ink">
+          Sign in with email code
+        </Text>
+        <Text className="font-body-normal text-sm text-ink/60">
+          We open WorkOS AuthKit. No password. Your local ledger stays on this device.
+        </Text>
+      </View>
+      <View className="gap-4">
+        <Text className="font-body-normal text-sm text-ink/70">
+          Signing in does not create a Household and does not upload device records.
+        </Text>
+        {failed ? (
+          <Text className="font-body-normal text-sm text-destructive">
+            Could not finish sign-in. Check your connection and try again.
+          </Text>
+        ) : null}
+        <Button disabled={busy} onPress={onContinue} className="w-full">
+          <Text>{busy ? "Opening AuthKit…" : "Continue with email code"}</Text>
+        </Button>
+        <Button disabled={busy} onPress={onDismiss} variant="link" className="self-center">
+          <Text>Cancel</Text>
+        </Button>
+      </View>
+    </View>
   );
 }
