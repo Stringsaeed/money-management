@@ -1,7 +1,6 @@
 import { isHouseholdRole } from "@trove/protocol";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { View } from "react-native";
-import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
 
 import { ActiveHouseholdPanel } from "@/components/household/active-household-panel";
@@ -16,6 +15,7 @@ import {
   NativeTertiaryButton,
 } from "@/components/native-ui";
 import { Card } from "@/components/settings/card";
+import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
 import { SignOutPendingSheet } from "@/components/access/sign-out-pending-sheet";
 import { useSyncEnrollment } from "@/hooks/use-enable-sync";
@@ -171,23 +171,8 @@ function HouseholdActionsSheet({
     ),
   }));
 
-  const [sheetIndex, setSheetIndex] = useState(0);
-
-  useEffect(() => {
-    setSheetIndex(open ? 1 : 0);
-  }, [open]);
-
   return (
-    <ModalBottomSheet
-      index={sheetIndex}
-      onIndexChange={(index) => {
-        setSheetIndex(index);
-        if (index === 0) onClose();
-      }}
-      animateContentHeight={false}
-      scrimColor="rgba(0, 0, 0, 0.5)"
-      surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
-    >
+    <ModalBottomSheet open={open} onDismiss={onClose} animateContentHeight={false}>
       <Animated.View style={keyboardPaddingStyle}>
         <View className="gap-5 px-4 pb-safe pt-2">
           <Text className="font-heading-normal text-lg italic text-ink">Household ledger</Text>

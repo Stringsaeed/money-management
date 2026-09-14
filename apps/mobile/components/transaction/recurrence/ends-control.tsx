@@ -3,12 +3,12 @@ import type { PressableProps } from "react-native";
 import { Pressable, View } from "react-native";
 import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { CheckIcon } from "phosphor-react-native";
-import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { addMonths } from "date-fns";
 import { useNativeVariable } from "react-native-css";
 
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +44,7 @@ export function EndsControl({
   onChange,
   children,
 }: EndsControlProps) {
-  const [index, setIndex] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<EndType>("never");
   const [dateValue, setDateValue] = useState<Date>(endDate ?? addMonths(startDate, 12));
   const [countValue, setCountValue] = useState<number>(endCount ?? 12);
@@ -55,7 +55,7 @@ export function EndsControl({
     setMode(endTypeOf(endDate, endCount));
     setDateValue(endDate ?? addMonths(startDate, 12));
     setCountValue(endCount ?? 12);
-    setIndex(1);
+    setIsOpen(true);
   };
 
   const trigger = React.cloneElement(
@@ -66,7 +66,7 @@ export function EndsControl({
   const selectRow = (type: EndType) => {
     if (type === "never") {
       onChange({ endDate: null, endCount: null });
-      setIndex(0);
+      setIsOpen(false);
       return;
     }
     setMode(type);
@@ -79,12 +79,7 @@ export function EndsControl({
   return (
     <>
       {trigger}
-      <ModalBottomSheet
-        index={index}
-        onIndexChange={setIndex}
-        scrimColor="rgba(0, 0, 0, 0.5)"
-        surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
-      >
+      <ModalBottomSheet open={isOpen} onDismiss={() => setIsOpen(false)}>
         <View className="pb-safe px-5 pt-5 gap-4">
           <Text className="font-heading-normal text-xl italic text-ink">Ends</Text>
 
@@ -132,7 +127,7 @@ export function EndsControl({
                 className="mx-8"
                 onPress={() => {
                   onChange({ endDate: dateValue, endCount: null });
-                  setIndex(0);
+                  setIsOpen(false);
                 }}
               >
                 <Text>Done</Text>
@@ -151,7 +146,7 @@ export function EndsControl({
                 className="mx-8"
                 onPress={() => {
                   onChange({ endDate: null, endCount: countValue });
-                  setIndex(0);
+                  setIsOpen(false);
                 }}
               >
                 <Text>Done</Text>

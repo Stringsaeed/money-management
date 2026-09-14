@@ -75,11 +75,7 @@ describe("create resource sheet dismissal", () => {
     await fireEvent.press(screen.getByTestId("create-resource-submit"));
 
     await waitFor(() => expect(mockCreateAccount).toHaveBeenCalledTimes(1));
-    await waitFor(() =>
-      expect(screen.getByTestId("create-resource-modal").props.accessibilityState).toEqual({
-        expanded: false,
-      }),
-    );
+    await waitFor(() => expect(screen.queryByTestId("create-resource-modal")).toBeNull());
   });
 
   it("dismisses the Category sheet after a successful create", async () => {
@@ -89,11 +85,7 @@ describe("create resource sheet dismissal", () => {
     await fireEvent.press(screen.getByTestId("create-resource-submit"));
 
     await waitFor(() => expect(mockCreateCategory).toHaveBeenCalledTimes(1));
-    await waitFor(() =>
-      expect(screen.getByTestId("create-resource-modal").props.accessibilityState).toEqual({
-        expanded: false,
-      }),
-    );
+    await waitFor(() => expect(screen.queryByTestId("create-resource-modal")).toBeNull());
   });
 
   it("calls onDismiss once when imperative dismiss precedes the native close callback", async () => {
@@ -114,7 +106,6 @@ describe("create resource sheet dismissal", () => {
     await act(async () => {
       sheetRef.current?.dismiss();
     });
-    await fireEvent.press(screen.getByTestId("dismiss-create-resource-modal"));
 
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });

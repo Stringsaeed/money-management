@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import type { PressableProps } from "react-native";
 import { Pressable, View } from "react-native";
 import { CheckIcon } from "phosphor-react-native";
-import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 import type { RecurrenceFrequency } from "@/types";
@@ -31,7 +31,7 @@ export function RepeatControl({
   onChange,
   children,
 }: RepeatControlProps) {
-  const [index, setIndex] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
   const [showCustom, setShowCustom] = useState(false);
   const [count, setCount] = useState(intervalCount);
   const [unit, setUnit] = useState<RecurrenceFrequency>(frequency);
@@ -41,7 +41,7 @@ export function RepeatControl({
     setShowCustom(selectedKey === "custom");
     setCount(Math.max(1, intervalCount));
     setUnit(frequency);
-    setIndex(1);
+    setIsOpen(true);
   };
 
   const trigger = React.cloneElement(
@@ -51,18 +51,13 @@ export function RepeatControl({
 
   const selectPreset = (nextFrequency: RecurrenceFrequency, nextCount: number) => {
     onChange(nextFrequency, nextCount);
-    setIndex(0);
+    setIsOpen(false);
   };
 
   return (
     <>
       {trigger}
-      <ModalBottomSheet
-        index={index}
-        onIndexChange={setIndex}
-        scrimColor="rgba(0, 0, 0, 0.5)"
-        surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
-      >
+      <ModalBottomSheet open={isOpen} onDismiss={() => setIsOpen(false)}>
         <View className="pb-safe px-5 pt-5 gap-4">
           <Text className="font-heading-normal text-xl italic text-ink">Repeats</Text>
 
@@ -153,7 +148,7 @@ export function RepeatControl({
                 className="mx-8"
                 onPress={() => {
                   onChange(unit, count);
-                  setIndex(0);
+                  setIsOpen(false);
                 }}
               >
                 <Text>Done</Text>

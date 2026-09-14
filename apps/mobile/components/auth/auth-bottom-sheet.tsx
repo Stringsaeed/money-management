@@ -1,9 +1,10 @@
-import { BottomSheet } from "@expo/ui";
+import { Host } from "@expo/ui";
 import { Children, cloneElement, useState, type ReactElement, type ReactNode } from "react";
 import type { PressableProps } from "react-native";
-import { useNativeVariable } from "react-native-css/native";
+import { View } from "react-native";
 
 import { AuthSurfaceProvider } from "@/components/auth/ui";
+import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 
 export function AuthBottomSheet({
   trigger,
@@ -19,7 +20,6 @@ export function AuthBottomSheet({
   const [uncontrolledPresented, setUncontrolledPresented] = useState(false);
   const isControlled = presentedProp !== undefined;
   const isPresented = isControlled ? presentedProp : uncontrolledPresented;
-  const bgSurface = useNativeVariable("--color-surface");
 
   const handleDismiss = () => {
     if (!isControlled) setUncontrolledPresented(false);
@@ -40,18 +40,13 @@ export function AuthBottomSheet({
   return (
     <>
       {renderTrigger()}
-      {isPresented ? (
-        <BottomSheet
-          snapPoints={["half"]}
-          isPresented
-          onDismiss={handleDismiss}
-          containerColor={bgSurface}
-          contentPadding={{ top: 24, bottom: 24, left: 24, right: 24 }}
-          testID="auth-bottom-sheet"
-        >
-          <AuthSurfaceProvider surface="sheet">{children}</AuthSurfaceProvider>
-        </BottomSheet>
-      ) : null}
+      <ModalBottomSheet open={isPresented} onDismiss={handleDismiss} testID="auth-bottom-sheet">
+        <View className="p-6">
+          <Host useViewportSizeMeasurement>
+            <AuthSurfaceProvider surface="sheet">{children}</AuthSurfaceProvider>
+          </Host>
+        </View>
+      </ModalBottomSheet>
     </>
   );
 }

@@ -1,8 +1,8 @@
-import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { View } from "react-native";
 
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
+import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { effectEmoji, formatActivityFullTimestamp } from "@/utils/activity";
 
 import type { ActivityEntry } from "@/hooks/use-activity";
@@ -38,16 +38,7 @@ export function ActivityDetailSheet({ entry, onDismiss }: ActivityDetailSheetPro
   }
 
   return (
-    <ModalBottomSheet
-      index={1}
-      onIndexChange={(index) => {
-        if (index === 0) {
-          onDismiss();
-        }
-      }}
-      scrimColor="rgba(0, 0, 0, 0.5)"
-      surface={<View className="absolute inset-0 rounded-t-3xl bg-background" />}
-    >
+    <ModalBottomSheet open onDismiss={onDismiss}>
       <View className="pb-safe w-full px-5 pt-6 gap-3">
         <View className="items-center gap-1 mb-2">
           <Text className="text-4xl">{effectEmoji(entry.effects[0] ?? "")}</Text>

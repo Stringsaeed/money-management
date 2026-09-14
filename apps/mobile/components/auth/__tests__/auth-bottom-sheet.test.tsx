@@ -42,7 +42,7 @@ describe("AuthBottomSheet", () => {
     expect(screen.queryByText("Sheet body")).toBeNull();
   });
 
-  it("unmounts Expo BottomSheet when closed instead of parking isPresented=false", async () => {
+  it("unmounts the app sheet when closed instead of parking native UI", async () => {
     await render(
       <AuthBottomSheet isPresented={false} onDismiss={() => undefined}>
         <Text>Sheet body</Text>
@@ -52,7 +52,7 @@ describe("AuthBottomSheet", () => {
     expect(screen.queryByTestId("auth-bottom-sheet")).toBeNull();
   });
 
-  it("mounts Expo BottomSheet only while presented", async () => {
+  it("mounts the app sheet only while presented", async () => {
     await render(
       <AuthBottomSheet isPresented onDismiss={() => undefined}>
         <Text>Sheet body</Text>

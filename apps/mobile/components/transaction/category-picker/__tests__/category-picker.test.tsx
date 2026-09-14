@@ -35,6 +35,8 @@ describe("Transaction CategoryPicker", () => {
       </CategoryPicker>,
     );
 
+    await fireEvent.press(screen.getByRole("button", { name: "Choose Category" }));
+
     expect(screen.getByRole("button", { name: "Dining" })).toBeOnTheScreen();
     expect(screen.queryByRole("button", { name: "Old Dining" })).not.toBeOnTheScreen();
 
