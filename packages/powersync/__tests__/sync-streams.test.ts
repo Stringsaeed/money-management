@@ -63,7 +63,7 @@ test("every Household stream denies inactive memberships and unknown role slugs"
     for (const query of config.streams[name].queries) {
       assert.match(
         query,
-        /SELECT household_id FROM membership\s+WHERE user_id = auth\.user_id\(\)\s+AND status = 'active'\s+AND role IN \('admin', 'member', 'viewer'\)/,
+        /SELECT household_id FROM membership\s+WHERE user_id = auth\.user_id\(\)\s+AND status = 'active'\s+AND role IN ROW\('admin', 'member', 'viewer'\)/,
         `${name} query gates on an active, known-role membership`,
       );
     }

@@ -1,0 +1,48 @@
+appId: com.stringsaeed.moneymanagement
+name: Personal ledger sync
+tags:
+  - sync
+  - personal
+  - smoke
+---
+# Run after the separate hosted WorkOS AuthKit flow. The profile selector is
+# the signed-in proof; this flow never creates or joins a Household.
+#
+# This is the first-enrollment path for an empty personal cloud. It requires
+# UPLOAD_CHOICE=confirm before probing or uploading. A populated or already
+# enrolled cloud needs a separate read-only path; do not silently merge data.
+- launchApp
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove://settings/household
+- extendedWaitUntil:
+    timeout: 15000
+    visible:
+      id: profile-sign-out
+- assertVisible:
+    id: profile-sign-out
+- runFlow:
+    when:
+      visible:
+        id: open-household-actions
+    commands:
+      - tapOn:
+          id: open-household-actions
+- assertVisible: "Household ledger"
+- assertTrue:
+    condition: ${UPLOAD_CHOICE == "confirm"}
+    label: "Set UPLOAD_CHOICE=confirm to approve the one-time upload"
+- tapOn:
+    id: enable-personal-sync
+- extendedWaitUntil:
+    timeout: 30000
+    visible:
+      id: confirm-personal-upload
+- assertVisible: ".*Upload to your cloud.*"
+- tapOn:
+    id: confirm-personal-upload
+- extendedWaitUntil:
+    timeout: 60000
+    visible: "Your personal ledger syncs"
+- assertVisible: "Your personal ledger syncs"

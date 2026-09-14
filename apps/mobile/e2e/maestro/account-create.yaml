@@ -1,0 +1,59 @@
+appId: com.stringsaeed.moneymanagement
+name: Resource Account creation
+tags:
+  - resource
+  - account
+  - smoke
+---
+# Reusable in either ledger mode. Pass EXPECTED_PROFILE_ID as
+# `profile-sign-in` before auth or `profile-sign-out` after personal sync.
+# Pass RUN_LABEL and RUN_ID to identify the exact record in cloud checks.
+# Preconditions: launch the Expo dev client through `stim ios`; do not use
+# `clearState`, which resets the dev-client shell rather than Trove's ledger.
+- launchApp
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove:///
+- evalScript: ${output.accountName = 'Maestro ' + RUN_LABEL + ' Checking ' + RUN_ID}
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove://settings/household
+- extendedWaitUntil:
+    timeout: 15000
+    visible:
+      id: ${EXPECTED_PROFILE_ID}
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove:///
+- extendedWaitUntil:
+    timeout: 45000
+    visible: "Upcoming payments"
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove://accounts
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Accounts"
+- tapOn:
+    point: "84%, 92%"
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Add Account"
+- tapOn: "e.g. Main Checking"
+- inputText: ${output.accountName}
+- hideKeyboard
+- tapOn:
+    id: "create-resource-submit"
+- extendedWaitUntil:
+    timeout: 15000
+    notVisible: "Add Account"
+- scrollUntilVisible:
+    element: ${output.accountName}
+    direction: DOWN
+    timeout: 15000
+    visibilityPercentage: 50
+- assertVisible: ".*${output.accountName}.*"

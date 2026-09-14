@@ -1,0 +1,60 @@
+appId: com.stringsaeed.moneymanagement
+name: Resource Category creation
+tags:
+  - resource
+  - category
+  - smoke
+---
+# Reusable in either ledger mode. Pass EXPECTED_PROFILE_ID as
+# `profile-sign-in` before auth or `profile-sign-out` after personal sync.
+# Pass RUN_LABEL and RUN_ID to identify the exact record in cloud checks.
+# Preconditions: launch the Expo dev client through `stim ios`; do not use
+# `clearState`, which resets the dev-client shell rather than Trove's ledger.
+- launchApp
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove:///
+- evalScript: ${output.categoryName = 'Maestro ' + RUN_LABEL + ' Groceries ' + RUN_ID}
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove://settings/household
+- extendedWaitUntil:
+    timeout: 15000
+    visible:
+      id: ${EXPECTED_PROFILE_ID}
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove:///
+- extendedWaitUntil:
+    timeout: 45000
+    visible: "Upcoming payments"
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove://categories
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Categories"
+# The Categories FAB currently has no accessibility identifier or testID.
+- tapOn:
+    point: "84%, 92%"
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Add Category"
+- tapOn: "e.g. Groceries"
+- inputText: ${output.categoryName}
+- hideKeyboard
+- tapOn:
+    id: "create-resource-submit"
+- extendedWaitUntil:
+    timeout: 15000
+    notVisible: "Add Category"
+- scrollUntilVisible:
+    element: ${output.categoryName}
+    direction: DOWN
+    timeout: 15000
+    visibilityPercentage: 50
+- assertVisible: ".*${output.categoryName}.*"

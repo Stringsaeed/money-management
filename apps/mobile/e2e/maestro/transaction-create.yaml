@@ -1,0 +1,53 @@
+appId: com.stringsaeed.moneymanagement
+name: Resource Transaction creation
+tags:
+  - resource
+  - transaction
+  - smoke
+---
+# Reusable in either ledger mode. Pass EXPECTED_PROFILE_ID as
+# `profile-sign-in` before auth or `profile-sign-out` after personal sync.
+# Pass RUN_LABEL and RUN_ID to identify the exact record in cloud checks.
+# Preconditions: launch through `stim ios` and have at least one Account in the
+# selected ledger. Do not use `clearState`: it opens the Expo dev-client shell.
+- launchApp
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove:///
+- evalScript: ${output.transactionNote = RUN_LABEL.slice(0, 1).toUpperCase() + 'TX ' + RUN_ID}
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove://settings/household
+- extendedWaitUntil:
+    timeout: 15000
+    visible:
+      id: ${EXPECTED_PROFILE_ID}
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove:///
+- extendedWaitUntil:
+    timeout: 45000
+    visible: "Create transaction"
+- tapOn: "Create transaction"
+- extendedWaitUntil:
+    timeout: 15000
+    visible:
+      id: "transaction-note-field"
+- tapOn: "5"
+- tapOn:
+    id: "transaction-note-field"
+- setClipboard: ${output.transactionNote}
+- pasteText
+- assertVisible: ".*${output.transactionNote}.*"
+- tapOn: "save"
+- extendedWaitUntil:
+    timeout: 25000
+    notVisible:
+      id: "transaction-note-field"
+- extendedWaitUntil:
+    timeout: 25000
+    visible: ".*${output.transactionNote}.*"
+- assertVisible: ".*${output.transactionNote}.*"
