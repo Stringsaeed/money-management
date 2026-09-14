@@ -37,6 +37,11 @@ const useLedgerRevision = (ledger: SyncedTransactionLedger | null) =>
 // ── Queries ────────────────────────────────────────────────────────────────────
 
 export function useTransactions(filters: TransactionFilters) {
+  "use no memo";
+
+  // TODO(#277): expose an immutable ledger snapshot keyed by revision, then
+  // remove this opt-out. The stable ledger identity otherwise lets the compiler
+  // cache status.phase as hydrating after PowerSync collections become ready.
   const source = useTransactionDataSource();
   const ledger = useSyncedTransactionLedger();
   useLedgerRevision(ledger);

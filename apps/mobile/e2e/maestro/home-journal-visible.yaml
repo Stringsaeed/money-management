@@ -1,0 +1,36 @@
+appId: com.stringsaeed.moneymanagement
+name: Home shows a saved transaction
+tags:
+  - home
+  - transaction
+  - smoke
+---
+# Read-only regression check. EXPECTED_NOTE must name a Transaction already
+# visible in the signed-in Personal Ledger; this flow must not create or upload
+# another row.
+- launchApp
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove:///
+- assertVisible: "Upcoming payments"
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove://settings/household
+- assertVisible:
+    id: profile-sign-out
+- tapOn:
+    id: open-household-actions
+- assertVisible: ".*Your personal ledger syncs.*"
+- tapOn:
+    point: "50%, 15%"
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove:///
+- assertVisible: "Recent Journal"
+- extendedWaitUntil:
+    timeout: 12000
+    visible: ".*${EXPECTED_NOTE}.*"
+- assertVisible: ".*${EXPECTED_NOTE}.*"

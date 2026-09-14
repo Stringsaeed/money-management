@@ -1,0 +1,70 @@
+appId: com.stringsaeed.moneymanagement
+name: Hosted WorkOS AuthKit authentication
+tags:
+  - auth
+  - hosted
+  - smoke
+jsEngine: graaljs
+onFlowComplete:
+  - evalScript: ${output.authMagicAuthCode = ""}
+  - evalScript: ${output.authMagicAuthDigits = []}
+  - evalScript: ${output.authRunStartedAtMs = 0}
+---
+# Preconditions: run this flow through scripts/maestro-workos-auth.js with a
+# approved dedicated QA address, a WorkOS client ID, and the Staging API
+# key in WORKOS_API_KEY. The runner keeps the key out of Maestro's environment.
+# Provision the dedicated WorkOS Staging User before this flow; the runner
+# retrieves a hosted code but does not create a User.
+# Leave the app signed out and do not use launchApp.clearState with the Expo
+# development client.
+- launchApp
+- evalScript: ${output.authRunStartedAtMs = new Date().getTime()}
+- runFlow:
+    file: open-trove-link.yaml
+    env:
+      APP_LINK: trove://settings/household
+- extendedWaitUntil:
+    timeout: 15000
+    visible:
+      id: profile-sign-in
+- tapOn:
+    id: profile-sign-in
+- extendedWaitUntil:
+    timeout: 15000
+    visible: "Sign in with email code"
+- tapOn: "Continue with email code"
+- runFlow:
+    when:
+      visible: ".*Wants to Use.*to Sign In"
+    commands:
+      - tapOn: "Continue"
+- extendedWaitUntil:
+    timeout: 30000
+    visible: "Email"
+- tapOn: "Email"
+- eraseText
+- inputText: ${MAESTRO_WORKOS_TEST_EMAIL}
+- hideKeyboard
+- tapOn: "Continue with email"
+- extendedWaitUntil:
+    timeout: 30000
+    visible: "Enter the code sent to"
+- runScript: auth-code.js
+- evalScript: ${output.authMagicAuthDigits = output.authMagicAuthCode.split("")}
+- tapOn:
+    point: "50%, 50%"
+- eraseText
+- inputText: ${output.authMagicAuthDigits[0]}
+- inputText: ${output.authMagicAuthDigits[1]}
+- inputText: ${output.authMagicAuthDigits[2]}
+- inputText: ${output.authMagicAuthDigits[3]}
+- inputText: ${output.authMagicAuthDigits[4]}
+- inputText: ${output.authMagicAuthDigits[5]}
+- evalScript: ${output.authMagicAuthCode = ""}
+- evalScript: ${output.authMagicAuthDigits = []}
+- extendedWaitUntil:
+    timeout: 60000
+    visible:
+      id: profile-sign-out
+- assertVisible:
+    id: profile-sign-out
