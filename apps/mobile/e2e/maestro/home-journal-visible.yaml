@@ -20,6 +20,11 @@ tags:
       APP_LINK: trove://settings/household
 - assertVisible:
     id: profile-sign-out
+- tapOn:
+    id: open-household-actions
+- assertVisible: ".*Your personal ledger syncs.*"
+- tapOn:
+    point: "50%, 15%"
 - runFlow:
     file: open-trove-link.yaml
     env:

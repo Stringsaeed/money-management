@@ -92,6 +92,15 @@ Use `profile-sign-out` and a `personal-*` label for the corresponding
 post-auth diagnosis. Each file launches the app independently, so a failed
 sheet-close assertion does not hide the next resource's result.
 
+After a Personal Ledger Transaction exists, check the fresh-launch Home
+readiness without creating another record:
+
+```sh
+maestro test --udid <SIMULATOR_UDID> \
+  -e EXPECTED_NOTE="PTX $RUN_ID" \
+  apps/mobile/e2e/maestro/home-journal-visible.yaml
+```
+
 ## Coverage and known limits
 
 | Flow                        | Expected result                                                                         |
