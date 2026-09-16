@@ -219,7 +219,6 @@ jest.mock("@/lib/sonner", () => {
 });
 
 jest.mock("sonner-native", () => jest.requireMock("@/lib/sonner"));
-jest.mock("sonner", () => jest.requireMock("@/lib/sonner"));
 
 // Reanimated 4 runs its own JS implementation under Jest, so we use the real
 // module and let setUpTests() register matchers, as recommended in the docs:

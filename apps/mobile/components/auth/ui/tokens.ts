@@ -1,5 +1,3 @@
-import { Platform } from "react-native";
-
 export type AuthTokenName =
   | "--color-ink"
   | "--color-foreground"
@@ -65,22 +63,19 @@ export const AUTH_FALLBACK_PALETTE = {
   },
 } satisfies Record<"light" | "dark", AuthPalette>;
 
+import { Platform } from "react-native";
+
 export type AuthFontWeight = "400" | "500" | "600";
 
 export const AUTH_FONT_FACES = {
-  "400": { ios: "Nunito-Regular", android: "Nunito_400Regular", web: "Nunito_400Regular" },
-  "500": { ios: "Nunito-Medium", android: "Nunito_500Medium", web: "Nunito_500Medium" },
-  "600": { ios: "Nunito-SemiBold", android: "Nunito_600SemiBold", web: "Nunito_600SemiBold" },
-} satisfies Record<
-  AuthFontWeight,
-  { readonly ios: string; readonly android: string; readonly web: string }
->;
+  "400": { ios: "Nunito-Regular", android: "Nunito_400Regular" },
+  "500": { ios: "Nunito-Medium", android: "Nunito_500Medium" },
+  "600": { ios: "Nunito-SemiBold", android: "Nunito_600SemiBold" },
+} satisfies Record<AuthFontWeight, { readonly ios: string; readonly android: string }>;
 
 export function fontFace(weight: AuthFontWeight): string {
   const faces = AUTH_FONT_FACES[weight];
-  return (
-    Platform.select({ ios: faces.ios, android: faces.android, default: faces.web }) ?? faces.web
-  );
+  return Platform.OS === "ios" ? faces.ios : faces.android;
 }
 
 const HEX_COLOR = /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
