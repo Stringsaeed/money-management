@@ -1,7 +1,8 @@
-import { TextInput, View } from "react-native";
+import { StyleSheet, TextInput, View } from "react-native";
 
 import type { EditableField } from "@/components/rejected-changes/payload-fields";
 import { Text } from "@/components/ui/text";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 
 interface RejectedChangeEditFormProps {
   fields: readonly EditableField[];
@@ -15,20 +16,18 @@ interface RejectedChangeEditFormProps {
 export function RejectedChangeEditForm({ fields, onFieldChange }: RejectedChangeEditFormProps) {
   if (fields.length === 0) {
     return (
-      <Text className="font-body-normal text-sm text-ink/50">
+      <Text style={styles.emptyHint}>
         This change has no editable values — resubmit it as-is or go back and discard it.
       </Text>
     );
   }
   return (
-    <View className="gap-4">
+    <View style={styles.form}>
       {fields.map((field) => (
-        <View key={field.key} className="gap-1.5">
-          <Text className="font-body-medium text-xs uppercase tracking-wider text-ink/50">
-            {field.key}
-          </Text>
+        <View key={field.key} style={styles.field}>
+          <Text style={styles.fieldLabel}>{field.key}</Text>
           <TextInput
-            className="rounded-xl border border-ledger-outline bg-surface-container px-3 py-2.5 font-body-normal text-base text-ink"
+            style={styles.input}
             value={field.value}
             onChangeText={(value) => onFieldChange(field.key, value)}
             autoCapitalize="none"
@@ -39,3 +38,38 @@ export function RejectedChangeEditForm({ fields, onFieldChange }: RejectedChange
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  emptyHint: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  form: {
+    gap: spacing[4],
+  },
+  field: {
+    gap: spacing[1.5],
+  },
+  fieldLabel: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textXs,
+    textTransform: "uppercase",
+    letterSpacing: typography.trackingWider,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  input: {
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: colors.ledgerOutline,
+    backgroundColor: colors.surfaceContainer,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2.5],
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textBase,
+    color: colors.ink,
+    borderCurve: "continuous",
+  },
+});

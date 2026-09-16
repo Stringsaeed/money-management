@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { RejectedChangesScreen } from "@/components/rejected-changes/rejected-changes-screen";
 import type { RejectedChange } from "@/modules/powersync/rejected-changes";
@@ -20,6 +21,16 @@ jest.mock("@/hooks/use-rejected-changes", () => ({
     resubmit: jest.fn(),
   }),
 }));
+
+
+const initialWindowMetrics = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 47, left: 0, right: 0, bottom: 34 },
+};
+
+function Wrapper({ children }: { children: React.ReactNode }) {
+  return <SafeAreaProvider initialMetrics={initialWindowMetrics}>{children}</SafeAreaProvider>;
+}
 
 function makeChange(overrides: Partial<RejectedChange> = {}): RejectedChange {
   return {
@@ -45,7 +56,7 @@ describe("RejectedChangesScreen", () => {
       makeChange({ commandId: "cmd-2", kind: "account.create" }),
     ];
 
-    await render(<RejectedChangesScreen />);
+    await render(<RejectedChangesScreen />, { wrapper: Wrapper });
 
     expect(screen.getByText(/Rejected Changes/)).toBeOnTheScreen();
     await waitFor(() => {
@@ -57,7 +68,7 @@ describe("RejectedChangesScreen", () => {
   it("shows the empty state when nothing was rejected", async () => {
     mockChanges.current = [];
 
-    await render(<RejectedChangesScreen />);
+    await render(<RejectedChangesScreen />, { wrapper: Wrapper });
 
     expect(screen.getByText("Nothing rejected")).toBeOnTheScreen();
   });

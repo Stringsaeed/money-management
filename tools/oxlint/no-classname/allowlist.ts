@@ -97,19 +97,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
   },
   {
     files: [
-      "apps/mobile/components/rejected-changes/rejected-change-card.tsx",
-      "apps/mobile/components/rejected-changes/rejected-change-edit-form.tsx",
-      "apps/mobile/components/rejected-changes/rejected-change-edit-screen.tsx",
-      "apps/mobile/components/rejected-changes/rejected-changes-empty-state.tsx",
-      "apps/mobile/components/rejected-changes/rejected-changes-screen.tsx",
-      "apps/mobile/components/rejected-changes/rejection-kind-badge.tsx",
-    ],
-    reason:
-      "Rejected changes components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: [
       "apps/mobile/components/resource/create-resource-bottom-sheet.tsx",
       "apps/mobile/components/resource/create-resource-sheet-footer.tsx",
       "apps/mobile/components/resource/resource-form-field.tsx",
