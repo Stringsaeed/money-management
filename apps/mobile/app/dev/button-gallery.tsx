@@ -1,18 +1,19 @@
 /**
  * TEMPORARY: Button Gallery for QA (#318)
  *
+ * TODO(#283): Delete this file after Button StyleSheet migration QA is complete.
+ *
  * This screen exists solely to QA the Button StyleSheet migration.
- * Remove after #283 is merged and visual parity is confirmed.
+ * It is gated by __DEV__ and will show an error in production builds.
  *
  * Route: /dev/button-gallery
  * Stim path: Deep link to exp://localhost:8081/--/dev/button-gallery
- *            or navigate via Expo Go: type URL manually
  */
 
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { colors, spacing } from "@/lib/design-tokens";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 const VARIANTS = ["default", "destructive", "secondary", "outline", "ghost", "link"] as const;
@@ -53,11 +54,31 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+function DevOnlyGate({ children }: { children: React.ReactNode }) {
+  if (!__DEV__) {
+    return (
+      <View style={styles.gateContainer}>
+        <Stack.Screen options={{ title: "Not Available", headerShown: true }} />
+        <Text style={styles.gateText}>⚠️ Dev-only screen</Text>
+        <Text style={styles.gateSubtext}>This screen is only available in development builds.</Text>
+        <Button variant="outline" onPress={() => router.back()}>
+          <Text>Go Back</Text>
+        </Button>
+      </View>
+    );
+  }
+  return <>{children}</>;
+}
+
 export default function ButtonGalleryScreen() {
   return (
-    <>
+    <DevOnlyGate>
       <Stack.Screen options={{ title: "🧪 Button Gallery", headerShown: true }} />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <View style={styles.tempBanner}>
+          <Text style={styles.tempBannerText}>⚠️ TEMPORARY — TODO(#283): Delete after QA</Text>
+        </View>
+
         <Text style={styles.header}>Button StyleSheet Migration QA</Text>
         <Text style={styles.subheader}>Variants × Sizes × States (system light/dark)</Text>
 
@@ -105,7 +126,7 @@ export default function ButtonGalleryScreen() {
 
         <View style={styles.spacer} />
       </ScrollView>
-    </>
+    </DevOnlyGate>
   );
 }
 
@@ -117,6 +138,20 @@ const styles = StyleSheet.create({
   content: {
     padding: spacing[4],
     paddingBottom: spacing[20],
+  },
+  tempBanner: {
+    backgroundColor: colors.kumoWarningTint,
+    borderWidth: 1,
+    borderColor: colors.kumoWarning,
+    borderRadius: 8,
+    padding: spacing[3],
+    marginBottom: spacing[4],
+  },
+  tempBannerText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.textWarning,
+    textAlign: "center",
   },
   header: {
     fontSize: 24,
@@ -156,5 +191,23 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: spacing[10],
+  },
+  gateContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: spacing[6],
+    gap: spacing[4],
+  },
+  gateText: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: colors.foreground,
+  },
+  gateSubtext: {
+    fontSize: 14,
+    color: colors.mutedForeground,
+    textAlign: "center",
   },
 });
