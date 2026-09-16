@@ -1,9 +1,9 @@
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { CheckIcon } from "phosphor-react-native";
 
-import { ColorPalette } from "@/constants/theme";
 import { Icon } from "@/components/ui/icon";
-import { cn } from "@/lib/utils";
+import { ColorPalette } from "@/constants/theme";
+import { colors, radii, shadows, spacing } from "@/lib/design-tokens";
 
 interface ColorPickerProps {
   value: string;
@@ -12,7 +12,7 @@ interface ColorPickerProps {
 
 export function ColorPicker({ value, onChange }: ColorPickerProps) {
   return (
-    <View className="flex-row flex-wrap gap-2.5 py-1">
+    <View style={styles.row}>
       {ColorPalette.map((color) => {
         const isSelected = value === color;
         return (
@@ -22,22 +22,20 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
             accessibilityRole="button"
             accessibilityLabel={`Color ${color}`}
             accessibilityState={{ selected: value === color }}
-            style={{ backgroundColor: color }}
-            className={cn(
-              "w-9 h-9 rounded-full will-change-variable isolate",
-              isSelected && "border-[3px] border-background shadow justify-center items-center",
-            )}
+            style={[
+              styles.swatch,
+              { backgroundColor: color },
+              isSelected && styles.swatchSelected,
+            ]}
           >
-            {value === color ? (
-              <View className="mix-blend-difference">
-                <Icon
-                  as={CheckIcon}
-                  className="text-white"
-                  size={13}
-                  weight="bold"
-                  testID="selected-color-check"
-                />
-              </View>
+            {isSelected ? (
+              <Icon
+                as={CheckIcon}
+                style={styles.checkIcon}
+                size={13}
+                weight="bold"
+                testID="selected-color-check"
+              />
             ) : null}
           </Pressable>
         );
@@ -45,3 +43,27 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing[2.5],
+    paddingVertical: spacing[1],
+  },
+  swatch: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.full,
+  },
+  swatchSelected: {
+    borderWidth: 3,
+    borderColor: colors.background,
+    boxShadow: shadows.DEFAULT,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  checkIcon: {
+    color: "#ffffff",
+  },
+});
