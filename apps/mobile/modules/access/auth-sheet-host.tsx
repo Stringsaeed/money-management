@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { AuthBottomSheet } from "@/components/auth/auth-bottom-sheet";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { resolveReturnDestination } from "@/modules/access/access";
 import { coreFromAccess } from "@/modules/access/core-from-state";
 import { hrefForInternal } from "@/modules/access/return-to";
 import { useAccess } from "@/modules/access/use-access";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 
 import type { AuthSheetSession } from "./auth-sheet-session";
 
@@ -65,31 +66,70 @@ function AuthKitSignInPanel({
   }
 
   return (
-    <View className="gap-6">
-      <View className="gap-2">
-        <Text className="font-heading-normal text-2xl italic text-ink">
-          Sign in with email code
-        </Text>
-        <Text className="font-body-normal text-sm text-ink/60">
+    <View style={styles.panel}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Sign in with email code</Text>
+        <Text style={styles.subtitle}>
           We open WorkOS AuthKit. No password. Your local ledger stays on this device.
         </Text>
       </View>
-      <View className="gap-4">
-        <Text className="font-body-normal text-sm text-ink/70">
+      <View style={styles.actions}>
+        <Text style={styles.note}>
           Signing in does not create a Household and does not upload device records.
         </Text>
         {failed ? (
-          <Text className="font-body-normal text-sm text-destructive">
+          <Text style={styles.error}>
             Could not finish sign-in. Check your connection and try again.
           </Text>
         ) : null}
-        <Button disabled={busy} onPress={onContinue} className="w-full">
+        <Button disabled={busy} onPress={onContinue} style={styles.fullWidth}>
           <Text>{busy ? "Opening AuthKit…" : "Continue with email code"}</Text>
         </Button>
-        <Button disabled={busy} onPress={onDismiss} variant="link" className="self-center">
+        <Button disabled={busy} onPress={onDismiss} variant="link" style={styles.cancel}>
           <Text>Cancel</Text>
         </Button>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  panel: {
+    gap: spacing[6],
+  },
+  header: {
+    gap: spacing[2],
+  },
+  title: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.text2xl,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  subtitle: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.6,
+  },
+  actions: {
+    gap: spacing[4],
+  },
+  note: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.7,
+  },
+  error: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.destructive,
+  },
+  fullWidth: {
+    width: "100%",
+  },
+  cancel: {
+    alignSelf: "center",
+  },
+});
