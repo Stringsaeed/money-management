@@ -17,8 +17,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
   {
     files: [
       "apps/mobile/app/activity.tsx",
-      "apps/mobile/app/categories.tsx",
-      "apps/mobile/app/category/new.tsx",
       "apps/mobile/app/_layout.tsx",
       "apps/mobile/app/recurring/index.tsx",
       "apps/mobile/app/splash.tsx",
@@ -55,18 +53,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
     ],
     reason:
       "Auth components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: [
-      "apps/mobile/components/category/category-form-content.tsx",
-      "apps/mobile/components/category/category-form-preview.tsx",
-      "apps/mobile/components/category/category-lifecycle-actions.tsx",
-      "apps/mobile/components/category/category-picker.tsx",
-      "apps/mobile/components/category/category-type-picker.tsx",
-    ],
-    reason:
-      "Category components using NativeWind className pending migration to theme module StyleSheet.",
     issue: 279,
   },
   {
