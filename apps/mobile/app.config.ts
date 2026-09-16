@@ -60,10 +60,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       predictiveBackGestureEnabled: false,
       package: getAppId(),
     },
-    web: {
-      output: "static",
-      favicon: "./assets/images/favicon.png",
-    },
     plugins: [
       "expo-router",
       [

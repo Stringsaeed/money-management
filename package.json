@@ -8,7 +8,6 @@
     "reset-project": "pnpm -C apps/mobile reset-project",
     "android": "turbo run build && pnpm -C apps/mobile android",
     "ios": "turbo run build && pnpm -C apps/mobile ios",
-    "web": "turbo run build && pnpm -C apps/mobile web",
     "prebuild": "turbo run build && pnpm -C apps/mobile prebuild",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",

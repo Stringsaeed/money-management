@@ -1,8 +1,6 @@
 import { createContext, createElement, use, type ReactNode } from "react";
-import { Platform } from "react-native";
 import {
   open,
-  openAsync,
   type DB,
   type OPSQLiteConnection,
   type QueryResult,
@@ -125,9 +123,6 @@ function openLedgerDatabase(
 async function openNative(name: string) {
   const location = sqliteDirectoryPath();
   const options = location ? { name, location } : { name };
-  if (Platform.OS === "web") {
-    return openAsync(options);
-  }
   return open(options);
 }
 
