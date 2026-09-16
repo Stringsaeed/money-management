@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { useCreateHousehold } from "@/hooks/use-households";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 
 /** Names and creates a new shared household; the creator becomes its admin. */
 export function CreateHouseholdForm({ onCreated }: { onCreated?: () => void }) {
@@ -25,8 +26,8 @@ export function CreateHouseholdForm({ onCreated }: { onCreated?: () => void }) {
   }
 
   return (
-    <View className="gap-3 px-4 py-4">
-      <Text className="font-body-normal text-xs text-ink/40">
+    <View style={styles.container}>
+      <Text style={styles.description}>
         Start a shared space — family accounts, budgets, and reports in one place.
       </Text>
       <Input placeholder="Household name (e.g. The Saeeds)" value={name} onChangeText={setName} />
@@ -34,10 +35,28 @@ export function CreateHouseholdForm({ onCreated }: { onCreated?: () => void }) {
         <Text>{createHousehold.isPending ? "Creating…" : "🏠 Create household"}</Text>
       </Button>
       {createHousehold.isError ? (
-        <Text className="text-destructive text-xs">
+        <Text style={styles.errorText}>
           Could not create the household. Check your connection and try again.
         </Text>
       ) : null}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: spacing[3],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[4],
+  },
+  description: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  errorText: {
+    fontSize: typography.textXs,
+    color: colors.destructive,
+  },
+});

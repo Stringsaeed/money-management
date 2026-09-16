@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TextInput, View } from "react-native";
+import { StyleSheet, TextInput, View } from "react-native";
 
 import {
   ENABLE_SYNC_IDLE_DESCRIPTION,
@@ -11,6 +11,7 @@ import { NativeHost, NativePrimaryButton } from "@/components/native-ui";
 import { inputTextStyle } from "@/components/ui/input-style";
 import { Text } from "@/components/ui/text";
 import { useEnableSync, type EnableSyncStatus } from "@/hooks/use-enable-sync";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 
 const RUNNING_STATUSES: readonly EnableSyncStatus[] = [
   "creating_household",
@@ -34,11 +35,9 @@ export function EnableSyncCard({ activeHouseholdId }: { activeHouseholdId: strin
 
   if (status === "matched") {
     return (
-      <View className="gap-1 px-4 py-4">
-        <Text className="font-body-semibold text-sm text-sage">☁️ Synced to the cloud</Text>
-        <Text className="font-body-normal text-xs text-ink/40">
-          {ENABLE_SYNC_MATCHED_DESCRIPTION}
-        </Text>
+      <View style={styles.matchedContainer}>
+        <Text style={styles.matchedTitle}>☁️ Synced to the cloud</Text>
+        <Text style={styles.description}>{ENABLE_SYNC_MATCHED_DESCRIPTION}</Text>
       </View>
     );
   }
@@ -50,9 +49,9 @@ export function EnableSyncCard({ activeHouseholdId }: { activeHouseholdId: strin
       : "Enable Sync";
 
   return (
-    <View className="gap-3 px-4 py-4">
-      <Text className="font-heading-normal italic text-lg text-ink">Enable Sync ☁️</Text>
-      <Text className="font-body-normal text-xs text-ink/40">{ENABLE_SYNC_IDLE_DESCRIPTION}</Text>
+    <View style={styles.container}>
+      <Text style={styles.heading}>Enable Sync ☁️</Text>
+      <Text style={styles.description}>{ENABLE_SYNC_IDLE_DESCRIPTION}</Text>
       {!activeHouseholdId ? (
         <TextInput
           placeholder="Household name (e.g. The Saeeds)"
@@ -60,8 +59,7 @@ export function EnableSyncCard({ activeHouseholdId }: { activeHouseholdId: strin
           onChangeText={setName}
           placeholderTextColor="#9a9896"
           editable={!isRunning}
-          className="border border-input rounded-[10px] p-3.5 text-base leading-5 text-foreground"
-          style={inputTextStyle}
+          style={[styles.textInput, inputTextStyle]}
         />
       ) : null}
       <NativeHost>
@@ -76,7 +74,7 @@ export function EnableSyncCard({ activeHouseholdId }: { activeHouseholdId: strin
         <Text
           accessibilityLiveRegion="assertive"
           accessibilityRole="alert"
-          className="text-destructive text-xs"
+          style={styles.errorText}
         >
           {error.message}
         </Text>
@@ -85,7 +83,7 @@ export function EnableSyncCard({ activeHouseholdId }: { activeHouseholdId: strin
         <Text
           accessibilityLiveRegion="assertive"
           accessibilityRole="alert"
-          className="text-destructive text-xs"
+          style={styles.errorText}
         >
           {ENABLE_SYNC_MISMATCH_DESCRIPTION}
         </Text>
@@ -93,3 +91,46 @@ export function EnableSyncCard({ activeHouseholdId }: { activeHouseholdId: strin
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: spacing[3],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[4],
+  },
+  matchedContainer: {
+    gap: spacing[1],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[4],
+  },
+  heading: {
+    fontFamily: typography.fontHeadingNormal,
+    fontStyle: "italic",
+    fontSize: typography.textLg,
+    color: colors.ink,
+  },
+  matchedTitle: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textSm,
+    color: colors.sage,
+  },
+  description: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: colors.input,
+    borderRadius: radii.DEFAULT,
+    padding: spacing[3.5],
+    fontSize: typography.textBase,
+    lineHeight: 20,
+    color: colors.foreground,
+  },
+  errorText: {
+    fontSize: typography.textXs,
+    color: colors.destructive,
+  },
+});
