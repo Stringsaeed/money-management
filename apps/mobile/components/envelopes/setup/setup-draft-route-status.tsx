@@ -1,6 +1,8 @@
 import { ActivityIndicator } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { styles } from "@/components/envelopes/styles";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 
@@ -17,6 +19,7 @@ export const SetupDraftRouteStatus = ({
   onRetry,
   status = "loading",
 }: SetupDraftRouteStatusProps) => {
+  const insets = useSafeAreaInsets();
   const unreadable = status === "unreadable";
   const unavailable = status === "unavailable";
   return (
@@ -24,7 +27,10 @@ export const SetupDraftRouteStatus = ({
       entering={FadeIn}
       exiting={FadeOut}
       layout={LinearTransition}
-      className="flex-1 items-center justify-center gap-3 bg-surface px-5 safe-top safe-bottom"
+      style={[
+        styles.screenFlexCenterGap3,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
     >
       {status === "loading" ? <ActivityIndicator accessibilityLabel="Loading Setup Draft" /> : null}
       {unreadable ? (
@@ -32,10 +38,10 @@ export const SetupDraftRouteStatus = ({
           entering={FadeIn}
           exiting={FadeOut}
           layout={LinearTransition}
-          className="gap-3"
+          style={styles.routeStatusGap3}
         >
-          <Text className="text-center font-body-semibold text-ink">Setup Draft is unreadable</Text>
-          <Text selectable className="text-center font-body-normal text-sm text-ink/60">
+          <Text style={styles.textCenterSemiboldInk}>Setup Draft is unreadable</Text>
+          <Text selectable style={styles.textCenterNormalSmInk60}>
             The saved plan cannot be resumed. Discard only this draft, then start setup again.
           </Text>
           <Button accessibilityLabel="Discard unreadable Setup Draft" onPress={onDiscard}>
@@ -48,10 +54,10 @@ export const SetupDraftRouteStatus = ({
           entering={FadeIn}
           exiting={FadeOut}
           layout={LinearTransition}
-          className="gap-3"
+          style={styles.routeStatusGap3}
         >
-          <Text className="text-center font-body-semibold text-ink">Setup data is unavailable</Text>
-          <Text selectable className="text-center font-body-normal text-sm text-ink/60">
+          <Text style={styles.textCenterSemiboldInk}>Setup data is unavailable</Text>
+          <Text selectable style={styles.textCenterNormalSmInk60}>
             Accounts or Categories could not be loaded. Check local storage, then retry.
           </Text>
           <Button accessibilityLabel="Retry loading Setup Draft" onPress={onRetry}>
@@ -61,7 +67,7 @@ export const SetupDraftRouteStatus = ({
       ) : null}
       {actionError ? (
         <Animated.View entering={FadeIn} exiting={FadeOut} layout={LinearTransition}>
-          <Text selectable className="text-center font-body-medium text-sm text-destructive">
+          <Text selectable style={[styles.textDestructive, { textAlign: "center" }]}>
             {actionError}
           </Text>
         </Animated.View>

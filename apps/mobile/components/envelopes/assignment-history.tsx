@@ -5,6 +5,8 @@ import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
 import type { AssignmentHistoryEntry } from "@/modules/budgeting/budgeting";
 
+import { styles } from "./styles";
+
 interface AssignmentHistoryProps {
   entries: readonly AssignmentHistoryEntry[];
   error: Error | null;
@@ -27,14 +29,14 @@ export function AssignmentHistory({
   if (isLoading) {
     return (
       <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
-        <Text className="font-body-normal text-sm text-ink/60">Loading history…</Text>
+        <Text style={styles.textNormalSmInk60}>Loading history…</Text>
       </Animated.View>
     );
   }
   if (error) {
     return (
       <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
-        <Text role="alert" className="text-sm text-destructive">
+        <Text role="alert" style={styles.textDestructiveAlert}>
           Assignment history could not be loaded.
         </Text>
       </Animated.View>
@@ -43,21 +45,19 @@ export function AssignmentHistory({
   if (entries.length === 0) {
     return (
       <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
-        <Text className="font-body-normal text-sm text-ink/60">
-          No Assignments in this Budget Period.
-        </Text>
+        <Text style={styles.textNormalSmInk60}>No Assignments in this Budget Period.</Text>
       </Animated.View>
     );
   }
   return (
     <Animated.View
       accessibilityLabel="Assignment history"
-      className="gap-2"
       entering={FadeIn}
       exiting={FadeOut}
       layout={layoutTransition}
+      style={styles.gap2}
     >
-      <Text className="font-heading-medium text-lg italic text-ink">Assignment history</Text>
+      <Text style={styles.historyTitle}>Assignment history</Text>
       {entries.map((entry) => {
         const isCorrectionCandidate =
           entry.kind === "original" && !reversedAssignmentIds.has(entry.id);
@@ -67,15 +67,15 @@ export function AssignmentHistory({
             accessibilityLabel={`Assignment ${entry.id}, ${entry.kind}`}
             accessibilityRole={isCorrectionCandidate ? "button" : undefined}
             accessibilityState={{ selected: isSelected }}
-            className="rounded-xl bg-surface-container px-4 py-3"
             disabled={!isCorrectionCandidate}
             key={entry.id}
             onPress={isCorrectionCandidate ? handleSelect(entry) : undefined}
+            style={styles.historyEntry}
           >
-            <Text className="font-body-medium text-sm text-ink">
+            <Text style={styles.textMediumInkSm}>
               {entry.kind} · {entry.amountMinor} minor units
             </Text>
-            <Text className="font-body-normal text-xs text-ink/60">{entry.id}</Text>
+            <Text style={styles.textNormalXsInk60}>{entry.id}</Text>
           </Pressable>
         );
       })}

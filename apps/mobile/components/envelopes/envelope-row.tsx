@@ -6,6 +6,8 @@ import { Text } from "@/components/ui/text";
 import type { EnvelopeSummary } from "@/modules/budgeting/budgeting";
 import { formatCents } from "@/utils/currency";
 
+import { styles } from "./styles";
+
 interface EnvelopeRowProps {
   envelope: EnvelopeSummary;
   onEdit?: (envelope: EnvelopeSummary) => void;
@@ -14,31 +16,28 @@ interface EnvelopeRowProps {
 export function EnvelopeRow({ envelope, onEdit }: EnvelopeRowProps) {
   const content = (
     <>
-      <View className="flex-row items-start gap-3">
-        <Text className="text-xl">{envelope.icon}</Text>
-        <View className="min-w-0 flex-1 gap-1">
-          <View className="flex-row items-center justify-between gap-3">
-            <Text className="font-body-semibold text-base text-ink" numberOfLines={1}>
+      <View style={styles.flexRowGap3}>
+        <Text style={styles.envelopeRowIcon}>{envelope.icon}</Text>
+        <View style={styles.minW0Flex1Gap1}>
+          <View style={styles.flexRowItemsCenterJustifyBetween}>
+            <Text style={styles.envelopeRowTitle} numberOfLines={1}>
               {envelope.name}
             </Text>
-            <Text
-              className="font-heading-medium text-lg italic text-ink"
-              style={{ fontVariant: ["tabular-nums"] }}
-            >
+            <Text style={styles.envelopeRowAmount}>
               {formatCents(envelope.availableMoney.amountMinor, envelope.currency)}
             </Text>
           </View>
-          <Text className="font-body-medium text-xs text-ink/50">Available Money</Text>
-          <View className="flex-row gap-4">
-            <Text className="font-body-normal text-xs text-ink/60">
+          <Text style={styles.envelopeRowLabelXs}>Available Money</Text>
+          <View style={styles.flexRowGap4}>
+            <Text style={styles.textNormalXsInk60}>
               Assigned Money {formatCents(envelope.assignedMoney.amountMinor, envelope.currency)}
             </Text>
-            <Text className="font-body-normal text-xs text-ink/60">
+            <Text style={styles.textNormalXsInk60}>
               Net Spent {formatCents(envelope.netSpent.amountMinor, envelope.currency)}
             </Text>
           </View>
           {envelope.health.status === "needs_attention" ? (
-            <Text className="font-body-medium text-xs text-destructive">
+            <Text style={styles.textDestructiveXs}>
               Needs Attention · Map an active expense Category
             </Text>
           ) : null}
@@ -52,15 +51,16 @@ export function EnvelopeRow({ envelope, onEdit }: EnvelopeRowProps) {
         <Pressable
           accessibilityLabel={`Edit ${envelope.name} Envelope`}
           accessibilityRole="button"
-          className="rounded-2xl border border-ledger-outline bg-surface px-4 py-3 active:bg-surface-dim"
           onPress={() => onEdit(envelope)}
+          style={({ pressed }) => [
+            styles.envelopeRowCard,
+            pressed && styles.envelopeRowCardPressed,
+          ]}
         >
           {content}
         </Pressable>
       ) : (
-        <View className="rounded-2xl border border-ledger-outline bg-surface px-4 py-3">
-          {content}
-        </View>
+        <View style={styles.envelopeRowCard}>{content}</View>
       )}
     </Animated.View>
   );
