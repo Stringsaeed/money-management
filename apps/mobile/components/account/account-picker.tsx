@@ -1,7 +1,8 @@
-import { Pressable, ScrollView, View } from "react-native";
-import { Text } from "@/components/ui/text";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
+import { Text } from "@/components/ui/text";
 import { useAccounts } from "@/hooks/use-accounts";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 
 interface AccountChipProps {
   name: string;
@@ -15,17 +16,16 @@ function AccountChip({ name, currency, color, isSelected, onPress }: AccountChip
   return (
     <Pressable
       onPress={onPress}
-      style={{
-        borderColor: isSelected ? color : undefined,
-        backgroundColor: isSelected ? `${color}20` : undefined,
-      }}
-      className={`px-3.5 py-2.5 rounded-[10px] border-2 min-w-[100px] ${isSelected ? "" : "border-input bg-card"}`}
+      style={[
+        styles.chip,
+        isSelected ? { borderColor: color, backgroundColor: `${color}20` } : styles.chipUnselected,
+      ]}
     >
-      <View style={{ backgroundColor: color }} className="w-2 h-2 rounded-full mb-1" />
-      <Text className="text-[13px] font-semibold text-foreground" numberOfLines={1}>
+      <View style={[styles.colorDot, { backgroundColor: color }]} />
+      <Text style={styles.chipName} numberOfLines={1}>
         {name}
       </Text>
-      <Text className="text-[11px] text-muted-foreground">{currency}</Text>
+      <Text style={styles.chipCurrency}>{currency}</Text>
     </Pressable>
   );
 }
@@ -44,12 +44,12 @@ export function AccountPicker({ value, onChange, exclude = [], label }: AccountP
   );
 
   return (
-    <View className="gap-2">
-      {label ? <Text className="text-sm font-semibold text-foreground">{label}</Text> : null}
+    <View style={styles.container}>
+      {label ? <Text style={styles.label}>{label}</Text> : null}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerClassName="gap-2"
+        contentContainerStyle={styles.scrollContent}
       >
         {available.map((account) => (
           <AccountChip
@@ -65,3 +65,44 @@ export function AccountPicker({ value, onChange, exclude = [], label }: AccountP
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: spacing[2],
+  },
+  label: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textSm,
+    color: colors.foreground,
+  },
+  scrollContent: {
+    gap: spacing[2],
+  },
+  chip: {
+    paddingHorizontal: spacing[3.5],
+    paddingVertical: spacing[2.5],
+    borderRadius: radii.DEFAULT,
+    borderWidth: 2,
+    minWidth: 100,
+  },
+  chipUnselected: {
+    borderColor: colors.input,
+    backgroundColor: colors.card,
+  },
+  colorDot: {
+    width: 8,
+    height: 8,
+    borderRadius: radii.full,
+    marginBottom: spacing[1],
+  },
+  chipName: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textSm,
+    color: colors.foreground,
+  },
+  chipCurrency: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: 11,
+    color: colors.mutedForeground,
+  },
+});

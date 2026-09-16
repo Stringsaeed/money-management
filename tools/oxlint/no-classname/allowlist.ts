@@ -16,8 +16,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
   },
   {
     files: [
-      "apps/mobile/app/account/\\[id\\].tsx",
-      "apps/mobile/app/accounts.tsx",
       "apps/mobile/app/activity.tsx",
       "apps/mobile/app/categories.tsx",
       "apps/mobile/app/category/new.tsx",
@@ -39,24 +37,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
     ],
     reason:
       "Access components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: [
-      "apps/mobile/components/account/account-archive-blocker-item.tsx",
-      "apps/mobile/components/account/account-archive-blockers.tsx",
-      "apps/mobile/components/account/account-currency-option-row.tsx",
-      "apps/mobile/components/account/account-currency-picker.tsx",
-      "apps/mobile/components/account/account-form-balance-section.tsx",
-      "apps/mobile/components/account/account-form-content.tsx",
-      "apps/mobile/components/account/account-form-preview.tsx",
-      "apps/mobile/components/account/account-lifecycle-actions.tsx",
-      "apps/mobile/components/account/account-picker.tsx",
-      "apps/mobile/components/account/account-type-picker.tsx",
-      "apps/mobile/components/account/archived-account-summary.tsx",
-    ],
-    reason:
-      "Account components using NativeWind className pending migration to theme module StyleSheet.",
     issue: 279,
   },
   {
@@ -173,7 +153,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
   },
   {
     files: [
-      "apps/mobile/components/settings/account-row.tsx",
       "apps/mobile/components/settings/card.tsx",
       "apps/mobile/components/settings/category-row.tsx",
       "apps/mobile/components/settings/divider.tsx",

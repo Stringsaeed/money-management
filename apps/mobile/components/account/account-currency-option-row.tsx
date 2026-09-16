@@ -1,10 +1,10 @@
 import { CheckIcon } from "phosphor-react-native";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import type { AccountCurrencyOption } from "@/components/account/account-currency-utils";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 
 interface AccountCurrencyOptionRowProps {
   item: AccountCurrencyOption;
@@ -22,40 +22,98 @@ export function AccountCurrencyOptionRow({
       accessibilityLabel={`${item.code}, ${item.name}`}
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      className={cn(
-        "min-h-14 flex-row items-center gap-3 rounded-xl px-4 py-3",
-        selected ? "bg-ink" : "bg-surface-container",
-      )}
+      style={[styles.container, selected ? styles.containerSelected : styles.containerUnselected]}
       onPress={() => onSelect(item.code)}
       testID={`account-currency-option-${item.code}`}
     >
       {item.symbol ? (
         <View
-          className={cn(
-            "min-w-12 items-center justify-center rounded-lg px-2 py-1.5",
-            selected ? "bg-surface/15" : "bg-surface",
-          )}
+          style={[
+            styles.symbolBadge,
+            selected ? styles.symbolBadgeSelected : styles.symbolBadgeUnselected,
+          ]}
         >
-          <Text
-            className={cn("font-body-semibold text-sm", selected ? "text-surface" : "text-ink")}
-          >
+          <Text style={[styles.symbolText, selected ? styles.textOnInk : styles.textOnSurface]}>
             {item.symbol}
           </Text>
         </View>
       ) : null}
-      <View className="min-w-0 flex-1">
-        <Text
-          className={cn("font-body-semibold text-base", selected ? "text-surface" : "text-ink")}
-        >
+      <View style={styles.labelContainer}>
+        <Text style={[styles.codeText, selected ? styles.textOnInk : styles.textOnSurface]}>
           {item.code}
         </Text>
         <Text
-          className={cn("font-body-normal text-sm", selected ? "text-surface/70" : "text-ink/50")}
+          style={[styles.nameText, selected ? styles.nameTextSelected : styles.nameTextUnselected]}
         >
           {item.name}
         </Text>
       </View>
-      {selected ? <Icon as={CheckIcon} className="text-surface" size={18} weight="bold" /> : null}
+      {selected ? <Icon as={CheckIcon} style={styles.checkIcon} size={18} weight="bold" /> : null}
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    minHeight: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[3],
+    borderRadius: radii.xl,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+  },
+  containerSelected: {
+    backgroundColor: colors.ink,
+  },
+  containerUnselected: {
+    backgroundColor: colors.surfaceContainer,
+  },
+  symbolBadge: {
+    minWidth: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radii.lg,
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[1.5],
+  },
+  symbolBadgeSelected: {
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+  },
+  symbolBadgeUnselected: {
+    backgroundColor: colors.surface,
+  },
+  symbolText: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textSm,
+  },
+  labelContainer: {
+    minWidth: 0,
+    flex: 1,
+  },
+  codeText: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textBase,
+  },
+  nameText: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+  },
+  nameTextSelected: {
+    color: colors.surface,
+    opacity: 0.7,
+  },
+  nameTextUnselected: {
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  textOnInk: {
+    color: colors.surface,
+  },
+  textOnSurface: {
+    color: colors.ink,
+  },
+  checkIcon: {
+    color: colors.surface,
+  },
+});

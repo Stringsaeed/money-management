@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { PlusIcon } from "phosphor-react-native";
 
@@ -14,27 +15,30 @@ import { layoutTransition } from "@/components/transaction/constants";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 import { useAllAccountsWithBalances } from "@/hooks/use-accounts";
 import type { AccountWithBalance } from "@/types";
 
 export default function AccountsScreen() {
   const [editingAccount, setEditingAccount] = useState<AccountWithBalance | null>(null);
   const { data: accounts = [] } = useAllAccountsWithBalances();
+  const insets = useSafeAreaInsets();
 
   return (
-    <View className="flex-1 bg-surface safe-bottom">
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <ScrollView
-        className="flex-1"
+        style={styles.scrollView}
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerClassName="pb-safe-offset-32 pt-2"
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + spacing[8] },
+        ]}
       >
         {accounts.length === 0 ? (
-          <View className="items-center py-16 px-8 gap-2">
+          <View style={styles.emptyContainer}>
             <CoinPlantGraphic />
-            <Text className="font-heading-normal italic text-lg text-ink">No accounts yet</Text>
-            <Text className="font-body-normal text-sm text-ink/50 text-center">
-              Tap the + button to add your first account.
-            </Text>
+            <Text style={styles.emptyTitle}>No accounts yet</Text>
+            <Text style={styles.emptySubtitle}>Tap the + button to add your first account.</Text>
           </View>
         ) : (
           <Card animated clipContent>
@@ -68,3 +72,35 @@ export default function AccountsScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.surface,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: spacing[2],
+  },
+  emptyContainer: {
+    alignItems: "center",
+    paddingVertical: spacing[16],
+    paddingHorizontal: spacing[8],
+    gap: spacing[2],
+  },
+  emptyTitle: {
+    fontFamily: typography.fontHeadingNormal,
+    fontStyle: "italic",
+    fontSize: typography.textLg,
+    color: colors.ink,
+  },
+  emptySubtitle: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.5,
+    textAlign: "center",
+  },
+});

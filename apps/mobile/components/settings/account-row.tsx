@@ -1,12 +1,12 @@
 import { CaretRightIcon } from "phosphor-react-native";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { ACCOUNT_TYPE_META } from "@/components/account/account-form-options";
 import { accountDisplayIcon } from "@/components/account/utils";
 import { Icon } from "@/components/ui/icon";
 import { MoneyText } from "@/components/ui/money-text";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 
 import type { AccountRowProps } from "./types";
 
@@ -18,34 +18,89 @@ export function AccountRow({ account, onPress }: AccountRowProps) {
       aria-label={account.lifecycle === "archived" ? `${account.name}, Archived` : account.name}
       role="button"
       onPress={onPress}
-      className="flex-row items-center px-4 py-3.5 gap-3 bg-surface-container active:bg-surface-dim"
+      style={({ pressed }) => [styles.container, pressed && styles.containerPressed]}
     >
-      <View
-        style={{ backgroundColor: `${account.color}20` }}
-        className="w-9 h-9 rounded-full items-center justify-center"
-      >
-        <Text className="text-base">{accountDisplayIcon(account)}</Text>
+      <View style={[styles.iconCircle, { backgroundColor: `${account.color}20` }]}>
+        <Text style={styles.iconText}>{accountDisplayIcon(account)}</Text>
       </View>
-      <View className="flex-1">
-        <Text className="font-body-medium text-base text-ink">{account.name}</Text>
-        <Text className="font-body-normal text-xs text-ink/40 mt-0.5">
+      <View style={styles.labelContainer}>
+        <Text style={styles.nameText}>{account.name}</Text>
+        <Text style={styles.subtitleText}>
           {typeMeta?.label ?? account.type} · {account.currency}
         </Text>
       </View>
-      {account.lifecycle === "archived" ? (
-        <Text className="font-body-medium text-xs text-ink/40">Archived</Text>
-      ) : null}
+      {account.lifecycle === "archived" ? <Text style={styles.archivedBadge}>Archived</Text> : null}
       <MoneyText
         cents={Math.abs(account.balance)}
         currency={account.currency}
         sign={account.balance < 0 ? "-" : ""}
-        className={cn(
-          "font-heading-normal text-base",
-          account.balance < 0 ? "text-terracotta" : "text-ink",
-        )}
-        style={{ fontVariant: ["tabular-nums"] }}
+        style={[
+          styles.amountText,
+          account.balance < 0 ? styles.amountNegative : styles.amountPositive,
+        ]}
       />
-      <Icon as={CaretRightIcon} className="text-ink/20 ml-1" size={16} />
+      <Icon as={CaretRightIcon} style={styles.caretIcon} size={16} />
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3.5],
+    gap: spacing[3],
+    backgroundColor: colors.surfaceContainer,
+  },
+  containerPressed: {
+    backgroundColor: colors.surfaceDim,
+  },
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.full,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconText: {
+    fontSize: typography.textBase,
+  },
+  labelContainer: {
+    flex: 1,
+  },
+  nameText: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textBase,
+    color: colors.ink,
+  },
+  subtitleText: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+    marginTop: spacing[0.5],
+  },
+  archivedBadge: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  amountText: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textBase,
+    fontVariant: ["tabular-nums"],
+  },
+  amountPositive: {
+    color: colors.ink,
+  },
+  amountNegative: {
+    color: colors.terracotta,
+  },
+  caretIcon: {
+    color: colors.ink,
+    opacity: 0.2,
+    marginLeft: spacing[1],
+  },
+});

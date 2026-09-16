@@ -1,10 +1,11 @@
 import type { Href } from "expo-router";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { layoutTransition } from "@/components/transaction/constants";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 import type { AccountWithBalance } from "@/types";
 
 import { AccountArchiveBlockers } from "./account-archive-blockers";
@@ -28,16 +29,16 @@ export function AccountLifecycleActions({
     !synced && (actions.archivalPreview.isError || actions.deletionPreview.isError);
 
   return (
-    <View className="gap-3 border-t border-ledger-outline pt-5">
-      <Text className="font-heading-normal text-lg italic text-ink">Account lifecycle</Text>
+    <View style={styles.container}>
+      <Text style={styles.heading}>Account lifecycle</Text>
       {account.lifecycle === "archived" ? (
         <Animated.View
           entering={FadeIn}
           exiting={FadeOut}
           layout={layoutTransition}
-          className="gap-3"
+          style={styles.actionsGroup}
         >
-          <Text className="font-body-normal text-sm text-ink/60">
+          <Text style={styles.infoText}>
             Archived Accounts keep their history but cannot receive new activity or fund a budget.
           </Text>
           {synced ? null : (
@@ -56,7 +57,7 @@ export function AccountLifecycleActions({
           entering={FadeIn}
           exiting={FadeOut}
           layout={layoutTransition}
-          className="gap-3"
+          style={styles.actionsGroup}
         >
           {blockers.length > 0 ? (
             <AccountArchiveBlockers account={account} blockers={blockers} onReview={onReview} />
@@ -83,7 +84,7 @@ export function AccountLifecycleActions({
             </Animated.View>
           ) : actions.deletionPreview.isSuccess ? (
             <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
-              <Text className="font-body-normal text-sm text-ink/50">
+              <Text style={styles.hintText}>
                 Financial history found. Archive this Account after resolving its prerequisites.
               </Text>
             </Animated.View>
@@ -92,14 +93,14 @@ export function AccountLifecycleActions({
       )}
       {previewFailed ? (
         <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
-          <Text role="alert" className="font-body-medium text-sm text-destructive">
+          <Text role="alert" style={styles.errorText}>
             Account dependencies could not be refreshed. Retry before changing its lifecycle.
           </Text>
         </Animated.View>
       ) : null}
       {actions.error ? (
         <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
-          <Text role="alert" className="font-body-medium text-sm text-destructive">
+          <Text role="alert" style={styles.errorText}>
             {actions.error}
           </Text>
         </Animated.View>
@@ -107,3 +108,38 @@ export function AccountLifecycleActions({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: spacing[3],
+    borderTopWidth: 1,
+    borderTopColor: colors.ledgerOutline,
+    paddingTop: spacing[5],
+  },
+  heading: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textLg,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  actionsGroup: {
+    gap: spacing[3],
+  },
+  infoText: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.6,
+  },
+  hintText: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  errorText: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textSm,
+    color: colors.destructive,
+  },
+});

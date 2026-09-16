@@ -1,10 +1,14 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { Alert } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import AccountsScreen from "@/app/accounts";
 import { useUIStore } from "@/stores/ui-store";
 import { createAccountWithBalance } from "@/tests/test-utils/factories";
+
+const insets = { top: 0, bottom: 0, left: 0, right: 0 };
+const initialWindowMetrics = { insets, frame: { x: 0, y: 0, width: 390, height: 844 } };
 
 const mockBlockedAccount = createAccountWithBalance({
   id: "account-blocked",
@@ -144,9 +148,11 @@ describe("app/accounts", () => {
 
   it("shows every blocked prerequisite and direct recovery action without a swipe bypass", async () => {
     await render(
-      <GestureHandlerRootView>
-        <AccountsScreen />
-      </GestureHandlerRootView>,
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <GestureHandlerRootView>
+          <AccountsScreen />
+        </GestureHandlerRootView>
+      </SafeAreaProvider>,
     );
 
     await fireEvent.press(screen.getByRole("button", { name: "Everyday" }));
@@ -188,9 +194,11 @@ describe("app/accounts", () => {
     "dismisses the Edit Account sheet and dismissTo's the destination for %s",
     async (buttonName, destination) => {
       await render(
-        <GestureHandlerRootView>
-          <AccountsScreen />
-        </GestureHandlerRootView>,
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+          <GestureHandlerRootView>
+            <AccountsScreen />
+          </GestureHandlerRootView>
+        </SafeAreaProvider>,
       );
 
       await fireEvent.press(screen.getByRole("button", { name: "Everyday" }));
@@ -215,9 +223,11 @@ describe("app/accounts", () => {
   it("labels archived Accounts and restores without promising Funding Membership", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
     const view = await render(
-      <GestureHandlerRootView>
-        <AccountsScreen />
-      </GestureHandlerRootView>,
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <GestureHandlerRootView>
+          <AccountsScreen />
+        </GestureHandlerRootView>
+      </SafeAreaProvider>,
     );
 
     await fireEvent.press(screen.getByRole("button", { name: "Old Wallet, Archived" }));
@@ -235,9 +245,11 @@ describe("app/accounts", () => {
 
     expect(mockRestoreAccount).toHaveBeenCalledWith("account-archived");
     await view.rerender(
-      <GestureHandlerRootView>
-        <AccountsScreen />
-      </GestureHandlerRootView>,
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <GestureHandlerRootView>
+          <AccountsScreen />
+        </GestureHandlerRootView>
+      </SafeAreaProvider>,
     );
     expect(screen.getByRole("button", { name: "Old Wallet" })).toBeOnTheScreen();
     expect(screen.queryByRole("button", { name: "Old Wallet, Archived" })).not.toBeOnTheScreen();
@@ -246,9 +258,11 @@ describe("app/accounts", () => {
   it("offers permanent Delete only for an unused Account", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
     await render(
-      <GestureHandlerRootView>
-        <AccountsScreen />
-      </GestureHandlerRootView>,
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <GestureHandlerRootView>
+          <AccountsScreen />
+        </GestureHandlerRootView>
+      </SafeAreaProvider>,
     );
 
     await fireEvent.press(screen.getByRole("button", { name: "Unused" }));

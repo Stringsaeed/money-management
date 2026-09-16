@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { FlatList, Keyboard, Pressable, View } from "react-native";
+import { FlatList, Keyboard, Pressable, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { recoverAccountCurrencyListScroll } from "@/components/account/account-currency-list-scroll";
 import { AccountCurrencyOptionRow } from "@/components/account/account-currency-option-row";
@@ -12,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 
 interface AccountCurrencyPickerProps {
   value: string;
@@ -32,6 +33,7 @@ export function AccountCurrencyPicker({
   const listRef = useRef<FlatList<AccountCurrencyOption>>(null);
   const selected = toAccountCurrencyOption(value);
   const results = filterAccountCurrencyOptions(CURRENCY_OPTIONS, query);
+  const insets = useSafeAreaInsets();
 
   const open = () => {
     setQuery("");
@@ -64,36 +66,35 @@ export function AccountCurrencyPicker({
       <Pressable
         accessibilityLabel={`Selected currency ${selected.code}, ${selected.name}`}
         accessibilityRole="button"
-        className={cn(
-          "rounded-2xl border border-ledger-outline bg-surface active:bg-surface-dim",
-          compact
-            ? "min-w-[72px] items-center justify-center px-3 py-3"
-            : "flex-row items-center gap-3 px-4 py-3.5",
-        )}
+        style={({ pressed }) => [
+          styles.trigger,
+          compact ? styles.triggerCompact : styles.triggerFull,
+          pressed && styles.triggerPressed,
+        ]}
         onPress={open}
         testID="account-currency-trigger"
       >
         {compact ? (
-          <Text className="font-body-semibold text-base text-ink">{selected.code}</Text>
+          <Text style={styles.compactCode}>{selected.code}</Text>
         ) : (
           <>
             {selected.symbol ? (
-              <View className="min-w-12 items-center justify-center rounded-xl bg-surface-container px-2 py-1.5">
-                <Text className="font-body-semibold text-sm text-ink">{selected.symbol}</Text>
+              <View style={styles.symbolBadge}>
+                <Text style={styles.symbolText}>{selected.symbol}</Text>
               </View>
             ) : null}
-            <View className="min-w-0 flex-1">
-              <Text className="font-body-semibold text-base text-ink">{selected.code}</Text>
-              <Text className="font-body-normal text-sm text-ink/50">{selected.name}</Text>
+            <View style={styles.labelContainer}>
+              <Text style={styles.codeText}>{selected.code}</Text>
+              <Text style={styles.nameText}>{selected.name}</Text>
             </View>
-            <Text className="font-body-medium text-sm text-ink/40">Change</Text>
+            <Text style={styles.changeText}>Change</Text>
           </>
         )}
       </Pressable>
 
       <ModalBottomSheet open={isPresented} onDismiss={dismiss} testID="account-currency-sheet">
-        <View className="gap-2 px-4 pb-2 pt-4">
-          <Text className="font-body-semibold text-base text-ink">Currency</Text>
+        <View style={styles.sheetContent}>
+          <Text style={styles.sheetTitle}>Currency</Text>
           <Input
             autoCapitalize="none"
             autoCorrect={false}
@@ -104,15 +105,13 @@ export function AccountCurrencyPicker({
             value={query}
           />
           <FlatList
-            className="h-96 w-full"
+            style={styles.list}
             ListEmptyComponent={
-              <View className="items-center px-4 py-10">
-                <Text className="font-body-medium text-base text-ink/50">
-                  {`No currencies match "${query.trim()}". 🔍`}
-                </Text>
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>{`No currencies match "${query.trim()}". 🔍`}</Text>
               </View>
             }
-            contentContainerClassName="pb-safe gap-2 pt-3"
+            contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom }]}
             data={results}
             initialNumToRender={CURRENCY_OPTIONS.length}
             keyExtractor={(item) => item.code}
@@ -135,3 +134,99 @@ export function AccountCurrencyPicker({
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  trigger: {
+    borderRadius: radii["2xl"],
+    borderWidth: 1,
+    borderColor: colors.ledgerOutline,
+    backgroundColor: colors.surface,
+  },
+  triggerCompact: {
+    minWidth: 72,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[3],
+  },
+  triggerFull: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[3],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3.5],
+  },
+  triggerPressed: {
+    backgroundColor: colors.surfaceDim,
+  },
+  compactCode: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textBase,
+    color: colors.ink,
+  },
+  symbolBadge: {
+    minWidth: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radii.xl,
+    backgroundColor: colors.surfaceContainer,
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[1.5],
+  },
+  symbolText: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textSm,
+    color: colors.ink,
+  },
+  labelContainer: {
+    minWidth: 0,
+    flex: 1,
+  },
+  codeText: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textBase,
+    color: colors.ink,
+  },
+  nameText: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  changeText: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  sheetContent: {
+    gap: spacing[2],
+    paddingHorizontal: spacing[4],
+    paddingBottom: spacing[2],
+    paddingTop: spacing[4],
+  },
+  sheetTitle: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textBase,
+    color: colors.ink,
+  },
+  list: {
+    height: 384,
+    width: "100%",
+  },
+  listContent: {
+    gap: spacing[2],
+    paddingTop: spacing[3],
+  },
+  emptyContainer: {
+    alignItems: "center",
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[10],
+  },
+  emptyText: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textBase,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+});
