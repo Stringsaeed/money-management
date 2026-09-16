@@ -1,10 +1,11 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { layoutTransition } from "@/components/transaction/constants";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useAppUpdate } from "@/hooks/use-app-update";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 
 import { Card } from "./card";
 import { SectionHeader } from "./section-header";
@@ -37,33 +38,29 @@ export function UpdateSection() {
           entering={FadeIn}
           exiting={FadeOut}
           layout={layoutTransition}
-          className="gap-1 px-4 py-4"
+          style={styles.contentContainer}
         >
-          <View className="flex-row items-center gap-3">
-            <Text className="w-7 text-center text-xl">📦</Text>
-            <View className="flex-1">
-              <Text className="font-body-medium text-base text-ink">{copy.title}</Text>
-              <Text className="mt-0.5 font-body-normal text-xs text-ink/40">
+          <View style={styles.statusRow}>
+            <Text style={styles.emoji}>📦</Text>
+            <View style={styles.statusContent}>
+              <Text style={styles.statusTitle}>{copy.title}</Text>
+              <Text style={styles.statusSubtitle}>
                 {status === "downloading" ? `${copy.subtitle} ${progressLabel}` : copy.subtitle}
               </Text>
             </View>
           </View>
 
-          {error ? (
-            <Text className="mt-2 font-body-normal text-xs leading-5 text-destructive">
-              {error}
-            </Text>
-          ) : null}
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
           {status !== "disabled" ? (
             <Animated.View
               entering={FadeIn}
               exiting={FadeOut}
               layout={layoutTransition}
-              className="mt-3 flex-row gap-2"
+              style={styles.buttonRow}
             >
               <Button
-                className="flex-1"
+                style={styles.button}
                 variant="outline"
                 disabled={isBusy}
                 onPress={checkForUpdate}
@@ -71,7 +68,7 @@ export function UpdateSection() {
                 <Text>{status === "checking" ? "Checking…" : "Check for Update"}</Text>
               </Button>
               {status === "available" ? (
-                <Button className="flex-1" onPress={installUpdate}>
+                <Button style={styles.button} onPress={installUpdate}>
                   <Text>Update Now</Text>
                 </Button>
               ) : null}
@@ -82,3 +79,51 @@ export function UpdateSection() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  contentContainer: {
+    gap: spacing[1],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[4],
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[3],
+  },
+  emoji: {
+    width: 28,
+    textAlign: "center",
+    fontSize: typography.textXl,
+  },
+  statusContent: {
+    flex: 1,
+  },
+  statusTitle: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textBase,
+    color: colors.ink,
+  },
+  statusSubtitle: {
+    marginTop: spacing[0.5],
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  errorText: {
+    marginTop: spacing[2],
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    lineHeight: typography.textXs * typography.lineHeightBase,
+    color: colors.destructive,
+  },
+  buttonRow: {
+    marginTop: spacing[3],
+    flexDirection: "row",
+    gap: spacing[2],
+  },
+  button: {
+    flex: 1,
+  },
+});

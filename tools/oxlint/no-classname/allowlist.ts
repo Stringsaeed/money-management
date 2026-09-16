@@ -23,8 +23,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
       "apps/mobile/app/recurring/index.tsx",
       "apps/mobile/app/splash.tsx",
       "apps/mobile/app/\\(tabs\\)/ledger/index.tsx",
-      "apps/mobile/app/\\(tabs\\)/settings/household.tsx",
-      "apps/mobile/app/\\(tabs\\)/settings/index.tsx",
     ],
     reason: "Screen files using NativeWind className pending migration to theme module StyleSheet.",
     issue: 279,
@@ -149,20 +147,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
     ],
     reason:
       "Resource components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: [
-      "apps/mobile/components/settings/card.tsx",
-      "apps/mobile/components/settings/category-row.tsx",
-      "apps/mobile/components/settings/divider.tsx",
-      "apps/mobile/components/settings/erase-local-data-control.tsx",
-      "apps/mobile/components/settings/section-header.tsx",
-      "apps/mobile/components/settings/settings-row.tsx",
-      "apps/mobile/components/settings/update-section.tsx",
-    ],
-    reason:
-      "Settings components using NativeWind className pending migration to theme module StyleSheet.",
     issue: 279,
   },
   {

@@ -1,6 +1,6 @@
 import { router } from "expo-router";
-import { ScrollView, View } from "react-native";
 import * as Updates from "expo-updates";
+import { ScrollView, StyleSheet, View } from "react-native";
 
 import { Card } from "@/components/settings/card";
 import { DevToolsSection } from "@/components/settings/dev-tools-section";
@@ -14,6 +14,7 @@ import { useAccountsWithBalances } from "@/hooks/use-accounts";
 import { useAllCategories } from "@/hooks/use-categories";
 import { useRecurringRulesList } from "@/hooks/use-recurring-rules";
 import { useTransactions } from "@/hooks/use-transactions";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 import { returnTo, useAccess, type AccessState } from "@/modules/access";
 
 export default function SettingsScreen() {
@@ -29,9 +30,9 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-surface"
+      style={styles.container}
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerClassName="pb-safe-offset-12"
+      contentContainerStyle={styles.contentContainer}
     >
       {/* Profile */}
       <SectionHeader title="Profile" />
@@ -101,11 +102,11 @@ export default function SettingsScreen() {
       {/* About */}
       <SectionHeader title="About ℹ️" />
       <Card>
-        <View className="items-center px-4 py-6 gap-1">
-          <Text className="text-4xl mb-2">💰</Text>
-          <Text className="font-heading-normal text-xl italic text-ink">Money Manager</Text>
-          <Text className="font-body-normal text-xs text-ink/40">Track your finances, simply.</Text>
-          <Text className="font-body-normal text-xs text-ink/20 mt-2">Version 1.0.0</Text>
+        <View style={styles.aboutContainer}>
+          <Text style={styles.aboutEmoji}>💰</Text>
+          <Text style={styles.aboutTitle}>Money Manager</Text>
+          <Text style={styles.aboutTagline}>Track your finances, simply.</Text>
+          <Text style={styles.aboutVersion}>Version 1.0.0</Text>
         </View>
       </Card>
 
@@ -143,3 +144,42 @@ function subtitleForAccess(access: AccessState): string {
   if (access.kind === "resolving") return "Loading…";
   return "Sign in or create profile";
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.surface,
+  },
+  contentContainer: {
+    paddingBottom: spacing[16],
+  },
+  aboutContainer: {
+    alignItems: "center",
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[6],
+    gap: spacing[1],
+  },
+  aboutEmoji: {
+    fontSize: typography.text4xl,
+    marginBottom: spacing[2],
+  },
+  aboutTitle: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textXl,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  aboutTagline: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  aboutVersion: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.2,
+    marginTop: spacing[2],
+  },
+});

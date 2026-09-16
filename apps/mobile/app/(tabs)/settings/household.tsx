@@ -1,22 +1,22 @@
+import { ScrollView, StyleSheet } from "react-native";
+
 import { SessionRevokedCard } from "@/components/access/session-revoked-card";
 import { SignedOutCard } from "@/components/access/signed-out-card";
 import { SignedInHousehold } from "@/components/household/signed-in-household";
 import { Text } from "@/components/ui/text";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 import { returnTo, useAccess } from "@/modules/access";
-import { ScrollView } from "react-native";
 
 export default function HouseholdScreen() {
   const access = useAccess();
 
   return (
     <ScrollView
-      className="flex-1 bg-background"
+      style={styles.container}
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerClassName="gap-2 px-4 bg-background grow"
+      contentContainerStyle={styles.contentContainer}
     >
-      {access.kind === "resolving" ? (
-        <Text className="text-muted-foreground px-1 py-6 text-sm">Loading…</Text>
-      ) : null}
+      {access.kind === "resolving" ? <Text style={styles.loadingText}>Loading…</Text> : null}
       {access.kind === "anonymous" ? (
         <SignedOutCard onSignIn={() => access.beginAuth(returnTo.profileHousehold())} />
       ) : null}
@@ -34,3 +34,23 @@ export default function HouseholdScreen() {
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  contentContainer: {
+    gap: spacing[2],
+    paddingHorizontal: spacing[4],
+    backgroundColor: colors.background,
+    flexGrow: 1,
+  },
+  loadingText: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.mutedForeground,
+    paddingHorizontal: spacing[1],
+    paddingVertical: spacing[6],
+  },
+});
