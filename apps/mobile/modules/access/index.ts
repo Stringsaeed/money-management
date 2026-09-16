@@ -19,6 +19,7 @@ export { firstRouteParam } from "./route-param";
 export { hrefForInternal, PROFILE_HOUSEHOLD_HREF, returnTo, serializeReturnTo } from "./return-to";
 export { getAuthAccessToken, probeSession, tryRemoteSignOut } from "./session-probe";
 export { signedInUserId, useAccess } from "./use-access";
+export { useLedgerScope, type LedgerScope, type LedgerScopeKind } from "./use-ledger-scope";
 export type {
   AccessCore,
   AccessState,
@@ -28,6 +29,7 @@ export type {
   Identity,
   IdentityClaim,
   InternalHref,
+  LedgerSelection,
   MembershipSummary,
   ResolveAccessInput,
   ReturnTo,
