@@ -559,67 +559,20 @@ const radii = {
 } as const;
 
 // -----------------------------------------------------------------------------
-// Shadow Tokens
+// Shadow Tokens (boxShadow format)
+// Format: "offsetX offsetY blurRadius spreadRadius? color"
 // -----------------------------------------------------------------------------
 
 const shadows = {
-  none: {
-    shadowColor: "transparent",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-  },
-  sm: {
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  DEFAULT: {
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  md: {
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  lg: {
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  xl: {
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 12,
-  },
+  none: "none",
+  sm: "0px 1px 2px rgba(0, 0, 0, 0.05)",
+  DEFAULT: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+  md: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+  lg: "0px 8px 12px rgba(0, 0, 0, 0.1)",
+  xl: "0px 12px 20px rgba(0, 0, 0, 0.15)",
   // Paper Ledger signature shadow
-  ledger: {
-    shadowColor: "#1c1b1a",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.04,
-    shadowRadius: 40,
-    elevation: 4,
-  },
-  ledgerDark: {
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 40,
-    elevation: 4,
-  },
+  ledger: "0px 10px 40px rgba(28, 27, 26, 0.04)",
+  ledgerDark: "0px 10px 40px rgba(0, 0, 0, 0.2)",
 } as const;
 
 // -----------------------------------------------------------------------------
