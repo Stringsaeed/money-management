@@ -1,13 +1,16 @@
-import { cn } from "@/lib/utils";
-import { Text } from "@/components/ui/text";
+import type { ReactNode } from "react";
+import { StyleSheet } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
+
+import { Text } from "@/components/ui/text";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 
 interface EmptyStateProps {
   icon?: string;
-  illustration?: React.ReactNode;
+  illustration?: ReactNode;
   title: string;
   message: string;
-  action?: React.ReactNode;
+  action?: ReactNode;
   /**
    * Set when the parent doesn't establish a definite height (e.g. an
    * auto-sized card in a ScrollView). `flex-1` needs a bounded ancestor to
@@ -28,12 +31,40 @@ export function EmptyState({
   return (
     <Animated.View
       entering={FadeIn.duration(400)}
-      className={cn("items-center justify-center gap-3 p-8", !compact && "flex-1")}
+      style={[styles.container, !compact && styles.flexFill]}
     >
-      {illustration ?? (icon ? <Text className="text-5xl">{icon}</Text> : null)}
-      <Text className="text-lg font-semibold text-center text-foreground">{title}</Text>
-      <Text className="text-sm text-center text-muted-foreground leading-5">{message}</Text>
+      {illustration ?? (icon ? <Text style={styles.icon}>{icon}</Text> : null)}
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.message}>{message}</Text>
       {action}
     </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing[3],
+    padding: spacing[8],
+  },
+  flexFill: {
+    flex: 1,
+  },
+  icon: {
+    fontSize: typography.text5xl,
+  },
+  title: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textLg,
+    textAlign: "center",
+    color: colors.foreground,
+  },
+  message: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    textAlign: "center",
+    color: colors.mutedForeground,
+    lineHeight: 20,
+  },
+});
