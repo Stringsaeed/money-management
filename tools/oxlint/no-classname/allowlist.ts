@@ -24,7 +24,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
       "apps/mobile/app/_layout.tsx",
       "apps/mobile/app/recurring/index.tsx",
       "apps/mobile/app/splash.tsx",
-      "apps/mobile/app/\\(tabs\\)/\\(home\\)/index.tsx",
       "apps/mobile/app/\\(tabs\\)/ledger/index.tsx",
       "apps/mobile/app/\\(tabs\\)/settings/household.tsx",
       "apps/mobile/app/\\(tabs\\)/settings/index.tsx",
@@ -137,24 +136,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
     ],
     reason:
       "Envelopes/budgeting components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: [
-      "apps/mobile/components/home/balance-hero.tsx",
-      "apps/mobile/components/home/filter-bar.tsx",
-      "apps/mobile/components/home/filter-chip.tsx",
-      "apps/mobile/components/home/filters-button.tsx",
-      "apps/mobile/components/home/home-brand.tsx",
-      "apps/mobile/components/home/home-empty-state.tsx",
-      "apps/mobile/components/home/journal-day-header.tsx",
-      "apps/mobile/components/home/journal-list-item-row.tsx",
-      "apps/mobile/components/home/recent-journal-section.tsx",
-      "apps/mobile/components/home/upcoming-recurring-row.tsx",
-      "apps/mobile/components/home/upcoming-recurring-section.tsx",
-    ],
-    reason:
-      "Home components using NativeWind className pending migration to theme module StyleSheet.",
     issue: 279,
   },
   {

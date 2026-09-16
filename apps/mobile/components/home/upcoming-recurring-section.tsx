@@ -9,7 +9,10 @@ import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useUpcomingRecurringRules } from "@/hooks/use-recurring-rules";
+import { rawColorValues } from "@/lib/design-tokens";
 import { today } from "@/utils/date";
+
+import { styles, lightStyles } from "./styles";
 
 export function UpcomingRecurringSection() {
   const colorScheme = useColorScheme();
@@ -19,84 +22,83 @@ export function UpcomingRecurringSection() {
   const hasAccounts = accounts.length > 0;
   const addAction = resolveUpcomingAddAction(isAccountsLoading, hasAccounts);
 
+  const iconTint = colorScheme === "dark" ? rawColorValues.dark.ink : rawColorValues.light.ink;
+
   function handleAddPress() {
     if (addAction.href) router.push(addAction.href);
   }
 
   return (
-    <Animated.View
-      className="mx-5 mt-5 overflow-hidden rounded-lg border border-ledger-outline bg-surface shadow-sm shadow-black/5"
-      layout={layoutTransition}
-    >
-      <View className="flex-row items-center justify-between border-b border-ledger-outline px-4 py-3">
-        <View className="flex-row flex-1 items-center gap-2">
-          <SymbolView
-            name="repeat"
-            size={18}
-            tintColor={colorScheme === "dark" ? "#D6E8DC" : "#1C1B1A"}
-          />
-          <Text className="font-heading-normal text-xl italic text-ink">Upcoming payments</Text>
+    <Animated.View style={styles.upcomingCard} layout={layoutTransition}>
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionHeaderLeft}>
+          <SymbolView name="repeat" size={18} tintColor={iconTint} />
+          <Text style={styles.sectionTitle}>Upcoming payments</Text>
         </View>
         <Pressable
           accessibilityLabel="View all recurring rules"
           accessibilityRole="button"
-          className="px-1 py-1 active:opacity-50"
           onPress={() => router.push("/recurring")}
+          style={({ pressed }) => [styles.viewAllButton, pressed && lightStyles.viewAllPressed]}
         >
-          <Text className="font-body-semibold text-xs text-ink/50">View all</Text>
+          <Text style={styles.viewAllText}>View all</Text>
         </Pressable>
       </View>
 
       {isLoading ? (
         <Animated.View
-          className="h-20 items-center justify-center"
           entering={FadeIn.duration(200)}
           exiting={FadeOut.duration(150)}
+          style={styles.loadingWrapShort}
         >
           <ActivityIndicator />
         </Animated.View>
       ) : isError ? (
         <Animated.View
-          className="gap-1 bg-surface-container/40 px-4 py-4"
           entering={FadeIn.duration(200)}
           exiting={FadeOut.duration(150)}
           layout={layoutTransition}
+          style={styles.errorUpcomingWrap}
         >
-          <Text className="font-body-medium text-sm text-ink">Upcoming payments unavailable</Text>
-          <Text className="font-body-normal text-xs leading-5 text-ink/45">
+          <Text style={styles.errorUpcomingTitle}>Upcoming payments unavailable</Text>
+          <Text style={styles.errorUpcomingSubtitle}>
             Open Recurring Rules to try loading them again.
           </Text>
         </Animated.View>
       ) : upcoming.length === 0 ? (
         <Animated.View
-          className="flex-row items-center gap-3 bg-surface-container/40 px-4 py-3"
           entering={FadeIn.duration(200)}
           exiting={FadeOut.duration(150)}
           layout={layoutTransition}
+          style={styles.emptyUpcomingWrap}
         >
-          <Text className="text-xl">🌱</Text>
-          <View className="flex-1">
-            <Text className="font-body-medium text-sm text-ink">Nothing scheduled yet</Text>
-            <Text className="font-body-normal text-xs leading-5 text-ink/45">
-              Add a Recurring Rule to see what’s next.
+          <Text style={styles.emptyUpcomingEmoji}>🌱</Text>
+          <View style={styles.emptyUpcomingContent}>
+            <Text style={styles.emptyUpcomingTitle}>Nothing scheduled yet</Text>
+            <Text style={styles.emptyUpcomingSubtitle}>
+              Add a Recurring Rule to see what&apos;s next.
             </Text>
           </View>
           <Pressable
             accessibilityLabel={addAction.accessibilityLabel}
             accessibilityRole="button"
-            className="px-1 py-2 active:opacity-50 disabled:opacity-50"
             disabled={!addAction.href}
             onPress={handleAddPress}
+            style={({ pressed }) => [
+              styles.emptyUpcomingAddButton,
+              pressed && lightStyles.viewAllPressed,
+              !addAction.href && { opacity: 0.5 },
+            ]}
           >
-            <Text className="font-body-semibold text-xs text-ink">{addAction.buttonLabel}</Text>
+            <Text style={styles.emptyUpcomingAddText}>{addAction.buttonLabel}</Text>
           </Pressable>
         </Animated.View>
       ) : (
         <Animated.View
-          className="overflow-hidden bg-surface-container/40"
           entering={FadeIn.duration(200)}
           exiting={FadeOut.duration(150)}
           layout={layoutTransition}
+          style={styles.upcomingListWrap}
         >
           {upcoming.map(({ rule, scheduledDate }, index) => (
             <Animated.View key={rule.id} layout={layoutTransition}>
@@ -111,9 +113,7 @@ export function UpcomingRecurringSection() {
                   })
                 }
               />
-              {index < upcoming.length - 1 ? (
-                <View className="ml-16 h-px bg-ledger-outline" />
-              ) : null}
+              {index < upcoming.length - 1 ? <View style={styles.upcomingDivider} /> : null}
             </Animated.View>
           ))}
         </Animated.View>

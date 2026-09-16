@@ -4,6 +4,8 @@ import { JournalDayHeader } from "@/components/home/journal-day-header";
 import { TransactionRow } from "@/components/transaction/transaction-row";
 import type { JournalListItem } from "@/utils/journal-list";
 
+import { styles } from "./styles";
+
 interface JournalListItemRowProps {
   item: JournalListItem;
 }
@@ -16,7 +18,7 @@ export function JournalListItemRow({ item }: JournalListItemRowProps) {
   return (
     <View>
       <TransactionRow transaction={item.data} showAccount={item.showAccount} />
-      {!item.isLast ? <View className="ml-16 h-px bg-ledger-outline" /> : null}
+      {!item.isLast ? <View style={styles.journalListDivider} /> : null}
     </View>
   );
 }
