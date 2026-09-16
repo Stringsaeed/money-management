@@ -1,10 +1,11 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable } from "react-native";
+import { Alert, Pressable, StyleSheet } from "react-native";
 
 import { useEraseLocalData } from "@/components/settings/use-erase-local-data";
 import { Text } from "@/components/ui/text";
 import { ONBOARDING_ENABLED } from "@/constants/onboarding";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 
 export function EraseLocalDataControl() {
   const erase = useEraseLocalData();
@@ -42,12 +43,10 @@ export function EraseLocalDataControl() {
     <Pressable
       onPress={handleEraseAll}
       disabled={erasing || unavailable}
-      className="px-4 py-3.5 items-center active:bg-destructive/10"
+      style={({ pressed }) => [styles.container, pressed && styles.containerPressed]}
     >
-      <Text className="font-body-semibold text-base text-destructive">
-        {erasing ? "Erasing…" : "Erase local data from this device"}
-      </Text>
-      <Text className="font-body-normal text-xs text-ink/40 mt-0.5">
+      <Text style={styles.title}>{erasing ? "Erasing…" : "Erase local data from this device"}</Text>
+      <Text style={styles.subtitle}>
         {unavailable
           ? erase.reason
           : "Permanently delete accounts, categories, and transactions on this device"}
@@ -55,3 +54,26 @@ export function EraseLocalDataControl() {
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3.5],
+    alignItems: "center",
+  },
+  containerPressed: {
+    opacity: 0.7,
+  },
+  title: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textBase,
+    color: colors.destructive,
+  },
+  subtitle: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+    marginTop: spacing[0.5],
+  },
+});

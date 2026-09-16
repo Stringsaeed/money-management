@@ -1,8 +1,9 @@
 import { CaretRightIcon } from "phosphor-react-native";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 
 import type { SettingsRowProps } from "./types";
 
@@ -21,25 +22,60 @@ export function SettingsRow({
       accessibilityRole={onPress ? "button" : undefined}
       disabled={onPress === undefined}
       onPress={onPress}
-      className="flex-row items-center gap-3 px-4 py-3.5 active:opacity-70"
+      style={({ pressed }) => [styles.container, pressed && styles.containerPressed]}
       testID={testID}
     >
-      <Text className="text-xl w-7 text-center">{emoji}</Text>
-      <View className="flex-1">
-        <Text className="font-body-medium text-base text-ink">{label}</Text>
-        {subtitle ? (
-          <Text className="font-body-normal text-xs text-ink/40 mt-0.5">{subtitle}</Text>
-        ) : null}
+      <Text style={styles.emoji}>{emoji}</Text>
+      <View style={styles.labelContainer}>
+        <Text style={styles.label}>{label}</Text>
+        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
-      {rightLabel ? (
-        <Text
-          className="font-body-semibold text-sm text-ink/40"
-          style={{ fontVariant: ["tabular-nums"] }}
-        >
-          {rightLabel}
-        </Text>
-      ) : null}
-      {!noChevron && <Icon as={CaretRightIcon} className="text-ink/20" size={16} />}
+      {rightLabel ? <Text style={styles.rightLabel}>{rightLabel}</Text> : null}
+      {!noChevron && <Icon as={CaretRightIcon} style={styles.caret} size={16} />}
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[3],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3.5],
+  },
+  containerPressed: {
+    opacity: 0.7,
+  },
+  emoji: {
+    fontSize: typography.textXl,
+    width: 28,
+    textAlign: "center",
+  },
+  labelContainer: {
+    flex: 1,
+  },
+  label: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textBase,
+    color: colors.ink,
+  },
+  subtitle: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+    marginTop: spacing[0.5],
+  },
+  rightLabel: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.4,
+    fontVariant: ["tabular-nums"],
+  },
+  caret: {
+    color: colors.ink,
+    opacity: 0.2,
+  },
+});
