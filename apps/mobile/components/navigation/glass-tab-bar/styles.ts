@@ -1,5 +1,7 @@
 import { Platform, StyleSheet } from "react-native";
 
+import { colors, rawColorValues, spacing, radii } from "@/lib/design-tokens";
+
 import { CREATE_SIZE, PILL_PADDING, TAB_HEIGHT, TAB_WIDTH } from "./constants";
 
 export const styles = StyleSheet.create({
@@ -68,5 +70,55 @@ export const styles = StyleSheet.create({
   },
   fallback: {
     overflow: "hidden",
+  },
+
+  capsuleOverlay: {
+    backgroundColor: `${rawColorValues.light.foreground}1A`,
+  },
+
+  fallbackOverlay: {
+    backgroundColor: `${rawColorValues.light.foreground}0D`,
+    borderWidth: 1,
+    borderColor: `${rawColorValues.light.foreground}1A`,
+  },
+
+  iconFocused: {
+    color: colors.foreground,
+  },
+
+  iconUnfocused: {
+    color: `${rawColorValues.light.foreground}8C`,
+  },
+
+  createPressable: {
+    width: spacing[14],
+    height: spacing[14],
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radii.full,
+  },
+
+  createPressableDisabled: {
+    opacity: 0.5,
+  },
+
+  createIcon: {
+    color: colors.foreground,
+  },
+});
+
+export const darkStyles = StyleSheet.create({
+  capsuleOverlay: {
+    backgroundColor: `${rawColorValues.dark.foreground}1A`,
+  },
+
+  fallbackOverlay: {
+    backgroundColor: `${rawColorValues.dark.foreground}0D`,
+    borderWidth: 1,
+    borderColor: `${rawColorValues.dark.foreground}1A`,
+  },
+
+  iconUnfocused: {
+    color: `${rawColorValues.dark.foreground}8C`,
   },
 });

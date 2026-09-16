@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { useColorScheme, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,7 +8,7 @@ import { CreateTabButton } from "./create-tab-button";
 import { GlassSurface } from "./glass-surface";
 import { GlassTabButton } from "./glass-tab-button";
 import { ScrollFade } from "./scroll-fade";
-import { styles } from "./styles";
+import { styles, darkStyles } from "./styles";
 import { getTabIcon, hasTabIcon } from "./tab-icons";
 import type { GlassTabBarProps } from "./types";
 import { useTabBarPanGesture } from "./use-tab-bar-pan-gesture";
@@ -16,6 +16,7 @@ import { useTabBarPanGesture } from "./use-tab-bar-pan-gesture";
 export function GlassTabBar({ state, descriptors, navigation }: GlassTabBarProps) {
   const posthog = usePostHog();
   const insets = useSafeAreaInsets();
+  const isDark = useColorScheme() === "dark";
   const isMoneyMovementEnabled = posthog.getFeatureFlag("enable-money-movement");
 
   const tabRoutes = state.routes
@@ -72,8 +73,12 @@ export function GlassTabBar({ state, descriptors, navigation }: GlassTabBarProps
         <GlassSurface style={styles.pill}>
           <Animated.View
             pointerEvents="none"
-            className="bg-foreground/10"
-            style={[styles.capsule, capsuleStyle]}
+            style={[
+              styles.capsule,
+              styles.capsuleOverlay,
+              isDark && darkStyles.capsuleOverlay,
+              capsuleStyle,
+            ]}
           />
           {tabRoutes.map((route) => {
             const icon = getTabIcon(route.name);

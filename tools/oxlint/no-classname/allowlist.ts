@@ -195,17 +195,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
   },
   {
     files: [
-      "apps/mobile/components/navigation/glass-tab-bar/create-tab-button.tsx",
-      "apps/mobile/components/navigation/glass-tab-bar/glass-surface.tsx",
-      "apps/mobile/components/navigation/glass-tab-bar/glass-tab-bar.tsx",
-      "apps/mobile/components/navigation/glass-tab-bar/glass-tab-button.tsx",
-    ],
-    reason:
-      "Navigation components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: [
       "apps/mobile/components/onboarding/onboarding-balance-step.tsx",
       "apps/mobile/components/onboarding/onboarding-bloom-burst.tsx",
       "apps/mobile/components/onboarding/onboarding-complete-step.tsx",
