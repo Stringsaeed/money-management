@@ -7,6 +7,7 @@ import {
   LEDGER_RESTRICTED_IMPORTS,
   ledgerBoundaryOverrides,
 } from "./tools/oxlint/ledger-boundary/allowlist.ts";
+import { classNameAllowlistOverrides } from "./tools/oxlint/no-classname/allowlist.ts";
 
 export default defineConfig({
   extends: [strict],
@@ -134,6 +135,7 @@ export default defineConfig({
     ".windsurf/**",
     "tools/oxlint/anti-slop/**",
     "tools/oxlint/ledger-boundary/**",
+    "tools/oxlint/no-classname/**",
     "android/app/build",
     "**/dist/**",
     "**/.alchemy/**",
@@ -153,6 +155,10 @@ export default defineConfig({
       name: "test-location",
       specifier: "./tools/oxlint/test-location/index.ts",
     },
+    {
+      name: "no-classname",
+      specifier: "./tools/oxlint/no-classname/index.ts",
+    },
   ],
   overrides: [
     {
@@ -160,9 +166,11 @@ export default defineConfig({
       rules: {
         "no-restricted-imports": ["error", LEDGER_RESTRICTED_IMPORTS],
         "ledger-boundary/no-raw-entity-sql": "error",
+        "no-classname/no-classname-prop": "error",
       },
     },
     ...ledgerBoundaryOverrides(),
+    ...classNameAllowlistOverrides(),
     {
       files: ["apps/mobile/modules/access/**", "apps/mobile/lib/server/orpc.ts"],
       rules: {
