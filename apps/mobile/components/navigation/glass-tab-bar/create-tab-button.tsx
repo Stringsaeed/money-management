@@ -29,10 +29,10 @@ export function CreateTabButton() {
       accessibilityLabel={accessibilityLabel}
       disabled={isLoading}
       onPress={handlePress}
-      className="size-14 items-center justify-center rounded-full disabled:opacity-50"
+      style={[styles.createPressable, isLoading && styles.createPressableDisabled]}
     >
       <GlassSurface style={styles.create}>
-        <Icon as={PlusIcon} size={26} weight="bold" className="text-foreground" />
+        <Icon as={PlusIcon} size={26} weight="bold" style={styles.createIcon} />
         <View pointerEvents="none" style={styles.insetShadow} />
       </GlassSurface>
     </Pressable>
