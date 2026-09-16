@@ -2,6 +2,7 @@
 import React from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { Pressable, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AccountFormBottomSheet } from "@/components/account/account-form-sheet";
 import { CategoryFormBottomSheet } from "@/components/category/category-form-sheet";
@@ -9,6 +10,9 @@ import {
   CreateResourceBottomSheet,
   type CreateResourceBottomSheetRef,
 } from "@/components/resource/create-resource-bottom-sheet";
+
+const insets = { top: 0, bottom: 0, left: 0, right: 0 };
+const initialWindowMetrics = { insets, frame: { x: 0, y: 0, width: 390, height: 844 } };
 
 const mockCreateAccount = jest.fn();
 const mockCreateCategory = jest.fn();
@@ -66,7 +70,11 @@ describe("create resource sheet dismissal", () => {
   });
 
   it("dismisses the Account sheet after a successful create", async () => {
-    await render(<AccountFormBottomSheet autoPresent />);
+    await render(
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <AccountFormBottomSheet autoPresent />
+      </SafeAreaProvider>,
+    );
 
     await fireEvent.changeText(
       screen.getByPlaceholderText("e.g. Main Checking"),

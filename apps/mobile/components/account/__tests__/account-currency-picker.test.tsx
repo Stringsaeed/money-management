@@ -1,8 +1,12 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { useState } from "react";
 import { FlatList } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AccountCurrencyPicker } from "@/components/account/account-currency-picker";
+
+const insets = { top: 0, bottom: 0, left: 0, right: 0 };
+const initialWindowMetrics = { insets, frame: { x: 0, y: 0, width: 390, height: 844 } };
 
 function CurrencyPickerHarness({
   compact = true,
@@ -12,7 +16,11 @@ function CurrencyPickerHarness({
   initialValue?: string;
 }) {
   const [value, setValue] = useState(initialValue);
-  return <AccountCurrencyPicker compact={compact} onChange={setValue} value={value} />;
+  return (
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <AccountCurrencyPicker compact={compact} onChange={setValue} value={value} />
+    </SafeAreaProvider>
+  );
 }
 
 describe("AccountCurrencyPicker", () => {

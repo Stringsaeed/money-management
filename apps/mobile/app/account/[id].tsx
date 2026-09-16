@@ -1,11 +1,20 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, Pressable, ScrollView, useColorScheme, View } from "react-native";
-import { Text } from "@/components/ui/text";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Text } from "@/components/ui/text";
 import { MoneyText } from "@/components/ui/money-text";
 import { TransactionGroup } from "@/components/transaction/transaction-group";
 import { useAccount } from "@/hooks/use-accounts";
 import { useTransactions } from "@/hooks/use-transactions";
+import { colors, radii, shadows, spacing, typography } from "@/lib/design-tokens";
 import { useUIStore } from "@/stores/ui-store";
 import { formatMonth, addMonths } from "@/utils/date";
 import type { DayGroup } from "@/types";
@@ -29,6 +38,7 @@ export default function AccountDetailScreen() {
   const { data: account, isLoading: loadingAccount } = useAccount(id);
   const { selectedYear, selectedMonth, setSelectedMonth } = useUIStore();
   const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
   const { data: transactions = [], isLoading: loadingTxns } = useTransactions({
     year: selectedYear ?? undefined,
     month: selectedMonth ?? undefined,
@@ -37,7 +47,7 @@ export default function AccountDetailScreen() {
 
   if (loadingAccount) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
+      <View style={styles.loadingContainer}>
         <ActivityIndicator />
       </View>
     );
@@ -52,28 +62,25 @@ export default function AccountDetailScreen() {
     .filter((t) => t.type === "expense")
     .reduce((s, t) => s + t.amount, 0);
 
+  const fabShadow = colorScheme === "dark" ? shadows.lg : shadows.md;
+
   return (
-    <ScrollView className="flex-1 bg-background">
+    <ScrollView style={styles.scrollView}>
       <View
-        style={{
-          backgroundColor: account.color,
-          paddingTop: 60,
-          paddingBottom: 24,
-          paddingHorizontal: 20,
-        }}
+        style={[
+          styles.header,
+          { backgroundColor: account.color, paddingTop: insets.top + spacing[4] },
+        ]}
       >
-        <Pressable onPress={() => router.back()} style={{ marginBottom: 16 }}>
-          <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 16 }}>← Back</Text>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Text style={styles.backText}>← Back</Text>
         </Pressable>
-        <Text style={{ color: "white", fontSize: 14, opacity: 0.8 }}>
+        <Text style={styles.accountType}>
           {account.type.replace("_", " ")} · {account.currency}
         </Text>
-        <Text style={{ color: "white", fontSize: 24, fontWeight: "700", marginTop: 4 }}>
-          {account.name}
-        </Text>
+        <Text style={styles.accountName}>{account.name}</Text>
 
-        {/* Month nav */}
-        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16, gap: 16 }}>
+        <View style={styles.monthNav}>
           <Pressable
             onPress={() => {
               if (!selectedYear || !selectedMonth) return;
@@ -81,20 +88,10 @@ export default function AccountDetailScreen() {
               setSelectedMonth(prev.year, prev.month);
             }}
           >
-            <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 20 }}>‹</Text>
+            <Text style={styles.navArrow}>‹</Text>
           </Pressable>
           {!!selectedMonth && !!selectedYear && (
-            <Text
-              style={{
-                color: "white",
-                fontSize: 15,
-                fontWeight: "600",
-                flex: 1,
-                textAlign: "center",
-              }}
-            >
-              {formatMonth(selectedYear, selectedMonth)}
-            </Text>
+            <Text style={styles.monthLabel}>{formatMonth(selectedYear, selectedMonth)}</Text>
           )}
           <Pressable
             onPress={() => {
@@ -103,64 +100,140 @@ export default function AccountDetailScreen() {
               setSelectedMonth(next.year, next.month);
             }}
           >
-            <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 20 }}>›</Text>
+            <Text style={styles.navArrow}>›</Text>
           </Pressable>
         </View>
 
-        {/* Month summary */}
-        <View style={{ flexDirection: "row", marginTop: 16, gap: 20 }}>
+        <View style={styles.summaryRow}>
           <View>
-            <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>INCOME</Text>
+            <Text style={styles.summaryLabel}>INCOME</Text>
             <MoneyText
               cents={totalIncome}
               currency={account.currency}
               sign="+"
-              style={{ color: "white", fontSize: 15, fontWeight: "600" }}
+              style={styles.summaryAmount}
             />
           </View>
           <View>
-            <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>EXPENSES</Text>
+            <Text style={styles.summaryLabel}>EXPENSES</Text>
             <MoneyText
               cents={totalExpense}
               currency={account.currency}
               sign="-"
-              style={{ color: "white", fontSize: 15, fontWeight: "600" }}
+              style={styles.summaryAmount}
             />
           </View>
         </View>
       </View>
 
-      {/* Transactions */}
-      <View className="py-2">
+      <View style={styles.transactionsContainer}>
         {loadingTxns ? (
-          <ActivityIndicator className="mt-8" />
+          <ActivityIndicator style={styles.loadingIndicator} />
         ) : groups.length === 0 ? (
-          <Text className="text-center text-muted-foreground mt-12">
-            No transactions this month
-          </Text>
+          <Text style={styles.emptyText}>No transactions this month</Text>
         ) : (
           groups.map((g) => <TransactionGroup key={g.date} group={g} currency={account.currency} />)
         )}
       </View>
 
-      {/* Add transaction FAB */}
       <Pressable
         onPress={() => router.push("/transaction/new")}
-        style={{
-          position: "absolute",
-          bottom: 32,
-          right: 20,
-          width: 56,
-          height: 56,
-          borderRadius: 28,
-          backgroundColor: account.color,
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: `0 4px 8px ${colorScheme === "dark" ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.3)"}`,
-        }}
+        style={[styles.fab, { backgroundColor: account.color, boxShadow: fabShadow }]}
       >
-        <Text style={{ color: "white", fontSize: 28, lineHeight: 30 }}>+</Text>
+        <Text style={styles.fabText}>+</Text>
       </Pressable>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.background,
+  },
+  header: {
+    paddingBottom: spacing[6],
+    paddingHorizontal: spacing[5],
+  },
+  backButton: {
+    marginBottom: spacing[4],
+  },
+  backText: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: typography.textLg,
+  },
+  accountType: {
+    color: "white",
+    fontSize: typography.textBase,
+    opacity: 0.8,
+  },
+  accountName: {
+    color: "white",
+    fontSize: typography.text2xl,
+    fontFamily: typography.fontHeadingBold,
+    marginTop: spacing[1],
+  },
+  monthNav: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: spacing[4],
+    gap: spacing[4],
+  },
+  navArrow: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 20,
+  },
+  monthLabel: {
+    color: "white",
+    fontSize: 15,
+    fontFamily: typography.fontBodySemibold,
+    flex: 1,
+    textAlign: "center",
+  },
+  summaryRow: {
+    flexDirection: "row",
+    marginTop: spacing[4],
+    gap: spacing[5],
+  },
+  summaryLabel: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 11,
+  },
+  summaryAmount: {
+    color: "white",
+    fontSize: 15,
+    fontFamily: typography.fontBodySemibold,
+  },
+  transactionsContainer: {
+    paddingVertical: spacing[2],
+  },
+  loadingIndicator: {
+    marginTop: spacing[8],
+  },
+  emptyText: {
+    textAlign: "center",
+    color: colors.mutedForeground,
+    marginTop: spacing[12],
+  },
+  fab: {
+    position: "absolute",
+    bottom: spacing[8],
+    right: spacing[5],
+    width: 56,
+    height: 56,
+    borderRadius: radii.full,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fabText: {
+    color: "white",
+    fontSize: 28,
+    lineHeight: 30,
+  },
+});

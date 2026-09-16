@@ -1,7 +1,11 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import AccountDetailScreen from "@/app/account/[id]";
 import { createAccount, createTransactionWithDetails } from "@/tests/test-utils/factories";
+
+const insets = { top: 0, bottom: 0, left: 0, right: 0 };
+const initialWindowMetrics = { insets, frame: { x: 0, y: 0, width: 390, height: 844 } };
 
 const mockBack = jest.fn();
 const mockPush = jest.fn();
@@ -66,7 +70,11 @@ describe("app/account/[id]", () => {
       isLoading: false,
     });
 
-    await render(<AccountDetailScreen />);
+    await render(
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <AccountDetailScreen />
+      </SafeAreaProvider>,
+    );
 
     expect(screen.getByText("Main Checking")).toBeOnTheScreen();
     expect(mockTransactionGroup).toHaveBeenCalled();
@@ -79,7 +87,11 @@ describe("app/account/[id]", () => {
     });
     mockUseTransactions.mockReturnValue({ data: [], isLoading: false });
 
-    await render(<AccountDetailScreen />);
+    await render(
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <AccountDetailScreen />
+      </SafeAreaProvider>,
+    );
     fireEvent.press(screen.getByText("← Back"));
 
     expect(mockBack).toHaveBeenCalled();
