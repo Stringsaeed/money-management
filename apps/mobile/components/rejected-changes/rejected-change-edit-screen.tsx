@@ -1,10 +1,12 @@
-import { ScrollView, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { RejectedChangeEditForm } from "@/components/rejected-changes/rejected-change-edit-form";
 import { useRejectedEditForm } from "@/components/rejected-changes/use-rejected-edit-form";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 import { describeRejection } from "@/modules/powersync/rejection";
 import { commandKindLabel, describeIntent } from "@/utils/intent-summary";
 
@@ -18,13 +20,17 @@ interface RejectedChangeEditScreenProps {
  * values. Saving resubmits the command under a NEW commandId.
  */
 export function RejectedChangeEditScreen({ commandId }: RejectedChangeEditScreenProps) {
+  const insets = useSafeAreaInsets();
   const { change, fields, isLoading, notFound, isSaving, saveError, setFieldValue, save } =
     useRejectedEditForm(commandId);
 
+  const topPad = insets.top + spacing[14];
+  const bottomPad = insets.bottom + spacing[8];
+
   if (isLoading) {
     return (
-      <View className="flex-1 bg-surface">
-        <Text className="px-5 pt-safe-offset-14 font-body-normal text-sm text-ink/50">
+      <View style={styles.container}>
+        <Text style={[styles.mutedText, { paddingHorizontal: spacing[5], paddingTop: topPad }]}>
           Loading…
         </Text>
       </View>
@@ -33,12 +39,10 @@ export function RejectedChangeEditScreen({ commandId }: RejectedChangeEditScreen
 
   if (notFound || !change) {
     return (
-      <View className="flex-1 gap-3 bg-surface px-5 pt-safe-offset-14">
-        <Text className="text-4xl">🤔</Text>
-        <Text className="font-heading-normal text-xl italic tracking-tight text-ink">
-          Nothing to edit
-        </Text>
-        <Text className="font-body-normal text-sm text-ink/50">
+      <View style={[styles.notFound, { paddingTop: topPad, paddingHorizontal: spacing[5] }]}>
+        <Text style={styles.emoji}>🤔</Text>
+        <Text style={styles.notFoundTitle}>Nothing to edit</Text>
+        <Text style={styles.mutedText}>
           This rejected change was already discarded or resubmitted.
         </Text>
         <Button variant="outline" size="sm" onPress={() => router.back()}>
@@ -49,42 +53,43 @@ export function RejectedChangeEditScreen({ commandId }: RejectedChangeEditScreen
   }
 
   return (
-    <View className="flex-1 bg-surface">
-      <ScrollView contentContainerClassName="gap-5 px-5 pt-safe-offset-14 pb-safe-offset-8">
-        <View className="gap-1">
-          <Text className="font-heading-medium text-2xl italic tracking-tight text-ink">
-            Edit &amp; resubmit ✏️
-          </Text>
-          <Text className="font-body-normal text-xs uppercase tracking-wider text-ink/40">
+    <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingTop: topPad,
+            paddingBottom: bottomPad,
+          },
+        ]}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Edit &amp; resubmit ✏️</Text>
+          <Text style={styles.kindLabel}>
             {change.kind === "unknown" ? "Unknown change" : commandKindLabel(change.kind)}
           </Text>
         </View>
 
-        <View className="gap-2 rounded-2xl border border-ledger-outline bg-surface-container p-4">
-          <Text
-            className="font-heading-medium text-lg italic tracking-tight text-ink"
-            numberOfLines={2}
-          >
+        <View style={styles.summaryCard}>
+          <Text style={styles.intentTitle} numberOfLines={2}>
             {change.kind === "unknown"
               ? "Unknown change"
               : describeIntent(change.kind, change.payload)}
           </Text>
-          <Text className="font-body-normal text-sm text-terracotta">
+          <Text style={styles.rejectionReason}>
             💬 Why it was rejected: {describeRejection(change.rejection)}
           </Text>
         </View>
 
         <RejectedChangeEditForm fields={fields} onFieldChange={setFieldValue} />
 
-        {saveError ? (
-          <Text className="font-body-normal text-sm text-destructive">{saveError}</Text>
-        ) : null}
+        {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
 
-        <View className="flex-row gap-2">
+        <View style={styles.actions}>
           <Button
             size="lg"
             variant="secondary"
-            className="flex-1"
+            style={styles.flex1}
             disabled={isSaving}
             onPress={() => void save()}
           >
@@ -95,7 +100,7 @@ export function RejectedChangeEditScreen({ commandId }: RejectedChangeEditScreen
           </Button>
         </View>
 
-        <Text className="font-body-normal text-xs text-ink/40">
+        <Text style={styles.footnote}>
           Resubmitting sends this as a fresh change with a new id — the original stays out of your
           queue.
         </Text>
@@ -103,3 +108,92 @@ export function RejectedChangeEditScreen({ commandId }: RejectedChangeEditScreen
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.surface,
+  },
+  scrollContent: {
+    gap: spacing[5],
+    paddingHorizontal: spacing[5],
+  },
+  notFound: {
+    flex: 1,
+    gap: spacing[3],
+    backgroundColor: colors.surface,
+  },
+  emoji: {
+    fontSize: typography.text4xl,
+  },
+  notFoundTitle: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textXl,
+    fontStyle: "italic",
+    letterSpacing: typography.trackingTight,
+    color: colors.ink,
+  },
+  header: {
+    gap: spacing[1],
+  },
+  title: {
+    fontFamily: typography.fontHeadingMedium,
+    fontSize: typography.text2xl,
+    fontStyle: "italic",
+    letterSpacing: typography.trackingTight,
+    color: colors.ink,
+  },
+  kindLabel: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    textTransform: "uppercase",
+    letterSpacing: typography.trackingWider,
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  summaryCard: {
+    gap: spacing[2],
+    borderRadius: radii["2xl"],
+    borderWidth: 1,
+    borderColor: colors.ledgerOutline,
+    backgroundColor: colors.surfaceContainer,
+    padding: spacing[4],
+    borderCurve: "continuous",
+  },
+  intentTitle: {
+    fontFamily: typography.fontHeadingMedium,
+    fontSize: typography.textLg,
+    fontStyle: "italic",
+    letterSpacing: typography.trackingTight,
+    color: colors.ink,
+  },
+  rejectionReason: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.terracotta,
+  },
+  errorText: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.destructive,
+  },
+  actions: {
+    flexDirection: "row",
+    gap: spacing[2],
+  },
+  flex1: {
+    flex: 1,
+  },
+  footnote: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  mutedText: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+});
