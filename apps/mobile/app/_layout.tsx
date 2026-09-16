@@ -178,6 +178,10 @@ export default function RootLayout() {
                                     name="dev/button-gallery"
                                     options={{ title: "Button Gallery" }}
                                   />
+                                  <Stack.Screen
+                                    name="dev/badge-gallery"
+                                    options={{ title: "Badge Gallery" }}
+                                  />
                                 </Stack>
                                 <StatusBar style="auto" />
                                 <MandatoryUpdateGate />
