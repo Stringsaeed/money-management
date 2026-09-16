@@ -1,5 +1,7 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
+
+import { colors, spacing } from "@/lib/design-tokens";
 
 interface OnboardingProgressProps {
   /** Zero-based index of the step currently on screen. */
@@ -17,7 +19,7 @@ export function OnboardingProgress({ current, total }: OnboardingProgressProps) 
     <View
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: total, now: current + 1 }}
-      className="h-1.5 flex-row items-center gap-1.5"
+      style={styles.container}
     >
       {Array.from({ length: total }, (_, index) => {
         const isActive = index === current;
@@ -25,24 +27,28 @@ export function OnboardingProgress({ current, total }: OnboardingProgressProps) 
         return (
           <Animated.View
             key={index}
-            style={{
-              flexGrow: isActive ? 2 : 1,
-              transitionProperty: ["flexGrow"],
-              transitionDuration: 420,
-              transitionTimingFunction: "ease-out",
-            }}
-            className="h-1.5 overflow-hidden rounded-full bg-ink/10"
+            style={[
+              styles.segment,
+              {
+                flexGrow: isActive ? 2 : 1,
+                transitionProperty: ["flexGrow"],
+                transitionDuration: 420,
+                transitionTimingFunction: "ease-out",
+              },
+            ]}
           >
             <Animated.View
-              className="h-full w-full rounded-full bg-ink"
-              style={{
-                opacity: isActive ? 1 : 0.5,
-                transform: [{ scaleX: index <= current ? 1 : 0 }],
-                transformOrigin: "left center",
-                transitionProperty: ["transform", "opacity"],
-                transitionDuration: [420, 260],
-                transitionTimingFunction: ["ease-out", "ease-out"],
-              }}
+              style={[
+                styles.fill,
+                {
+                  opacity: isActive ? 1 : 0.5,
+                  transform: [{ scaleX: index <= current ? 1 : 0 }],
+                  transformOrigin: "left center",
+                  transitionProperty: ["transform", "opacity"],
+                  transitionDuration: [420, 260],
+                  transitionTimingFunction: ["ease-out", "ease-out"],
+                },
+              ]}
             />
           </Animated.View>
         );
@@ -50,3 +56,25 @@ export function OnboardingProgress({ current, total }: OnboardingProgressProps) 
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    height: spacing[1.5],
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[1.5],
+  },
+  segment: {
+    height: spacing[1.5],
+    overflow: "hidden",
+    borderRadius: 9999,
+    backgroundColor: colors.ink,
+    opacity: 0.1,
+  },
+  fill: {
+    height: "100%",
+    width: "100%",
+    borderRadius: 9999,
+    backgroundColor: colors.ink,
+  },
+});

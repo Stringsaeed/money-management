@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { AccountCurrencyPicker } from "@/components/account/account-currency-picker";
@@ -7,6 +7,7 @@ import { layoutTransition, stepItemEntering } from "@/components/onboarding/moti
 import { OnboardingStepHeading } from "@/components/onboarding/onboarding-step-heading";
 import { OnboardingTextField } from "@/components/onboarding/onboarding-text-field";
 import { Text } from "@/components/ui/text";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 
 /** Digits with at most two decimal places. Empty is allowed and means zero. */
 const AMOUNT_PATTERN = /^\d*(\.\d{0,2})?$/;
@@ -17,14 +18,18 @@ interface OnboardingBalanceStepProps {
 
 export function OnboardingBalanceStep({ form }: OnboardingBalanceStepProps) {
   return (
-    <View className="gap-7">
+    <View style={styles.container}>
       <OnboardingStepHeading
         title="What's in it today?"
         subtitle="Your ledger starts counting from here. Leave it at zero if you'd rather begin fresh."
       />
 
-      <Animated.View className="gap-2.5" entering={stepItemEntering(2)} layout={layoutTransition}>
-        <Text className="font-body-medium text-sm text-ink/50">Starting balance</Text>
+      <Animated.View
+        style={styles.fieldGroup}
+        entering={stepItemEntering(2)}
+        layout={layoutTransition}
+      >
+        <Text style={styles.label}>Starting balance</Text>
         <form.Field
           name="amount"
           validators={{
@@ -35,7 +40,7 @@ export function OnboardingBalanceStep({ form }: OnboardingBalanceStepProps) {
           }}
         >
           {(field) => (
-            <View className="gap-2">
+            <View style={styles.inputGroup}>
               <form.Subscribe selector={(state) => state.values.currency}>
                 {(currency) => (
                   <OnboardingTextField
@@ -43,9 +48,7 @@ export function OnboardingBalanceStep({ form }: OnboardingBalanceStepProps) {
                     keyboardType="decimal-pad"
                     onChangeText={field.handleChange}
                     placeholder="0.00"
-                    prefix={
-                      <Text className="font-body-semibold text-base text-ink/45">{currency}</Text>
-                    }
+                    prefix={<Text style={styles.currencyPrefix}>{currency}</Text>}
                     returnKeyType="done"
                     testID="onboarding-amount-input"
                     value={field.state.value}
@@ -53,17 +56,19 @@ export function OnboardingBalanceStep({ form }: OnboardingBalanceStepProps) {
                 )}
               </form.Subscribe>
               {field.state.meta.errors.length > 0 ? (
-                <Text className="font-body-medium text-xs text-destructive">
-                  {String(field.state.meta.errors[0])}
-                </Text>
+                <Text style={styles.errorText}>{String(field.state.meta.errors[0])}</Text>
               ) : null}
             </View>
           )}
         </form.Field>
       </Animated.View>
 
-      <Animated.View className="gap-2.5" entering={stepItemEntering(3)} layout={layoutTransition}>
-        <Text className="font-body-medium text-sm text-ink/50">Currency</Text>
+      <Animated.View
+        style={styles.fieldGroup}
+        entering={stepItemEntering(3)}
+        layout={layoutTransition}
+      >
+        <Text style={styles.label}>Currency</Text>
         <form.Field name="currency">
           {(field) => (
             <AccountCurrencyPicker onChange={field.handleChange} value={field.state.value} />
@@ -73,3 +78,32 @@ export function OnboardingBalanceStep({ form }: OnboardingBalanceStepProps) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: spacing[7],
+  },
+  fieldGroup: {
+    gap: spacing[2.5],
+  },
+  inputGroup: {
+    gap: spacing[2],
+  },
+  label: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  currencyPrefix: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textBase,
+    color: colors.ink,
+    opacity: 0.45,
+  },
+  errorText: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textXs,
+    color: colors.destructive,
+  },
+});

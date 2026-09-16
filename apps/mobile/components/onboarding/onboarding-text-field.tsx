@@ -1,10 +1,10 @@
 import { useState, type ReactNode } from "react";
-import { TextInput, View, type TextInputProps } from "react-native";
+import { StyleSheet, TextInput, View, type TextInputProps } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { useGraphicPalette } from "@/components/graphics/palette";
 import { inputTextStyle } from "@/components/ui/input-style";
-import { cn } from "@/lib/utils";
+import { colors, radii, spacing, typography, shadows } from "@/lib/design-tokens";
 
 interface OnboardingTextFieldProps extends TextInputProps {
   /** Renders the value at display size — used for the starting balance. */
@@ -29,17 +29,16 @@ export function OnboardingTextField({
 
   return (
     <Animated.View
-      className="flex-row items-center gap-3 rounded-2xl bg-surface px-4"
-      style={{
-        borderWidth: 1.5,
-        borderColor: focused ? ink : outline,
-        boxShadow: focused
-          ? "0px 8px 20px rgba(44, 95, 71, 0.10)"
-          : "0px 0px 0px rgba(44, 95, 71, 0)",
-        transitionProperty: ["borderColor", "boxShadow"],
-        transitionDuration: 200,
-        transitionTimingFunction: "ease-out",
-      }}
+      style={[
+        styles.container,
+        {
+          borderColor: focused ? ink : outline,
+          boxShadow: focused ? shadows.md : shadows.none,
+          transitionProperty: ["borderColor", "boxShadow"],
+          transitionDuration: 200,
+          transitionTimingFunction: "ease-out",
+        },
+      ]}
     >
       {prefix ? <View>{prefix}</View> : null}
       <TextInput
@@ -53,14 +52,40 @@ export function OnboardingTextField({
           onFocus?.(event);
         }}
         placeholderTextColor={placeholder}
-        className={cn(
-          "flex-1 text-ink",
-          emphasis
-            ? "py-3 font-heading-normal text-[34px] leading-[42px]"
-            : "py-4 font-body-medium text-[17px] leading-[22px]",
-        )}
-        style={emphasis ? { ...inputTextStyle, fontVariant: ["tabular-nums"] } : inputTextStyle}
+        style={[
+          styles.input,
+          emphasis ? styles.inputEmphasis : styles.inputNormal,
+          emphasis ? { ...inputTextStyle, fontVariant: ["tabular-nums"] } : inputTextStyle,
+        ]}
       />
     </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[3],
+    borderRadius: radii["2xl"],
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing[4],
+    borderWidth: 1.5,
+  },
+  input: {
+    flex: 1,
+    color: colors.ink,
+  },
+  inputNormal: {
+    paddingVertical: spacing[4],
+    fontFamily: typography.fontBodyMedium,
+    fontSize: 17,
+    lineHeight: 22,
+  },
+  inputEmphasis: {
+    paddingVertical: spacing[3],
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: 34,
+    lineHeight: 42,
+  },
+});

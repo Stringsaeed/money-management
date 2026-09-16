@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
@@ -8,7 +9,6 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from "react-native-reanimated";
-import { useEffect } from "react";
 
 import { useGraphicPalette } from "@/components/graphics/palette";
 
@@ -41,11 +41,7 @@ export function OnboardingBloomBurst({ radius = 96 }: OnboardingBloomBurstProps)
   if (reducedMotion) return null;
 
   return (
-    <View
-      pointerEvents="none"
-      style={StyleSheet.absoluteFill}
-      className="items-center justify-center"
-    >
+    <View pointerEvents="none" style={styles.container}>
       {Array.from({ length: SPARK_COUNT }, (_, index) => (
         <Spark key={index} burst={burst} index={index} radius={radius} />
       ))}
@@ -84,11 +80,10 @@ function Spark({ burst, index, radius }: SparkProps) {
   return (
     <Animated.View
       style={[
+        styles.spark,
         {
-          position: "absolute",
           width: index % 2 === 0 ? 7 : 5,
           height: index % 2 === 0 ? 7 : 5,
-          borderRadius: 4,
           backgroundColor: color,
         },
         style,
@@ -96,3 +91,19 @@ function Spark({ burst, index, radius }: SparkProps) {
     />
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  spark: {
+    position: "absolute",
+    borderRadius: 4,
+  },
+});
