@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BudgetSummaryCard } from "@/components/envelopes/budget-summary-card";
 import { EnvelopeFormSheet } from "@/components/envelopes/envelope-form/envelope-form-sheet";
@@ -16,8 +17,11 @@ import {
   useEnvelopeFormOptions,
   useSelectBudgetWorkspace,
 } from "@/hooks/use-budget-workspaces";
+import { spacing } from "@/lib/design-tokens";
 import type { EnvelopeSummary, WorkspaceSelection } from "@/modules/budgeting/budgeting";
 import { formatMonth, today } from "@/utils/date";
+
+import { styles } from "./styles";
 
 interface BudgetOverviewScreenProps {
   selection: WorkspaceSelection;
@@ -30,6 +34,7 @@ type SheetState =
   | null;
 
 export function BudgetOverviewScreen({ selection }: BudgetOverviewScreenProps) {
+  const insets = useSafeAreaInsets();
   const selectedCurrency = selection.selectedCurrency ?? selection.workspaces[0].currency;
   const period = today().slice(0, 7);
   const projection = useBudgetProjection(selectedCurrency, period);
@@ -64,20 +69,21 @@ export function BudgetOverviewScreen({ selection }: BudgetOverviewScreenProps) {
   return (
     <>
       <ScrollView
-        className="flex-1 bg-surface pt-safe-offset-20"
-        contentContainerClassName="gap-5 px-5 pb-safe-offset-24"
         contentInsetAdjustmentBehavior="automatic"
+        style={[styles.screenFlex1, { paddingTop: insets.top + spacing[5] }]}
+        contentContainerStyle={[
+          styles.screenScrollContent,
+          { paddingBottom: insets.bottom + spacing[6] },
+        ]}
       >
-        <Animated.View entering={FadeIn} exiting={FadeOut} className="gap-2">
-          <Text className="font-heading-medium text-2xl italic text-ink">
-            {formatMonth(month[0], month[1])}
-          </Text>
-          <Text className="font-body-normal text-sm text-ink/60">
+        <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.gap2}>
+          <Text style={styles.heading2xlItalicInk}>{formatMonth(month[0], month[1])}</Text>
+          <Text style={styles.textNormalSmInk60}>
             Plan exact Money inside one currency Funding Pool.
           </Text>
         </Animated.View>
 
-        <View accessibilityRole="radiogroup" className="gap-2">
+        <View accessibilityRole="radiogroup" style={styles.gap2}>
           {selection.workspaces.map(({ currency }) => (
             <WorkspaceOption
               key={currency}
@@ -96,9 +102,9 @@ export function BudgetOverviewScreen({ selection }: BudgetOverviewScreenProps) {
             exiting={FadeOut}
             layout={layoutTransition}
             role="alert"
-            className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3"
+            style={styles.alertBorder}
           >
-            <Text selectable className="font-body-medium text-sm text-destructive">
+            <Text selectable style={styles.textDestructive}>
               Couldn&apos;t remember {selectWorkspace.variables?.currency ?? "that currency"}.
               Choose it again to retry.
             </Text>
@@ -107,8 +113,8 @@ export function BudgetOverviewScreen({ selection }: BudgetOverviewScreenProps) {
 
         <BudgetSummaryCard money={projection.data.unassignedMoney} />
 
-        <View className="flex-row items-center justify-between gap-3">
-          <Text className="font-heading-medium text-xl italic text-ink">
+        <View style={styles.flexRowItemsCenterJustifyBetween}>
+          <Text style={styles.headingMediumXlItalicInk}>
             {showArchived ? "Archived Envelopes" : "Envelopes"}
           </Text>
           {!showArchived ? (
@@ -130,9 +136,9 @@ export function BudgetOverviewScreen({ selection }: BudgetOverviewScreenProps) {
             exiting={FadeOut}
             layout={layoutTransition}
             role="alert"
-            className="gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3"
+            style={styles.alertBorderGap2}
           >
-            <Text selectable className="font-body-medium text-sm text-destructive">
+            <Text selectable style={styles.textDestructive}>
               Category Mappings could not be loaded. Retry before creating or editing an Envelope.
             </Text>
             <Button
@@ -146,10 +152,10 @@ export function BudgetOverviewScreen({ selection }: BudgetOverviewScreenProps) {
           </Animated.View>
         ) : null}
 
-        <Animated.View layout={layoutTransition} className="gap-2">
+        <Animated.View layout={layoutTransition} style={styles.gap2}>
           {visibleEnvelopes.length === 0 ? (
-            <Animated.View entering={FadeIn} exiting={FadeOut} className="py-8">
-              <Text className="text-center font-body-medium text-sm text-ink/60">
+            <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.emptyPy8}>
+              <Text style={styles.textCenterNormalSmInk60}>
                 {showArchived ? "No archived Envelopes" : "No active Envelopes yet"}
               </Text>
             </Animated.View>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { TextInput } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 
+import { styles } from "@/components/envelopes/styles";
 import { Text } from "@/components/ui/text";
 import { parseSetupAssignment } from "@/modules/budgeting/setup-assignment";
 import { centsToDecimalString } from "@/utils/currency";
@@ -46,21 +47,19 @@ export const SetupAssignmentInput = ({
   };
 
   return (
-    <Animated.View layout={LinearTransition} className="gap-1">
-      <Text className="font-body-semibold text-xs uppercase tracking-wide text-ink/50">
-        Optional initial Assignment
-      </Text>
+    <Animated.View layout={LinearTransition} style={styles.gap1}>
+      <Text style={styles.sectionLabel}>Optional initial Assignment</Text>
       <TextInput
         accessibilityLabel={`${envelopeName} initial Assignment`}
-        className="h-11 rounded-xl bg-surface-container px-3 font-body-normal text-ink"
         inputMode="decimal"
         onChangeText={handleChangeText}
         onEndEditing={handleEndEditing}
+        style={styles.assignmentInput}
         value={value}
       />
       {error ? (
         <Animated.View entering={FadeIn} exiting={FadeOut} layout={LinearTransition}>
-          <Text selectable className="font-body-medium text-sm text-destructive">
+          <Text selectable style={styles.textDestructive}>
             {error}
           </Text>
         </Animated.View>

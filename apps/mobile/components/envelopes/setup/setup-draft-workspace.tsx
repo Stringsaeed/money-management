@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 
+import { styles } from "@/components/envelopes/styles";
 import { SetupDraftEnvelopeItem } from "@/components/envelopes/setup/setup-draft-envelope-item";
 import { SetupFundingAccountRow } from "@/components/envelopes/setup/setup-funding-account-row";
 import { Button } from "@/components/ui/button";
@@ -63,11 +64,9 @@ export const SetupDraftWorkspaceSection = ({
 
   return (
     <>
-      <View className="gap-1">
-        <Text className="font-heading-medium text-xl italic text-ink">
-          {workspace.currency} workspace
-        </Text>
-        <Text className="font-body-normal text-sm text-ink/60">Choose Funding Accounts</Text>
+      <View style={styles.gap1}>
+        <Text style={styles.workspaceTitle}>{workspace.currency} workspace</Text>
+        <Text style={styles.workspaceSubtitle}>Choose Funding Accounts</Text>
       </View>
       {fundingAccounts
         .filter(({ currency }) => currency === workspace.currency)
@@ -84,7 +83,7 @@ export const SetupDraftWorkspaceSection = ({
       </Button>
       {workspace.envelopes.length === 0 ? (
         <Animated.View entering={FadeIn} exiting={FadeOut} layout={LinearTransition}>
-          <Text selectable className="rounded-2xl bg-surface-container p-4 text-sm text-ink/60">
+          <Text selectable style={styles.blankPlanText}>
             Blank plan — add an Envelope whenever you are ready.
           </Text>
         </Animated.View>

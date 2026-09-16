@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import type { BudgetProjection } from "@/modules/budgeting/budgeting";
 
+import { styles } from "./styles";
+
 interface MoveMoneySheetProps {
   currency: string;
   onDismiss: VoidFunction;
@@ -53,8 +55,8 @@ export function MoveMoneySheet({
     <CreateResourceBottomSheet
       autoPresent
       content={
-        <View className="gap-4">
-          <Text className="font-body-normal text-sm text-ink/60">
+        <View style={styles.gap4}>
+          <Text style={styles.textNormalSmInk60}>
             Move exact Money inside the {currency} workspace. Committed moves stay in history.
           </Text>
           <MoveMoneyEndpointPicker
@@ -79,7 +81,7 @@ export function MoveMoneySheet({
           />
           {selectedCorrection ? (
             <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
-              <Text accessibilityLiveRegion="polite" className="font-body-medium text-sm text-ink">
+              <Text accessibilityLiveRegion="polite" style={styles.textMediumInkSm}>
                 Correcting Assignment {selectedCorrection.id}
               </Text>
             </Animated.View>
