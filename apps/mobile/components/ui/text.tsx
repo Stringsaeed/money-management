@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import * as Slot from "@rn-primitives/slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
-import { Text as RNText, type Role } from "react-native";
+import { Text as RNText, type Role, type StyleProp, type TextStyle } from "react-native";
 
 const textVariants = cva("text-foreground text-base", {
   variants: {
@@ -45,9 +45,11 @@ const ARIA_LEVEL: Partial<Record<TextVariant, string>> = {
 };
 
 const TextClassContext = React.createContext<string | undefined>(undefined);
+const TextStyleContext = React.createContext<StyleProp<TextStyle> | undefined>(undefined);
 
 function Text({
   className,
+  style,
   asChild = false,
   variant = "default",
   ...props
@@ -57,10 +59,12 @@ function Text({
     asChild?: boolean;
   }) {
   const textClass = React.useContext(TextClassContext);
+  const textStyle = React.useContext(TextStyleContext);
   const Component = asChild ? Slot.Text : RNText;
   return (
     <Component
       className={cn(textVariants({ variant }), textClass, className)}
+      style={[textStyle, style]}
       role={variant ? ROLE[variant] : undefined}
       aria-level={variant ? ARIA_LEVEL[variant] : undefined}
       {...props}
@@ -68,4 +72,4 @@ function Text({
   );
 }
 
-export { Text, TextClassContext };
+export { Text, TextClassContext, TextStyleContext };

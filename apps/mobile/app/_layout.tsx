@@ -173,6 +173,11 @@ export default function RootLayout() {
                                     name="recurring/index"
                                     options={{ title: "Recurring Rules" }}
                                   />
+                                  {/* TEMPORARY: Button gallery for QA (#318) - remove after migration */}
+                                  <Stack.Screen
+                                    name="dev/button-gallery"
+                                    options={{ title: "Button Gallery" }}
+                                  />
                                 </Stack>
                                 <StatusBar style="auto" />
                                 <MandatoryUpdateGate />
