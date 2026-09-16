@@ -88,20 +88,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
   },
   {
     files: [
-      "apps/mobile/components/money-movement/market-hero.tsx",
-      "apps/mobile/components/money-movement/market-source-badge.tsx",
-      "apps/mobile/components/money-movement/market-state-card.tsx",
-      "apps/mobile/components/money-movement/money-movement-screen.tsx",
-      "apps/mobile/components/money-movement/quote-row.tsx",
-      "apps/mobile/components/money-movement/quote-section.tsx",
-      "apps/mobile/components/money-movement/refresh-market-button.tsx",
-    ],
-    reason:
-      "Money movement components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: [
       "apps/mobile/components/recurring/recurring-rule-row.tsx",
       "apps/mobile/components/recurring/recurring-rule-warning.tsx",
     ],
