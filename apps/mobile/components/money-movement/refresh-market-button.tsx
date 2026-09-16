@@ -1,8 +1,9 @@
-import { Pressable } from "react-native";
 import { ArrowClockwiseIcon } from "phosphor-react-native";
+import { Pressable, StyleSheet } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 
 interface RefreshMarketButtonProps {
   disabled: boolean;
@@ -15,10 +16,43 @@ export function RefreshMarketButton({ disabled, onPress }: RefreshMarketButtonPr
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
-      className="flex-row items-center gap-2 rounded-full border border-ledger-outline px-3 py-2 active:bg-surface-dim disabled:opacity-40"
+      style={({ pressed }) => [
+        styles.container,
+        pressed && styles.containerPressed,
+        disabled && styles.containerDisabled,
+      ]}
     >
-      <Icon as={ArrowClockwiseIcon} className="text-ink/50" size={14} />
-      <Text className="font-body-semibold text-xs text-ink/50">Refresh</Text>
+      <Icon as={ArrowClockwiseIcon} style={styles.icon} size={14} />
+      <Text style={styles.text}>Refresh</Text>
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[2],
+    borderRadius: radii.full,
+    borderWidth: 1,
+    borderColor: colors.ledgerOutline,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+  },
+  containerPressed: {
+    backgroundColor: colors.surfaceDim,
+  },
+  containerDisabled: {
+    opacity: 0.4,
+  },
+  icon: {
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  text: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+});

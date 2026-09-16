@@ -1,7 +1,17 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { MoneyMovementScreen } from "@/components/money-movement/money-movement-screen";
 import type { MarketQuote } from "@/hooks/use-market-quotes";
+
+const initialWindowMetrics = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 47, left: 0, right: 0, bottom: 34 },
+};
+
+function Wrapper({ children }: { children: React.ReactNode }) {
+  return <SafeAreaProvider initialMetrics={initialWindowMetrics}>{children}</SafeAreaProvider>;
+}
 
 const mockHasTwelveDataApiKey = jest.fn();
 const mockUseMarketQuotes = jest.fn();
@@ -55,7 +65,7 @@ describe("MoneyMovementScreen", () => {
   it("shows setup state when market API keys are missing", async () => {
     mockHasTwelveDataApiKey.mockReturnValue(false);
 
-    await render(<MoneyMovementScreen />);
+    await render(<MoneyMovementScreen />, { wrapper: Wrapper });
 
     expect(screen.getByText(/Live board for top US stocks/)).toBeOnTheScreen();
     expect(screen.getByText("Connect market APIs 🔌")).toBeOnTheScreen();
@@ -88,7 +98,7 @@ describe("MoneyMovementScreen", () => {
       refetch: mockRefetch,
     });
 
-    await render(<MoneyMovementScreen />);
+    await render(<MoneyMovementScreen />, { wrapper: Wrapper });
 
     expect(screen.getByText("Stocks")).toBeOnTheScreen();
     expect(screen.getByText("Metals")).toBeOnTheScreen();
@@ -111,7 +121,7 @@ describe("MoneyMovementScreen", () => {
       refetch: mockRefetch,
     });
 
-    const { rerender } = await render(<MoneyMovementScreen />);
+    const { rerender } = await render(<MoneyMovementScreen />, { wrapper: Wrapper });
 
     expect(screen.getByText("Market feed paused")).toBeOnTheScreen();
     expect(screen.getByText("Quota reached")).toBeOnTheScreen();
