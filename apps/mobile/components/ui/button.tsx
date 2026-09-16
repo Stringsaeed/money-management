@@ -1,7 +1,6 @@
 import { TextStyleContext } from "@/components/ui/text";
 import { colors, radii, shadows, spacing, typography } from "@/lib/design-tokens";
 import {
-  Platform,
   Pressable,
   type PressableStateCallbackType,
   StyleSheet,
@@ -24,39 +23,6 @@ type ButtonProps = React.ComponentProps<typeof Pressable> &
   };
 
 // -----------------------------------------------------------------------------
-// Shadow Helpers (parse boxShadow string to RN shadow props)
-// -----------------------------------------------------------------------------
-
-type ShadowStyle = {
-  shadowColor: string;
-  shadowOffset: { width: number; height: number };
-  shadowOpacity: number;
-  shadowRadius: number;
-  elevation: number;
-};
-
-function parseShadow(shadow: string): ShadowStyle | Record<string, never> {
-  if (shadow === "none") {
-    return {};
-  }
-  const match = shadow.match(
-    /(-?\d+)px\s+(-?\d+)px\s+(-?\d+)px\s+(?:(-?\d+)px\s+)?rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/,
-  );
-  if (!match) {
-    return {};
-  }
-  const [, offsetX, offsetY, blurRadius, , r, g, b, a] = match;
-  const opacity = a ? parseFloat(a) : 1;
-  return {
-    shadowColor: `rgb(${r}, ${g}, ${b})`,
-    shadowOffset: { width: parseInt(offsetX, 10), height: parseInt(offsetY, 10) },
-    shadowOpacity: opacity,
-    shadowRadius: parseInt(blurRadius, 10) / 2,
-    elevation: Math.max(1, Math.round(parseInt(blurRadius, 10) / 2)),
-  };
-}
-
-// -----------------------------------------------------------------------------
 // Variant Styles
 // -----------------------------------------------------------------------------
 
@@ -65,25 +31,25 @@ const variantStyles = {
     backgroundColor: colors.kumoBrandEmphasisEnd,
     borderWidth: 1,
     borderColor: "#045ede",
-    ...parseShadow(shadows.sm),
+    boxShadow: shadows.sm,
   },
   destructive: {
     backgroundColor: colors.kumoDangerEmphasisEnd,
     borderWidth: 1,
     borderColor: "#da252e",
-    ...parseShadow(shadows.sm),
+    boxShadow: shadows.sm,
   },
   secondary: {
     backgroundColor: colors.secondary,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.25)",
-    ...parseShadow(shadows.sm),
+    boxShadow: shadows.sm,
   },
   outline: {
     backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,
-    ...parseShadow(shadows.sm),
+    boxShadow: shadows.sm,
   },
   ghost: {
     backgroundColor: "transparent",
@@ -227,11 +193,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
     borderWidth: 0,
-    ...Platform.select({
-      web: {
-        userSelect: "none",
-      },
-    }),
   },
   disabled: {
     opacity: 0.5,
