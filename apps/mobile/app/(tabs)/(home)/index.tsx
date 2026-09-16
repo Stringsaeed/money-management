@@ -1,13 +1,23 @@
 import { Redirect } from "expo-router";
-import { ScrollView } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HomeListHeader } from "@/components/home/home-list-header";
 import { RecentJournalSection } from "@/components/home/recent-journal-section";
 import { ONBOARDING_ENABLED } from "@/constants/onboarding";
 import { useHomeScreen } from "@/hooks/use-home-screen";
+import { colors, spacing } from "@/lib/design-tokens";
 import { useAccess } from "@/modules/access";
 
+const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+});
+
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
   const {
     loadingAccounts,
     loadingTx,
@@ -35,8 +45,11 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="pt-safe-offset-20 pb-safe-offset-32"
+      contentContainerStyle={{
+        paddingTop: insets.top + spacing[5],
+        paddingBottom: insets.bottom + spacing[8],
+      }}
+      style={styles.scroll}
     >
       <HomeListHeader />
       <RecentJournalSection
