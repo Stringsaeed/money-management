@@ -1,4 +1,4 @@
-import { Alert, Platform, View } from "react-native";
+import { Alert, Platform, StyleSheet, View } from "react-native";
 
 import { EnableSyncCard } from "@/components/household/enable-sync-card";
 import { HouseholdMembers, type HouseholdMember } from "@/components/household/household-members";
@@ -13,6 +13,7 @@ import { Card } from "@/components/settings/card";
 import { SectionHeader } from "@/components/settings/section-header";
 import { Text } from "@/components/ui/text";
 import { useDeleteHousehold, useLeaveHousehold, useOpenMemberWidget } from "@/hooks/use-households";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 
 interface ActiveHouseholdPanelProps {
   readonly householdId: string;
@@ -47,12 +48,10 @@ export function ActiveHouseholdPanel({
         <SyncStatusCard />
       )}
       <Card>
-        <View className="flex-row items-center justify-between p-4">
-          <View className="gap-1">
-            <Text className="font-body-semibold text-xs uppercase text-ink/40">
-              Active Household
-            </Text>
-            <Text className="font-heading-normal text-xl italic text-ink">{name}</Text>
+        <View style={styles.headerRow}>
+          <View style={styles.headerContent}>
+            <Text style={styles.headerLabel}>Active Household</Text>
+            <Text style={styles.householdName}>{name}</Text>
           </View>
           {isAdmin ? (
             <NativeHost fillWidth={false}>
@@ -66,7 +65,7 @@ export function ActiveHouseholdPanel({
           ) : null}
         </View>
         {adminless ? (
-          <Text className="px-4 pb-4 text-xs text-terracotta">
+          <Text style={styles.adminlessWarning}>
             This Household has no admin. Ask WorkOS support or recreate administration carefully —
             Trove cannot invent a last-admin invariant from webhooks.
           </Text>
@@ -76,18 +75,18 @@ export function ActiveHouseholdPanel({
         <SectionHeader title="Members 👥" variant="card" />
         <HouseholdMembers currentUserId={currentUserId} members={members} />
         {!isAdmin ? (
-          <Text className="px-4 pb-4 text-xs text-ink/50">
+          <Text style={styles.memberHint}>
             Invitations and role changes are managed by a Household admin.
           </Text>
         ) : (
-          <Text className="px-4 pb-4 text-xs text-ink/50">
+          <Text style={styles.memberHint}>
             Invite people and change roles in Manage — WorkOS hosts that screen.
           </Text>
         )}
       </Card>
       <Card>
-        <View className="gap-2 p-4">
-          <Text className="font-body-semibold text-xs uppercase text-destructive">Danger Zone</Text>
+        <View style={styles.dangerZone}>
+          <Text style={styles.dangerLabel}>Danger Zone</Text>
           {isAdmin ? (
             <NativeHost>
               <NativeDestructiveButton
@@ -173,3 +172,51 @@ function confirmDelete(
     ],
   );
 }
+
+const styles = StyleSheet.create({
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: spacing[4],
+  },
+  headerContent: {
+    gap: spacing[1],
+  },
+  headerLabel: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textXs,
+    textTransform: "uppercase",
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  householdName: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textXl,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  adminlessWarning: {
+    paddingHorizontal: spacing[4],
+    paddingBottom: spacing[4],
+    fontSize: typography.textXs,
+    color: colors.terracotta,
+  },
+  memberHint: {
+    paddingHorizontal: spacing[4],
+    paddingBottom: spacing[4],
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  dangerZone: {
+    gap: spacing[2],
+    padding: spacing[4],
+  },
+  dangerLabel: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textXs,
+    textTransform: "uppercase",
+    color: colors.destructive,
+  },
+});

@@ -1,11 +1,14 @@
 import { isHouseholdRole } from "@trove/protocol";
 import { useState } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SignOutPendingSheet } from "@/components/access/sign-out-pending-sheet";
 import { ActiveHouseholdPanel } from "@/components/household/active-household-panel";
-import type { HouseholdMember } from "@/components/household/household-members";
 import { CreateHouseholdForm } from "@/components/household/create-household-form";
+import type { HouseholdMember } from "@/components/household/household-members";
 import { LedgerSelector } from "@/components/household/ledger-selector";
 import { PersonalSyncCard } from "@/components/household/personal-sync-card";
 import {
@@ -17,13 +20,11 @@ import {
 import { Card } from "@/components/settings/card";
 import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
-import { SignOutPendingSheet } from "@/components/access/sign-out-pending-sheet";
 import { useSyncEnrollment } from "@/hooks/use-enable-sync";
-import { useSignOutRequest } from "@/hooks/use-sign-out";
 import { useHouseholdDetail } from "@/hooks/use-households";
+import { useSignOutRequest } from "@/hooks/use-sign-out";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 import { NO_SYNC_ENROLLMENT, type AccessState } from "@/modules/access";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type SignedInAccess = Extract<AccessState, { kind: "signed_in" }>;
 
@@ -82,13 +83,11 @@ function ProfileCard({
 }) {
   return (
     <Card>
-      <View className="gap-3 p-4">
-        <View className="flex-row items-center justify-between">
-          <View className="gap-1">
-            <Text className="font-heading-normal text-lg italic text-ink">
-              {access.user.displayName}
-            </Text>
-            <Text className="text-xs text-ink/50">{access.user.email}</Text>
+      <View style={styles.profileContainer}>
+        <View style={styles.profileRow}>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{access.user.displayName}</Text>
+            <Text style={styles.profileEmail}>{access.user.email}</Text>
           </View>
           <NativeHost fillWidth={false}>
             <NativeSecondaryButton label="Sign out" onPress={onSignOut} testID="profile-sign-out" />
@@ -103,10 +102,12 @@ function UnavailableCard({ access }: { readonly access: SignedInAccess }) {
   if (access.household.kind !== "unavailable") return null;
   return (
     <Card>
-      <View className="flex-row items-center justify-between gap-3 p-4">
-        <View className="flex-1 gap-0.5">
-          <Text className="font-body-semibold text-sm text-ink">Household sync is paused</Text>
-          <Text className="text-xs text-ink/60">Your ledger on this device is still usable.</Text>
+      <View style={styles.unavailableRow}>
+        <View style={styles.unavailableContent}>
+          <Text style={styles.unavailableTitle}>Household sync is paused</Text>
+          <Text style={styles.unavailableSubtitle}>
+            Your ledger on this device is still usable.
+          </Text>
         </View>
         <NativeHost fillWidth={false}>
           <NativeTertiaryButton
@@ -125,10 +126,10 @@ function PersonalAndCreateCards({ personalEnabled }: { readonly personalEnabled:
   return (
     <>
       <Card>
-        <View className="gap-3 p-4">
-          <View className="gap-1">
-            <Text className="font-heading-normal text-lg italic text-ink">Set up this ledger</Text>
-            <Text className="text-xs text-ink/50">
+        <View style={styles.setupContainer}>
+          <View style={styles.setupContent}>
+            <Text style={styles.setupTitle}>Set up this ledger</Text>
+            <Text style={styles.setupSubtitle}>
               Sync just for you, start a shared household, or join one you were invited to.
             </Text>
           </View>
@@ -174,16 +175,16 @@ function HouseholdActionsSheet({
   return (
     <ModalBottomSheet open={open} onDismiss={onClose} animateContentHeight={false}>
       <Animated.View style={keyboardPaddingStyle}>
-        <View className="gap-5 px-4 pb-safe pt-2">
-          <Text className="font-heading-normal text-lg italic text-ink">Household ledger</Text>
+        <View style={styles.sheetContent}>
+          <Text style={styles.sheetTitle}>Household ledger</Text>
           <PersonalSyncCard alreadyEnabled={personalEnabled} />
-          <View className="gap-1">
-            <Text className="font-body-semibold text-sm text-ink">Create a Household</Text>
+          <View style={styles.sectionGroup}>
+            <Text style={styles.sectionTitle}>Create a Household</Text>
             <CreateHouseholdForm />
           </View>
-          <View className="gap-1 pb-2">
-            <Text className="font-body-semibold text-sm text-ink">Join a Household</Text>
-            <Text className="text-xs text-ink/50">
+          <View style={styles.joinSection}>
+            <Text style={styles.sectionTitle}>Join a Household</Text>
+            <Text style={styles.joinDescription}>
               Accept the WorkOS invitation email (hosted AuthKit). Custom invite codes are gone —
               joining never moves your Personal ledger into the shared one.
             </Text>
@@ -212,3 +213,96 @@ function toMembers(
       : [],
   );
 }
+
+const styles = StyleSheet.create({
+  profileContainer: {
+    gap: spacing[3],
+    padding: spacing[4],
+  },
+  profileRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  profileInfo: {
+    gap: spacing[1],
+  },
+  profileName: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textLg,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  profileEmail: {
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  unavailableRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing[3],
+    padding: spacing[4],
+  },
+  unavailableContent: {
+    flex: 1,
+    gap: spacing[0.5],
+  },
+  unavailableTitle: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textSm,
+    color: colors.ink,
+  },
+  unavailableSubtitle: {
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.6,
+  },
+  setupContainer: {
+    gap: spacing[3],
+    padding: spacing[4],
+  },
+  setupContent: {
+    gap: spacing[1],
+  },
+  setupTitle: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textLg,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  setupSubtitle: {
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  sheetContent: {
+    gap: spacing[5],
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[2],
+  },
+  sheetTitle: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textLg,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  sectionGroup: {
+    gap: spacing[1],
+  },
+  sectionTitle: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textSm,
+    color: colors.ink,
+  },
+  joinSection: {
+    gap: spacing[1],
+    paddingBottom: spacing[2],
+  },
+  joinDescription: {
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+});
