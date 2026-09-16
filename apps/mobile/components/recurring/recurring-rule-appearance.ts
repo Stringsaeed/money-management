@@ -1,32 +1,35 @@
+import type { ViewStyle } from "react-native";
+
+import { rawColorValues } from "@/lib/design-tokens";
 import type { RecurringRule } from "@/modules/recurring-rules";
 
 interface RecurringRuleAppearance {
   iconTintColor: string;
-  surfaceClassName: string;
+  surfaceStyle: ViewStyle;
 }
 
 const lifecycleAppearance: Record<RecurringRule["lifecycle"], RecurringRuleAppearance> = {
   active: {
-    iconTintColor: "#4A8F69",
-    surfaceClassName: "bg-sage/10",
+    iconTintColor: rawColorValues.light.sage,
+    surfaceStyle: { backgroundColor: `${rawColorValues.light.sage}1A` },
   },
   paused: {
-    iconTintColor: "#2C5F47",
-    surfaceClassName: "bg-surface-dim",
+    iconTintColor: rawColorValues.light.ink,
+    surfaceStyle: { backgroundColor: rawColorValues.light.surfaceDim },
   },
   archived: {
-    iconTintColor: "#D46A4C",
-    surfaceClassName: "bg-terracotta/10",
+    iconTintColor: rawColorValues.light.terracotta,
+    surfaceStyle: { backgroundColor: `${rawColorValues.light.terracotta}1A` },
   },
   completed: {
-    iconTintColor: "#6E8A7C",
-    surfaceClassName: "bg-surface-container",
+    iconTintColor: rawColorValues.light.mutedForeground,
+    surfaceStyle: { backgroundColor: rawColorValues.light.surfaceContainer },
   },
 };
 
 const attentionAppearance: RecurringRuleAppearance = {
-  iconTintColor: "#C4452F",
-  surfaceClassName: "bg-terracotta/15",
+  iconTintColor: rawColorValues.light.destructive,
+  surfaceStyle: { backgroundColor: `${rawColorValues.light.terracotta}26` },
 };
 
 export function getRecurringRuleAppearance(rule: RecurringRule): RecurringRuleAppearance {

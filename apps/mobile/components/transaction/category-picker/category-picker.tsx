@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import type { PressableProps } from "react-native";
-import { Pressable, View } from "react-native";
-import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
+import { Pressable, StyleSheet, View } from "react-native";
 
+import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
+
 import type { CategoryPickerProps } from "./types";
 
 type CategoryItem = CategoryPickerProps["categories"][number];
@@ -19,7 +20,7 @@ function CategoryGrid({
   onSelect: (id: string) => void;
 }) {
   return (
-    <View className="flex-row flex-wrap gap-2">
+    <View style={styles.gridContainer}>
       {items.map((cat) => {
         const isSelected = cat.id === selectedId;
         return (
@@ -28,16 +29,18 @@ function CategoryGrid({
             aria-selected={isSelected}
             key={cat.id}
             onPress={() => onSelect(cat.id)}
-            className={cn(
-              "items-center gap-1.5 px-4 py-3 rounded-xl",
-              !isSelected && "bg-kumo-fill",
-            )}
-            style={isSelected ? { backgroundColor: `${cat.color}20` } : undefined}
+            style={[styles.categoryItem, !isSelected && styles.categoryItemDefault]}
+            {...(isSelected && {
+              style: [styles.categoryItem, { backgroundColor: `${cat.color}20` }],
+            })}
             role="button"
           >
-            <Text className="text-2xl">{cat.icon}</Text>
+            <Text style={styles.categoryIcon}>{cat.icon}</Text>
             <Text
-              className={cn("font-body-medium text-xs", isSelected ? "text-ink" : "text-ink/40")}
+              style={[
+                styles.categoryName,
+                isSelected ? styles.categoryNameSelected : styles.categoryNameDefault,
+              ]}
             >
               {cat.name}
             </Text>
@@ -72,6 +75,7 @@ export default function CategoryPicker({
   const renderTrigger = () => {
     if (children) {
       const child = React.Children.only(children);
+      // SAFETY: Picker pattern expects a single pressable child element
       return React.cloneElement(child as React.ReactElement<PressableProps>, {
         onPress: onOpen,
       });
@@ -83,14 +87,12 @@ export default function CategoryPicker({
     <>
       {renderTrigger()}
       <ModalBottomSheet open={open} onDismiss={() => setOpen(false)}>
-        <View className="pb-safe px-5 pt-5 gap-5">
-          <Text className="font-heading-normal text-xl italic text-ink">Category</Text>
+        <View style={styles.sheetContent}>
+          <Text style={styles.sheetTitle}>Category</Text>
 
           {expenseCategories.length > 0 ? (
-            <View className="gap-3">
-              <Text className="font-body-semibold text-[10px] text-ink/40 uppercase tracking-wider">
-                Expenses
-              </Text>
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionLabel}>Expenses</Text>
               <CategoryGrid
                 items={expenseCategories}
                 selectedId={selectedId}
@@ -100,10 +102,8 @@ export default function CategoryPicker({
           ) : null}
 
           {incomeCategories.length > 0 ? (
-            <View className="gap-3">
-              <Text className="font-body-semibold text-[10px] text-ink/40 uppercase tracking-wider">
-                Income
-              </Text>
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionLabel}>Income</Text>
               <CategoryGrid
                 items={incomeCategories}
                 selectedId={selectedId}
@@ -112,9 +112,67 @@ export default function CategoryPicker({
             </View>
           ) : null}
 
-          <View className="h-4" />
+          <View style={styles.bottomSpacer} />
         </View>
       </ModalBottomSheet>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  sheetContent: {
+    paddingBottom: spacing[10],
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[5],
+    gap: spacing[5],
+  },
+  sheetTitle: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textXl,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  sectionContainer: {
+    gap: spacing[3],
+  },
+  sectionLabel: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: 10,
+    color: colors.ink,
+    opacity: 0.4,
+    textTransform: "uppercase",
+    letterSpacing: typography.trackingWider,
+  },
+  gridContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing[2],
+  },
+  categoryItem: {
+    alignItems: "center",
+    gap: spacing[1.5],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+    borderRadius: radii.xl,
+  },
+  categoryItemDefault: {
+    backgroundColor: colors.kumoFill,
+  },
+  categoryIcon: {
+    fontSize: typography.text2xl,
+  },
+  categoryName: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textXs,
+  },
+  categoryNameSelected: {
+    color: colors.ink,
+  },
+  categoryNameDefault: {
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  bottomSpacer: {
+    height: spacing[4],
+  },
+});

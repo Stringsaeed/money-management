@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import type { PressableProps } from "react-native";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { CheckIcon } from "phosphor-react-native";
 
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 import type { RecurrenceFrequency } from "@/types";
 
 import { CountStepper } from "./count-stepper";
@@ -24,7 +24,6 @@ interface RepeatControlProps {
   children: React.ReactNode;
 }
 
-/** Repeats field: a bottom sheet of presets plus a "Custom…" every-N editor. */
 export function RepeatControl({
   frequency,
   intervalCount,
@@ -44,6 +43,7 @@ export function RepeatControl({
     setIsOpen(true);
   };
 
+  // SAFETY: Picker pattern expects a single pressable child element
   const trigger = React.cloneElement(
     React.Children.only(children) as React.ReactElement<PressableProps>,
     { onPress: open },
@@ -58,31 +58,31 @@ export function RepeatControl({
     <>
       {trigger}
       <ModalBottomSheet open={isOpen} onDismiss={() => setIsOpen(false)}>
-        <View className="pb-safe px-5 pt-5 gap-4">
-          <Text className="font-heading-normal text-xl italic text-ink">Repeats</Text>
+        <View style={styles.sheetContent}>
+          <Text style={styles.sheetTitle}>Repeats</Text>
 
-          <View className="gap-2">
+          <View style={styles.optionsContainer}>
             {REPEAT_PRESETS.map((preset) => {
               const isSelected = !showCustom && selectedKey === preset.key;
               return (
                 <Pressable
                   key={preset.key}
                   onPress={() => selectPreset(preset.frequency, preset.intervalCount)}
-                  className={cn(
-                    "flex-row items-center px-4 py-3.5 rounded-xl",
-                    isSelected ? "bg-ink" : "bg-surface-container",
-                  )}
+                  style={[
+                    styles.optionRow,
+                    isSelected ? styles.optionRowSelected : styles.optionRowDefault,
+                  ]}
                 >
                   <Text
-                    className={cn(
-                      "flex-1 font-body-medium text-[15px]",
-                      isSelected ? "text-surface" : "text-ink",
-                    )}
+                    style={[
+                      styles.optionLabel,
+                      isSelected ? styles.optionLabelSelected : styles.optionLabelDefault,
+                    ]}
                   >
                     {preset.label}
                   </Text>
                   {isSelected ? (
-                    <Icon as={CheckIcon} size={18} className="text-surface" weight="bold" />
+                    <Icon as={CheckIcon} size={18} style={styles.checkIcon} weight="bold" />
                   ) : null}
                 </Pressable>
               );
@@ -94,48 +94,48 @@ export function RepeatControl({
                 setUnit(frequency);
                 setShowCustom(true);
               }}
-              className={cn(
-                "flex-row items-center px-4 py-3.5 rounded-xl",
-                showCustom ? "bg-ink" : "bg-surface-container",
-              )}
+              style={[
+                styles.optionRow,
+                showCustom ? styles.optionRowSelected : styles.optionRowDefault,
+              ]}
             >
               <Text
-                className={cn(
-                  "flex-1 font-body-medium text-[15px]",
-                  showCustom ? "text-surface" : "text-ink",
-                )}
+                style={[
+                  styles.optionLabel,
+                  showCustom ? styles.optionLabelSelected : styles.optionLabelDefault,
+                ]}
               >
                 Custom…
               </Text>
               {showCustom ? (
-                <Icon as={CheckIcon} size={18} className="text-surface" weight="bold" />
+                <Icon as={CheckIcon} size={18} style={styles.checkIcon} weight="bold" />
               ) : null}
             </Pressable>
           </View>
 
           {showCustom ? (
-            <View className="gap-4 pt-1">
-              <View className="flex-row items-center justify-between">
-                <Text className="font-body-medium text-[15px] text-ink">Every</Text>
+            <View style={styles.editorContainer}>
+              <View style={styles.everyRow}>
+                <Text style={styles.everyLabel}>Every</Text>
                 <CountStepper value={count} min={1} max={99} onChange={setCount} />
               </View>
-              <View className="flex-row gap-2">
+              <View style={styles.unitOptionsRow}>
                 {UNIT_OPTIONS.map((option) => {
                   const isSelected = unit === option;
                   return (
                     <Pressable
                       key={option}
                       onPress={() => setUnit(option)}
-                      className={cn(
-                        "flex-1 items-center py-2.5 rounded-xl",
-                        isSelected ? "bg-ink" : "bg-surface-container",
-                      )}
+                      style={[
+                        styles.unitOption,
+                        isSelected ? styles.unitOptionSelected : styles.unitOptionDefault,
+                      ]}
                     >
                       <Text
-                        className={cn(
-                          "font-body-medium text-[13px]",
-                          isSelected ? "text-surface" : "text-ink",
-                        )}
+                        style={[
+                          styles.unitLabel,
+                          isSelected ? styles.unitLabelSelected : styles.unitLabelDefault,
+                        ]}
                       >
                         {capitalize(FREQUENCY_LABELS[option])}
                       </Text>
@@ -145,7 +145,7 @@ export function RepeatControl({
               </View>
               <Button
                 size="xl"
-                className="mx-8"
+                style={styles.doneButton}
                 onPress={() => {
                   onChange(unit, count);
                   setIsOpen(false);
@@ -156,9 +156,100 @@ export function RepeatControl({
             </View>
           ) : null}
 
-          <View className="h-2" />
+          <View style={styles.bottomSpacer} />
         </View>
       </ModalBottomSheet>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  sheetContent: {
+    paddingBottom: spacing[10],
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[5],
+    gap: spacing[4],
+  },
+  sheetTitle: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textXl,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  optionsContainer: {
+    gap: spacing[2],
+  },
+  optionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3.5],
+    borderRadius: radii.xl,
+  },
+  optionRowSelected: {
+    backgroundColor: colors.ink,
+  },
+  optionRowDefault: {
+    backgroundColor: colors.surfaceContainer,
+  },
+  optionLabel: {
+    flex: 1,
+    fontFamily: typography.fontBodyMedium,
+    fontSize: 15,
+  },
+  optionLabelSelected: {
+    color: colors.surface,
+  },
+  optionLabelDefault: {
+    color: colors.ink,
+  },
+  checkIcon: {
+    color: colors.surface,
+  },
+  editorContainer: {
+    gap: spacing[4],
+    paddingTop: spacing[1],
+  },
+  everyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  everyLabel: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  unitOptionsRow: {
+    flexDirection: "row",
+    gap: spacing[2],
+  },
+  unitOption: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: spacing[2.5],
+    borderRadius: radii.xl,
+  },
+  unitOptionSelected: {
+    backgroundColor: colors.ink,
+  },
+  unitOptionDefault: {
+    backgroundColor: colors.surfaceContainer,
+  },
+  unitLabel: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: 13,
+  },
+  unitLabelSelected: {
+    color: colors.surface,
+  },
+  unitLabelDefault: {
+    color: colors.ink,
+  },
+  doneButton: {
+    marginHorizontal: spacing[8],
+  },
+  bottomSpacer: {
+    height: spacing[2],
+  },
+});

@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { ActivityIndicator, Alert, View } from "react-native";
+import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 
 import { getRecurringRuleAppearance } from "@/components/recurring/recurring-rule-appearance";
 import {
@@ -37,6 +37,7 @@ import {
   useTransaction,
   useUpdateTransaction,
 } from "@/hooks/use-transactions";
+import { colors } from "@/lib/design-tokens";
 import type { RecurringChangeResult } from "@/modules/recurring-rules";
 import { getSystemTimeZone } from "@/modules/recurring-rules/clock";
 import { toDateString } from "@/utils/date";
@@ -73,7 +74,7 @@ export default function TransactionScreen() {
   const isLoading = isRuleEditor ? isRuleLoading : isTransactionLoading;
   if (!isNew && isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-surface">
+      <View style={styles.loadingContainer}>
         <ActivityIndicator />
       </View>
     );
@@ -238,8 +239,17 @@ export default function TransactionScreen() {
         bannerContent={
           rule?.health === "needs_attention" ? <RecurringRuleWarning rule={rule} /> : undefined
         }
-        surfaceClassName={appearance?.surfaceClassName}
+        surfaceStyle={appearance?.surfaceStyle}
       />
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+  },
+});

@@ -1,27 +1,25 @@
 import type { UniversalTextStyle } from "@expo/ui";
 import { Platform } from "react-native";
 
+import { colors, rawColorValues } from "@/lib/design-tokens";
+
 export interface FieldBorderState {
   readonly focused: boolean;
   readonly error: boolean;
 }
 
-export function fieldBorderClassName({ focused, error }: FieldBorderState): string {
-  if (focused) return "border-ink";
-  if (error) return "border-destructive";
-  return "border-transparent";
+export function fieldBorderColor({ focused, error }: FieldBorderState) {
+  if (focused) return colors.ink;
+  if (error) return colors.destructive;
+  return "transparent";
 }
 
-/** Platform PostScript / loaded-face names for body medium. */
 const BODY_MEDIUM_FACE = {
   ios: "Nunito-Medium",
   android: "Nunito_500Medium",
   web: "Nunito_500Medium",
 } as const;
 
-/**
- * `@expo/ui` TextInput takes typography via textStyle. Host cannot take NativeWind classNames.
- */
 export function fieldTextStyle(ink: string): UniversalTextStyle {
   return {
     fontFamily:
@@ -37,5 +35,5 @@ export function fieldTextStyle(ink: string): UniversalTextStyle {
 }
 
 export function fieldPlaceholderColor(scheme: string | null | undefined): string {
-  return scheme === "dark" ? "#E8E6E340" : "#1C1B1A40";
+  return scheme === "dark" ? `${rawColorValues.dark.ink}40` : `${rawColorValues.light.ink}40`;
 }
