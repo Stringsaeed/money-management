@@ -1,24 +1,27 @@
 /**
  * Expo Config Plugin: withAndroidThemeColor
  *
- * Generates Android color resources (default + night) during `pnpm prebuild`
- * so that PlatformColor can read design tokens natively.
+ * Injects design token colors into Android color resources during prebuild
+ * using Expo's stock color mods (not withDangerousMod).
  *
  * This plugin:
- * 1. Creates res/values/colors.xml with light mode color values
- * 2. Creates res/values-night/colors.xml with dark mode color values
- * 3. Uses the naming convention: design_token_<snake_case_key>
+ * 1. Uses withAndroidColors to add light mode colors to values/colors.xml
+ * 2. Uses withAndroidColorsNight to add dark mode colors to values-night/colors.xml
+ * 3. Uses AndroidConfig.Colors.assignColorValue to set each color
  *
- * The values survive a full prebuild cycle because the plugin regenerates
- * them each time, rather than relying on hand-edited files.
+ * NOTE: Color values are duplicated here from lib/design-tokens.ts because
+ * that module uses React Native APIs (DynamicColorIOS, PlatformColor) that
+ * can't be imported in a Node.js config plugin context. Keep these in sync.
  */
 
-const { withDangerousMod } = require("@expo/config-plugins");
-const fs = require("fs");
-const path = require("path");
+const {
+  withAndroidColors,
+  withAndroidColorsNight,
+  AndroidConfig,
+} = require("@expo/config-plugins");
 
-// Color definitions matching lib/design-tokens.ts
-// This is the canonical source for raw hex values
+// Color values mirrored from lib/design-tokens.ts rawColorValues
+// Keep in sync when design tokens change.
 const colorValues = {
   light: {
     surface: "#f5f5f0",
@@ -75,16 +78,16 @@ const colorValues = {
     kumoLine: "#1a1a1a1a",
     kumoHairline: "#e5e5e5",
     kumoFocus: "#171717",
-    kumoShadowEdge: "#0000001f",
-    kumoShadowDrop: "#00000014",
+    kumoShadowEdge: "#1f000000",
+    kumoShadowDrop: "#14000000",
     kumoInfo: "#3b82f6",
-    kumoInfoTint: "#dbeafe73",
+    kumoInfoTint: "#73dbeafe",
     kumoSuccess: "#10b981",
-    kumoSuccessTint: "#d1fae591",
+    kumoSuccessTint: "#91d1fae5",
     kumoWarning: "#f59e0b",
-    kumoWarningTint: "#fef3c733",
+    kumoWarningTint: "#33fef3c7",
     kumoDanger: "#ef4444",
-    kumoDangerTint: "#fee2e26b",
+    kumoDangerTint: "#6bfee2e2",
     kumoBrandEmphasisStart: "#5b8def",
     kumoBrandEmphasisEnd: "#2563eb",
     kumoBrandEmphasisHover: "#85abf3",
@@ -165,16 +168,16 @@ const colorValues = {
     kumoLine: "#3f3f46",
     kumoHairline: "#262626",
     kumoFocus: "#e5e5e5",
-    kumoShadowEdge: "#ffffff1a",
-    kumoShadowDrop: "#0000004d",
+    kumoShadowEdge: "#1affffff",
+    kumoShadowDrop: "#4d000000",
     kumoInfo: "#3b82f6",
-    kumoInfoTint: "#1e3a8a38",
+    kumoInfoTint: "#381e3a8a",
     kumoSuccess: "#34d399",
-    kumoSuccessTint: "#052e1633",
+    kumoSuccessTint: "#33052e16",
     kumoWarning: "#d97706",
-    kumoWarningTint: "#4e2e095e",
+    kumoWarningTint: "#5e4e2e09",
     kumoDanger: "#dc2626",
-    kumoDangerTint: "#7f1d1d2b",
+    kumoDangerTint: "#2b7f1d1d",
     kumoBrandEmphasisStart: "#3d71c7",
     kumoBrandEmphasisEnd: "#1e5fcc",
     kumoBrandEmphasisHover: "#5c8ad0",
@@ -206,105 +209,29 @@ function camelToSnake(str) {
   return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
 
-function convertToAndroidColor(hexColor) {
-  // Android colors: #AARRGGBB or #RRGGBB
-  // Input may be: #RGB, #RGBA, #RRGGBB, #RRGGBBAA, or rgba() format
-
-  if (hexColor.startsWith("rgba(")) {
-    // Parse rgba(r, g, b, a) format
-    const match = hexColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/);
-    if (match) {
-      const r = parseInt(match[1], 10).toString(16).padStart(2, "0");
-      const g = parseInt(match[2], 10).toString(16).padStart(2, "0");
-      const b = parseInt(match[3], 10).toString(16).padStart(2, "0");
-      const a = match[4]
-        ? Math.round(parseFloat(match[4]) * 255)
-            .toString(16)
-            .padStart(2, "0")
-        : "ff";
-      return `#${a}${r}${g}${b}`.toUpperCase();
-    }
+function withDesignTokenColors(config, colors) {
+  for (const [key, value] of Object.entries(colors)) {
+    const colorName = `design_token_${camelToSnake(key)}`;
+    config.modResults = AndroidConfig.Colors.assignColorValue(config.modResults, {
+      name: colorName,
+      value: value.toUpperCase(),
+    });
   }
-
-  // Handle hex colors
-  let hex = hexColor.replace("#", "");
-
-  // Expand short hex
-  if (hex.length === 3) {
-    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-  } else if (hex.length === 4) {
-    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
-  }
-
-  // Convert RRGGBBAA to AARRGGBB (Android format)
-  if (hex.length === 8) {
-    const alpha = hex.slice(6, 8);
-    const rgb = hex.slice(0, 6);
-    return `#${alpha}${rgb}`.toUpperCase();
-  }
-
-  // Standard RRGGBB
-  return `#${hex}`.toUpperCase();
-}
-
-function generateColorsXml(colors) {
-  const entries = Object.entries(colors)
-    .map(([key, value]) => {
-      const name = `design_token_${camelToSnake(key)}`;
-      const androidColor = convertToAndroidColor(value);
-      return `    <color name="${name}">${androidColor}</color>`;
-    })
-    .join("\n");
-
-  return `<?xml version="1.0" encoding="utf-8"?>
-<!--
-  Generated by withAndroidThemeColor Expo config plugin.
-  Do not edit manually - regenerated on each prebuild.
-
-  These color resources are read by PlatformColor in design-tokens.ts
-  to provide native light/dark mode resolution on Android.
--->
-<resources>
-${entries}
-</resources>
-`;
+  return config;
 }
 
 const withAndroidThemeColor = (config) => {
-  return withDangerousMod(config, [
-    "android",
-    async (config) => {
-      const projectRoot = config.modRequest.projectRoot;
-      const androidResPath = path.join(projectRoot, "android", "app", "src", "main", "res");
+  // Add light mode colors to values/colors.xml
+  config = withAndroidColors(config, (config) => {
+    return withDesignTokenColors(config, colorValues.light);
+  });
 
-      // Ensure directories exist
-      const valuesDir = path.join(androidResPath, "values");
-      const valuesNightDir = path.join(androidResPath, "values-night");
+  // Add dark mode colors to values-night/colors.xml
+  config = withAndroidColorsNight(config, (config) => {
+    return withDesignTokenColors(config, colorValues.dark);
+  });
 
-      if (!fs.existsSync(valuesDir)) {
-        fs.mkdirSync(valuesDir, { recursive: true });
-      }
-      if (!fs.existsSync(valuesNightDir)) {
-        fs.mkdirSync(valuesNightDir, { recursive: true });
-      }
-
-      // Generate light mode colors (values/design_tokens_colors.xml)
-      const lightColorsPath = path.join(valuesDir, "design_tokens_colors.xml");
-      const lightColorsXml = generateColorsXml(colorValues.light);
-      fs.writeFileSync(lightColorsPath, lightColorsXml);
-
-      // Generate dark mode colors (values-night/design_tokens_colors.xml)
-      const darkColorsPath = path.join(valuesNightDir, "design_tokens_colors.xml");
-      const darkColorsXml = generateColorsXml(colorValues.dark);
-      fs.writeFileSync(darkColorsPath, darkColorsXml);
-
-      console.log("[withAndroidThemeColor] Generated Android color resources:");
-      console.log(`  - ${lightColorsPath}`);
-      console.log(`  - ${darkColorsPath}`);
-
-      return config;
-    },
-  ]);
+  return config;
 };
 
 module.exports = withAndroidThemeColor;
