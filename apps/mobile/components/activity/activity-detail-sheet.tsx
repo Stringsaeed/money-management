@@ -1,8 +1,10 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 import { effectEmoji, formatActivityFullTimestamp } from "@/utils/activity";
 
 import type { ActivityEntry } from "@/hooks/use-activity";
@@ -15,13 +17,11 @@ interface ActivityDetailSheetProps {
 
 function DetailRow({ emoji, label, value }: { emoji: string; label: string; value: string }) {
   return (
-    <View className="flex-row items-start gap-3 px-1 py-2.5">
-      <Text className="text-lg w-7 text-center">{emoji}</Text>
-      <View className="flex-1 gap-0.5">
-        <Text className="font-body-medium text-xs text-ink/40 tracking-wide uppercase">
-          {label}
-        </Text>
-        <Text className="font-body-normal text-sm text-ink">{value}</Text>
+    <View style={styles.detailRow}>
+      <Text style={styles.detailEmoji}>{emoji}</Text>
+      <View style={styles.detailBody}>
+        <Text style={styles.detailLabel}>{label}</Text>
+        <Text style={styles.detailValue}>{value}</Text>
       </View>
     </View>
   );
@@ -33,51 +33,156 @@ function DetailRow({ emoji, label, value }: { emoji: string; label: string; valu
  * Closed state is controlled by the parent passing `entry: null`.
  */
 export function ActivityDetailSheet({ entry, onDismiss }: ActivityDetailSheetProps) {
+  const insets = useSafeAreaInsets();
+
   if (!entry) {
     return null;
   }
 
   return (
     <ModalBottomSheet open onDismiss={onDismiss}>
-      <View className="pb-safe w-full px-5 pt-6 gap-3">
-        <View className="items-center gap-1 mb-2">
-          <Text className="text-4xl">{effectEmoji(entry.effects[0] ?? "")}</Text>
-          <Text className="font-heading-medium italic text-xl text-ink text-center">
-            {entry.summary}
-          </Text>
+      <View style={[styles.sheetBody, { paddingBottom: insets.bottom }]}>
+        <View style={styles.header}>
+          <Text style={styles.headerEmoji}>{effectEmoji(entry.effects[0] ?? "")}</Text>
+          <Text style={styles.headerTitle}>{entry.summary}</Text>
         </View>
 
-        <View className="rounded-xl bg-surface-container px-2 py-1 gap-1">
+        <View style={styles.detailCard}>
           <DetailRow emoji="👤" label="Made by" value={entry.userName} />
           <DetailRow emoji="🕒" label="When" value={formatActivityFullTimestamp(entry.createdAt)} />
           <DetailRow emoji="#️⃣" label="Change #" value={`seq ${entry.seq}`} />
         </View>
 
-        <View className="gap-1.5 mt-1">
-          <Text className="font-body-semibold text-xs text-ink/40 tracking-wide uppercase">
-            Affected entities 🎯
-          </Text>
-          <View className="flex-row flex-wrap gap-1.5">
+        <View style={styles.effectsSection}>
+          <Text style={styles.effectsHeading}>Affected entities 🎯</Text>
+          <View style={styles.effectsRow}>
             {entry.effects.length > 0 ? (
               entry.effects.map((tag) => (
-                <View
-                  key={tag}
-                  className="flex-row items-center gap-1 rounded-full bg-surface-dim px-2.5 py-1"
-                >
-                  <Text className="text-xs">{effectEmoji(tag)}</Text>
-                  <Text className="font-body-medium text-xs text-ink/70 capitalize">{tag}</Text>
+                <View key={tag} style={styles.effectChip}>
+                  <Text style={styles.effectEmoji}>{effectEmoji(tag)}</Text>
+                  <Text style={styles.effectLabel}>{tag}</Text>
                 </View>
               ))
             ) : (
-              <Text className="font-body-normal text-sm text-ink/50">Nothing specific</Text>
+              <Text style={styles.emptyEffects}>Nothing specific</Text>
             )}
           </View>
         </View>
 
-        <Button size="xl" className="mx-8 mt-3" onPress={onDismiss}>
+        <Button
+          size="xl"
+          style={styles.doneButton}
+          onPress={onDismiss}
+        >
           <Text>Done</Text>
         </Button>
       </View>
     </ModalBottomSheet>
   );
 }
+
+const styles = StyleSheet.create({
+  sheetBody: {
+    width: "100%",
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[6],
+    gap: spacing[3],
+  },
+  header: {
+    alignItems: "center",
+    gap: spacing[1],
+    marginBottom: spacing[2],
+  },
+  headerEmoji: {
+    fontSize: typography.text4xl,
+  },
+  headerTitle: {
+    fontFamily: typography.fontHeadingMedium,
+    fontStyle: "italic",
+    fontSize: typography.textXl,
+    color: colors.ink,
+    textAlign: "center",
+  },
+  detailCard: {
+    borderRadius: radii.xl,
+    backgroundColor: colors.surfaceContainer,
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[1],
+    gap: spacing[1],
+  },
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing[3],
+    paddingHorizontal: spacing[1],
+    paddingVertical: spacing[2.5],
+  },
+  detailEmoji: {
+    fontSize: typography.textLg,
+    width: 28,
+    textAlign: "center",
+  },
+  detailBody: {
+    flex: 1,
+    gap: spacing[0.5],
+  },
+  detailLabel: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+    letterSpacing: typography.trackingWide,
+    textTransform: "uppercase",
+  },
+  detailValue: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+  },
+  effectsSection: {
+    gap: spacing[1.5],
+    marginTop: spacing[1],
+  },
+  effectsHeading: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+    letterSpacing: typography.trackingWide,
+    textTransform: "uppercase",
+  },
+  effectsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing[1.5],
+  },
+  effectChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[1],
+    borderRadius: radii.full,
+    backgroundColor: colors.surfaceDim,
+    paddingHorizontal: spacing[2.5],
+    paddingVertical: spacing[1],
+  },
+  effectEmoji: {
+    fontSize: typography.textXs,
+  },
+  effectLabel: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.7,
+    textTransform: "capitalize",
+  },
+  emptyEffects: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  doneButton: {
+    marginHorizontal: spacing[8],
+    marginTop: spacing[3],
+  },
+});
