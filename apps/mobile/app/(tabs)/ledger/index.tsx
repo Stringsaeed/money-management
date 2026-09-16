@@ -1,9 +1,10 @@
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import { HomeEmptyState } from "@/components/home/home-empty-state";
 import { HomeJournalList } from "@/components/home/home-journal-list";
 import { LedgerListHeader } from "@/components/ledger/ledger-list-header";
 import { useHomeScreen } from "@/hooks/use-home-screen";
+import { colors, spacing } from "@/lib/design-tokens";
 
 export default function LedgerScreen() {
   const { loadingTx, groups, currency, activeFilterCount, activeAccountId, resetFilters } =
@@ -14,11 +15,11 @@ export default function LedgerScreen() {
   const listHeader = <LedgerListHeader />;
 
   return (
-    <View className="flex-1 bg-background">
+    <View style={styles.screen}>
       {loadingTx ? (
         <>
           {listHeader}
-          <ActivityIndicator className="mt-10" />
+          <ActivityIndicator style={styles.loader} />
         </>
       ) : groups.length === 0 ? (
         <>
@@ -36,3 +37,13 @@ export default function LedgerScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  loader: {
+    marginTop: spacing[10],
+  },
+});

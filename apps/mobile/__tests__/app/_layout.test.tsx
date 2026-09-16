@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import RootLayout from "@/app/_layout";
 
@@ -145,6 +146,15 @@ jest.mock("@/components/banner/ledger-toaster", () => ({
   LedgerToaster: () => null,
 }));
 
+const initialWindowMetrics = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 47, left: 0, right: 0, bottom: 34 },
+};
+
+function Wrapper({ children }: { children: React.ReactNode }) {
+  return <SafeAreaProvider initialMetrics={initialWindowMetrics}>{children}</SafeAreaProvider>;
+}
+
 describe("app/_layout", () => {
   beforeEach(() => {
     mockMarkDatabaseReset.mockReset();
@@ -160,7 +170,7 @@ describe("app/_layout", () => {
   it("renders the loading fallback before fonts are ready", async () => {
     mockUseFonts.mockReturnValue([false, null]);
 
-    await render(<RootLayout />);
+    await render(<RootLayout />, { wrapper: Wrapper });
 
     expect(screen.queryByText("stack-ready")).not.toBeOnTheScreen();
   });
@@ -168,7 +178,7 @@ describe("app/_layout", () => {
   it("renders the provider tree and hides the splash screen once fonts load", async () => {
     mockUseFonts.mockReturnValue([true, null]);
 
-    await render(<RootLayout />);
+    await render(<RootLayout />, { wrapper: Wrapper });
 
     expect(screen.getByText("stack-ready")).toBeOnTheScreen();
     expect(screen.getByText("portal-host")).toBeOnTheScreen();
@@ -184,7 +194,7 @@ describe("app/_layout", () => {
     mockUseFonts.mockReturnValue([true, null]);
     const database = { name: "money.db" };
 
-    await render(<RootLayout />);
+    await render(<RootLayout />, { wrapper: Wrapper });
     await capturedOnInit?.(database);
 
     expect(mockRunMigrations).toHaveBeenCalledWith("drizzle-database");

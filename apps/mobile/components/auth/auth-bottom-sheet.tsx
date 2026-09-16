@@ -1,8 +1,9 @@
 import { Children, cloneElement, useState, type ReactElement, type ReactNode } from "react";
 import type { PressableProps } from "react-native";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
+import { spacing } from "@/lib/design-tokens";
 
 export function AuthBottomSheet({
   trigger,
@@ -39,8 +40,14 @@ export function AuthBottomSheet({
     <>
       {renderTrigger()}
       <ModalBottomSheet open={isPresented} onDismiss={handleDismiss} testID="auth-bottom-sheet">
-        <View className="p-6">{children}</View>
+        <View style={styles.body}>{children}</View>
       </ModalBottomSheet>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  body: {
+    padding: spacing[6],
+  },
+});

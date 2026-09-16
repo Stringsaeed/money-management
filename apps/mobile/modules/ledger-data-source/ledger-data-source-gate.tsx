@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useSyncEnrollment } from "@/hooks/use-enable-sync";
 import {
@@ -19,13 +20,14 @@ export function LedgerDataSourceGate({ children }: { readonly children: ReactNod
   const enrollment = useSyncEnrollment();
   const mode = useSyncModeStore((state) => state.mode);
   const reason = useSyncModeStore((state) => state.reason);
+  const insets = useSafeAreaInsets();
 
   // Only block the first migration read. Access "resolving" (session/households
   // pending) must not unmount the tree — that remounts onboarding at welcome
   // and looks like a loop when the session probe flaps.
   if (enrollment.isPending) {
     return (
-      <View className="safe-top safe-bottom flex-1 items-center justify-center">
+      <View style={[styles.loading, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <ActivityIndicator size="large" />
       </View>
     );
@@ -50,3 +52,11 @@ export function LedgerDataSourceGate({ children }: { readonly children: ReactNod
     </LedgerDataSourceProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
