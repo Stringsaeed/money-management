@@ -1,6 +1,7 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { Text } from "@/components/ui/text";
+import { spacing, typography } from "@/lib/design-tokens";
 
 import { TransactionTextField } from "./ui/transaction-text-field";
 
@@ -11,8 +12,8 @@ interface NoteInputProps {
 
 export function NoteInput({ value, onChange }: NoteInputProps) {
   return (
-    <View className="px-5 py-2 flex-row items-center gap-2">
-      <Text className="text-base">📝</Text>
+    <View style={styles.container}>
+      <Text style={styles.emoji}>📝</Text>
       <TransactionTextField
         value={value}
         onChangeText={onChange}
@@ -25,3 +26,16 @@ export function NoteInput({ value, onChange }: NoteInputProps) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: spacing[5],
+    paddingVertical: spacing[2],
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[2],
+  },
+  emoji: {
+    fontSize: typography.textBase,
+  },
+});

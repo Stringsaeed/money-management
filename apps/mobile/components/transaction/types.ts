@@ -34,7 +34,7 @@ export interface TransactionFormProps {
   onSubmit: (data: TransactionFormData) => Promise<void>;
   formRef?: React.MutableRefObject<TransactionFormHandle | null>;
   bannerContent?: React.ReactNode;
-  surfaceClassName?: string;
+  surfaceStyle?: import("react-native").StyleProp<import("react-native").ViewStyle>;
 }
 
 export interface FormValues {

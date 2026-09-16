@@ -27,7 +27,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
       "apps/mobile/app/\\(tabs\\)/ledger/index.tsx",
       "apps/mobile/app/\\(tabs\\)/settings/household.tsx",
       "apps/mobile/app/\\(tabs\\)/settings/index.tsx",
-      "apps/mobile/app/transaction/\\[id\\].tsx",
     ],
     reason: "Screen files using NativeWind className pending migration to theme module StyleSheet.",
     issue: 279,
@@ -204,27 +203,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
     ],
     reason:
       "Settings components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: [
-      "apps/mobile/components/transaction/account-picker/account-picker.tsx",
-      "apps/mobile/components/transaction/amount-display.tsx",
-      "apps/mobile/components/transaction/breadcrumb-segment.tsx",
-      "apps/mobile/components/transaction/category-picker/category-picker.tsx",
-      "apps/mobile/components/transaction/note-input.tsx",
-      "apps/mobile/components/transaction/num-pad.tsx",
-      "apps/mobile/components/transaction/recurrence/count-stepper.tsx",
-      "apps/mobile/components/transaction/recurrence/ends-control.tsx",
-      "apps/mobile/components/transaction/recurrence/repeat-control.tsx",
-      "apps/mobile/components/transaction/transaction-date-picker/transaction-date-picker.tsx",
-      "apps/mobile/components/transaction/transaction-form.tsx",
-      "apps/mobile/components/transaction/transaction-group.tsx",
-      "apps/mobile/components/transaction/transaction-row.tsx",
-      "apps/mobile/components/transaction/ui/transaction-text-field.tsx",
-    ],
-    reason:
-      "Transaction components using NativeWind className pending migration to theme module StyleSheet.",
     issue: 279,
   },
   {
