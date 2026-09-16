@@ -9,6 +9,12 @@ export const CLASSNAME_MIGRATION_MESSAGE =
 
 export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
   {
+    files: ["apps/mobile/app/dev/text-gallery.tsx"],
+    reason:
+      "Temporary dev-only gallery for Text QA. TODO(#285): Delete after QA sign-off on Text StyleSheet migration.",
+    issue: 285,
+  },
+  {
     files: [
       "apps/mobile/app/account/\\[id\\].tsx",
       "apps/mobile/app/accounts.tsx",
