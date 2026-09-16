@@ -140,25 +140,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
   },
   {
     files: [
-      "apps/mobile/components/onboarding/onboarding-balance-step.tsx",
-      "apps/mobile/components/onboarding/onboarding-bloom-burst.tsx",
-      "apps/mobile/components/onboarding/onboarding-complete-step.tsx",
-      "apps/mobile/components/onboarding/onboarding-cta.tsx",
-      "apps/mobile/components/onboarding/onboarding-flow.tsx",
-      "apps/mobile/components/onboarding/onboarding-header.tsx",
-      "apps/mobile/components/onboarding/onboarding-name-step.tsx",
-      "apps/mobile/components/onboarding/onboarding-progress.tsx",
-      "apps/mobile/components/onboarding/onboarding-step-heading.tsx",
-      "apps/mobile/components/onboarding/onboarding-style-step.tsx",
-      "apps/mobile/components/onboarding/onboarding-text-field.tsx",
-      "apps/mobile/components/onboarding/onboarding-welcome-step.tsx",
-    ],
-    reason:
-      "Onboarding components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: [
       "apps/mobile/components/recurring/recurring-rule-row.tsx",
       "apps/mobile/components/recurring/recurring-rule-warning.tsx",
     ],

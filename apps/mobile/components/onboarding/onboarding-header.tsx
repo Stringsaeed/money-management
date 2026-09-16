@@ -1,8 +1,9 @@
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { ArrowLeftIcon } from "phosphor-react-native";
 
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import { Icon } from "@/components/ui/icon";
+import { colors, spacing } from "@/lib/design-tokens";
 
 interface OnboardingHeaderProps {
   current: number;
@@ -17,24 +18,58 @@ interface OnboardingHeaderProps {
  */
 export function OnboardingHeader({ current, onBack, total }: OnboardingHeaderProps) {
   return (
-    <View className="h-11 flex-row items-center gap-3 px-5">
+    <View style={styles.container}>
       <Pressable
         accessibilityLabel="Go back"
         accessibilityRole="button"
         hitSlop={12}
         onPress={onBack}
-        className="h-9 w-9 items-center justify-center rounded-full border border-ledger-outline bg-surface/80 active:bg-surface-dim"
+        style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
         testID="onboarding-back"
       >
-        <Icon as={ArrowLeftIcon} className="text-ink" size={16} weight="bold" />
+        <Icon as={ArrowLeftIcon} size={16} weight="bold" style={styles.backIcon} />
       </Pressable>
 
-      <View className="flex-1">
+      <View style={styles.progressWrapper}>
         <OnboardingProgress current={current} total={total} />
       </View>
 
       {/* Balances the back slot so progress stays optically centred. */}
-      <View className="h-9 w-9" />
+      <View style={styles.spacer} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    height: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[3],
+    paddingHorizontal: spacing[5],
+  },
+  backButton: {
+    height: 36,
+    width: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: colors.ledgerOutline,
+    backgroundColor: colors.surface,
+    opacity: 0.8,
+  },
+  backButtonPressed: {
+    backgroundColor: colors.surfaceDim,
+  },
+  backIcon: {
+    color: colors.ink,
+  },
+  progressWrapper: {
+    flex: 1,
+  },
+  spacer: {
+    height: 36,
+    width: 36,
+  },
+});
