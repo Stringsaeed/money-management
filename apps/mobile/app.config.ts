@@ -150,6 +150,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "react-native-nitro-fetch",
       "expo-secure-store",
       "./plugins/withThirdPartySQLitePod.js",
+      "./plugins/withUISceneLifecycle.js",
     ],
     experiments: {
       typedRoutes: true,
