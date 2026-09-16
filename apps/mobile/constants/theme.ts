@@ -1,4 +1,19 @@
 /**
+ * ⚠️ SUPERSEDED by lib/design-tokens.ts
+ *
+ * This is the legacy Expo-template color palette. Its values differ from
+ * the live Tailwind theme (global.css) and the SVG palette mirror.
+ *
+ * New code should use lib/design-tokens.ts instead, which:
+ * - Consolidates all three divergent color sources
+ * - Is hook-free (usable in StyleSheet.create)
+ * - Resolves light/dark natively via DynamicColorIOS (iOS) and PlatformColor (Android)
+ *
+ * This file is retained for existing components during the migration.
+ * See: https://github.com/Stringsaeed/money-management/issues/279
+ */
+
+/**
  * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
  */
 
