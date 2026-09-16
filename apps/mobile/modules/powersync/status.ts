@@ -26,7 +26,6 @@ export const reconcilePowerSyncStatus = async (
     }
     return;
   }
-  if (input.killSwitchLocalOnly === undefined) return;
   if (input.killSwitchLocalOnly) {
     if (dependencies.reason() !== "kill_switch") dependencies.setLocalOnly("kill_switch");
     await dependencies.disconnect();

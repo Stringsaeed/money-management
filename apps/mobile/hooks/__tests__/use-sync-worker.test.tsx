@@ -144,6 +144,39 @@ describe("reconcilePowerSyncStatus", () => {
     expect(harness.disconnectAndClear).not.toHaveBeenCalled();
     expect(harness.connect).not.toHaveBeenCalled();
   });
+
+  it("connects even when kill switch status is still pending (#307)", async () => {
+    const harness = createDependencies();
+
+    await reconcilePowerSyncStatus(
+      {
+        householdId: null,
+        userId: "user-1",
+        syncPersonalLedger: true,
+        killSwitchLocalOnly: undefined,
+      },
+      harness.dependencies,
+    );
+
+    expect(harness.connect).toHaveBeenCalledWith("user-1");
+    expect(harness.disconnect).not.toHaveBeenCalled();
+  });
+
+  it("connects a household when kill switch status is still pending", async () => {
+    const harness = createDependencies();
+
+    await reconcilePowerSyncStatus(
+      {
+        householdId: "household-1",
+        userId: "user-1",
+        killSwitchLocalOnly: undefined,
+      },
+      harness.dependencies,
+    );
+
+    expect(harness.connect).toHaveBeenCalledWith("user-1");
+    expect(harness.disconnect).not.toHaveBeenCalled();
+  });
 });
 
 describe("useSyncWorker availability", () => {
