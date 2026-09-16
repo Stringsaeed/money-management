@@ -1,7 +1,8 @@
 import { TrashIcon } from "phosphor-react-native";
-import { Pressable } from "react-native";
+import { Pressable, StyleSheet, useColorScheme } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
+import { radii, rawColorValues, spacing } from "@/lib/design-tokens";
 
 interface ResourceSheetDeleteButtonProps {
   label: string;
@@ -9,15 +10,32 @@ interface ResourceSheetDeleteButtonProps {
 }
 
 export function ResourceSheetDeleteButton({ label, onPress }: ResourceSheetDeleteButtonProps) {
+  const colorScheme = useColorScheme();
+  const destructiveHex =
+    colorScheme === "dark" ? rawColorValues.dark.destructive : rawColorValues.light.destructive;
+
   return (
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
-      className="h-10 w-10 items-center justify-center rounded-full active:bg-destructive/10"
       hitSlop={8}
       onPress={onPress}
+      style={({ pressed }) => [
+        styles.button,
+        pressed && { backgroundColor: `${destructiveHex}1A` },
+      ]}
     >
-      <Icon as={TrashIcon} className="text-destructive" size={20} />
+      <Icon as={TrashIcon} size={20} style={{ color: destructiveHex }} />
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    height: spacing[10],
+    width: spacing[10],
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radii.full,
+  },
+});
