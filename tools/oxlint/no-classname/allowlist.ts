@@ -289,7 +289,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
   {
     files: [
       "apps/mobile/components/ui/badge.tsx",
-      "apps/mobile/components/ui/button.tsx",
       "apps/mobile/components/ui/icon.tsx",
       "apps/mobile/components/ui/input.tsx",
       "apps/mobile/components/ui/modal-bottom-sheet.tsx",
