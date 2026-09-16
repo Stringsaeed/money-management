@@ -293,17 +293,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
     issue: 279,
   },
   {
-    files: [
-      "apps/mobile/components/ui/icon.tsx",
-      "apps/mobile/components/ui/input.tsx",
-      "apps/mobile/components/ui/modal-bottom-sheet.tsx",
-      "apps/mobile/components/ui/money-text.tsx",
-    ],
-    reason:
-      "UI primitives using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
     files: ["apps/mobile/components/updates/mandatory-update-gate.tsx"],
     reason:
       "Updates components using NativeWind className pending migration to theme module StyleSheet.",
