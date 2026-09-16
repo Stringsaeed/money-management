@@ -1,3 +1,17 @@
+/**
+ * ⚠️ SUPERSEDED by lib/design-tokens.ts
+ *
+ * This CSS theme file is retained for NativeWind/Tailwind compatibility
+ * during the incremental migration to plain React Native StyleSheet.
+ * New components should use lib/design-tokens.ts directly.
+ *
+ * The canonical design token module (lib/design-tokens.ts) consolidates
+ * these values with native light/dark mode resolution via DynamicColorIOS
+ * (iOS) and PlatformColor + Android color resources (Android).
+ *
+ * See: https://github.com/Stringsaeed/money-management/issues/279
+ */
+
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/preflight.css" layer(base);
 @import "tailwindcss/utilities.css";

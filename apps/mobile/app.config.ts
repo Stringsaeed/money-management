@@ -151,6 +151,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "expo-secure-store",
       "./plugins/withThirdPartySQLitePod.js",
       "./plugins/withUISceneLifecycle.js",
+      "./plugins/withAndroidThemeColor.js",
     ],
     experiments: {
       typedRoutes: true,
