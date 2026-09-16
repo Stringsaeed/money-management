@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import {
@@ -7,7 +7,7 @@ import {
 } from "@/components/category/category-form-options";
 import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 
 interface CategoryTypePickerProps {
   value: CategoryType;
@@ -16,7 +16,7 @@ interface CategoryTypePickerProps {
 
 export function CategoryTypePicker({ value, onChange }: CategoryTypePickerProps) {
   return (
-    <View className="flex-row gap-2">
+    <View style={styles.row}>
       {CATEGORY_TYPE_OPTIONS.map((option) => {
         const isSelected = option.value === value;
 
@@ -25,31 +25,28 @@ export function CategoryTypePicker({ value, onChange }: CategoryTypePickerProps)
             key={option.value}
             layout={layoutTransition}
             style={{
+              flex: 1,
               transform: [{ scale: isSelected ? 1 : 0.97 }],
               transitionProperty: "transform",
               transitionDuration: 220,
               transitionTimingFunction: "ease-out",
             }}
-            className="flex-1"
           >
             <Pressable
               onPress={() => onChange(option.value)}
-              className={cn(
-                "flex-row items-center justify-center gap-1.5 rounded-2xl border px-3.5 py-3 active:bg-surface-dim",
-                isSelected ? "border-ink bg-surface" : "border-ledger-outline bg-surface/70",
-              )}
-              style={
-                isSelected
-                  ? { backgroundColor: `${option.color}14`, borderColor: option.color }
-                  : undefined
-              }
+              style={({ pressed }) => [
+                styles.chip,
+                isSelected ? styles.chipSelected : styles.chipUnselected,
+                isSelected && { backgroundColor: `${option.color}14`, borderColor: option.color },
+                pressed && styles.chipPressed,
+              ]}
             >
-              <Text className="text-sm">{option.emoji}</Text>
+              <Text style={styles.emoji}>{option.emoji}</Text>
               <Text
-                className={cn(
-                  "font-body-semibold text-sm",
-                  isSelected ? "text-ink" : "text-ink/80",
-                )}
+                style={[
+                  styles.labelText,
+                  isSelected ? styles.labelSelected : styles.labelUnselected,
+                ]}
               >
                 {option.label}
               </Text>
@@ -60,3 +57,46 @@ export function CategoryTypePicker({ value, onChange }: CategoryTypePickerProps)
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    gap: spacing[2],
+  },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing[1.5],
+    borderRadius: radii["2xl"],
+    borderWidth: 1,
+    paddingHorizontal: spacing[3.5],
+    paddingVertical: spacing[3],
+  },
+  chipSelected: {
+    borderColor: colors.ink,
+    backgroundColor: colors.surface,
+  },
+  chipUnselected: {
+    borderColor: colors.ledgerOutline,
+    backgroundColor: colors.surface,
+    opacity: 0.7,
+  },
+  chipPressed: {
+    backgroundColor: colors.surfaceDim,
+  },
+  emoji: {
+    fontSize: typography.textSm,
+  },
+  labelText: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textSm,
+  },
+  labelSelected: {
+    color: colors.ink,
+  },
+  labelUnselected: {
+    color: colors.ink,
+    opacity: 0.8,
+  },
+});

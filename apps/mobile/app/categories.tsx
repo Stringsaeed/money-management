@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, useColorScheme, View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   ListIcon,
   PlusIcon,
@@ -20,8 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { useAllCategories } from "@/hooks/use-categories";
+import { colors, radii, rawColorValues, spacing, typography } from "@/lib/design-tokens";
 import type { Category } from "@/types";
-import { cn } from "@/lib/utils";
 
 type CategoryFilter = "all" | "income" | "expense" | "archived";
 
@@ -41,6 +42,9 @@ const FILTERS: FilterOption[] = [
 export default function CategoriesScreen() {
   const [filter, setFilter] = useState<CategoryFilter>("all");
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const palette = colorScheme === "dark" ? rawColorValues.dark : rawColorValues.light;
 
   const { data: categories = [] } = useAllCategories();
 
@@ -61,16 +65,19 @@ export default function CategoriesScreen() {
   const fabInitialType = filter === "income" ? "income" : "expense";
 
   return (
-    <View className="flex-1 bg-surface safe-bottom">
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <ScrollView
-        className="flex-1"
+        style={styles.scrollView}
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerClassName="pb-safe-offset-32"
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + spacing[32] },
+        ]}
       >
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerClassName="px-5 pt-4 pb-2 gap-2"
+          contentContainerStyle={styles.filtersContent}
         >
           {FILTERS.map((option) => {
             const active = filter === option.value;
@@ -80,19 +87,20 @@ export default function CategoriesScreen() {
                 key={option.value}
                 onPress={() => setFilter(option.value)}
                 role="button"
-                className={cn(
-                  "flex-row items-center gap-1.5 px-3 py-1.5 rounded-full border",
-                  active ? "bg-ink border-ink" : "bg-surface-container border-ledger-outline",
-                )}
+                style={[
+                  styles.filterChip,
+                  active ? styles.filterChipActive : styles.filterChipIdle,
+                ]}
               >
                 <Icon
                   as={option.icon}
                   size={14}
-                  className={active ? "text-surface" : "text-ink/60"}
+                  style={{
+                    color: active ? palette.surface : palette.ink,
+                    opacity: active ? 1 : 0.6,
+                  }}
                 />
-                <Text
-                  className={cn("font-body-medium text-sm", active ? "text-surface" : "text-ink")}
-                >
+                <Text style={[styles.filterLabel, active ? styles.filterLabelActive : null]}>
                   {option.label}
                 </Text>
               </Pressable>
@@ -101,12 +109,10 @@ export default function CategoriesScreen() {
         </ScrollView>
 
         {filtered.length === 0 ? (
-          <View className="items-center py-16 px-8 gap-2">
+          <View style={styles.emptyContainer}>
             <SeedPacketsGraphic />
-            <Text className="font-heading-normal italic text-lg text-ink">No categories yet</Text>
-            <Text className="font-body-normal text-sm text-ink/50 text-center">
-              Tap the + button to add your first category.
-            </Text>
+            <Text style={styles.emptyTitle}>No categories yet</Text>
+            <Text style={styles.emptySubtitle}>Tap the + button to add your first category.</Text>
           </View>
         ) : (
           <Card animated>
@@ -140,3 +146,64 @@ export default function CategoriesScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.surface,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {},
+  filtersContent: {
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[4],
+    paddingBottom: spacing[2],
+    gap: spacing[2],
+  },
+  filterChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[1.5],
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[1.5],
+    borderRadius: radii.full,
+    borderWidth: 1,
+  },
+  filterChipActive: {
+    backgroundColor: colors.ink,
+    borderColor: colors.ink,
+  },
+  filterChipIdle: {
+    backgroundColor: colors.surfaceContainer,
+    borderColor: colors.ledgerOutline,
+  },
+  filterLabel: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textSm,
+    color: colors.ink,
+  },
+  filterLabelActive: {
+    color: colors.surface,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    paddingVertical: spacing[16],
+    paddingHorizontal: spacing[8],
+    gap: spacing[2],
+  },
+  emptyTitle: {
+    fontFamily: typography.fontHeadingNormal,
+    fontStyle: "italic",
+    fontSize: typography.textLg,
+    color: colors.ink,
+  },
+  emptySubtitle: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.5,
+    textAlign: "center",
+  },
+});

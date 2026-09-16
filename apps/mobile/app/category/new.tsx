@@ -1,11 +1,12 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from "react-native";
 
 import { CATEGORY_TYPE_META, type CategoryType } from "@/components/category/category-form-options";
 import { CategoryFormContent } from "@/components/category/category-form-content";
 import { CategoryFormSheetFooter } from "@/components/category/category-form-sheet-footer";
 import { useCategoryForm } from "@/components/category/form";
+import { colors, spacing } from "@/lib/design-tokens";
 
 export default function NewCategoryScreen() {
   const [hasCustomColor, setHasCustomColor] = useState(false);
@@ -27,10 +28,10 @@ export default function NewCategoryScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-background"
+      style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScrollView contentContainerClassName="gap-4 px-5 py-4" keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <CategoryFormContent
           form={form}
           onColorChange={handleColorChange}
@@ -41,3 +42,15 @@ export default function NewCategoryScreen() {
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    gap: spacing[4],
+    paddingHorizontal: spacing[5],
+    paddingVertical: spacing[4],
+  },
+});
