@@ -1,56 +1,111 @@
-import { TextClassContext } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
+import { TextStyleContext } from "@/components/ui/text";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 import * as Slot from "@rn-primitives/slot";
-import { cva, type VariantProps } from "class-variance-authority";
-import type { ViewProps } from "react-native";
-import { View } from "react-native";
+import {
+  StyleSheet,
+  type StyleProp,
+  type TextStyle,
+  type ViewStyle,
+  View,
+  type ViewProps,
+} from "react-native";
 
-const badgeVariants = cva(
-  "border-border group shrink-0 flex-row items-center justify-center gap-1 overflow-hidden rounded-full border px-2 py-0.5",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary border-transparent",
-        secondary: "bg-secondary border-transparent",
-        destructive: "bg-destructive border-transparent",
-        outline: "",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  },
-);
+// -----------------------------------------------------------------------------
+// Types
+// -----------------------------------------------------------------------------
 
-const badgeTextVariants = cva("text-xs font-medium", {
-  variants: {
-    variant: {
-      default: "text-primary-foreground",
-      secondary: "text-secondary-foreground",
-      destructive: "text-white",
-      outline: "text-foreground",
-    },
-  },
-  defaultVariants: {
-    variant: "default",
-  },
-});
+type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
 
 type BadgeProps = ViewProps &
   React.RefAttributes<View> & {
+    variant?: BadgeVariant;
     asChild?: boolean;
-  } & VariantProps<typeof badgeVariants>;
+  };
 
-function Badge({ className, variant, asChild, ...props }: BadgeProps) {
+// -----------------------------------------------------------------------------
+// Variant Styles
+// -----------------------------------------------------------------------------
+
+const variantStyles = {
+  default: {
+    backgroundColor: colors.primary,
+    borderColor: "transparent",
+  },
+  secondary: {
+    backgroundColor: colors.secondary,
+    borderColor: "transparent",
+  },
+  destructive: {
+    backgroundColor: colors.destructive,
+    borderColor: "transparent",
+  },
+  outline: {
+    backgroundColor: "transparent",
+    borderColor: colors.border,
+  },
+} satisfies Record<BadgeVariant, ViewStyle>;
+
+// -----------------------------------------------------------------------------
+// Text Styles
+// -----------------------------------------------------------------------------
+
+const baseTextStyle = {
+  fontFamily: typography.fontBodyMedium,
+  fontSize: typography.textXs,
+} satisfies TextStyle;
+
+const variantTextStyles = {
+  default: {
+    color: colors.primaryForeground,
+  },
+  secondary: {
+    color: colors.secondaryForeground,
+  },
+  destructive: {
+    color: "#ffffff",
+  },
+  outline: {
+    color: colors.foreground,
+  },
+} satisfies Record<BadgeVariant, TextStyle>;
+
+// -----------------------------------------------------------------------------
+// Base Styles
+// -----------------------------------------------------------------------------
+
+const styles = StyleSheet.create({
+  base: {
+    flexShrink: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing[1],
+    overflow: "hidden",
+    borderRadius: radii.full,
+    borderWidth: 1,
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[0.5],
+  },
+});
+
+// -----------------------------------------------------------------------------
+// Badge Component
+// -----------------------------------------------------------------------------
+
+function Badge({ variant = "default", asChild, style, children, ...props }: BadgeProps) {
   const Component = asChild ? Slot.View : View;
+
+  const containerStyle: StyleProp<ViewStyle> = [styles.base, variantStyles[variant], style];
+  const textStyle: StyleProp<TextStyle> = [baseTextStyle, variantTextStyles[variant]];
+
   return (
-    <TextClassContext.Provider value={badgeTextVariants({ variant })}>
-      <Component className={cn(badgeVariants({ variant }), className)} {...props} />
-    </TextClassContext.Provider>
+    <TextStyleContext.Provider value={textStyle}>
+      <Component style={containerStyle} {...props}>
+        {children}
+      </Component>
+    </TextStyleContext.Provider>
   );
 }
 
-export {
-  Badge,
-  // badgeTextVariants, badgeVariants
-};
+export { Badge };
+export type { BadgeProps, BadgeVariant };
