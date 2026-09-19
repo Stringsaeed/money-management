@@ -56,17 +56,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
     issue: 279,
   },
   {
-    files: [
-      "apps/mobile/components/common/amount-input.tsx",
-      "apps/mobile/components/common/color-picker.tsx",
-      "apps/mobile/components/common/emoji-picker.tsx",
-      "apps/mobile/components/common/empty-state.tsx",
-    ],
-    reason:
-      "Common components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
     files: ["apps/mobile/components/ledger/ledger-list-header.tsx"],
     reason:
       "Ledger components using NativeWind className pending migration to theme module StyleSheet.",
