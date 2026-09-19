@@ -1,8 +1,20 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import HomeScreen from "@/app/(tabs)/(home)/index";
 
 const mockUseHomeScreen = jest.fn();
+
+const TEST_INSETS = { top: 0, right: 0, bottom: 0, left: 0 };
+const TEST_FRAME = { x: 0, y: 0, width: 375, height: 812 };
+
+function Wrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <SafeAreaProvider initialMetrics={{ insets: TEST_INSETS, frame: TEST_FRAME }}>
+      {children}
+    </SafeAreaProvider>
+  );
+}
 
 jest.mock("expo-router", () => ({
   Redirect: ({ href }: { href: string }) => {
@@ -68,7 +80,7 @@ describe("app/index", () => {
       resetFilters: jest.fn(),
     });
 
-    await render(<HomeScreen />);
+    await render(<HomeScreen />, { wrapper: Wrapper });
 
     expect(screen.getByText("header")).toBeOnTheScreen();
   });
@@ -87,7 +99,7 @@ describe("app/index", () => {
       resetFilters: jest.fn(),
     });
 
-    await render(<HomeScreen />);
+    await render(<HomeScreen />, { wrapper: Wrapper });
 
     expect(screen.getByText("header")).toBeOnTheScreen();
     expect(screen.getByText("journal:loading")).toBeOnTheScreen();
@@ -109,7 +121,7 @@ describe("app/index", () => {
       resetFilters,
     });
 
-    await render(<HomeScreen />);
+    await render(<HomeScreen />, { wrapper: Wrapper });
 
     await fireEvent.press(screen.getByText("journal:0:filters:2"));
 
@@ -130,7 +142,7 @@ describe("app/index", () => {
       resetFilters: jest.fn(),
     });
 
-    await render(<HomeScreen />);
+    await render(<HomeScreen />, { wrapper: Wrapper });
 
     expect(screen.getByText("journal:1:filters:0")).toBeOnTheScreen();
   });
@@ -149,7 +161,7 @@ describe("app/index", () => {
       resetFilters: jest.fn(),
     });
 
-    await render(<HomeScreen />);
+    await render(<HomeScreen />, { wrapper: Wrapper });
 
     expect(screen.queryByText("redirect:/onboarding")).not.toBeOnTheScreen();
     expect(screen.getByText("header")).toBeOnTheScreen();

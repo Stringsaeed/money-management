@@ -1,6 +1,7 @@
 import { ArrowCounterClockwiseIcon, FunnelSimpleIcon } from "phosphor-react-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/ui/icon";
 import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
@@ -10,6 +11,8 @@ import { useAllCategories } from "@/hooks/use-categories";
 import { useTransactionDateRange } from "@/hooks/use-transactions";
 import { useUIStore } from "@/stores/ui-store";
 import { formatMonth, monthsBetween } from "@/utils/date";
+
+import { styles } from "./styles";
 
 function FilterRow({
   label,
@@ -23,9 +26,17 @@ function FilterRow({
   return (
     <Pressable
       onPress={onPress}
-      className={`rounded-full px-4 py-2 ${selected ? "bg-ink" : "bg-surface-container"}`}
+      style={[
+        styles.filterRowChip,
+        selected ? styles.filterRowChipSelected : styles.filterRowChipUnselected,
+      ]}
     >
-      <Text className={`font-body-medium text-[13px] ${selected ? "text-surface" : "text-ink"}`}>
+      <Text
+        style={[
+          styles.filterRowText,
+          selected ? styles.filterRowTextSelected : styles.filterRowTextUnselected,
+        ]}
+      >
         {label}
       </Text>
     </Pressable>
@@ -34,15 +45,16 @@ function FilterRow({
 
 function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <View className="gap-1.5">
-      <Text className="font-heading-normal text-lg italic text-ink">{title}</Text>
-      <View className="flex-row flex-wrap gap-2">{children}</View>
+    <View style={styles.filterSectionGap}>
+      <Text style={styles.filterSectionTitle}>{title}</Text>
+      <View style={styles.filterSectionRow}>{children}</View>
     </View>
   );
 }
 
 export function FiltersButton() {
   const [open, setOpen] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const {
     activeAccountId,
@@ -69,27 +81,24 @@ export function FiltersButton() {
         accessibilityRole="button"
         accessibilityLabel="Filters"
         onPress={() => setOpen(true)}
-        className="mr-1 h-9 w-9 items-center justify-center"
+        style={styles.filtersButtonWrap}
       >
-        <Icon as={FunnelSimpleIcon} size={22} className="text-foreground" />
+        <Icon as={FunnelSimpleIcon} size={22} style={styles.filtersButtonIcon} />
         {activeFilterCount > 0 ? (
-          <View className="absolute right-0 top-0 h-4 min-w-4 items-center justify-center rounded-full bg-ink px-1">
-            <Text className="font-body-medium text-[10px] text-surface">{activeFilterCount}</Text>
+          <View style={styles.filtersBadge}>
+            <Text style={styles.filtersBadgeText}>{activeFilterCount}</Text>
           </View>
         ) : null}
       </Pressable>
 
       <ModalBottomSheet open={open} onDismiss={() => setOpen(false)}>
-        <View className="p-4.5 pb-safe gap-4">
-          <View className="flex-row items-center justify-between">
-            <Text className="font-heading-normal text-2xl italic text-ink">Filters</Text>
+        <View style={[styles.filtersSheetContent, { paddingBottom: insets.bottom }]}>
+          <View style={styles.filtersSheetHeader}>
+            <Text style={styles.filtersSheetTitle}>Filters</Text>
             {activeFilterCount > 0 ? (
-              <Pressable
-                onPress={resetFilters}
-                className="flex-row items-center gap-1.5 rounded-full bg-surface-container px-3 py-1.5"
-              >
-                <Icon as={ArrowCounterClockwiseIcon} size={14} className="text-ink" />
-                <Text className="font-body-medium text-[13px] text-ink">Reset</Text>
+              <Pressable onPress={resetFilters} style={styles.filtersResetButton}>
+                <Icon as={ArrowCounterClockwiseIcon} size={14} style={styles.filtersResetIcon} />
+                <Text style={styles.filtersResetText}>Reset</Text>
               </Pressable>
             ) : null}
           </View>

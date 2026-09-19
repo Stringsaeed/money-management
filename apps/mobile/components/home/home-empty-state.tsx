@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import { SproutLedgerGraphic } from "@/components/graphics/sprout-ledger";
 import { Text } from "@/components/ui/text";
 
+import { styles } from "./styles";
 import type { HomeEmptyStateProps } from "./types";
 
 export function HomeEmptyState({
@@ -25,12 +26,9 @@ export function HomeEmptyState({
         activeFilterCount > 0 ? (
           <Pressable
             onPress={onResetFilters}
-            className="mt-1 border border-ink px-5 py-2.5 active:bg-ink"
-            style={{ borderCurve: "continuous" }}
+            style={[styles.emptyStateButton, { borderCurve: "continuous" }]}
           >
-            <Text className="font-body-semibold text-[11px] uppercase tracking-wide text-ink">
-              Reset Filters
-            </Text>
+            <Text style={styles.emptyStateButtonText}>Reset Filters</Text>
           </Pressable>
         ) : undefined
       }
