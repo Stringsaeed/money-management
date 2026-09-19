@@ -1,8 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
-import { BackHandler, KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import {
+  BackHandler,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AccountFormPreview } from "@/components/account/account-form-preview";
 import { ACCOUNT_TYPE_META } from "@/components/account/account-form-options";
@@ -25,7 +33,7 @@ import {
 } from "@/components/onboarding/steps";
 import { useKeyboardVisible } from "@/components/onboarding/use-keyboard-visible";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 import type { AccountType } from "@/types";
 
 const GARDEN_WIDTH = 168;
@@ -37,6 +45,7 @@ export function OnboardingFlow() {
   const [phase, setPhase] = useState<"welcome" | "form" | "complete">("welcome");
   const [stepIndex, setStepIndex] = useState(0);
   const [error, setError] = useState("");
+  const insets = useSafeAreaInsets();
 
   // Type drives the default accent and mark, but only until the user overrides
   // one — after that the type picker stops rewriting their choice.
@@ -115,12 +124,12 @@ export function OnboardingFlow() {
   }
 
   return (
-    <View className="flex-1 bg-background">
+    <View style={styles.root}>
       <OnboardingBackground />
 
       {phase === "welcome" ? (
         <Animated.View
-          className="flex-1"
+          style={styles.phaseContainer}
           entering={FadeIn.duration(240)}
           exiting={FadeOut.duration(160)}
         >
@@ -129,12 +138,12 @@ export function OnboardingFlow() {
       ) : null}
 
       {phase === "form" ? (
-        <Animated.View className="flex-1" entering={FadeIn.duration(280)}>
+        <Animated.View style={styles.phaseContainer} entering={FadeIn.duration(280)}>
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            className="flex-1"
+            style={styles.phaseContainer}
           >
-            <View className="pt-safe-offset-2">
+            <View style={[styles.headerWrapper, { paddingTop: insets.top + spacing[2] }]}>
               <OnboardingHeader current={stepIndex} onBack={goBack} total={FORM_STEPS.length} />
             </View>
 
@@ -142,16 +151,18 @@ export function OnboardingFlow() {
                 three steps, so the plant keeps growing and the account the
                 user is building never scrolls out from under them. The garden
                 folds away while the keyboard is up to buy back the room. */}
-            <View className="gap-4 px-6 pb-2 pt-2">
+            <View style={styles.pinnedSection}>
               <Animated.View
-                className="items-center overflow-hidden"
-                style={{
-                  height: keyboardVisible ? 0 : GARDEN_HEIGHT,
-                  opacity: keyboardVisible ? 0 : 1,
-                  transitionProperty: ["height", "opacity"],
-                  transitionDuration: [280, 180],
-                  transitionTimingFunction: "ease-out",
-                }}
+                style={[
+                  styles.gardenWrapper,
+                  {
+                    height: keyboardVisible ? 0 : GARDEN_HEIGHT,
+                    opacity: keyboardVisible ? 0 : 1,
+                    transitionProperty: ["height", "opacity"],
+                    transitionDuration: [280, 180],
+                    transitionTimingFunction: "ease-out",
+                  },
+                ]}
               >
                 <GrowingGarden
                   initialStage={WELCOME_GARDEN_STAGE}
@@ -175,8 +186,8 @@ export function OnboardingFlow() {
             </View>
 
             <ScrollView
-              className="flex-1"
-              contentContainerClassName="grow px-6 pb-6 pt-4"
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollContent}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
@@ -193,16 +204,19 @@ export function OnboardingFlow() {
 
             {/* KeyboardAvoidingView already lifts this clear of the keyboard,
                 so re-adding the home-indicator inset would double it up. */}
-            <View className={cn("gap-3 px-6 pt-2", keyboardVisible ? "pb-3" : "pb-safe-offset-3")}>
+            <View
+              style={[
+                styles.ctaSection,
+                { paddingBottom: keyboardVisible ? spacing[3] : insets.bottom + spacing[3] },
+              ]}
+            >
               {error ? (
                 <Animated.View
                   entering={FadeIn.duration(200)}
                   exiting={FadeOut.duration(150)}
                   layout={layoutTransition}
                 >
-                  <Text className="text-center font-body-medium text-sm text-destructive">
-                    {error}
-                  </Text>
+                  <Text style={styles.errorText}>{error}</Text>
                 </Animated.View>
               ) : null}
 
@@ -229,7 +243,7 @@ export function OnboardingFlow() {
       ) : null}
 
       {phase === "complete" ? (
-        <Animated.View className="flex-1" entering={FadeIn.duration(320)}>
+        <Animated.View style={styles.phaseContainer} entering={FadeIn.duration(320)}>
           <form.Subscribe selector={(state) => state.values}>
             {(values) => (
               <OnboardingCompleteStep onFinish={() => router.replace("/")} values={values} />
@@ -277,3 +291,44 @@ function canContinue(stepIndex: number, values: { amount: string; name: string }
   }
   return true;
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  phaseContainer: {
+    flex: 1,
+  },
+  headerWrapper: {},
+  pinnedSection: {
+    gap: spacing[4],
+    paddingHorizontal: spacing[6],
+    paddingBottom: spacing[2],
+    paddingTop: spacing[2],
+  },
+  gardenWrapper: {
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: spacing[6],
+    paddingBottom: spacing[6],
+    paddingTop: spacing[4],
+  },
+  ctaSection: {
+    gap: spacing[3],
+    paddingHorizontal: spacing[6],
+    paddingTop: spacing[2],
+  },
+  errorText: {
+    textAlign: "center",
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textSm,
+    color: colors.destructive,
+  },
+});

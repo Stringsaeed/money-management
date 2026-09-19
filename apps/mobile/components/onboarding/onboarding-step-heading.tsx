@@ -1,8 +1,9 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { stepItemEntering } from "@/components/onboarding/motion";
 import { Text } from "@/components/ui/text";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 
 interface OnboardingStepHeadingProps {
   subtitle: string;
@@ -12,13 +13,32 @@ interface OnboardingStepHeadingProps {
 /** Serif title over a muted subtitle — the app's voice, one beat apart. */
 export function OnboardingStepHeading({ subtitle, title }: OnboardingStepHeadingProps) {
   return (
-    <View className="gap-2">
+    <View style={styles.container}>
       <Animated.View entering={stepItemEntering(0)}>
-        <Text className="font-heading-normal text-[28px] leading-9 text-ink">{title}</Text>
+        <Text style={styles.title}>{title}</Text>
       </Animated.View>
       <Animated.View entering={stepItemEntering(1)}>
-        <Text className="font-body-normal text-base leading-6 text-ink/55">{subtitle}</Text>
+        <Text style={styles.subtitle}>{subtitle}</Text>
       </Animated.View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: spacing[2],
+  },
+  title: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: 28,
+    lineHeight: 36,
+    color: colors.ink,
+  },
+  subtitle: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textBase,
+    lineHeight: 24,
+    color: colors.ink,
+    opacity: 0.55,
+  },
+});
