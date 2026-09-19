@@ -1,11 +1,13 @@
-import { ScrollView, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import Animated, { LinearTransition } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { RejectedChangeCard } from "@/components/rejected-changes/rejected-change-card";
 import { RejectedChangesEmptyState } from "@/components/rejected-changes/rejected-changes-empty-state";
 import { Text } from "@/components/ui/text";
 import { useRejectedChanges } from "@/hooks/use-rejected-changes";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 
 /**
  * The Rejected Changes inbox (#94): every command the server refused with its
@@ -13,6 +15,7 @@ import { useRejectedChanges } from "@/hooks/use-rejected-changes";
  * pre-populated form, or Discard to drop the change for good.
  */
 export function RejectedChangesScreen() {
+  const insets = useSafeAreaInsets();
   const { changes, isLoading, error, discard } = useRejectedChanges();
 
   const handleEdit = (commandId: string) => {
@@ -20,32 +23,34 @@ export function RejectedChangesScreen() {
   };
 
   return (
-    <View className="flex-1 bg-surface">
+    <View style={styles.container}>
       <ScrollView
-        className="flex-1"
-        contentContainerClassName="gap-4 px-5 pt-safe-offset-14 pb-safe-offset-8"
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingTop: insets.top + spacing[14],
+            paddingBottom: insets.bottom + spacing[8],
+          },
+        ]}
       >
-        <View className="gap-1">
-          <Text className="font-heading-medium text-3xl italic tracking-tight text-ink">
-            Rejected Changes 📥
-          </Text>
-          <Text className="font-body-normal text-sm text-ink/50">
+        <View style={styles.header}>
+          <Text style={styles.title}>Rejected Changes 📥</Text>
+          <Text style={styles.subtitle}>
             The server refused these changes — edit and resend them, or let them go.
           </Text>
         </View>
 
         {error ? (
-          <Text className="font-body-normal text-sm text-destructive">
-            Couldn&apos;t load the inbox: {error.message}
-          </Text>
+          <Text style={styles.errorText}>Couldn&apos;t load the inbox: {error.message}</Text>
         ) : null}
 
         {isLoading ? (
-          <Text className="font-body-normal text-sm text-ink/50">Loading…</Text>
+          <Text style={styles.mutedText}>Loading…</Text>
         ) : changes.length === 0 ? (
           <RejectedChangesEmptyState />
         ) : (
-          <Animated.View layout={LinearTransition} className="gap-4">
+          <Animated.View layout={LinearTransition} style={styles.list}>
             {changes.map((change) => (
               <RejectedChangeCard
                 key={change.commandId}
@@ -60,3 +65,47 @@ export function RejectedChangesScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.surface,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    gap: spacing[4],
+    paddingHorizontal: spacing[5],
+  },
+  header: {
+    gap: spacing[1],
+  },
+  title: {
+    fontFamily: typography.fontHeadingMedium,
+    fontSize: typography.text3xl,
+    fontStyle: "italic",
+    letterSpacing: typography.trackingTight,
+    color: colors.ink,
+  },
+  subtitle: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  errorText: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.destructive,
+  },
+  mutedText: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  list: {
+    gap: spacing[4],
+  },
+});
