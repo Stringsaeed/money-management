@@ -35,6 +35,7 @@ import * as Haptics from "expo-haptics";
 
 import { AccessBanner } from "@/components/access/access-banner";
 import { LedgerToaster } from "@/components/banner/ledger-toaster";
+import { LedgerScopeChrome } from "@/components/navigation/ledger-scope-chrome";
 import { SyncWorker } from "@/components/sync/sync-worker";
 import { SyncModeBanner } from "@/components/sync/sync-mode-banner";
 import { AppUpdateProvider } from "@/components/updates/app-update-provider";
@@ -142,9 +143,18 @@ export default function RootLayout() {
                                   <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                                   <Stack.Screen
                                     name="categories"
-                                    options={{ title: "Categories" }}
+                                    options={{
+                                      title: "Categories",
+                                      headerLeft: () => <LedgerScopeChrome />,
+                                    }}
                                   />
-                                  <Stack.Screen name="accounts" options={{ title: "Accounts" }} />
+                                  <Stack.Screen
+                                    name="accounts"
+                                    options={{
+                                      title: "Accounts",
+                                      headerLeft: () => <LedgerScopeChrome />,
+                                    }}
+                                  />
                                   <Stack.Screen
                                     name="activity"
                                     options={{ title: "Activity Timeline" }}

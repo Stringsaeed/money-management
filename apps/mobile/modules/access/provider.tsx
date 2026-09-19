@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useDatabase } from "@/db/client";
 import { orpc } from "@/lib/server/orpc";
+import { cohereLedgerCache } from "@/modules/ledger-cache";
 
 import {
   householdReadFromQuery,
@@ -34,6 +35,7 @@ const PERSONAL: LedgerSelection = { kind: "personal" };
 
 export function AccessProvider({ children }: { readonly children: ReactNode }) {
   const db = useDatabase();
+  const queryClient = useQueryClient();
   const claim = useIdentityClaim();
   const probe = useSessionProbe();
   const [signedOut, setSignedOut] = useState(false);
@@ -50,6 +52,7 @@ export function AccessProvider({ children }: { readonly children: ReactNode }) {
   });
   const actions = useAccessActions(
     db,
+    queryClient,
     claim.setValue,
     setSignedOut,
     core,
@@ -61,6 +64,8 @@ export function AccessProvider({ children }: { readonly children: ReactNode }) {
   useEffect(() => {
     if (probe?.kind === "no_session") setSignedOut(false);
   }, [probe]);
+
+  useRevocationEffect(core, selection, queryClient);
 
   return (
     <AccessContext value={access}>
@@ -148,16 +153,41 @@ function useHouseholdRead(userId: string | null, enabled: boolean): HouseholdRea
   });
 }
 
+/**
+ * Detects revoked membership and resets selection to Personal.
+ *
+ * When `resolveAccess` normalizes a household selection to Personal (because
+ * the membership no longer exists), this effect persists that reset and
+ * invalidates ledger caches so stale household data isn't shown.
+ *
+ * Fail-closed: revoked membership → Personal + cache clear.
+ * Offline: last authorized cache is kept until reconnect proves removal.
+ */
+function useRevocationEffect(
+  core: AccessCore,
+  selection: { value: LedgerSelection; setValue: (next: LedgerSelection) => void },
+  queryClient: ReturnType<typeof useQueryClient>,
+) {
+  useEffect(() => {
+    if (core.kind !== "signed_in") return;
+    const wasHousehold = selection.value.kind === "household";
+    const nowPersonal = core.selection.kind === "personal";
+    if (!wasHousehold || !nowPersonal) return;
+    selection.setValue(PERSONAL);
+    void writeLedgerSelection(core.user.userId, PERSONAL);
+    void cohereLedgerCache(queryClient, { kind: "ledger.reset" });
+  }, [core, selection, queryClient]);
+}
+
 function useAccessActions(
   db: ReturnType<typeof useDatabase>,
+  queryClient: ReturnType<typeof useQueryClient>,
   setClaim: (claim: IdentityClaim) => void,
   setSignedOut: (value: boolean) => void,
   core: AccessCore,
   setSheetSession: (session: AuthSheetSession) => void,
   setSelection: (selection: LedgerSelection) => void,
 ) {
-  const queryClient = useQueryClient();
-
   function presentAuthSheet(input: PresentAuthSheetInput) {
     setSheetSession(openAuthSheetSession(input));
   }
@@ -183,8 +213,16 @@ function useAccessActions(
       const allowed = core.memberships.some((row) => row.householdId === next.householdId);
       if (!allowed) return;
     }
+    const changed =
+      core.selection.kind !== next.kind ||
+      (next.kind === "household" &&
+        core.selection.kind === "household" &&
+        next.householdId !== core.selection.householdId);
     setSelection(next);
     await writeLedgerSelection(core.user.userId, next);
+    if (changed) {
+      await cohereLedgerCache(queryClient, { kind: "ledger.reset" });
+    }
     await queryClient.invalidateQueries({ queryKey: HOUSEHOLDS_KEY });
   }
 
