@@ -18,7 +18,7 @@ import { SQLiteProvider, type SQLiteDatabase } from "@/db/sqlite";
 import { StatusBar } from "expo-status-bar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import "../global.css";
@@ -44,6 +44,7 @@ import { RecurringSettlementProvider } from "@/components/recurring/recurring-se
 import { AccessProvider } from "@/modules/access";
 import { RecurringRulesProvider } from "@/modules/recurring-rules/provider";
 import { LedgerDataSourceGate } from "@/modules/ledger-data-source/ledger-data-source-gate";
+import { colors } from "@/lib/design-tokens";
 
 // Keep the native splash screen visible while fonts load
 SplashScreen.preventAutoHideAsync();
@@ -67,11 +68,20 @@ async function onDatabaseInit(db: SQLiteDatabase) {
 
 function LoadingFallback() {
   return (
-    <View className="flex-1 justify-center items-center">
+    <View style={styles.loading}>
       <ActivityIndicator size="large" />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.background,
+  },
+});
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

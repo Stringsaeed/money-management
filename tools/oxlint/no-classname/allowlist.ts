@@ -14,65 +14,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
       "Temporary dev-only gallery for Text QA. TODO(#285): Delete after QA sign-off on Text StyleSheet migration.",
     issue: 285,
   },
-  {
-    files: [
-      "apps/mobile/app/_layout.tsx",
-      "apps/mobile/app/recurring/index.tsx",
-      "apps/mobile/app/splash.tsx",
-      "apps/mobile/app/\\(tabs\\)/ledger/index.tsx",
-    ],
-    reason: "Screen files using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: [
-      "apps/mobile/components/access/session-revoked-card.tsx",
-      "apps/mobile/components/access/signed-out-card.tsx",
-      "apps/mobile/components/access/sign-out-pending-sheet.tsx",
-    ],
-    reason:
-      "Access components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: [
-      "apps/mobile/components/auth/auth-bottom-sheet.tsx",
-      "apps/mobile/components/auth/ui/auth-host.tsx",
-    ],
-    reason:
-      "Auth components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: ["apps/mobile/components/ledger/ledger-list-header.tsx"],
-    reason:
-      "Ledger components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: [
-      "apps/mobile/components/recurring/recurring-rule-row.tsx",
-      "apps/mobile/components/recurring/recurring-rule-warning.tsx",
-    ],
-    reason:
-      "Recurring components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: ["apps/mobile/components/updates/mandatory-update-gate.tsx"],
-    reason:
-      "Updates components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: [
-      "apps/mobile/modules/access/auth-sheet-host.tsx",
-      "apps/mobile/modules/ledger-data-source/ledger-data-source-gate.tsx",
-    ],
-    reason:
-      "Module components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
 ];
 
 export type OxlintOverride = {

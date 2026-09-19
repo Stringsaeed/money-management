@@ -1,6 +1,9 @@
 import { Host } from "@expo/ui";
 import { createContext, useContext, type ReactElement, type ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { colors, spacing } from "@/lib/design-tokens";
 
 import { useAuthSurface } from "./auth-surface";
 import { useAuthPalette } from "./use-auth-palette";
@@ -16,6 +19,7 @@ const hostFill = StyleSheet.create({
 export function AuthHost({ children }: { readonly children: ReactNode }): ReactElement {
   const surface = useAuthSurface();
   const palette = useAuthPalette();
+  const insets = useSafeAreaInsets();
   const tree = (
     <AuthPaletteContext.Provider value={palette}>{children}</AuthPaletteContext.Provider>
   );
@@ -25,7 +29,7 @@ export function AuthHost({ children }: { readonly children: ReactNode }): ReactE
   }
 
   return (
-    <View className="flex-1 bg-surface pt-safe pb-safe px-4">
+    <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <Host style={hostFill.fill} useViewportSizeMeasurement>
         {tree}
       </Host>
@@ -40,3 +44,11 @@ export function useAuthPaletteContext(): AuthPalette {
   }
   return palette;
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing[4],
+  },
+});
