@@ -3,7 +3,7 @@ import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import type { ReactNode } from "react";
 import { StyleSheet, useColorScheme, View, type StyleProp, type ViewStyle } from "react-native";
 
-import { styles } from "./styles";
+import { styles, darkStyles } from "./styles";
 
 interface GlassSurfaceProps {
   children: ReactNode;
@@ -13,6 +13,7 @@ interface GlassSurfaceProps {
 
 export function GlassSurface({ style, children, isInteractive = true }: GlassSurfaceProps) {
   const scheme = useColorScheme();
+  const isDark = scheme === "dark";
 
   if (isLiquidGlassAvailable()) {
     return (
@@ -23,14 +24,13 @@ export function GlassSurface({ style, children, isInteractive = true }: GlassSur
   }
 
   return (
-    <BlurView
-      intensity={60}
-      tint={scheme === "dark" ? "dark" : "light"}
-      style={[style, styles.fallback]}
-    >
+    <BlurView intensity={60} tint={isDark ? "dark" : "light"} style={[style, styles.fallback]}>
       <View
-        style={StyleSheet.absoluteFill}
-        className="bg-foreground/5 border border-foreground/10"
+        style={[
+          StyleSheet.absoluteFill,
+          styles.fallbackOverlay,
+          isDark && darkStyles.fallbackOverlay,
+        ]}
       />
       {children}
     </BlurView>
