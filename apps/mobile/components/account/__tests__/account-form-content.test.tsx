@@ -1,11 +1,15 @@
 import { useForm } from "@tanstack/react-form";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { useState } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AccountFormContent } from "@/components/account/account-form-content";
 import { AccountFormSheetFooter } from "@/components/account/account-form-sheet-footer";
 import { ACCOUNT_TYPE_META } from "@/components/account/account-form-options";
 import { accountFormOptions, type AccountFormValues } from "@/components/account/form";
+
+const insets = { top: 0, bottom: 0, left: 0, right: 0 };
+const initialWindowMetrics = { insets, frame: { x: 0, y: 0, width: 390, height: 844 } };
 
 jest.mock("@/components/common/color-picker", () => ({
   ColorPicker: (_props: { onChange: (value: string) => void }) => null,
@@ -67,7 +71,11 @@ describe("AccountFormContent", () => {
   it("does not submit when the account name is blank", async () => {
     const onSubmit = jest.fn();
 
-    await render(<AccountFormContentHarness onSubmit={onSubmit} />);
+    await render(
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <AccountFormContentHarness onSubmit={onSubmit} />
+      </SafeAreaProvider>,
+    );
 
     await fireEvent.press(screen.getByText("Create Account"));
 
@@ -77,7 +85,11 @@ describe("AccountFormContent", () => {
   it("submits account values", async () => {
     const onSubmit = jest.fn();
 
-    await render(<AccountFormContentHarness onSubmit={onSubmit} />);
+    await render(
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <AccountFormContentHarness onSubmit={onSubmit} />
+      </SafeAreaProvider>,
+    );
 
     await fireEvent.changeText(screen.getByPlaceholderText("e.g. Main Checking"), "Wallet");
     await fireEvent.changeText(screen.getByPlaceholderText("0.00"), "8.50");
@@ -101,11 +113,13 @@ describe("AccountFormContent", () => {
 
   it("hides the starting amount field when editing", async () => {
     await render(
-      <AccountFormContentHarness
-        amountEditable={false}
-        lockedBalanceCents={250_00}
-        onSubmit={jest.fn()}
-      />,
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <AccountFormContentHarness
+          amountEditable={false}
+          lockedBalanceCents={250_00}
+          onSubmit={jest.fn()}
+        />
+      </SafeAreaProvider>,
     );
 
     expect(screen.queryByPlaceholderText("0.00")).not.toBeOnTheScreen();
