@@ -1,9 +1,14 @@
-import React from "react";
+import { colors, radii } from "@/lib/design-tokens";
 import {
   ModalBottomSheet as NativeModalBottomSheet,
   type ModalBottomSheetProps as NativeModalBottomSheetProps,
 } from "@swmansion/react-native-bottom-sheet";
-import { View } from "react-native";
+import React from "react";
+import { StyleSheet, View } from "react-native";
+
+// -----------------------------------------------------------------------------
+// Types
+// -----------------------------------------------------------------------------
 
 export interface ModalBottomSheetProps extends Omit<
   NativeModalBottomSheetProps,
@@ -16,6 +21,33 @@ export interface ModalBottomSheetProps extends Omit<
   testID?: string;
 }
 
+// -----------------------------------------------------------------------------
+// Styles
+// -----------------------------------------------------------------------------
+
+const styles = StyleSheet.create({
+  surface: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    borderTopLeftRadius: radii["3xl"],
+    borderTopRightRadius: radii["3xl"],
+    backgroundColor: colors.background,
+  },
+});
+
+// -----------------------------------------------------------------------------
+// Default Surface Component
+// -----------------------------------------------------------------------------
+
+const DefaultSurface = <View style={styles.surface} />;
+
+// -----------------------------------------------------------------------------
+// ModalBottomSheet Component
+// -----------------------------------------------------------------------------
+
 /**
  * App-owned lifecycle boundary for modal sheets.
  *
@@ -27,7 +59,7 @@ export function ModalBottomSheet({
   open,
   onDismiss,
   scrimColor = "rgba(0, 0, 0, 0.5)",
-  surface = <View className="absolute inset-0 rounded-t-3xl bg-background" />,
+  surface = DefaultSurface,
   testID,
   children,
   ...props
