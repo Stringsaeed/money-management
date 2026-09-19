@@ -9,6 +9,12 @@ export const CLASSNAME_MIGRATION_MESSAGE =
 
 export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
   {
+    files: ["apps/mobile/app/dev/text-gallery.tsx"],
+    reason:
+      "Temporary dev-only gallery for Text QA. TODO(#285): Delete after QA sign-off on Text StyleSheet migration.",
+    issue: 285,
+  },
+  {
     files: [
       "apps/mobile/app/account/\\[id\\].tsx",
       "apps/mobile/app/accounts.tsx",
@@ -292,7 +298,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
       "apps/mobile/components/ui/input.tsx",
       "apps/mobile/components/ui/modal-bottom-sheet.tsx",
       "apps/mobile/components/ui/money-text.tsx",
-      "apps/mobile/components/ui/text.tsx",
     ],
     reason:
       "UI primitives using NativeWind className pending migration to theme module StyleSheet.",
