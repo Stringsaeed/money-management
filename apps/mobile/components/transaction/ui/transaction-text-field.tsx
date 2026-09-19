@@ -9,13 +9,9 @@ import {
 } from "react-native";
 
 import { useGraphicPalette } from "@/components/graphics/palette";
-import { cn } from "@/lib/utils";
+import { colors, radii, spacing } from "@/lib/design-tokens";
 
-import { fieldBorderClassName, fieldPlaceholderColor, fieldTextStyle } from "./field-style";
-
-const hostFill = StyleSheet.create({
-  fill: { flex: 1 },
-});
+import { fieldBorderColor, fieldPlaceholderColor, fieldTextStyle } from "./field-style";
 
 export interface TransactionTextFieldProps {
   readonly value: string;
@@ -63,13 +59,13 @@ export function TransactionTextField({
     <View
       testID={testID}
       accessibilityLabel={accessibilityLabel}
-      className={cn(
-        "flex-1 flex-row items-center rounded-xl border bg-surface-container px-4 py-2.5",
-        fieldBorderClassName({ focused, error }),
-        !editable && "opacity-50",
-      )}
+      style={[
+        styles.container,
+        { borderColor: fieldBorderColor({ focused, error }) },
+        !editable && styles.containerDisabled,
+      ]}
     >
-      <Host style={hostFill.fill} matchContents={{ vertical: true }}>
+      <Host style={styles.host} matchContents={{ vertical: true }}>
         <TextInput
           value={state}
           onChangeText={onChangeText}
@@ -95,3 +91,22 @@ export function TransactionTextField({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    backgroundColor: colors.surfaceContainer,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2.5],
+  },
+  containerDisabled: {
+    opacity: 0.5,
+  },
+  host: {
+    flex: 1,
+  },
+});

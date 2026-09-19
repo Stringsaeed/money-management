@@ -1,18 +1,20 @@
 import { Platform } from "react-native";
 
-import { fieldBorderClassName, fieldPlaceholderColor, fieldTextStyle } from "../field-style";
+import { colors, rawColorValues } from "@/lib/design-tokens";
 
-describe("fieldBorderClassName", () => {
+import { fieldBorderColor, fieldPlaceholderColor, fieldTextStyle } from "../field-style";
+
+describe("fieldBorderColor", () => {
   it("prioritizes the focus ring over the error state", () => {
-    expect(fieldBorderClassName({ focused: true, error: true })).toBe("border-ink");
+    expect(fieldBorderColor({ focused: true, error: true })).toBe(colors.ink);
   });
 
   it("falls back to a destructive border when invalid and idle", () => {
-    expect(fieldBorderClassName({ focused: false, error: true })).toBe("border-destructive");
+    expect(fieldBorderColor({ focused: false, error: true })).toBe(colors.destructive);
   });
 
   it("stays transparent when idle and valid", () => {
-    expect(fieldBorderClassName({ focused: false, error: false })).toBe("border-transparent");
+    expect(fieldBorderColor({ focused: false, error: false })).toBe("transparent");
   });
 });
 
@@ -29,8 +31,8 @@ describe("fieldTextStyle", () => {
 
 describe("fieldPlaceholderColor", () => {
   it("uses the muted ink token for light and dark schemes", () => {
-    expect(fieldPlaceholderColor("light")).toBe("#1C1B1A40");
-    expect(fieldPlaceholderColor("dark")).toBe("#E8E6E340");
-    expect(fieldPlaceholderColor(null)).toBe("#1C1B1A40");
+    expect(fieldPlaceholderColor("light")).toBe(`${rawColorValues.light.ink}40`);
+    expect(fieldPlaceholderColor("dark")).toBe(`${rawColorValues.dark.ink}40`);
+    expect(fieldPlaceholderColor(null)).toBe(`${rawColorValues.light.ink}40`);
   });
 });
