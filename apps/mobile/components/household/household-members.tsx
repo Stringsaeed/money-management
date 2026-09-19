@@ -1,8 +1,9 @@
 import type { HouseholdRole } from "@trove/protocol";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { roleLabel } from "@/modules/access/memberships";
 import { Text } from "@/components/ui/text";
+import { colors, spacing, typography } from "@/lib/design-tokens";
+import { roleLabel } from "@/modules/access/memberships";
 
 export type HouseholdMember = {
   userId: string;
@@ -21,27 +22,68 @@ export function HouseholdMembers({
 }) {
   return (
     <View>
-      {members.map((member) => (
+      {members.map((member, index) => (
         <View
           key={member.userId}
-          className="flex-row items-center gap-3 border-b border-ledger-outline px-4 py-3 last:border-b-0"
+          style={[styles.memberRow, index < members.length - 1 && styles.memberRowBorder]}
         >
-          <View className="flex-1">
-            <Text className="font-body-medium text-base text-ink">
+          <View style={styles.memberInfo}>
+            <Text style={styles.memberName}>
               {member.userName}
               {member.userId === currentUserId ? " (you)" : ""}
             </Text>
-            <Text className="font-body-normal text-xs text-ink/40">{member.userEmail}</Text>
+            <Text style={styles.memberEmail}>{member.userEmail}</Text>
           </View>
-          <Text className="font-body-semibold text-xs uppercase tracking-wide text-ink/40">
+          <Text style={styles.memberRole}>
             {member.role === "admin" ? "👑 " : ""}
             {roleLabel(member.role)}
           </Text>
         </View>
       ))}
-      {members.length === 0 ? (
-        <Text className="px-4 py-3 text-xs text-ink/40">No members yet.</Text>
-      ) : null}
+      {members.length === 0 ? <Text style={styles.emptyText}>No members yet.</Text> : null}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  memberRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[3],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+  },
+  memberRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.ledgerOutline,
+  },
+  memberInfo: {
+    flex: 1,
+  },
+  memberName: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textBase,
+    color: colors.ink,
+  },
+  memberEmail: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  memberRole: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textXs,
+    textTransform: "uppercase",
+    letterSpacing: typography.trackingWide,
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  emptyText: {
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+  },
+});
