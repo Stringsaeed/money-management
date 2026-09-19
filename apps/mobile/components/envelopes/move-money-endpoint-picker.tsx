@@ -1,8 +1,9 @@
 import { Pressable, View } from "react-native";
 
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
 import type { BudgetProjection, MoveMoneyEndpoint } from "@/modules/budgeting/budgeting";
+
+import { styles } from "./styles";
 
 interface MoveMoneyEndpointPickerProps {
   accessibilityLabel: string;
@@ -23,26 +24,28 @@ export function MoveMoneyEndpointPicker({
     { id: null, label: "Unassigned Money" },
     ...projection.envelopes.map((envelope) => ({ id: envelope.id, label: envelope.name })),
   ];
-  const optionClassName = (selected: boolean) =>
-    cn("rounded-xl px-3 py-2", selected ? "bg-ink" : "bg-surface-container");
-  const optionTextClassName = (selected: boolean) => cn(selected ? "text-surface" : "text-ink");
   const handlePress = (id: MoveMoneyEndpoint) => () => onChange(id);
 
   return (
-    <View accessibilityLabel={accessibilityLabel} className="gap-2">
-      <Text className="font-body-medium text-sm text-ink">{label}</Text>
-      <View className="flex-row flex-wrap gap-2">
+    <View accessibilityLabel={accessibilityLabel} style={styles.gap2}>
+      <Text style={styles.textMediumInkSm}>{label}</Text>
+      <View style={styles.flexRowWrapGap2}>
         {options.map((option) => {
           const selected = option.id === selectedId;
           return (
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ selected }}
-              className={optionClassName(selected)}
               key={option.id ?? "unassigned"}
               onPress={handlePress(option.id)}
+              style={[
+                styles.endpointOption,
+                selected ? styles.endpointOptionSelected : styles.endpointOptionUnselected,
+              ]}
             >
-              <Text className={optionTextClassName(selected)}>{option.label}</Text>
+              <Text style={selected ? styles.endpointTextSelected : styles.endpointTextUnselected}>
+                {option.label}
+              </Text>
             </Pressable>
           );
         })}

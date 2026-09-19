@@ -1,5 +1,6 @@
 import { Pressable, View } from "react-native";
 
+import { styles } from "@/components/envelopes/styles";
 import { Text } from "@/components/ui/text";
 
 import type { UseEnvelopeFormReturn } from "./form";
@@ -14,16 +15,16 @@ export function EnvelopeSettingsFields({ form, maximumSortOrder }: EnvelopeSetti
     <>
       <form.Field name="positiveRollover">
         {(field) => (
-          <View className="gap-2">
-            <Text className="font-body-medium text-sm text-ink/60">Positive Rollover</Text>
+          <View style={styles.gap2}>
+            <Text style={styles.textMediumSmInk60}>Positive Rollover</Text>
             <Pressable
               accessibilityLabel="Carry positive Available Money forward"
               accessibilityRole="switch"
               accessibilityState={{ checked: field.state.value }}
-              className="rounded-2xl border border-ledger-outline bg-surface px-4 py-3"
               onPress={() => field.handleChange(!field.state.value)}
+              style={styles.settingOptionBase}
             >
-              <Text className="font-body-medium text-sm text-ink">
+              <Text style={styles.textMediumInkSm}>
                 {field.state.value ? "Carries forward ✓" : "Starts fresh each month"}
               </Text>
             </Pressable>
@@ -33,22 +34,26 @@ export function EnvelopeSettingsFields({ form, maximumSortOrder }: EnvelopeSetti
 
       <form.Field name="sortOrder">
         {(field) => (
-          <View className="gap-2">
-            <Text className="font-body-medium text-sm text-ink/60">Manual order</Text>
-            <View className="flex-row items-center gap-2">
+          <View style={styles.gap2}>
+            <Text style={styles.textMediumSmInk60}>Manual order</Text>
+            <View style={styles.flexRowItemsCenter}>
               <Pressable
                 accessibilityLabel="Move Envelope earlier"
                 accessibilityRole="button"
                 accessibilityState={{ disabled: field.state.value === 0 }}
-                className="min-h-12 flex-1 items-center justify-center rounded-xl border border-ledger-outline bg-surface px-3 active:bg-surface-dim disabled:opacity-40"
                 disabled={field.state.value === 0}
                 onPress={() => field.handleChange(field.state.value - 1)}
+                style={({ pressed }) => [
+                  styles.sortOrderButton,
+                  pressed && styles.sortOrderButtonPressed,
+                  field.state.value === 0 && styles.sortOrderButtonDisabled,
+                ]}
               >
-                <Text className="font-body-medium text-sm text-ink">Earlier</Text>
+                <Text style={styles.textMediumInkSm}>Earlier</Text>
               </Pressable>
               <Text
                 accessibilityLabel={`Envelope position ${field.state.value + 1}`}
-                className="font-body-semibold text-sm text-ink"
+                style={styles.sortOrderText}
               >
                 {field.state.value + 1}
               </Text>
@@ -56,11 +61,15 @@ export function EnvelopeSettingsFields({ form, maximumSortOrder }: EnvelopeSetti
                 accessibilityLabel="Move Envelope later"
                 accessibilityRole="button"
                 accessibilityState={{ disabled: field.state.value >= maximumSortOrder }}
-                className="min-h-12 flex-1 items-center justify-center rounded-xl border border-ledger-outline bg-surface px-3 active:bg-surface-dim disabled:opacity-40"
                 disabled={field.state.value >= maximumSortOrder}
                 onPress={() => field.handleChange(field.state.value + 1)}
+                style={({ pressed }) => [
+                  styles.sortOrderButton,
+                  pressed && styles.sortOrderButtonPressed,
+                  field.state.value >= maximumSortOrder && styles.sortOrderButtonDisabled,
+                ]}
               >
-                <Text className="font-body-medium text-sm text-ink">Later</Text>
+                <Text style={styles.textMediumInkSm}>Later</Text>
               </Pressable>
             </View>
           </View>

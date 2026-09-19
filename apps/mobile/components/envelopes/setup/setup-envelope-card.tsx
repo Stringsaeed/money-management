@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 
+import { styles } from "@/components/envelopes/styles";
 import { SetupAssignmentInput } from "@/components/envelopes/setup/setup-assignment-input";
 import { SetupCategoryMappingOption } from "@/components/envelopes/setup/setup-category-mapping-option";
 import { SetupCategoryMappingRow } from "@/components/envelopes/setup/setup-category-mapping-row";
@@ -39,7 +40,7 @@ export const SetupEnvelopeCard = ({
       entering={FadeIn}
       exiting={FadeOut}
       layout={LinearTransition}
-      className="gap-3 rounded-2xl border border-ledger-outline bg-surface p-4"
+      style={styles.envelopeCard}
     >
       <SetupEnvelopeIdentityFields envelope={envelope} onChange={onChange} />
       <Button
@@ -49,10 +50,8 @@ export const SetupEnvelopeCard = ({
       >
         <Text>{mergeSelected ? "Selected for merge" : "Select for merge"}</Text>
       </Button>
-      <View className="gap-2">
-        <Text className="font-body-semibold text-xs uppercase tracking-wide text-ink/50">
-          Category Mappings
-        </Text>
+      <View style={styles.gap2}>
+        <Text style={styles.sectionLabel}>Category Mappings</Text>
         {envelope.categoryIds.map((categoryId) => {
           const category = categories.find(({ id }) => id === categoryId);
           return (

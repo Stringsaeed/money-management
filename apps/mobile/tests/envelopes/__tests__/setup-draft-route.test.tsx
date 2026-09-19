@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import type { ReactNode } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import type { TestInstance } from "test-renderer";
 import type { SQLiteDatabase } from "@/db/sqlite";
 
@@ -420,9 +421,16 @@ async function renderRoute() {
   });
   queryClients.push(queryClient);
   return render(
-    <QueryClientProvider client={queryClient}>
-      <SetupDraftRoute />
-    </QueryClientProvider>,
+    <SafeAreaProvider
+      initialMetrics={{
+        frame: { x: 0, y: 0, width: 390, height: 844 },
+        insets: { top: 47, left: 0, right: 0, bottom: 34 },
+      }}
+    >
+      <QueryClientProvider client={queryClient}>
+        <SetupDraftRoute />
+      </QueryClientProvider>
+    </SafeAreaProvider>,
   );
 }
 

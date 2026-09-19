@@ -1,7 +1,7 @@
 import { Pressable } from "react-native";
 
+import { styles } from "@/components/envelopes/styles";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
 import type { SetupDraftFundingAccount } from "@/modules/budgeting/budgeting";
 import { formatCents } from "@/utils/currency";
 
@@ -21,16 +21,16 @@ export const SetupFundingAccountRow = ({
     <Pressable
       accessibilityLabel={`${selected ? "Remove" : "Add"} ${account.name} Funding Account`}
       aria-pressed={selected}
-      className={cn(
-        "flex-row items-center gap-3 rounded-xl border p-3",
-        selected ? "border-sage bg-sage/10" : "border-ledger-outline bg-surface",
-      )}
       onPress={handlePress}
       role="button"
+      style={[
+        styles.fundingRowBase,
+        selected ? styles.fundingRowSelected : styles.fundingRowUnselected,
+      ]}
     >
-      <Text className="text-lg">{account.icon}</Text>
-      <Text className="flex-1 font-body-medium text-sm text-ink">{account.name}</Text>
-      <Text selectable className="font-body-normal text-sm text-ink/60">
+      <Text style={styles.fundingIcon}>{account.icon}</Text>
+      <Text style={[styles.textMediumInkSm, styles.flex1]}>{account.name}</Text>
+      <Text selectable style={styles.fundingBalance}>
         {formatCents(account.balanceMinor, account.currency)}
       </Text>
     </Pressable>

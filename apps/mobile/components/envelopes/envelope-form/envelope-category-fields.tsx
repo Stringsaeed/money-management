@@ -3,6 +3,7 @@ import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { EnvelopeCategoryOptionRow } from "@/components/envelopes/envelope-form/envelope-category-option";
 import { RestoredCategoryConfirmation } from "@/components/envelopes/envelope-form/restored-category-confirmation";
+import { styles } from "@/components/envelopes/styles";
 import { Text } from "@/components/ui/text";
 import { layoutTransition } from "@/components/transaction/constants";
 import type { EnvelopeCategoryOption } from "@/modules/budgeting/budgeting";
@@ -26,10 +27,10 @@ export function EnvelopeCategoryFields({ envelopeId, form, options }: EnvelopeCa
         }}
       >
         {(field) => (
-          <View className="gap-2">
-            <Text className="font-body-medium text-sm text-ink/60">Category Mappings</Text>
+          <View style={styles.gap2}>
+            <Text style={styles.textMediumSmInk60}>Category Mappings</Text>
             {options.length === 0 ? (
-              <Text className="font-body-normal text-sm text-ink/60">
+              <Text style={styles.textNormalSmInk60}>
                 Create an active expense Category before adding an Envelope.
               </Text>
             ) : (
@@ -55,9 +56,7 @@ export function EnvelopeCategoryFields({ envelopeId, form, options }: EnvelopeCa
             )}
             {field.state.meta.errors[0] ? (
               <Animated.View entering={FadeIn} exiting={FadeOut} layout={layoutTransition}>
-                <Text className="font-body-medium text-xs text-destructive">
-                  {String(field.state.meta.errors[0])}
-                </Text>
+                <Text style={styles.textDestructiveXs}>{String(field.state.meta.errors[0])}</Text>
               </Animated.View>
             ) : null}
           </View>
@@ -85,11 +84,9 @@ export function EnvelopeCategoryFields({ envelopeId, form, options }: EnvelopeCa
                   entering={FadeIn}
                   exiting={FadeOut}
                   layout={layoutTransition}
-                  className="gap-2"
+                  style={styles.gap2}
                 >
-                  <Text className="font-body-medium text-sm text-ink/60">
-                    Restored Category confirmation
-                  </Text>
+                  <Text style={styles.textMediumSmInk60}>Restored Category confirmation</Text>
                   {restored.map((option) => {
                     const checked = field.state.value.includes(option.id);
                     return (
