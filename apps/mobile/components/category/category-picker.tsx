@@ -1,9 +1,9 @@
-import { Pressable, ScrollView, View } from "react-native";
-import { Text } from "@/components/ui/text";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import Animated, { Easing, LinearTransition } from "react-native-reanimated";
 
+import { Text } from "@/components/ui/text";
 import { useCategories } from "@/hooks/use-categories";
-import { cn } from "@/lib/utils";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 
 interface CategoryChipProps {
   name: string;
@@ -18,20 +18,18 @@ function CategoryChip({ name, color, isSelected, onPress }: CategoryChipProps) {
       aria-label={name}
       aria-selected={isSelected}
       onPress={onPress}
-      style={{
-        borderColor: isSelected ? color : undefined,
-        backgroundColor: isSelected ? `${color}20` : undefined,
-      }}
-      className={cn(
-        "flex-row items-center gap-1.5 rounded-full border-2 px-3 py-2",
-        !isSelected && "border-input bg-card",
-      )}
       role="button"
+      style={[
+        styles.chip,
+        isSelected ? { borderColor: color, backgroundColor: `${color}20` } : styles.chipUnselected,
+      ]}
     >
-      <View style={{ backgroundColor: color }} className="w-2 h-2 rounded-full" />
+      <View style={[styles.colorDot, { backgroundColor: color }]} />
       <Text
-        style={{ color: isSelected ? color : undefined }}
-        className={cn("text-sm", isSelected ? "font-semibold" : "font-normal text-foreground")}
+        style={[
+          styles.chipLabel,
+          isSelected ? { color, fontFamily: typography.fontBodySemibold } : styles.chipLabelIdle,
+        ]}
       >
         {name}
       </Text>
@@ -59,12 +57,12 @@ export function CategoryPicker({
 
   if (horizontal) {
     return (
-      <View className="gap-2">
-        {label ? <Text className="text-sm font-semibold text-foreground">{label}</Text> : null}
+      <View style={styles.container}>
+        {label ? <Text style={styles.label}>{label}</Text> : null}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerClassName="gap-2"
+          contentContainerStyle={styles.chipRow}
         >
           {cats.map((cat) => (
             <CategoryChip
@@ -81,12 +79,9 @@ export function CategoryPicker({
   }
 
   return (
-    <View className="gap-2">
-      {label ? <Text className="text-sm font-semibold text-foreground">{label}</Text> : null}
-      <Animated.View
-        layout={LinearTransition.easing(Easing.ease)}
-        className="flex-row flex-wrap gap-2"
-      >
+    <View style={styles.container}>
+      {label ? <Text style={styles.label}>{label}</Text> : null}
+      <Animated.View layout={LinearTransition.easing(Easing.ease)} style={styles.wrapRow}>
         {cats.map((cat) => (
           <CategoryChip
             key={cat.id}
@@ -100,3 +95,47 @@ export function CategoryPicker({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: spacing[2],
+  },
+  label: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textSm,
+    color: colors.foreground,
+  },
+  chipRow: {
+    gap: spacing[2],
+  },
+  wrapRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing[2],
+  },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[1.5],
+    borderRadius: radii.full,
+    borderWidth: 2,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+  },
+  chipUnselected: {
+    borderColor: colors.input,
+    backgroundColor: colors.card,
+  },
+  colorDot: {
+    width: 8,
+    height: 8,
+    borderRadius: radii.full,
+  },
+  chipLabel: {
+    fontSize: typography.textSm,
+  },
+  chipLabelIdle: {
+    fontFamily: typography.fontBodyNormal,
+    color: colors.foreground,
+  },
+});

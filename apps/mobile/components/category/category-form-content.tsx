@@ -1,17 +1,14 @@
 import type { ComponentProps, ComponentType } from "react";
-import { TextInput, View } from "react-native";
+import { StyleSheet, TextInput, View } from "react-native";
 
 import { CategoryColorPicker } from "@/components/category/category-color-picker";
 import { CategoryFormPreview } from "@/components/category/category-form-preview";
 import { CategoryIconPicker } from "@/components/category/category-icon-picker";
 import { CategoryTypePicker } from "@/components/category/category-type-picker";
-import {
-  inputTextStyle,
-  ResourceFormField,
-  resourceInputClassName,
-} from "@/components/resource/resource-form-field";
+import { inputTextStyle } from "@/components/resource/resource-form-field";
 import { CATEGORY_TYPE_META, type CategoryType } from "@/components/category/category-form-options";
 import { Text } from "@/components/ui/text";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 
 import type { UseCategoryFormReturn } from "./form";
 
@@ -45,7 +42,7 @@ export function CategoryFormContent({
         {(previewValues) => <CategoryFormPreview values={previewValues} />}
       </form.Subscribe>
 
-      <View className="gap-5">
+      <View style={styles.fieldsContainer}>
         <form.Field
           name="name"
           validators={{
@@ -54,32 +51,35 @@ export function CategoryFormContent({
           }}
         >
           {(field) => (
-            <ResourceFormField label="Name" error={field.state.meta.errors[0]}>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Name</Text>
               <TextInputComponent
-                className={resourceInputClassName}
                 onChangeText={field.handleChange}
                 placeholder="e.g. Groceries"
                 placeholderTextColor="#9a9896"
                 returnKeyType="next"
-                style={inputTextStyle}
+                style={[styles.textInput, inputTextStyle]}
                 value={field.state.value}
               />
-            </ResourceFormField>
+              {field.state.meta.errors[0] ? (
+                <Text style={styles.errorText}>{String(field.state.meta.errors[0])}</Text>
+              ) : null}
+            </View>
           )}
         </form.Field>
 
         <form.Field name="type">
           {(field) => (
-            <View className="gap-2">
-              <Text className="font-body-medium text-sm text-ink/60">Type</Text>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Type</Text>
               {typeEditable ? (
                 <CategoryTypePicker
                   onChange={(type) => onTypeChange?.(type)}
                   value={field.state.value}
                 />
               ) : (
-                <View className="rounded-2xl border border-ledger-outline bg-surface px-4 py-3">
-                  <Text className="font-body-medium text-base text-ink">
+                <View style={styles.readOnlyContainer}>
+                  <Text style={styles.readOnlyText}>
                     {CATEGORY_TYPE_META[field.state.value].label}
                   </Text>
                 </View>
@@ -90,8 +90,8 @@ export function CategoryFormContent({
 
         <form.Field name="icon">
           {(field) => (
-            <View className="gap-2">
-              <Text className="font-body-medium text-sm text-ink/60">Icon</Text>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Icon</Text>
               <CategoryIconPicker onChange={field.handleChange} value={field.state.value} />
             </View>
           )}
@@ -99,8 +99,8 @@ export function CategoryFormContent({
 
         <form.Field name="color">
           {(field) => (
-            <View className="gap-2">
-              <Text className="font-body-medium text-sm text-ink/60">Accent</Text>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Accent</Text>
               <CategoryColorPicker onChange={onColorChange} value={field.state.value} />
             </View>
           )}
@@ -109,3 +109,47 @@ export function CategoryFormContent({
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  fieldsContainer: {
+    gap: spacing[5],
+  },
+  fieldGroup: {
+    gap: spacing[2],
+  },
+  label: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.6,
+  },
+  textInput: {
+    borderRadius: radii["2xl"],
+    borderWidth: 1,
+    borderColor: colors.ledgerOutline,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+    fontSize: typography.textBase,
+    lineHeight: 20,
+    color: colors.ink,
+  },
+  errorText: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textXs,
+    color: colors.destructive,
+  },
+  readOnlyContainer: {
+    borderRadius: radii["2xl"],
+    borderWidth: 1,
+    borderColor: colors.ledgerOutline,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+  },
+  readOnlyText: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textBase,
+    color: colors.ink,
+  },
+});

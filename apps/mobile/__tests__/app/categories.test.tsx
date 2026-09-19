@@ -1,5 +1,6 @@
 import { Alert } from "react-native";
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import CategoriesScreen from "@/app/categories";
 import { createCategory } from "@/tests/test-utils/factories";
@@ -31,6 +32,15 @@ jest.mock("@/hooks/use-categories", () => ({
   useUpdateCategory: () => ({ mutateAsync: mockUpdateCategory }),
 }));
 
+const initialWindowMetrics = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 47, left: 0, right: 0, bottom: 34 },
+};
+
+function Wrapper({ children }: { children: React.ReactNode }) {
+  return <SafeAreaProvider initialMetrics={initialWindowMetrics}>{children}</SafeAreaProvider>;
+}
+
 describe("app/categories", () => {
   beforeEach(() => {
     mockArchiveCategory.mockResolvedValue(undefined);
@@ -42,7 +52,7 @@ describe("app/categories", () => {
 
   it("offers Archive instead of permanent Delete for a Category with history", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
-    await render(<CategoriesScreen />);
+    await render(<CategoriesScreen />, { wrapper: Wrapper });
 
     await fireEvent.press(screen.getByRole("button", { name: "Dining" }));
 
@@ -62,7 +72,7 @@ describe("app/categories", () => {
 
   it("restores an archived Category without presenting an Archive action", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
-    await render(<CategoriesScreen />);
+    await render(<CategoriesScreen />, { wrapper: Wrapper });
 
     await fireEvent.press(screen.getByRole("button", { name: "Old Groceries, Archived" }));
 
@@ -81,7 +91,7 @@ describe("app/categories", () => {
 
   it("offers permanent Delete only for a Category without dependent history", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
-    await render(<CategoriesScreen />);
+    await render(<CategoriesScreen />, { wrapper: Wrapper });
 
     await fireEvent.press(screen.getByRole("button", { name: "Unused" }));
     await fireEvent.press(screen.getByRole("button", { name: "Permanently delete Unused" }));
