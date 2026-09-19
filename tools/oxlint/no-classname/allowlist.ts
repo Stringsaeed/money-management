@@ -82,17 +82,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
     issue: 279,
   },
   {
-    files: [
-      "apps/mobile/components/resource/create-resource-bottom-sheet.tsx",
-      "apps/mobile/components/resource/create-resource-sheet-footer.tsx",
-      "apps/mobile/components/resource/resource-form-field.tsx",
-      "apps/mobile/components/resource/resource-sheet-delete-button.tsx",
-    ],
-    reason:
-      "Resource components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
     files: ["apps/mobile/components/updates/mandatory-update-gate.tsx"],
     reason:
       "Updates components using NativeWind className pending migration to theme module StyleSheet.",
