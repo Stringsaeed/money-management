@@ -1,9 +1,9 @@
 import type { Icon as PhosphorIcon } from "phosphor-react-native";
-import { Pressable } from "react-native";
+import { Pressable, useColorScheme } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
 
-import { styles } from "./styles";
+import { styles, darkStyles } from "./styles";
 
 interface GlassTabButtonProps {
   label: string;
@@ -13,6 +13,14 @@ interface GlassTabButtonProps {
 }
 
 export function GlassTabButton({ label, icon, isFocused, onPress }: GlassTabButtonProps) {
+  const isDark = useColorScheme() === "dark";
+
+  const iconStyle = isFocused
+    ? styles.iconFocused
+    : isDark
+      ? darkStyles.iconUnfocused
+      : styles.iconUnfocused;
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -21,12 +29,7 @@ export function GlassTabButton({ label, icon, isFocused, onPress }: GlassTabButt
       onPress={onPress}
       style={styles.tab}
     >
-      <Icon
-        as={icon}
-        size={24}
-        weight={isFocused ? "fill" : "regular"}
-        className={isFocused ? "text-foreground" : "text-foreground/55"}
-      />
+      <Icon as={icon} size={24} weight={isFocused ? "fill" : "regular"} style={iconStyle} />
     </Pressable>
   );
 }
