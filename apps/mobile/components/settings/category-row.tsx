@@ -1,8 +1,9 @@
 import { CaretRightIcon } from "phosphor-react-native";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 
 import type { CategoryRowProps } from "./types";
 
@@ -12,14 +13,48 @@ export function CategoryRow({ category, onPress }: CategoryRowProps) {
       aria-label={category.lifecycle === "archived" ? `${category.name}, Archived` : category.name}
       role="button"
       onPress={onPress}
-      className="flex-row items-center px-4 py-3 gap-3 active:bg-surface-dim"
+      style={({ pressed }) => [styles.container, pressed && styles.containerPressed]}
     >
-      <View style={{ backgroundColor: category.color }} className="w-2.5 h-2.5 rounded-full" />
-      <Text className="flex-1 font-body-medium text-base text-ink">{category.name}</Text>
+      <View style={[styles.colorDot, { backgroundColor: category.color }]} />
+      <Text style={styles.name}>{category.name}</Text>
       {category.lifecycle === "archived" ? (
-        <Text className="font-body-medium text-xs text-ink/40">Archived</Text>
+        <Text style={styles.archivedBadge}>Archived</Text>
       ) : null}
-      <Icon as={CaretRightIcon} className="text-ink/20" size={14} />
+      <Icon as={CaretRightIcon} style={styles.caret} size={14} />
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+    gap: spacing[3],
+  },
+  containerPressed: {
+    backgroundColor: colors.surfaceDim,
+  },
+  colorDot: {
+    width: 10,
+    height: 10,
+    borderRadius: radii.full,
+  },
+  name: {
+    flex: 1,
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textBase,
+    color: colors.ink,
+  },
+  archivedBadge: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  caret: {
+    color: colors.ink,
+    opacity: 0.2,
+  },
+});

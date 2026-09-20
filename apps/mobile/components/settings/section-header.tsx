@@ -1,7 +1,7 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 
 interface SectionHeaderProps {
   readonly title: string;
@@ -12,12 +12,34 @@ export function SectionHeader({ title, variant = "page" }: SectionHeaderProps) {
   return (
     <View
       testID="section-header"
-      className={cn(
-        "flex-row items-center border-b border-ledger-outline",
-        variant === "card" ? "px-4 pt-4 pb-3" : "pt-8 pb-3 mx-5",
-      )}
+      style={[styles.container, variant === "card" ? styles.cardVariant : styles.pageVariant]}
     >
-      <Text className="font-heading-normal text-xl italic text-ink">{title}</Text>
+      <Text style={styles.title}>{title}</Text>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.ledgerOutline,
+  },
+  pageVariant: {
+    paddingTop: spacing[8],
+    paddingBottom: spacing[3],
+    marginHorizontal: spacing[5],
+  },
+  cardVariant: {
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[4],
+    paddingBottom: spacing[3],
+  },
+  title: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textXl,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+});
