@@ -1,0 +1,10 @@
+head=5e89f6d
+stage=z6_verify_5e89f6d
+mode=dry-run
+plan=2 create
+create=HYPERDRIVE_FRESH
+create=server
+server_bindings=ANDROID_CERT_FINGERPRINTS,BETTER_AUTH_SECRET,BETTER_AUTH_URL,CORS_ORIGIN,EMAIL,HYPERDRIVE_FRESH,KILL_SWITCH_LOCAL_ONLY,METRICS,POWERSYNC_JWT_KID,POWERSYNC_JWT_PRIVATE_KEY,POWERSYNC_URL
+d1_binding_present=false
+d1_resource_present=false
+result=pass

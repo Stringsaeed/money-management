@@ -1,8 +1,0 @@
-node_modules/
-.env
-wrangler.jsonc
-*.db
-*.sqlite
-dist/
-.wrangler/
-lib/
