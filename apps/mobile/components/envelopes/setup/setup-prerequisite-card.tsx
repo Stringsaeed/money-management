@@ -1,6 +1,7 @@
 import { Link } from "expo-router";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 
+import { styles } from "@/components/envelopes/styles";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 
@@ -15,12 +16,12 @@ export const SetupPrerequisiteCard = ({ kind }: SetupPrerequisiteCardProps) => {
       entering={FadeIn}
       exiting={FadeOut}
       layout={LinearTransition}
-      className="gap-3 rounded-2xl border border-ledger-outline bg-surface-container p-4"
+      style={styles.prerequisiteCard}
     >
-      <Text className="font-body-semibold text-ink">
+      <Text style={styles.textSemiboldInk}>
         {isAccount ? "🏦 Add Money you can budget" : "🏷️ Add an expense Category"}
       </Text>
-      <Text selectable className="font-body-normal text-sm leading-5 text-ink/60">
+      <Text selectable style={styles.prerequisiteText}>
         {isAccount
           ? "Setup needs an active checking, savings, or Cash Account so every Assignment stays cash-backed."
           : "Category suggestions preserve how you already classify spending. You can also start with a blank plan."}

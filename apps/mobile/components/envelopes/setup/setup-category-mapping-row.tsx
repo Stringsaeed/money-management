@@ -1,5 +1,6 @@
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 
+import { styles } from "@/components/envelopes/styles";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 
@@ -22,9 +23,9 @@ export const SetupCategoryMappingRow = ({
       entering={FadeIn}
       exiting={FadeOut}
       layout={LinearTransition}
-      className="flex-row items-center gap-2"
+      style={styles.flexRowItemsCenter}
     >
-      <Text className="flex-1 font-body-normal text-sm text-ink">
+      <Text style={styles.mappingRowText}>
         {icon} {name}
       </Text>
       <Button

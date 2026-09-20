@@ -4,6 +4,7 @@ import { EnvelopeAppearanceFields } from "@/components/envelopes/envelope-form/e
 import { EnvelopeCategoryFields } from "@/components/envelopes/envelope-form/envelope-category-fields";
 import { EnvelopeIdentityFields } from "@/components/envelopes/envelope-form/envelope-identity-fields";
 import { EnvelopeSettingsFields } from "@/components/envelopes/envelope-form/envelope-settings-fields";
+import { styles } from "@/components/envelopes/styles";
 import type { EnvelopeCategoryOption } from "@/modules/budgeting/budgeting";
 
 import type { UseEnvelopeFormReturn } from "./form";
@@ -24,7 +25,7 @@ export function EnvelopeFormContent({
   options,
 }: EnvelopeFormContentProps) {
   return (
-    <View className="gap-5">
+    <View style={styles.gap5}>
       <EnvelopeIdentityFields currency={currency} form={form} />
       <EnvelopeAppearanceFields form={form} />
       <EnvelopeCategoryFields envelopeId={envelopeId} form={form} options={options} />

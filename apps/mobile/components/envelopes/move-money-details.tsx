@@ -1,6 +1,9 @@
 import { TextInput, View } from "react-native";
 
 import { Text } from "@/components/ui/text";
+import { colors } from "@/lib/design-tokens";
+
+import { styles } from "./styles";
 
 interface MoveMoneyDetailsProps {
   amount: string;
@@ -16,27 +19,29 @@ export function MoveMoneyDetails({
   period,
 }: MoveMoneyDetailsProps) {
   return (
-    <View className="gap-4">
-      <View className="gap-2">
-        <Text className="font-body-medium text-sm text-ink">Amount (minor units)</Text>
+    <View style={styles.gap4}>
+      <View style={styles.gap2}>
+        <Text style={styles.textMediumInkSm}>Amount (minor units)</Text>
         <TextInput
           accessibilityLabel="Move Money amount"
-          className="h-12 rounded-xl border border-ledger-outline bg-surface-container px-4 font-body-normal text-base text-ink"
           keyboardType="number-pad"
           onChangeText={onAmountChange}
           placeholder="e.g. 2500"
+          placeholderTextColor={colors.textPlaceholder}
+          style={styles.moveMoneyInput}
           value={amount}
         />
       </View>
-      <View className="gap-2">
-        <Text className="font-body-medium text-sm text-ink">Budget Period</Text>
+      <View style={styles.gap2}>
+        <Text style={styles.textMediumInkSm}>Budget Period</Text>
         <TextInput
           accessibilityHint="Enter the current or a future Budget Period as YYYY-MM."
           accessibilityLabel="Move Money period"
           autoCapitalize="none"
-          className="h-12 rounded-xl border border-ledger-outline bg-surface-container px-4 font-body-normal text-base text-ink"
           onChangeText={onPeriodChange}
           placeholder="YYYY-MM"
+          placeholderTextColor={colors.textPlaceholder}
+          style={styles.moveMoneyInput}
           value={period}
         />
       </View>

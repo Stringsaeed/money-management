@@ -1,5 +1,6 @@
 import { View } from "react-native";
 
+import { styles } from "@/components/envelopes/styles";
 import type { SetupDraftEnvelope } from "@/modules/budgeting/budgeting";
 import { Input } from "@/components/ui/input";
 import { useForm } from "@tanstack/react-form";
@@ -27,7 +28,7 @@ export const SetupEnvelopeIdentityFields = ({
   };
 
   return (
-    <View className="gap-2">
+    <View style={styles.gap2}>
       <form.Field name="name">
         {({ handleChange, state }) => (
           <Input
@@ -40,8 +41,8 @@ export const SetupEnvelopeIdentityFields = ({
       </form.Field>
       <form.Subscribe selector={(state) => state.values.name}>
         {(name) => (
-          <View className="flex-row gap-2">
-            <View className="flex-1">
+          <View style={styles.flexRowGap2}>
+            <View style={styles.flex1}>
               <form.Field name="icon">
                 {(field) => (
                   <Input
@@ -53,7 +54,7 @@ export const SetupEnvelopeIdentityFields = ({
                 )}
               </form.Field>
             </View>
-            <View className="flex-1">
+            <View style={styles.flex1}>
               <form.Field name="color">
                 {(field) => (
                   <Input
