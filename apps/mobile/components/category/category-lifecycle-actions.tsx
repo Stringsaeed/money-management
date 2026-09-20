@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
@@ -9,6 +9,7 @@ import {
   useDeleteCategory,
   useRestoreCategory,
 } from "@/hooks/use-categories";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 import type { Category } from "@/types";
 
 interface CategoryLifecycleActionsProps {
@@ -91,11 +92,11 @@ export function CategoryLifecycleActions({ category, onCompleted }: CategoryLife
   }
 
   return (
-    <View className="gap-3 border-t border-ledger-outline pt-5">
-      <Text className="font-heading-normal text-lg italic text-ink">Category lifecycle</Text>
+    <View style={styles.container}>
+      <Text style={styles.heading}>Category lifecycle</Text>
       {category.lifecycle === "archived" ? (
         <>
-          <Text className="font-body-normal text-sm text-ink/60">
+          <Text style={styles.infoText}>
             Archived Categories stay attached to history but cannot be selected for new activity.
           </Text>
           <Button
@@ -127,17 +128,49 @@ export function CategoryLifecycleActions({ category, onCompleted }: CategoryLife
               <Text>Delete Permanently</Text>
             </Button>
           ) : deletionPreview.isSuccess ? (
-            <Text className="font-body-normal text-sm text-ink/50">
+            <Text style={styles.hintText}>
               Financial history found. Archive this Category instead of permanently deleting it.
             </Text>
           ) : null}
         </>
       )}
       {error ? (
-        <Text role="alert" className="font-body-medium text-sm text-destructive">
+        <Text role="alert" style={styles.errorText}>
           {error}
         </Text>
       ) : null}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: spacing[3],
+    borderTopWidth: 1,
+    borderTopColor: colors.ledgerOutline,
+    paddingTop: spacing[5],
+  },
+  heading: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textLg,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  infoText: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.6,
+  },
+  hintText: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  errorText: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textSm,
+    color: colors.destructive,
+  },
+});
