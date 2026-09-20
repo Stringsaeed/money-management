@@ -1,9 +1,10 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
+import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import type { PersonalSyncStatus } from "@/hooks/use-enable-sync";
 import { useEnablePersonalSync } from "@/hooks/use-enable-sync";
-import { Button } from "../ui/button";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 
 const BUTTON_LABEL = {
   idle: "Sync just for me",
@@ -44,9 +45,9 @@ export function PersonalSyncCard({ alreadyEnabled }: { readonly alreadyEnabled: 
 
   if (alreadyEnabled || status === "enabled") {
     return (
-      <View className="gap-1 px-4 py-4">
-        <Text className="font-body-semibold text-sm text-sage">🪪 Your personal ledger syncs</Text>
-        <Text className="font-body-normal text-xs text-ink/40">
+      <View style={styles.container}>
+        <Text style={styles.successTitle}>🪪 Your personal ledger syncs</Text>
+        <Text style={styles.description}>
           Accounts, categories, and transactions follow you to every device you sign in on.
         </Text>
       </View>
@@ -55,11 +56,9 @@ export function PersonalSyncCard({ alreadyEnabled }: { readonly alreadyEnabled: 
 
   if (status === "confirm_upload") {
     return (
-      <View className="gap-3 px-4 py-4">
-        <Text className="font-heading-normal text-lg italic text-ink">
-          Upload to your cloud? ☁️
-        </Text>
-        <Text className="font-body-normal text-xs text-ink/40">
+      <View style={styles.confirmContainer}>
+        <Text style={styles.heading}>Upload to your cloud? ☁️</Text>
+        <Text style={styles.description}>
           Your personal cloud is empty and this device has local accounts and transactions. Confirm
           once to copy them up - sign-in alone never uploads. Your on-device ledger stays here for
           local-only use anytime.
@@ -77,11 +76,9 @@ export function PersonalSyncCard({ alreadyEnabled }: { readonly alreadyEnabled: 
   const busy = getIsBusy(status);
 
   return (
-    <View className="gap-3 px-4 py-4">
-      <Text className="font-heading-normal text-lg italic text-ink">
-        Sync without a Household 🪪
-      </Text>
-      <Text className="font-body-normal text-xs text-ink/40">
+    <View style={styles.confirmContainer}>
+      <Text style={styles.heading}>Sync without a Household 🪪</Text>
+      <Text style={styles.description}>
         {cloudMode === "populated"
           ? "Your personal cloud already has data. Opening sync reads that ledger — everything on this device stays on this device, with no merge step."
           : "Keep a personal ledger in the cloud on your own. We check whether the cloud is empty before offering a one-time upload from this device."}
@@ -93,7 +90,7 @@ export function PersonalSyncCard({ alreadyEnabled }: { readonly alreadyEnabled: 
         <Text
           accessibilityLiveRegion="assertive"
           accessibilityRole="alert"
-          className="text-destructive text-xs"
+          style={styles.errorText}
         >
           {error.message}
         </Text>
@@ -101,3 +98,37 @@ export function PersonalSyncCard({ alreadyEnabled }: { readonly alreadyEnabled: 
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: spacing[1],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[4],
+  },
+  confirmContainer: {
+    gap: spacing[3],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[4],
+  },
+  successTitle: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textSm,
+    color: colors.sage,
+  },
+  heading: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textLg,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  description: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  errorText: {
+    fontSize: typography.textXs,
+    color: colors.destructive,
+  },
+});

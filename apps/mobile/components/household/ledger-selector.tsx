@@ -1,9 +1,10 @@
 import type { HouseholdRole } from "@trove/protocol";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { NativeHost, NativePrimaryButton, NativeSecondaryButton } from "@/components/native-ui";
 import { Card } from "@/components/settings/card";
 import { Text } from "@/components/ui/text";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 import type { AccessState, MembershipSummary } from "@/modules/access/types";
 
 type SignedInAccess = Extract<AccessState, { kind: "signed_in" }>;
@@ -13,10 +14,10 @@ export function LedgerSelector({ access }: { readonly access: SignedInAccess }) 
   if (access.memberships.length === 0) return null;
   return (
     <Card>
-      <View className="gap-3 p-4">
-        <Text className="font-body-semibold text-xs uppercase text-ink/40">Ledger</Text>
-        <View className="flex-row flex-wrap gap-2">
-          <View className="min-w-30 flex-1">
+      <View style={styles.container}>
+        <Text style={styles.label}>Ledger</Text>
+        <View style={styles.buttonsRow}>
+          <View style={styles.buttonWrapper}>
             <NativeHost>
               {access.selection.kind === "personal" ? (
                 <NativePrimaryButton
@@ -34,7 +35,7 @@ export function LedgerSelector({ access }: { readonly access: SignedInAccess }) 
             </NativeHost>
           </View>
           {access.memberships.map((household) => (
-            <View key={household.householdId} className="min-w-[120px] flex-1">
+            <View key={household.householdId} style={styles.householdButtonWrapper}>
               <HouseholdOption access={access} household={household} />
             </View>
           ))}
@@ -82,3 +83,30 @@ function roleHint(role: HouseholdRole): string {
       return "viewer";
   }
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: spacing[3],
+    padding: spacing[4],
+  },
+  label: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textXs,
+    textTransform: "uppercase",
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  buttonsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing[2],
+  },
+  buttonWrapper: {
+    flex: 1,
+    minWidth: 120,
+  },
+  householdButtonWrapper: {
+    flex: 1,
+    minWidth: 120,
+  },
+});

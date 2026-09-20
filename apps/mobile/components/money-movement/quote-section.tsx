@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { QuoteRow } from "@/components/money-movement/quote-row";
@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Text } from "@/components/ui/text";
 import { layoutTransition } from "@/components/transaction/constants";
 import type { MarketAssetGroup, MarketQuote } from "@/hooks/use-market-quotes";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 
 interface QuoteSectionProps {
   title: MarketAssetGroup;
@@ -15,16 +16,13 @@ interface QuoteSectionProps {
 export function QuoteSection({ title, quotes }: QuoteSectionProps) {
   return (
     <Animated.View entering={FadeIn.duration(220)} exiting={FadeOut} layout={layoutTransition}>
-      <View className="mx-5 flex-row items-center justify-between border-b border-ledger-outline pb-3">
-        <Text className="font-heading-normal text-xl italic text-ink">{title}</Text>
-        <Badge variant="outline" className="bg-surface">
+      <View style={styles.header}>
+        <Text style={styles.title}>{title}</Text>
+        <Badge variant="outline" style={styles.badge}>
           <Text>{quotes.length} tracked</Text>
         </Badge>
       </View>
-      <View
-        className="mx-5 overflow-hidden bg-surface-container"
-        style={{ borderCurve: "continuous" }}
-      >
+      <View style={styles.content}>
         {quotes.map((quote, index) => (
           <QuoteRow key={quote.symbol} quote={quote} isLast={index === quotes.length - 1} />
         ))}
@@ -32,3 +30,30 @@ export function QuoteSection({ title, quotes }: QuoteSectionProps) {
     </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    marginHorizontal: spacing[5],
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.ledgerOutline,
+    paddingBottom: spacing[3],
+  },
+  title: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textXl,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  badge: {
+    backgroundColor: colors.surface,
+  },
+  content: {
+    marginHorizontal: spacing[5],
+    overflow: "hidden",
+    backgroundColor: colors.surfaceContainer,
+    borderCurve: "continuous",
+  },
+});

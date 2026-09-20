@@ -81,39 +81,9 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
     issue: 279,
   },
   {
-    files: [
-      "apps/mobile/components/household/active-household-panel.tsx",
-      "apps/mobile/components/household/create-household-form.tsx",
-      "apps/mobile/components/household/enable-sync-card.tsx",
-      "apps/mobile/components/household/household-members.tsx",
-      "apps/mobile/components/household/join-household-form.tsx",
-      "apps/mobile/components/household/ledger-selector.tsx",
-      "apps/mobile/components/household/personal-sync-card.tsx",
-      "apps/mobile/components/household/signed-in-household.tsx",
-      "apps/mobile/components/household/sync-status-card.tsx",
-    ],
-    reason:
-      "Household components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
     files: ["apps/mobile/components/ledger/ledger-list-header.tsx"],
     reason:
       "Ledger components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: [
-      "apps/mobile/components/money-movement/market-hero.tsx",
-      "apps/mobile/components/money-movement/market-source-badge.tsx",
-      "apps/mobile/components/money-movement/market-state-card.tsx",
-      "apps/mobile/components/money-movement/money-movement-screen.tsx",
-      "apps/mobile/components/money-movement/quote-row.tsx",
-      "apps/mobile/components/money-movement/quote-section.tsx",
-      "apps/mobile/components/money-movement/refresh-market-button.tsx",
-    ],
-    reason:
-      "Money movement components using NativeWind className pending migration to theme module StyleSheet.",
     issue: 279,
   },
   {

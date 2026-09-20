@@ -1,4 +1,5 @@
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { MarketHero } from "@/components/money-movement/market-hero";
 import { MarketStateCard } from "@/components/money-movement/market-state-card";
@@ -9,10 +10,12 @@ import {
   type MarketAssetGroup,
   useMarketQuotes,
 } from "@/hooks/use-market-quotes";
+import { colors, spacing } from "@/lib/design-tokens";
 
 const GROUPS: MarketAssetGroup[] = ["Stocks", "Metals", "Crypto"];
 
 export function MoneyMovementScreen() {
+  const insets = useSafeAreaInsets();
   const hasApiKey = hasMarketDataApiKeys();
   const { data: quotes = [], isFetching, isLoading, error, refetch } = useMarketQuotes();
   const handleRefresh = () => {
@@ -25,9 +28,16 @@ export function MoneyMovementScreen() {
   }));
 
   return (
-    <View className="flex-1 bg-background">
-      {/* <Stack.Screen options={{ title: "Money Movement" }} /> */}
-      <ScrollView contentContainerClassName="gap-5 pt-safe-offset-20 pb-safe-offset-10">
+    <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingTop: insets.top + spacing[20],
+            paddingBottom: insets.bottom + spacing[10],
+          },
+        ]}
+      >
         <MarketHero hasApiKey={hasApiKey} isFetching={isFetching} onRefresh={handleRefresh} />
 
         {!hasApiKey ? (
@@ -37,7 +47,7 @@ export function MoneyMovementScreen() {
           />
         ) : null}
 
-        {hasApiKey && isLoading ? <ActivityIndicator className="mt-5" /> : null}
+        {hasApiKey && isLoading ? <ActivityIndicator style={styles.loader} /> : null}
 
         {hasApiKey && error ? (
           <MarketStateCard
@@ -62,3 +72,16 @@ export function MoneyMovementScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    gap: spacing[5],
+  },
+  loader: {
+    marginTop: spacing[5],
+  },
+});
