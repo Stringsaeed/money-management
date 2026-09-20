@@ -68,3 +68,6 @@ graphify-out
 
 .audit/
 .local/
+
+# QA Stim / agent proof dumps — local only (never commit)
+artifacts/qa-*/
