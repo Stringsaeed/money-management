@@ -183,20 +183,6 @@ export default function RootLayout() {
                                     name="recurring/index"
                                     options={{ title: "Recurring Rules" }}
                                   />
-                                  {/* TEMPORARY: Button gallery for QA (#318) - remove after migration */}
-                                  <Stack.Screen
-                                    name="dev/button-gallery"
-                                    options={{ title: "Button Gallery" }}
-                                  />
-                                  <Stack.Screen
-                                    name="dev/badge-gallery"
-                                    options={{ title: "Badge Gallery" }}
-                                  />
-                                  {/* TODO(#285): Delete after QA sign-off on Text StyleSheet migration */}
-                                  <Stack.Screen
-                                    name="dev/text-gallery"
-                                    options={{ title: "Text Gallery" }}
-                                  />
                                 </Stack>
                                 <StatusBar style="auto" />
                                 <MandatoryUpdateGate />
