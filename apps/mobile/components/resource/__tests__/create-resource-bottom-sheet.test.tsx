@@ -87,7 +87,11 @@ describe("create resource sheet dismissal", () => {
   });
 
   it("dismisses the Category sheet after a successful create", async () => {
-    await render(<CategoryFormBottomSheet autoPresent />);
+    await render(
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <CategoryFormBottomSheet autoPresent />
+      </SafeAreaProvider>,
+    );
 
     await fireEvent.changeText(screen.getByPlaceholderText("e.g. Groceries"), "Everyday expenses");
     await fireEvent.press(screen.getByTestId("create-resource-submit"));
@@ -101,14 +105,16 @@ describe("create resource sheet dismissal", () => {
     const sheetRef = React.createRef<CreateResourceBottomSheetRef>();
 
     await render(
-      <CreateResourceBottomSheet
-        autoPresent
-        content={<View testID="sheet-body" />}
-        footer={null}
-        onDismiss={onDismiss}
-        ref={sheetRef}
-        title="Add Account"
-      />,
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <CreateResourceBottomSheet
+          autoPresent
+          content={<View testID="sheet-body" />}
+          footer={null}
+          onDismiss={onDismiss}
+          ref={sheetRef}
+          title="Add Account"
+        />
+      </SafeAreaProvider>,
     );
 
     await act(async () => {
@@ -123,14 +129,16 @@ describe("create resource sheet dismissal", () => {
     const onDismiss = jest.fn();
 
     await render(
-      <CreateResourceBottomSheet
-        content={<View />}
-        footer={null}
-        onDismiss={onDismiss}
-        title="Test resource"
-      >
-        <Pressable testID="open-resource-sheet" />
-      </CreateResourceBottomSheet>,
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <CreateResourceBottomSheet
+          content={<View />}
+          footer={null}
+          onDismiss={onDismiss}
+          title="Test resource"
+        >
+          <Pressable testID="open-resource-sheet" />
+        </CreateResourceBottomSheet>
+      </SafeAreaProvider>,
     );
 
     await fireEvent.press(screen.getByTestId("open-resource-sheet"));
