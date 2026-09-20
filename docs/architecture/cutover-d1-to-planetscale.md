@@ -2,7 +2,7 @@
 
 - **Status:** Production D1 freeze, export, and PlanetScale import completed on 2026-09-08. Worker cutover remains blocked until the environment and PowerSync deployment gates pass.
 - **Issue:** #177
-- **Freeze:** `KILL_SWITCH_LOCAL_ONLY=on` is deployed. The reviewed receipt is [`../../artifacts/powersync-planetscale/production-d1-cutover.md`](../../artifacts/powersync-planetscale/production-d1-cutover.md).
+- **Freeze:** `KILL_SWITCH_LOCAL_ONLY=on` is deployed. The reviewed receipt is [`./production-d1-cutover.md`](./production-d1-cutover.md).
 
 ## Binding
 
@@ -10,7 +10,7 @@ Workers reach PlanetScale through Hyperdrive `HYPERDRIVE_FRESH`. Caching stays d
 
 `alchemy.run.ts` keeps production on `trove-ledger-fresh` and gives every non-production stage a stage-suffixed Hyperdrive name. That prevents a verification deploy from retargeting the shared production config. The production name is still a name match, not a pin of id `8e9800a6f0ff4d738ccde750c2120dd1`. `alchemy dev` creates a **local** Hyperdrive from `PLANETSCALE_*` and does not exercise the remote config. `wrangler hyperdrive get 8e9800a6f0ff4d738ccde750c2120dd1` is a separate check.
 
-Do not put `z2-staging` credentials in a prod Alchemy env. That retargets the shared name at the development branch. Do not run `artifacts/powersync-planetscale-spike/smoke.sh --teardown`. That script deletes this Hyperdrive.
+Do not put `z2-staging` credentials in a prod Alchemy env. That retargets the shared name at the development branch. Do not run `packages/infra/scripts/powersync-z0/smoke.sh --teardown`. That script deletes this Hyperdrive.
 
 Production deploys are fail-closed in both GitHub Actions and `alchemy.run.ts`. They require repository variable `PLANETSCALE_CUTOVER_APPROVED=issue-173-approved`; non-production stages do not. The deploy workflow also requires `PLANETSCALE_HOST`, `PLANETSCALE_DATABASE`, `PLANETSCALE_USER`, and `PLANETSCALE_PASSWORD` as Actions secrets. Do not set the approval variable until #173 is closed and the production D1 export plus PlanetScale row-parity receipt are complete.
 
@@ -28,10 +28,10 @@ Production deploys are fail-closed in both GitHub Actions and `alchemy.run.ts`. 
 From the staging Worker account, dump each money table **before** the Hyperdrive deploy:
 
 ```
-npx wrangler d1 export database --remote --output artifacts/powersync-planetscale/z2-d1-export.sql
+npx wrangler d1 export database --remote --output .scratch/powersync-cutover/z2-d1-export.sql
 ```
 
-Count rows for `user`, `session`, `account`, `verification`, `household`, `membership`, `invite_code`, `accounts`, `categories`, `transactions`, `household_changes`, `command_results`, plus budget and recurring tables that exist in the dump. Save the counts in `artifacts/powersync-planetscale/z2-row-counts.md`.
+Count rows for `user`, `session`, `account`, `verification`, `household`, `membership`, `invite_code`, `accounts`, `categories`, `transactions`, `household_changes`, `command_results`, plus budget and recurring tables that exist in the dump. Save the counts in `.scratch/powersync-cutover/z2-row-counts.md`.
 
 ## Import PlanetScale
 

@@ -40,13 +40,13 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
   - [ ] Z5 after Z4.
   - [ ] Z6 after Z5.
 - [ ] Hold the file boundaries.
-  - [ ] Z0 touches only `artifacts/powersync-planetscale-spike/**`.
+  - [ ] Z0 touches only `packages/infra/scripts/powersync-z0/**`.
   - [ ] Z1 touches only `apps/mobile/db/**`, `apps/mobile/app/_layout.tsx`, `apps/mobile/package.json`, `apps/mobile/app.config.ts`, `apps/mobile/tests/test-utils/sqlite.ts`, root `package.json`, and the lockfile.
   - [ ] Z2 touches only `packages/db/**`, `packages/api/**`, `packages/auth/**`, `packages/env/**`, `packages/infra/**`, `apps/server/**`, and `docs/architecture/**`.
   - [ ] Z3 touches only `packages/powersync/**`, `packages/api/src/routers/**`, `packages/api/src/lib/powersync/**`, `packages/env/**`, `packages/infra/**`, `apps/server/src/index.ts`, and `deploy/powersync/**`.
   - [ ] Z4 touches only `apps/mobile/modules/powersync/**`, `apps/mobile/modules/ledger-db/**`, `apps/mobile/modules/ledger-data-source/**`, `apps/mobile/hooks/use-sync-worker.ts`, `apps/mobile/hooks/use-rejected-changes.ts`, `apps/mobile/components/rejected-changes/**`, `apps/mobile/lib/migration/**`, `apps/mobile/metro.config.js`, and `apps/mobile/package.json`.
   - [ ] Z5 deletes under `apps/mobile/lib/sync/**`, `apps/mobile/hooks/use-household-push.*`, `apps/mobile/modules/ledger-data-source/**`, `packages/api/src/lib/sync/**`, and `packages/api/src/routers/sync.ts`. It edits `apps/mobile/db/schema.ts`, `apps/mobile/hooks/use-sync-worker.ts`, `CONTEXT.md`, `tools/oxlint/ledger-boundary/allowlist.ts`, `docs/architecture/sqlite-roles.md`, and `docs/postman/**`.
-  - [ ] Z6 touches only `packages/powersync/**`, `packages/db/src/migrations/**`, `apps/mobile/modules/powersync/schema.ts`, `apps/mobile/modules/recurring-rules/**`, `apps/mobile/modules/budgeting/**`, `tools/oxlint/ledger-boundary/allowlist.ts`, `packages/infra/**`, `artifacts/powersync-planetscale/**`, and `docs/architecture/**`.
+  - [ ] Z6 touches only `packages/powersync/**`, `packages/db/src/migrations/**`, `apps/mobile/modules/powersync/schema.ts`, `apps/mobile/modules/recurring-rules/**`, `apps/mobile/modules/budgeting/**`, `tools/oxlint/ledger-boundary/allowlist.ts`, `packages/infra/**`, `docs/architecture/**`, and `docs/architecture/**`.
 - [ ] Hold the review gate. Z0, Z1, Z4, Z5, and Z6 change an interaction or a one-way stack choice. They wait for the operator's review in chat with screenshots and a video before append.
 
 ### PR mechanics, for every PR
@@ -79,11 +79,11 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 
 **Files.**
 
-- [ ] Create `artifacts/powersync-planetscale-spike/README.md`.
-- [ ] Create `artifacts/powersync-planetscale-spike/smoke.sh`.
-- [ ] Create `artifacts/powersync-planetscale-spike/spike.sql`.
-- [ ] Create `artifacts/powersync-planetscale-spike/sync-streams.yaml`.
-- [ ] Create `artifacts/powersync-planetscale-spike/verdict.md`.
+- [ ] Create `packages/infra/scripts/powersync-z0/README.md`.
+- [ ] Create `packages/infra/scripts/powersync-z0/smoke.sh`.
+- [ ] Create `packages/infra/scripts/powersync-z0/spike.sql`.
+- [ ] Create `packages/infra/scripts/powersync-z0/sync-streams.yaml`.
+- [ ] Create `packages/infra/scripts/powersync-z0/verdict.md`.
 - [ ] Do not edit `apps/`, `packages/`, or `tools/`.
 
 **Build.**
@@ -99,11 +99,11 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 
 **You see.**
 
-- [ ] `artifacts/powersync-planetscale-spike/verdict.md` states `engine: postgresql`, `wal_level=logical`, the accepted `CREATE PUBLICATION powersync FOR TABLE ...` statement, the Hyperdrive id with caching disabled, the PowerSync instance URL with replication `active`, and one Worker insert visible in the client SQLite file with its measured delay.
+- [ ] `packages/infra/scripts/powersync-z0/verdict.md` states `engine: postgresql`, `wal_level=logical`, the accepted `CREATE PUBLICATION powersync FOR TABLE ...` statement, the Hyperdrive id with caching disabled, the PowerSync instance URL with replication `active`, and one Worker insert visible in the client SQLite file with its measured delay.
 
 **Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] `artifacts/powersync-planetscale-spike/smoke.sh` exits 0 after `SHOW wal_level`, the Hyperdrive `SELECT 1`, the publication check `SELECT pubname FROM pg_publication WHERE pubname = 'powersync'`, and one row round trip into the PowerSync client file. Run `bash artifacts/powersync-planetscale-spike/smoke.sh`.
+- [ ] `packages/infra/scripts/powersync-z0/smoke.sh` exits 0 after `SHOW wal_level`, the Hyperdrive `SELECT 1`, the publication check `SELECT pubname FROM pg_publication WHERE pubname = 'powersync'`, and one row round trip into the PowerSync client file. Run `bash packages/infra/scripts/powersync-z0/smoke.sh`.
 
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `grok-4.6-fast-xhigh` at the PR head, per the boot recipe.
 
@@ -127,8 +127,8 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 
 **Review gate.** The operator reviews before merge.
 
-- [ ] Copy lane 7 and lane 9 screenshots into `artifacts/powersync-planetscale-spike/Z0-review-replication.png` and `artifacts/powersync-planetscale-spike/Z0-review-roundtrip.png`.
-- [ ] Record a 30 to 60 second video of the `pscale` engine check, the Hyperdrive insert, and the row arriving in the client file. Save it as `artifacts/powersync-planetscale-spike/Z0-review.mp4`.
+- [ ] Copy lane 7 and lane 9 screenshots into `packages/infra/scripts/powersync-z0/Z0-review-replication.png` and `packages/infra/scripts/powersync-z0/Z0-review-roundtrip.png`.
+- [ ] Record a 30 to 60 second video of the `pscale` engine check, the Hyperdrive insert, and the row arriving in the client file. Save it as `packages/infra/scripts/powersync-z0/Z0-review.mp4`.
 - [ ] Post the screenshots, the video, and `verdict.md` in chat. Stop at merge-ready. Wait for the operator's click.
 
 **Merge.**
@@ -187,8 +187,8 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 
 **Review gate.** The operator reviews before merge.
 
-- [ ] Copy lane 1 and lane 6 screenshots into `artifacts/powersync-planetscale/Z1-review-account.png` and `artifacts/powersync-planetscale/Z1-review-relaunch.png`.
-- [ ] Record a 30 to 60 second video of launch, create, relaunch, and Erase All Data. Save it as `artifacts/powersync-planetscale/Z1-review.mp4`.
+- [ ] Copy lane 1 and lane 6 screenshots into `docs/architecture/Z1-review-account.png` and `docs/architecture/Z1-review-relaunch.png`.
+- [ ] Record a 30 to 60 second video of launch, create, relaunch, and Erase All Data. Save it as `docs/architecture/Z1-review.mp4`.
 - [ ] Post the screenshots and the video in chat. Stop at merge-ready. Wait for the operator's click.
 
 **Merge.**
@@ -370,8 +370,8 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 
 **Review gate.** The operator reviews before merge.
 
-- [ ] Copy lane 2 and lane 3 screenshots into `artifacts/powersync-planetscale/Z4-review-cross.png` and `artifacts/powersync-planetscale/Z4-review-offline.png`.
-- [ ] Record a 30 to 60 second video of cross-device create, airplane mode drain, and one rejection. Save it as `artifacts/powersync-planetscale/Z4-review.mp4`.
+- [ ] Copy lane 2 and lane 3 screenshots into `docs/architecture/Z4-review-cross.png` and `docs/architecture/Z4-review-offline.png`.
+- [ ] Record a 30 to 60 second video of cross-device create, airplane mode drain, and one rejection. Save it as `docs/architecture/Z4-review.mp4`.
 - [ ] Post the screenshots and the video in chat. Stop at merge-ready. Wait for the operator's click.
 
 **Merge.**
@@ -434,8 +434,8 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 
 **Review gate.** The operator reviews before merge.
 
-- [ ] Copy lane 1 and lane 10 screenshots into `artifacts/powersync-planetscale/Z5-review-no-delta.png` and `artifacts/powersync-planetscale/Z5-review-idle.png`.
-- [ ] Record a 30 to 60 second video of Enable Sync, cross-device create, and the idle degrade. Save it as `artifacts/powersync-planetscale/Z5-review.mp4`.
+- [ ] Copy lane 1 and lane 10 screenshots into `docs/architecture/Z5-review-no-delta.png` and `docs/architecture/Z5-review-idle.png`.
+- [ ] Record a 30 to 60 second video of Enable Sync, cross-device create, and the idle degrade. Save it as `docs/architecture/Z5-review.mp4`.
 - [ ] Post the screenshots and the video in chat. Stop at merge-ready. Wait for the operator's click.
 
 **Merge.**
@@ -459,7 +459,7 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 - [x] Edit `tools/oxlint/ledger-boundary/allowlist.ts`. Delete every `legacy-local-pending-cutover` entry.
 - [x] Confirm `packages/infra/alchemy.run.ts` exports no D1 resource, binding, or D1 migration directory; enforce it with `no-d1-money.test.mjs`.
 - [x] Create `docs/architecture/powersync-operations.md`. Slot lag monitoring, `pg_replication_slots` checks, instance sizing, bucket count, and the self-host switch.
-- [x] Create `artifacts/powersync-planetscale/certification.md`. The #98 close packet with links to every available review artifact and explicit pending receipts.
+- [x] Create `docs/architecture/powersync-certification.md`. The #98 close packet with links to every available review artifact and explicit pending receipts.
 - [x] Edit `docs/architecture/backend-architecture.md` and `CONTEXT.md` for the final shape.
 
 **Build.**
@@ -479,27 +479,27 @@ Each live lane runs on its own cloud VM at the PR head. Drive the app through `.
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `grok-4.6-fast-xhigh` at the PR head, per the boot recipe.
 
 - [ ] Lane 1. Regression lane against trunk. Run the full Enable Sync fixture at trunk and at head. Save `z6-regression.png`. Pass when head matches the trunk row counts and every tab renders from collections.
-- [x] Lane 2. Recurring rules after sync. [`../../artifacts/powersync-planetscale/z6-rules.png`](../../artifacts/powersync-planetscale/z6-rules.png) and [`../../artifacts/powersync-planetscale/z6-native-review.md`](../../artifacts/powersync-planetscale/z6-native-review.md) show `Monthly Rent` replicated through `commands.apply` and rendered from `powersync.db`.
-- [x] Lane 3. Envelopes after sync. [`../../artifacts/powersync-planetscale/z6-envelopes.png`](../../artifacts/powersync-planetscale/z6-envelopes.png) and the native receipt show the USD workspace and `Home Essentials` rendered from the budget collections.
-- [x] Lane 4. Mixed writes under load. [`../../artifacts/powersync-planetscale/z6-worker-load.md`](../../artifacts/powersync-planetscale/z6-worker-load.md) records three consecutive public Worker runs with every row on both clients and p95 below 2 s. Review screenshot pending.
-- [x] Lane 5. Bucket count. [`../../artifacts/powersync-planetscale/z6-expanded-streams-live.md`](../../artifacts/powersync-planetscale/z6-expanded-streams-live.md) records 10 buckets and no `PSYNC_S2305`. Review screenshot pending.
-- [x] Lane 6. Replication slot health. [`../../artifacts/powersync-planetscale/z6-slot-health.txt`](../../artifacts/powersync-planetscale/z6-slot-health.txt) records one active slot, advancing `confirmed_flush_lsn`, and zero final lag. Review screenshot pending.
-- [x] Lane 7. Hyperdrive still cache-disabled. [`../../artifacts/powersync-planetscale/z6-hyperdrive-final.txt`](../../artifacts/powersync-planetscale/z6-hyperdrive-final.txt) records the cache-disabled binding and final 15-connection cap. Review screenshot pending.
+- [x] Lane 2. Recurring rules after sync. [`./z6-rules.png`](./z6-rules.png) and [`./z6-native-review.md`](./z6-native-review.md) show `Monthly Rent` replicated through `commands.apply` and rendered from `powersync.db`.
+- [x] Lane 3. Envelopes after sync. [`./z6-envelopes.png`](./z6-envelopes.png) and the native receipt show the USD workspace and `Home Essentials` rendered from the budget collections.
+- [x] Lane 4. Mixed writes under load. [`./z6-worker-load.md`](./z6-worker-load.md) records three consecutive public Worker runs with every row on both clients and p95 below 2 s. Review screenshot pending.
+- [x] Lane 5. Bucket count. [`./z6-expanded-streams-live.md`](./z6-expanded-streams-live.md) records 10 buckets and no `PSYNC_S2305`. Review screenshot pending.
+- [x] Lane 6. Replication slot health. [`./z6-slot-health.txt`](./z6-slot-health.txt) records one active slot, advancing `confirmed_flush_lsn`, and zero final lag. Review screenshot pending.
+- [x] Lane 7. Hyperdrive still cache-disabled. [`./z6-hyperdrive-final.txt`](./z6-hyperdrive-final.txt) records the cache-disabled binding and final 15-connection cap. Review screenshot pending.
 - [x] Lane 8. Region decision. `powersync-operations.md` records the PlanetScale region, Worker placement, PowerSync EU Development and Production regions, the accepted non-production exception, and the operator's explicit European Production choice. Review screenshot pending.
-- [x] Lane 9. D1 gone. [`../../artifacts/powersync-planetscale/z6-no-d1-dry-run.txt`](../../artifacts/powersync-planetscale/z6-no-d1-dry-run.txt) lists no D1 binding or resource. Review screenshot pending.
+- [x] Lane 9. D1 gone. [`./z6-no-d1-dry-run.txt`](./z6-no-d1-dry-run.txt) lists no D1 binding or resource. Review screenshot pending.
 - [ ] Lane 10. Certification packet. Save `z6-cert.png`. Pass when `certification.md` links every Z0 to Z6 review artifact and the #98 close comment draft exists.
 
 **Verify, perf.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [x] Metric. [`../../artifacts/powersync-planetscale/z6-worker-load.md`](../../artifacts/powersync-planetscale/z6-worker-load.md) records device-B p95 under 50 concurrent creates; [`../../artifacts/powersync-planetscale/z6-slot-health.txt`](../../artifacts/powersync-planetscale/z6-slot-health.txt) records final zero slot lag.
-- [ ] Probe. The load script in `artifacts/powersync-planetscale/load.mjs` at trunk and at head, interleaved, three runs each.
+- [x] Metric. [`./z6-worker-load.md`](./z6-worker-load.md) records device-B p95 under 50 concurrent creates; [`./z6-slot-health.txt`](./z6-slot-health.txt) records final zero slot lag.
+- [ ] Probe. The load script in `packages/powersync/load.mjs` at trunk and at head, interleaved, three runs each.
 - [ ] Baseline. Record the trunk p95 first. Trunk at this point is Z5, so the baseline is the three-table stream.
 - [ ] Rule. Three consecutive final runs passed below 2 s at 1,771 ms, 1,699 ms, and 1,725 ms with zero final slot lag. The serialized pre-fix run was 3,770 ms and the worst final run is 53.0% faster, but the exact Z5 three-table baseline and sampled slot-lag p95 remain to be recorded.
 
 **Review gate.** The operator reviews before merge.
 
-- [x] [`../../artifacts/powersync-planetscale/Z6-review-load.png`](../../artifacts/powersync-planetscale/Z6-review-load.png) and [`../../artifacts/powersync-planetscale/Z6-review-buckets.png`](../../artifacts/powersync-planetscale/Z6-review-buckets.png) render the committed live receipts for operator review.
-- [ ] [`../../artifacts/powersync-planetscale/Z6-review.mp4`](../../artifacts/powersync-planetscale/Z6-review.mp4) records the native Envelopes, Home, and Recurring Rules collection reads. A dedicated two-device load-convergence video is still required.
+- [x] [`./Z6-review-load.png`](./Z6-review-load.png) and [`./Z6-review-buckets.png`](./Z6-review-buckets.png) render the committed live receipts for operator review.
+- [ ] [`./Z6-review.mp4`](./Z6-review.mp4) records the native Envelopes, Home, and Recurring Rules collection reads. A dedicated two-device load-convergence video is still required.
 - [ ] Post the screenshots, the video, and `certification.md` in chat. Stop at merge-ready. Wait for the operator's click.
 
 **Merge.**

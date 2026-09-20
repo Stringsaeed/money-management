@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "live:verify": "node ../../node_modules/@powersync/node/download_core.js && node live-verify.mjs",
-    "load:verify": "node ../../node_modules/@powersync/node/download_core.js && node ../../artifacts/powersync-planetscale/load.mjs",
+    "load:verify": "node ../../node_modules/@powersync/node/download_core.js && node ./load.mjs",
     "test": "node --test __tests__/sync-streams.test.ts",
     "validate": "pnpm dlx powersync@0.10.0 validate --directory . --sync-config-file-path sync-streams.yaml --validate-only sync-config",
     "deploy": "pnpm dlx powersync@0.10.0 deploy sync-config --directory . --sync-config-file-path sync-streams.yaml"
