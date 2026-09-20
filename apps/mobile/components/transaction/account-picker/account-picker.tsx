@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import type { PressableProps } from "react-native";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { CheckIcon } from "phosphor-react-native";
-import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 
 import { Icon } from "@/components/ui/icon";
-import { cn } from "@/lib/utils";
-
+import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
+
 import type { AccountPickerProps } from "./types";
 
 export default function AccountPicker({
@@ -26,6 +26,7 @@ export default function AccountPicker({
   const renderTrigger = () => {
     if (children) {
       const child = React.Children.only(children);
+      // SAFETY: Picker pattern expects a single pressable child element
       return React.cloneElement(child as React.ReactElement<PressableProps>, {
         onPress: onOpen,
       });
@@ -37,10 +38,10 @@ export default function AccountPicker({
     <>
       {renderTrigger()}
       <ModalBottomSheet open={open} onDismiss={() => setOpen(false)}>
-        <View className="pb-safe px-5 pt-5 gap-4">
-          <Text className="font-heading-normal text-xl italic text-ink">Account</Text>
+        <View style={styles.sheetContent}>
+          <Text style={styles.sheetTitle}>Account</Text>
 
-          <View className="gap-2">
+          <View style={styles.optionsContainer}>
             {selectableAccounts.map((acc) => {
               const isSelected = acc.id === selectedId;
               return (
@@ -50,41 +51,107 @@ export default function AccountPicker({
                     onChange(acc.id);
                     setOpen(false);
                   }}
-                  className={cn(
-                    "flex-row items-center gap-3 px-4 py-3.5 rounded-xl",
-                    isSelected ? "bg-ink" : "bg-surface-container",
-                  )}
+                  style={[
+                    styles.optionRow,
+                    isSelected ? styles.optionRowSelected : styles.optionRowDefault,
+                  ]}
                 >
-                  <Text className="text-lg">🏦</Text>
-                  <View className="flex-1">
+                  <Text style={styles.emoji}>🏦</Text>
+                  <View style={styles.textContainer}>
                     <Text
-                      className={cn(
-                        "font-body-medium text-[15px]",
-                        isSelected ? "text-surface" : "text-ink",
-                      )}
+                      style={[
+                        styles.accountName,
+                        isSelected ? styles.textSelected : styles.textDefault,
+                      ]}
                     >
                       {acc.name}
                     </Text>
                     <Text
-                      className={cn(
-                        "font-body-normal text-xs",
-                        isSelected ? "text-surface/60" : "text-ink/40",
-                      )}
+                      style={[
+                        styles.accountCurrency,
+                        isSelected ? styles.subtextSelected : styles.subtextDefault,
+                      ]}
                     >
                       {acc.currency}
                     </Text>
                   </View>
                   {isSelected ? (
-                    <Icon as={CheckIcon} size={18} className="text-surface" weight="bold" />
+                    <Icon as={CheckIcon} size={18} style={styles.checkIcon} weight="bold" />
                   ) : null}
                 </Pressable>
               );
             })}
           </View>
 
-          <View className="h-4" />
+          <View style={styles.bottomSpacer} />
         </View>
       </ModalBottomSheet>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  sheetContent: {
+    paddingBottom: spacing[10],
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[5],
+    gap: spacing[4],
+  },
+  sheetTitle: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textXl,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  optionsContainer: {
+    gap: spacing[2],
+  },
+  optionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[3],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3.5],
+    borderRadius: radii.xl,
+  },
+  optionRowSelected: {
+    backgroundColor: colors.ink,
+  },
+  optionRowDefault: {
+    backgroundColor: colors.surfaceContainer,
+  },
+  emoji: {
+    fontSize: typography.textLg,
+  },
+  textContainer: {
+    flex: 1,
+  },
+  accountName: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: 15,
+  },
+  accountCurrency: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+  },
+  textSelected: {
+    color: colors.surface,
+  },
+  textDefault: {
+    color: colors.ink,
+  },
+  subtextSelected: {
+    color: colors.surface,
+    opacity: 0.6,
+  },
+  subtextDefault: {
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  checkIcon: {
+    color: colors.surface,
+  },
+  bottomSpacer: {
+    height: spacing[4],
+  },
+});

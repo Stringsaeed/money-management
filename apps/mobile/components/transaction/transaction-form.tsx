@@ -1,15 +1,16 @@
 import { useEffect } from "react";
-import { KeyboardAvoidingView, Platform, View } from "react-native";
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { useForm } from "@tanstack/react-form";
 import { batch } from "@tanstack/react-store";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import NumberPad from "@/components/transaction/num-pad";
 import { Text } from "@/components/ui/text";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useAllCategories } from "@/hooks/use-categories";
 import useNumPadNumber from "@/hooks/use-num-pad-number";
-import { cn } from "@/lib/utils";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 import type { TransactionType } from "@/types";
 
 import AccountPicker from "./account-picker/account-picker";
@@ -39,8 +40,9 @@ export function TransactionForm({
   onSubmit,
   formRef,
   bannerContent,
-  surfaceClassName,
+  surfaceStyle,
 }: TransactionFormProps) {
+  const insets = useSafeAreaInsets();
   const { data: accounts = [] } = useAccounts();
   const { data: categories = [] } = useAllCategories();
 
@@ -56,6 +58,7 @@ export function TransactionForm({
     defaultValues: {
       accountId: initialData?.accountId ?? firstAccountId,
       toAccountId: initialData?.toAccountId ?? null,
+      // SAFETY: Form-level defaults coerced for @tanstack/react-form
       categoryId: initialData?.categoryId ?? null,
       description: initialData?.description ?? "",
       date: initialData?.date ?? new Date(),
@@ -121,18 +124,18 @@ export function TransactionForm({
   }
 
   return (
-    <View className={cn("flex-1 bg-surface pt-safe-offset-20", surfaceClassName)}>
+    <View style={[styles.container, { paddingTop: insets.top + 20 }, surfaceStyle]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
+        style={styles.flex}
       >
         {bannerContent}
-        <View className="pt-2 pb-3">
+        <View style={styles.breadcrumbContainer}>
           <Animated.ScrollView
             layout={LinearTransition.springify(400)}
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, gap: 8, alignItems: "center" }}
+            contentContainerStyle={styles.breadcrumbScroll}
           >
             {accounts.length > 1 ? (
               <form.Subscribe selector={(s) => s.values.accountId}>
@@ -151,7 +154,7 @@ export function TransactionForm({
                           active={!!account}
                         />
                       </AccountPicker>
-                      <Text className="font-heading-normal text-sm italic text-ink/25">›</Text>
+                      <Text style={styles.breadcrumbSeparator}>›</Text>
                     </>
                   );
                 }}
@@ -177,7 +180,7 @@ export function TransactionForm({
               }}
             </form.Subscribe>
 
-            <Text className="font-heading-normal text-sm italic text-ink/25">›</Text>
+            <Text style={styles.breadcrumbSeparator}>›</Text>
 
             <form.Subscribe selector={(s) => s.values.date}>
               {(date) => (
@@ -196,9 +199,9 @@ export function TransactionForm({
                 entering={FadeIn.duration(200)}
                 exiting={FadeOut.duration(150)}
                 layout={LinearTransition.springify(400)}
-                style={{ flexDirection: "row", alignItems: "center", columnGap: 8 }}
+                style={styles.recurringControls}
               >
-                <Text className="font-heading-normal text-sm italic text-ink/25">›</Text>
+                <Text style={styles.breadcrumbSeparator}>›</Text>
                 <form.Subscribe selector={(s) => s.values.frequency}>
                   {(frequency) => (
                     <form.Subscribe selector={(s) => s.values.intervalCount}>
@@ -224,7 +227,7 @@ export function TransactionForm({
                   )}
                 </form.Subscribe>
 
-                <Text className="font-heading-normal text-sm italic text-ink/25">›</Text>
+                <Text style={styles.breadcrumbSeparator}>›</Text>
 
                 <form.Subscribe selector={(s) => s.values.date}>
                   {(date) => (
@@ -266,10 +269,7 @@ export function TransactionForm({
             const currency = account?.currency ?? initialData?.currency ?? firstAccountCurrency;
             const symbol = getCurrencySymbol(currency);
             return (
-              <Animated.View
-                layout={layoutTransition}
-                className="flex-1 items-center justify-center px-5"
-              >
+              <Animated.View layout={layoutTransition} style={styles.amountContainer}>
                 <AmountDisplay currencySymbol={symbol} numPadConfig={numPad} />
               </Animated.View>
             );
@@ -283,11 +283,9 @@ export function TransactionForm({
                 entering={FadeIn.duration(200)}
                 exiting={FadeOut.duration(150)}
                 layout={layoutTransition}
-                className="px-5 pb-2"
+                style={styles.errorContainer}
               >
-                <Text className="font-body-medium text-[13px] text-destructive text-center">
-                  {errors.join(", ")}
-                </Text>
+                <Text style={styles.errorText}>{errors.join(", ")}</Text>
               </Animated.View>
             ) : null
           }
@@ -303,7 +301,7 @@ export function TransactionForm({
         </form.Subscribe>
       </KeyboardAvoidingView>
 
-      <View className="flex-1 px-4 border-t border-ledger-outline">
+      <View style={styles.numPadContainer}>
         <NumberPad
           onClear={numPad.clearAll}
           onDelete={numPad.deleteDigit}
@@ -314,3 +312,56 @@ export function TransactionForm({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.surface,
+  },
+  flex: {
+    flex: 1,
+  },
+  breadcrumbContainer: {
+    paddingTop: spacing[2],
+    paddingBottom: spacing[3],
+  },
+  breadcrumbScroll: {
+    paddingHorizontal: spacing[5],
+    gap: spacing[2],
+    alignItems: "center",
+  },
+  breadcrumbSeparator: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textSm,
+    fontStyle: "italic",
+    color: colors.ink,
+    opacity: 0.25,
+  },
+  recurringControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: spacing[2],
+  },
+  amountContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing[5],
+  },
+  errorContainer: {
+    paddingHorizontal: spacing[5],
+    paddingBottom: spacing[2],
+  },
+  errorText: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: 13,
+    color: colors.destructive,
+    textAlign: "center",
+  },
+  numPadContainer: {
+    flex: 1,
+    paddingHorizontal: spacing[4],
+    borderTopWidth: 1,
+    borderTopColor: colors.ledgerOutline,
+  },
+});

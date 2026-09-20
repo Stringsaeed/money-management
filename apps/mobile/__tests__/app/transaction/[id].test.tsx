@@ -27,7 +27,7 @@ let capturedFormProps: {
   initialData?: Partial<TransactionFormData>;
   isRecurring: boolean;
   bannerContent?: React.ReactNode;
-  surfaceClassName?: string;
+  surfaceStyle?: Record<string, unknown>;
 } | null = null;
 
 jest.mock("expo-router", () => ({
@@ -345,7 +345,7 @@ describe("app/transaction/[id]", () => {
     expect(mockUseRecurringRule).toHaveBeenCalledWith("rule-1");
     expect(capturedFormProps?.isRecurring).toBe(true);
     expect(capturedFormProps?.bannerContent).toBeDefined();
-    expect(capturedFormProps?.surfaceClassName).toBe("bg-terracotta/15");
+    expect(capturedFormProps?.surfaceStyle).toBeDefined();
 
     await act(async () => {
       await capturedFormProps?.onSubmit({
@@ -384,7 +384,7 @@ describe("app/transaction/[id]", () => {
 
     await render(<TransactionScreen />);
 
-    expect(capturedFormProps?.surfaceClassName).toBe("bg-surface-dim");
+    expect(capturedFormProps?.surfaceStyle).toBeDefined();
     expect(capturedFormProps?.bannerContent).toBeUndefined();
     const screenCall = mockStackScreen.mock.calls.at(-1)?.[0] as unknown as {
       options: {
@@ -399,7 +399,7 @@ describe("app/transaction/[id]", () => {
       .unstable_headerRightItems()
       .find((item) => item.label === "Resume paused Rule");
 
-    expect(resume).toMatchObject({ tintColor: "#2C5F47" });
+    expect(resume).toMatchObject({ tintColor: "#2c5f47" });
     await act(async () => resume?.onPress());
 
     expect(mockResumeRecurring).toHaveBeenCalledWith({

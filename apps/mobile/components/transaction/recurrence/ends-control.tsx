@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import type { PressableProps } from "react-native";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { CheckIcon } from "phosphor-react-native";
 import { addMonths } from "date-fns";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 
 import { CountStepper } from "./count-stepper";
 
@@ -36,7 +36,6 @@ function endTypeOf(endDate: Date | null, endCount: number | null): EndType {
   return "never";
 }
 
-/** Ends field: a bottom sheet of Never / On date / After N times with inline editors. */
 export function EndsControl({
   startDate,
   endDate,
@@ -58,6 +57,7 @@ export function EndsControl({
     setIsOpen(true);
   };
 
+  // SAFETY: Picker pattern expects a single pressable child element
   const trigger = React.cloneElement(
     React.Children.only(children) as React.ReactElement<PressableProps>,
     { onPress: open },
@@ -80,31 +80,31 @@ export function EndsControl({
     <>
       {trigger}
       <ModalBottomSheet open={isOpen} onDismiss={() => setIsOpen(false)}>
-        <View className="pb-safe px-5 pt-5 gap-4">
-          <Text className="font-heading-normal text-xl italic text-ink">Ends</Text>
+        <View style={styles.sheetContent}>
+          <Text style={styles.sheetTitle}>Ends</Text>
 
-          <View className="gap-2">
+          <View style={styles.optionsContainer}>
             {OPTIONS.map((option) => {
               const isSelected = mode === option.type;
               return (
                 <Pressable
                   key={option.type}
                   onPress={() => selectRow(option.type)}
-                  className={cn(
-                    "flex-row items-center px-4 py-3.5 rounded-xl",
-                    isSelected ? "bg-ink" : "bg-surface-container",
-                  )}
+                  style={[
+                    styles.optionRow,
+                    isSelected ? styles.optionRowSelected : styles.optionRowDefault,
+                  ]}
                 >
                   <Text
-                    className={cn(
-                      "flex-1 font-body-medium text-[15px]",
-                      isSelected ? "text-surface" : "text-ink",
-                    )}
+                    style={[
+                      styles.optionLabel,
+                      isSelected ? styles.optionLabelSelected : styles.optionLabelDefault,
+                    ]}
                   >
                     {option.label}
                   </Text>
                   {isSelected ? (
-                    <Icon as={CheckIcon} size={18} className="text-surface" weight="bold" />
+                    <Icon as={CheckIcon} size={18} style={styles.checkIcon} weight="bold" />
                   ) : null}
                 </Pressable>
               );
@@ -112,7 +112,7 @@ export function EndsControl({
           </View>
 
           {mode === "on_date" ? (
-            <View className="gap-4 pt-1">
+            <View style={styles.editorContainer}>
               <DateTimePicker
                 value={dateValue}
                 mode="date"
@@ -120,11 +120,11 @@ export function EndsControl({
                 minimumDate={startDate}
                 onChange={handleDateChange}
                 accentColor={colorInk}
-                style={{ width: "100%", alignSelf: "center" }}
+                style={styles.datePicker}
               />
               <Button
                 size="xl"
-                className="mx-8"
+                style={styles.doneButton}
                 onPress={() => {
                   onChange({ endDate: dateValue, endCount: null });
                   setIsOpen(false);
@@ -136,14 +136,14 @@ export function EndsControl({
           ) : null}
 
           {mode === "after_count" ? (
-            <View className="gap-4 pt-1">
-              <View className="flex-row items-center justify-between">
-                <Text className="font-body-medium text-[15px] text-ink">Occurrences</Text>
+            <View style={styles.editorContainer}>
+              <View style={styles.countRow}>
+                <Text style={styles.countLabel}>Occurrences</Text>
                 <CountStepper value={countValue} min={1} max={99} onChange={setCountValue} />
               </View>
               <Button
                 size="xl"
-                className="mx-8"
+                style={styles.doneButton}
                 onPress={() => {
                   onChange({ endDate: null, endCount: countValue });
                   setIsOpen(false);
@@ -154,9 +154,78 @@ export function EndsControl({
             </View>
           ) : null}
 
-          <View className="h-2" />
+          <View style={styles.bottomSpacer} />
         </View>
       </ModalBottomSheet>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  sheetContent: {
+    paddingBottom: spacing[10],
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[5],
+    gap: spacing[4],
+  },
+  sheetTitle: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textXl,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  optionsContainer: {
+    gap: spacing[2],
+  },
+  optionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3.5],
+    borderRadius: radii.xl,
+  },
+  optionRowSelected: {
+    backgroundColor: colors.ink,
+  },
+  optionRowDefault: {
+    backgroundColor: colors.surfaceContainer,
+  },
+  optionLabel: {
+    flex: 1,
+    fontFamily: typography.fontBodyMedium,
+    fontSize: 15,
+  },
+  optionLabelSelected: {
+    color: colors.surface,
+  },
+  optionLabelDefault: {
+    color: colors.ink,
+  },
+  checkIcon: {
+    color: colors.surface,
+  },
+  editorContainer: {
+    gap: spacing[4],
+    paddingTop: spacing[1],
+  },
+  datePicker: {
+    width: "100%",
+    alignSelf: "center",
+  },
+  countRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  countLabel: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  doneButton: {
+    marginHorizontal: spacing[8],
+  },
+  bottomSpacer: {
+    height: spacing[2],
+  },
+});

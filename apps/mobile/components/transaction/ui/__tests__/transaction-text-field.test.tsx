@@ -1,5 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
+import { colors } from "@/lib/design-tokens";
+
 import { TransactionTextField } from "../transaction-text-field";
 
 describe("TransactionTextField", () => {
@@ -32,13 +34,23 @@ describe("TransactionTextField", () => {
     );
 
     const input = screen.getByPlaceholderText("Add a note...");
-    expect(screen.getByTestId("note-field").props.className).toContain("border-transparent");
+    const container = screen.getByTestId("note-field");
+    const initialStyle = container.props.style;
+    expect(initialStyle).toEqual(
+      expect.arrayContaining([expect.objectContaining({ borderColor: "transparent" })]),
+    );
 
     await fireEvent(input, "focus");
-    expect(screen.getByTestId("note-field").props.className).toContain("border-ink");
+    const focusedStyle = screen.getByTestId("note-field").props.style;
+    expect(focusedStyle).toEqual(
+      expect.arrayContaining([expect.objectContaining({ borderColor: colors.ink })]),
+    );
 
     await fireEvent(input, "blur");
-    expect(screen.getByTestId("note-field").props.className).toContain("border-transparent");
+    const blurredStyle = screen.getByTestId("note-field").props.style;
+    expect(blurredStyle).toEqual(
+      expect.arrayContaining([expect.objectContaining({ borderColor: "transparent" })]),
+    );
   });
 
   it("paints a destructive border when marked invalid", async () => {
@@ -46,7 +58,10 @@ describe("TransactionTextField", () => {
       <TransactionTextField value="" onChangeText={jest.fn()} error testID="note-field" />,
     );
 
-    expect(screen.getByTestId("note-field").props.className).toContain("border-destructive");
+    const container = screen.getByTestId("note-field");
+    expect(container.props.style).toEqual(
+      expect.arrayContaining([expect.objectContaining({ borderColor: colors.destructive })]),
+    );
   });
 
   it("dims and stops accepting edits when not editable", async () => {
@@ -61,7 +76,10 @@ describe("TransactionTextField", () => {
     );
 
     expect(screen.getByPlaceholderText("Add a note...").props.editable).toBe(false);
-    expect(screen.getByTestId("note-field").props.className).toContain("opacity-50");
+    const container = screen.getByTestId("note-field");
+    expect(container.props.style).toEqual(
+      expect.arrayContaining([expect.objectContaining({ opacity: 0.5 })]),
+    );
   });
 
   it("notifies focus and blur callbacks", async () => {
