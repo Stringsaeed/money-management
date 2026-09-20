@@ -1,8 +1,10 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { NativeHost, NativePrimaryButton, NativeSecondaryButton } from "@/components/native-ui";
 import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 
 interface SignOutPendingSheetProps {
   readonly open: boolean;
@@ -23,13 +25,13 @@ export function SignOutPendingSheet({
   onDiscardAndSignOut,
   onCancel,
 }: SignOutPendingSheetProps) {
+  const insets = useSafeAreaInsets();
+
   return (
     <ModalBottomSheet open={open} onDismiss={onCancel}>
-      <View className="gap-4 px-4 pb-safe">
-        <Text className="font-heading-normal text-lg italic text-ink">
-          Edits still uploading ⏳
-        </Text>
-        <Text className="font-body-normal text-sm text-ink/60">
+      <View style={[styles.content, { paddingBottom: insets.bottom }]}>
+        <Text style={styles.title}>Edits still uploading ⏳</Text>
+        <Text style={styles.body}>
           {pendingCount} change{pendingCount === 1 ? "" : "s"} waiting to reach the cloud. Sync
           first, discard them, or stay signed in.
         </Text>
@@ -54,7 +56,7 @@ export function SignOutPendingSheet({
           />
         </NativeHost>
         {error ? (
-          <Text accessibilityLiveRegion="assertive" className="text-destructive text-xs">
+          <Text accessibilityLiveRegion="assertive" style={styles.error}>
             {error}
           </Text>
         ) : null}
@@ -62,3 +64,26 @@ export function SignOutPendingSheet({
     </ModalBottomSheet>
   );
 }
+
+const styles = StyleSheet.create({
+  content: {
+    gap: spacing[4],
+    paddingHorizontal: spacing[4],
+  },
+  title: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: typography.textLg,
+    fontStyle: "italic",
+    color: colors.ink,
+  },
+  body: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.6,
+  },
+  error: {
+    color: colors.destructive,
+    fontSize: typography.textXs,
+  },
+});

@@ -1,8 +1,9 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { PlusIcon } from "phosphor-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { EmptyState } from "@/components/common/empty-state";
 import { WateringCanGraphic } from "@/components/graphics/watering-can";
@@ -12,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { useRecurringRulesList } from "@/hooks/use-recurring-rules";
-import { cn } from "@/lib/utils";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 
 const newRecurringRoute = {
   pathname: "/transaction/[id]" as const,
@@ -31,35 +32,45 @@ export default function RecurringListScreen() {
   const params = useLocalSearchParams<{ filter?: string }>();
   const [filter, setFilter] = useState<RuleFilter>(() => parseFilter(params.filter));
   const { data: rules = [], isLoading } = useRecurringRulesList(filter);
+  const insets = useSafeAreaInsets();
 
   return (
-    <View className="flex-1 bg-surface pt-safe-offset-20 safe-bottom">
-      <View className="flex-row gap-2 px-5 py-3">
-        {filters.map((item) => (
-          <Pressable
-            key={item.value}
-            accessibilityRole="button"
-            accessibilityState={{ selected: filter === item.value }}
-            className={cn(
-              "rounded-full px-3 py-2 active:bg-surface-dim",
-              filter === item.value ? "bg-ink" : "bg-surface-container",
-            )}
-            onPress={() => setFilter(item.value)}
-          >
-            <Text
-              className={cn(
-                "font-body-semibold text-xs",
-                filter === item.value ? "text-surface" : "text-ink/60",
-              )}
+    <View
+      style={[
+        styles.screen,
+        { paddingTop: insets.top + spacing[20], paddingBottom: insets.bottom },
+      ]}
+    >
+      <View style={styles.filterRow}>
+        {filters.map((item) => {
+          const selected = filter === item.value;
+          return (
+            <Pressable
+              key={item.value}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              style={({ pressed }) => [
+                styles.filterChip,
+                selected ? styles.filterChipSelected : styles.filterChipIdle,
+                pressed && styles.filterChipPressed,
+              ]}
+              onPress={() => setFilter(item.value)}
             >
-              {item.label}
-            </Text>
-          </Pressable>
-        ))}
+              <Text
+                style={[
+                  styles.filterLabel,
+                  selected ? styles.filterLabelSelected : styles.filterLabelIdle,
+                ]}
+              >
+                {item.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       {isLoading ? (
-        <ActivityIndicator className="mt-10" />
+        <ActivityIndicator style={styles.loader} />
       ) : rules.length === 0 ? (
         <EmptyState
           illustration={<WateringCanGraphic />}
@@ -74,8 +85,8 @@ export default function RecurringListScreen() {
           }
         />
       ) : (
-        <ScrollView contentContainerClassName="pb-safe-offset-24">
-          <View className="gap-1 py-1">
+        <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + spacing[24] }}>
+          <View style={styles.list}>
             {rules.map((rule) => (
               <Animated.View
                 key={rule.id}
@@ -125,3 +136,48 @@ function emptyMessage(filter: RuleFilter): string {
   if (filter === "archived") return "Archived Rules stay available for restoration and history.";
   return "Set up a Rule for rent, subscriptions, regular income, or transfers.";
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: colors.surface,
+  },
+  filterRow: {
+    flexDirection: "row",
+    gap: spacing[2],
+    paddingHorizontal: spacing[5],
+    paddingVertical: spacing[3],
+  },
+  filterChip: {
+    borderRadius: radii.full,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+  },
+  filterChipSelected: {
+    backgroundColor: colors.ink,
+  },
+  filterChipIdle: {
+    backgroundColor: colors.surfaceContainer,
+  },
+  filterChipPressed: {
+    backgroundColor: colors.surfaceDim,
+  },
+  filterLabel: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textXs,
+  },
+  filterLabelSelected: {
+    color: colors.surface,
+  },
+  filterLabelIdle: {
+    color: colors.ink,
+    opacity: 0.6,
+  },
+  loader: {
+    marginTop: spacing[10],
+  },
+  list: {
+    gap: spacing[1],
+    paddingVertical: spacing[1],
+  },
+});

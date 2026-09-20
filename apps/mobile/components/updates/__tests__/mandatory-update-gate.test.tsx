@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { MandatoryUpdateGate } from "../mandatory-update-gate";
 
@@ -8,6 +9,15 @@ const mockUseAppUpdate = jest.fn();
 jest.mock("@/hooks/use-app-update", () => ({
   useAppUpdate: () => mockUseAppUpdate(),
 }));
+
+const initialWindowMetrics = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 47, left: 0, right: 0, bottom: 34 },
+};
+
+function Wrapper({ children }: { children: React.ReactNode }) {
+  return <SafeAreaProvider initialMetrics={initialWindowMetrics}>{children}</SafeAreaProvider>;
+}
 
 describe("MandatoryUpdateGate", () => {
   beforeEach(() => {
@@ -20,7 +30,7 @@ describe("MandatoryUpdateGate", () => {
   });
 
   it("stays hidden for optional update states", async () => {
-    await render(<MandatoryUpdateGate />);
+    await render(<MandatoryUpdateGate />, { wrapper: Wrapper });
 
     expect(screen.queryByText("Update required")).not.toBeOnTheScreen();
   });
@@ -33,7 +43,7 @@ describe("MandatoryUpdateGate", () => {
       retryMandatoryUpdate: mockRetryMandatoryUpdate,
     });
 
-    await render(<MandatoryUpdateGate />);
+    await render(<MandatoryUpdateGate />, { wrapper: Wrapper });
 
     expect(screen.getByText("Update required")).toBeOnTheScreen();
     expect(screen.getByText("Downloading 58%")).toBeOnTheScreen();
@@ -47,7 +57,7 @@ describe("MandatoryUpdateGate", () => {
       retryMandatoryUpdate: mockRetryMandatoryUpdate,
     });
 
-    await render(<MandatoryUpdateGate />);
+    await render(<MandatoryUpdateGate />, { wrapper: Wrapper });
 
     expect(screen.getByText("The update could not be downloaded.")).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole("button", { name: "Retry Update" }));
