@@ -6,6 +6,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { formatMonth } from "@/utils/date";
 
 import { FilterChip } from "./filter-chip";
+import { styles } from "./styles";
 
 export function FilterBar() {
   const {
@@ -31,9 +32,9 @@ export function FilterBar() {
   return (
     <ScrollView
       horizontal
-      className="bg-background"
-      contentContainerClassName="px-5 gap-2 pb-3"
+      contentContainerStyle={styles.filterBarContent}
       showsHorizontalScrollIndicator={false}
+      style={styles.filterBarScroll}
     >
       {activeAccountName && (
         <FilterChip label={activeAccountName} onRemove={() => setActiveAccountId(null)} />
