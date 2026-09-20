@@ -54,7 +54,7 @@ export function OnboardingNameStep({ form, onTypeChange }: OnboardingNameStepPro
           <form.Field name="type">
             {(field) => (
               <AccountTypePicker
-                contentContainerClassName="gap-2 px-6"
+                contentContainerStyle={styles.typePickerContent}
                 onChange={onTypeChange}
                 value={field.state.value}
               />
@@ -84,5 +84,9 @@ const styles = StyleSheet.create({
   },
   typePickerWrapper: {
     marginHorizontal: -spacing[6],
+  },
+  typePickerContent: {
+    gap: spacing[2],
+    paddingHorizontal: spacing[6],
   },
 });

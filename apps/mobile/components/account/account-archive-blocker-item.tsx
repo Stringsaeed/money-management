@@ -1,9 +1,10 @@
 import type { Href } from "expo-router";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { MoneyText } from "@/components/ui/money-text";
 import { Text } from "@/components/ui/text";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 import type { AccountArchiveBlocker } from "@/modules/accounts/account-lifecycle";
 import { useUIStore } from "@/stores/ui-store";
 import type { AccountWithBalance } from "@/types";
@@ -44,8 +45,8 @@ export function AccountArchiveBlockerItem({
 
   if (blocker.kind === "non-zero-balance") {
     return (
-      <View className="gap-2">
-        <Text className="font-body-normal text-sm text-ink/70">
+      <View style={styles.container}>
+        <Text style={styles.bodyText}>
           Balance must be zero. Current balance:{" "}
           <MoneyText
             cents={Math.abs(blocker.balanceMinor)}
@@ -53,7 +54,7 @@ export function AccountArchiveBlockerItem({
             sign={blocker.balanceMinor < 0 ? "-" : ""}
           />
         </Text>
-        <Text className="font-body-normal text-xs text-ink/50">{blocker.recoveryAction}</Text>
+        <Text style={styles.hintText}>{blocker.recoveryAction}</Text>
         <Button
           aria-label={`Review ${account.name} balance`}
           onPress={reviewBalance}
@@ -68,11 +69,11 @@ export function AccountArchiveBlockerItem({
 
   if (blocker.kind === "active-recurring-rules") {
     return (
-      <View className="gap-2">
-        <Text className="font-body-normal text-sm text-ink/70">
+      <View style={styles.container}>
+        <Text style={styles.bodyText}>
           Active Recurring Rules: {blocker.rules.map((rule) => rule.name).join(", ")}
         </Text>
-        <Text className="font-body-normal text-xs text-ink/50">{blocker.recoveryAction}</Text>
+        <Text style={styles.hintText}>{blocker.recoveryAction}</Text>
         <Button
           aria-label="Review blocking Recurring Rules"
           onPress={reviewRules}
@@ -98,20 +99,20 @@ export function AccountArchiveBlockerItem({
   );
 
   return (
-    <View className="gap-2">
+    <View style={styles.container}>
       {blocker.dependencies.map((dependency) => (
         <View
-          className="gap-1"
+          style={styles.dependencyItem}
           key={`${dependency.kind}:${dependency.currency}:${"transactionId" in dependency ? dependency.transactionId : "summary"}`}
         >
-          <Text className="font-body-normal text-sm text-ink/70">
+          <Text style={styles.bodyText}>
             {BUDGET_DEPENDENCY_LABELS[dependency.kind]}:{" "}
             <MoneyText cents={dependency.amountMinor} currency={dependency.currency} />
           </Text>
-          <Text className="font-body-normal text-xs text-ink/50">{dependency.recoveryAction}</Text>
+          <Text style={styles.hintText}>{dependency.recoveryAction}</Text>
         </View>
       ))}
-      <Text className="font-body-normal text-xs text-ink/50">{blocker.recoveryAction}</Text>
+      <Text style={styles.hintText}>{blocker.recoveryAction}</Text>
       {hasBudgetDependency ? (
         <Button
           aria-label="Review blocking budget dependencies"
@@ -145,3 +146,24 @@ export function AccountArchiveBlockerItem({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: spacing[2],
+  },
+  dependencyItem: {
+    gap: spacing[1],
+  },
+  bodyText: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.7,
+  },
+  hintText: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+});

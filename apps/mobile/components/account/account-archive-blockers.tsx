@@ -1,8 +1,10 @@
 import type { Href } from "expo-router";
+import { StyleSheet, useColorScheme } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { layoutTransition } from "@/components/transaction/constants";
 import { Text } from "@/components/ui/text";
+import { colors, radii, rawColorValues, spacing, typography } from "@/lib/design-tokens";
 import type { AccountArchiveBlocker } from "@/modules/accounts/account-lifecycle";
 import type { AccountWithBalance } from "@/types";
 
@@ -19,14 +21,21 @@ export function AccountArchiveBlockers({
   blockers,
   onReview,
 }: AccountArchiveBlockersProps) {
+  const colorScheme = useColorScheme();
+  const terracottaHex =
+    colorScheme === "dark" ? rawColorValues.dark.terracotta : rawColorValues.light.terracotta;
+
   return (
     <Animated.View
-      className="gap-3 rounded-xl border border-terracotta/30 bg-terracotta/10 p-4"
+      style={[
+        styles.container,
+        { borderColor: `${terracottaHex}4D`, backgroundColor: `${terracottaHex}1A` },
+      ]}
       entering={FadeIn}
       exiting={FadeOut}
       layout={layoutTransition}
     >
-      <Text role="alert" className="font-body-semibold text-sm text-terracotta">
+      <Text role="alert" style={styles.alertText}>
         Resolve every prerequisite before archiving
       </Text>
       {blockers.map((blocker) => (
@@ -40,3 +49,17 @@ export function AccountArchiveBlockers({
     </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: spacing[3],
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    padding: spacing[4],
+  },
+  alertText: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textSm,
+    color: colors.terracotta,
+  },
+});
