@@ -1,58 +1,96 @@
-import { TextClassContext } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
+import { TextStyleContext } from "@/components/ui/text";
+import { colors } from "@/lib/design-tokens";
 import type { Icon as PhosphorIcon, IconProps as PhosphorIconProps } from "phosphor-react-native";
-import { styled } from "nativewind";
 import * as React from "react";
-import type { ClassValue } from "clsx";
+import { StyleSheet, type StyleProp, type TextStyle } from "react-native";
 
-type IconProps = PhosphorIconProps & {
+// -----------------------------------------------------------------------------
+// Types
+// -----------------------------------------------------------------------------
+
+type IconProps = Omit<PhosphorIconProps, "color"> & {
   as: PhosphorIcon;
-  className?: ClassValue;
+  style?: StyleProp<TextStyle>;
+  /**
+   * @deprecated Use `style` prop with design tokens instead.
+   * This prop exists for backward compatibility with NativeWind consumers.
+   * NativeWind transforms className → style at compile time.
+   */
+  className?: string;
 };
 
-function IconImpl({ as: IconComponent, ...props }: IconProps) {
-  return <IconComponent {...props} />;
-}
+// -----------------------------------------------------------------------------
+// Styles
+// -----------------------------------------------------------------------------
 
-const IconStyled = styled(IconImpl, {
-  className: {
-    target: false,
-    nativeStyleMapping: {
-      color: "color",
-    },
+const styles = StyleSheet.create({
+  default: {
+    color: colors.foreground,
   },
 });
 
+// -----------------------------------------------------------------------------
+// Color Extraction Helper
+// -----------------------------------------------------------------------------
+
 /**
- * A wrapper component for Phosphor icons with Nativewind `className` support via `cssInterop`.
+ * Extracts the color value from a flattened style array.
+ * Returns the last defined color string found in the style chain.
  *
- * This component allows you to render any Phosphor icon while applying utility classes
- * using `nativewind`. It avoids the need to wrap or configure each icon individually.
+ * Note: Phosphor icons only accept string colors, not ColorValue/OpaqueColorValue.
+ * When using design tokens (which return dynamic colors), pass the color directly
+ * via style prop with a hex string, or the icon will fall back to the default color.
+ */
+function extractColor(styleProp: StyleProp<TextStyle>): string | undefined {
+  if (!styleProp) return undefined;
+
+  const flatStyles = StyleSheet.flatten(styleProp);
+  const colorValue = flatStyles?.color;
+
+  // SAFETY: Phosphor icons require string colors. React Native's ColorValue
+  // type includes OpaqueColorValue (from DynamicColorIOS/PlatformColor) which
+  // cannot be used with Phosphor. We filter for string colors only.
+  // oxlint-disable-next-line anti-slop/no-runtime-typeof
+  if (typeof colorValue === "string") {
+    return colorValue;
+  }
+
+  return undefined;
+}
+
+// -----------------------------------------------------------------------------
+// Icon Component
+// -----------------------------------------------------------------------------
+
+/**
+ * A wrapper component for Phosphor icons with StyleSheet support.
+ *
+ * This component allows you to render any Phosphor icon while applying styles
+ * using React Native StyleSheet. It inherits text color from parent components
+ * via TextStyleContext (e.g., when used inside Button or Badge).
  *
  * @component
  * @example
  * ```tsx
  * import { XIcon } from 'phosphor-react-native';
- * import { Icon } from '@/registry/components/ui/icon';
+ * import { Icon } from '@/components/ui/icon';
+ * import { colors } from '@/lib/design-tokens';
  *
- * <Icon as={XIcon} className="text-red-500" size={16} />
+ * <Icon as={XIcon} style={{ color: colors.destructive }} size={16} />
  * ```
  *
  * @param {PhosphorIcon} as - The Phosphor icon component to render.
- * @param {string} className - Utility classes to style the icon using Nativewind.
+ * @param {StyleProp<TextStyle>} style - Style object to apply to the icon.
  * @param {number} size - Icon size (defaults to 14).
  * @param {...PhosphorIconProps} ...props - Additional Phosphor icon props passed to the "as" icon.
  */
-function Icon({ as: IconComponent, className, size = 14, ...props }: IconProps) {
-  const textClass = React.useContext(TextClassContext);
-  return (
-    <IconStyled
-      as={IconComponent}
-      className={cn("text-foreground", textClass, className)}
-      size={size}
-      {...props}
-    />
-  );
+function Icon({ as: IconComponent, style, className: _className, size = 14, ...props }: IconProps) {
+  const textStyle = React.useContext(TextStyleContext);
+
+  const color = extractColor([styles.default, textStyle, style]);
+
+  return <IconComponent color={color} size={size} {...props} />;
 }
 
 export { Icon };
+export type { IconProps };
