@@ -1,10 +1,11 @@
 import { format } from "date-fns";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, { FadeInDown, FadeOut, LinearTransition } from "react-native-reanimated";
 
 import { RejectionKindBadge } from "@/components/rejected-changes/rejection-kind-badge";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 import type { RejectedChange } from "@/modules/powersync/rejected-changes";
 import { describeRejection } from "@/modules/powersync/rejection";
 import { commandKindLabel, describeIntent } from "@/utils/intent-summary";
@@ -26,38 +27,31 @@ export function RejectedChangeCard({ change, onEdit, onDiscard }: RejectedChange
       entering={FadeInDown}
       exiting={FadeOut}
       layout={LinearTransition}
-      className="gap-3 rounded-2xl border border-ledger-outline bg-surface-container p-4"
+      style={styles.card}
     >
-      <View className="flex-row items-center justify-between gap-2">
+      <View style={styles.headerRow}>
         <RejectionKindBadge kind={change.rejection.kind} />
-        <Text className="font-body-normal text-xs text-ink/50">
-          {format(change.createdAt, "MMM d · HH:mm")}
-        </Text>
+        <Text style={styles.timestamp}>{format(change.createdAt, "MMM d · HH:mm")}</Text>
       </View>
 
-      <View className="gap-1">
-        <Text
-          className="font-heading-medium text-lg italic tracking-tight text-ink"
-          numberOfLines={2}
-        >
+      <View style={styles.intentBlock}>
+        <Text style={styles.intentTitle} numberOfLines={2}>
           {change.kind === "unknown"
             ? "Unknown change"
             : describeIntent(change.kind, change.payload)}
         </Text>
-        <Text className="font-body-normal text-xs uppercase tracking-wider text-ink/40">
+        <Text style={styles.kindLabel}>
           {change.kind === "unknown" ? "Unknown change" : commandKindLabel(change.kind)}
         </Text>
       </View>
 
-      <Text className="font-body-normal text-sm text-terracotta">
-        💬 {describeRejection(change.rejection)}
-      </Text>
+      <Text style={styles.rejectionReason}>💬 {describeRejection(change.rejection)}</Text>
 
-      <View className="flex-row gap-2">
+      <View style={styles.actions}>
         <Button
           variant="outline"
           size="sm"
-          className="flex-1"
+          style={styles.flex1}
           onPress={() => onEdit(change)}
           testID={`rejected-edit-${change.commandId}`}
         >
@@ -66,13 +60,70 @@ export function RejectedChangeCard({ change, onEdit, onDiscard }: RejectedChange
         <Button
           variant="ghost"
           size="sm"
-          className="flex-1"
+          style={styles.flex1}
           onPress={() => onDiscard(change)}
           testID={`rejected-discard-${change.commandId}`}
         >
-          <Text className="text-destructive">🗑️ Discard</Text>
+          <Text style={styles.discardLabel}>🗑️ Discard</Text>
         </Button>
       </View>
     </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    gap: spacing[3],
+    borderRadius: radii["2xl"],
+    borderWidth: 1,
+    borderColor: colors.ledgerOutline,
+    backgroundColor: colors.surfaceContainer,
+    padding: spacing[4],
+    borderCurve: "continuous",
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing[2],
+  },
+  timestamp: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  intentBlock: {
+    gap: spacing[1],
+  },
+  intentTitle: {
+    fontFamily: typography.fontHeadingMedium,
+    fontSize: typography.textLg,
+    fontStyle: "italic",
+    letterSpacing: typography.trackingTight,
+    color: colors.ink,
+  },
+  kindLabel: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    textTransform: "uppercase",
+    letterSpacing: typography.trackingWider,
+    color: colors.ink,
+    opacity: 0.4,
+  },
+  rejectionReason: {
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    color: colors.terracotta,
+  },
+  actions: {
+    flexDirection: "row",
+    gap: spacing[2],
+  },
+  flex1: {
+    flex: 1,
+  },
+  discardLabel: {
+    color: colors.destructive,
+  },
+});

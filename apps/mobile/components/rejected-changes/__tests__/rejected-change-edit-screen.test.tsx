@@ -1,4 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+
 import { router } from "expo-router";
 
 import { RejectedChangeEditScreen } from "@/components/rejected-changes/rejected-change-edit-screen";
@@ -32,6 +34,16 @@ jest.mock("@/hooks/use-rejected-changes", () => ({
   }),
 }));
 
+
+const initialWindowMetrics = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 47, left: 0, right: 0, bottom: 34 },
+};
+
+function Wrapper({ children }: { children: React.ReactNode }) {
+  return <SafeAreaProvider initialMetrics={initialWindowMetrics}>{children}</SafeAreaProvider>;
+}
+
 function makeChange(overrides: Partial<RejectedChange> = {}): RejectedChange {
   return {
     commandId: "cmd-1",
@@ -58,7 +70,7 @@ describe("RejectedChangeEditScreen", () => {
   it("pre-populates the form with the original payload values and shows the reason", async () => {
     mockGetRejectedChange.mockReturnValue(makeChange());
 
-    await render(<RejectedChangeEditScreen commandId="cmd-1" />);
+    await render(<RejectedChangeEditScreen commandId="cmd-1" />, { wrapper: Wrapper });
 
     expect(await screen.findByDisplayValue("-50")).toBeOnTheScreen();
     expect(screen.getByDisplayValue("Coffee")).toBeOnTheScreen();
@@ -69,7 +81,7 @@ describe("RejectedChangeEditScreen", () => {
     mockGetRejectedChange.mockReturnValue(makeChange());
     mockResubmit.mockResolvedValue("cmd-new-uuid");
 
-    const { getByDisplayValue } = await render(<RejectedChangeEditScreen commandId="cmd-1" />);
+    const { getByDisplayValue } = await render(<RejectedChangeEditScreen commandId="cmd-1" />, { wrapper: Wrapper });
 
     const amountInput = await waitFor(() => getByDisplayValue("-50"));
     // RNTL v14: fireEvent is async — each interaction must be awaited so its
@@ -90,7 +102,7 @@ describe("RejectedChangeEditScreen", () => {
     mockGetRejectedChange.mockReturnValue(makeChange());
     mockResubmit.mockRejectedValue(new Error("disk full"));
 
-    await render(<RejectedChangeEditScreen commandId="cmd-1" />);
+    await render(<RejectedChangeEditScreen commandId="cmd-1" />, { wrapper: Wrapper });
 
     await fireEvent.press(await screen.findByText("📨 Resubmit"));
 
@@ -101,7 +113,7 @@ describe("RejectedChangeEditScreen", () => {
   it("explains when the rejected change is already gone", async () => {
     mockGetRejectedChange.mockReturnValue(null);
 
-    await render(<RejectedChangeEditScreen commandId="cmd-1" />);
+    await render(<RejectedChangeEditScreen commandId="cmd-1" />, { wrapper: Wrapper });
 
     expect(await screen.findByText("Nothing to edit")).toBeOnTheScreen();
   });
