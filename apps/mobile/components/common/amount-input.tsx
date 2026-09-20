@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
+
 import { inputTextStyle } from "@/components/ui/input-style";
 import { Text } from "@/components/ui/text";
-
+import { colors, radii, spacing, typography } from "@/lib/design-tokens";
 import { centsToDecimalString, decimalStringToCents } from "@/utils/currency";
 
 interface AmountInputProps {
@@ -28,19 +29,43 @@ export function AmountInput({ valueCents, onChangeCents, currency = "USD" }: Amo
 
   return (
     <Pressable onPress={() => inputRef.current?.focus()}>
-      <View className="flex-row items-center border border-input rounded-[10px] px-3.5 py-3 gap-1.5">
-        <Text className="text-base text-muted-foreground font-semibold">{currency}</Text>
+      <View style={styles.row}>
+        <Text style={styles.currency}>{currency}</Text>
         <TextInput
           ref={inputRef}
           value={raw}
           onChangeText={handleChange}
           keyboardType="decimal-pad"
           placeholder="0.00"
-          className="flex-1 text-[22px] leading-7 font-semibold text-foreground"
-          style={{ ...inputTextStyle, fontVariant: ["tabular-nums"] }}
+          style={[styles.input, inputTextStyle, { fontVariant: ["tabular-nums"] }]}
           returnKeyType="done"
         />
       </View>
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.input,
+    borderRadius: radii.DEFAULT,
+    paddingHorizontal: spacing[3.5],
+    paddingVertical: spacing[3],
+    gap: spacing[1.5],
+  },
+  currency: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textBase,
+    color: colors.mutedForeground,
+  },
+  input: {
+    flex: 1,
+    fontFamily: typography.fontBodySemibold,
+    fontSize: 22,
+    lineHeight: 28,
+    color: colors.foreground,
+  },
+});
