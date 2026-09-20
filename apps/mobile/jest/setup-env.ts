@@ -74,6 +74,15 @@ jest.mock("@/modules/access", () => ({
     kind: "anonymous" as const,
     beginAuth: jest.fn(),
   })),
+  useLedgerScope: jest.fn(() => ({
+    kind: "local_anonymous" as const,
+    selection: { kind: "personal" as const },
+    householdId: null,
+    householdName: null,
+    canSwitch: false,
+    availableHouseholds: [],
+    setActiveHousehold: null,
+  })),
   AccessProvider: ({ children }: { children: React.ReactNode }) => children,
   signedInUserId: (access: { kind: string; user?: { userId: string } }) =>
     access.kind === "signed_in" ? (access.user?.userId ?? null) : null,

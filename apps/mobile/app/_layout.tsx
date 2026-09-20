@@ -35,7 +35,7 @@ import * as Haptics from "expo-haptics";
 
 import { AccessBanner } from "@/components/access/access-banner";
 import { LedgerToaster } from "@/components/banner/ledger-toaster";
-import { LedgerScopeChrome } from "@/components/navigation/ledger-scope-chrome";
+import { LedgerScopeChrome, LedgerScopeSheetHost } from "@/components/navigation/ledger-scope-chrome";
 import { SyncWorker } from "@/components/sync/sync-worker";
 import { SyncModeBanner } from "@/components/sync/sync-mode-banner";
 import { AppUpdateProvider } from "@/components/updates/app-update-provider";
@@ -200,6 +200,7 @@ export default function RootLayout() {
                                 <SyncModeBanner />
                                 <AccessBanner />
                                 <LedgerToaster />
+                                <LedgerScopeSheetHost />
                                 <PortalHost />
                               </AppUpdateProvider>
                             </ThemeProvider>
