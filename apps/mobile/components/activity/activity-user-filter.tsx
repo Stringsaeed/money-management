@@ -1,13 +1,14 @@
 import { Children, cloneElement, useState } from "react";
 import type { ReactElement, ReactNode } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, useColorScheme, View } from "react-native";
 import { CheckIcon } from "phosphor-react-native";
 import type { PressableProps } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/ui/icon";
 import { ModalBottomSheet } from "@/components/ui/modal-bottom-sheet";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
+import { colors, radii, rawColorValues, spacing, typography } from "@/lib/design-tokens";
 
 import type { ActivityUserOption } from "./types";
 
@@ -31,6 +32,9 @@ export function ActivityUserFilter({
   children,
 }: ActivityUserFilterProps) {
   const [open, setOpen] = useState(false);
+  const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const inkHex = colorScheme === "dark" ? rawColorValues.dark.ink : rawColorValues.light.ink;
 
   const options: readonly (ActivityUserOption | null)[] = [null, ...members];
 
@@ -39,13 +43,17 @@ export function ActivityUserFilter({
   const renderTrigger = () => {
     if (children) {
       const child = Children.only(children);
+      // SAFETY: Picker pattern expects a single pressable child element
       return cloneElement(child as ReactElement<PressableProps>, { onPress: handleOpen });
     }
     return (
-      <Pressable onPress={handleOpen} className="active:opacity-70">
-        <View className="flex-row items-center gap-1.5 rounded-xl px-3 py-1.5 bg-surface-container">
-          <Text className="text-sm">👤</Text>
-          <Text className="font-body-medium text-sm text-ink">
+      <Pressable
+        onPress={handleOpen}
+        style={({ pressed }) => [pressed && styles.triggerPressed]}
+      >
+        <View style={styles.triggerChip}>
+          <Text style={styles.triggerEmoji}>👤</Text>
+          <Text style={styles.triggerLabel}>
             {members.find((m) => m.userId === value)?.userName ?? "Everyone"}
           </Text>
         </View>
@@ -57,13 +65,13 @@ export function ActivityUserFilter({
     <>
       {renderTrigger()}
       <ModalBottomSheet open={open} onDismiss={() => setOpen(false)}>
-        <View className="pb-safe w-full px-5 pt-5 gap-1">
-          <Text className="font-heading-medium italic text-lg text-ink mb-2">Filter by member</Text>
+        <View style={[styles.sheetBody, { paddingBottom: insets.bottom }]}>
+          <Text style={styles.sheetTitle}>Filter by member</Text>
           {options.map((option, i) => {
             const selected = (option?.userId ?? null) === value;
             return (
               <View key={option?.userId ?? "all"}>
-                {i > 0 && <View className="h-px bg-ledger-outline" />}
+                {i > 0 && <View style={styles.divider} />}
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={option?.userName ?? "Everyone"}
@@ -71,15 +79,16 @@ export function ActivityUserFilter({
                     setOpen(false);
                     onChange(option?.userId ?? null);
                   }}
-                  className={cn(
-                    "flex-row items-center justify-between px-2 py-3 active:bg-surface-dim rounded-xl",
-                    selected && "bg-surface-dim",
-                  )}
+                  style={({ pressed }) => [
+                    styles.option,
+                    selected && styles.optionSelected,
+                    pressed && styles.optionPressed,
+                  ]}
                 >
-                  <Text className="font-body-medium text-base text-ink">
+                  <Text style={styles.optionLabel}>
                     {option ? `👤 ${option.userName}` : "🌍 Everyone"}
                   </Text>
-                  {selected ? <Icon as={CheckIcon} size={18} className="text-ink" /> : null}
+                  {selected ? <Icon as={CheckIcon} size={18} style={{ color: inkHex }} /> : null}
                 </Pressable>
               </View>
             );
@@ -89,3 +98,62 @@ export function ActivityUserFilter({
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  triggerPressed: {
+    opacity: 0.7,
+  },
+  triggerChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[1.5],
+    borderRadius: radii.xl,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[1.5],
+    backgroundColor: colors.surfaceContainer,
+  },
+  triggerEmoji: {
+    fontSize: typography.textSm,
+  },
+  triggerLabel: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textSm,
+    color: colors.ink,
+  },
+  sheetBody: {
+    width: "100%",
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[5],
+    gap: spacing[1],
+  },
+  sheetTitle: {
+    fontFamily: typography.fontHeadingMedium,
+    fontStyle: "italic",
+    fontSize: typography.textLg,
+    color: colors.ink,
+    marginBottom: spacing[2],
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.ledgerOutline,
+  },
+  option: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[3],
+    borderRadius: radii.xl,
+  },
+  optionSelected: {
+    backgroundColor: colors.surfaceDim,
+  },
+  optionPressed: {
+    backgroundColor: colors.surfaceDim,
+  },
+  optionLabel: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textBase,
+    color: colors.ink,
+  },
+});

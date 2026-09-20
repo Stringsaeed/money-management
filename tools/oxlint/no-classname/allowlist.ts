@@ -16,7 +16,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
   },
   {
     files: [
-      "apps/mobile/app/activity.tsx",
       "apps/mobile/app/_layout.tsx",
       "apps/mobile/app/recurring/index.tsx",
       "apps/mobile/app/splash.tsx",
@@ -33,17 +32,6 @@ export const CLASSNAME_ALLOWLIST: ClassNameAllowlistEntry[] = [
     ],
     reason:
       "Access components using NativeWind className pending migration to theme module StyleSheet.",
-    issue: 279,
-  },
-  {
-    files: [
-      "apps/mobile/components/activity/activity-date-range-filter.tsx",
-      "apps/mobile/components/activity/activity-detail-sheet.tsx",
-      "apps/mobile/components/activity/activity-entry-row.tsx",
-      "apps/mobile/components/activity/activity-user-filter.tsx",
-    ],
-    reason:
-      "Activity components using NativeWind className pending migration to theme module StyleSheet.",
     issue: 279,
   },
   {
