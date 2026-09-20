@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Pressable } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import { ArrowRightIcon } from "phosphor-react-native";
 import Animated from "react-native-reanimated";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/utils";
+import { colors, spacing, typography, shadows } from "@/lib/design-tokens";
 
 interface OnboardingCtaProps {
   disabled?: boolean;
@@ -41,21 +41,19 @@ export function OnboardingCta({
       testID={testID}
     >
       <Animated.View
-        className={cn(
-          "h-14 flex-row items-center justify-center gap-2 rounded-full bg-ink px-6",
-          disabled && "opacity-35",
-        )}
-        style={{
-          transform: [{ scale: isPressed ? 0.97 : 1 }],
-          boxShadow: isPressed
-            ? "0px 2px 6px rgba(28, 27, 26, 0.10)"
-            : "0px 10px 24px rgba(28, 27, 26, 0.16)",
-          transitionProperty: ["transform", "boxShadow"],
-          transitionDuration: 140,
-          transitionTimingFunction: "ease-out",
-        }}
+        style={[
+          styles.container,
+          disabled && styles.containerDisabled,
+          {
+            transform: [{ scale: isPressed ? 0.97 : 1 }],
+            boxShadow: isPressed ? shadows.sm : shadows.lg,
+            transitionProperty: ["transform", "boxShadow"],
+            transitionDuration: 140,
+            transitionTimingFunction: "ease-out",
+          },
+        ]}
       >
-        <Text className="font-body-semibold text-[17px] text-surface">{label}</Text>
+        <Text style={styles.label}>{label}</Text>
         {showArrow ? (
           <Animated.View
             style={{
@@ -65,10 +63,34 @@ export function OnboardingCta({
               transitionTimingFunction: "ease-out",
             }}
           >
-            <Icon as={ArrowRightIcon} className="text-surface" size={18} weight="bold" />
+            <Icon as={ArrowRightIcon} size={18} weight="bold" style={styles.arrowIcon} />
           </Animated.View>
         ) : null}
       </Animated.View>
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    height: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing[2],
+    borderRadius: 9999,
+    backgroundColor: colors.ink,
+    paddingHorizontal: spacing[6],
+  },
+  containerDisabled: {
+    opacity: 0.35,
+  },
+  label: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: 17,
+    color: colors.surface,
+  },
+  arrowIcon: {
+    color: colors.surface,
+  },
+});

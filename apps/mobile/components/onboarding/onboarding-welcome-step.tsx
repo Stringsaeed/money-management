@@ -1,7 +1,8 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { LeafIcon, LockKeyIcon, TrendUpIcon } from "phosphor-react-native";
 import type { Icon as PhosphorIcon } from "phosphor-react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GrowingGarden } from "@/components/graphics/growing-garden";
 import { OnboardingCta } from "@/components/onboarding/onboarding-cta";
@@ -9,6 +10,7 @@ import { STAGGER_MS } from "@/components/onboarding/motion";
 import { WELCOME_GARDEN_STAGE } from "@/components/onboarding/steps";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 
 interface WelcomePromise {
   description: string;
@@ -49,47 +51,48 @@ interface OnboardingWelcomeStepProps {
 }
 
 export function OnboardingWelcomeStep({ onStart }: OnboardingWelcomeStepProps) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View className="flex-1 justify-between px-6 pb-2 pt-safe-offset-4">
-      <View className="flex-1 justify-center gap-8">
-        <Animated.View className="items-center" entering={FadeIn.duration(520).delay(GARDEN_DELAY)}>
+    <View style={[styles.container, { paddingTop: insets.top + spacing[4] }]}>
+      <View style={styles.content}>
+        <Animated.View
+          style={styles.gardenWrapper}
+          entering={FadeIn.duration(520).delay(GARDEN_DELAY)}
+        >
           {/* A young plant, growing in from bare soil. Each step adds a notch. */}
           <GrowingGarden stage={WELCOME_GARDEN_STAGE} width={244} />
         </Animated.View>
 
-        <View className="items-center gap-3">
+        <View style={styles.titleGroup}>
           <Animated.View
             entering={FadeInDown.springify().damping(20).stiffness(130).delay(WORDMARK_DELAY)}
           >
-            <Text className="font-heading-normal text-[44px] leading-[52px] text-ink">Trove</Text>
+            <Text style={styles.wordmark}>Trove</Text>
           </Animated.View>
           <Animated.View
             entering={FadeInDown.springify().damping(20).stiffness(130).delay(TAGLINE_DELAY)}
           >
-            <Text className="text-center font-body-normal text-base leading-6 text-ink/55">
-              A quiet ledger for money{"\n"}you want to see grow.
-            </Text>
+            <Text style={styles.tagline}>A quiet ledger for money{"\n"}you want to see grow.</Text>
           </Animated.View>
         </View>
 
-        <View className="gap-4">
+        <View style={styles.promisesGroup}>
           {PROMISES.map((promise, index) => (
             <Animated.View
               key={promise.title}
-              className="flex-row items-start gap-3.5"
+              style={styles.promiseRow}
               entering={FadeInDown.springify()
                 .damping(20)
                 .stiffness(140)
                 .delay(PROMISES_DELAY + index * STAGGER_MS * 1.6)}
             >
-              <View className="mt-0.5 h-9 w-9 items-center justify-center rounded-full border border-ledger-outline bg-surface-container">
-                <Icon as={promise.icon} className="text-sage" size={17} weight="duotone" />
+              <View style={styles.promiseIconWrapper}>
+                <Icon as={promise.icon} size={17} weight="duotone" style={styles.promiseIcon} />
               </View>
-              <View className="min-w-0 flex-1">
-                <Text className="font-body-semibold text-base text-ink">{promise.title}</Text>
-                <Text className="mt-0.5 font-body-normal text-sm leading-5 text-ink/50">
-                  {promise.description}
-                </Text>
+              <View style={styles.promiseTextWrapper}>
+                <Text style={styles.promiseTitle}>{promise.title}</Text>
+                <Text style={styles.promiseDescription}>{promise.description}</Text>
               </View>
             </Animated.View>
           ))}
@@ -97,14 +100,96 @@ export function OnboardingWelcomeStep({ onStart }: OnboardingWelcomeStepProps) {
       </View>
 
       <Animated.View
-        className="gap-3 pb-safe-offset-4"
+        style={[styles.ctaWrapper, { paddingBottom: insets.bottom + spacing[4] }]}
         entering={FadeInDown.springify().damping(22).stiffness(140).delay(CTA_DELAY)}
       >
         <OnboardingCta label="Plant your first seed" onPress={onStart} testID="onboarding-start" />
-        <Text className="text-center font-body-normal text-xs text-ink/40">
-          Takes about a minute. Nothing leaves your phone.
-        </Text>
+        <Text style={styles.ctaSubtext}>Takes about a minute. Nothing leaves your phone.</Text>
       </Animated.View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "space-between",
+    paddingHorizontal: spacing[6],
+    paddingBottom: spacing[2],
+  },
+  content: {
+    flex: 1,
+    justifyContent: "center",
+    gap: spacing[8],
+  },
+  gardenWrapper: {
+    alignItems: "center",
+  },
+  titleGroup: {
+    alignItems: "center",
+    gap: spacing[3],
+  },
+  wordmark: {
+    fontFamily: typography.fontHeadingNormal,
+    fontSize: 44,
+    lineHeight: 52,
+    color: colors.ink,
+  },
+  tagline: {
+    textAlign: "center",
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textBase,
+    lineHeight: 24,
+    color: colors.ink,
+    opacity: 0.55,
+  },
+  promisesGroup: {
+    gap: spacing[4],
+  },
+  promiseRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing[3.5],
+  },
+  promiseIconWrapper: {
+    marginTop: spacing[0.5],
+    height: 36,
+    width: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: colors.ledgerOutline,
+    backgroundColor: colors.surfaceContainer,
+  },
+  promiseIcon: {
+    color: colors.sage,
+  },
+  promiseTextWrapper: {
+    minWidth: 0,
+    flex: 1,
+  },
+  promiseTitle: {
+    fontFamily: typography.fontBodySemibold,
+    fontSize: typography.textBase,
+    color: colors.ink,
+  },
+  promiseDescription: {
+    marginTop: spacing[0.5],
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textSm,
+    lineHeight: 20,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  ctaWrapper: {
+    gap: spacing[3],
+  },
+  ctaSubtext: {
+    textAlign: "center",
+    fontFamily: typography.fontBodyNormal,
+    fontSize: typography.textXs,
+    color: colors.ink,
+    opacity: 0.4,
+  },
+});

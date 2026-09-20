@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { AccountTypePicker } from "@/components/account/account-type-picker";
@@ -7,6 +7,7 @@ import { layoutTransition, stepItemEntering } from "@/components/onboarding/moti
 import { OnboardingStepHeading } from "@/components/onboarding/onboarding-step-heading";
 import { OnboardingTextField } from "@/components/onboarding/onboarding-text-field";
 import { Text } from "@/components/ui/text";
+import { colors, spacing, typography } from "@/lib/design-tokens";
 import type { AccountType } from "@/types";
 
 interface OnboardingNameStepProps {
@@ -16,14 +17,18 @@ interface OnboardingNameStepProps {
 
 export function OnboardingNameStep({ form, onTypeChange }: OnboardingNameStepProps) {
   return (
-    <View className="gap-7">
+    <View style={styles.container}>
       <OnboardingStepHeading
         title="Name your first plot"
         subtitle="Where does most of your money sit right now? You can add more accounts later."
       />
 
-      <Animated.View className="gap-2.5" entering={stepItemEntering(2)} layout={layoutTransition}>
-        <Text className="font-body-medium text-sm text-ink/50">Account name</Text>
+      <Animated.View
+        style={styles.fieldGroup}
+        entering={stepItemEntering(2)}
+        layout={layoutTransition}
+      >
+        <Text style={styles.label}>Account name</Text>
         <form.Field name="name">
           {(field) => (
             <OnboardingTextField
@@ -39,9 +44,13 @@ export function OnboardingNameStep({ form, onTypeChange }: OnboardingNameStepPro
         </form.Field>
       </Animated.View>
 
-      <Animated.View className="gap-2.5" entering={stepItemEntering(3)} layout={layoutTransition}>
-        <Text className="px-0 font-body-medium text-sm text-ink/50">Account type</Text>
-        <View className="-mx-6">
+      <Animated.View
+        style={styles.fieldGroup}
+        entering={stepItemEntering(3)}
+        layout={layoutTransition}
+      >
+        <Text style={[styles.label, styles.labelNoPadding]}>Account type</Text>
+        <View style={styles.typePickerWrapper}>
           <form.Field name="type">
             {(field) => (
               <AccountTypePicker
@@ -56,3 +65,24 @@ export function OnboardingNameStep({ form, onTypeChange }: OnboardingNameStepPro
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: spacing[7],
+  },
+  fieldGroup: {
+    gap: spacing[2.5],
+  },
+  label: {
+    fontFamily: typography.fontBodyMedium,
+    fontSize: typography.textSm,
+    color: colors.ink,
+    opacity: 0.5,
+  },
+  labelNoPadding: {
+    paddingHorizontal: 0,
+  },
+  typePickerWrapper: {
+    marginHorizontal: -spacing[6],
+  },
+});
