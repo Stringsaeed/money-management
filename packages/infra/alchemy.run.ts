@@ -76,6 +76,15 @@ export const server = Cloudflare.Worker(
         CORS_ORIGIN: Config.string("CORS_ORIGIN"),
         WORKOS_API_KEY: Config.redacted("WORKOS_API_KEY"),
         WORKOS_CLIENT_ID: Config.string("WORKOS_CLIENT_ID"),
+        MARKET_STOCKS_API_KEY: Config.redacted("MARKET_STOCKS_API_KEY").pipe(
+          Config.withDefault(Redacted.make("")),
+        ),
+        MARKET_METALS_API_KEY: Config.redacted("MARKET_METALS_API_KEY").pipe(
+          Config.withDefault(Redacted.make("")),
+        ),
+        MARKET_CRYPTO_API_KEY: Config.redacted("MARKET_CRYPTO_API_KEY").pipe(
+          Config.withDefault(Redacted.make("")),
+        ),
         WORKOS_TOKEN_AUDIENCE: Config.string("WORKOS_TOKEN_AUDIENCE").pipe(Config.withDefault("")),
         WORKOS_TOKEN_ISSUER: Config.string("WORKOS_TOKEN_ISSUER").pipe(
           Config.withDefault("https://api.workos.com"),

@@ -162,6 +162,60 @@ export default defineConfig({
   ],
   overrides: [
     {
+      files: ["apps/mobile-next/**/*.{ts,tsx}"],
+      rules: {
+        "no-classname/no-classname-prop": "error",
+        "no-restricted-imports": [
+          "error",
+          {
+            paths: [
+              {
+                name: "react-native-reanimated",
+                message:
+                  "Use react-native-ease. Document an Ease limitation before allowing an exception.",
+              },
+            ],
+            patterns: [
+              {
+                group: ["@powersync/*", "@tanstack/powersync-db-collection", "**/mobile/**"],
+                message:
+                  "Trove Next uses isolated V2 data and rebuilt UI; legacy app and sync imports are forbidden.",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      files: ["apps/mobile-next/src/ui/**/*.{ts,tsx}"],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: [
+              {
+                group: [
+                  "@/features/*",
+                  "@/data/*",
+                  "**/features/**",
+                  "**/data/**",
+                  "@trove/*",
+                  "@powersync/*",
+                  "**/mobile/**",
+                ],
+                message:
+                  "UI components accept presentation props and must not depend on business features, authentication, or data access.",
+              },
+              {
+                group: ["react-native-reanimated"],
+                message: "Use react-native-ease; an exception needs a documented Ease limitation.",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
       files: ["apps/mobile/**/*.{ts,tsx}"],
       rules: {
         "no-restricted-imports": ["error", LEDGER_RESTRICTED_IMPORTS],

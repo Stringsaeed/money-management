@@ -47,6 +47,9 @@ app-example
 /android
 /apps/mobile/ios
 /apps/mobile/android
+/apps/mobile-next/ios
+/apps/mobile-next/android
+/packages/api/.next-data/
 
 # pnpm
 .pnpm-store/
@@ -54,6 +57,7 @@ app-example
 
 coverage
 .env*
+!/apps/mobile-next/.env.example
 graphify-out
 
 # Alchemy generated bundles + local runtime state
@@ -68,6 +72,7 @@ graphify-out
 
 .audit/
 .local/
+.argent/recordings/
 
 # QA Stim / agent proof dumps — local only (never commit)
 artifacts/qa-*/
