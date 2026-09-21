@@ -7,6 +7,7 @@ module.exports = {
     "^@expo/ui/community/bottom-sheet$": "<rootDir>/src/ui/__mocks__/expo-ui.tsx",
     "^expo-blur$": "<rootDir>/src/ui/__mocks__/expo-blur.tsx",
     "^react-native-ease$": "<rootDir>/src/ui/__mocks__/react-native-ease.tsx",
+    "^react-native-linear-gradient$": "<rootDir>/src/ui/__mocks__/react-native-linear-gradient.ts",
   },
   setupFiles: ["react-native-gesture-handler/jestSetup"],
   testPathIgnorePatterns: ["<rootDir>/dist/"],
