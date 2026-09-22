@@ -17,11 +17,17 @@ import { confirmLedgerDeletion } from "../delete-confirmation";
 
 type CategoryFilter = "all" | "income" | "expense" | "archived";
 
-export function CategoriesScreen() {
+export interface CategoriesScreenProps {
+  readonly initialCreate?: boolean;
+}
+
+export function CategoriesScreen({ initialCreate = false }: CategoriesScreenProps) {
   const categories = useCategoriesQuery();
   const mutations = useLedgerMutations();
   const [filter, setFilter] = useState<CategoryFilter>("all");
-  const [editing, setEditing] = useState<string | "new">();
+  const [editing, setEditing] = useState<string | "new" | undefined>(
+    initialCreate ? "new" : undefined,
+  );
   const [error, setError] = useState<string>();
   const [actionError, setActionError] = useState<string>();
   const [pendingAction, setPendingAction] = useState<string>();

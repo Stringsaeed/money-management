@@ -6,6 +6,8 @@ module.exports = {
     "^@expo/ui$": "<rootDir>/src/ui/__mocks__/expo-ui.tsx",
     "^@expo/ui/community/bottom-sheet$": "<rootDir>/src/ui/__mocks__/expo-ui.tsx",
     "^expo-blur$": "<rootDir>/src/ui/__mocks__/expo-blur.tsx",
+    "^react-native-reanimated$": "<rootDir>/src/ui/__mocks__/react-native-reanimated.ts",
+    "^react-native-worklets$": "<rootDir>/src/ui/__mocks__/react-native-worklets.ts",
     "^react-native-ease$": "<rootDir>/src/ui/__mocks__/react-native-ease.tsx",
     "^react-native-linear-gradient$": "<rootDir>/src/ui/__mocks__/react-native-linear-gradient.ts",
   },

@@ -22,7 +22,7 @@ import {
   type TransactionInput,
 } from "./ledger-client";
 import { createLedgerCollections, scopeKey, type LedgerCollections } from "./ledger-collections";
-import { parseHome } from "./ledger-schemas";
+import { parseHome, type UpcomingOccurrence } from "./ledger-schemas";
 import { createRequestKeyRunner } from "./request-keys";
 import { changeRecurringLifecycle } from "./recurring-lifecycle";
 
@@ -169,6 +169,25 @@ export function useHomeQuery(): HomeQueryResult {
   };
 }
 
+export function useUpcomingQuery(): LedgerQueryResult<UpcomingOccurrence> {
+  const { identityKey, scope } = useLedgerData();
+  const query = useQuery({
+    queryKey: ["v2", "upcoming", scopeKey(identityKey, scope)],
+    queryFn: () => ledgerClient.recurring.upcoming(scope),
+    staleTime: 15_000,
+    retry: 1,
+  });
+  return {
+    data: query.data?.items ?? [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error instanceof Error ? query.error : null,
+    retry: async () => {
+      await query.refetch();
+    },
+  };
+}
+
 export function useLedgerMutations() {
   const { identityKey, queryClient, scope, collections } = useLedgerData();
   const [runWithRequestKey] = useState(createRequestKeyRunner);
@@ -191,6 +210,9 @@ export function useLedgerMutations() {
         queryKey: ["v2", "home", scopeKey(identityKey, scope)],
       });
     }
+    await queryClient.invalidateQueries({
+      queryKey: ["v2", "upcoming", scopeKey(identityKey, scope)],
+    });
   };
 
   return {

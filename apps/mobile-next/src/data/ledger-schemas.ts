@@ -94,6 +94,16 @@ export const recurringRuleSchema: z.ZodType<V2RecurringRule> = z.object({
   updatedAt: z.string(),
 });
 
+export const upcomingOccurrenceSchema = z.object({
+  ruleId: z.string(),
+  scheduledDate: ledgerDateSchema,
+  amountMinor: money,
+  currency: z.string(),
+  kind: z.enum(["income", "expense", "transfer"]),
+});
+
+export type UpcomingOccurrence = z.infer<typeof upcomingOccurrenceSchema>;
+
 export const pageSchema = <T extends z.ZodTypeAny>(item: T) =>
   z.object({ items: z.array(item), nextCursor: z.string().nullable() });
 

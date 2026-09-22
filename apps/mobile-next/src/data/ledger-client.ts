@@ -25,6 +25,7 @@ import {
   categorySchema,
   recurringRuleSchema,
   transactionSchema,
+  upcomingOccurrenceSchema,
 } from "./ledger-schemas";
 
 export type LedgerScope = V2LedgerScope;
@@ -282,6 +283,11 @@ export const ledgerClient = {
   },
 
   recurring: {
+    upcoming(scope: LedgerScope) {
+      return request(withScope("/recurring/upcoming", scope), undefined, (payload) =>
+        parsePage(upcomingOccurrenceSchema, payload),
+      );
+    },
     list(scope: LedgerScope, options: PageOptions = {}): Promise<V2Page<V2RecurringRule>> {
       return request(pagePath("/recurring", scope, options), undefined, (payload) =>
         parsePage(recurringRuleSchema, payload),

@@ -1,3 +1,4 @@
+import { addMonths } from "date-fns";
 import { and, asc, eq, ne, or } from "drizzle-orm";
 
 import {
@@ -414,13 +415,17 @@ export interface UpcomingOccurrence {
 
 export async function listUpcoming(
   context: V2LedgerContext,
-  throughDate = new Date(),
+  throughDate = addMonths(new Date(), 1),
 ): Promise<readonly UpcomingOccurrence[]> {
   const rows = await context.db
     .select()
     .from(v2RecurringRule)
     .where(
-      and(eq(v2RecurringRule.ledgerId, context.ledgerId), eq(v2RecurringRule.lifecycle, "active")),
+      and(
+        eq(v2RecurringRule.ledgerId, context.ledgerId),
+        eq(v2RecurringRule.lifecycle, "active"),
+        eq(v2RecurringRule.health, "ready"),
+      ),
     );
   const occurrenceRows = await context.db
     .select({

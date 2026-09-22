@@ -8,8 +8,10 @@ export function Host({ children }: PropsWithChildren) {
 export function BottomSheet({
   children,
   isPresented,
-}: PropsWithChildren<{ isPresented: boolean }>) {
-  return isPresented ? <View>{children}</View> : null;
+  index,
+}: PropsWithChildren<{ isPresented?: boolean; index?: number }>) {
+  const visible = isPresented ?? (index ?? -1) >= 0;
+  return visible ? <View>{children}</View> : null;
 }
 
 export function BottomSheetView({ children }: PropsWithChildren) {

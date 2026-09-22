@@ -1,10 +1,12 @@
 import { ArrowDownLeftIcon, ArrowUpRightIcon, ArrowsLeftRightIcon } from "phosphor-react-native";
-import { Pressable, StyleSheet, useColorScheme, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { format, parseISO } from "date-fns";
 
 import type { V2Transaction } from "@trove/api/v2/contracts";
 
 import { Text } from "@/ui/text";
-import { colors, rawColorValues, spacing, typography } from "@/ui/design-tokens";
+import { spacing, typography } from "@/ui/design-tokens";
+import { tileColors } from "@/ui/tiled-garden/tile-tokens";
 import { formatMoneyMinor } from "@/utils/money";
 
 interface HomeTransactionRowProps {
@@ -25,10 +27,9 @@ export function HomeTransactionRow({
   categoryName,
 }: HomeTransactionRowProps) {
   const Icon = iconFor(transaction.kind);
-  const scheme = useColorScheme();
-  const iconColor = scheme === "dark" ? rawColorValues.dark.ink : rawColorValues.light.ink;
+  const iconColor = tileColors.ink;
   const sign = transaction.kind === "income" ? "+" : transaction.kind === "expense" ? "−" : "";
-  const amountColor = transaction.kind === "income" ? colors.sage : colors.ink;
+  const amountColor = tileColors.ink;
   const label = transaction.note.trim() || categoryName || "Transaction";
 
   return (
@@ -46,7 +47,7 @@ export function HomeTransactionRow({
           {label}
         </Text>
         <Text numberOfLines={1} style={styles.date}>
-          {transaction.date}
+          {format(parseISO(transaction.date), "d MMM")}
           {categoryName ? ` · ${categoryName}` : ""}
         </Text>
       </View>
@@ -69,9 +70,9 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.6 },
   iconWrap: {
     alignItems: "center",
-    backgroundColor: colors.surfaceContainer,
-    borderColor: colors.ledgerOutline,
-    borderRadius: 999,
+    backgroundColor: tileColors.olive,
+    borderColor: tileColors.grout,
+    borderRadius: 11,
     borderWidth: 1,
     height: 36,
     justifyContent: "center",
@@ -79,12 +80,12 @@ const styles = StyleSheet.create({
   },
   copy: { flex: 1, gap: spacing[0.5] },
   label: {
-    color: colors.ink,
+    color: tileColors.ink,
     fontFamily: typography.fontBodySemibold,
     fontSize: typography.textBase,
   },
   date: {
-    color: colors.mutedForeground,
+    color: tileColors.muted,
     fontFamily: typography.fontBodyNormal,
     fontSize: typography.textXs,
   },

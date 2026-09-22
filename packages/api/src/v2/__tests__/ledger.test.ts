@@ -1,21 +1,23 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
 
 import { user } from "@trove/db/schema/auth";
 import { v2GuestSession } from "@trove/db/schema/v2-identity";
+import { v2RecurringOccurrence, v2RecurringRule } from "@trove/db/schema/v2-ledger";
 
 import { createAccount, deleteAccount, listAccounts } from "../accounts";
 import { createCategory, deleteCategory, listCategories } from "../categories";
 import { getHome } from "../home";
 import {
   createRecurringRule,
+  listUpcoming,
   listRecurringRules,
   settleRecurringRule,
   updateRecurringRule,
 } from "../recurring";
 import { resolveV2LedgerContext } from "../shared";
 import type { V2Principal } from "../contracts";
-import { createTransaction, listTransactions } from "../transactions";
+import { createTransaction, deleteTransaction, listTransactions } from "../transactions";
 import { claimGuestLedgerInTransaction } from "../guest-claim";
 import { createTestDb } from "../../test-support/db";
 
@@ -380,6 +382,96 @@ describe("V2 ledger", () => {
     expect(first.generatedCount).toBe(1);
     const retry = await settleRecurringRule(context, rule.id, new Date("2026-09-15T12:00:00.000Z"));
     expect(retry.generatedCount).toBe(0);
+  });
+
+  it("lists the next unsettled occurrence through the default one-month horizon after its transaction is deleted", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-15T12:00:00.000Z"));
+    try {
+      const context = await personal();
+      const account = await createAccount(context, {
+        id: "upcoming-account",
+        name: "Upcoming",
+        type: "checking",
+        currency: "USD",
+      });
+      const rule = await createRecurringRule(context, {
+        id: "upcoming-rule",
+        name: "Monthly payment",
+        accountId: account.id,
+        kind: "expense",
+        amountMinor: 25,
+        currency: "USD",
+        frequency: "month",
+        intervalCount: 1,
+        startDate: "2026-09-01",
+        endDate: null,
+        endCount: null,
+        timeZone: "UTC",
+      });
+      const paused = await createRecurringRule(context, {
+        id: "paused-upcoming-rule",
+        name: "Paused payment",
+        accountId: account.id,
+        kind: "expense",
+        amountMinor: 30,
+        currency: "USD",
+        frequency: "month",
+        intervalCount: 1,
+        startDate: "2026-09-01",
+        endDate: null,
+        endCount: null,
+        timeZone: "UTC",
+      });
+      await updateRecurringRule(context, paused.id, { lifecycle: "paused" }, paused.revision);
+      const needsAttention = await createRecurringRule(context, {
+        id: "attention-upcoming-rule",
+        name: "Attention payment",
+        accountId: account.id,
+        kind: "expense",
+        amountMinor: 35,
+        currency: "USD",
+        frequency: "month",
+        intervalCount: 1,
+        startDate: "2026-09-01",
+        endDate: null,
+        endCount: null,
+        timeZone: "UTC",
+      });
+      await db
+        .update(v2RecurringRule)
+        .set({ health: "needs_attention" })
+        .where(eq(v2RecurringRule.id, needsAttention.id));
+
+      const settled = await settleRecurringRule(
+        context,
+        rule.id,
+        new Date("2026-09-15T12:00:00.000Z"),
+      );
+      expect(settled.generatedCount).toBe(1);
+
+      const beforeDelete = await listUpcoming(context);
+      expect(beforeDelete.map((item) => [item.ruleId, item.scheduledDate])).toEqual([
+        [rule.id, "2026-10-01"],
+      ]);
+
+      const generated = (await listTransactions(context)).items.find(
+        (transaction) => transaction.recurringRuleId === rule.id,
+      );
+      expect(generated).toBeDefined();
+      await db
+        .update(v2RecurringOccurrence)
+        .set({ transactionId: null })
+        .where(eq(v2RecurringOccurrence.transactionId, generated!.id));
+      await deleteTransaction(context, generated!.id, generated!.version);
+
+      const afterDelete = await listUpcoming(context);
+      expect(afterDelete.map((item) => [item.ruleId, item.scheduledDate])).toEqual([
+        [rule.id, "2026-10-01"],
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("does not let a pre-claim guest write mutate the claimed user ledger", async () => {
