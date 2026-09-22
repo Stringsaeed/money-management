@@ -9,6 +9,7 @@ import { EmptyState } from "@/ui/empty-state";
 import { Button } from "@/ui/button";
 import { colors, spacing } from "@/ui/design-tokens";
 import { useReducedMotion } from "@/ui/motion";
+import { SoftStripedBackground } from "@/ui/tiled-garden/soft-striped-background";
 
 import { useHomeData } from "./use-home-data";
 import { HomeHeader } from "./home-header";
@@ -60,6 +61,7 @@ export function HomeScreen() {
           />
         }
       >
+        <SoftStripedBackground />
         {home.isLoading ? (
           <Text style={styles.status}>Gathering your ledger…</Text>
         ) : home.isError ? (
@@ -135,6 +137,7 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: {
+    flexGrow: 1,
     paddingHorizontal: spacing[5],
     paddingTop: spacing[4],
     paddingBottom: 140,
