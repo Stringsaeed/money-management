@@ -1,6 +1,7 @@
 import type { IconName } from "../icon";
 
 const TAB_ICONS = {
+  "(home)": "house",
   index: "house",
   ledger: "book-open",
   market: "chart-line-up",

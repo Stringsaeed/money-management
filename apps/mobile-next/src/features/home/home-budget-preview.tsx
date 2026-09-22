@@ -38,8 +38,9 @@ export function HomeBudgetPreview() {
 }
 
 const styles = StyleSheet.create({
-  section: { gap: spacing[3] },
+  section: { gap: spacing[3], marginHorizontal: -spacing[5] },
   heading: {
+    paddingHorizontal: spacing[5],
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "center",
@@ -58,7 +59,12 @@ const styles = StyleSheet.create({
     backgroundColor: tileColors.cream,
     borderRadius: 6,
   },
-  cards: { gap: spacing[3], paddingBottom: spacing[1] },
+  cards: {
+    gap: spacing[3],
+    paddingHorizontal: spacing[5],
+    paddingBottom: spacing[2],
+    paddingTop: spacing[1],
+  },
   card: { width: 258, gap: spacing[2] },
   cardTitle: {
     fontFamily: typography.fontBodyBold,

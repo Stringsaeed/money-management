@@ -1,8 +1,11 @@
 import {
   ArrowClockwiseIcon,
+  ArrowDownLeftIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
+  ArrowUpRightIcon,
   BookOpenIcon,
+  ChartBarIcon,
   CaretRightIcon,
   ChartLineUpIcon,
   CheckIcon,
@@ -33,9 +36,12 @@ import { colors } from "./design-tokens";
 
 export type IconName =
   | "arrow-clockwise"
+  | "arrow-down-left"
   | "arrow-left"
   | "arrow-right"
+  | "arrow-up-right"
   | "book-open"
+  | "chart-bar"
   | "caret-right"
   | "chart-line-up"
   | "check"
@@ -60,9 +66,12 @@ export type IconName =
 
 const ICONS = {
   "arrow-clockwise": ArrowClockwiseIcon,
+  "arrow-down-left": ArrowDownLeftIcon,
   "arrow-left": ArrowLeftIcon,
   "arrow-right": ArrowRightIcon,
+  "arrow-up-right": ArrowUpRightIcon,
   "book-open": BookOpenIcon,
+  "chart-bar": ChartBarIcon,
   "caret-right": CaretRightIcon,
   "chart-line-up": ChartLineUpIcon,
   check: CheckIcon,

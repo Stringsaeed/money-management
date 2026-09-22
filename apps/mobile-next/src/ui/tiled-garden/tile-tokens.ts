@@ -15,6 +15,12 @@ export const tileColors = {
   white: "#FFFDF7",
 } as const;
 
+export const tileBorderColors = {
+  cream: "rgba(37, 35, 29, 0.26)",
+  olive: "rgba(37, 35, 29, 0.3)",
+  pink: "rgba(37, 35, 29, 0.26)",
+} as const;
+
 export const tileForegrounds = {
   cream: tileColors.ink,
   olive: tileColors.ink,

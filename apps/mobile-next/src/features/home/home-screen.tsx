@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { router } from "expo-router";
-import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { useHeaderHeight } from "expo-router/react-navigation";
+import { Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease";
 
-import { Screen } from "@/ui/screen";
 import { Text } from "@/ui/text";
 import { EmptyState } from "@/ui/empty-state";
 import { Button } from "@/ui/button";
@@ -20,6 +20,7 @@ import { HomeFilters } from "./home-filters";
 
 export function HomeScreen() {
   const home = useHomeData();
+  const headerHeight = useHeaderHeight();
   const reducedMotion = useReducedMotion();
   const [refreshing, setRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState(false);
@@ -35,24 +36,30 @@ export function HomeScreen() {
     }
   };
   return (
-    <Screen edges={["top"]}>
+    <>
+      <HomeHeader
+        name={home.name}
+        seed={home.seed}
+        onOpenFilters={() => home.setFiltersOpen(true)}
+        onOpenProfile={() => router.push("/(tabs)/settings")}
+      />
       <ScrollView
-        contentContainerStyle={styles.content}
+        style={styles.screen}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={[
+          styles.content,
+          Platform.OS === "android" && { paddingTop: headerHeight + spacing[4] },
+        ]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => void refresh()}
             tintColor={colors.primary}
+            progressViewOffset={Platform.OS === "android" ? headerHeight : 0}
           />
         }
       >
-        <HomeHeader
-          name={home.name}
-          seed={home.seed}
-          onOpenFilters={() => home.setFiltersOpen(true)}
-          onOpenProfile={() => router.push("/(tabs)/settings")}
-        />
         {home.isLoading ? (
           <Text style={styles.status}>Gathering your ledger…</Text>
         ) : home.isError ? (
@@ -121,14 +128,15 @@ export function HomeScreen() {
         onCurrency={home.setCurrency}
         onAccount={home.setAccount}
       />
-    </Screen>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
   content: {
     paddingHorizontal: spacing[5],
-    paddingTop: spacing[1],
+    paddingTop: spacing[4],
     paddingBottom: 140,
     gap: spacing[4],
   },

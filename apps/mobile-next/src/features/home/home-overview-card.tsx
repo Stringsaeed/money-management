@@ -1,10 +1,11 @@
 import { format, parseISO } from "date-fns";
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { Text } from "@/ui/text";
+import { Icon } from "@/ui/icon";
 import { spacing, typography } from "@/ui/design-tokens";
-import { TilePanel } from "@/ui/tiled-garden/tile-panel";
+import { Text } from "@/ui/text";
 import { BalanceChart } from "@/ui/tiled-garden/balance-chart";
+import { TilePanel } from "@/ui/tiled-garden/tile-panel";
 import { tileColors, tileChartColors } from "@/ui/tiled-garden/tile-tokens";
 import { formatMoneyMinor } from "@/utils/money";
 import { formatChartMoney } from "./home-display";
@@ -41,7 +42,7 @@ export function HomeOverviewCard({
     <TilePanel tone="olive" contentStyle={styles.panel}>
       <View style={styles.top}>
         <View style={styles.balanceCopy}>
-          <Text style={styles.eyebrow}>THE BIG PICTURE</Text>
+          <Text style={styles.eyebrow}>Overview</Text>
           <Text
             style={styles.balance}
             adjustsFontSizeToFit
@@ -64,9 +65,12 @@ export function HomeOverviewCard({
               onPress={() => onMode(value)}
               style={[styles.switchButton, mode === value && styles.selected]}
             >
-              <Text style={[styles.switchLabel, mode === value && styles.selectedLabel]}>
-                {value === "line" ? "Line" : "Bars"}
-              </Text>
+              <Icon
+                name={value === "line" ? "chart-line-up" : "chart-bar"}
+                color={mode === value ? tileColors.cream : tileColors.ink}
+                size={20}
+                weight={mode === value ? "bold" : "regular"}
+              />
             </Pressable>
           ))}
         </View>
@@ -100,21 +104,23 @@ export function HomeOverviewCard({
         ))}
       </View>
       <View style={styles.totals}>
-        <View style={styles.total}>
-          <View style={styles.legend}>
-            <View style={styles.incomeDot} />
-            <Text style={styles.caption}>MONEY IN</Text>
-          </View>
-          <Text style={styles.totalValue}>
+        <View
+          accessible
+          accessibilityLabel={`Money in ${formatMoneyMinor(overview.incomeMinor, overview.currency)}`}
+          style={styles.total}
+        >
+          <Icon name="arrow-down-left" color={tileChartColors.income} size={18} weight="bold" />
+          <Text style={[styles.totalValue, styles.incomeValue]}>
             {formatMoneyMinor(overview.incomeMinor, overview.currency)}
           </Text>
         </View>
-        <View style={styles.total}>
-          <View style={styles.legend}>
-            <View style={styles.expenseDot} />
-            <Text style={styles.caption}>MONEY OUT</Text>
-          </View>
-          <Text style={styles.totalValue}>
+        <View
+          accessible
+          accessibilityLabel={`Money out ${formatMoneyMinor(overview.expenseMinor, overview.currency)}`}
+          style={styles.total}
+        >
+          <Icon name="arrow-up-right" color={tileChartColors.expense} size={18} weight="bold" />
+          <Text style={[styles.totalValue, styles.expenseValue]}>
             {formatMoneyMinor(overview.expenseMinor, overview.currency)}
           </Text>
         </View>
@@ -155,24 +161,17 @@ const styles = StyleSheet.create({
     padding: 3,
     borderWidth: 1,
     borderColor: tileColors.grout,
-    borderRadius: 11,
+    borderRadius: 999,
     backgroundColor: "rgba(255,255,255,0.28)",
   },
   switchButton: {
-    minHeight: 38,
-    minWidth: 40,
     alignItems: "center",
+    borderRadius: 22,
+    height: 44,
     justifyContent: "center",
-    paddingHorizontal: spacing[2],
-    borderRadius: 8,
+    width: 44,
   },
   selected: { backgroundColor: tileColors.ink },
-  switchLabel: {
-    color: tileColors.ink,
-    fontSize: typography.textXs,
-    fontFamily: typography.fontBodyBold,
-  },
-  selectedLabel: { color: tileColors.cream },
   periods: { flexDirection: "row", alignSelf: "center", gap: spacing[1] },
   period: {
     minHeight: 36,
@@ -195,14 +194,17 @@ const styles = StyleSheet.create({
     paddingTop: spacing[3],
     gap: spacing[3],
   },
-  total: { flex: 1, gap: spacing[1] },
-  legend: { flexDirection: "row", alignItems: "center", gap: spacing[1] },
-  incomeDot: { width: 7, height: 7, borderRadius: 2, backgroundColor: tileChartColors.income },
-  expenseDot: { width: 7, height: 7, borderRadius: 2, backgroundColor: tileChartColors.expense },
+  total: {
+    alignItems: "center",
+    flex: 1,
+    flexDirection: "row",
+    gap: spacing[2],
+  },
   totalValue: {
-    color: tileColors.ink,
     fontFamily: typography.fontBodyBold,
     fontSize: typography.textLg,
     fontVariant: ["tabular-nums"],
   },
+  incomeValue: { color: tileChartColors.income },
+  expenseValue: { color: tileColors.ink },
 });

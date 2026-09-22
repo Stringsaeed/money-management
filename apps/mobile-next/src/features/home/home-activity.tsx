@@ -39,7 +39,7 @@ export function HomeActivity({
           accessibilityRole="button"
           accessibilityLabel="View all transactions"
           onPress={onViewAll}
-          style={styles.link}
+          style={({ pressed }) => [styles.link, pressed && styles.pressed]}
         >
           <Icon name="arrow-right" color={tileColors.ink} size={20} />
         </Pressable>
@@ -80,12 +80,13 @@ const styles = StyleSheet.create({
   link: {
     width: 44,
     height: 44,
-    borderRadius: 14,
+    borderRadius: 22,
     backgroundColor: tileColors.pink,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
     borderColor: tileColors.grout,
   },
+  pressed: { opacity: 0.68 },
   empty: { color: tileColors.muted, fontSize: typography.textSm, paddingVertical: spacing[4] },
 });

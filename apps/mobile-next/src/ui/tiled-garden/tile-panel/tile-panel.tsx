@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 import { motionTransition, STATE_TRANSITION, useReducedMotion } from "@/ui/motion";
 
-import { tileColors, type TileTone } from "../tile-tokens";
+import { tileBorderColors, tileColors, type TileTone } from "../tile-tokens";
 import { CheckerMotif } from "./checker-motif";
 
 export interface TilePanelProps {
@@ -16,9 +16,9 @@ export interface TilePanelProps {
 }
 
 const toneStyles = {
-  cream: { backgroundColor: tileColors.cream },
-  olive: { backgroundColor: tileColors.olive },
-  pink: { backgroundColor: tileColors.pink },
+  cream: { backgroundColor: tileColors.cream, borderColor: tileBorderColors.cream },
+  olive: { backgroundColor: tileColors.olive, borderColor: tileBorderColors.olive },
+  pink: { backgroundColor: tileColors.pink, borderColor: tileBorderColors.pink },
 } satisfies Record<TileTone, ViewStyle>;
 
 export function TilePanel({
@@ -49,8 +49,8 @@ const styles = StyleSheet.create({
     borderColor: tileColors.grout,
     borderCurve: "continuous",
     borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
-    boxShadow: "0 8px 20px rgba(54, 45, 25, 0.13)",
+    borderWidth: 1,
+    boxShadow: "0 2px 8px rgba(54, 45, 25, 0.09)",
     overflow: "hidden",
     position: "relative",
   },

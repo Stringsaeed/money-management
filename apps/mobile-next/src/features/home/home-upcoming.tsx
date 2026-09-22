@@ -29,9 +29,9 @@ export function HomeUpcoming({ items, loading, failed, onOpen, onViewAll }: Home
           accessibilityRole="button"
           accessibilityLabel="View recurring transactions"
           onPress={onViewAll}
-          style={styles.link}
+          style={({ pressed }) => [styles.link, pressed && styles.pressed]}
         >
-          <Icon name="arrow-right" />
+          <Icon name="arrow-right" color={tileColors.ink} />
         </Pressable>
       </View>
       {loading ? (
@@ -73,7 +73,16 @@ const styles = StyleSheet.create({
   heading: { flexDirection: "row", alignItems: "center", gap: spacing[2] },
   copy: { flex: 1 },
   title: { fontFamily: typography.fontBodyBold, fontSize: typography.textLg },
-  link: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  link: {
+    alignItems: "center",
+    backgroundColor: tileColors.pink,
+    borderColor: tileColors.grout,
+    borderRadius: 22,
+    borderWidth: 1,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -102,5 +111,5 @@ const styles = StyleSheet.create({
   name: { flex: 1, fontFamily: typography.fontBodySemibold },
   amount: { fontFamily: typography.fontBodyBold, fontVariant: ["tabular-nums"] },
   empty: { color: colors.mutedForeground, paddingVertical: spacing[4] },
-  pressed: { opacity: 0.65 },
+  pressed: { opacity: 0.68 },
 });

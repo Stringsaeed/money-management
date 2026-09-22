@@ -37,7 +37,7 @@ export function GlassTabBar({
     28,
     Math.min(
       TAB_WIDTH,
-      (windowWidth - 8 * 2 - 8 * 2 - 48 - CREATE_SIZE - PILL_PADDING * 2) /
+      (windowWidth - 8 * 2 - 8 * 2 - CREATE_SIZE * 2 - PILL_PADDING * 2) /
         Math.max(tabRoutes.length, 1),
     ),
   );

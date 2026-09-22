@@ -1,7 +1,8 @@
-import { Pressable, StyleSheet } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { Icon } from "@/ui/icon";
-import { colors, radii, shadows, spacing } from "@/ui/design-tokens";
+import { GlassSurface } from "@/ui/glass-tab-bar/glass-surface";
+import { styles } from "@/ui/glass-tab-bar/styles";
 
 interface ScopeControlProps {
   readonly label: string;
@@ -14,27 +15,12 @@ export function ScopeControl({ label, onPress }: ScopeControlProps) {
       accessibilityRole="button"
       accessibilityLabel={`Ledger scope: ${label}`}
       onPress={onPress}
-      style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+      style={styles.createPressable}
     >
-      <Icon name="wallet" size={20} color={colors.foreground} />
+      <GlassSurface style={styles.create}>
+        <Icon name="wallet" size={26} weight="regular" style={styles.createIcon} />
+        <View pointerEvents="none" style={styles.insetShadow} />
+      </GlassSurface>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    alignItems: "center",
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderCurve: "continuous",
-    borderRadius: radii.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    boxShadow: shadows.sm,
-    flexDirection: "row",
-    height: spacing[14],
-    justifyContent: "center",
-    paddingHorizontal: 0,
-    width: spacing[12],
-  },
-  pressed: { opacity: 0.72 },
-});
