@@ -30,12 +30,20 @@ export function LedgerScreen({
   onOpenCategories,
   onOpenRecurring,
 }: LedgerScreenProps) {
-  const [accountId, setAccountId] = useState<string | null>(null);
-  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [selectedAccountId, setAccountId] = useState<string | null>(null);
+  const [selectedCategoryId, setCategoryId] = useState<string | null>(null);
   const [kind, setKind] = useState<V2Transaction["kind"] | null>(null);
-  const transactions = useTransactionsQuery({ accountId, categoryId, kind });
   const accounts = useAccountsQuery();
   const categories = useCategoriesQuery();
+  const accountId = accounts.data.some((item) => item.id === selectedAccountId && !item.archived)
+    ? selectedAccountId
+    : null;
+  const categoryId = categories.data.some(
+    (item) => item.id === selectedCategoryId && !item.archived,
+  )
+    ? selectedCategoryId
+    : null;
+  const transactions = useTransactionsQuery({ accountId, categoryId, kind });
   const categoryById = new Map(categories.data.map((category) => [category.id, category]));
 
   if (transactions.isError) {

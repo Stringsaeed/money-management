@@ -1,6 +1,11 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
-import { v2Category, v2RecurringRule, v2Transaction } from "@trove/db/schema/v2-ledger";
+import {
+  v2Category,
+  v2RecurringOccurrence,
+  v2RecurringRule,
+  v2Transaction,
+} from "@trove/db/schema/v2-ledger";
 
 import {
   categoryCreateSchema,
@@ -214,48 +219,43 @@ export async function deleteCategory(
     const current = await findCategory(db, context.ledgerId, id);
     if (!current) throw new V2ApiError(404, "category_not_found", "Category not found.");
     requireExpectedVersion(expectedVersion, current.version, id);
-    if (await categoryHasDependencies(db, context.ledgerId, id)) {
-      await db
-        .update(v2Category)
-        .set({
-          lifecycle: "archived",
-          version: current.version + 1,
-          updatedBy: context.ownerId,
-          updatedAt: new Date(),
-        })
-        .where(and(eq(v2Category.ledgerId, context.ledgerId), eq(v2Category.id, id)));
-      return { id, archived: true, deleted: false };
-    }
+    // Delete the dependent facts in this ledger before removing the Category.
+    // `withLedgerMutation` keeps the complete cascade atomic and scoped to the
+    // authenticated ledger, including recurring rules that could otherwise
+    // recreate transactions with an invalid Category.
+    const linkedTransactionIds = db
+      .select({ id: v2Transaction.id })
+      .from(v2Transaction)
+      .where(and(eq(v2Transaction.ledgerId, context.ledgerId), eq(v2Transaction.categoryId, id)));
+    await db
+      .update(v2RecurringOccurrence)
+      .set({ transactionId: null })
+      .where(
+        and(
+          eq(v2RecurringOccurrence.ledgerId, context.ledgerId),
+          inArray(v2RecurringOccurrence.transactionId, linkedTransactionIds),
+        ),
+      );
+    await db
+      .delete(v2Transaction)
+      .where(and(eq(v2Transaction.ledgerId, context.ledgerId), eq(v2Transaction.categoryId, id)));
+    await db
+      .delete(v2RecurringRule)
+      .where(
+        and(eq(v2RecurringRule.ledgerId, context.ledgerId), eq(v2RecurringRule.categoryId, id)),
+      );
+    await db
+      .update(v2Category)
+      .set({
+        parentId: null,
+        version: sql`${v2Category.version} + 1`,
+        updatedBy: context.ownerId,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(v2Category.ledgerId, context.ledgerId), eq(v2Category.parentId, id)));
     await db
       .delete(v2Category)
       .where(and(eq(v2Category.ledgerId, context.ledgerId), eq(v2Category.id, id)));
     return { id, archived: false, deleted: true };
   });
-}
-
-async function categoryHasDependencies(
-  db: V2DbExecutor,
-  ledgerId: string,
-  categoryId: string,
-): Promise<boolean> {
-  const [transactions, recurring, children] = await Promise.all([
-    db
-      .select({ id: v2Transaction.id })
-      .from(v2Transaction)
-      .where(and(eq(v2Transaction.ledgerId, ledgerId), eq(v2Transaction.categoryId, categoryId)))
-      .limit(1),
-    db
-      .select({ id: v2RecurringRule.id })
-      .from(v2RecurringRule)
-      .where(
-        and(eq(v2RecurringRule.ledgerId, ledgerId), eq(v2RecurringRule.categoryId, categoryId)),
-      )
-      .limit(1),
-    db
-      .select({ id: v2Category.id })
-      .from(v2Category)
-      .where(and(eq(v2Category.ledgerId, ledgerId), eq(v2Category.parentId, categoryId)))
-      .limit(1),
-  ]);
-  return Boolean(transactions[0] || recurring[0] || children[0]);
 }

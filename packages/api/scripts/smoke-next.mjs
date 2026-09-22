@@ -114,11 +114,68 @@ assert.equal(removed.status, 200);
 const deleted = await request(`/transactions/${transaction.body.id}`, token);
 assert.equal(deleted.status, 404);
 
+const renamedCategory = await request(
+  `/categories/${category.body.id}`,
+  token,
+  "PATCH",
+  { name: "Smoke essentials" },
+  crypto.randomUUID(),
+  category.body.version,
+);
+assert.equal(renamedCategory.status, 200);
+assert.equal(renamedCategory.body.name, "Smoke essentials");
+const removedCategory = await request(
+  `/categories/${category.body.id}`,
+  token,
+  "DELETE",
+  {},
+  crypto.randomUUID(),
+  renamedCategory.body.version,
+);
+assert.equal(removedCategory.status, 200);
+assert.equal((await request(`/categories/${category.body.id}`, token)).status, 404);
+assert.equal((await request(`/recurring/${recurring.body.id}`, token)).status, 404);
+assert.deepEqual((await request("/transactions", token)).body.items, []);
+assert.equal((await request("/home", token)).body.accounts[0].balanceMinor, 10_000);
+
+const savings = await request("/accounts", token, "POST", {
+  name: "Smoke savings",
+  type: "savings",
+  currency: "USD",
+  openingBalanceMinor: 5_000,
+});
+assert.equal(savings.status, 201);
+for (const [accountId, toAccountId] of [
+  [account.body.id, savings.body.id],
+  [savings.body.id, account.body.id],
+]) {
+  const transfer = await request("/transactions", token, "POST", {
+    accountId,
+    toAccountId,
+    kind: "transfer",
+    amountMinor: 200,
+    date: today,
+  });
+  assert.equal(transfer.status, 201);
+}
+const removedAccount = await request(
+  `/accounts/${account.body.id}`,
+  token,
+  "DELETE",
+  {},
+  crypto.randomUUID(),
+  account.body.version,
+);
+assert.equal(removedAccount.status, 200);
+assert.equal((await request(`/accounts/${account.body.id}`, token)).status, 404);
+assert.deepEqual((await request("/transactions", token)).body.items, []);
+assert.equal((await request(`/accounts/${savings.body.id}`, token)).body.balanceMinor, 5_000);
+
 const secondGuest = await request("/auth/guest", null, "POST");
 const otherToken = secondGuest.body.session.token;
 const isolated = await request("/accounts", otherToken);
 assert.deepEqual(isolated.body.items, [], "Guest ledgers must be isolated");
-const inaccessible = await request(`/accounts/${account.body.id}`, otherToken);
+const inaccessible = await request(`/accounts/${savings.body.id}`, otherToken);
 assert.equal(inaccessible.status, 404);
 const household = await request("/households", token);
 assert.equal(household.status, 403);
@@ -127,5 +184,5 @@ const revoked = await request("/accounts", token);
 assert.equal(revoked.status, 401);
 await request("/auth/revoke", otherToken, "POST");
 console.log(
-  "V2 live HTTP smoke passed: auth, guest persistence, idempotent CRUD, stale-edit rejection, recurring settlement, Home totals, isolation, household guard, revocation.",
+  "V2 live HTTP smoke passed: auth, guest persistence, idempotent CRUD, category/account cascades, stale-edit rejection, recurring settlement, Home totals, isolation, household guard, revocation.",
 );

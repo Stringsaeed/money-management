@@ -125,7 +125,12 @@ export function useTransactionsQuery(
   const result = useCollectionRows<V2Transaction>(collections.transactions);
   // oxlint-disable-next-line complexity -- each independent filter is user-selectable.
   const data = result.data.filter((transaction) => {
-    if (filters.accountId && transaction.accountId !== filters.accountId) return false;
+    if (
+      filters.accountId &&
+      transaction.accountId !== filters.accountId &&
+      transaction.toAccountId !== filters.accountId
+    )
+      return false;
     if (filters.categoryId && transaction.categoryId !== filters.categoryId) return false;
     if (filters.kind && transaction.kind !== filters.kind) return false;
     if (filters.fromDate && transaction.date < filters.fromDate) return false;
@@ -242,7 +247,7 @@ export function useLedgerMutations() {
         fingerprint(JSON.stringify([id, version]) ?? ""),
         async (requestKey) => {
           await ledgerClient.accounts.remove(scope, id, version, requestKey);
-          await refresh("accounts");
+          await refresh("home");
         },
       );
     },
@@ -299,7 +304,7 @@ export function useLedgerMutations() {
         fingerprint(JSON.stringify([id, version]) ?? ""),
         async (requestKey) => {
           await ledgerClient.categories.remove(scope, id, version, requestKey);
-          await refresh("categories");
+          await refresh("home");
         },
       );
     },

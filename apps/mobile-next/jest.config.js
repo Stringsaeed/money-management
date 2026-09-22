@@ -12,6 +12,6 @@ module.exports = {
   setupFiles: ["react-native-gesture-handler/jestSetup"],
   testPathIgnorePatterns: ["<rootDir>/dist/"],
   transformIgnorePatterns: [
-    "/node_modules/(?!(.pnpm|react-native|@react-native|expo|expo-modules-core|@expo|@expo-google-fonts|react-navigation|@react-navigation|phosphor-react-native|@tanstack))",
+    "/node_modules/(?!(.pnpm|react-native|@react-native|expo|expo-modules-core|@expo|@expo-google-fonts|react-navigation|@react-navigation|phosphor-react-native|@tanstack|fractional-indexing))",
   ],
 };

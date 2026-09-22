@@ -1,5 +1,10 @@
-import { and, eq, or } from "drizzle-orm";
-import { v2Account, v2RecurringRule, v2Transaction } from "@trove/db/schema/v2-ledger";
+import { and, eq, inArray, or } from "drizzle-orm";
+import {
+  v2Account,
+  v2RecurringOccurrence,
+  v2RecurringRule,
+  v2Transaction,
+} from "@trove/db/schema/v2-ledger";
 
 import {
   accountCreateSchema,
@@ -286,51 +291,46 @@ export async function deleteAccount(
     if (!current) throw new ApiError(404, "account_not_found", "Account not found.");
     requireExpectedVersion(expectedVersion, current.version, id);
 
-    if (await accountHasDependencies(db, context.ledgerId, id)) {
-      await db
-        .update(v2Account)
-        .set({
-          lifecycle: "archived",
-          version: current.version + 1,
-          updatedBy: context.ownerId,
-          updatedAt: new Date(),
-        })
-        .where(and(eq(v2Account.ledgerId, context.ledgerId), eq(v2Account.id, id)));
-      return { id, archived: true, deleted: false };
-    }
+    // Transfers reference an Account from either side, so remove both source
+    // and destination history before deleting the Account itself. This also
+    // removes generated transactions whose recurring rules are deleted below.
+    const linkedTransactionIds = db
+      .select({ id: v2Transaction.id })
+      .from(v2Transaction)
+      .where(
+        and(
+          eq(v2Transaction.ledgerId, context.ledgerId),
+          or(eq(v2Transaction.accountId, id), eq(v2Transaction.toAccountId, id)),
+        ),
+      );
+    await db
+      .update(v2RecurringOccurrence)
+      .set({ transactionId: null })
+      .where(
+        and(
+          eq(v2RecurringOccurrence.ledgerId, context.ledgerId),
+          inArray(v2RecurringOccurrence.transactionId, linkedTransactionIds),
+        ),
+      );
+    await db
+      .delete(v2Transaction)
+      .where(
+        and(
+          eq(v2Transaction.ledgerId, context.ledgerId),
+          or(eq(v2Transaction.accountId, id), eq(v2Transaction.toAccountId, id)),
+        ),
+      );
+    await db
+      .delete(v2RecurringRule)
+      .where(
+        and(
+          eq(v2RecurringRule.ledgerId, context.ledgerId),
+          or(eq(v2RecurringRule.accountId, id), eq(v2RecurringRule.toAccountId, id)),
+        ),
+      );
     await db
       .delete(v2Account)
       .where(and(eq(v2Account.ledgerId, context.ledgerId), eq(v2Account.id, id)));
     return { id, archived: false, deleted: true };
   });
-}
-
-async function accountHasDependencies(
-  db: V2DbExecutor,
-  ledgerId: string,
-  accountId: string,
-): Promise<boolean> {
-  const [transactionHistory, recurringUsage] = await Promise.all([
-    db
-      .select({ id: v2Transaction.id })
-      .from(v2Transaction)
-      .where(
-        and(
-          eq(v2Transaction.ledgerId, ledgerId),
-          or(eq(v2Transaction.accountId, accountId), eq(v2Transaction.toAccountId, accountId)),
-        ),
-      )
-      .limit(1),
-    db
-      .select({ id: v2RecurringRule.id })
-      .from(v2RecurringRule)
-      .where(
-        and(
-          eq(v2RecurringRule.ledgerId, ledgerId),
-          or(eq(v2RecurringRule.accountId, accountId), eq(v2RecurringRule.toAccountId, accountId)),
-        ),
-      )
-      .limit(1),
-  ]);
-  return Boolean(transactionHistory[0] || recurringUsage[0]);
 }

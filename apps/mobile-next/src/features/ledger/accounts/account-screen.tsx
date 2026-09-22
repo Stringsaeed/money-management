@@ -13,6 +13,7 @@ import { formatMoneyMinor } from "@/utils/money";
 
 import { AccountForm } from "./account-form";
 import { TransactionRow } from "../transactions/transaction-row";
+import { confirmLedgerDeletion } from "../delete-confirmation";
 
 export interface AccountScreenProps {
   readonly id?: string;
@@ -28,6 +29,7 @@ export function AccountScreen({ id, onBack, onOpenTransaction }: AccountScreenPr
   const [editOpen, setEditOpen] = useState(false);
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   if (id === "new") {
     return (
@@ -90,6 +92,7 @@ export function AccountScreen({ id, onBack, onOpenTransaction }: AccountScreenPr
               <Button
                 title="Edit"
                 variant="secondary"
+                disabled={deleteBusy}
                 onPress={() => {
                   setError(undefined);
                   setEditOpen(true);
@@ -98,6 +101,7 @@ export function AccountScreen({ id, onBack, onOpenTransaction }: AccountScreenPr
               <Button
                 title={account.archived ? "Restore" : "Archive"}
                 variant="ghost"
+                disabled={deleteBusy}
                 onPress={() =>
                   void (
                     account.archived
@@ -109,17 +113,26 @@ export function AccountScreen({ id, onBack, onOpenTransaction }: AccountScreenPr
                 }
               />
               <Button
-                title="Delete"
+                title="Delete account"
                 variant="destructive"
+                loading={deleteBusy}
+                disabled={deleteBusy || busy}
                 onPress={() =>
-                  void mutations
-                    .deleteAccount(account.id, account.version)
-                    .then(onBack)
-                    .catch((cause) =>
-                      setError(
-                        cause instanceof Error ? cause.message : "Could not delete account.",
-                      ),
-                    )
+                  confirmLedgerDeletion("account", account.name, () => {
+                    setError(undefined);
+                    setDeleteBusy(true);
+                    void mutations
+                      .deleteAccount(account.id, account.version)
+                      .then(onBack)
+                      .catch((cause) =>
+                        setError(
+                          cause instanceof Error
+                            ? cause.message
+                            : "Could not delete account. Try again.",
+                        ),
+                      )
+                      .finally(() => setDeleteBusy(false));
+                  })
                 }
               />
             </View>
