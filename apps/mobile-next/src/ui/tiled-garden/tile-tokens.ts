@@ -13,7 +13,6 @@ export const tileColors = {
   muted: "#746D60",
   grout: "#D5C9B1",
   white: "#FFFDF7",
-  stripe: "#A9BDA4",
 } as const;
 
 export const tileBorderColors = {
