@@ -12,6 +12,8 @@
     }
   },
   "scripts": {
+    "dev:next": "tsx scripts/dev-next.ts",
+    "test:next:http": "node scripts/smoke-next.mjs",
     "check-types": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -25,16 +27,22 @@
     "@trove/domain": "workspace:*",
     "@trove/env": "workspace:*",
     "@trove/protocol": "workspace:*",
+    "date-fns": "^4.1.0",
     "dotenv": "catalog:",
+    "drizzle-orm": "^0.45.2",
+    "hono": "catalog:",
     "jose": "6.2.9",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:",
     "@electric-sql/pglite": "^0.3.14",
+    "@electric-sql/pglite-socket": "0.0.21",
+    "@hono/node-server": "2.1.1",
     "@trove/typescript-config": "workspace:*",
     "@types/node": "catalog:",
-    "hono": "catalog:",
+    "postgres": "^3.4.7",
+    "tsx": "4.22.4",
     "typescript": "~7.0.2",
     "vitest": "^3.2.4"
   }

@@ -5,6 +5,10 @@
   "scripts": {
     "build": "turbo run build",
     "start": "turbo run build && pnpm -C apps/mobile start",
+    "start:next": "turbo run build --filter=mobile-next^... && pnpm -C apps/mobile-next start",
+    "ios:next": "turbo run build --filter=mobile-next^... && pnpm -C apps/mobile-next ios",
+    "android:next": "turbo run build --filter=mobile-next^... && pnpm -C apps/mobile-next android",
+    "check:next": "turbo run check-types test --filter=mobile-next",
     "reset-project": "pnpm -C apps/mobile reset-project",
     "android": "turbo run build && pnpm -C apps/mobile android",
     "ios": "turbo run build && pnpm -C apps/mobile ios",
@@ -21,6 +25,7 @@
     "ts:check": "turbo run build && pnpm -C apps/mobile ts:check",
     "push:storage": "node apps/mobile/scripts/push-code-storage.mjs",
     "dev:server": "pnpm --filter @trove/infra dev",
+    "dev:server:next": "pnpm --filter @trove/api dev:next",
     "db:generate": "turbo run db:generate -F @trove/db --",
     "deploy": "turbo run deploy -F @trove/infra --",
     "destroy": "turbo run destroy -F @trove/infra --"

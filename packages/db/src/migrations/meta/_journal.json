@@ -64,6 +64,13 @@
       "when": 1788847200000,
       "tag": "0015_remove_legacy_auth_and_private_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790007505287,
+      "tag": "0016_mobile_next",
+      "breakpoints": true
     }
   ]
 }
