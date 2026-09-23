@@ -3,7 +3,7 @@ import type { V2Category, V2Transaction } from "@trove/api/v2/contracts";
 
 import { Text } from "@/ui/text";
 import { Icon } from "@/ui/icon";
-import { spacing, typography } from "@/ui/design-tokens";
+import { colors, spacing, typography } from "@/ui/design-tokens";
 import { TilePanel } from "@/ui/tiled-garden/tile-panel";
 import { tileColors } from "@/ui/tiled-garden/tile-tokens";
 import { HomeTransactionRow } from "./home-transaction-row";
@@ -25,7 +25,7 @@ export function HomeActivity({
 }: HomeActivityProps) {
   const names = new Map(categories.map((category) => [category.id, category.name]));
   return (
-    <TilePanel tone="cream" style={styles.panel}>
+    <TilePanel style={styles.panel}>
       <View style={styles.heading}>
         <View style={styles.copy}>
           <Text style={styles.title}>Latest activity</Text>
@@ -72,11 +72,11 @@ const styles = StyleSheet.create({
   },
   copy: { flex: 1 },
   title: {
-    color: tileColors.ink,
+    color: colors.foreground,
     fontSize: typography.textLg,
     fontFamily: typography.fontBodyBold,
   },
-  subtitle: { color: tileColors.muted, fontSize: typography.textXs },
+  subtitle: { color: colors.mutedForeground, fontSize: typography.textXs },
   link: {
     width: 44,
     height: 44,
@@ -88,5 +88,9 @@ const styles = StyleSheet.create({
     borderColor: tileColors.grout,
   },
   pressed: { opacity: 0.68 },
-  empty: { color: tileColors.muted, fontSize: typography.textSm, paddingVertical: spacing[4] },
+  empty: {
+    color: colors.mutedForeground,
+    fontSize: typography.textSm,
+    paddingVertical: spacing[4],
+  },
 });

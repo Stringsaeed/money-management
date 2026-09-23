@@ -4,5 +4,4 @@ export { SeedAvatar } from "./seed-avatar/seed-avatar";
 export type { SeedAvatarProps } from "./seed-avatar/seed-avatar";
 export { TilePanel } from "./tile-panel/tile-panel";
 export type { TilePanelProps } from "./tile-panel/tile-panel";
-export { tileChartColors, tileColors, tileForegrounds } from "./tile-tokens";
-export type { TileTone } from "./tile-tokens";
+export { tileChartColors, tileColors } from "./tile-tokens";

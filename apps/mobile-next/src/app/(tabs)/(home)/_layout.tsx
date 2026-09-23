@@ -9,6 +9,8 @@ export default function HomeLayout() {
         headerShadowVisible: false,
         headerBlurEffect: "none",
         headerStyle: { backgroundColor: "transparent" },
+        // Let native header colors follow the window's system appearance.
+        unstable_nativeProps: { headerConfig: { experimental_userInterfaceStyle: "unspecified" } },
         headerTitleStyle: {
           fontFamily: typography.fontBodyBold,
           color: colors.foreground,

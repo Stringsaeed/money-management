@@ -2,7 +2,7 @@ import { format, parseISO } from "date-fns";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { Icon } from "@/ui/icon";
-import { spacing, typography } from "@/ui/design-tokens";
+import { colors, spacing, typography } from "@/ui/design-tokens";
 import { Text } from "@/ui/text";
 import { BalanceChart } from "@/ui/tiled-garden/balance-chart";
 import { TilePanel } from "@/ui/tiled-garden/tile-panel";
@@ -39,7 +39,7 @@ export function HomeOverviewCard({
   onRange,
 }: HomeOverviewCardProps) {
   return (
-    <TilePanel tone="olive" contentStyle={styles.panel}>
+    <TilePanel contentStyle={styles.panel}>
       <View style={styles.top}>
         <View style={styles.balanceCopy}>
           <Text style={styles.eyebrow}>Overview</Text>
@@ -67,7 +67,7 @@ export function HomeOverviewCard({
             >
               <Icon
                 name={value === "line" ? "chart-line-up" : "chart-bar"}
-                color={mode === value ? tileColors.cream : tileColors.ink}
+                color={mode === value ? tileColors.ink : colors.foreground}
                 size={20}
                 weight={mode === value ? "bold" : "regular"}
               />
@@ -97,7 +97,7 @@ export function HomeOverviewCard({
             onPress={() => onRange(value)}
             style={[styles.period, range === value && styles.periodSelected]}
           >
-            <Text style={styles.periodText}>
+            <Text style={[styles.periodText, range === value && styles.periodTextSelected]}>
               {value === "week" ? "Week" : value === "month" ? "Month" : "Year"}
             </Text>
           </Pressable>
@@ -134,14 +134,14 @@ const styles = StyleSheet.create({
   top: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: spacing[2] },
   balanceCopy: { flex: 1, minWidth: 120, gap: spacing[0.5] },
   eyebrow: {
-    color: tileColors.ink,
+    color: colors.foreground,
     fontSize: 10,
     lineHeight: 14,
     fontFamily: typography.fontBodyBold,
     letterSpacing: 1.5,
   },
   balance: {
-    color: tileColors.ink,
+    color: colors.foreground,
     fontSize: 34,
     lineHeight: 40,
     fontFamily: typography.fontHeadingBlack,
@@ -149,10 +149,9 @@ const styles = StyleSheet.create({
     letterSpacing: -1.4,
   },
   caption: {
-    color: tileColors.ink,
+    color: colors.mutedForeground,
     fontSize: typography.textXs,
     lineHeight: 16,
-    opacity: 0.78,
     fontFamily: typography.fontBodyMedium,
   },
   switcher: {
@@ -160,9 +159,9 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     padding: 3,
     borderWidth: 1,
-    borderColor: tileColors.grout,
+    borderColor: colors.border,
     borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.28)",
+    backgroundColor: colors.muted,
   },
   switchButton: {
     alignItems: "center",
@@ -171,7 +170,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 44,
   },
-  selected: { backgroundColor: tileColors.ink },
+  selected: { backgroundColor: tileColors.olive },
   periods: { flexDirection: "row", alignSelf: "center", gap: spacing[1] },
   period: {
     minHeight: 36,
@@ -181,16 +180,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "transparent",
   },
-  periodSelected: { backgroundColor: "rgba(255,255,255,0.35)", borderColor: tileColors.grout },
+  periodSelected: { backgroundColor: tileColors.olive, borderColor: tileColors.grout },
   periodText: {
-    color: tileColors.ink,
+    color: colors.foreground,
     fontSize: typography.textXs,
     fontFamily: typography.fontBodyBold,
   },
   totals: {
     flexDirection: "row",
     borderTopWidth: 1,
-    borderTopColor: tileColors.grout,
+    borderTopColor: colors.border,
     paddingTop: spacing[3],
     gap: spacing[3],
   },
@@ -206,5 +205,6 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   incomeValue: { color: tileChartColors.income },
-  expenseValue: { color: tileColors.ink },
+  expenseValue: { color: colors.foreground },
+  periodTextSelected: { color: tileColors.ink },
 });

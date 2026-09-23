@@ -2,9 +2,9 @@ import { useState } from "react";
 import { G, Line, Svg, Text as SvgText } from "react-native-svg";
 import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
 
-import { typography } from "@/ui/design-tokens";
+import { colors, typography } from "@/ui/design-tokens";
 
-import { tileChartColors, tileColors } from "../tile-tokens";
+import { tileChartColors } from "../tile-tokens";
 import {
   formatChartValue,
   getAreaPath,
@@ -89,7 +89,7 @@ export function BalanceChart({
             y2={chartHeight - PLOT_BOTTOM}
           />
           <SvgText
-            fill={tileColors.muted}
+            fill={colors.mutedForeground}
             fontFamily={typography.fontBodyMedium}
             fontSize={10}
             textAnchor="end"
@@ -99,7 +99,7 @@ export function BalanceChart({
             {formatValue(geometry.max)}
           </SvgText>
           <SvgText
-            fill={tileColors.muted}
+            fill={colors.mutedForeground}
             fontFamily={typography.fontBodyMedium}
             fontSize={10}
             textAnchor="end"
@@ -121,7 +121,7 @@ export function BalanceChart({
           {labels.length > 0 ? (
             <>
               <SvgText
-                fill={tileColors.muted}
+                fill={colors.mutedForeground}
                 fontFamily={typography.fontBodyMedium}
                 fontSize={10}
                 textAnchor="start"
@@ -132,7 +132,7 @@ export function BalanceChart({
               </SvgText>
               {labels.length > 1 ? (
                 <SvgText
-                  fill={tileColors.muted}
+                  fill={colors.mutedForeground}
                   fontFamily={typography.fontBodyMedium}
                   fontSize={10}
                   textAnchor="end"
@@ -145,7 +145,7 @@ export function BalanceChart({
             </>
           ) : (
             <SvgText
-              fill={tileColors.muted}
+              fill={colors.mutedForeground}
               fontFamily={typography.fontBodyMedium}
               fontSize={12}
               textAnchor="middle"
@@ -163,7 +163,7 @@ export function BalanceChart({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: tileColors.cream,
+    backgroundColor: colors.card,
     borderRadius: 16,
     minWidth: 0,
     overflow: "hidden",

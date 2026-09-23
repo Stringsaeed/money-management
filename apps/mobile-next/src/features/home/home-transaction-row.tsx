@@ -1,12 +1,11 @@
-import { ArrowDownLeftIcon, ArrowUpRightIcon, ArrowsLeftRightIcon } from "phosphor-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
 import { format, parseISO } from "date-fns";
 
 import type { V2Transaction } from "@trove/api/v2/contracts";
 
 import { Text } from "@/ui/text";
-import { spacing, typography } from "@/ui/design-tokens";
-import { tileColors } from "@/ui/tiled-garden/tile-tokens";
+import { colors, spacing, typography } from "@/ui/design-tokens";
+import { Icon, type IconName } from "@/ui/icon";
 import { formatMoneyMinor } from "@/utils/money";
 
 interface HomeTransactionRowProps {
@@ -15,21 +14,18 @@ interface HomeTransactionRowProps {
   readonly categoryName?: string;
 }
 
-const iconFor = (kind: V2Transaction["kind"]) => {
-  if (kind === "income") return ArrowDownLeftIcon;
-  if (kind === "transfer") return ArrowsLeftRightIcon;
-  return ArrowUpRightIcon;
-};
+const transactionIcons = {
+  income: "arrow-down-left",
+  expense: "arrow-up-right",
+  transfer: "arrows-left-right",
+} satisfies Record<V2Transaction["kind"], IconName>;
 
 export function HomeTransactionRow({
   transaction,
   onPress,
   categoryName,
 }: HomeTransactionRowProps) {
-  const Icon = iconFor(transaction.kind);
-  const iconColor = tileColors.ink;
   const sign = transaction.kind === "income" ? "+" : transaction.kind === "expense" ? "−" : "";
-  const amountColor = tileColors.ink;
   const label = transaction.note.trim() || categoryName || "Transaction";
 
   return (
@@ -40,7 +36,12 @@ export function HomeTransactionRow({
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
       <View style={styles.iconWrap}>
-        <Icon size={18} color={iconColor} weight="regular" />
+        <Icon
+          name={transactionIcons[transaction.kind]}
+          size={18}
+          color={colors.foreground}
+          weight="regular"
+        />
       </View>
       <View style={styles.copy}>
         <Text numberOfLines={1} style={styles.label}>
@@ -51,7 +52,7 @@ export function HomeTransactionRow({
           {categoryName ? ` · ${categoryName}` : ""}
         </Text>
       </View>
-      <Text style={[styles.amount, { color: amountColor }]}>
+      <Text style={styles.amount}>
         {sign}
         {formatMoneyMinor(transaction.amountMinor, transaction.currency)}
       </Text>
@@ -70,8 +71,8 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.6 },
   iconWrap: {
     alignItems: "center",
-    backgroundColor: tileColors.olive,
-    borderColor: tileColors.grout,
+    backgroundColor: colors.muted,
+    borderColor: colors.border,
     borderRadius: 11,
     borderWidth: 1,
     height: 36,
@@ -80,16 +81,17 @@ const styles = StyleSheet.create({
   },
   copy: { flex: 1, gap: spacing[0.5] },
   label: {
-    color: tileColors.ink,
+    color: colors.foreground,
     fontFamily: typography.fontBodySemibold,
     fontSize: typography.textBase,
   },
   date: {
-    color: tileColors.muted,
+    color: colors.mutedForeground,
     fontFamily: typography.fontBodyNormal,
     fontSize: typography.textXs,
   },
   amount: {
+    color: colors.foreground,
     fontFamily: typography.fontHeadingMedium,
     fontSize: typography.textBase,
     fontVariant: ["tabular-nums"],

@@ -1,9 +1,10 @@
+import type { ColorValue } from "react-native";
 import { Rect } from "react-native-svg";
 
 import type { ChartGeometry } from "./balance-chart-types";
 
 export interface ValueBarProps {
-  color: string;
+  color: ColorValue;
   value: number;
   width: number;
   x: number;

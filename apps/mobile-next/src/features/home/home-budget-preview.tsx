@@ -2,9 +2,8 @@ import { ScrollView, StyleSheet, View } from "react-native";
 
 import { Text } from "@/ui/text";
 import { Icon } from "@/ui/icon";
-import { spacing, typography } from "@/ui/design-tokens";
+import { colors, spacing, typography } from "@/ui/design-tokens";
 import { TilePanel } from "@/ui/tiled-garden/tile-panel";
-import { tileColors } from "@/ui/tiled-garden/tile-tokens";
 
 export function HomeBudgetPreview() {
   return (
@@ -20,14 +19,14 @@ export function HomeBudgetPreview() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.cards}
       >
-        <TilePanel tone="pink" motif style={styles.card}>
-          <Icon name="wallet" size={26} color={tileColors.ink} />
+        <TilePanel style={styles.card}>
+          <Icon name="wallet" size={26} color={colors.foreground} />
           <Text style={styles.cardTitle}>A little structure.</Text>
           <Text style={styles.copy}>Budgets for everyday life, with room to breathe.</Text>
           <Text style={styles.caption}>Budgets are not available yet.</Text>
         </TilePanel>
-        <TilePanel tone="olive" motif style={styles.card}>
-          <Icon name="chart-line-up" size={26} color={tileColors.ink} />
+        <TilePanel style={styles.card}>
+          <Icon name="chart-line-up" size={26} color={colors.foreground} />
           <Text style={styles.cardTitle}>A bigger picture.</Text>
           <Text style={styles.copy}>See what is left for the things that matter to you.</Text>
           <Text style={styles.caption}>Coming in a future release.</Text>
@@ -54,9 +53,9 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontBodyBold,
     padding: spacing[1.5],
     borderWidth: 1,
-    borderColor: tileColors.grout,
-    color: tileColors.ink,
-    backgroundColor: tileColors.cream,
+    borderColor: colors.border,
+    color: colors.mutedForeground,
+    backgroundColor: colors.muted,
     borderRadius: 6,
   },
   cards: {
@@ -69,8 +68,8 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontFamily: typography.fontBodyBold,
     fontSize: typography.textLg,
-    color: tileColors.ink,
+    color: colors.foreground,
   },
-  copy: { fontSize: typography.textSm, color: tileColors.ink },
-  caption: { fontSize: typography.textXs, color: tileColors.ink, opacity: 0.7 },
+  copy: { fontSize: typography.textSm, color: colors.foreground },
+  caption: { fontSize: typography.textXs, color: colors.mutedForeground },
 });

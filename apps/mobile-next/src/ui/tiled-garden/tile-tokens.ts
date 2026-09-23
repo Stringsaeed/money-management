@@ -1,9 +1,12 @@
+import type { ColorValue } from "react-native";
+
+import { colors } from "@/ui/design-tokens";
+
 /**
- * Fixed colors for the Tiled Garden surfaces.
+ * Fixed colors for Tiled Garden actions and avatar accents.
  *
- * These surfaces are intentionally the same in light and dark appearance. The
- * Home composition uses them as editorial accents while the app background and
- * surrounding controls continue to use the canonical native-aware tokens.
+ * These accents are intentionally the same in light and dark appearance. Card
+ * and chart surfaces use the canonical native-aware tokens instead.
  */
 export const tileColors = {
   cream: "#F5EBD6",
@@ -15,24 +18,10 @@ export const tileColors = {
   white: "#FFFDF7",
 } as const;
 
-export const tileBorderColors = {
-  cream: "rgba(37, 35, 29, 0.26)",
-  olive: "rgba(37, 35, 29, 0.3)",
-  pink: "rgba(37, 35, 29, 0.26)",
-} as const;
-
-export const tileForegrounds = {
-  cream: tileColors.ink,
-  olive: tileColors.ink,
-  pink: tileColors.ink,
-} as const;
-
 export const tileChartColors = {
-  balance: "#354722",
-  income: "#40562D",
-  expense: "#B95770",
-  area: "#BFCB83",
-  grid: "#D8CFBC",
-} as const;
-
-export type TileTone = keyof typeof tileForegrounds;
+  balance: colors.foreground,
+  income: colors.foreground,
+  expense: colors.mutedForeground,
+  area: colors.muted,
+  grid: colors.border,
+} satisfies Record<string, ColorValue>;

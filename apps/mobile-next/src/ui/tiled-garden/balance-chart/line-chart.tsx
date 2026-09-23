@@ -1,6 +1,8 @@
 import { Circle, G, Path } from "react-native-svg";
 
-import { tileChartColors, tileColors } from "../tile-tokens";
+import { colors } from "@/ui/design-tokens";
+
+import { tileChartColors } from "../tile-tokens";
 import { safeNumber } from "./balance-chart-geometry";
 import type { BalanceChartPoint, ChartGeometry } from "./balance-chart-types";
 
@@ -30,7 +32,7 @@ export function LineChart({ points, geometry, areaPath, linePath }: LineChartPro
           <Circle
             cx={geometry.xForIndex(index)}
             cy={geometry.yForValue(safeNumber(point.balance))}
-            fill={tileColors.white}
+            fill={colors.card}
             key={`${point.label}-${index}`}
             r={4}
             stroke={tileChartColors.balance}

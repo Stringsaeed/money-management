@@ -3,6 +3,7 @@ import {
   ArrowDownLeftIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
+  ArrowsLeftRightIcon,
   ArrowUpRightIcon,
   BookOpenIcon,
   ChartBarIcon,
@@ -39,6 +40,7 @@ export type IconName =
   | "arrow-down-left"
   | "arrow-left"
   | "arrow-right"
+  | "arrows-left-right"
   | "arrow-up-right"
   | "book-open"
   | "chart-bar"
@@ -69,6 +71,7 @@ const ICONS = {
   "arrow-down-left": ArrowDownLeftIcon,
   "arrow-left": ArrowLeftIcon,
   "arrow-right": ArrowRightIcon,
+  "arrows-left-right": ArrowsLeftRightIcon,
   "arrow-up-right": ArrowUpRightIcon,
   "book-open": BookOpenIcon,
   "chart-bar": ChartBarIcon,
