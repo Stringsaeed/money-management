@@ -9,10 +9,12 @@ export interface EmptyStateProps {
   title: string;
   message: string;
   onRetry?: () => void;
+  /** Primary next step, e.g. sending the user somewhere to create the missing resource. */
+  action?: { label: string; onPress: () => void };
   icon?: ReactNode;
 }
 
-export function EmptyState({ title, message, onRetry, icon }: EmptyStateProps) {
+export function EmptyState({ title, message, onRetry, action, icon }: EmptyStateProps) {
   return (
     <View accessibilityRole="summary" style={styles.container}>
       {icon ? <View style={styles.icon}>{icon}</View> : null}
@@ -24,6 +26,9 @@ export function EmptyState({ title, message, onRetry, icon }: EmptyStateProps) {
       </Text>
       {onRetry ? (
         <Button title="Try again" onPress={onRetry} variant="secondary" style={styles.retry} />
+      ) : null}
+      {action ? (
+        <Button title={action.label} onPress={action.onPress} style={styles.retry} />
       ) : null}
     </View>
   );

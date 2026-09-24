@@ -41,3 +41,54 @@ export function parseMoneyMinor(input: string, currency: string): number | null 
     Number(`${whole}${fraction.padEnd(fractionDigits, "0")}`) * (value.startsWith("-") ? -1 : 1);
   return Number.isSafeInteger(minor) ? minor : null;
 }
+
+const CURRENCY_SYMBOLS = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  JPY: "¥",
+  CNY: "¥",
+  INR: "₹",
+  KRW: "₩",
+  RUB: "₽",
+  BRL: "R$",
+  ZAR: "R",
+  EGP: "E£",
+  SAR: "﷼",
+  AED: "د.إ",
+} as const satisfies Record<string, string>;
+
+/** Currencies whose symbol ships as an SVG glyph (see `assets/currencies`) instead of text. */
+const CURRENCY_GLYPHS = {
+  SAR: "riyal",
+  AED: "dirham",
+} as const satisfies Record<string, string>;
+
+export type CurrencyGlyphKey = (typeof CURRENCY_GLYPHS)[keyof typeof CURRENCY_GLYPHS];
+
+const hasGlyph = (currency: string): currency is keyof typeof CURRENCY_GLYPHS =>
+  Object.hasOwn(CURRENCY_GLYPHS, currency);
+
+export function currencyGlyph(currency: string): CurrencyGlyphKey | null {
+  return hasGlyph(currency) ? CURRENCY_GLYPHS[currency] : null;
+}
+
+const hasKnownSymbol = (currency: string): currency is keyof typeof CURRENCY_SYMBOLS =>
+  Object.hasOwn(CURRENCY_SYMBOLS, currency);
+
+/** Narrow currency symbol (e.g. "$", "€"), falling back to the ISO code. Hermes' Intl often reports only the code. */
+export function currencySymbol(currency: string): string {
+  if (hasKnownSymbol(currency)) return CURRENCY_SYMBOLS[currency];
+  try {
+    const part = new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+      currencyDisplay: "narrowSymbol",
+    })
+      .formatToParts(0)
+      .find((item) => item.type === "currency");
+    return part?.value ?? currency;
+  } catch {
+    return currency;
+  }
+}

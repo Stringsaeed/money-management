@@ -48,9 +48,12 @@
     "react-native-gesture-handler": "~3.1.0",
     "react-native-keyboard-controller": "1.21.9",
     "react-native-linear-gradient": "^2.8.3",
+    "react-native-nano-icons": "0.2.1",
+    "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.2",
     "react-native-svg": "15.15.4",
+    "react-native-worklets": "0.10.1",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -82,6 +82,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     "expo-image",
     "expo-status-bar",
+    [
+      "react-native-nano-icons",
+      {
+        iconSets: [
+          {
+            inputDir: "./assets/currencies",
+            fontFamily: "TroveCurrencies",
+            outputDir: "./assets/nanoicons",
+          },
+        ],
+      },
+    ],
     "./plugins/withUISceneLifecycle.js",
     "./plugins/withAndroidThemeColor.js",
   ],
