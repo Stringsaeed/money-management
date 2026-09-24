@@ -10,6 +10,7 @@ import {
   ScopeControl,
   ScopeSheet,
 } from "@/features/navigation";
+import { playCue } from "@/features/sound";
 import { GlassTabBar } from "@/ui/glass-tab-bar";
 
 import { useLedgerScope } from "./ledger-scope-context";
@@ -42,6 +43,7 @@ export const AppTabBar = ({ state, navigation, descriptors, insets }: BottomTabB
   };
   const selectLedgerScope = (nextScope: V2LedgerScope) => {
     selectScope(nextScope);
+    playCue("toggle");
     setScopeOpen(false);
   };
 

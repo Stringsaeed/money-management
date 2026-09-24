@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { V2Account, V2Category, V2Transaction } from "@trove/api/v2/contracts";
 
 import type { TransactionInput } from "@/data/ledger-client";
+import { playCue } from "@/features/sound";
 import { currencyFractionDigits, parseMoneyMinor } from "@/utils/money";
 
 import {
@@ -67,6 +68,7 @@ export function useTransactionForm({
 
   const pressKey = (key: AmountKey) => {
     keyHaptic();
+    playCue("key");
     setValidationError(undefined);
     setDraft((current) => ({
       ...current,
@@ -81,6 +83,7 @@ export function useTransactionForm({
     const error = transactionDraftError(draft, amountMinor, activeAccounts.length > 0);
     if (error || amountMinor === null) {
       errorHaptic();
+      playCue("error");
       setValidationError(error);
       return;
     }

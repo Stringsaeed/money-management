@@ -4,13 +4,13 @@ import { Alert } from "react-native";
 import type { V2Transaction } from "@trove/api/v2/contracts";
 
 import type { TransactionInput } from "@/data/ledger-client";
-import { useLedgerMutations } from "@/data/ledger-queries";
+import { useLedgerMutationsWithSound } from "@/features/sound";
 
 const errorMessage = (cause: unknown, fallback: string) =>
   cause instanceof Error ? cause.message : fallback;
 
 export function useTransactionActions(transaction: V2Transaction | undefined, onDone?: () => void) {
-  const mutations = useLedgerMutations();
+  const mutations = useLedgerMutationsWithSound();
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
 

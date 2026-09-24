@@ -25,3 +25,7 @@ export function BottomSheetScrollView({ children, ...props }: PropsWithChildren)
 export function DateTimePicker() {
   return null;
 }
+
+export function Slider() {
+  return null;
+}

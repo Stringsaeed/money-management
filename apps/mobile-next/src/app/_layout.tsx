@@ -16,10 +16,12 @@ import {
   Nunito_900Black,
 } from "@expo-google-fonts/nunito";
 import { AuthProvider } from "@/features/auth/auth-provider";
+import { hydrateSoundPreferences } from "@/features/sound";
 import { SessionGate } from "@/navigation/session-gate";
 import { colors } from "@/ui/design-tokens";
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+void hydrateSoundPreferences();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({

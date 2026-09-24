@@ -2,7 +2,8 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { LegendList } from "@legendapp/list/react-native";
 
-import { useAccountsQuery, useLedgerMutations, useTransactionsQuery } from "@/data/ledger-queries";
+import { useAccountsQuery, useTransactionsQuery } from "@/data/ledger-queries";
+import { useLedgerMutationsWithSound } from "@/features/sound";
 import { Button } from "@/ui/button";
 import { EmptyState } from "@/ui/empty-state";
 import { Screen } from "@/ui/screen";
@@ -25,7 +26,7 @@ export function AccountScreen({ id, onBack, onOpenTransaction }: AccountScreenPr
   const accounts = useAccountsQuery();
   const account = accounts.data.find((item) => item.id === id);
   const transactions = useTransactionsQuery({ accountId: id });
-  const mutations = useLedgerMutations();
+  const mutations = useLedgerMutationsWithSound();
   const [editOpen, setEditOpen] = useState(false);
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
