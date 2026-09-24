@@ -346,11 +346,13 @@ export async function signInWithWorkOS(): Promise<AuthActionResult> {
 }
 
 export async function continueAsGuest(): Promise<AuthActionResult> {
+  console.log("test");
   const response = await apiRequest("/auth/guest", {
     method: "POST",
     skipAuth: true,
     schema: guestResponseSchema,
   });
+  console.log("test response");
   const session = guestSessionSchema.parse({
     principal: {
       kind: "guest",
