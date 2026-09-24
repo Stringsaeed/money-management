@@ -33,7 +33,7 @@ export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) 
         <Stack.Screen name="categories" options={{ title: "Categories" }} />
         <Stack.Screen
           name="transactions/[id]"
-          options={{ title: "Transaction", presentation: "modal" }}
+          options={{ title: "Transaction", presentation: "modal", headerShown: false }}
         />
         <Stack.Screen name="recurring/index" options={{ title: "Recurring transactions" }} />
         <Stack.Screen

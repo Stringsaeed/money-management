@@ -10,6 +10,7 @@ export interface IconButtonProps {
   accessibilityLabel: string;
   onPress?: () => void;
   disabled?: boolean;
+  variant?: "default" | "primary";
   style?: StyleProp<ViewStyle>;
 }
 
@@ -18,6 +19,7 @@ export function IconButton({
   accessibilityLabel,
   onPress,
   disabled = false,
+  variant = "default",
   style,
 }: IconButtonProps) {
   const reducedMotion = useReducedMotion();
@@ -37,9 +39,14 @@ export function IconButton({
           animate={{ opacity: disabled ? 0.45 : pressed ? 0.82 : 1, scale: pressed ? 0.95 : 1 }}
           pointerEvents="none"
           transition={motionTransition(reducedMotion, PRESS_TRANSITION)}
-          style={[styles.button, style]}
+          style={[styles.button, variant === "primary" && styles.primary, style]}
         >
-          <Icon name={name} size={20} />
+          <Icon
+            name={name}
+            size={20}
+            weight={variant === "primary" ? "bold" : "regular"}
+            color={variant === "primary" ? colors.primaryForeground : undefined}
+          />
         </EaseView>
       )}
     </Pressable>
@@ -56,4 +63,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: spacing[11],
   },
+  primary: { backgroundColor: colors.primary },
 });
