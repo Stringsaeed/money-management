@@ -1,7 +1,7 @@
 import { Platform, StyleSheet } from "react-native";
 
 import { CREATE_SIZE, PILL_PADDING, TAB_HEIGHT, TAB_WIDTH } from "./constants";
-import { colors, radii, rawColorValues, spacing } from "../design-tokens";
+import { colors, radii, rawColorValues, shadows, spacing } from "../design-tokens";
 
 export const styles = StyleSheet.create({
   wrap: {
@@ -17,9 +17,11 @@ export const styles = StyleSheet.create({
   },
   pill: {
     borderRadius: 999,
-    // overflow: "hidden",
     ...Platform.select({
-      android: { elevation: 8 },
+      android: {
+        borderWidth: StyleSheet.hairlineWidth,
+        boxShadow: shadows.sm,
+      },
       default: {},
     }),
     flexDirection: "row",
@@ -63,12 +65,17 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     ...Platform.select({
-      android: { elevation: 8 },
+      android: {
+        borderColor: colors.kumoLine,
+        borderWidth: StyleSheet.hairlineWidth,
+        boxShadow: shadows.sm,
+      },
       default: {},
     }),
   },
   fallback: {
-    overflow: "hidden",
+    backgroundColor: colors.background,
+    borderColor: colors.kumoLine,
   },
 
   capsuleOverlay: {
@@ -76,9 +83,8 @@ export const styles = StyleSheet.create({
   },
 
   fallbackOverlay: {
-    backgroundColor: `${rawColorValues.light.foreground}0D`,
-    borderWidth: 1,
-    borderColor: `${rawColorValues.light.foreground}1A`,
+    backgroundColor: colors.background,
+    borderColor: colors.kumoLine,
   },
 
   iconFocused: {

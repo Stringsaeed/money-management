@@ -8,6 +8,8 @@ import { z } from "zod";
 
 const configuredBaseUrl = (process.env.EXPO_PUBLIC_API_URL ?? "").replace(/\/+$/, "");
 
+console.log(configuredBaseUrl);
+
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string | null;
