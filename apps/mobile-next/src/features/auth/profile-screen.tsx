@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 
+import { SoundSettings } from "@/features/sound";
 import { Button, Screen, Surface, Text } from "@/ui";
 import { colors } from "@/ui/design-tokens";
 import { useLedgerScope } from "@/navigation/ledger-scope-context";
@@ -43,11 +44,14 @@ export function ProfileScreen() {
 
   return (
     <Screen style={styles.screen}>
-      <View style={styles.header}>
-        <Text variant="headline">Profile</Text>
-        <Text variant="body" style={styles.copy}>
-          {description}
-        </Text>
+      <View style={styles.top}>
+        <View style={styles.header}>
+          <Text variant="headline">Profile</Text>
+          <Text variant="body" style={styles.copy}>
+            {description}
+          </Text>
+        </View>
+        <SoundSettings />
       </View>
       <Surface variant="raised" style={styles.card}>
         {isGuest ? (
@@ -84,7 +88,8 @@ export function ProfileScreen() {
 
 const styles = StyleSheet.create({
   screen: { justifyContent: "space-between", padding: 24 },
-  header: { gap: 12, paddingTop: 24 },
+  top: { gap: 24, paddingTop: 24 },
+  header: { gap: 12 },
   copy: { color: colors.mutedForeground },
   card: { gap: 12, marginBottom: 12 },
   error: { color: colors.destructive },

@@ -6,6 +6,8 @@ module.exports = {
     "^@expo/ui$": "<rootDir>/src/ui/__mocks__/expo-ui.tsx",
     "^@expo/ui/community/bottom-sheet$": "<rootDir>/src/ui/__mocks__/expo-ui.tsx",
     "^@expo/ui/community/datetime-picker$": "<rootDir>/src/ui/__mocks__/expo-ui.tsx",
+    "^@expo/ui/community/slider$": "<rootDir>/src/ui/__mocks__/expo-ui.tsx",
+    "^cuelume-native$": "<rootDir>/src/features/sound/__mocks__/cuelume-native.ts",
     "^expo-blur$": "<rootDir>/src/ui/__mocks__/expo-blur.tsx",
     "^react-native-reanimated$": "<rootDir>/src/ui/__mocks__/react-native-reanimated.ts",
     "^react-native-worklets$": "<rootDir>/src/ui/__mocks__/react-native-worklets.ts",

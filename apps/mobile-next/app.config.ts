@@ -94,6 +94,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         ],
       },
     ],
+    [
+      // Short UI cues only: no background audio, foreground service, or file decoding.
+      "react-native-audio-api",
+      {
+        iosBackgroundMode: false,
+        androidForegroundService: false,
+        androidPermissions: [],
+        disableFFmpeg: true,
+      },
+    ],
     "./plugins/withUISceneLifecycle.js",
     "./plugins/withAndroidThemeColor.js",
   ],

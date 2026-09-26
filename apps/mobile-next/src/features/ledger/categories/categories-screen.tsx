@@ -2,7 +2,8 @@ import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { LegendList } from "@legendapp/list/react-native";
 
-import { useCategoriesQuery, useLedgerMutations } from "@/data/ledger-queries";
+import { useCategoriesQuery } from "@/data/ledger-queries";
+import { useLedgerMutationsWithSound } from "@/features/sound";
 import { Button } from "@/ui/button";
 import { Chip } from "@/ui/chip";
 import { EmptyState } from "@/ui/empty-state";
@@ -23,7 +24,7 @@ export interface CategoriesScreenProps {
 
 export function CategoriesScreen({ initialCreate = false }: CategoriesScreenProps) {
   const categories = useCategoriesQuery();
-  const mutations = useLedgerMutations();
+  const mutations = useLedgerMutationsWithSound();
   const [filter, setFilter] = useState<CategoryFilter>("all");
   const [editing, setEditing] = useState<string | "new" | undefined>(
     initialCreate ? "new" : undefined,

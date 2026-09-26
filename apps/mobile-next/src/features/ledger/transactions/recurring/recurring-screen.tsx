@@ -2,12 +2,8 @@ import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { LegendList } from "@legendapp/list/react-native";
 
-import {
-  useAccountsQuery,
-  useCategoriesQuery,
-  useLedgerMutations,
-  useRecurringQuery,
-} from "@/data/ledger-queries";
+import { useAccountsQuery, useCategoriesQuery, useRecurringQuery } from "@/data/ledger-queries";
+import { useLedgerMutationsWithSound } from "@/features/sound";
 import { Button } from "@/ui/button";
 import { Chip } from "@/ui/chip";
 import { EmptyState } from "@/ui/empty-state";
@@ -28,7 +24,7 @@ export function RecurringScreen({ onOpenRule }: RecurringScreenProps) {
   const recurring = useRecurringQuery();
   const accounts = useAccountsQuery();
   const categories = useCategoriesQuery();
-  const mutations = useLedgerMutations();
+  const mutations = useLedgerMutationsWithSound();
   const [filter, setFilter] = useState<"current" | "needs_attention" | "archived">("current");
   const [createOpen, setCreateOpen] = useState(false);
   const [error, setError] = useState<string>();

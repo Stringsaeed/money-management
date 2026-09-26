@@ -2,7 +2,8 @@ import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { LegendList } from "@legendapp/list/react-native";
 
-import { useAccountsQuery, useLedgerMutations } from "@/data/ledger-queries";
+import { useAccountsQuery } from "@/data/ledger-queries";
+import { useLedgerMutationsWithSound } from "@/features/sound";
 import { Button } from "@/ui/button";
 import { Chip } from "@/ui/chip";
 import { EmptyState } from "@/ui/empty-state";
@@ -21,7 +22,7 @@ export interface AccountsScreenProps {
 
 export function AccountsScreen({ onOpenAccount }: AccountsScreenProps) {
   const accounts = useAccountsQuery();
-  const mutations = useLedgerMutations();
+  const mutations = useLedgerMutationsWithSound();
   const [formOpen, setFormOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [busy, setBusy] = useState(false);

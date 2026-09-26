@@ -3,12 +3,8 @@
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
-import {
-  useAccountsQuery,
-  useCategoriesQuery,
-  useLedgerMutations,
-  useRecurringQuery,
-} from "@/data/ledger-queries";
+import { useAccountsQuery, useCategoriesQuery, useRecurringQuery } from "@/data/ledger-queries";
+import { useLedgerMutationsWithSound } from "@/features/sound";
 import { Button } from "@/ui/button";
 import { EmptyState } from "@/ui/empty-state";
 import { Screen } from "@/ui/screen";
@@ -26,7 +22,7 @@ export function RecurringRuleScreen({ id = "new", onBack }: RecurringRuleScreenP
   const recurring = useRecurringQuery();
   const accounts = useAccountsQuery();
   const categories = useCategoriesQuery();
-  const mutations = useLedgerMutations();
+  const mutations = useLedgerMutationsWithSound();
   const [error, setError] = useState<string>();
   const [actionError, setActionError] = useState<string>();
   const [busy, setBusy] = useState(false);
