@@ -24,6 +24,7 @@ import {
 import { createLedgerCollections, scopeKey, type LedgerCollections } from "./ledger-collections";
 import { parseHome, type UpcomingOccurrence } from "./ledger-schemas";
 import { createRequestKeyRunner } from "./request-keys";
+import { transactionListKey } from "./transaction-list-keys";
 import { changeRecurringLifecycle } from "./recurring-lifecycle";
 
 interface LedgerDataContextValue {
@@ -55,7 +56,7 @@ export function LedgerDataProvider({
   return <LedgerDataContext.Provider value={value}>{children}</LedgerDataContext.Provider>;
 }
 
-function useLedgerData(): LedgerDataContextValue {
+export function useLedgerData(): LedgerDataContextValue {
   const value = useContext(LedgerDataContext);
   if (!value) throw new Error("LedgerDataProvider is required for ledger features.");
   return value;
@@ -213,6 +214,8 @@ export function useLedgerMutations() {
     await queryClient.invalidateQueries({
       queryKey: ["v2", "upcoming", scopeKey(identityKey, scope)],
     });
+    // Paged lists embed Account/Category references, and deletes cascade into them.
+    await queryClient.invalidateQueries({ queryKey: transactionListKey(identityKey, scope) });
   };
 
   return {

@@ -325,6 +325,20 @@ export interface V2Page<T> {
   readonly nextCursor: string | null;
 }
 
+export interface V2TransactionCurrencyTotal {
+  readonly currency: string;
+  readonly count: number;
+  readonly incomeMinor: number;
+  readonly expenseMinor: number;
+  readonly netMinor: number;
+}
+
+/** Aggregates over every Transaction matching a list filter, independent of paging. */
+export interface V2TransactionSummary {
+  readonly count: number;
+  readonly totals: readonly V2TransactionCurrencyTotal[];
+}
+
 export function principalOwner(principal: V2Principal): {
   readonly ownerType: Exclude<V2LedgerOwnerType, "household">;
   readonly ownerId: string;

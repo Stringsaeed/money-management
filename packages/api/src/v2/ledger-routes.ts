@@ -19,8 +19,11 @@ import {
   updateRecurringRule,
 } from "./recurring";
 import {
+  decodeTransactionCursor,
   getTransaction,
   listTransactions,
+  summarizeTransactions,
+  type TransactionFilterOptions,
   createTransaction,
   deleteTransaction,
   updateTransaction,
@@ -29,6 +32,7 @@ import {
   accountCreateSchema,
   accountUpdateSchema,
   categoryCreateSchema,
+  ledgerDateSchema,
   categoryUpdateSchema,
   recurringCreateSchema,
   recurringUpdateSchema,
@@ -174,22 +178,18 @@ export function createV2LedgerRoutes(dependencies: V2LedgerRouteDependencies): H
 
   routes.get("/transactions", async (context) => {
     const ledger = await resolveContext(dependencies, context);
-    const kindValue = context.req.query("kind");
-    const kind = kindValue === undefined ? undefined : transactionKindSchema.parse(kindValue);
     const cursor = context.req.query("cursor");
-    const [beforeDate, beforeId] = cursor?.split(":", 2) ?? [];
     return context.json(
       await listTransactions(ledger, {
+        ...parseTransactionFilters(context),
         limit: parseOptionalInteger(context.req.query("limit"), "limit"),
-        beforeDate,
-        beforeId,
-        accountId: context.req.query("accountId"),
-        categoryId: context.req.query("categoryId"),
-        kind,
-        from: context.req.query("from"),
-        to: context.req.query("to"),
+        cursor: cursor ? decodeTransactionCursor(cursor) : undefined,
       }),
     );
+  });
+  routes.get("/transactions/summary", async (context) => {
+    const ledger = await resolveContext(dependencies, context);
+    return context.json(await summarizeTransactions(ledger, parseTransactionFilters(context)));
   });
   routes.post("/transactions", async (context) => {
     const ledger = await resolveContext(dependencies, context);
@@ -311,6 +311,48 @@ async function readJson<T>(context: Context, schema: z.ZodType<T>): Promise<T> {
     throw new V2ApiError(400, "invalid_json", "Request body must be valid JSON.");
   }
   return schema.parse(body);
+}
+
+const MAX_FILTER_VALUES = 50;
+const MAX_SEARCH_LENGTH = 100;
+
+/** Filters repeat as query params: `?accountId=a&accountId=b&kind=expense`. */
+function parseTransactionFilters(context: Context): TransactionFilterOptions {
+  const kinds = parseRepeated(context, "kind").map((value) => {
+    const parsed = transactionKindSchema.safeParse(value);
+    if (!parsed.success)
+      throw new V2ApiError(400, "invalid_kind", "kind must be income, expense, or transfer.");
+    return parsed.data;
+  });
+  const search = context.req.query("q")?.trim();
+  if (search && search.length > MAX_SEARCH_LENGTH)
+    throw new V2ApiError(400, "invalid_q", `q must be at most ${MAX_SEARCH_LENGTH} characters.`);
+  return {
+    accountIds: parseRepeated(context, "accountId"),
+    categoryIds: parseRepeated(context, "categoryId"),
+    kinds,
+    from: parseOptionalDate(context.req.query("from"), "from"),
+    to: parseOptionalDate(context.req.query("to"), "to"),
+    search: search || undefined,
+  };
+}
+
+function parseRepeated(context: Context, name: string): string[] {
+  const values = [...new Set((context.req.queries(name) ?? []).filter(Boolean))];
+  if (values.length > MAX_FILTER_VALUES)
+    throw new V2ApiError(
+      400,
+      `invalid_${name}`,
+      `${name} accepts at most ${MAX_FILTER_VALUES} values.`,
+    );
+  return values;
+}
+
+function parseOptionalDate(value: string | undefined, name: string): string | undefined {
+  if (!value) return undefined;
+  if (!ledgerDateSchema.safeParse(value).success)
+    throw new V2ApiError(400, `invalid_${name}`, `${name} must be a YYYY-MM-DD date.`);
+  return value;
 }
 
 function parseOptionalInteger(value: string | undefined, name: string): number | undefined {
