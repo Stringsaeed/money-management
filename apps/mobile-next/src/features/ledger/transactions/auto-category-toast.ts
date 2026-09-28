@@ -1,0 +1,27 @@
+import type { V2CreatedTransaction } from "@trove/api/v2/contracts";
+
+import type { Toast } from "@/ui/toast";
+
+import { categoryEmoji } from "./transaction-display";
+
+const MAX_NOTE_LENGTH = 28;
+
+const shortNote = (note: string): string => {
+  const trimmed = note.trim();
+  return trimmed.length > MAX_NOTE_LENGTH ? `${trimmed.slice(0, MAX_NOTE_LENGTH - 1)}…` : trimmed;
+};
+
+/**
+ * Toast announcing where AI filed a new transaction. Every other outcome
+ * (unsure, rate limited, unavailable) stays silent: the transaction is saved
+ * either way and simply remains uncategorized.
+ */
+export function autoCategoryToast(created: V2CreatedTransaction): Omit<Toast, "id"> | null {
+  const categorization = created.autoCategorization;
+  if (categorization?.outcome !== "categorized") return null;
+  const { category } = categorization;
+  return {
+    emoji: "✨",
+    message: `“${shortNote(created.note)}” auto-categorized to ${categoryEmoji(category.icon)} ${category.name}`,
+  };
+}

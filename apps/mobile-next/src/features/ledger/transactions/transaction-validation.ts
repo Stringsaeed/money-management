@@ -12,11 +12,14 @@ export interface TransactionDraft {
   readonly amount: string;
   readonly date: string;
   readonly note: string;
+  /** "AI pick": the server chooses a category of `kind` from the note on create. */
+  readonly autoCategorize: boolean;
 }
 
 export function initialTransactionDraft(
   transaction: V2Transaction | undefined,
   activeAccounts: readonly V2Account[],
+  autoCategorize = false,
 ): TransactionDraft {
   if (!transaction)
     return {
@@ -27,6 +30,7 @@ export function initialTransactionDraft(
       amount: "",
       date: todayDateKey(),
       note: "",
+      autoCategorize,
     };
   return {
     kind: transaction.kind,
@@ -36,6 +40,7 @@ export function initialTransactionDraft(
     amount: decimalFromMinor(transaction.amountMinor, transaction.currency),
     date: transaction.date,
     note: transaction.note,
+    autoCategorize: false,
   };
 }
 
@@ -62,13 +67,17 @@ export function transactionInputFromDraft(
   amountMinor: number,
 ): TransactionInput {
   const isTransfer = draft.kind === "transfer";
-  return {
+  const note = draft.note.trim();
+  const input: TransactionInput = {
     accountId: draft.accountId,
     categoryId: isTransfer ? null : draft.categoryId,
     toAccountId: isTransfer ? draft.toAccountId : null,
     kind: draft.kind,
     amountMinor,
     date: draft.date,
-    note: draft.note.trim(),
+    note,
   };
+  // The categorizer reads only the note, so without one there is nothing to ask it.
+  const wantsAi = draft.autoCategorize && !isTransfer && !draft.categoryId && note.length > 0;
+  return wantsAi ? { ...input, autoCategorize: true } : input;
 }

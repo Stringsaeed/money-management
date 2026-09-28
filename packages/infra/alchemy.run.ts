@@ -85,6 +85,11 @@ export const server = Cloudflare.Worker(
         MARKET_CRYPTO_API_KEY: Config.redacted("MARKET_CRYPTO_API_KEY").pipe(
           Config.withDefault(Redacted.make("")),
         ),
+        // Vercel AI Gateway key for the Transaction categorizer (Jev + research LLM).
+        // Empty disables auto-categorization (503) instead of failing requests.
+        AI_GATEWAY_API_KEY: Config.redacted("AI_GATEWAY_API_KEY").pipe(
+          Config.withDefault(Redacted.make("")),
+        ),
         WORKOS_TOKEN_AUDIENCE: Config.string("WORKOS_TOKEN_AUDIENCE").pipe(Config.withDefault("")),
         WORKOS_TOKEN_ISSUER: Config.string("WORKOS_TOKEN_ISSUER").pipe(
           Config.withDefault("https://api.workos.com"),

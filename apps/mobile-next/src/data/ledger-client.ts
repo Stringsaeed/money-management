@@ -5,6 +5,7 @@ import { randomUUID } from "expo-crypto";
 import type {
   V2Account,
   V2Category,
+  V2CreatedTransaction,
   V2Home,
   V2LedgerScope,
   V2Page,
@@ -19,6 +20,7 @@ import { apiRequest } from "@/data/http";
 import {
   parseAccount,
   parseCategory,
+  parseCreatedTransaction,
   parseHome,
   parsePage,
   parseRecurringRule,
@@ -63,6 +65,8 @@ export interface TransactionInput {
   readonly amountMinor: number;
   readonly date: string;
   readonly note?: string;
+  /** Create only: let the server's categorizer pick a category from the note. */
+  readonly autoCategorize?: boolean;
 }
 
 export interface RecurringRuleInput {
@@ -296,11 +300,11 @@ export const ledgerClient = {
       scope: LedgerScope,
       input: TransactionInput,
       options: MutationOptions = {},
-    ): Promise<V2Transaction> {
+    ): Promise<V2CreatedTransaction> {
       return request(
         withScope("/transactions", scope),
         json("POST", input, options),
-        parseTransaction,
+        parseCreatedTransaction,
       );
     },
     update(

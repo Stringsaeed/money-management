@@ -62,11 +62,13 @@ export function TransactionForm({
             accountId={form.draft.accountId}
             toAccountId={form.draft.toAccountId}
             categoryId={form.draft.categoryId}
+            autoCategorize={form.autoCategorize}
             date={form.draft.date}
             onAccountChange={form.selectAccount}
             onToAccountChange={form.setToAccountId}
             onSelectCategory={form.selectCategory}
             onSelectTransfer={form.selectTransfer}
+            onSelectAutoCategory={form.selectAutoCategory}
             onDateChange={form.setDate}
             onCreateAccount={onCreateAccount}
             onCreateCategory={onCreateCategory}
@@ -87,7 +89,9 @@ export function TransactionForm({
         <InlineField
           emoji="📝"
           accessibilityLabel="Note"
-          placeholder="Add a note…"
+          placeholder={
+            form.autoCategorize ? "Add a note and AI picks the category…" : "Add a note…"
+          }
           value={form.draft.note}
           onChange={form.setNote}
           testID="transaction-note-field"

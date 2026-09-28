@@ -71,6 +71,13 @@
       "when": 1790007505287,
       "tag": "0016_mobile_next",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790600000000,
+      "tag": "0017_v2_ai_usage",
+      "breakpoints": true
     }
   ]
 }

@@ -11,7 +11,9 @@ import {
   recurringLifecycleSchema,
   transactionKindSchema,
   type V2Account,
+  type V2AutoCategorization,
   type V2Category,
+  type V2CreatedTransaction,
   type V2Home,
   type V2Page,
   type V2RecurringRule,
@@ -142,6 +144,26 @@ export const parseAccount = (payload: unknown): V2Account => accountResponseSche
 export const parseCategory = (payload: unknown): V2Category => categorySchema.parse(payload);
 export const parseTransaction = (payload: unknown): V2Transaction =>
   transactionSchema.parse(payload);
+
+const autoCategorizationSchema: z.ZodType<V2AutoCategorization> = z.discriminatedUnion("outcome", [
+  z.object({
+    outcome: z.literal("categorized"),
+    source: z.enum(["jev", "research"]),
+    category: categorySchema,
+  }),
+  z.object({ outcome: z.enum(["skipped", "uncategorized", "rate_limited", "unavailable"]) }),
+]);
+
+/** A malformed categorization note must never fail a save that already succeeded. */
+export const parseCreatedTransaction = (payload: unknown): V2CreatedTransaction => {
+  const transaction = transactionSchema.parse(payload);
+  const categorization = z
+    .object({ autoCategorization: autoCategorizationSchema })
+    .safeParse(payload);
+  return categorization.success
+    ? { ...transaction, autoCategorization: categorization.data.autoCategorization }
+    : transaction;
+};
 export const parseRecurringRule = (payload: unknown): V2RecurringRule =>
   recurringRuleSchema.parse(payload);
 export const parseHome = (payload: unknown): V2Home => homeSchema.parse(payload);

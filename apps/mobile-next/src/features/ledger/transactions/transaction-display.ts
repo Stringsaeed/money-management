@@ -27,13 +27,24 @@ export interface CategoryChip {
   readonly active: boolean;
 }
 
-/** Breadcrumb chip for the category slot, which also represents transfers. */
-export function categoryChip(category: V2Category | undefined, isTransfer: boolean): CategoryChip {
+/** Breadcrumb chip for the category slot, which also represents transfers and "AI pick". */
+export function categoryChip(
+  category: V2Category | undefined,
+  isTransfer: boolean,
+  autoCategorize = false,
+): CategoryChip {
   if (isTransfer)
     return {
       emoji: "🔁",
       label: "Transfer",
       accessibilityLabel: "Category: Transfer",
+      active: true,
+    };
+  if (autoCategorize)
+    return {
+      emoji: "✨",
+      label: "AI pick",
+      accessibilityLabel: "Category: AI picks from the note",
       active: true,
     };
   if (!category)

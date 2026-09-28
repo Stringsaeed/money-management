@@ -14,12 +14,18 @@ import { BreadcrumbSegment } from "./breadcrumb-segment";
 import { afterSheetCloses } from "./transaction-create-actions";
 import { categoryChip, categoryEmoji } from "./transaction-display";
 
+type CategoryKind = V2Category["kind"];
+
 interface CategoryPickerProps {
   readonly categories: readonly V2Category[];
   readonly selectedId: string | null;
   readonly isTransfer: boolean;
+  /** Kind whose "AI pick" is selected, or null when a category or transfer is. */
+  readonly autoKind: CategoryKind | null;
   readonly onSelectCategory: (category: V2Category) => void;
   readonly onSelectTransfer: () => void;
+  /** Omitted when AI is off or the transaction is being edited. */
+  readonly onSelectAuto?: (kind: CategoryKind) => void;
   readonly onCreateCategory?: () => void;
 }
 
@@ -27,15 +33,27 @@ interface CategorySectionProps {
   readonly title: string;
   readonly categories: readonly V2Category[];
   readonly selectedId: string | null;
+  readonly autoSelected: boolean;
   readonly onSelect: (category: V2Category) => void;
+  readonly onSelectAuto?: () => void;
 }
 
-function CategorySection({ title, categories, selectedId, onSelect }: CategorySectionProps) {
+function CategorySection({
+  title,
+  categories,
+  selectedId,
+  autoSelected,
+  onSelect,
+  onSelectAuto,
+}: CategorySectionProps) {
   if (categories.length === 0) return null;
   return (
     <View style={styles.section}>
       <Text variant="label">{title}</Text>
       <View style={styles.grid}>
+        {onSelectAuto ? (
+          <OptionTile emoji="✨" label="AI pick" selected={autoSelected} onPress={onSelectAuto} />
+        ) : null}
         {categories.map((category) => (
           <OptionTile
             key={category.id}
@@ -55,8 +73,10 @@ export function CategoryPicker({
   categories,
   selectedId,
   isTransfer,
+  autoKind,
   onSelectCategory,
   onSelectTransfer,
+  onSelectAuto,
   onCreateCategory,
 }: CategoryPickerProps) {
   const [open, setOpen] = useState(false);
@@ -69,12 +89,20 @@ export function CategoryPicker({
   const chip = categoryChip(
     categories.find((item) => item.id === selectedId),
     isTransfer,
+    autoKind !== null,
   );
   const highlightedId = isTransfer ? null : selectedId;
   const selectCategory = (category: V2Category) => {
     onSelectCategory(category);
     setOpen(false);
   };
+  const selectAuto = (kind: CategoryKind) =>
+    onSelectAuto
+      ? () => {
+          onSelectAuto(kind);
+          setOpen(false);
+        }
+      : undefined;
 
   return (
     <>
@@ -93,13 +121,17 @@ export function CategoryPicker({
           title="💸 Expenses"
           categories={categories.filter((item) => item.kind === "expense")}
           selectedId={highlightedId}
+          autoSelected={autoKind === "expense"}
           onSelect={selectCategory}
+          onSelectAuto={selectAuto("expense")}
         />
         <CategorySection
           title="💰 Income"
           categories={categories.filter((item) => item.kind === "income")}
           selectedId={highlightedId}
+          autoSelected={autoKind === "income"}
           onSelect={selectCategory}
+          onSelectAuto={selectAuto("income")}
         />
         <View style={styles.section}>
           <Text variant="label">🏦 Move money</Text>

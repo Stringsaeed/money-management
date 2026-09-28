@@ -15,13 +15,16 @@ import {
   Nunito_800ExtraBold,
   Nunito_900Black,
 } from "@expo-google-fonts/nunito";
+import { hydrateAiPreferences } from "@/features/ai";
 import { AuthProvider } from "@/features/auth/auth-provider";
 import { hydrateSoundPreferences } from "@/features/sound";
 import { SessionGate } from "@/navigation/session-gate";
 import { colors } from "@/ui/design-tokens";
+import { ToastHost } from "@/ui/toast";
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 void hydrateSoundPreferences();
+void hydrateAiPreferences();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -44,6 +47,7 @@ export default function RootLayout() {
         <AuthProvider>
           <SessionGate />
         </AuthProvider>
+        <ToastHost />
         <StatusBar style="auto" />
       </SafeAreaProvider>
     </GestureHandlerRootView>
