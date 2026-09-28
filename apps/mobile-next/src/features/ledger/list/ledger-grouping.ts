@@ -8,7 +8,10 @@ export interface LedgerSectionHeader {
   readonly type: "header";
   readonly key: string;
   readonly title: string;
-  /** Net of the loaded rows in this section, when they share one currency. */
+  /**
+   * Net of the section when it is fully loaded and single-currency. The trailing section of a
+   * list with more pages is still partial, so it carries no net rather than a misleading one.
+   */
   readonly net: { readonly minor: number; readonly currency: string } | null;
   readonly count: number;
 }
@@ -59,6 +62,7 @@ export function groupTransactions(
   transactions: readonly V2Transaction[],
   grouping: LedgerGrouping,
   today: Date,
+  hasMore = false,
 ): LedgerListItem[] {
   const sectionKey = (row: V2Transaction) => (grouping === "day" ? row.date : row.date.slice(0, 7));
   const sections: { key: string; rows: V2Transaction[] }[] = [];
@@ -68,12 +72,12 @@ export function groupTransactions(
     if (current?.key === key) current.rows.push(row);
     else sections.push({ key, rows: [row] });
   }
-  return sections.flatMap(({ key, rows }) => [
+  return sections.flatMap(({ key, rows }, index) => [
     {
       type: "header" as const,
       key: `header:${key}`,
       title: grouping === "day" ? dayTitle(key, today) : monthTitle(`${key}-01`),
-      net: sectionNet(rows),
+      net: hasMore && index === sections.length - 1 ? null : sectionNet(rows),
       count: rows.length,
     },
     ...rows.map((transaction, index) => ({

@@ -36,7 +36,7 @@ export function LedgerTransactionList({
   onAddTransaction,
 }: LedgerTransactionListProps) {
   const { pages } = list;
-  const items = groupTransactions(pages.data, grouping, new Date());
+  const items = groupTransactions(pages.data, grouping, new Date(), pages.hasNextPage);
   return (
     <LegendList
       data={items}
@@ -45,6 +45,7 @@ export function LedgerTransactionList({
       estimatedItemSize={density === "statement" ? 53 : 64}
       stickyHeaderIndices={headerIndices(items)}
       recycleItems
+      style={pages.isStale ? styles.stale : undefined}
       contentContainerStyle={styles.content}
       contentInsetAdjustmentBehavior="automatic"
       refreshing={pages.isRefreshing}
@@ -103,6 +104,7 @@ export function LedgerTransactionList({
 }
 
 const styles = StyleSheet.create({
+  stale: { opacity: 0.55 },
   content: {
     backgroundColor: colors.background,
     paddingBottom: 140,

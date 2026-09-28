@@ -124,6 +124,12 @@ describe("ledger grouping", () => {
     expect(items[2]).toMatchObject({ lastInSection: true });
   });
 
+  it("withholds the net of a trailing section that more pages may extend", () => {
+    const items = groupTransactions(rows, "day", today, true);
+    expect(items[0]).toMatchObject({ net: { minor: 1_500 } });
+    expect(items.at(-2)).toMatchObject({ type: "header", net: null });
+  });
+
   it("sections by month for statement layouts", () => {
     const items = groupTransactions(rows, "month", today);
     expect(items.filter((item) => item.type === "header").map((item) => item.key)).toEqual([

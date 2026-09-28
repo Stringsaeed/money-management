@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 import type { V2Transaction, V2TransactionSummary } from "@trove/api/v2/contracts";
 
@@ -13,6 +13,8 @@ export interface TransactionPagesResult {
   readonly isLoading: boolean;
   readonly isError: boolean;
   readonly isRefreshing: boolean;
+  /** Rows belong to the previous filter while the new one loads. */
+  readonly isStale: boolean;
   readonly hasNextPage: boolean;
   readonly isFetchingNextPage: boolean;
   readonly nextPageFailed: boolean;
@@ -36,6 +38,8 @@ export function useTransactionPagesQuery(filters: TransactionListFilters): Trans
       }),
     initialPageParam: FIRST_PAGE,
     getNextPageParam: (page) => page.nextCursor,
+    // Keep the current rows on screen while a changed filter loads, instead of blanking.
+    placeholderData: keepPreviousData,
     staleTime: 15_000,
     retry: 1,
   });
@@ -45,7 +49,8 @@ export function useTransactionPagesQuery(filters: TransactionListFilters): Trans
     isLoading: query.isLoading,
     // A failed follow-up page keeps the rows already shown; only an empty list is an error.
     isError: query.isError && !hasData,
-    isRefreshing: query.isRefetching && !query.isFetchingNextPage,
+    isRefreshing: query.isRefetching && !query.isFetchingNextPage && !query.isPlaceholderData,
+    isStale: query.isPlaceholderData,
     hasNextPage: query.hasNextPage,
     isFetchingNextPage: query.isFetchingNextPage,
     nextPageFailed: query.isFetchNextPageError,
@@ -73,6 +78,7 @@ export function useTransactionSummaryQuery(
   const query = useQuery({
     queryKey: [...transactionListKey(identityKey, scope), "summary", normalized],
     queryFn: () => ledgerClient.transactions.summary(scope, normalized),
+    placeholderData: keepPreviousData,
     staleTime: 15_000,
     retry: 1,
   });

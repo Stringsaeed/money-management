@@ -75,6 +75,7 @@ const styles = StyleSheet.create({
     fontSize: typography.text3xl,
     fontVariant: ["tabular-nums"],
     letterSpacing: typography.trackingTight,
+    lineHeight: 40,
   },
   split: { flexDirection: "row", gap: spacing[4], marginTop: spacing[1] },
   cell: { flex: 1, gap: spacing[0.5] },
