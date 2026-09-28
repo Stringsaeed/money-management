@@ -1,21 +1,21 @@
 import { useState } from "react";
-import { StyleSheet, View } from "react-native";
-import { LegendList } from "@legendapp/list/react-native";
 
 import type { V2Transaction } from "@trove/api/v2/contracts";
 
-import { useAccountsQuery, useCategoriesQuery } from "@/data/ledger-queries";
-import { useTransactionPagesQuery } from "@/data/transaction-list-queries";
-import { Button } from "@/ui/button";
-import { Chip } from "@/ui/chip";
-import { EmptyState } from "@/ui/empty-state";
 import { Screen } from "@/ui/screen";
-import { Section } from "@/ui/section";
-import { Text } from "@/ui/text";
-import { colors, spacing, typography } from "@/ui/design-tokens";
 
-import { TransactionListFooter } from "./transactions/transaction-list-footer";
-import { TransactionRow } from "./transactions/transaction-row";
+import { LedgerFilterSheet } from "./list/ledger-filter-sheet";
+import { monthRange } from "./list/ledger-filters";
+import type { LedgerVariant } from "./list/ledger-variant";
+import { LedgerVariantSwitcher } from "./list/ledger-variant-switcher";
+import { LEDGER_INSET } from "./list/ledger-transaction-list";
+import { useLedgerList } from "./list/use-ledger-list";
+import { AccountsVariant } from "./list/variants/accounts-variant";
+import { JournalVariant } from "./list/variants/journal-variant";
+import { MonthlyVariant } from "./list/variants/monthly-variant";
+import { StatementVariant } from "./list/variants/statement-variant";
+import { SummaryVariant } from "./list/variants/summary-variant";
+import type { LedgerVariantProps } from "./list/variants/variant-props";
 
 export interface LedgerScreenProps {
   readonly onAddTransaction?: () => void;
@@ -23,7 +23,17 @@ export interface LedgerScreenProps {
   readonly onOpenAccounts?: () => void;
   readonly onOpenCategories?: () => void;
   readonly onOpenRecurring?: () => void;
+  /** Starting layout while the design is under review. */
+  readonly initialVariant?: LedgerVariant;
 }
+
+const VARIANTS = {
+  journal: JournalVariant,
+  summary: SummaryVariant,
+  accounts: AccountsVariant,
+  statement: StatementVariant,
+  monthly: MonthlyVariant,
+} satisfies Record<LedgerVariant, (props: LedgerVariantProps) => React.ReactNode>;
 
 export function LedgerScreen({
   onAddTransaction,
@@ -31,151 +41,31 @@ export function LedgerScreen({
   onOpenAccounts,
   onOpenCategories,
   onOpenRecurring,
+  initialVariant = "journal",
 }: LedgerScreenProps) {
-  const [selectedAccountId, setAccountId] = useState<string | null>(null);
-  const [selectedCategoryId, setCategoryId] = useState<string | null>(null);
-  const [kind, setKind] = useState<V2Transaction["kind"] | null>(null);
-  const accounts = useAccountsQuery();
-  const categories = useCategoriesQuery();
-  const accountId = accounts.data.some((item) => item.id === selectedAccountId && !item.archived)
-    ? selectedAccountId
-    : null;
-  const categoryId = categories.data.some(
-    (item) => item.id === selectedCategoryId && !item.archived,
-  )
-    ? selectedCategoryId
-    : null;
-  const transactions = useTransactionPagesQuery({
-    accountIds: accountId ? [accountId] : [],
-    categoryIds: categoryId ? [categoryId] : [],
-    kinds: kind ? [kind] : [],
-  });
-  const categoryById = new Map(categories.data.map((category) => [category.id, category]));
-
-  if (transactions.isError) {
-    return (
-      <Screen>
-        <EmptyState
-          title="Ledger is unavailable"
-          message="Check your connection and try again."
-          onRetry={() => void transactions.refresh()}
-        />
-      </Screen>
-    );
-  }
+  const list = useLedgerList();
+  const [variant, setVariant] = useState<LedgerVariant>(initialVariant);
+  const Variant = VARIANTS[variant];
+  const chooseVariant = (next: LedgerVariant) => {
+    setVariant(next);
+    // Monthly is built around one month; open it on the current one.
+    if (next === "monthly" && !list.filters.range)
+      list.update((current) => ({ ...current, range: monthRange(new Date()) }));
+  };
 
   return (
-    <Screen>
-      <LegendList
-        data={transactions.data}
-        keyExtractor={(item) => item.id}
-        estimatedItemSize={68}
-        contentContainerStyle={styles.content}
-        ListHeaderComponent={
-          <View style={styles.header}>
-            <Text variant="headline" style={styles.title}>
-              Ledger
-            </Text>
-            <View style={styles.actionRow}>
-              <Button title="Add transaction" onPress={onAddTransaction} />
-              <Button title="Accounts" variant="secondary" onPress={onOpenAccounts} />
-            </View>
-            <Section title="Filter">
-              <View style={styles.chips}>
-                <Chip label="All" selected={!kind} onPress={() => setKind(null)} />
-                <Chip
-                  label="Income"
-                  selected={kind === "income"}
-                  onPress={() => setKind(kind === "income" ? null : "income")}
-                />
-                <Chip
-                  label="Expenses"
-                  selected={kind === "expense"}
-                  onPress={() => setKind(kind === "expense" ? null : "expense")}
-                />
-                <Chip
-                  label="Transfers"
-                  selected={kind === "transfer"}
-                  onPress={() => setKind(kind === "transfer" ? null : "transfer")}
-                />
-              </View>
-              <View style={styles.chips}>
-                {accounts.data
-                  .filter((account) => !account.archived)
-                  .slice(0, 6)
-                  .map((account) => (
-                    <Chip
-                      key={account.id}
-                      label={account.name}
-                      selected={accountId === account.id}
-                      onPress={() => setAccountId(accountId === account.id ? null : account.id)}
-                    />
-                  ))}
-              </View>
-              <View style={styles.chips}>
-                {categories.data
-                  .filter((category) => !category.archived)
-                  .slice(0, 6)
-                  .map((category) => (
-                    <Chip
-                      key={category.id}
-                      label={category.name}
-                      selected={categoryId === category.id}
-                      onPress={() => setCategoryId(categoryId === category.id ? null : category.id)}
-                    />
-                  ))}
-              </View>
-            </Section>
-            <View style={styles.links}>
-              <Button title="Categories" variant="ghost" onPress={onOpenCategories} />
-              <Button title="Recurring" variant="ghost" onPress={onOpenRecurring} />
-            </View>
-          </View>
-        }
-        onEndReached={transactions.loadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          <TransactionListFooter
-            count={transactions.data.length}
-            hasNextPage={transactions.hasNextPage}
-            isFetchingNextPage={transactions.isFetchingNextPage}
-            nextPageFailed={transactions.nextPageFailed}
-            onLoadMore={transactions.loadMore}
-          />
-        }
-        ListEmptyComponent={
-          !transactions.isLoading ? (
-            <EmptyState
-              title="No transactions"
-              message="Add an entry to start your ledger."
-              onRetry={onAddTransaction}
-            />
+    <Screen edges={["top"]}>
+      <Variant
+        list={list}
+        navigation={{ onAddTransaction, onOpenAccounts, onOpenCategories, onOpenRecurring }}
+        onOpenTransaction={onOpenTransaction}
+        switcher={
+          __DEV__ ? (
+            <LedgerVariantSwitcher value={variant} onChange={chooseVariant} inset={LEDGER_INSET} />
           ) : null
         }
-        renderItem={({ item }) => (
-          <TransactionRow
-            transaction={item}
-            category={categoryById.get(item.categoryId ?? "")}
-            onPress={onOpenTransaction}
-          />
-        )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
+      <LedgerFilterSheet list={list} />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  content: {
-    gap: spacing[2],
-    paddingBottom: spacing[16],
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[4],
-  },
-  header: { gap: spacing[4] },
-  title: { color: colors.ink, fontFamily: typography.fontHeadingNormal, fontStyle: "italic" },
-  actionRow: { flexDirection: "row", gap: spacing[2] },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing[2] },
-  links: { flexDirection: "row", gap: spacing[2] },
-  separator: { backgroundColor: colors.ledgerOutline, height: 1 },
-});
