@@ -1,8 +1,9 @@
-import { and, desc, eq, gte, lt, lte, or } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, lt, lte, or, sql, type SQL } from "drizzle-orm";
 
 import { v2Account, v2Category, v2Transaction } from "@trove/db/schema/v2-ledger";
 
 import {
+  ledgerDateSchema,
   transactionCreateSchema,
   transactionUpdateSchema,
   type V2TransactionCreateInput,
@@ -10,6 +11,7 @@ import {
   type V2Page,
   type V2Transaction,
   type V2TransactionKind,
+  type V2TransactionSummary,
 } from "./contracts";
 import {
   iso,
@@ -148,61 +150,140 @@ async function validateCategoryOwnership(
   }
 }
 
-export interface TransactionListOptions {
-  readonly limit?: number;
-  readonly beforeDate?: string;
-  readonly beforeId?: string;
-  readonly accountId?: string;
-  readonly categoryId?: string;
-  readonly kind?: V2TransactionKind;
+export interface TransactionFilterOptions {
+  readonly accountIds?: readonly string[];
+  readonly categoryIds?: readonly string[];
+  readonly kinds?: readonly V2TransactionKind[];
   readonly from?: string;
   readonly to?: string;
+  readonly search?: string;
+}
+
+export interface TransactionCursor {
+  readonly date: string;
+  readonly id: string;
+}
+
+export interface TransactionListOptions extends TransactionFilterOptions {
+  readonly limit?: number;
+  readonly cursor?: TransactionCursor;
+}
+
+export const TRANSACTION_PAGE_DEFAULT = 50;
+export const TRANSACTION_PAGE_MAX = 200;
+
+export function encodeTransactionCursor(cursor: TransactionCursor): string {
+  return `${cursor.date}:${cursor.id}`;
+}
+
+/** Cursors are `date:id` of the last row served; ids never contain a colon. */
+export function decodeTransactionCursor(value: string): TransactionCursor {
+  const separator = value.indexOf(":");
+  const date = value.slice(0, separator);
+  const id = value.slice(separator + 1);
+  if (separator < 0 || !ledgerDateSchema.safeParse(date).success || id.length === 0) {
+    throw new V2ApiError(400, "invalid_cursor", "cursor is not a Transaction page cursor.");
+  }
+  return { date, id };
 }
 
 export async function listTransactions(
   context: V2LedgerContext,
   options: TransactionListOptions = {},
 ): Promise<V2Page<V2Transaction>> {
-  const limit = Math.min(Math.max(options.limit ?? 50, 1), 200);
-  const conditions = transactionFilters(context.ledgerId, options);
+  const limit = Math.min(
+    Math.max(options.limit ?? TRANSACTION_PAGE_DEFAULT, 1),
+    TRANSACTION_PAGE_MAX,
+  );
+  const conditions = [...transactionFilters(context.ledgerId, options)];
+  if (options.cursor) conditions.push(beforeCursor(options.cursor));
   const rows = await context.db
     .select()
     .from(v2Transaction)
-    .where(conditions)
+    .where(and(...conditions))
     .orderBy(desc(v2Transaction.date), desc(v2Transaction.id))
     .limit(limit + 1);
   const pageRows = rows.slice(0, limit);
   const last = pageRows.at(-1);
   return {
     items: pageRows.map(transactionRow),
-    nextCursor: rows.length > limit && last ? `${last.date}:${last.id}` : null,
+    nextCursor: rows.length > limit && last ? encodeTransactionCursor(last) : null,
   };
 }
 
-function transactionFilters(ledgerId: string, options: TransactionListOptions) {
-  const conditions = [eq(v2Transaction.ledgerId, ledgerId)];
-  if (options.accountId)
+export async function summarizeTransactions(
+  context: V2LedgerContext,
+  options: TransactionFilterOptions = {},
+): Promise<V2TransactionSummary> {
+  const rows = await context.db
+    .select({
+      currency: v2Transaction.currency,
+      kind: v2Transaction.kind,
+      count: sql<string>`count(*)`,
+      amountMinor: sql<string>`coalesce(sum(${v2Transaction.amountMinor}), 0)`,
+    })
+    .from(v2Transaction)
+    .where(and(...transactionFilters(context.ledgerId, options)))
+    .groupBy(v2Transaction.currency, v2Transaction.kind);
+
+  const byCurrency = new Map<
+    string,
+    { count: number; incomeMinor: number; expenseMinor: number }
+  >();
+  let count = 0;
+  for (const row of rows) {
+    const rowCount = Number(row.count);
+    const amount = safeMinor(row.amountMinor, "Transaction summary amount");
+    const current = byCurrency.get(row.currency) ?? { count: 0, incomeMinor: 0, expenseMinor: 0 };
+    current.count += rowCount;
+    if (row.kind === "income") current.incomeMinor += amount;
+    if (row.kind === "expense") current.expenseMinor += amount;
+    byCurrency.set(row.currency, current);
+    count += rowCount;
+  }
+  return {
+    count,
+    totals: [...byCurrency.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([currency, value]) => ({
+        currency,
+        ...value,
+        netMinor: safeMinor(value.incomeMinor - value.expenseMinor, "Transaction summary net"),
+      })),
+  };
+}
+
+function beforeCursor(cursor: TransactionCursor) {
+  return or(
+    lt(v2Transaction.date, cursor.date),
+    and(eq(v2Transaction.date, cursor.date), lt(v2Transaction.id, cursor.id)),
+  )!;
+}
+
+/** Escapes LIKE wildcards so a search is always a literal substring match. */
+function likeContains(value: string): string {
+  return `%${value.replace(/[\\%_]/g, (match) => `\\${match}`)}%`;
+}
+
+// oxlint-disable-next-line complexity -- each filter is independent and maps to one predicate.
+function transactionFilters(ledgerId: string, options: TransactionFilterOptions): SQL[] {
+  const conditions: SQL[] = [eq(v2Transaction.ledgerId, ledgerId)];
+  if (options.accountIds?.length) {
     conditions.push(
       or(
-        eq(v2Transaction.accountId, options.accountId),
-        eq(v2Transaction.toAccountId, options.accountId),
-      )!,
-    );
-  if (options.categoryId) conditions.push(eq(v2Transaction.categoryId, options.categoryId));
-  if (options.kind) conditions.push(eq(v2Transaction.kind, options.kind));
-  if (options.from) conditions.push(gte(v2Transaction.date, options.from));
-  if (options.to) conditions.push(lte(v2Transaction.date, options.to));
-  if (options.beforeDate) {
-    conditions.push(
-      or(
-        lt(v2Transaction.date, options.beforeDate),
-        options.beforeId
-          ? and(eq(v2Transaction.date, options.beforeDate), lt(v2Transaction.id, options.beforeId))
-          : undefined,
+        inArray(v2Transaction.accountId, [...options.accountIds]),
+        inArray(v2Transaction.toAccountId, [...options.accountIds]),
       )!,
     );
   }
-  return and(...conditions);
+  if (options.categoryIds?.length)
+    conditions.push(inArray(v2Transaction.categoryId, [...options.categoryIds]));
+  if (options.kinds?.length) conditions.push(inArray(v2Transaction.kind, [...options.kinds]));
+  if (options.from) conditions.push(gte(v2Transaction.date, options.from));
+  if (options.to) conditions.push(lte(v2Transaction.date, options.to));
+  const search = options.search?.trim();
+  if (search) conditions.push(ilike(v2Transaction.note, likeContains(search)));
+  return conditions;
 }
 
 export async function getTransaction(context: V2LedgerContext, id: string): Promise<V2Transaction> {

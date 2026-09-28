@@ -10,6 +10,8 @@ import type {
   V2Page,
   V2RecurringRule,
   V2Transaction,
+  V2TransactionKind,
+  V2TransactionSummary,
 } from "@trove/api/v2/contracts";
 
 import { apiRequest } from "@/data/http";
@@ -21,6 +23,7 @@ import {
   parsePage,
   parseRecurringRule,
   parseTransaction,
+  parseTransactionSummary,
   accountResponseSchema,
   categorySchema,
   recurringRuleSchema,
@@ -85,6 +88,16 @@ export interface PageOptions {
   readonly includeArchived?: boolean;
 }
 
+/** Server-side Transaction filters; values inside one field match any, fields combine. */
+export interface TransactionListFilters {
+  readonly accountIds?: readonly string[];
+  readonly categoryIds?: readonly string[];
+  readonly kinds?: readonly V2TransactionKind[];
+  readonly from?: string | null;
+  readonly to?: string | null;
+  readonly search?: string;
+}
+
 export interface MutationOptions {
   readonly version?: number;
   readonly requestKey?: string;
@@ -126,12 +139,28 @@ const json = (method: string, body: unknown, options: MutationOptions = {}): Req
   requestKey: options.requestKey,
 });
 
-const pagePath = (path: string, scope: LedgerScope, options: PageOptions): string => {
+const pagePath = (
+  path: string,
+  scope: LedgerScope,
+  options: PageOptions & TransactionListFilters,
+): string => {
   const params = new URLSearchParams(scopeQuery(scope));
   if (options.limit !== undefined) params.set("limit", String(options.limit));
   if (options.cursor) params.set("cursor", options.cursor);
   if (options.includeArchived) params.set("includeArchived", "true");
+  appendFilters(params, options);
   return `${path}?${params.toString()}`;
+};
+
+// oxlint-disable-next-line complexity -- each optional filter maps to one query parameter.
+const appendFilters = (params: URLSearchParams, filters: TransactionListFilters): void => {
+  for (const id of filters.accountIds ?? []) params.append("accountId", id);
+  for (const id of filters.categoryIds ?? []) params.append("categoryId", id);
+  for (const kind of filters.kinds ?? []) params.append("kind", kind);
+  if (filters.from) params.set("from", filters.from);
+  if (filters.to) params.set("to", filters.to);
+  const search = filters.search?.trim();
+  if (search) params.set("q", search);
 };
 
 export const ledgerClient = {
@@ -238,9 +267,22 @@ export const ledgerClient = {
   },
 
   transactions: {
-    list(scope: LedgerScope, options: PageOptions = {}): Promise<V2Page<V2Transaction>> {
+    list(
+      scope: LedgerScope,
+      options: PageOptions & TransactionListFilters = {},
+    ): Promise<V2Page<V2Transaction>> {
       return request(pagePath("/transactions", scope, options), undefined, (payload) =>
         parsePage(transactionSchema, payload),
+      );
+    },
+    summary(
+      scope: LedgerScope,
+      filters: TransactionListFilters = {},
+    ): Promise<V2TransactionSummary> {
+      return request(
+        pagePath("/transactions/summary", scope, filters),
+        undefined,
+        parseTransactionSummary,
       );
     },
     get(scope: LedgerScope, id: string): Promise<V2Transaction> {

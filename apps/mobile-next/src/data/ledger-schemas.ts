@@ -16,6 +16,7 @@ import {
   type V2Page,
   type V2RecurringRule,
   type V2Transaction,
+  type V2TransactionSummary,
 } from "@trove/api/v2/contracts";
 
 const money = z.number().int().refine(Number.isSafeInteger);
@@ -121,6 +122,19 @@ export const homeSchema = z.object({
   recentTransactions: z.array(transactionSchema),
 });
 
+export const transactionSummarySchema: z.ZodType<V2TransactionSummary> = z.object({
+  count: z.number().int().nonnegative(),
+  totals: z.array(
+    z.object({
+      currency: z.string(),
+      count: z.number().int().nonnegative(),
+      incomeMinor: money,
+      expenseMinor: money,
+      netMinor: money,
+    }),
+  ),
+});
+
 export const parsePage = <T>(schema: z.ZodType<T>, payload: unknown): V2Page<T> =>
   z.object({ items: z.array(schema), nextCursor: z.string().nullable() }).parse(payload);
 
@@ -131,3 +145,5 @@ export const parseTransaction = (payload: unknown): V2Transaction =>
 export const parseRecurringRule = (payload: unknown): V2RecurringRule =>
   recurringRuleSchema.parse(payload);
 export const parseHome = (payload: unknown): V2Home => homeSchema.parse(payload);
+export const parseTransactionSummary = (payload: unknown): V2TransactionSummary =>
+  transactionSummarySchema.parse(payload);

@@ -4,7 +4,8 @@ import { LegendList } from "@legendapp/list/react-native";
 
 import type { V2Transaction } from "@trove/api/v2/contracts";
 
-import { useAccountsQuery, useCategoriesQuery, useTransactionsQuery } from "@/data/ledger-queries";
+import { useAccountsQuery, useCategoriesQuery } from "@/data/ledger-queries";
+import { useTransactionPagesQuery } from "@/data/transaction-list-queries";
 import { Button } from "@/ui/button";
 import { Chip } from "@/ui/chip";
 import { EmptyState } from "@/ui/empty-state";
@@ -13,6 +14,7 @@ import { Section } from "@/ui/section";
 import { Text } from "@/ui/text";
 import { colors, spacing, typography } from "@/ui/design-tokens";
 
+import { TransactionListFooter } from "./transactions/transaction-list-footer";
 import { TransactionRow } from "./transactions/transaction-row";
 
 export interface LedgerScreenProps {
@@ -43,7 +45,11 @@ export function LedgerScreen({
   )
     ? selectedCategoryId
     : null;
-  const transactions = useTransactionsQuery({ accountId, categoryId, kind });
+  const transactions = useTransactionPagesQuery({
+    accountIds: accountId ? [accountId] : [],
+    categoryIds: categoryId ? [categoryId] : [],
+    kinds: kind ? [kind] : [],
+  });
   const categoryById = new Map(categories.data.map((category) => [category.id, category]));
 
   if (transactions.isError) {
@@ -52,7 +58,7 @@ export function LedgerScreen({
         <EmptyState
           title="Ledger is unavailable"
           message="Check your connection and try again."
-          onRetry={() => void transactions.retry()}
+          onRetry={() => void transactions.refresh()}
         />
       </Screen>
     );
@@ -125,6 +131,17 @@ export function LedgerScreen({
               <Button title="Recurring" variant="ghost" onPress={onOpenRecurring} />
             </View>
           </View>
+        }
+        onEndReached={transactions.loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          <TransactionListFooter
+            count={transactions.data.length}
+            hasNextPage={transactions.hasNextPage}
+            isFetchingNextPage={transactions.isFetchingNextPage}
+            nextPageFailed={transactions.nextPageFailed}
+            onLoadMore={transactions.loadMore}
+          />
         }
         ListEmptyComponent={
           !transactions.isLoading ? (

@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native";
 
-import { useAccountsQuery, useCategoriesQuery, useTransactionsQuery } from "@/data/ledger-queries";
+import { useAccountsQuery, useCategoriesQuery } from "@/data/ledger-queries";
+import { useTransactionQuery } from "@/data/transaction-list-queries";
 import { EmptyState } from "@/ui/empty-state";
 import { IconButton } from "@/ui/icon-button";
 import { Screen } from "@/ui/screen";
@@ -24,11 +25,11 @@ export function TransactionScreen({
 }: TransactionScreenProps) {
   const accounts = useAccountsQuery();
   const categories = useCategoriesQuery();
-  const transactions = useTransactionsQuery();
-  const transaction = id === "new" ? undefined : transactions.data.find((item) => item.id === id);
+  const existing = useTransactionQuery(id === "new" ? undefined : id);
+  const transaction = existing.data;
   const actions = useTransactionActions(transaction, onBack);
 
-  if (accounts.isLoading || categories.isLoading || (id !== "new" && transactions.isLoading))
+  if (accounts.isLoading || categories.isLoading || (id !== "new" && existing.isLoading))
     return (
       <Screen>
         <Text style={styles.status}>Loading form…</Text>
@@ -43,7 +44,7 @@ export function TransactionScreen({
         <EmptyState
           title="Transaction not found"
           message="This entry may have been deleted."
-          onRetry={() => void transactions.retry()}
+          onRetry={() => void existing.retry()}
         />
       </Screen>
     );

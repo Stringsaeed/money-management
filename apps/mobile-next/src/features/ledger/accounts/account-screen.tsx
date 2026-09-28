@@ -2,7 +2,8 @@ import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { LegendList } from "@legendapp/list/react-native";
 
-import { useAccountsQuery, useTransactionsQuery } from "@/data/ledger-queries";
+import { useAccountsQuery } from "@/data/ledger-queries";
+import { useTransactionPagesQuery } from "@/data/transaction-list-queries";
 import { useLedgerMutationsWithSound } from "@/features/sound";
 import { Button } from "@/ui/button";
 import { EmptyState } from "@/ui/empty-state";
@@ -11,6 +12,7 @@ import { Text } from "@/ui/text";
 import { colors, spacing, typography } from "@/ui/design-tokens";
 import { formatMoneyMinor } from "@/utils/money";
 
+import { TransactionListFooter } from "../transactions/transaction-list-footer";
 import { TransactionRow } from "../transactions/transaction-row";
 import { confirmLedgerDeletion } from "../delete-confirmation";
 
@@ -24,7 +26,7 @@ export interface AccountScreenProps {
 export function AccountScreen({ id, onBack, onEdit, onOpenTransaction }: AccountScreenProps) {
   const accounts = useAccountsQuery();
   const account = accounts.data.find((item) => item.id === id);
-  const transactions = useTransactionsQuery({ accountId: id });
+  const transactions = useTransactionPagesQuery({ accountIds: id ? [id] : [] });
   const mutations = useLedgerMutationsWithSound();
   const [error, setError] = useState<string>();
   const [deleteBusy, setDeleteBusy] = useState(false);
@@ -113,11 +115,30 @@ export function AccountScreen({ id, onBack, onEdit, onOpenTransaction }: Account
             <Text variant="title">Transactions</Text>
           </View>
         }
-        ListEmptyComponent={
-          <EmptyState
-            title="No transactions"
-            message="Transactions for this account will appear here."
+        onEndReached={transactions.loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          <TransactionListFooter
+            count={transactions.data.length}
+            hasNextPage={transactions.hasNextPage}
+            isFetchingNextPage={transactions.isFetchingNextPage}
+            nextPageFailed={transactions.nextPageFailed}
+            onLoadMore={transactions.loadMore}
           />
+        }
+        ListEmptyComponent={
+          transactions.isLoading ? null : transactions.isError ? (
+            <EmptyState
+              title="Transactions are unavailable"
+              message="Check your connection and try again."
+              onRetry={() => void transactions.refresh()}
+            />
+          ) : (
+            <EmptyState
+              title="No transactions"
+              message="Transactions for this account will appear here."
+            />
+          )
         }
         renderItem={({ item }) => (
           <TransactionRow

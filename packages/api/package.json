@@ -15,7 +15,8 @@
     "dev:next": "tsx scripts/dev-next.ts",
     "test:next:http": "node scripts/smoke-next.mjs",
     "check-types": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed:next": "node scripts/seed-next-ledger.mjs"
   },
   "dependencies": {
     "@orpc/client": "catalog:",
