@@ -1,8 +1,10 @@
-import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { colors, spacing, typography } from "@/ui/design-tokens";
 import { Icon } from "@/ui/icon";
 import { Text } from "@/ui/text";
+
+import { usePadHeight } from "../editor/use-pad-height";
 
 import type { AmountKey } from "./amount-entry";
 import { NumPadKey } from "./num-pad-key";
@@ -20,19 +22,11 @@ const ROWS: readonly (readonly AmountKey[])[] = [
   [".", "0", "delete"],
 ];
 
-// The note card sits directly above the pad, so the pad must stay taller than the system
-// keyboard (plus its suggestion bar) or the note would be covered while typing.
-const SCREEN_SHARE = 0.46;
-const MIN_KEYBOARD_CLEARANCE = 340;
-
 export function NumPad({ allowDecimal, onKey, onClear }: NumPadProps) {
-  const { height } = useWindowDimensions();
+  const height = usePadHeight();
 
   return (
-    <View
-      style={[styles.pad, { height: Math.max(height * SCREEN_SHARE, MIN_KEYBOARD_CLEARANCE) }]}
-      testID="transaction-num-pad"
-    >
+    <View style={[styles.pad, { height }]} testID="transaction-num-pad">
       {ROWS.map((row) => (
         <View key={row.join("")} style={styles.row}>
           {row.map((key) =>

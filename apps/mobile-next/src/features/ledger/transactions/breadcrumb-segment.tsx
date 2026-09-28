@@ -10,6 +10,8 @@ interface BreadcrumbSegmentProps {
   readonly emoji: string;
   readonly label: string;
   readonly active?: boolean;
+  /** Makes the segment one option of a toggle: only the selected option keeps its pill. */
+  readonly selected?: boolean;
   readonly onPress: () => void;
 }
 
@@ -18,21 +20,25 @@ export function BreadcrumbSegment({
   emoji,
   label,
   active = true,
+  selected,
   onPress,
 }: BreadcrumbSegmentProps) {
   const reducedMotion = useReducedMotion();
+  const isToggle = selected !== undefined;
+  const resting = isToggle && !selected ? colors.surfaceContainer : colors.background;
 
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
+      accessibilityState={isToggle ? { selected } : undefined}
       hitSlop={4}
       onPress={onPress}
     >
       {({ pressed }) => (
         <EaseView
           animate={{
-            backgroundColor: pressed ? colors.surfaceDim : colors.background,
+            backgroundColor: pressed ? colors.surfaceDim : resting,
             scale: pressed ? 0.96 : 1,
           }}
           pointerEvents="none"
@@ -40,7 +46,10 @@ export function BreadcrumbSegment({
           style={styles.segment}
         >
           <NativeText style={styles.emoji}>{emoji}</NativeText>
-          <Text numberOfLines={1} style={[styles.label, !active && styles.inactive]}>
+          <Text
+            numberOfLines={1}
+            style={[styles.label, (!active || selected === false) && styles.inactive]}
+          >
             {label}
           </Text>
         </EaseView>

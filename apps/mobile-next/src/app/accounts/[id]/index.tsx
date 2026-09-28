@@ -8,6 +8,7 @@ export default function AccountRoute() {
     <AccountScreen
       id={id}
       onBack={() => router.back()}
+      onEdit={() => router.push({ pathname: "/accounts/[id]/edit", params: { id } })}
       onOpenTransaction={(transactionId) => router.push(`/transactions/${transactionId}`)}
     />
   );

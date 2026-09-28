@@ -3,30 +3,23 @@ import { StyleSheet, View } from "react-native";
 import { LegendList } from "@legendapp/list/react-native";
 
 import { useAccountsQuery } from "@/data/ledger-queries";
-import { useLedgerMutationsWithSound } from "@/features/sound";
 import { Button } from "@/ui/button";
 import { Chip } from "@/ui/chip";
 import { EmptyState } from "@/ui/empty-state";
 import { Screen } from "@/ui/screen";
-import { Sheet } from "@/ui/sheet";
 import { Surface } from "@/ui/surface";
 import { Text } from "@/ui/text";
 import { colors, spacing, typography } from "@/ui/design-tokens";
 import { formatMoneyMinor } from "@/utils/money";
 
-import { AccountForm } from "./account-form";
-
 export interface AccountsScreenProps {
   readonly onOpenAccount?: (id: string) => void;
+  readonly onAddAccount?: () => void;
 }
 
-export function AccountsScreen({ onOpenAccount }: AccountsScreenProps) {
+export function AccountsScreen({ onOpenAccount, onAddAccount }: AccountsScreenProps) {
   const accounts = useAccountsQuery();
-  const mutations = useLedgerMutationsWithSound();
-  const [formOpen, setFormOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [formError, setFormError] = useState<string>();
   const active = accounts.data.filter((account) =>
     showArchived ? account.archived : !account.archived,
   );
@@ -53,20 +46,13 @@ export function AccountsScreen({ onOpenAccount }: AccountsScreenProps) {
           <View style={styles.header}>
             <Text variant="headline">Accounts</Text>
             <View style={styles.headerActions}>
-              <Button
-                title="Add account"
-                onPress={() => {
-                  setFormError(undefined);
-                  setFormOpen(true);
-                }}
-              />
+              <Button title="Add account" onPress={onAddAccount} />
               <Chip
                 label="Archived"
                 selected={showArchived}
                 onPress={() => setShowArchived((value) => !value)}
               />
             </View>
-            {formError ? <Text style={styles.error}>{formError}</Text> : null}
           </View>
         }
         ListEmptyComponent={
@@ -74,7 +60,7 @@ export function AccountsScreen({ onOpenAccount }: AccountsScreenProps) {
             <EmptyState
               title="No accounts"
               message="Create an account to start your ledger."
-              onRetry={() => setFormOpen(true)}
+              action={onAddAccount ? { label: "Add account", onPress: onAddAccount } : undefined}
             />
           ) : null
         }
@@ -91,24 +77,6 @@ export function AccountsScreen({ onOpenAccount }: AccountsScreenProps) {
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
-      <Sheet open={formOpen} onDismiss={() => setFormOpen(false)} snapPoints={["half", "full"]}>
-        <AccountForm
-          error={formError}
-          onCancel={() => setFormOpen(false)}
-          busy={busy}
-          onSubmit={async (input) => {
-            setBusy(true);
-            try {
-              await mutations.createAccount(input);
-              setFormOpen(false);
-            } catch (error) {
-              setFormError(error instanceof Error ? error.message : "Could not create account.");
-            } finally {
-              setBusy(false);
-            }
-          }}
-        />
-      </Sheet>
     </Screen>
   );
 }
@@ -135,5 +103,4 @@ const styles = StyleSheet.create({
   },
   amount: { fontSize: typography.textXl },
   separator: { height: spacing[2] },
-  error: { color: colors.destructive },
 });

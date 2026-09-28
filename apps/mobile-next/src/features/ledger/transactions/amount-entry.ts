@@ -51,6 +51,16 @@ export function amountDisplayParts(amount: string, fractionDigits: number): Amou
   };
 }
 
+/** Spoken form of the headline amount, e.g. "Amount minus 1,250.5 USD". */
+export function amountAccessibilityLabel(
+  parts: AmountDisplayParts,
+  currency: string | null,
+  negative: boolean,
+): string {
+  const fraction = parts.hasDecimal ? `.${parts.typedFraction}` : "";
+  return `Amount ${negative ? "minus " : ""}${parts.whole}${fraction}${currency ? ` ${currency}` : ""}`;
+}
+
 /** Normalize a keypad entry ("12." / "") into a string parseMoneyMinor accepts. */
 export function normalizeAmountEntry(amount: string): string {
   const trimmed = amount.endsWith(".") ? amount.slice(0, -1) : amount;

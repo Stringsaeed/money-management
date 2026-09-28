@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { LegendList } from "@legendapp/list/react-native";
 
 import { useAccountsQuery, useTransactionsQuery } from "@/data/ledger-queries";
@@ -7,55 +7,28 @@ import { useLedgerMutationsWithSound } from "@/features/sound";
 import { Button } from "@/ui/button";
 import { EmptyState } from "@/ui/empty-state";
 import { Screen } from "@/ui/screen";
-import { Sheet } from "@/ui/sheet";
 import { Text } from "@/ui/text";
 import { colors, spacing, typography } from "@/ui/design-tokens";
 import { formatMoneyMinor } from "@/utils/money";
 
-import { AccountForm } from "./account-form";
 import { TransactionRow } from "../transactions/transaction-row";
 import { confirmLedgerDeletion } from "../delete-confirmation";
 
 export interface AccountScreenProps {
   readonly id?: string;
   readonly onBack?: () => void;
+  readonly onEdit?: () => void;
   readonly onOpenTransaction?: (id: string) => void;
 }
 
-export function AccountScreen({ id, onBack, onOpenTransaction }: AccountScreenProps) {
+export function AccountScreen({ id, onBack, onEdit, onOpenTransaction }: AccountScreenProps) {
   const accounts = useAccountsQuery();
   const account = accounts.data.find((item) => item.id === id);
   const transactions = useTransactionsQuery({ accountId: id });
   const mutations = useLedgerMutationsWithSound();
-  const [editOpen, setEditOpen] = useState(false);
   const [error, setError] = useState<string>();
-  const [busy, setBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
 
-  if (id === "new") {
-    return (
-      <Screen style={styles.screen}>
-        <ScrollView contentContainerStyle={styles.formContent} keyboardShouldPersistTaps="handled">
-          <AccountForm
-            busy={busy}
-            error={error}
-            onCancel={onBack}
-            onSubmit={async (input) => {
-              setBusy(true);
-              try {
-                await mutations.createAccount(input);
-                onBack?.();
-              } catch (cause) {
-                setError(cause instanceof Error ? cause.message : "Could not create account.");
-              } finally {
-                setBusy(false);
-              }
-            }}
-          />
-        </ScrollView>
-      </Screen>
-    );
-  }
   if (accounts.isLoading)
     return (
       <Screen>
@@ -96,7 +69,7 @@ export function AccountScreen({ id, onBack, onOpenTransaction }: AccountScreenPr
                 disabled={deleteBusy}
                 onPress={() => {
                   setError(undefined);
-                  setEditOpen(true);
+                  onEdit?.();
                 }}
               />
               <Button
@@ -117,7 +90,7 @@ export function AccountScreen({ id, onBack, onOpenTransaction }: AccountScreenPr
                 title="Delete account"
                 variant="destructive"
                 loading={deleteBusy}
-                disabled={deleteBusy || busy}
+                disabled={deleteBusy}
                 onPress={() =>
                   confirmLedgerDeletion("account", account.name, () => {
                     setError(undefined);
@@ -154,32 +127,11 @@ export function AccountScreen({ id, onBack, onOpenTransaction }: AccountScreenPr
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
-      <Sheet open={editOpen} onDismiss={() => setEditOpen(false)} snapPoints={["half", "full"]}>
-        <AccountForm
-          account={account}
-          busy={busy}
-          error={error}
-          onCancel={() => setEditOpen(false)}
-          onSubmit={async (input) => {
-            setBusy(true);
-            try {
-              await mutations.updateAccount(account.id, input, account.version);
-              setEditOpen(false);
-            } catch (cause) {
-              setError(cause instanceof Error ? cause.message : "Could not save account.");
-            } finally {
-              setBusy(false);
-            }
-          }}
-        />
-      </Sheet>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { paddingHorizontal: spacing[5], paddingTop: spacing[4] },
-  formContent: { paddingBottom: spacing[16] },
   content: {
     gap: spacing[3],
     paddingBottom: spacing[16],

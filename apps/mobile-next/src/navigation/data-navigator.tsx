@@ -9,6 +9,9 @@ interface DataNavigatorProps {
   readonly identityKey: string;
 }
 
+/** Editors open as full-height modals from anywhere in the app and draw their own header. */
+const editorOptions = { presentation: "modal", headerShown: false } as const;
+
 const screenOptions = {
   headerStyle: { backgroundColor: colors.background },
   headerTitleStyle: { fontFamily: typography.fontBodySemibold },
@@ -29,11 +32,21 @@ export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) 
       <Stack screenOptions={screenOptions}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="accounts/index" options={{ title: "Accounts" }} />
-        <Stack.Screen name="accounts/[id]" options={{ title: "Account" }} />
-        <Stack.Screen name="categories" options={{ title: "Categories" }} />
+        <Stack.Screen name="accounts/[id]/index" options={{ title: "Account" }} />
+        <Stack.Screen name="accounts/new" options={{ title: "New account", ...editorOptions }} />
+        <Stack.Screen
+          name="accounts/[id]/edit"
+          options={{ title: "Edit account", ...editorOptions }}
+        />
+        <Stack.Screen name="categories/index" options={{ title: "Categories" }} />
+        <Stack.Screen name="categories/new" options={{ title: "New category", ...editorOptions }} />
+        <Stack.Screen
+          name="categories/[id]"
+          options={{ title: "Edit category", ...editorOptions }}
+        />
         <Stack.Screen
           name="transactions/[id]"
-          options={{ title: "Transaction", presentation: "modal", headerShown: false }}
+          options={{ title: "Transaction", ...editorOptions }}
         />
         <Stack.Screen name="recurring/index" options={{ title: "Recurring transactions" }} />
         <Stack.Screen
