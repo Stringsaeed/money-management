@@ -23,13 +23,13 @@ export interface HomeAccent {
 
 export const homeAccent: HomeAccent = {
   action: {
-    background: colors.primary,
-    border: colors.primary,
-    icon: colors.primaryForeground,
+    background: colors.popover,
+    border: colors.border,
+    icon: colors.foreground,
   },
   selected: {
-    background: colors.primary,
-    border: colors.primary,
-    foreground: colors.primaryForeground,
+    background: colors.popover,
+    border: colors.border,
+    foreground: colors.foreground,
   },
 };
