@@ -124,6 +124,18 @@ export const homeSchema = z.object({
   recentTransactions: z.array(transactionSchema),
 });
 
+export const homeOverviewBucketsSchema = z.object({
+  openingBalanceMinor: money,
+  buckets: z.array(
+    z.object({
+      date: z.string(),
+      deltaMinor: money,
+      incomeMinor: money,
+      expenseMinor: money,
+    }),
+  ),
+});
+
 export const transactionSummarySchema: z.ZodType<V2TransactionSummary> = z.object({
   count: z.number().int().nonnegative(),
   totals: z.array(

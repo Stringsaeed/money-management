@@ -151,6 +151,7 @@ async function validateCategoryOwnership(
 }
 
 export interface TransactionFilterOptions {
+  readonly currency?: string;
   readonly accountIds?: readonly string[];
   readonly categoryIds?: readonly string[];
   readonly kinds?: readonly V2TransactionKind[];
@@ -268,6 +269,7 @@ function likeContains(value: string): string {
 // oxlint-disable-next-line complexity -- each filter is independent and maps to one predicate.
 function transactionFilters(ledgerId: string, options: TransactionFilterOptions): SQL[] {
   const conditions: SQL[] = [eq(v2Transaction.ledgerId, ledgerId)];
+  if (options.currency) conditions.push(eq(v2Transaction.currency, options.currency));
   if (options.accountIds?.length) {
     conditions.push(
       or(

@@ -1,4 +1,5 @@
 import { Hono, type Context } from "hono";
+import { differenceInCalendarDays, parseISO } from "date-fns";
 import { z } from "zod";
 
 import { listAccounts, createAccount, deleteAccount, getAccount, updateAccount } from "./accounts";
@@ -11,7 +12,7 @@ import {
   getCategory,
   updateCategory,
 } from "./categories";
-import { getHome } from "./home";
+import { getHome, getHomeOverviewBuckets } from "./home";
 import {
   createRecurringRule,
   getRecurringRule,
@@ -41,6 +42,7 @@ import {
   transactionCreateSchema,
   transactionKindSchema,
   transactionUpdateSchema,
+  currencySchema,
   v2ScopeSchema,
   type V2LedgerScope,
   type V2Principal,
@@ -76,7 +78,53 @@ export function createV2LedgerRoutes(dependencies: V2LedgerRouteDependencies): H
 
   routes.get("/home", async (context) => {
     const ledger = await resolveContext(dependencies, context);
-    return context.json(await getHome(ledger));
+    const currencyValue = context.req.query("currency");
+    const currency = currencyValue ? currencySchema.safeParse(currencyValue) : null;
+    if (currency && !currency.success)
+      throw new V2ApiError(
+        400,
+        "invalid_currency",
+        "currency must be a three-letter uppercase ISO code.",
+      );
+    return context.json(
+      await getHome(ledger, {
+        currency: currency?.data,
+        accountIds: parseRepeated(context, "accountId"),
+        from: parseOptionalDate(context.req.query("from"), "from"),
+        to: parseOptionalDate(context.req.query("to"), "to"),
+        recentLimit: parseOptionalInteger(context.req.query("recentLimit"), "recentLimit"),
+      }),
+    );
+  });
+
+  routes.get("/home/overview", async (context) => {
+    const ledger = await resolveContext(dependencies, context);
+    const range = z.enum(["week", "month", "year"]).safeParse(context.req.query("range"));
+    const currency = currencySchema.safeParse(context.req.query("currency"));
+    const from = parseOptionalDate(context.req.query("from"), "from");
+    const to = parseOptionalDate(context.req.query("to"), "to");
+    if (
+      !range.success ||
+      !currency.success ||
+      !from ||
+      !to ||
+      from > to ||
+      (from && to && differenceInCalendarDays(parseISO(to), parseISO(from)) > 366)
+    )
+      throw new V2ApiError(
+        400,
+        "invalid_overview",
+        "Home overview requires a valid range, currency, and date interval.",
+      );
+    return context.json(
+      await getHomeOverviewBuckets(ledger, {
+        range: range.data,
+        currency: currency.data,
+        from,
+        to,
+        accountId: context.req.query("accountId") || undefined,
+      }),
+    );
   });
 
   routes.get("/accounts", async (context) => {

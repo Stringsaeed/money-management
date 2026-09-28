@@ -9,11 +9,72 @@ import {
   startOfWeek,
   startOfYear,
 } from "date-fns";
-import type { V2Transaction } from "@trove/api/v2/contracts";
+import type { V2Transaction, V2HomeOverviewBuckets } from "@trove/api/v2/contracts";
 
 import type { BuildHomeOverviewInput, HomeOverview } from "./home-model-types";
 
 const DATE_ONLY_PATTERN = "yyyy-MM-dd";
+
+export function homeRangeDates(range: BuildHomeOverviewInput["range"], now = new Date()) {
+  const today = startOfDay(requireValidDate(now));
+  return {
+    from: format(rangeStart(today, range), DATE_ONLY_PATTERN),
+    to: format(today, DATE_ONLY_PATTERN),
+  };
+}
+
+export function overviewFromBuckets(
+  data: V2HomeOverviewBuckets,
+  currency: string,
+  range: BuildHomeOverviewInput["range"],
+  now = new Date(),
+): HomeOverview {
+  const today = startOfDay(requireValidDate(now));
+  const { from, to } = homeRangeDates(range, now);
+  const dates =
+    range === "year"
+      ? eachMonthOfInterval({ start: startOfYear(today), end: startOfMonth(today) })
+      : eachDayOfInterval({ start: rangeStart(today, range), end: today });
+  const buckets = new Map<
+    string,
+    { deltaMinor: number; incomeMinor: number; expenseMinor: number }
+  >();
+  for (const row of data.buckets) {
+    const key = range === "year" ? row.date.slice(0, 7) : row.date;
+    const previous = buckets.get(key) ?? { deltaMinor: 0, incomeMinor: 0, expenseMinor: 0 };
+    buckets.set(key, {
+      deltaMinor: addMinor(previous.deltaMinor, row.deltaMinor, currency),
+      incomeMinor: addMinor(previous.incomeMinor, row.incomeMinor, currency),
+      expenseMinor: addMinor(previous.expenseMinor, row.expenseMinor, currency),
+    });
+  }
+  let balance = data.openingBalanceMinor;
+  let income = 0;
+  let expense = 0;
+  // oxlint-disable-next-line complexity -- chart points carry three independent money totals.
+  const points = dates.map((date) => {
+    const key = bucketKey(date, range);
+    const bucket = buckets.get(key);
+    balance = addMinor(balance, bucket?.deltaMinor ?? 0, currency);
+    income = addMinor(income, bucket?.incomeMinor ?? 0, currency);
+    expense = addMinor(expense, bucket?.expenseMinor ?? 0, currency);
+    return {
+      date: format(date, DATE_ONLY_PATTERN),
+      balanceMinor: balance,
+      incomeMinor: bucket?.incomeMinor ?? 0,
+      expenseMinor: bucket?.expenseMinor ?? 0,
+    };
+  });
+  return {
+    balanceMinor: balance,
+    incomeMinor: income,
+    expenseMinor: expense,
+    points,
+    currency,
+    startDate: from,
+    endDate: to,
+  };
+}
 
 interface TransactionEffect {
   readonly date: Date;
