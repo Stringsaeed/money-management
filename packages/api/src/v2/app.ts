@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { ZodError } from "zod";
+import type { TransactionCategorizer } from "./categorizer";
 import { createV2AuthRoutes, resolveV2Principal, type V2AuthRoutesDeps } from "./auth-routes";
 import { requireUserPrincipal, v2AuthErrorResponse } from "./auth";
 import { createV2HouseholdRoutes } from "./household-routes";
@@ -11,6 +12,7 @@ import { V2ApiError } from "./shared";
 
 export interface V2ApiDependencies extends V2AuthRoutesDeps, V2HouseholdDeps {
   readonly market: MarketRouteDependencies;
+  readonly categorizer?: TransactionCategorizer;
 }
 
 export function createV2Api(dependencies: V2ApiDependencies) {
@@ -44,6 +46,7 @@ export function createV2Api(dependencies: V2ApiDependencies) {
     "/",
     createV2LedgerRoutes({
       db: dependencies.db,
+      categorizer: dependencies.categorizer,
       getPrincipal: (context) => resolveV2Principal(context.req.raw, dependencies),
       authorizeHousehold: async (principal, householdId, access) => {
         const user = requireUserPrincipal(principal);

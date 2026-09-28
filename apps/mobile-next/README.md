@@ -51,6 +51,24 @@ contain native code.
   (Twelve Data), `MARKET_METALS_API_KEY` (Metals.Dev), and
   `MARKET_CRYPTO_API_KEY` (FreeCryptoAPI). Missing/failed feeds are shown
   explicitly; the app never substitutes sample prices.
+- `AI_GATEWAY_API_KEY` (Vercel AI Gateway) enables smart categories. Without
+  it, transactions saved with "AI pick" simply stay uncategorized.
+
+## Smart categories
+
+New transactions default to "AI pick" (Settings can turn it off). The create
+request carries `autoCategorize: true`, and the server categorizes it in the
+same request (`packages/api/src/v2/categorizer.ts`):
+
+1. Jev (`typesafe-ai/jev`) chooses one of the ledger's categories of that kind,
+   or `other`, and judges whether it recognizes the note at all.
+2. If Jev is unsure or doesn't recognize the note (e.g. "Breadfast"), an LLM
+   with web search describes what the note refers to, and Jev decides again.
+
+Only the note, its currency, and category names are sent. AI never fails a
+save: unsure, rate-limited, or failed attempts leave the transaction
+uncategorized with no error shown. Per-person quotas in `v2_ai_usage` cap cost
+(`packages/api/src/v2/ai-quota.ts`); the hourly cron prunes expired windows.
 
 ## Boundaries
 
@@ -89,7 +107,8 @@ totals, and guest isolation.
 
 ## Release
 
-`0016_mobile_next` is an additive, journaled database migration. Apply it using
+`0016_mobile_next` and `0017_v2_ai_usage` are additive, journaled database
+migrations. Apply them using
 the repository's reviewed production migration workflow before deploying V2;
 see `docs/agents/postgres-migrations.md`. The existing `/rpc` APIs remain intact.
 The Worker mounts `/api/v2` and includes V2 recurring settlement in its scheduled

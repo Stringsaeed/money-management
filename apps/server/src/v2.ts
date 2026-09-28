@@ -1,5 +1,6 @@
 import { createWorkOSHouseholdDirectory } from "@trove/auth";
 import { createV2Api } from "@trove/api/v2/app";
+import { createGatewayCategorizer } from "@trove/api/v2/categorizer-gateway";
 import { claimGuestLedgerInTransaction } from "@trove/api/v2/guest-claim";
 import { createDb } from "@trove/db";
 import { env } from "@trove/env/server";
@@ -16,6 +17,9 @@ v2Routes.all("/*", async (context) => {
       workos: env,
       directory: createWorkOSHouseholdDirectory(env.WORKOS_API_KEY),
       claimGuestLedger: claimGuestLedgerInTransaction,
+      categorizer: env.AI_GATEWAY_API_KEY
+        ? createGatewayCategorizer(env.AI_GATEWAY_API_KEY)
+        : undefined,
       market: {
         keys: {
           stocks: env.MARKET_STOCKS_API_KEY,

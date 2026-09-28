@@ -17,11 +17,13 @@ interface TransactionBreadcrumbsProps extends TransactionCreateActions {
   readonly accountId: string;
   readonly toAccountId: string | null;
   readonly categoryId: string | null;
+  readonly autoCategorize: boolean;
   readonly date: string;
   readonly onAccountChange: (id: string) => void;
   readonly onToAccountChange: (id: string) => void;
   readonly onSelectCategory: (category: V2Category) => void;
   readonly onSelectTransfer: () => void;
+  readonly onSelectAutoCategory?: (kind: V2Category["kind"]) => void;
   readonly onDateChange: (date: string) => void;
 }
 
@@ -32,11 +34,13 @@ export function TransactionBreadcrumbs({
   accountId,
   toAccountId,
   categoryId,
+  autoCategorize,
   date,
   onAccountChange,
   onToAccountChange,
   onSelectCategory,
   onSelectTransfer,
+  onSelectAutoCategory,
   onDateChange,
   onCreateAccount,
   onCreateCategory,
@@ -58,8 +62,10 @@ export function TransactionBreadcrumbs({
         categories={categories}
         selectedId={categoryId}
         isTransfer={kind === "transfer"}
+        autoKind={autoCategorize && kind !== "transfer" ? kind : null}
         onSelectCategory={onSelectCategory}
         onSelectTransfer={onSelectTransfer}
+        onSelectAuto={onSelectAutoCategory}
         onCreateCategory={onCreateCategory}
       />
       {kind === "transfer" ? (

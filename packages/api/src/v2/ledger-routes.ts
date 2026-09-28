@@ -2,6 +2,8 @@ import { Hono, type Context } from "hono";
 import { z } from "zod";
 
 import { listAccounts, createAccount, deleteAccount, getAccount, updateAccount } from "./accounts";
+import { autoCategorizeTransaction } from "./auto-categorize";
+import type { TransactionCategorizer } from "./categorizer";
 import {
   listCategories,
   createCategory,
@@ -56,6 +58,8 @@ export interface V2LedgerRouteDependencies {
   readonly db: V2Database;
   readonly getPrincipal: (context: Context) => Promise<V2Principal>;
   readonly authorizeHousehold?: AuthorizeV2Household;
+  /** Absent when no AI Gateway key is configured; `autoCategorize` then leaves Transactions uncategorized. */
+  readonly categorizer?: TransactionCategorizer;
 }
 
 export function createV2LedgerRoutes(dependencies: V2LedgerRouteDependencies): Hono {
@@ -193,12 +197,15 @@ export function createV2LedgerRoutes(dependencies: V2LedgerRouteDependencies): H
   });
   routes.post("/transactions", async (context) => {
     const ledger = await resolveContext(dependencies, context);
+    const input = await readJson(context, transactionCreateSchema);
+    const created = await createTransaction(
+      ledger,
+      input,
+      idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
+    );
+    if (!input.autoCategorize) return context.json(created, 201);
     return context.json(
-      await createTransaction(
-        ledger,
-        await readJson(context, transactionCreateSchema),
-        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
-      ),
+      await autoCategorizeTransaction(ledger, created, dependencies.categorizer),
       201,
     );
   });

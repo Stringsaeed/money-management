@@ -27,5 +27,7 @@ export type { TabBarItem, TabBarProps } from "./tab-bar-types";
 export { Text } from "./text";
 export type { TextProps, TextVariant } from "./text";
 export { TextField } from "./text-field";
+export { ToastHost, showToast } from "./toast";
+export type { Toast } from "./toast";
 export type { TextFieldProps } from "./text-field";
 export { useReducedMotion } from "./motion";

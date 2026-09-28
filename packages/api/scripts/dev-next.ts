@@ -13,6 +13,7 @@ import { Hono } from "hono";
 import postgres from "postgres";
 
 import { createV2Api } from "../src/v2/app";
+import { createGatewayCategorizer } from "../src/v2/categorizer-gateway";
 import { claimGuestLedgerInTransaction } from "../src/v2/guest-claim";
 import { settleV2DueRules } from "../src/v2/recurring";
 
@@ -75,6 +76,9 @@ const api = new Hono().route(
     workos,
     directory: createWorkOSHouseholdDirectory(workos.WORKOS_API_KEY),
     claimGuestLedger: claimGuestLedgerInTransaction,
+    categorizer: process.env.AI_GATEWAY_API_KEY
+      ? createGatewayCategorizer(process.env.AI_GATEWAY_API_KEY)
+      : undefined,
     market: {
       keys: {
         stocks: process.env.MARKET_STOCKS_API_KEY ?? "",

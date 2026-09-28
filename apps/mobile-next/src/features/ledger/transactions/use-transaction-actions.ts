@@ -4,8 +4,11 @@ import type { V2Transaction } from "@trove/api/v2/contracts";
 
 import type { TransactionInput } from "@/data/ledger-client";
 import { useLedgerMutationsWithSound } from "@/features/sound";
+import { showToast } from "@/ui/toast";
 
 import { useEditorSubmit } from "../editor/use-editor-submit";
+
+import { autoCategoryToast } from "./auto-category-toast";
 
 export function useTransactionActions(transaction: V2Transaction | undefined, onDone?: () => void) {
   const mutations = useLedgerMutationsWithSound();
@@ -13,9 +16,12 @@ export function useTransactionActions(transaction: V2Transaction | undefined, on
 
   const save = (input: TransactionInput) =>
     run(async () => {
-      if (transaction)
+      if (transaction) {
         await mutations.updateTransaction(transaction.id, input, transaction.version);
-      else await mutations.createTransaction(input);
+        return;
+      }
+      const toast = autoCategoryToast(await mutations.createTransaction(input));
+      if (toast) showToast(toast);
     }, "Couldn't save this transaction. Check your connection and try again.");
 
   const confirmDelete = (target: V2Transaction) =>

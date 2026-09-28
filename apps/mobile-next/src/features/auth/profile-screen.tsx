@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 
+import { AiSettings } from "@/features/ai";
 import { SoundSettings } from "@/features/sound";
 import { Button, Screen, Surface, Text } from "@/ui";
 import { colors } from "@/ui/design-tokens";
@@ -52,6 +53,7 @@ export function ProfileScreen() {
           </Text>
         </View>
         <SoundSettings />
+        <AiSettings />
       </View>
       <Surface variant="raised" style={styles.card}>
         {isGuest ? (

@@ -130,6 +130,8 @@ export const transactionCreateSchema = z
     amountMinor: positiveMoneyMinorSchema,
     date: ledgerDateSchema,
     note: z.string().max(500).default(""),
+    /** Let the categorizer pick a category from the note; ignored for transfers or when categoryId is set. */
+    autoCategorize: z.boolean().default(false),
   })
   .superRefine((value, context) => {
     if (value.kind === "transfer" && !value.toAccountId) {
@@ -280,6 +282,26 @@ export interface V2Transaction {
   readonly version: number;
   readonly createdAt: string;
   readonly updatedAt: string;
+}
+
+/**
+ * Outcome of `autoCategorize` on Transaction create. AI never fails the create:
+ * anything other than `categorized` leaves the Transaction uncategorized.
+ * `source` says whether Jev decided alone or after researching the note.
+ */
+export type V2AutoCategorization =
+  | {
+      readonly outcome: "categorized";
+      readonly source: "jev" | "research";
+      readonly category: V2Category;
+    }
+  | {
+      readonly outcome: "skipped" | "uncategorized" | "rate_limited" | "unavailable";
+    };
+
+export interface V2CreatedTransaction extends V2Transaction {
+  /** Present only when the create asked for `autoCategorize`. */
+  readonly autoCategorization?: V2AutoCategorization;
 }
 
 export interface V2RecurringRule {

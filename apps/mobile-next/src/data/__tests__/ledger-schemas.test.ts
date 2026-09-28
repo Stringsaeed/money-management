@@ -1,5 +1,6 @@
 import {
   parseAccount,
+  parseCreatedTransaction,
   parsePage,
   parseTransaction,
   transactionSchema,
@@ -47,6 +48,50 @@ describe("V2 ledger response parsing", () => {
         updatedAt: "2026-09-21T00:00:00.000Z",
       }),
     ).toThrow();
+  });
+
+  it("reads a create's AI categorization without letting a malformed one fail the save", () => {
+    const transaction = {
+      id: "tx-1",
+      ledgerId: "personal:guest-1",
+      accountId: "account-1",
+      categoryId: "groceries",
+      toAccountId: null,
+      kind: "expense",
+      amountMinor: 45_000,
+      currency: "EGP",
+      date: "2026-09-28",
+      note: "Breadfast",
+      recurringRuleId: null,
+      version: 1,
+      createdAt: "2026-09-28T00:00:00.000Z",
+      updatedAt: "2026-09-28T00:00:00.000Z",
+    };
+    const category = {
+      id: "groceries",
+      ledgerId: "personal:guest-1",
+      name: "Groceries",
+      kind: "expense",
+      color: "#4a8f69",
+      icon: "🛒",
+      parentId: null,
+      sortOrder: 0,
+      archived: false,
+      version: 0,
+      createdAt: "2026-09-28T00:00:00.000Z",
+      updatedAt: "2026-09-28T00:00:00.000Z",
+    };
+
+    expect(
+      parseCreatedTransaction({
+        ...transaction,
+        autoCategorization: { outcome: "categorized", source: "research", category },
+      }).autoCategorization,
+    ).toMatchObject({ outcome: "categorized", category: { name: "Groceries" } });
+    expect(
+      parseCreatedTransaction({ ...transaction, autoCategorization: { outcome: "surprise" } }),
+    ).not.toHaveProperty("autoCategorization");
+    expect(parseCreatedTransaction(transaction).id).toBe("tx-1");
   });
 
   it("parses paged collections without silently changing the cursor", () => {

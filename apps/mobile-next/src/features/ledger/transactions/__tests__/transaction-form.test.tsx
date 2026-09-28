@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 
-import type { V2Account, V2Category } from "@trove/api/v2/contracts";
+import type { V2Account, V2Category, V2Transaction } from "@trove/api/v2/contracts";
 
+import { updateAiPreferences } from "@/features/ai/ai-store";
 import { rawColorValues } from "@/ui/design-tokens";
 
 import { TransactionForm } from "../transaction-form";
@@ -44,14 +45,18 @@ const salary: V2Category = {
 const accounts = [account("account-1", "Checking"), account("account-2", "Savings")];
 
 const press = (label: string) => fireEvent.press(screen.getByRole("button", { name: label }));
+/** New transactions start on "AI pick" while smart categories are on (the default). */
+const CATEGORY_CHIP = "Category: AI picks from the note";
 
 describe("TransactionForm", () => {
+  afterEach(() => updateAiPreferences({ autoCategorize: true }));
+
   it("builds the amount on the keypad and submits an expense", async () => {
     const onSubmit = jest.fn(() => Promise.resolve());
     await render(<TransactionForm accounts={accounts} categories={[food]} onSubmit={onSubmit} />);
 
     for (const key of ["1", "2", "Decimal point", "5"]) await press(key);
-    await press("Category: none");
+    await press(CATEGORY_CHIP);
     await press("Food");
     await fireEvent.changeText(screen.getByLabelText("Note"), "  Lunch ");
     await press("Save");
@@ -83,7 +88,7 @@ describe("TransactionForm", () => {
     const onSubmit = jest.fn(() => Promise.resolve());
     await render(<TransactionForm accounts={accounts} categories={[food]} onSubmit={onSubmit} />);
 
-    await press("Category: none");
+    await press(CATEGORY_CHIP);
     await press("Transfer");
     await press("5");
     await press("Save");
@@ -109,7 +114,7 @@ describe("TransactionForm", () => {
     );
 
     await press("9");
-    await press("Category: none");
+    await press(CATEGORY_CHIP);
     await press("Salary");
     await press("Save");
 
@@ -202,5 +207,119 @@ describe("TransactionForm", () => {
     expect(screen.getByText("$")).toHaveStyle({ color: rawColorValues.light.mutedForeground });
     await press("5");
     expect(screen.getByText("$")).toHaveStyle({ color: rawColorValues.light.ink });
+  });
+
+  describe("AI pick", () => {
+    const edited: V2Transaction = {
+      ...stamp,
+      id: "transaction-1",
+      ledgerId: "personal:guest-1",
+      accountId: "account-1",
+      categoryId: null,
+      toAccountId: null,
+      kind: "expense",
+      amountMinor: 500,
+      currency: "USD",
+      date: "2026-09-21",
+      note: "Breadfast",
+      recurringRuleId: null,
+    };
+
+    it("asks the server to pick an expense category from the note by default", async () => {
+      const onSubmit = jest.fn(() => Promise.resolve());
+      await render(<TransactionForm accounts={accounts} categories={[food]} onSubmit={onSubmit} />);
+
+      await press("5");
+      await fireEvent.changeText(screen.getByLabelText("Note"), " Breadfast ");
+      await press("Save");
+
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kind: "expense",
+          categoryId: null,
+          note: "Breadfast",
+          autoCategorize: true,
+        }),
+      );
+    });
+
+    it("does not ask AI when there is no note to read", async () => {
+      const onSubmit = jest.fn(() => Promise.resolve());
+      await render(<TransactionForm accounts={accounts} categories={[food]} onSubmit={onSubmit} />);
+
+      await press("5");
+      await press("Save");
+
+      expect(onSubmit).toHaveBeenCalledWith(expect.not.objectContaining({ autoCategorize: true }));
+    });
+
+    it("lets the person choose income and leave the category to AI", async () => {
+      const onSubmit = jest.fn(() => Promise.resolve());
+      await render(
+        <TransactionForm accounts={accounts} categories={[food, salary]} onSubmit={onSubmit} />,
+      );
+
+      await press("5");
+      await press(CATEGORY_CHIP);
+      const [, incomePick] = screen.getAllByRole("button", { name: "AI pick" });
+      if (!incomePick) throw new Error("Income section should offer AI pick.");
+      await fireEvent.press(incomePick);
+      await fireEvent.changeText(screen.getByLabelText("Note"), "Upwork payout");
+      await press("Save");
+
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ kind: "income", categoryId: null, autoCategorize: true }),
+      );
+    });
+
+    it("stops asking AI once the person picks a category", async () => {
+      const onSubmit = jest.fn(() => Promise.resolve());
+      await render(<TransactionForm accounts={accounts} categories={[food]} onSubmit={onSubmit} />);
+
+      await press("5");
+      await press(CATEGORY_CHIP);
+      await press("Food");
+      await fireEvent.changeText(screen.getByLabelText("Note"), "Breadfast");
+      await press("Save");
+
+      expect(onSubmit).toHaveBeenCalledWith(expect.not.objectContaining({ autoCategorize: true }));
+      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ categoryId: "category-1" }));
+    });
+
+    it("hides AI pick when smart categories are turned off", async () => {
+      updateAiPreferences({ autoCategorize: false });
+      const onSubmit = jest.fn(() => Promise.resolve());
+      await render(<TransactionForm accounts={accounts} categories={[food]} onSubmit={onSubmit} />);
+
+      await press("Category: none");
+      expect(screen.queryByRole("button", { name: "AI pick" })).toBeNull();
+    });
+
+    it("shows no AI pick until there is a category of that kind to choose", async () => {
+      const onSubmit = jest.fn(() => Promise.resolve());
+      await render(
+        <TransactionForm accounts={accounts} categories={[salary]} onSubmit={onSubmit} />,
+      );
+
+      expect(screen.getByRole("button", { name: "Category: none" })).toBeOnTheScreen();
+      await press("5");
+      await fireEvent.changeText(screen.getByLabelText("Note"), "Breadfast");
+      await press("Save");
+      expect(onSubmit).toHaveBeenCalledWith(expect.not.objectContaining({ autoCategorize: true }));
+    });
+
+    it("is not offered when editing a transaction", async () => {
+      await render(
+        <TransactionForm
+          transaction={edited}
+          accounts={accounts}
+          categories={[food]}
+          onSubmit={jest.fn(() => Promise.resolve())}
+        />,
+      );
+
+      await press("Category: none");
+      expect(screen.queryByRole("button", { name: "AI pick" })).toBeNull();
+    });
   });
 });

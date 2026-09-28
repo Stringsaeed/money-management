@@ -7,6 +7,7 @@ export * from "./recurring";
 export * from "./commands";
 export * from "./household";
 export * from "./deletion";
+export * from "./v2-ai";
 export * from "./v2-identity";
 export * from "./v2-ledger";
 export {};

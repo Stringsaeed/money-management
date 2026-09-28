@@ -16,6 +16,7 @@ import { memberWidget } from "./member-widget";
 import { workosWebhooks } from "./workos-webhooks";
 import { v2Routes } from "./v2";
 import { settleV2DueRules } from "@trove/api/v2/recurring";
+import { pruneAiUsage } from "@trove/api/v2/ai-quota";
 
 const app = new Hono();
 
@@ -101,10 +102,14 @@ async function settleLegacy(controller: ScheduledController) {
 }
 
 async function settleNext(controller: ScheduledController) {
-  const nextSummary = await settleV2DueRules(createDb(), new Date(controller.scheduledTime));
+  const db = createDb();
+  const now = new Date(controller.scheduledTime);
+  const nextSummary = await settleV2DueRules(db, now);
   console.log(
     `V2 settlement: ${nextSummary.generatedCount} transaction(s) across ${nextSummary.ledgers} ledger(s).`,
   );
+  // Expired AI quota windows only matter for rate limiting; losing a prune just retries next hour.
+  await pruneAiUsage(db, now).catch(() => console.error("V2 AI usage prune failed."));
 }
 
 export default {

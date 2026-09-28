@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { V2Account, V2Category, V2Transaction } from "@trove/api/v2/contracts";
 
 import type { TransactionInput } from "@/data/ledger-client";
+import { useAiPreferences } from "@/features/ai";
 import { playCue } from "@/features/sound";
 import { currencyFractionDigits, parseMoneyMinor } from "@/utils/money";
 
@@ -36,7 +37,12 @@ export function useTransactionForm({
   onSubmit,
 }: UseTransactionFormOptions) {
   const activeAccounts = accounts.filter((item) => !item.archived);
-  const [draft, setDraft] = useState(() => initialTransactionDraft(transaction, activeAccounts));
+  // "AI pick" is offered on create only; an edit keeps the category the person sees.
+  const canAutoCategorize = useAiPreferences().autoCategorize && !transaction;
+  const [draft, setDraft] = useState(() =>
+    initialTransactionDraft(transaction, activeAccounts, canAutoCategorize),
+  );
+
   const [validationError, setValidationError] = useState<string>();
 
   // Currency always comes from the chosen account; until one exists there is no currency to show.
@@ -47,6 +53,11 @@ export function useTransactionForm({
   const currency = currencyOf(draft.accountId);
   const fractionDigits = digitsFor(currency);
   const activeCategories = categories.filter((item) => !item.archived);
+  // AI can only choose among categories of the transaction's kind; with none there is no "AI pick".
+  const autoCategorize =
+    canAutoCategorize &&
+    draft.autoCategorize &&
+    activeCategories.some((item) => item.kind === draft.kind);
 
   const update = (patch: Partial<TransactionDraft>) => {
     setValidationError(undefined);
@@ -55,9 +66,19 @@ export function useTransactionForm({
 
   // The category decides the transaction type; transfers are picked from the same sheet.
   const selectCategory = (category: V2Category) =>
-    update({ kind: category.kind, categoryId: category.id, toAccountId: null });
+    update({
+      kind: category.kind,
+      categoryId: category.id,
+      toAccountId: null,
+      autoCategorize: false,
+    });
 
-  const selectTransfer = () => update({ kind: "transfer", categoryId: null });
+  const selectTransfer = () =>
+    update({ kind: "transfer", categoryId: null, autoCategorize: false });
+
+  /** The person sets the direction; AI picks among that kind's categories on save. */
+  const selectAutoCategory = (kind: V2Category["kind"]) =>
+    update({ kind, categoryId: null, toAccountId: null, autoCategorize: true });
 
   const selectAccount = (accountId: string) =>
     update({
@@ -88,7 +109,7 @@ export function useTransactionForm({
       return;
     }
     setValidationError(undefined);
-    await onSubmit(transactionInputFromDraft(draft, amountMinor));
+    await onSubmit(transactionInputFromDraft({ ...draft, autoCategorize }, amountMinor));
   };
 
   return {
@@ -98,8 +119,10 @@ export function useTransactionForm({
     activeAccounts,
     activeCategories,
     validationError,
+    autoCategorize,
     selectCategory,
     selectTransfer,
+    selectAutoCategory: canAutoCategorize ? selectAutoCategory : undefined,
     selectAccount,
     setToAccountId: (toAccountId: string) => update({ toAccountId }),
     setDate: (date: string) => update({ date }),

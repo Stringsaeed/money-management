@@ -28,6 +28,7 @@
     "@trove/domain": "workspace:*",
     "@trove/env": "workspace:*",
     "@trove/protocol": "workspace:*",
+    "ai": "^7.0.118",
     "date-fns": "^4.1.0",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.2",
