@@ -23,7 +23,7 @@ export function HomeActivity({
   onOpen,
   onViewAll,
 }: HomeActivityProps) {
-  const names = new Map(categories.map((category) => [category.id, category.name]));
+  const byId = new Map(categories.map((category) => [category.id, category]));
   return (
     <TilePanel style={styles.panel}>
       <View style={styles.heading}>
@@ -53,7 +53,7 @@ export function HomeActivity({
           <HomeTransactionRow
             key={transaction.id}
             transaction={transaction}
-            categoryName={names.get(transaction.categoryId ?? "")}
+            category={byId.get(transaction.categoryId ?? "")}
             onPress={onOpen}
           />
         ))

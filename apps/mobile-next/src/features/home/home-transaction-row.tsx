@@ -1,61 +1,41 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import { format, parseISO } from "date-fns";
 
-import type { V2Transaction } from "@trove/api/v2/contracts";
+import type { V2Category, V2Transaction } from "@trove/api/v2/contracts";
 
 import { Text } from "@/ui/text";
 import { colors, spacing, typography } from "@/ui/design-tokens";
-import { Icon, type IconName } from "@/ui/icon";
-import { formatMoneyMinor } from "@/utils/money";
+import { CategoryAvatar } from "@/features/ledger/list/category-avatar";
+import { ledgerRowDisplay } from "@/features/ledger/list/ledger-row-display";
 
 interface HomeTransactionRowProps {
   readonly transaction: V2Transaction;
   readonly onPress?: (transaction: V2Transaction) => void;
-  readonly categoryName?: string;
+  readonly category?: V2Category;
 }
 
-const transactionIcons = {
-  income: "arrow-down-left",
-  expense: "arrow-up-right",
-  transfer: "arrows-left-right",
-} satisfies Record<V2Transaction["kind"], IconName>;
-
-export function HomeTransactionRow({
-  transaction,
-  onPress,
-  categoryName,
-}: HomeTransactionRowProps) {
-  const sign = transaction.kind === "income" ? "+" : transaction.kind === "expense" ? "−" : "";
-  const label = transaction.note.trim() || categoryName || "Transaction";
+/** Latest-activity row: the Category's emoji on its color wash, same as the Ledger tab. */
+export function HomeTransactionRow({ transaction, onPress, category }: HomeTransactionRowProps) {
+  const display = ledgerRowDisplay(transaction, { category });
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Open ${label}`}
+      accessibilityLabel={`Open ${display.title}`}
       onPress={() => onPress?.(transaction)}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
-      <View style={styles.iconWrap}>
-        <Icon
-          name={transactionIcons[transaction.kind]}
-          size={18}
-          color={colors.foreground}
-          weight="regular"
-        />
-      </View>
+      <CategoryAvatar emoji={display.emoji} tint={display.tint} icon={display.icon} size={36} />
       <View style={styles.copy}>
         <Text numberOfLines={1} style={styles.label}>
-          {label}
+          {display.title}
         </Text>
         <Text numberOfLines={1} style={styles.date}>
           {format(parseISO(transaction.date), "d MMM")}
-          {categoryName ? ` · ${categoryName}` : ""}
+          {display.meta ? ` · ${display.meta}` : ""}
         </Text>
       </View>
-      <Text style={styles.amount}>
-        {sign}
-        {formatMoneyMinor(transaction.amountMinor, transaction.currency)}
-      </Text>
+      <Text style={[styles.amount, styles[display.tone]]}>{display.amount}</Text>
     </Pressable>
   );
 }
@@ -69,16 +49,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[2],
   },
   pressed: { opacity: 0.6 },
-  iconWrap: {
-    alignItems: "center",
-    backgroundColor: colors.muted,
-    borderColor: colors.border,
-    borderRadius: 11,
-    borderWidth: 1,
-    height: 36,
-    justifyContent: "center",
-    width: 36,
-  },
   copy: { flex: 1, gap: spacing[0.5] },
   label: {
     color: colors.foreground,
@@ -91,9 +61,11 @@ const styles = StyleSheet.create({
     fontSize: typography.textXs,
   },
   amount: {
-    color: colors.foreground,
     fontFamily: typography.fontHeadingMedium,
     fontSize: typography.textBase,
     fontVariant: ["tabular-nums"],
   },
+  income: { color: colors.sage },
+  expense: { color: colors.foreground },
+  transfer: { color: colors.mutedForeground },
 });
