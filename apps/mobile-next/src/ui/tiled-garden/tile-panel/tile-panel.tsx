@@ -29,11 +29,13 @@ export function TilePanel({ children, style, contentStyle }: TilePanelProps) {
 const styles = StyleSheet.create({
   panel: {
     backgroundColor: colors.card,
-    borderColor: colors.border,
     borderCurve: "continuous",
     borderRadius: 24,
-    borderWidth: 1,
-    boxShadow: "0 2px 8px rgba(54, 45, 25, 0.09)",
+    // 1px ring (spread, no blur) that follows the light/dark border token, plus a soft drop.
+    boxShadow: [
+      { offsetX: 0, offsetY: 0, blurRadius: 0, spreadDistance: 1, color: colors.border },
+      { offsetX: 0, offsetY: 2, blurRadius: 6, color: "rgba(28, 27, 26, 0.06)" },
+    ],
     position: "relative",
   },
   content: {

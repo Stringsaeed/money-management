@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import type { UpcomingOccurrence } from "@/data/ledger-schemas";
 import { Text } from "@/ui/text";
 import { Icon } from "@/ui/icon";
+import { TilePanel } from "@/ui/tiled-garden/tile-panel";
 import { colors, spacing, typography } from "@/ui/design-tokens";
 import { formatMoneyMinor } from "@/utils/money";
 import { homeAccent } from "./home-accent";
@@ -17,7 +18,7 @@ interface HomeUpcomingProps {
 
 export function HomeUpcoming({ items, loading, failed, onOpen, onViewAll }: HomeUpcomingProps) {
   return (
-    <View style={styles.section}>
+    <TilePanel contentStyle={styles.section}>
       <View style={styles.heading}>
         <View style={styles.copy}>
           <Text variant="title" style={styles.title}>
@@ -64,7 +65,7 @@ export function HomeUpcoming({ items, loading, failed, onOpen, onViewAll }: Home
           </Pressable>
         ))
       )}
-    </View>
+    </TilePanel>
   );
 }
 
