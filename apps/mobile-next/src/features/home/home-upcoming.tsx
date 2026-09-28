@@ -3,9 +3,10 @@ import { Pressable, StyleSheet, View } from "react-native";
 import type { UpcomingOccurrence } from "@/data/ledger-schemas";
 import { Text } from "@/ui/text";
 import { Icon } from "@/ui/icon";
+import { TilePanel } from "@/ui/tiled-garden/tile-panel";
 import { colors, spacing, typography } from "@/ui/design-tokens";
-import { tileColors } from "@/ui/tiled-garden/tile-tokens";
 import { formatMoneyMinor } from "@/utils/money";
+import { homeAccent } from "./home-accent";
 
 interface HomeUpcomingProps {
   readonly items: readonly (UpcomingOccurrence & { readonly name: string })[];
@@ -17,7 +18,7 @@ interface HomeUpcomingProps {
 
 export function HomeUpcoming({ items, loading, failed, onOpen, onViewAll }: HomeUpcomingProps) {
   return (
-    <View style={styles.section}>
+    <TilePanel contentStyle={styles.section}>
       <View style={styles.heading}>
         <View style={styles.copy}>
           <Text variant="title" style={styles.title}>
@@ -31,7 +32,7 @@ export function HomeUpcoming({ items, loading, failed, onOpen, onViewAll }: Home
           onPress={onViewAll}
           style={({ pressed }) => [styles.link, pressed && styles.pressed]}
         >
-          <Icon name="arrow-right" color={tileColors.ink} />
+          <Icon name="arrow-right" color={homeAccent.action.icon} />
         </Pressable>
       </View>
       {loading ? (
@@ -64,7 +65,7 @@ export function HomeUpcoming({ items, loading, failed, onOpen, onViewAll }: Home
           </Pressable>
         ))
       )}
-    </View>
+    </TilePanel>
   );
 }
 
@@ -75,8 +76,8 @@ const styles = StyleSheet.create({
   title: { fontFamily: typography.fontBodyBold, fontSize: typography.textLg },
   link: {
     alignItems: "center",
-    backgroundColor: tileColors.pink,
-    borderColor: tileColors.grout,
+    backgroundColor: homeAccent.action.background,
+    borderColor: homeAccent.action.border,
     borderRadius: 22,
     borderWidth: 1,
     height: 44,

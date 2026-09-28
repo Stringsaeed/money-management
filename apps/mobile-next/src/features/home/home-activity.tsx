@@ -5,8 +5,8 @@ import { Text } from "@/ui/text";
 import { Icon } from "@/ui/icon";
 import { colors, spacing, typography } from "@/ui/design-tokens";
 import { TilePanel } from "@/ui/tiled-garden/tile-panel";
-import { tileColors } from "@/ui/tiled-garden/tile-tokens";
 import { HomeTransactionRow } from "./home-transaction-row";
+import { homeAccent } from "./home-accent";
 
 interface HomeActivityProps {
   readonly transactions: readonly V2Transaction[];
@@ -23,7 +23,7 @@ export function HomeActivity({
   onOpen,
   onViewAll,
 }: HomeActivityProps) {
-  const names = new Map(categories.map((category) => [category.id, category.name]));
+  const byId = new Map(categories.map((category) => [category.id, category]));
   return (
     <TilePanel style={styles.panel}>
       <View style={styles.heading}>
@@ -41,7 +41,7 @@ export function HomeActivity({
           onPress={onViewAll}
           style={({ pressed }) => [styles.link, pressed && styles.pressed]}
         >
-          <Icon name="arrow-right" color={tileColors.ink} size={20} />
+          <Icon name="arrow-right" color={homeAccent.action.icon} size={20} />
         </Pressable>
       </View>
       {transactions.length === 0 ? (
@@ -53,7 +53,7 @@ export function HomeActivity({
           <HomeTransactionRow
             key={transaction.id}
             transaction={transaction}
-            categoryName={names.get(transaction.categoryId ?? "")}
+            category={byId.get(transaction.categoryId ?? "")}
             onPress={onOpen}
           />
         ))
@@ -81,11 +81,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: tileColors.pink,
+    backgroundColor: homeAccent.action.background,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: tileColors.grout,
+    borderColor: homeAccent.action.border,
   },
   pressed: { opacity: 0.68 },
   empty: {
