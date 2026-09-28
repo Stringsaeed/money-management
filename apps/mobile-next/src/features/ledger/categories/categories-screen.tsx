@@ -8,38 +8,30 @@ import { Button } from "@/ui/button";
 import { Chip } from "@/ui/chip";
 import { EmptyState } from "@/ui/empty-state";
 import { Screen } from "@/ui/screen";
-import { Sheet } from "@/ui/sheet";
 import { Text } from "@/ui/text";
 import { colors, spacing } from "@/ui/design-tokens";
 
 import { CategoryRow } from "./category-row";
-import { CategoryForm } from "./category-form";
 import { confirmLedgerDeletion } from "../delete-confirmation";
 
 type CategoryFilter = "all" | "income" | "expense" | "archived";
 
 export interface CategoriesScreenProps {
-  readonly initialCreate?: boolean;
+  readonly onAddCategory?: () => void;
+  readonly onEditCategory?: (id: string) => void;
 }
 
-export function CategoriesScreen({ initialCreate = false }: CategoriesScreenProps) {
+export function CategoriesScreen({ onAddCategory, onEditCategory }: CategoriesScreenProps) {
   const categories = useCategoriesQuery();
   const mutations = useLedgerMutationsWithSound();
   const [filter, setFilter] = useState<CategoryFilter>("all");
-  const [editing, setEditing] = useState<string | "new" | undefined>(
-    initialCreate ? "new" : undefined,
-  );
-  const [error, setError] = useState<string>();
   const [actionError, setActionError] = useState<string>();
   const [pendingAction, setPendingAction] = useState<string>();
-  const [busy, setBusy] = useState(false);
   const visible = categories.data.filter((category) => {
     if (filter === "archived") return category.archived;
     if (category.archived) return false;
     return filter === "all" || category.kind === filter;
   });
-  const category =
-    editing && editing !== "new" ? categories.data.find((item) => item.id === editing) : undefined;
   const runAction = (
     action: "archive" | "restore" | "delete",
     item: (typeof categories.data)[number],
@@ -90,9 +82,8 @@ export function CategoriesScreen({ initialCreate = false }: CategoriesScreenProp
               title="Add category"
               disabled={Boolean(pendingAction)}
               onPress={() => {
-                setError(undefined);
                 setActionError(undefined);
-                setEditing("new");
+                onAddCategory?.();
               }}
             />
             <View style={styles.chips}>
@@ -113,6 +104,7 @@ export function CategoriesScreen({ initialCreate = false }: CategoriesScreenProp
             <EmptyState
               title="No categories"
               message="Add categories to make entries easier to understand."
+              action={onAddCategory ? { label: "Add category", onPress: onAddCategory } : undefined}
             />
           ) : null
         }
@@ -121,9 +113,8 @@ export function CategoriesScreen({ initialCreate = false }: CategoriesScreenProp
             category={item}
             pendingAction={pendingAction}
             onEdit={() => {
-              setError(undefined);
               setActionError(undefined);
-              setEditing(item.id);
+              onEditCategory?.(item.id);
             }}
             onArchive={() => runAction("archive", item)}
             onRestore={() => runAction("restore", item)}
@@ -132,30 +123,6 @@ export function CategoriesScreen({ initialCreate = false }: CategoriesScreenProp
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
-      <Sheet
-        open={Boolean(editing)}
-        onDismiss={() => setEditing(undefined)}
-        snapPoints={["half", "full"]}
-      >
-        <CategoryForm
-          category={category}
-          busy={busy}
-          error={error}
-          onCancel={() => setEditing(undefined)}
-          onSubmit={async (input) => {
-            setBusy(true);
-            try {
-              if (category) await mutations.updateCategory(category.id, input, category.version);
-              else await mutations.createCategory(input);
-              setEditing(undefined);
-            } catch (cause) {
-              setError(cause instanceof Error ? cause.message : "Could not save category.");
-            } finally {
-              setBusy(false);
-            }
-          }}
-        />
-      </Sheet>
     </Screen>
   );
 }

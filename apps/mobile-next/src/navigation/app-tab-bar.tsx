@@ -28,18 +28,13 @@ export const AppTabBar = ({ state, navigation, descriptors, insets }: BottomTabB
     scope.kind === "household" ? (household.household?.name ?? "Household") : "Personal";
   const selectCreateAction = (action: CreateAction) => {
     setCreateOpen(false);
-    const navigate = () => {
-      if (action === "category") {
-        router.push({ pathname: "/categories", params: { create: "1" } });
-        return;
-      }
-      const paths = {
-        transaction: "/transactions/new",
-        account: "/accounts/new",
-      } as const satisfies Record<Exclude<CreateAction, "category">, string>;
-      router.push(paths[action]);
-    };
-    setTimeout(navigate, 0);
+    const paths = {
+      transaction: "/transactions/new",
+      account: "/accounts/new",
+      category: "/categories/new",
+    } as const satisfies Record<CreateAction, string>;
+    // Let the sheet finish closing so the editor isn't presented underneath it.
+    setTimeout(() => router.push(paths[action]), 0);
   };
   const selectLedgerScope = (nextScope: V2LedgerScope) => {
     selectScope(nextScope);

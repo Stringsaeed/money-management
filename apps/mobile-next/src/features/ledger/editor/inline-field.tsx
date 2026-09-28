@@ -1,26 +1,43 @@
-import { StyleSheet, Text as NativeText, TextInput, View } from "react-native";
+import { StyleSheet, Text as NativeText, TextInput, View, type TextInputProps } from "react-native";
 
 import { colors, radii, shadows, spacing, typography } from "@/ui/design-tokens";
 
-interface NoteInputProps {
+interface InlineFieldProps {
+  readonly emoji: string;
+  readonly accessibilityLabel: string;
+  readonly placeholder: string;
   readonly value: string;
   readonly onChange: (value: string) => void;
+  readonly autoCapitalize?: TextInputProps["autoCapitalize"];
+  readonly maxLength?: number;
+  readonly testID?: string;
 }
 
-export function NoteInput({ value, onChange }: NoteInputProps) {
+/** Single-line card field that sits above an editor's pad (transaction note, account name). */
+export function InlineField({
+  emoji,
+  accessibilityLabel,
+  placeholder,
+  value,
+  onChange,
+  autoCapitalize = "sentences",
+  maxLength,
+  testID,
+}: InlineFieldProps) {
   return (
     <View style={styles.row}>
-      <NativeText style={styles.emoji}>📝</NativeText>
+      <NativeText style={styles.emoji}>{emoji}</NativeText>
       <TextInput
-        accessibilityLabel="Note"
-        autoCapitalize="sentences"
+        accessibilityLabel={accessibilityLabel}
+        autoCapitalize={autoCapitalize}
+        maxLength={maxLength}
         onChangeText={onChange}
-        placeholder="Add a note…"
+        placeholder={placeholder}
         placeholderTextColor={colors.mutedForeground}
         returnKeyType="done"
         style={styles.input}
         submitBehavior="blurAndSubmit"
-        testID="transaction-note-field"
+        testID={testID}
         value={value}
       />
     </View>

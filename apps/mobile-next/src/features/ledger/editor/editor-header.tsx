@@ -4,21 +4,25 @@ import { spacing } from "@/ui/design-tokens";
 import { IconButton } from "@/ui/icon-button";
 import { Text } from "@/ui/text";
 
-interface TransactionHeaderProps {
+interface EditorHeaderProps {
   readonly title: string;
   readonly busy: boolean;
+  /** Names what the trash button removes, e.g. "Delete transaction". */
+  readonly deleteLabel?: string;
   readonly onCancel?: () => void;
   readonly onDelete?: () => void;
   readonly onSave: () => void;
 }
 
-export function TransactionHeader({
+/** Title row shared by the ledger's modal editors: delete, close, and a primary save. */
+export function EditorHeader({
   title,
   busy,
+  deleteLabel = "Delete",
   onCancel,
   onDelete,
   onSave,
-}: TransactionHeaderProps) {
+}: EditorHeaderProps) {
   return (
     <View style={styles.header}>
       <Text variant="headline" numberOfLines={1} style={styles.title}>
@@ -27,7 +31,7 @@ export function TransactionHeader({
       {onDelete ? (
         <IconButton
           name="trash"
-          accessibilityLabel="Delete transaction"
+          accessibilityLabel={deleteLabel}
           disabled={busy}
           onPress={onDelete}
         />

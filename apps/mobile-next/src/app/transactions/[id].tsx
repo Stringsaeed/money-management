@@ -9,7 +9,7 @@ export default function TransactionRoute() {
       id={id}
       onBack={() => router.back()}
       onCreateAccount={() => router.push("/accounts/new")}
-      onCreateCategory={() => router.push({ pathname: "/categories", params: { create: "1" } })}
+      onCreateCategory={() => router.push("/categories/new")}
     />
   );
 }

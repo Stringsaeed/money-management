@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Alert } from "react-native";
 
 import type { V2Transaction } from "@trove/api/v2/contracts";
@@ -6,26 +5,11 @@ import type { V2Transaction } from "@trove/api/v2/contracts";
 import type { TransactionInput } from "@/data/ledger-client";
 import { useLedgerMutationsWithSound } from "@/features/sound";
 
-const errorMessage = (cause: unknown, fallback: string) =>
-  cause instanceof Error ? cause.message : fallback;
+import { useEditorSubmit } from "../editor/use-editor-submit";
 
 export function useTransactionActions(transaction: V2Transaction | undefined, onDone?: () => void) {
   const mutations = useLedgerMutationsWithSound();
-  const [error, setError] = useState<string>();
-  const [busy, setBusy] = useState(false);
-
-  const run = async (action: () => Promise<void>, fallback: string) => {
-    setBusy(true);
-    setError(undefined);
-    try {
-      await action();
-      onDone?.();
-    } catch (cause) {
-      setError(errorMessage(cause, fallback));
-    } finally {
-      setBusy(false);
-    }
-  };
+  const { busy, error, run } = useEditorSubmit(onDone);
 
   const save = (input: TransactionInput) =>
     run(async () => {

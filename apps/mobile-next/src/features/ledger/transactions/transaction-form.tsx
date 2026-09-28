@@ -6,12 +6,13 @@ import type { TransactionInput } from "@/data/ledger-client";
 import { colors, spacing, typography } from "@/ui/design-tokens";
 import { Text } from "@/ui/text";
 
+import { EditorHeader } from "../editor/editor-header";
+import { InlineField } from "../editor/inline-field";
+
 import { AmountDisplay } from "./amount-display";
-import { NoteInput } from "./note-input";
 import { NumPad } from "./num-pad";
 import { TransactionBreadcrumbs } from "./transaction-breadcrumbs";
 import type { TransactionCreateActions } from "./transaction-create-actions";
-import { TransactionHeader } from "./transaction-header";
 import { useTransactionForm } from "./use-transaction-form";
 
 interface TransactionFormProps extends TransactionCreateActions {
@@ -45,9 +46,10 @@ export function TransactionForm({
       {/* The pad is taller than the system keyboard, so the note field above it stays
           visible without keyboard avoidance. */}
       <View style={styles.body}>
-        <TransactionHeader
+        <EditorHeader
           title={transaction ? "Edit transaction" : "New transaction"}
           busy={busy}
+          deleteLabel="Delete transaction"
           onCancel={onCancel}
           onDelete={onDelete}
           onSave={() => void form.submit()}
@@ -82,7 +84,14 @@ export function TransactionForm({
             </Text>
           ) : null}
         </View>
-        <NoteInput value={form.draft.note} onChange={form.setNote} />
+        <InlineField
+          emoji="📝"
+          accessibilityLabel="Note"
+          placeholder="Add a note…"
+          value={form.draft.note}
+          onChange={form.setNote}
+          testID="transaction-note-field"
+        />
       </View>
       <NumPad
         allowDecimal={form.fractionDigits > 0}

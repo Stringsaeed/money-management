@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import { Button } from "@/ui/button";
+import { OptionTile } from "@/features/ledger/editor/option-tile";
 import { Sheet } from "@/ui/sheet";
 import { Text } from "@/ui/text";
 import { spacing } from "@/ui/design-tokens";
@@ -13,23 +13,29 @@ interface CreateActionSheetProps {
   readonly onSelect: (action: CreateAction) => void;
 }
 
-const ACTIONS: readonly { action: CreateAction; label: string }[] = [
-  { action: "transaction", label: "Transaction" },
-  { action: "account", label: "Account" },
-  { action: "category", label: "Category" },
+const ACTIONS: readonly { action: CreateAction; emoji: string; label: string }[] = [
+  { action: "transaction", emoji: "🧾", label: "Transaction" },
+  { action: "account", emoji: "🏦", label: "Account" },
+  { action: "category", emoji: "🏷️", label: "Category" },
 ];
 
 export function CreateActionSheet({ open, onDismiss, onSelect }: CreateActionSheetProps) {
   return (
     <Sheet open={open} onDismiss={onDismiss} testID="create-action-sheet">
-      <Text variant="title">Create</Text>
+      <Text variant="title">✨ Create</Text>
       <View style={styles.actions}>
-        {ACTIONS.map(({ action, label }) => (
-          <Button key={action} title={label} onPress={() => onSelect(action)} />
+        {ACTIONS.map(({ action, emoji, label }) => (
+          <OptionTile
+            key={action}
+            emoji={emoji}
+            label={label}
+            selected
+            onPress={() => onSelect(action)}
+          />
         ))}
       </View>
     </Sheet>
   );
 }
 
-const styles = StyleSheet.create({ actions: { gap: spacing[2] } });
+const styles = StyleSheet.create({ actions: { flexDirection: "row", gap: spacing[2] } });
