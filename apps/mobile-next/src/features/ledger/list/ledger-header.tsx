@@ -7,7 +7,6 @@ import { colors, spacing } from "@/ui/design-tokens";
 import { ActiveFilterBar } from "./active-filter-bar";
 import { CollapsibleRow } from "./collapsible-row";
 import { FilterButton } from "./filter-button";
-import { ledgerCountCaption } from "./ledger-count-caption";
 import { LedgerSearchField } from "./ledger-search-field";
 import { LedgerTitle } from "./ledger-title";
 import type { LedgerListModel } from "./use-ledger-list";
@@ -27,7 +26,6 @@ export function LedgerHeader({ list, searchHidden }: LedgerHeaderProps) {
   return (
     <View style={styles.header}>
       <LedgerTitle
-        caption={ledgerCountCaption(list.summary.data)}
         accessory={<FilterButton count={list.chips.length} onPress={list.openFilters} />}
       />
       <CollapsibleRow hidden={searchHidden}>
