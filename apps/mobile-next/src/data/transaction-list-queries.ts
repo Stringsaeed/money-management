@@ -1,4 +1,5 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 import type { V2Transaction, V2TransactionSummary } from "@trove/api/v2/contracts";
 
@@ -12,7 +13,13 @@ export interface TransactionPagesResult {
   readonly data: readonly V2Transaction[];
   readonly isLoading: boolean;
   readonly isError: boolean;
-  readonly isRefreshing: boolean;
+  /** Rows belong to the previous filter while the new one loads. */
+  readonly isStale: boolean;
+  /**
+   * Identity of the filter that produced `data`. It changes when fresh rows for a new filter
+   * replace the old ones — not while the old rows stand in — so lists can reset layout then.
+   */
+  readonly dataKey: string;
   readonly hasNextPage: boolean;
   readonly isFetchingNextPage: boolean;
   readonly nextPageFailed: boolean;
@@ -36,16 +43,22 @@ export function useTransactionPagesQuery(filters: TransactionListFilters): Trans
       }),
     initialPageParam: FIRST_PAGE,
     getNextPageParam: (page) => page.nextCursor,
+    // Keep the current rows on screen while a changed filter loads, instead of blanking.
+    placeholderData: keepPreviousData,
     staleTime: 15_000,
     retry: 1,
   });
+  const filterKey = JSON.stringify(normalized);
+  const [dataKey, setDataKey] = useState(filterKey);
+  if (!query.isPlaceholderData && dataKey !== filterKey) setDataKey(filterKey);
   const hasData = (query.data?.pages.length ?? 0) > 0;
   return {
+    dataKey,
     data: query.data?.pages.flatMap((page) => page.items) ?? [],
     isLoading: query.isLoading,
     // A failed follow-up page keeps the rows already shown; only an empty list is an error.
     isError: query.isError && !hasData,
-    isRefreshing: query.isRefetching && !query.isFetchingNextPage,
+    isStale: query.isPlaceholderData,
     hasNextPage: query.hasNextPage,
     isFetchingNextPage: query.isFetchingNextPage,
     nextPageFailed: query.isFetchNextPageError,
@@ -73,6 +86,7 @@ export function useTransactionSummaryQuery(
   const query = useQuery({
     queryKey: [...transactionListKey(identityKey, scope), "summary", normalized],
     queryFn: () => ledgerClient.transactions.summary(scope, normalized),
+    placeholderData: keepPreviousData,
     staleTime: 15_000,
     retry: 1,
   });
