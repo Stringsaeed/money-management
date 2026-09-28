@@ -4,7 +4,7 @@ import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { colors, radii } from "@/ui/design-tokens";
 import { Icon } from "@/ui/icon";
 import { SeedAvatar } from "@/ui/tiled-garden/seed-avatar";
-import { tileColors } from "@/ui/tiled-garden/tile-tokens";
+import { homeAccent } from "./home-accent";
 
 interface HomeHeaderProps {
   readonly name: string;
@@ -38,7 +38,7 @@ export function HomeHeader({ name, seed, onOpenFilters, onOpenProfile }: HomeHea
             onPress={onOpenFilters}
             style={({ pressed }) => [styles.filter, pressed && styles.pressed]}
           >
-            <Icon name="funnel" size={22} color={tileColors.ink} />
+            <Icon name="funnel" size={22} color={homeAccent.action.icon} />
           </Pressable>
         ),
       }}
@@ -60,9 +60,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: radii.full,
-    backgroundColor: tileColors.pink,
+    backgroundColor: homeAccent.action.background,
     borderWidth: 1,
-    borderColor: tileColors.grout,
+    borderColor: homeAccent.action.border,
     alignItems: "center",
     justifyContent: "center",
     boxShadow: "0 2px 3px rgba(32, 49, 33, 0.08)",

@@ -6,9 +6,10 @@ import { colors, spacing, typography } from "@/ui/design-tokens";
 import { Text } from "@/ui/text";
 import { BalanceChart } from "@/ui/tiled-garden/balance-chart";
 import { TilePanel } from "@/ui/tiled-garden/tile-panel";
-import { tileColors, tileChartColors } from "@/ui/tiled-garden/tile-tokens";
+import { tileChartColors } from "@/ui/tiled-garden/tile-tokens";
 import { formatMoneyMinor } from "@/utils/money";
 import { formatChartMoney } from "./home-display";
+import { homeAccent } from "./home-accent";
 
 interface HomeOverviewCardProps {
   readonly overview: {
@@ -67,7 +68,7 @@ export function HomeOverviewCard({
             >
               <Icon
                 name={value === "line" ? "chart-line-up" : "chart-bar"}
-                color={mode === value ? tileColors.ink : colors.foreground}
+                color={mode === value ? homeAccent.selected.foreground : colors.foreground}
                 size={20}
                 weight={mode === value ? "bold" : "regular"}
               />
@@ -170,7 +171,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 44,
   },
-  selected: { backgroundColor: tileColors.olive },
+  selected: { backgroundColor: homeAccent.selected.background },
   periods: { flexDirection: "row", alignSelf: "center", gap: spacing[1] },
   period: {
     minHeight: 36,
@@ -180,7 +181,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "transparent",
   },
-  periodSelected: { backgroundColor: tileColors.olive, borderColor: tileColors.grout },
+  periodSelected: {
+    backgroundColor: homeAccent.selected.background,
+    borderColor: homeAccent.selected.border,
+  },
   periodText: {
     color: colors.foreground,
     fontSize: typography.textXs,
@@ -206,5 +210,5 @@ const styles = StyleSheet.create({
   },
   incomeValue: { color: tileChartColors.income },
   expenseValue: { color: colors.foreground },
-  periodTextSelected: { color: tileColors.ink },
+  periodTextSelected: { color: homeAccent.selected.foreground },
 });

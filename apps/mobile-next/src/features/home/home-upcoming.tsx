@@ -4,8 +4,8 @@ import type { UpcomingOccurrence } from "@/data/ledger-schemas";
 import { Text } from "@/ui/text";
 import { Icon } from "@/ui/icon";
 import { colors, spacing, typography } from "@/ui/design-tokens";
-import { tileColors } from "@/ui/tiled-garden/tile-tokens";
 import { formatMoneyMinor } from "@/utils/money";
+import { homeAccent } from "./home-accent";
 
 interface HomeUpcomingProps {
   readonly items: readonly (UpcomingOccurrence & { readonly name: string })[];
@@ -31,7 +31,7 @@ export function HomeUpcoming({ items, loading, failed, onOpen, onViewAll }: Home
           onPress={onViewAll}
           style={({ pressed }) => [styles.link, pressed && styles.pressed]}
         >
-          <Icon name="arrow-right" color={tileColors.ink} />
+          <Icon name="arrow-right" color={homeAccent.action.icon} />
         </Pressable>
       </View>
       {loading ? (
@@ -75,8 +75,8 @@ const styles = StyleSheet.create({
   title: { fontFamily: typography.fontBodyBold, fontSize: typography.textLg },
   link: {
     alignItems: "center",
-    backgroundColor: tileColors.pink,
-    borderColor: tileColors.grout,
+    backgroundColor: homeAccent.action.background,
+    borderColor: homeAccent.action.border,
     borderRadius: 22,
     borderWidth: 1,
     height: 44,
