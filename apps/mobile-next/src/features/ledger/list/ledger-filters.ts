@@ -68,14 +68,6 @@ export function presetRange(preset: DatePreset, today: Date): LedgerDateRange {
   }
 }
 
-export function monthRange(month: Date): LedgerDateRange {
-  return {
-    label: format(month, "MMMM yyyy"),
-    from: key(startOfMonth(month)),
-    to: key(endOfMonth(month)),
-  };
-}
-
 export function toggleValue<T extends string>(values: readonly T[], value: T): T[] {
   return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
 }

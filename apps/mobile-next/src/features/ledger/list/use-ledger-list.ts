@@ -31,6 +31,10 @@ export function useLedgerList() {
   const activeAccounts = accounts.data.filter((account) => !account.archived);
   const activeCategories = categories.data.filter((category) => !category.archived);
   const chips = activeFilters(filters, accounts.data, categories.data);
+  // Changes whenever an Account or Category a row might display is added, edited, or removed.
+  const lookupVersion = [...accounts.data, ...categories.data]
+    .map((item) => `${item.id}:${item.version}`)
+    .join("|");
 
   return {
     filters,
@@ -40,6 +44,7 @@ export function useLedgerList() {
     accounts: activeAccounts,
     categories: activeCategories,
     accountById: new Map<string, V2Account>(accounts.data.map((item) => [item.id, item])),
+    lookupVersion,
     categoryById: new Map<string, V2Category>(categories.data.map((item) => [item.id, item])),
     filtersOpen,
     openFilters: () => setFiltersOpen(true),

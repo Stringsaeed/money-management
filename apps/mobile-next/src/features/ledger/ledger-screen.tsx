@@ -1,21 +1,17 @@
-import { useState } from "react";
+import { StyleSheet, View } from "react-native";
 
 import type { V2Transaction } from "@trove/api/v2/contracts";
 
+import { spacing } from "@/ui/design-tokens";
+import { useReducedMotion } from "@/ui/motion";
 import { Screen } from "@/ui/screen";
 
 import { LedgerFilterSheet } from "./list/ledger-filter-sheet";
-import { monthRange } from "./list/ledger-filters";
-import type { LedgerVariant } from "./list/ledger-variant";
-import { LedgerVariantSwitcher } from "./list/ledger-variant-switcher";
-import { LEDGER_INSET } from "./list/ledger-transaction-list";
+import { LedgerHeader } from "./list/ledger-header";
+import { LedgerManageLinks } from "./list/ledger-manage-links";
+import { LedgerTransactionList } from "./list/ledger-transaction-list";
 import { useLedgerList } from "./list/use-ledger-list";
-import { AccountsVariant } from "./list/variants/accounts-variant";
-import { JournalVariant } from "./list/variants/journal-variant";
-import { MonthlyVariant } from "./list/variants/monthly-variant";
-import { StatementVariant } from "./list/variants/statement-variant";
-import { SummaryVariant } from "./list/variants/summary-variant";
-import type { LedgerVariantProps } from "./list/variants/variant-props";
+import { useSearchReveal } from "./list/use-search-reveal";
 
 export interface LedgerScreenProps {
   readonly onAddTransaction?: () => void;
@@ -23,17 +19,7 @@ export interface LedgerScreenProps {
   readonly onOpenAccounts?: () => void;
   readonly onOpenCategories?: () => void;
   readonly onOpenRecurring?: () => void;
-  /** Starting layout while the design is under review. */
-  readonly initialVariant?: LedgerVariant;
 }
-
-const VARIANTS = {
-  journal: JournalVariant,
-  summary: SummaryVariant,
-  accounts: AccountsVariant,
-  statement: StatementVariant,
-  monthly: MonthlyVariant,
-} satisfies Record<LedgerVariant, (props: LedgerVariantProps) => React.ReactNode>;
 
 export function LedgerScreen({
   onAddTransaction,
@@ -41,31 +27,31 @@ export function LedgerScreen({
   onOpenAccounts,
   onOpenCategories,
   onOpenRecurring,
-  initialVariant = "journal",
 }: LedgerScreenProps) {
   const list = useLedgerList();
-  const [variant, setVariant] = useState<LedgerVariant>(initialVariant);
-  const Variant = VARIANTS[variant];
-  const chooseVariant = (next: LedgerVariant) => {
-    setVariant(next);
-    // Monthly is built around one month; open it on the current one.
-    if (next === "monthly" && !list.filters.range)
-      list.update((current) => ({ ...current, range: monthRange(new Date()) }));
-  };
+  const reveal = useSearchReveal(useReducedMotion());
 
   return (
     <Screen edges={["top"]}>
-      <Variant
+      <LedgerHeader list={list} searchHidden={reveal.hidden} />
+      <LedgerTransactionList
         list={list}
-        navigation={{ onAddTransaction, onOpenAccounts, onOpenCategories, onOpenRecurring }}
+        scrollOffset={reveal.scrollOffset}
         onOpenTransaction={onOpenTransaction}
-        switcher={
-          __DEV__ ? (
-            <LedgerVariantSwitcher value={variant} onChange={chooseVariant} inset={LEDGER_INSET} />
-          ) : null
+        onAddTransaction={onAddTransaction}
+        header={
+          <View style={styles.links}>
+            <LedgerManageLinks
+              navigation={{ onAddTransaction, onOpenAccounts, onOpenCategories, onOpenRecurring }}
+            />
+          </View>
         }
       />
       <LedgerFilterSheet list={list} />
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  links: { paddingTop: spacing[3] },
+});

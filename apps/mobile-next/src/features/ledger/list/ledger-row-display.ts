@@ -1,9 +1,6 @@
-import { format } from "date-fns";
-
 import type { V2Account, V2Category, V2Transaction } from "@trove/api/v2/contracts";
 
 import type { IconName } from "@/ui/icon";
-import { parseDateKey } from "@/utils/date";
 import { formatMoneyMinor } from "@/utils/money";
 
 export interface LedgerRowDisplay {
@@ -29,17 +26,14 @@ export function ledgerRowDisplay(
     readonly category?: V2Category;
     readonly account?: V2Account;
     readonly toAccount?: V2Account;
-    readonly showDate?: boolean;
   },
 ): LedgerRowDisplay {
-  const { category, account, toAccount, showDate } = lookups;
+  const { category, account, toAccount } = lookups;
   const note = transaction.note.trim();
   const transferTitle = `Transfer to ${toAccount?.name ?? "account"}`;
   const title =
     note || (transaction.kind === "transfer" ? transferTitle : category?.name) || "Transaction";
-  const date = parseDateKey(transaction.date);
   const meta = [
-    showDate && date ? format(date, "d MMM") : null,
     note && transaction.kind !== "transfer" ? category?.name : null,
     transaction.kind === "transfer" && note ? transferTitle : null,
     account?.name,
