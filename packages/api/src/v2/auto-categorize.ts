@@ -2,6 +2,7 @@ import { CATEGORIZE_QUOTA, consumeAiQuota, RESEARCH_QUOTA } from "./ai-quota";
 import type { TransactionCategorizer } from "./categorizer";
 import { listCategories } from "./categories";
 import {
+  MIN_AUTO_CATEGORIZE_CATEGORIES,
   personalLedgerOwner,
   type V2AutoCategorization,
   type V2Category,
@@ -52,7 +53,8 @@ async function categorize(
     return result(transaction, { outcome: "skipped" });
 
   const categories = await listCategories(context, { kind: transaction.kind });
-  if (categories.length === 0) return result(transaction, { outcome: "skipped" });
+  if (categories.length < MIN_AUTO_CATEGORIZE_CATEGORIES)
+    return result(transaction, { outcome: "skipped" });
 
   // Quotas follow the person, not the ledger, so household members don't share one.
   const subject = personalLedgerOwner(context.principal);
