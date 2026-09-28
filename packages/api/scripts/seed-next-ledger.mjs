@@ -6,15 +6,19 @@
 //   SEED_COUNT=1000 SEED_CURRENCY=AED \
 //   pnpm --filter @trove/api seed:next
 //
-// The run is deterministic (fixed PRNG seed and ids) and resumable: re-running skips rows
-// the server already has (409), so an expired token mid-run only needs a fresh token.
-import { format, subDays } from "date-fns";
+// The run is deterministic for a given SEED and SEED_REFERENCE_DATE (ids, dates, amounts).
+// To resume an interrupted run, repeat it with the same SEED, SEED_REFERENCE_DATE, and a token
+// for the same ledger; rows already written are recognized and skipped. Without TROVE_AUTH a
+// new guest ledger is minted, so keep the printed guest token to resume into it.
+import { format, parseISO, subDays } from "date-fns";
 
 const base = (process.env.TROVE_API_URL ?? "http://127.0.0.1:3012/api/v2").replace(/\/+$/, "");
 const count = Number(process.env.SEED_COUNT ?? 1000);
 const currency = process.env.SEED_CURRENCY ?? "AED";
 const accountName = process.env.SEED_ACCOUNT_NAME ?? "Seed Everyday";
 const seed = Number(process.env.SEED ?? 20260928);
+const referenceDate = process.env.SEED_REFERENCE_DATE ?? format(new Date(), "yyyy-MM-dd");
+const REQUEST_TIMEOUT_MS = 20_000;
 const scope = process.env.SEED_SCOPE_QUERY ?? "scope=personal";
 const concurrency = Number(process.env.SEED_CONCURRENCY ?? 6);
 
@@ -122,7 +126,15 @@ function mulberry32(value) {
     return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296;
   };
 }
-const random = mulberry32(seed);
+/** FNV-1a, to fold the target Account into the PRNG seed. */
+function hash(text) {
+  let value = 0x811c9dc5;
+  for (const char of text) value = Math.imul(value ^ char.charCodeAt(0), 0x01000193);
+  return value >>> 0;
+}
+// Transaction ids are globally unique, so the sequence is keyed by SEED and the target
+// Account: stable when resuming into that Account, distinct for any other ledger.
+let random = mulberry32(seed);
 const between = (min, max) => min + random() * (max - min);
 const pick = (items) => items[Math.floor(random() * items.length)];
 const weighted = (items) => {
@@ -152,18 +164,44 @@ function headersFor(body, key) {
 }
 
 const retryable = (status) => status === 429 || status >= 500;
+const TIMED_OUT = 0;
 
-async function request(path, { method = "GET", body, key } = {}) {
+/** Credentials only travel over HTTPS, except to this machine during local development. */
+function assertSecureBase() {
+  const url = new URL(base);
+  const loopback = ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname);
+  if (url.protocol !== "https:" && !loopback) {
+    throw new Error(
+      `Refusing to send credentials to ${url.origin} over ${url.protocol}; use https.`,
+    );
+  }
+}
+
+async function send(url, init) {
+  try {
+    return await fetch(url, { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+  } catch (error) {
+    if (error?.name === "TimeoutError" || error?.name === "TypeError") return null;
+    throw error;
+  }
+}
+
+function initFor({ method = "GET", body, key } = {}) {
+  return {
+    method,
+    headers: headersFor(body, key),
+    body: body === undefined ? undefined : JSON.stringify(body),
+  };
+}
+
+async function request(path, options) {
   const url = `${base}${path}${path.includes("?") ? "&" : "?"}${scope}`;
   for (let attempt = 0; ; attempt += 1) {
-    const response = await fetch(url, {
-      method,
-      headers: headersFor(body, key),
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
-    const payload = await response.json().catch(() => null);
-    if (!retryable(response.status) || attempt >= 4)
-      return { status: response.status, body: payload };
+    const response = await send(url, initFor(options));
+    const status = response?.status ?? TIMED_OUT;
+    const payload = response ? await response.json().catch(() => null) : null;
+    if (!(status === TIMED_OUT || retryable(status)) || attempt >= 4)
+      return { status, body: payload };
     await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
   }
 }
@@ -171,9 +209,10 @@ async function request(path, { method = "GET", body, key } = {}) {
 function expectOk(result, what) {
   if (result.status === 401) {
     throw new Error(
-      `${what}: 401 — the token expired. Re-run with a fresh TROVE_AUTH; finished rows are skipped.`,
+      `${what}: 401 — the token expired. Re-run with a fresh TROVE_AUTH for the same ledger and the same SEED_REFERENCE_DATE=${referenceDate}; finished rows are skipped.`,
     );
   }
+  if (result.status === TIMED_OUT) throw new Error(`${what}: no response after retries.`);
   if (result.status >= 300)
     throw new Error(`${what}: ${result.status} ${JSON.stringify(result.body)}`);
   return result.body;
@@ -183,7 +222,8 @@ async function ensureGuest() {
   if (auth) return;
   const guest = expectOk(await request("/auth/guest", { method: "POST" }), "Create guest");
   auth = `Guest ${guest.session.token}`;
-  console.log(`Minted guest session; token: ${guest.session.token}`);
+  console.log("Minted a new guest ledger. To resume into it, re-run with:");
+  console.log(`  TROVE_AUTH="Guest ${guest.session.token}"`);
 }
 
 async function ensureAccount() {
@@ -231,7 +271,7 @@ async function ensureCategories() {
 }
 
 function plan(categoryIds) {
-  const today = new Date();
+  const today = parseISO(referenceDate);
   const rows = [];
   const push = (kind, name, amount, date, note) =>
     rows.push({
@@ -285,12 +325,16 @@ function plan(categoryIds) {
 }
 
 async function main() {
+  assertSecureBase();
   console.log(`Seeding ${count} transactions into "${accountName}" at ${base}`);
+  console.log(`  SEED=${seed} SEED_REFERENCE_DATE=${referenceDate}`);
   await ensureGuest();
   const account = await ensureAccount();
+  random = mulberry32(hash(`${seed}:${account.id}`));
   const categoryIds = await ensureCategories();
   const rows = plan(categoryIds);
-  // Replayed idempotency keys return 201 and conflicting ids 409; either way the row exists.
+  // A replayed idempotency key returns 201; an id written by an earlier run is a
+  // transaction_exists 409. Any other conflict is a real failure.
   let confirmed = 0;
   let next = 0;
   const worker = async () => {
@@ -302,7 +346,8 @@ async function main() {
         key: `seed-${seed}-transaction-${row.id}`,
         body: { ...row, accountId: account.id },
       });
-      if (result.status !== 409) expectOk(result, `Create transaction ${row.id}`);
+      const exists = result.status === 409 && result.body?.error?.code === "transaction_exists";
+      if (!exists) expectOk(result, `Create transaction ${row.id}`);
       confirmed += 1;
       if (confirmed % 100 === 0) console.log(`  ${confirmed}/${rows.length}`);
     }
