@@ -1,14 +1,17 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ledgerClient } from "@/data/ledger-client";
 import {
+  useLedgerData,
   useAccountsQuery,
   useCategoriesQuery,
   useRecurringQuery,
-  useTransactionsQuery,
   useUpcomingQuery,
 } from "@/data/ledger-queries";
+import { scopeKey } from "@/data/ledger-collections";
 import { useSession } from "@/features/auth/use-session";
 import { useLedgerScope } from "@/navigation/ledger-scope-context";
-import { buildHomeOverview } from "./home-model";
+import { homeRangeDates, overviewFromBuckets } from "./home-model";
 import type { HomeOverviewRange } from "./home-model-types";
 import {
   homeIdentity,
@@ -20,8 +23,8 @@ import {
 export function useHomeData() {
   const session = useSession();
   const { scope } = useLedgerScope();
+  const ledger = useLedgerData();
   const accounts = useAccountsQuery();
-  const transactions = useTransactionsQuery();
   const categories = useCategoriesQuery();
   const recurring = useRecurringQuery();
   const upcoming = useUpcomingQuery();
@@ -35,15 +38,60 @@ export function useHomeData() {
     selectedCurrency,
     selectedAccount,
   );
-  const overview = buildHomeOverview({
-    accounts: accounts.data,
-    transactions: transactions.data,
+  const dates = homeRangeDates(range);
+  const home = useQuery({
+    queryKey: [
+      "v2",
+      "home",
+      scopeKey(ledger.identityKey, ledger.scope),
+      "recent",
+      currency,
+      accountId,
+      dates.from,
+      dates.to,
+      [...accountIds].sort(),
+    ],
+    queryFn: () =>
+      ledgerClient.home(ledger.scope, {
+        currency,
+        accountIds: [...accountIds],
+        from: dates.from,
+        to: dates.to,
+      }),
+    enabled: !accounts.isLoading,
+    staleTime: 15_000,
+    retry: 1,
+  });
+  const chart = useQuery({
+    queryKey: [
+      "v2",
+      "home",
+      scopeKey(ledger.identityKey, ledger.scope),
+      "overview",
+      range,
+      currency,
+      accountId,
+      dates.from,
+      dates.to,
+    ],
+    queryFn: () =>
+      ledgerClient.homeOverview(ledger.scope, {
+        range,
+        currency,
+        accountId: accountId ?? undefined,
+        from: dates.from,
+        to: dates.to,
+      }),
+    staleTime: 15_000,
+    retry: 1,
+  });
+  const overview = overviewFromBuckets(
+    chart.data ?? { openingBalanceMinor: 0, buckets: [] },
     currency,
     range,
-    accountId,
-  });
+  );
   const recent = recentHomeActivity(
-    transactions.data,
+    home.data?.recentTransactions ?? [],
     currency,
     overview.startDate,
     overview.endDate,
@@ -72,8 +120,8 @@ export function useHomeData() {
     accountLabel,
     filtersOpen,
     setFiltersOpen,
-    isLoading: accounts.isLoading || transactions.isLoading,
-    isError: accounts.isError || transactions.isError,
+    isLoading: accounts.isLoading || home.isLoading || chart.isLoading,
+    isError: accounts.isError || home.isError || chart.isError,
     setCurrency: (value: string) => {
       setSelectedCurrency(value);
       setSelectedAccount(null);
@@ -82,7 +130,8 @@ export function useHomeData() {
     retry: async () => {
       await Promise.all([
         accounts.retry(),
-        transactions.retry(),
+        home.refetch(),
+        chart.refetch(),
         categories.retry(),
         recurring.retry(),
         upcoming.retry(),

@@ -1,4 +1,4 @@
-import { and, eq, inArray, or } from "drizzle-orm";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
 import {
   v2Account,
   v2RecurringOccurrence,
@@ -110,11 +110,12 @@ async function balancesFor(
     .select({
       accountId: v2Transaction.accountId,
       toAccountId: v2Transaction.toAccountId,
-      amountMinor: v2Transaction.amountMinor,
+      amountMinor: sql<string>`sum(${v2Transaction.amountMinor})`,
       kind: v2Transaction.kind,
     })
     .from(v2Transaction)
-    .where(eq(v2Transaction.ledgerId, ledgerId));
+    .where(eq(v2Transaction.ledgerId, ledgerId))
+    .groupBy(v2Transaction.accountId, v2Transaction.toAccountId, v2Transaction.kind);
   const balances = new Map(
     accounts.map((account) => [
       account.id,

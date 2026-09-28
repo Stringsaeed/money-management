@@ -7,6 +7,7 @@ import type {
   V2Category,
   V2CreatedTransaction,
   V2Home,
+  V2HomeOverviewBuckets,
   V2LedgerScope,
   V2Page,
   V2RecurringRule,
@@ -22,6 +23,7 @@ import {
   parseCategory,
   parseCreatedTransaction,
   parseHome,
+  homeOverviewBucketsSchema,
   parsePage,
   parseRecurringRule,
   parseTransaction,
@@ -168,8 +170,39 @@ const appendFilters = (params: URLSearchParams, filters: TransactionListFilters)
 };
 
 export const ledgerClient = {
-  home(scope: LedgerScope): Promise<V2Home> {
-    return request(withScope("/home", scope), undefined, parseHome);
+  home(
+    scope: LedgerScope,
+    filters?: { currency: string; accountIds: readonly string[]; from: string; to: string },
+  ): Promise<V2Home> {
+    const params = new URLSearchParams(scopeQuery(scope));
+    if (filters) {
+      params.set("currency", filters.currency);
+      params.set("from", filters.from);
+      params.set("to", filters.to);
+      params.set("recentLimit", "5");
+      for (const id of filters.accountIds) params.append("accountId", id);
+    }
+    return request(`/home?${params}`, undefined, parseHome);
+  },
+  homeOverview(
+    scope: LedgerScope,
+    options: {
+      range: "week" | "month" | "year";
+      currency: string;
+      from: string;
+      to: string;
+      accountId?: string;
+    },
+  ): Promise<V2HomeOverviewBuckets> {
+    const params = new URLSearchParams(scopeQuery(scope));
+    params.set("range", options.range);
+    params.set("currency", options.currency);
+    params.set("from", options.from);
+    params.set("to", options.to);
+    if (options.accountId) params.set("accountId", options.accountId);
+    return request(`/home/overview?${params}`, undefined, (payload) =>
+      homeOverviewBucketsSchema.parse(payload),
+    );
   },
 
   accounts: {

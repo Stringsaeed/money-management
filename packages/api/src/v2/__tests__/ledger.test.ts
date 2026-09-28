@@ -7,7 +7,7 @@ import { v2RecurringOccurrence, v2RecurringRule } from "@trove/db/schema/v2-ledg
 
 import { createAccount, deleteAccount, listAccounts } from "../accounts";
 import { createCategory, deleteCategory, listCategories } from "../categories";
-import { getHome } from "../home";
+import { getHome, getHomeOverviewBuckets } from "../home";
 import {
   createRecurringRule,
   listUpcoming,
@@ -52,6 +52,47 @@ describe("V2 ledger", () => {
   async function personal(principal: V2Principal = userPrincipal) {
     return resolveV2LedgerContext(db, principal, { kind: "personal" });
   }
+
+  it("aggregates Home buckets per selected account, including transfers and prior history", async () => {
+    const context = await personal();
+    for (const id of ["a", "b"])
+      await createAccount(context, {
+        id,
+        name: id,
+        type: "checking",
+        currency: "USD",
+        openingBalanceMinor: 1_000,
+      });
+    for (const [id, kind, amountMinor, date, accountId, toAccountId] of [
+      ["prior", "income", 100, "2026-08-31", "a", null],
+      ["spent", "expense", 30, "2026-09-02", "a", null],
+      ["moved", "transfer", 70, "2026-09-02", "a", "b"],
+      ["future", "income", 999, "2026-09-16", "a", null],
+    ] as const)
+      await createTransaction(context, {
+        id,
+        kind,
+        amountMinor,
+        date,
+        accountId,
+        toAccountId,
+        note: id,
+      });
+    const options = {
+      currency: "USD",
+      from: "2026-09-01",
+      to: "2026-09-15",
+      range: "month" as const,
+    };
+    expect(await getHomeOverviewBuckets(context, { ...options, accountId: "a" })).toEqual({
+      openingBalanceMinor: 1_100,
+      buckets: [{ date: "2026-09-02", deltaMinor: -100, incomeMinor: 0, expenseMinor: 30 }],
+    });
+    expect(await getHomeOverviewBuckets(context, options)).toEqual({
+      openingBalanceMinor: 2_100,
+      buckets: [{ date: "2026-09-02", deltaMinor: -30, incomeMinor: 0, expenseMinor: 30 }],
+    });
+  });
 
   it("keeps CRUD, balances, and Home aggregates on the V2 ledger", async () => {
     const context = await personal();

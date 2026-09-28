@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 import type { V2Account, V2Transaction } from "@trove/api/v2/contracts";
 
-import { buildHomeOverview } from "../home-model";
+import { buildHomeOverview, overviewFromBuckets } from "../home-model";
 
 const NOW = new Date("2026-09-15T12:00:00.000Z");
 
@@ -50,6 +50,30 @@ const transaction = (
 });
 
 describe("buildHomeOverview", () => {
+  it("fills missing days and rolls daily aggregates into a yearly month", () => {
+    const data = {
+      openingBalanceMinor: 1_100,
+      buckets: [
+        { date: "2026-09-02", deltaMinor: -100, incomeMinor: 0, expenseMinor: 30 },
+        { date: "2026-09-15", deltaMinor: 200, incomeMinor: 200, expenseMinor: 0 },
+      ],
+    };
+    const month = overviewFromBuckets(data, "USD", "month", NOW);
+    expect(month.points[0]).toMatchObject({ date: "2026-09-01", balanceMinor: 1_100 });
+    expect(month.points[1]).toMatchObject({
+      date: "2026-09-02",
+      balanceMinor: 1_000,
+      expenseMinor: 30,
+    });
+    expect(month).toMatchObject({ balanceMinor: 1_200, incomeMinor: 200, expenseMinor: 30 });
+    const year = overviewFromBuckets(data, "USD", "year", NOW);
+    expect(year.points.at(-1)).toMatchObject({
+      date: "2026-09-01",
+      balanceMinor: 1_200,
+      incomeMinor: 200,
+      expenseMinor: 30,
+    });
+  });
   it("replays opening balance and history while excluding future rows", () => {
     const result = buildHomeOverview({
       accounts: [

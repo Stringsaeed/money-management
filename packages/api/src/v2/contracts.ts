@@ -342,6 +342,16 @@ export interface V2Home {
   readonly recentTransactions: readonly V2Transaction[];
 }
 
+export interface V2HomeOverviewBuckets {
+  readonly openingBalanceMinor: number;
+  readonly buckets: readonly {
+    readonly date: string;
+    readonly deltaMinor: number;
+    readonly incomeMinor: number;
+    readonly expenseMinor: number;
+  }[];
+}
+
 export interface V2Page<T> {
   readonly items: readonly T[];
   readonly nextCursor: string | null;
