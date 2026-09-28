@@ -10,6 +10,7 @@ import { Text } from "@/ui/text";
 
 import { OptionTile } from "../editor/option-tile";
 
+import { hasAiPickChoice } from "./ai-pick";
 import { BreadcrumbSegment } from "./breadcrumb-segment";
 import { afterSheetCloses } from "./transaction-create-actions";
 import { categoryChip, categoryEmoji } from "./transaction-display";
@@ -97,7 +98,7 @@ export function CategoryPicker({
     setOpen(false);
   };
   const selectAuto = (kind: CategoryKind) =>
-    onSelectAuto
+    onSelectAuto && hasAiPickChoice(categories, kind)
       ? () => {
           onSelectAuto(kind);
           setOpen(false);

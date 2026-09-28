@@ -284,6 +284,9 @@ export interface V2Transaction {
   readonly updatedAt: string;
 }
 
+/** "AI pick" needs a real choice: with fewer categories of a kind there is nothing to decide. */
+export const MIN_AUTO_CATEGORIZE_CATEGORIES = 2;
+
 /**
  * Outcome of `autoCategorize` on Transaction create. AI never fails the create:
  * anything other than `categorized` leaves the Transaction uncategorized.
