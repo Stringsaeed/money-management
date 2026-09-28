@@ -37,7 +37,7 @@ export function AmountDisplay({
       parts.whole.length +
       (fractionDigits > 0 ? fraction.length + 1 : 0),
   );
-  // Dynamic size from the entered value; the symbol and fraction stay at ~56% of the digits.
+  // Dynamic size from the entered value; the fraction stays at ~56% of the digits.
   const sizes = { line: { fontSize }, minor: { fontSize: Math.round(fontSize * 0.56) } };
 
   return (
@@ -54,7 +54,7 @@ export function AmountDisplay({
       ) : null}
       <AmountGlyph active={!empty} fontSize={fontSize} symbol={symbol} />
       <NativeText numberOfLines={1} style={[styles.line, sizes.line]}>
-        <AmountSymbol active={!empty} fontSize={sizes.minor.fontSize} symbol={symbol} />
+        <AmountSymbol active={!empty} symbol={symbol} />
         <NativeText style={[styles.whole, empty && styles.placeholder]}>{parts.whole}</NativeText>
         {fractionDigits > 0 ? (
           <NativeText style={sizes.minor}>

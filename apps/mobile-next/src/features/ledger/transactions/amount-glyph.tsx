@@ -14,7 +14,8 @@ interface AmountGlyphProps {
 
 /** Nunito's descender is ~0.353em; lifting by it puts the glyph on the digits' baseline. */
 const DESCENDER = 0.353;
-const GLYPH_SCALE = 0.44;
+/** Sizes the glyph to the digits' height (Nunito figures are ~0.7em tall). */
+const GLYPH_SCALE = 0.68;
 
 /**
  * SVG currency glyphs (riyal, dirham) sit beside the amount text rather than inside it:
@@ -23,7 +24,13 @@ const GLYPH_SCALE = 0.44;
 export function AmountGlyph({ symbol, fontSize, active }: AmountGlyphProps) {
   if (symbol.kind !== "glyph") return null;
   return (
-    <View style={[styles.glyph, { marginBottom: Math.round(fontSize * DESCENDER) }]}>
+    <View
+      style={[
+        styles.glyph,
+        !active && styles.idle,
+        { marginBottom: Math.round(fontSize * DESCENDER) },
+      ]}
+    >
       <CurrencyGlyph active={active} name={symbol.name} size={Math.round(fontSize * GLYPH_SCALE)} />
     </View>
   );
@@ -31,4 +38,6 @@ export function AmountGlyph({ symbol, fontSize, active }: AmountGlyphProps) {
 
 const styles = StyleSheet.create({
   glyph: { marginRight: spacing[1] },
+  // Matches the placeholder digits, which are muted and faded until a value is entered.
+  idle: { opacity: 0.6 },
 });
