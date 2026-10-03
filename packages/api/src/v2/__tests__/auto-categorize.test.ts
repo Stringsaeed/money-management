@@ -124,6 +124,15 @@ describe("V2 Transaction create with autoCategorize", () => {
     expect(calls).toHaveLength(0);
   });
 
+  it("skips AI when the transaction's kind has only one category to pick", async () => {
+    const app = await appWith(picking("salary"));
+
+    expect(await create(app, transaction({ kind: "income", note: "Upwork payout" }))).toMatchObject(
+      { categoryId: null, autoCategorization: { outcome: "skipped" } },
+    );
+    expect(calls).toHaveLength(0);
+  });
+
   it("still creates the transaction when AI is unsure, missing, or failing", async () => {
     const unsure = await appWith(picking(null));
     expect(await create(unsure, transaction())).toMatchObject({

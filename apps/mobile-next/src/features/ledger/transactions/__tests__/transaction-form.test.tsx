@@ -42,6 +42,10 @@ const salary: V2Category = {
   kind: "income",
   icon: "💼",
 };
+const groceries: V2Category = { ...food, id: "category-3", name: "Groceries", icon: "🛒" };
+/** "AI pick" needs at least two categories of a kind to choose between. */
+const expenses = [food, groceries];
+const freelance: V2Category = { ...salary, id: "category-4", name: "Freelance", icon: "💻" };
 const accounts = [account("account-1", "Checking"), account("account-2", "Savings")];
 
 const press = (label: string) => fireEvent.press(screen.getByRole("button", { name: label }));
@@ -53,7 +57,7 @@ describe("TransactionForm", () => {
 
   it("builds the amount on the keypad and submits an expense", async () => {
     const onSubmit = jest.fn(() => Promise.resolve());
-    await render(<TransactionForm accounts={accounts} categories={[food]} onSubmit={onSubmit} />);
+    await render(<TransactionForm accounts={accounts} categories={expenses} onSubmit={onSubmit} />);
 
     for (const key of ["1", "2", "Decimal point", "5"]) await press(key);
     await press(CATEGORY_CHIP);
@@ -74,7 +78,7 @@ describe("TransactionForm", () => {
 
   it("blocks saving a zero amount with an actionable message", async () => {
     const onSubmit = jest.fn(() => Promise.resolve());
-    await render(<TransactionForm accounts={accounts} categories={[food]} onSubmit={onSubmit} />);
+    await render(<TransactionForm accounts={accounts} categories={expenses} onSubmit={onSubmit} />);
 
     await press("Save");
 
@@ -86,7 +90,7 @@ describe("TransactionForm", () => {
 
   it("requires a destination account for transfers", async () => {
     const onSubmit = jest.fn(() => Promise.resolve());
-    await render(<TransactionForm accounts={accounts} categories={[food]} onSubmit={onSubmit} />);
+    await render(<TransactionForm accounts={accounts} categories={expenses} onSubmit={onSubmit} />);
 
     await press(CATEGORY_CHIP);
     await press("Transfer");
@@ -110,7 +114,11 @@ describe("TransactionForm", () => {
   it("takes the transaction type from the chosen category", async () => {
     const onSubmit = jest.fn(() => Promise.resolve());
     await render(
-      <TransactionForm accounts={accounts} categories={[food, salary]} onSubmit={onSubmit} />,
+      <TransactionForm
+        accounts={accounts}
+        categories={[...expenses, salary]}
+        onSubmit={onSubmit}
+      />,
     );
 
     await press("9");
@@ -128,7 +136,7 @@ describe("TransactionForm", () => {
     await render(
       <TransactionForm
         accounts={[]}
-        categories={[food]}
+        categories={expenses}
         onSubmit={jest.fn(() => Promise.resolve())}
         onCreateAccount={onCreateAccount}
       />,
@@ -227,7 +235,9 @@ describe("TransactionForm", () => {
 
     it("asks the server to pick an expense category from the note by default", async () => {
       const onSubmit = jest.fn(() => Promise.resolve());
-      await render(<TransactionForm accounts={accounts} categories={[food]} onSubmit={onSubmit} />);
+      await render(
+        <TransactionForm accounts={accounts} categories={expenses} onSubmit={onSubmit} />,
+      );
 
       await press("5");
       await fireEvent.changeText(screen.getByLabelText("Note"), " Breadfast ");
@@ -245,7 +255,9 @@ describe("TransactionForm", () => {
 
     it("does not ask AI when there is no note to read", async () => {
       const onSubmit = jest.fn(() => Promise.resolve());
-      await render(<TransactionForm accounts={accounts} categories={[food]} onSubmit={onSubmit} />);
+      await render(
+        <TransactionForm accounts={accounts} categories={expenses} onSubmit={onSubmit} />,
+      );
 
       await press("5");
       await press("Save");
@@ -256,7 +268,11 @@ describe("TransactionForm", () => {
     it("lets the person choose income and leave the category to AI", async () => {
       const onSubmit = jest.fn(() => Promise.resolve());
       await render(
-        <TransactionForm accounts={accounts} categories={[food, salary]} onSubmit={onSubmit} />,
+        <TransactionForm
+          accounts={accounts}
+          categories={[...expenses, salary, freelance]}
+          onSubmit={onSubmit}
+        />,
       );
 
       await press("5");
@@ -274,7 +290,9 @@ describe("TransactionForm", () => {
 
     it("stops asking AI once the person picks a category", async () => {
       const onSubmit = jest.fn(() => Promise.resolve());
-      await render(<TransactionForm accounts={accounts} categories={[food]} onSubmit={onSubmit} />);
+      await render(
+        <TransactionForm accounts={accounts} categories={expenses} onSubmit={onSubmit} />,
+      );
 
       await press("5");
       await press(CATEGORY_CHIP);
@@ -289,19 +307,25 @@ describe("TransactionForm", () => {
     it("hides AI pick when smart categories are turned off", async () => {
       updateAiPreferences({ autoCategorize: false });
       const onSubmit = jest.fn(() => Promise.resolve());
-      await render(<TransactionForm accounts={accounts} categories={[food]} onSubmit={onSubmit} />);
+      await render(
+        <TransactionForm accounts={accounts} categories={expenses} onSubmit={onSubmit} />,
+      );
 
       await press("Category: none");
       expect(screen.queryByRole("button", { name: "AI pick" })).toBeNull();
     });
 
-    it("shows no AI pick until there is a category of that kind to choose", async () => {
+    it.each([
+      ["no", []],
+      ["only one", [food]],
+    ])("offers no AI pick with %s expense category to choose", async (_, only) => {
       const onSubmit = jest.fn(() => Promise.resolve());
       await render(
-        <TransactionForm accounts={accounts} categories={[salary]} onSubmit={onSubmit} />,
+        <TransactionForm accounts={accounts} categories={[...only, salary]} onSubmit={onSubmit} />,
       );
 
-      expect(screen.getByRole("button", { name: "Category: none" })).toBeOnTheScreen();
+      await press("Category: none");
+      expect(screen.queryByRole("button", { name: "AI pick" })).toBeNull();
       await press("5");
       await fireEvent.changeText(screen.getByLabelText("Note"), "Breadfast");
       await press("Save");
@@ -313,7 +337,7 @@ describe("TransactionForm", () => {
         <TransactionForm
           transaction={edited}
           accounts={accounts}
-          categories={[food]}
+          categories={expenses}
           onSubmit={jest.fn(() => Promise.resolve())}
         />,
       );

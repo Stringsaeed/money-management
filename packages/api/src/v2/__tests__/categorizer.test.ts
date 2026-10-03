@@ -191,7 +191,7 @@ describe("categorizeNote", () => {
     expect(recorder.researchRequests).toHaveLength(1);
   });
 
-  it("skips blank notes and ledgers without categories without calling any model", async () => {
+  it("skips blank notes and ledgers with fewer than two categories without calling any model", async () => {
     const recorder = recordingModels([]);
     await expect(categorizeNote({ ...breadfast, note: "   " }, recorder.models)).resolves.toEqual({
       categoryId: null,
@@ -199,6 +199,9 @@ describe("categorizeNote", () => {
     });
     await expect(
       categorizeNote({ ...breadfast, categories: [] }, recorder.models),
+    ).resolves.toEqual({ categoryId: null, stage: "skipped" });
+    await expect(
+      categorizeNote({ ...breadfast, categories: [categories[0]!] }, recorder.models),
     ).resolves.toEqual({ categoryId: null, stage: "skipped" });
     expect(recorder.jevRequests).toHaveLength(0);
   });

@@ -60,6 +60,9 @@ New transactions default to "AI pick" (Settings can turn it off). The create
 request carries `autoCategorize: true`, and the server categorizes it in the
 same request (`packages/api/src/v2/categorizer.ts`):
 
+"AI pick" is offered only when the transaction's kind has at least two categories
+(`MIN_AUTO_CATEGORIZE_CATEGORIES`); the server enforces the same minimum.
+
 1. Jev (`typesafe-ai/jev`) chooses one of the ledger's categories of that kind,
    or `other`, and judges whether it recognizes the note at all.
 2. If Jev is unsure or doesn't recognize the note (e.g. "Breadfast"), an LLM
