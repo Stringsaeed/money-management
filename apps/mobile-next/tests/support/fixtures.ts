@@ -15,7 +15,11 @@ export const test = base.extend<{ guest: void }>({
   guest: async ({ app, device, screen }, provide) => {
     await device.clearKeychain();
     await app.open();
-    await screen.getByRole("button", "Continue as guest").tap({ timeout: FIRST_SCREEN_TIMEOUT });
+    // The button shows while the stored session is still loading but ignores taps until it is
+    // enabled, and the mobile engine taps without waiting for that.
+    const continueAsGuest = screen.getByRole("button", "Continue as guest");
+    await expect(continueAsGuest).toBeEnabled({ timeout: FIRST_SCREEN_TIMEOUT });
+    await continueAsGuest.tap();
     await expect(screen.getByText("Add an account to start your overview.")).toBeVisible({
       timeout: 30_000,
     });

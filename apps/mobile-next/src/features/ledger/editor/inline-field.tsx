@@ -26,7 +26,9 @@ export function InlineField({
 }: InlineFieldProps) {
   return (
     <View style={styles.row}>
-      <NativeText style={styles.emoji}>{emoji}</NativeText>
+      <NativeText accessible={false} accessibilityElementsHidden style={styles.emoji}>
+        {emoji}
+      </NativeText>
       <TextInput
         accessibilityLabel={accessibilityLabel}
         autoCapitalize={autoCapitalize}

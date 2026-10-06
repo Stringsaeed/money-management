@@ -10,7 +10,7 @@ describe("accounts", { tags: ["accounts"] }, () => {
     await expect(screen.getByText("New account")).toBeVisible();
 
     await enterAmount(screen, "2500");
-    await expect(screen.getByText("$2,500.00")).toBeVisible();
+    await expect(screen.getByText("Amount 2,500 USD")).toBeVisible();
     await screen.getByLabel("Account name").fill("Everyday");
     await screen.getByRole("button", "Save").tap();
 
