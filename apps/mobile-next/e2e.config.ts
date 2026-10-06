@@ -6,7 +6,9 @@ import { chatgpt } from "e2e/oauth/chatgpt";
 // unset, the engine uses whichever iOS simulator is booted, or boots one.
 const iphone = mobile({ platform: "ios", device: process.env.E2E_IOS_DEVICE, transition: 700 });
 
-const METRO_URL = "http://localhost:8081";
+// Set E2E_METRO_PORT when another Metro holds 8081; it is passed on to scripts/e2e-stack.mjs.
+const METRO_PORT = process.env.E2E_METRO_PORT ?? "8081";
+const METRO_URL = `http://localhost:${METRO_PORT}`;
 
 export default {
   tests: "tests/**/*.e2e.ts",
@@ -33,7 +35,7 @@ export default {
         command: {
           executable: "node",
           args: ["scripts/e2e-stack.mjs"],
-          env: { LANG: "en_US.UTF-8", LC_ALL: "en_US.UTF-8" },
+          env: { LANG: "en_US.UTF-8", LC_ALL: "en_US.UTF-8", E2E_METRO_PORT: METRO_PORT },
           startupTimeout: 300_000,
           reuseExisting: true,
           log: ".e2e/logs/app.log",
