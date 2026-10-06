@@ -9,6 +9,7 @@
     "ios:next": "turbo run build --filter=mobile-next^... && pnpm -C apps/mobile-next ios",
     "android:next": "turbo run build --filter=mobile-next^... && pnpm -C apps/mobile-next android",
     "check:next": "turbo run check-types test --filter=mobile-next",
+    "e2e:next": "turbo run build --filter=mobile-next^... && pnpm -C apps/mobile-next test:e2e",
     "reset-project": "pnpm -C apps/mobile reset-project",
     "android": "turbo run build && pnpm -C apps/mobile android",
     "ios": "turbo run build && pnpm -C apps/mobile ios",

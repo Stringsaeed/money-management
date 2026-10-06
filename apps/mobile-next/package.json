@@ -12,7 +12,9 @@
     "check-types": "tsc --noEmit",
     "test": "jest",
     "test:ci": "jest --runInBand --ci --watchman=false",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:e2e": "e2e run",
+    "test:e2e:exact": "e2e run --exclude-tag agent"
   },
   "dependencies": {
     "@expo-google-fonts/nunito": "^0.4.2",
@@ -59,10 +61,14 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@ai-sdk/openai": "^4.0.0",
+    "@e2e-dev/mobile": "^0.9.2",
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "29.5.14",
     "@types/react": "~19.2.10",
     "@types/react-test-renderer": "^19",
+    "ai": "^7.0.0",
+    "e2e": "^0.17.0",
     "jest": "^29.7.0",
     "jest-expo": "~57.0.4",
     "react-test-renderer": "19.2.3",
