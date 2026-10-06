@@ -45,9 +45,10 @@ export default {
     },
   ],
   // Sign in with `pnpm exec e2e login openai`; `pnpm exec e2e models openai` lists the ids.
+  // E2E_AGENT_MODEL picks another one for a run, e.g. E2E_AGENT_MODEL=gpt-6-sol.
   agents: {
     default: {
-      model: chatgpt("gpt-6-luna"),
+      model: chatgpt(process.env.E2E_AGENT_MODEL ?? "gpt-6-luna"),
       system:
         "You are a thorough QA agent testing Trove Next, a personal finance iOS app. " +
         "Use the controls on screen; verify every outcome before you finish.",
