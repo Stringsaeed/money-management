@@ -10,6 +10,8 @@ lives in `.agents/skills/e2e` (`pnpm exec e2e guide` prints it).
 2. Sign in the model used by `agent.*` steps: `pnpm exec e2e login openai`.
 3. Optional: pin the simulator with `E2E_IOS_DEVICE="Trove Next QA iPhone 17"` (a name
    or UDID). Unset, the engine uses a booted iOS simulator, or boots one.
+4. Optional: if another project's Metro already holds port 8081, run with `E2E_METRO_PORT=8085`
+   (any free port). It sets both the dev client's initial URL and the port Metro starts on.
 
 ## Running
 
