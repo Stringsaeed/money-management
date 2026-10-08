@@ -1,0 +1,13 @@
+steps:
+  - run: guest-home
+  - tap: { text: Settings }
+  - await: { visible: { text: Profile } }
+  - await: { idle: true }
+  - assert: { visible: { text: Sounds } }
+  - assert: { visible: { text: Smart categories } }
+  - scroll-to: { target: { text: End guest session }, direction: down }
+  - tap: { text: End guest session }
+  - tap: { text: End session }
+  - await: { visible: { text: Continue as guest }, timeout: 20000 }
+  - await: { idle: true }
+  - assert: { visible: { text: Sign in with WorkOS } }

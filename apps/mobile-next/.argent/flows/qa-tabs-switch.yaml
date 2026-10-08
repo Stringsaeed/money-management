@@ -1,0 +1,19 @@
+steps:
+  - run: guest-home
+  - tap: { text: Ledger }
+  - await: { visible: { text: Search notes } }
+  - await: { idle: true }
+  - scroll-to: { target: { text: No transactions yet }, direction: down }
+  - tap: { text: Market }
+  - await:
+      visible:
+        text: { matches: 'Live quotes for stocks, metals, and crypto\.|No quotes yet' }
+      timeout: 30000
+  - await: { idle: true }
+  - tap: { text: Settings }
+  - await: { visible: { text: Profile } }
+  - await: { idle: true }
+  - assert: { visible: { text: Your guest ledger is stored in a private guest session. } }
+  - tap: { text: Home }
+  - await: { visible: { text: Latest activity } }
+  - await: { idle: true }

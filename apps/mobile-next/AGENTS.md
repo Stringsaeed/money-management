@@ -34,8 +34,6 @@
 
 ## Verification
 
-Screen proof is a Maestro replay of a path Argent just drove. Load `verify-trove-next` when a change in this app touches a screen, gesture, empty or error state, auth, Home, Ledger, Market, or Household, or when a visible bug needs a regression.
+Load `verify-trove-next` for a screen, gesture, empty state, error state, auth, Home, Ledger, Market, or Household change in this app. Load it for a visible bug that needs a regression, and for recording or repairing an Argent flow. Flows live in `apps/mobile-next/.argent/flows`. The dev client closes the Expo dev menu when JavaScript loads.
 
-- Jest covers logic, schemas, and transport under `__tests__`. A screen or interaction is recorded in `e2e/maestro` and replayed with `pnpm maestro`, `pnpm maestro:main`, or `pnpm maestro:core`.
-- The feature or bug under test updates its Maestro flow in the same change. Argent drives the simulator and supplies the live labels. The YAML is the replay, on iOS and on Android.
-- Types, `pnpm lint:fix`, and `pnpm format` still run. Name any device or backend check that did not run. Quote the replay command and the device for every pass.
+Quote the replay command and the device for every pass. Name any device or backend check that did not run.

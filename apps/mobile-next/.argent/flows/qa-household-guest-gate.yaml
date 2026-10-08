@@ -1,0 +1,9 @@
+steps:
+  - run: guest-home
+  - tap: { text: "Ledger scope: Personal" }
+  - await: { visible: { id: ledger-scope-sheet } }
+  - await: { idle: true }
+  - tap: { text: Open household }
+  - await: { visible: { text: Sign in to share }, timeout: 20000 }
+  - await: { idle: true }
+  - assert: { visible: { text: Households are available after WorkOS sign-in. } }

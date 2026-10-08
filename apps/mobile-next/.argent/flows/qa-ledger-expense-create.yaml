@@ -1,0 +1,15 @@
+steps:
+  - run: qa-ledger-account-create
+  - tap: { text: Create }
+  - await: { visible: { text: New transaction } }
+  - await: { idle: true }
+  - tap: { id: transaction-note-field }
+  - type: { text: Maestro coffee, submit: false }
+  - tap: { text: "1", within: { id: transaction-num-pad } }
+  - tap: { text: "2", within: { id: transaction-num-pad } }
+  - tap: { text: Decimal point, within: { id: transaction-num-pad } }
+  - tap: { text: "5", within: { id: transaction-num-pad } }
+  - tap: { text: Save }
+  - await: { hidden: { text: New transaction }, timeout: 30000 }
+  - assert: { visible: { text: Maestro coffee } }
+  - await: { idle: true }

@@ -1,4 +1,0 @@
-# Suite entry. Helpers in subflows/ are run only via runFlow.
-flows:
-  - "main/*"
-  - "core/*"

@@ -12,10 +12,7 @@
     "check-types": "tsc --noEmit",
     "test": "jest",
     "test:ci": "jest --runInBand --ci --watchman=false",
-    "test:watch": "jest --watch",
-    "maestro": "maestro test --config e2e/maestro/config.yaml",
-    "maestro:main": "maestro test --config e2e/maestro/config.yaml --include-tags main",
-    "maestro:core": "maestro test --config e2e/maestro/config.yaml --include-tags core"
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@expo-google-fonts/nunito": "^0.4.2",

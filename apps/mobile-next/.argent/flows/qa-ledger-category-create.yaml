@@ -1,0 +1,17 @@
+steps:
+  - run: guest-home
+  - tap: { text: Ledger }
+  - await: { visible: { text: Open Categories } }
+  - await: { idle: true }
+  - tap: { text: Open Categories }
+  - await: { visible: { text: Add category }, timeout: 20000 }
+  - await: { idle: true }
+  - tap: { text: Add category }
+  - await: { visible: { text: New category } }
+  - await: { idle: true }
+  - tap: { id: category-name-field }
+  - type: { text: Maestro Groceries, submit: false }
+  - tap: { text: Save }
+  - await: { hidden: { text: New category }, timeout: 30000 }
+  - assert: { visible: { text: Maestro Groceries } }
+  - await: { idle: true }

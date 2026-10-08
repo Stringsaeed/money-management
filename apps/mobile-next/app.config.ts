@@ -19,6 +19,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
       CADisableMinimumFrameDurationOnPhone: true,
+      EXDevMenuShowsAtLaunch: false,
+      EXDevMenuShowFloatingActionButton: false,
+      EXDevMenuIsOnboardingFinished: true,
     },
     icon: "./assets/icon.icon",
   },
@@ -106,6 +109,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     "./plugins/withUISceneLifecycle.js",
     "./plugins/withAndroidThemeColor.js",
+    "./plugins/withDevMenuDisabled.js",
   ],
   experiments: {
     typedRoutes: true,
