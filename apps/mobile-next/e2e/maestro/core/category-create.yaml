@@ -1,0 +1,25 @@
+appId: com.stringsaeed.moneymanagement.next
+name: Create a category
+tags:
+  - core
+---
+- runFlow: ../subflows/launch-guest.yaml
+- tapOn: "Ledger"
+- tapOn: "Open Categories"
+- extendedWaitUntil:
+    timeout: 20000
+    visible: "Add category"
+- tapOn: "Add category"
+- extendedWaitUntil:
+    timeout: 20000
+    visible: "New category"
+- tapOn:
+    id: "category-name-field"
+- eraseText
+- inputText: "Maestro Groceries"
+- hideKeyboard
+- tapOn: "Save"
+- extendedWaitUntil:
+    timeout: 30000
+    notVisible: "New category"
+- assertVisible: "Maestro Groceries"

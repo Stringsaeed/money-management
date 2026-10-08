@@ -34,7 +34,8 @@
 
 ## Verification
 
-- Follow root pnpm tooling and Conventional Commits. Keep tests under `__tests__` to match the active lint rule.
-- Verify types, relevant API/component tests, `pnpm lint:fix`, and `pnpm format`. Do not reformat unrelated files.
-- Verify real iOS and Android development builds with Stim and Argent. Check auth/guest persistence, ledger CRUD, recurring rules, Market, household access, light/dark appearance, and reduced motion.
-- Report external configuration or runtime checks that remain unverified; never present fixtures or mock responses as live backend verification.
+Screen proof is a Maestro replay of a path Argent just drove. Load `verify-trove-next` when a change in this app touches a screen, gesture, empty or error state, auth, Home, Ledger, Market, or Household, or when a visible bug needs a regression.
+
+- Jest covers logic, schemas, and transport under `__tests__`. A screen or interaction is recorded in `e2e/maestro` and replayed with `pnpm maestro`, `pnpm maestro:main`, or `pnpm maestro:core`.
+- The feature or bug under test updates its Maestro flow in the same change. Argent drives the simulator and supplies the live labels. The YAML is the replay, on iOS and on Android.
+- Types, `pnpm lint:fix`, and `pnpm format` still run. Name any device or backend check that did not run. Quote the replay command and the device for every pass.

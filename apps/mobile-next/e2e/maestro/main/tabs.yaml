@@ -1,0 +1,22 @@
+appId: com.stringsaeed.moneymanagement.next
+name: Tabs reach Home, Ledger, Market, and Settings
+tags:
+  - main
+---
+- runFlow: ../subflows/launch-guest.yaml
+- tapOn: "Ledger"
+- assertVisible: "Search notes"
+- scrollUntilVisible:
+    element:
+      text: "No transactions yet"
+    direction: DOWN
+    timeout: 20000
+- tapOn: "Market"
+- extendedWaitUntil:
+    timeout: 30000
+    visible: 'Live quotes for stocks, metals, and crypto\.|No quotes yet'
+- tapOn: "Settings"
+- assertVisible: "Profile"
+- assertVisible: "Your guest ledger is stored in a private guest session."
+- tapOn: "Home"
+- assertVisible: "Latest activity"

@@ -1,0 +1,26 @@
+appId: com.stringsaeed.moneymanagement.next
+name: Ledger opens accounts, categories, and recurring
+tags:
+  - core
+---
+- runFlow: ../subflows/launch-guest.yaml
+- tapOn: "Ledger"
+- tapOn: "Open Accounts"
+- extendedWaitUntil:
+    timeout: 20000
+    visible: "No accounts"
+- back
+- assertVisible: "Search notes"
+- tapOn: "Open Categories"
+- extendedWaitUntil:
+    timeout: 20000
+    visible: "No categories"
+- back
+- assertVisible: "Search notes"
+- tapOn: "Open Recurring"
+- extendedWaitUntil:
+    timeout: 20000
+    visible: "Recurring Rules"
+- assertVisible: "No Rules"
+- back
+- assertVisible: "Search notes"

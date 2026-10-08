@@ -1,0 +1,34 @@
+appId: com.stringsaeed.moneymanagement.next
+name: Create an expense
+tags:
+  - core
+---
+- runFlow: ../subflows/launch-guest.yaml
+- runFlow: ../subflows/create-account.yaml
+- tapOn: "Create"
+- extendedWaitUntil:
+    timeout: 20000
+    visible: "New transaction"
+- tapOn:
+    id: "transaction-note-field"
+- eraseText
+- inputText: "Maestro coffee"
+- hideKeyboard
+- tapOn:
+    text: "1"
+    below:
+      id: "transaction-note-field"
+- tapOn:
+    text: "2"
+    below:
+      id: "transaction-note-field"
+- tapOn: "Decimal point"
+- tapOn:
+    text: "5"
+    below:
+      id: "transaction-note-field"
+- tapOn: "Save"
+- extendedWaitUntil:
+    timeout: 30000
+    notVisible: "New transaction"
+- assertVisible: "Maestro coffee"
