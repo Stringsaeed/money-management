@@ -1,6 +1,6 @@
 import type { Experimental_EvaluationQuestion as EvaluationQuestion } from "ai";
 
-import type { V2CategoryKind } from "./contracts";
+import { MIN_AUTO_CATEGORIZE_CATEGORIES, type V2CategoryKind } from "./contracts";
 
 /**
  * Transaction categorizer pipeline.
@@ -170,7 +170,8 @@ export async function categorizeNote(
   options: CategorizeOptions = {},
 ): Promise<CategorizeOutcome> {
   const note = request.note.trim();
-  if (!note || request.categories.length === 0) return { categoryId: null, stage: "skipped" };
+  if (!note || request.categories.length < MIN_AUTO_CATEGORIZE_CATEGORIES)
+    return { categoryId: null, stage: "skipped" };
   const normalized = { ...request, note };
   const labels = labelCategories(request.categories);
 

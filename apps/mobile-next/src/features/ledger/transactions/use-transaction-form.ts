@@ -7,6 +7,7 @@ import { useAiPreferences } from "@/features/ai";
 import { playCue } from "@/features/sound";
 import { currencyFractionDigits, parseMoneyMinor } from "@/utils/money";
 
+import { hasAiPickChoice } from "./ai-pick";
 import {
   applyAmountKey,
   fitAmountToPrecision,
@@ -53,11 +54,8 @@ export function useTransactionForm({
   const currency = currencyOf(draft.accountId);
   const fractionDigits = digitsFor(currency);
   const activeCategories = categories.filter((item) => !item.archived);
-  // AI can only choose among categories of the transaction's kind; with none there is no "AI pick".
   const autoCategorize =
-    canAutoCategorize &&
-    draft.autoCategorize &&
-    activeCategories.some((item) => item.kind === draft.kind);
+    canAutoCategorize && draft.autoCategorize && hasAiPickChoice(activeCategories, draft.kind);
 
   const update = (patch: Partial<TransactionDraft>) => {
     setValidationError(undefined);
