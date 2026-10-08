@@ -1,0 +1,14 @@
+steps:
+  - echo: Guest baseline. Launch keeps the stored session, so sign in only when the auth screen is up.
+  - echo: The dev client closes the Expo dev menu after JavaScript loads.
+  - launch: { native: com.stringsaeed.moneymanagement.next }
+  - await: { idle: true, timeout: 15000 }
+  - await:
+      visible: { text: { matches: "Continue as guest|Latest activity" } }
+      timeout: 45000
+  - when: { visible: { text: Continue as guest } }
+    steps:
+      - tap: { text: Continue as guest }
+  - await: { visible: { text: Latest activity }, timeout: 45000 }
+  - await: { idle: true }
+  - assert: { visible: { text: "Ledger scope: Personal" } }

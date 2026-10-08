@@ -1,0 +1,28 @@
+steps:
+  - run: guest-home
+  - long-press: { text: Create }
+  - await: { visible: { id: create-action-sheet } }
+  - await: { idle: true }
+  - tap: { text: Account }
+  - await: { visible: { text: New account } }
+  - await: { idle: true }
+  - tap: { id: account-name-field }
+  - type: { text: Maestro Checking, submit: false }
+  - tap: { text: "1", within: { id: transaction-num-pad } }
+  - tap: { text: "2", within: { id: transaction-num-pad } }
+  - tap: { text: Decimal point, within: { id: transaction-num-pad } }
+  - tap: { text: "5", within: { id: transaction-num-pad } }
+  - tap: { text: Save }
+  - await: { hidden: { text: New account }, timeout: 30000 }
+  - tap: { text: Ledger }
+  - await: { visible: { text: Open Accounts } }
+  - await: { idle: true }
+  - tap: { text: Open Accounts }
+  - await: { visible: { text: Maestro Checking }, timeout: 30000 }
+  - await: { idle: true }
+  - tap: { text: Back }
+  - await: { visible: { text: Search notes } }
+  - await: { idle: true }
+  - tap: { text: Home }
+  - await: { visible: { text: Latest activity } }
+  - await: { idle: true }

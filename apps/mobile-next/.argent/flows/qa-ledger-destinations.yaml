@@ -1,0 +1,24 @@
+steps:
+  - run: guest-home
+  - tap: { text: Ledger }
+  - await: { visible: { text: Open Accounts } }
+  - await: { idle: true }
+  - tap: { text: Open Accounts }
+  - await: { visible: { text: Accounts }, timeout: 20000 }
+  - await: { idle: true }
+  - tap: { text: Back }
+  - await: { visible: { text: Search notes } }
+  - await: { idle: true }
+  - tap: { text: Open Categories }
+  - await: { visible: { text: Categories }, timeout: 20000 }
+  - await: { idle: true }
+  - tap: { text: Back }
+  - await: { visible: { text: Search notes } }
+  - await: { idle: true }
+  - tap: { text: Open Recurring }
+  - await: { visible: { text: Recurring Rules }, timeout: 20000 }
+  - await: { idle: true }
+  - assert: { visible: { text: No Rules } }
+  - tap: { text: Back }
+  - await: { visible: { text: Search notes } }
+  - await: { idle: true }

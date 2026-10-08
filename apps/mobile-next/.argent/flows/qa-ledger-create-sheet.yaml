@@ -1,0 +1,26 @@
+steps:
+  - run: guest-home
+  - long-press: { text: Create }
+  - await: { visible: { id: create-action-sheet } }
+  - await: { idle: true }
+  - assert: { visible: { text: Transaction } }
+  - assert: { visible: { text: Account } }
+  - assert: { visible: { text: Category } }
+  - tap: { text: Account }
+  - await: { visible: { text: New account } }
+  - await: { idle: true }
+  - tap: { text: Close }
+  - await: { hidden: { text: New account } }
+  - long-press: { text: Create }
+  - await: { visible: { id: create-action-sheet } }
+  - await: { idle: true }
+  - tap: { text: Category }
+  - await: { visible: { text: New category } }
+  - await: { idle: true }
+  - tap: { text: Close }
+  - await: { hidden: { text: New category } }
+  - tap: { text: Create }
+  - await: { visible: { text: New transaction } }
+  - await: { idle: true }
+  - tap: { text: Close }
+  - await: { hidden: { text: New transaction } }

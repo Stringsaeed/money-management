@@ -15,6 +15,7 @@ import {
   Nunito_800ExtraBold,
   Nunito_900Black,
 } from "@expo-google-fonts/nunito";
+import { disableDevMenu } from "@/dev/disable-dev-menu";
 import { hydrateAiPreferences } from "@/features/ai";
 import { AuthProvider } from "@/features/auth/auth-provider";
 import { hydrateSoundPreferences } from "@/features/sound";
@@ -23,6 +24,7 @@ import { colors } from "@/ui/design-tokens";
 import { ToastHost } from "@/ui/toast";
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+void disableDevMenu();
 void hydrateSoundPreferences();
 void hydrateAiPreferences();
 
@@ -38,7 +40,9 @@ export default function RootLayout() {
     Nunito_900Black,
   });
   useEffect(() => {
-    if (fontsLoaded || fontError) void SplashScreen.hideAsync().catch(() => undefined);
+    if (!fontsLoaded && !fontError) return;
+    disableDevMenu();
+    void SplashScreen.hideAsync().catch(() => undefined);
   }, [fontsLoaded, fontError]);
   if (!fontsLoaded && !fontError) return null;
   return (

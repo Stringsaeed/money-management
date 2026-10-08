@@ -1,0 +1,7 @@
+steps:
+  - run: guest-home
+  - scroll-to: { target: { text: Budgets }, direction: down }
+  - assert: { visible: { text: COMING SOON } }
+  - scroll-to: { target: { text: Nothing scheduled }, direction: down }
+  - assert: { visible: { text: Upcoming transactions } }
+  - await: { idle: true }

@@ -34,7 +34,6 @@
 
 ## Verification
 
-- Follow root pnpm tooling and Conventional Commits. Keep tests under `__tests__` to match the active lint rule.
-- Verify types, relevant API/component tests, `pnpm lint:fix`, and `pnpm format`. Do not reformat unrelated files.
-- Verify real iOS and Android development builds with Stim and Argent. Check auth/guest persistence, ledger CRUD, recurring rules, Market, household access, light/dark appearance, and reduced motion.
-- Report external configuration or runtime checks that remain unverified; never present fixtures or mock responses as live backend verification.
+Load `verify-trove-next` for a screen, gesture, empty state, error state, auth, Home, Ledger, Market, or Household change in this app. Load it for a visible bug that needs a regression, and for recording or repairing an Argent flow. Flows live in `apps/mobile-next/.argent/flows`. The dev client closes the Expo dev menu when JavaScript loads.
+
+Quote the replay command and the device for every pass. Name any device or backend check that did not run.
