@@ -41,7 +41,9 @@ export function AmountDisplay({
   const sizes = { line: { fontSize }, minor: { fontSize: Math.round(fontSize * 0.56) } };
 
   return (
+    // One accessibility element: the label already speaks the value, so the digits stay hidden.
     <View
+      accessible
       accessibilityLabel={amountAccessibilityLabel(parts, currency, negative)}
       accessibilityRole="text"
       style={styles.container}

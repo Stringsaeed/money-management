@@ -13,6 +13,8 @@ export function BreadcrumbBar({ children }: BreadcrumbBarProps) {
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
+      // iOS still exposes the hidden vertical indicator as a "scroll bar" accessibility element.
+      showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.row}
       style={styles.scroll}
     >

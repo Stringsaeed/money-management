@@ -59,7 +59,11 @@ export function BreadcrumbSegment({
 }
 
 export function BreadcrumbSeparator() {
-  return <Text style={styles.separator}>›</Text>;
+  return (
+    <Text accessible={false} accessibilityElementsHidden style={styles.separator}>
+      ›
+    </Text>
+  );
 }
 
 const styles = StyleSheet.create({
