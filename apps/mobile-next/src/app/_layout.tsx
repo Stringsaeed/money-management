@@ -15,6 +15,11 @@ import {
   Nunito_800ExtraBold,
   Nunito_900Black,
 } from "@expo-google-fonts/nunito";
+import {
+  IBMPlexMono_400Regular,
+  IBMPlexMono_500Medium,
+  IBMPlexMono_600SemiBold,
+} from "@expo-google-fonts/ibm-plex-mono";
 import { disableDevMenu } from "@/dev/disable-dev-menu";
 import { hydrateAiPreferences } from "@/features/ai";
 import { AuthProvider } from "@/features/auth/auth-provider";
@@ -38,6 +43,9 @@ export default function RootLayout() {
     Nunito_700Bold,
     Nunito_800ExtraBold,
     Nunito_900Black,
+    IBMPlexMono_400Regular,
+    IBMPlexMono_500Medium,
+    IBMPlexMono_600SemiBold,
   });
   useEffect(() => {
     if (!fontsLoaded && !fontError) return;

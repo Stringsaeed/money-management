@@ -205,6 +205,25 @@ const colorValues = {
   },
 };
 
+// Trove design system tokens: one JSON source shared with src/ui/trove/tokens/colors.ts.
+const troveColorValues = require("../src/ui/trove/tokens/colors.json");
+
+/** CSS `#RRGGBBAA` → Android `#AARRGGBB`; `#RRGGBB` passes through. */
+function toAndroidHex(value) {
+  const hex = value.toUpperCase();
+  return hex.length === 9 ? `#${hex.slice(7)}${hex.slice(1, 7)}` : hex;
+}
+
+function withTroveColors(config, colors) {
+  for (const [key, value] of Object.entries(colors)) {
+    config.modResults = AndroidConfig.Colors.assignColorValue(config.modResults, {
+      name: `trove_${camelToSnake(key)}`,
+      value: toAndroidHex(value),
+    });
+  }
+  return config;
+}
+
 function camelToSnake(str) {
   return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
@@ -223,12 +242,15 @@ function withDesignTokenColors(config, colors) {
 const withAndroidThemeColor = (config) => {
   // Add light mode colors to values/colors.xml
   config = withAndroidColors(config, (config) => {
-    return withDesignTokenColors(config, colorValues.light);
+    return withTroveColors(
+      withDesignTokenColors(config, colorValues.light),
+      troveColorValues.light,
+    );
   });
 
   // Add dark mode colors to values-night/colors.xml
   config = withAndroidColorsNight(config, (config) => {
-    return withDesignTokenColors(config, colorValues.dark);
+    return withTroveColors(withDesignTokenColors(config, colorValues.dark), troveColorValues.dark);
   });
 
   return config;
