@@ -73,7 +73,12 @@ export const colors = {
   highlight: colorToken("highlight"),
   /** Status colors are for money only. */
   positive: { text: colorToken("positiveText"), subtle: colorToken("positiveSubtle") },
-  negative: { text: colorToken("negativeText"), subtle: colorToken("negativeSubtle") },
+  negative: {
+    text: colorToken("negativeText"),
+    subtle: colorToken("negativeSubtle"),
+    /** Label on a solid negative.text fill — destructive confirm button only. */
+    on: colorToken("negativeOn"),
+  },
   warning: {
     text: colorToken("warningText"),
     subtle: colorToken("warningSubtle"),

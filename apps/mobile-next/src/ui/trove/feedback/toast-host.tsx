@@ -1,0 +1,70 @@
+import { useEffect, useSyncExternalStore } from "react";
+import { AccessibilityInfo, StyleSheet, View } from "react-native";
+import { EaseView } from "react-native-ease";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { useReducedMotion } from "../../motion";
+import { motion, space, troveTransition } from "../tokens";
+import { Toast } from "./toast";
+import { getToast, hideToast, subscribeToast } from "./toast-store";
+
+export interface ToastHostProps {
+  /** Height of the tab bar (or any chrome) the toast must clear, on top of the safe-area inset. */
+  bottomOffset?: number;
+}
+
+/** Renders the current Trove toast at the bottom of the screen; mount once at the app root. */
+export function ToastHost({ bottomOffset = 0 }: ToastHostProps) {
+  const toast = useSyncExternalStore(subscribeToast, getToast);
+  const insets = useSafeAreaInsets();
+  const reducedMotion = useReducedMotion();
+  const toastId = toast?.id;
+  const message = toast?.message;
+
+  // iOS ignores live regions, so announce the message explicitly.
+  useEffect(() => {
+    if (toastId !== undefined && message) AccessibilityInfo.announceForAccessibility(message);
+  }, [toastId, message]);
+
+  if (!toast) return null;
+
+  const onAction = toast.onAction
+    ? () => {
+        toast.onAction?.();
+        hideToast();
+      }
+    : undefined;
+
+  return (
+    <View
+      pointerEvents="box-none"
+      style={[styles.overlay, { bottom: insets.bottom + bottomOffset + space[2] }]}
+    >
+      <EaseView
+        key={toast.id}
+        animate={{ opacity: 1, translateY: 0 }}
+        initialAnimate={{ opacity: 0, translateY: space[6] }}
+        style={styles.slot}
+        transition={troveTransition(reducedMotion, motion.sheet)}
+      >
+        <Toast
+          actionLabel={toast.actionLabel}
+          icon={toast.icon}
+          message={toast.message}
+          onAction={onAction}
+          onDismiss={hideToast}
+        />
+      </EaseView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: {
+    alignItems: "center",
+    left: space[5],
+    position: "absolute",
+    right: space[5],
+  },
+  slot: { maxWidth: 420, width: "100%" },
+});

@@ -60,7 +60,8 @@
     "chartTooltipFill": "#151515",
     "chartTooltipText": "#F2F1EC",
     "warningBar": "#D99A2B",
-    "receiptLeader": "#B9B5AA"
+    "receiptLeader": "#B9B5AA",
+    "negativeOn": "#FFFFFF"
   },
   "dark": {
     "bgCanvas": "#151515",
@@ -123,6 +124,7 @@
     "chartTooltipFill": "#F7F5EF",
     "chartTooltipText": "#1A1A1A",
     "warningBar": "#FFB547",
-    "receiptLeader": "#B9B5AA"
+    "receiptLeader": "#B9B5AA",
+    "negativeOn": "#151515"
   }
 }
