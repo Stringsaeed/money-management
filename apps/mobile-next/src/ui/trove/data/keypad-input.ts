@@ -1,3 +1,5 @@
+import { decimalSeparator } from "../amount/amount-parts";
+
 /** Digits and decimal point are kept in a canonical string ("12.5"); display swaps the separator. */
 export type KeypadDigit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 export type KeypadKey = KeypadDigit | "decimal" | "backspace";
@@ -40,12 +42,7 @@ export function applyKeypadKey(value: string, key: KeypadKey, limits: KeypadLimi
 
 /** Decimal separator of a locale (the device locale when omitted); falls back to ".". */
 export function localeDecimalSeparator(locale?: string): string {
-  try {
-    const part = new Intl.NumberFormat(locale).formatToParts(1.1).find((p) => p.type === "decimal");
-    return part?.value ?? DECIMAL;
-  } catch {
-    return DECIMAL;
-  }
+  return decimalSeparator(locale);
 }
 
 /** Canonical value for display: swaps in the locale separator, and shows "0" for an empty entry. */

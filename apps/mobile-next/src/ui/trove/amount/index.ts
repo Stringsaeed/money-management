@@ -4,6 +4,7 @@ export {
   amountAccessibilityLabel,
   amountParts,
   currencyFractionDigits,
+  decimalSeparator,
   MINUS,
 } from "./amount-parts";
 export type { AmountParts, CurrencyGlyphName, SignDisplay } from "./amount-parts";

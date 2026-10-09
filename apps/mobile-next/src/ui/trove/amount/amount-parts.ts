@@ -73,6 +73,36 @@ function signFor(minor: number, signDisplay: SignDisplay): AmountParts["sign"] {
   return signDisplay === "always" ? "+" : "";
 }
 
+/**
+ * Decimal separator of a locale (the device locale when omitted). Derived from `format()`
+ * because Hermes does not implement `Intl.NumberFormat.prototype.formatToParts`.
+ */
+export function decimalSeparator(locale?: string): string {
+  try {
+    const sample = new Intl.NumberFormat(locale, { minimumFractionDigits: 1 }).format(1.5);
+    return sample.replace(/\d/g, "") || ".";
+  } catch {
+    return ".";
+  }
+}
+
+interface SplitAmount {
+  readonly whole: string;
+  readonly fraction: string;
+}
+
+/** Splits a locale-formatted absolute amount at its decimal separator. */
+function splitFormatted(value: number, digits: number): SplitAmount {
+  const formatted = new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(value);
+  if (digits === 0) return { whole: formatted, fraction: "" };
+  const at = formatted.lastIndexOf(decimalSeparator());
+  if (at < 0) return { whole: formatted, fraction: "" };
+  return { whole: formatted.slice(0, at), fraction: formatted.slice(at) };
+}
+
 /** Splits an amount in minor units into the pieces Trove sets separately. */
 export function amountParts(
   minor: number,
@@ -80,17 +110,7 @@ export function amountParts(
   signDisplay: SignDisplay = "auto",
 ): AmountParts {
   const digits = currencyFractionDigits(currency);
-  const value = Math.abs(minor) / 10 ** digits;
-  const parts = new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  }).formatToParts(value);
-  let whole = "";
-  let fraction = "";
-  for (const part of parts) {
-    if (part.type === "integer" || part.type === "group") whole += part.value;
-    else if (part.type === "decimal" || part.type === "fraction") fraction += part.value;
-  }
+  const { whole, fraction } = splitFormatted(Math.abs(minor) / 10 ** digits, digits);
   const glyph = hasGlyph(currency) ? GLYPHS[currency] : null;
   return {
     sign: signFor(minor, signDisplay),
@@ -101,18 +121,11 @@ export function amountParts(
   };
 }
 
-/** Screen-reader text, e.g. "minus 64.20 UAE dirhams" via Intl's long currency name. */
+/**
+ * Screen-reader text, e.g. "minus 64.20 USD". Built from our own parts: Hermes' Intl
+ * renders `currencyDisplay: "name"` inconsistently (e.g. "US Dollar126.00").
+ */
 export function amountAccessibilityLabel(minor: number, currency: string): string {
-  const digits = currencyFractionDigits(currency);
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency,
-      currencyDisplay: "name",
-      minimumFractionDigits: digits,
-      maximumFractionDigits: digits,
-    }).format(minor / 10 ** digits);
-  } catch {
-    return `${minor / 10 ** digits} ${currency}`;
-  }
+  const { whole, fraction } = amountParts(minor, currency, "never");
+  return `${minor < 0 ? "minus " : ""}${whole}${fraction} ${currency}`;
 }

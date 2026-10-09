@@ -55,6 +55,7 @@ export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) 
         />
         <Stack.Screen name="household" options={{ title: "Household" }} />
         <Stack.Screen name="callback" options={{ headerShown: false }} />
+        <Stack.Screen name="dev/trove" options={{ headerShown: false }} />
       </Stack>
     </LedgerDataProvider>
   );

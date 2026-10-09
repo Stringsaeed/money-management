@@ -1,4 +1,4 @@
-import { amountParts, MINUS } from "../amount-parts";
+import { amountAccessibilityLabel, amountParts, MINUS } from "../amount-parts";
 
 describe("amountParts", () => {
   it("puts the minus before the currency and splits cents", () => {
@@ -33,5 +33,35 @@ describe("amountParts", () => {
     expect(amountParts(132000, "USD", "always").sign).toBe("+");
     expect(amountParts(0, "USD", "always").sign).toBe("");
     expect(amountParts(-100, "USD", "never").sign).toBe("");
+  });
+});
+
+describe("amountParts on Hermes", () => {
+  it("splits whole digits and cents without formatToParts", () => {
+    // Hermes has no Intl.NumberFormat.prototype.formatToParts; the split must not depend on it.
+    const original = Intl.NumberFormat.prototype.formatToParts;
+    Object.defineProperty(Intl.NumberFormat.prototype, "formatToParts", {
+      configurable: true,
+      value: undefined,
+    });
+    try {
+      expect(amountParts(-1248050, "USD")).toMatchObject({
+        sign: MINUS,
+        whole: "12,480",
+        fraction: ".50",
+      });
+    } finally {
+      Object.defineProperty(Intl.NumberFormat.prototype, "formatToParts", {
+        configurable: true,
+        value: original,
+      });
+    }
+  });
+});
+
+describe("amountAccessibilityLabel", () => {
+  it("speaks the sign, digits and ISO code", () => {
+    expect(amountAccessibilityLabel(-6420, "USD")).toBe("minus 64.20 USD");
+    expect(amountAccessibilityLabel(184300, "JPY")).toBe("184,300 JPY");
   });
 });
