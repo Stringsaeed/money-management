@@ -16,7 +16,7 @@ export interface BannerProps {
   onAction?: () => void;
 }
 
-/** Inline notice: warning ("Dining out is at 94%"), negative ("Bank sync stopped") or neutral info. */
+/** Inline notice: neutral info, positive ("Back under budget"), warning ("Dining out is at 94%") or negative ("Bank sync stopped"). */
 export function Banner({ tone = "neutral", title, message, actionLabel, onAction }: BannerProps) {
   const spec = BANNER_TONES[tone];
   const hasAction = Boolean(actionLabel && onAction);
@@ -64,8 +64,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     flexDirection: "row",
     gap: space[3],
-    paddingHorizontal: space[4],
-    paddingVertical: 14,
+    // The 1pt ring is transparent on every tone but neutral, so all four stay the same size.
+    borderColor: "transparent",
+    borderWidth: 1,
+    paddingHorizontal: space[4] - 1,
+    paddingVertical: 13,
   },
   icon: { paddingTop: 1 },
   body: { flex: 1, gap: space[2] },
@@ -76,5 +79,6 @@ const styles = StyleSheet.create({
 const toneStyles = StyleSheet.create({
   warning: { backgroundColor: colors.warning.subtle },
   negative: { backgroundColor: colors.negative.subtle },
-  neutral: { backgroundColor: colors.fill.neutral },
+  positive: { backgroundColor: colors.positive.subtle },
+  neutral: { backgroundColor: colors.surface.default, borderColor: colors.border.subtle },
 });

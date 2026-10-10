@@ -7,6 +7,7 @@ import { useReducedMotion } from "../../motion";
 import { motion, space, troveTransition } from "../tokens";
 import { Toast } from "./toast";
 import { getToast, hideToast, subscribeToast } from "./toast-store";
+import { resolveToastAction } from "./utils";
 
 export interface ToastHostProps {
   /** Height of the tab bar (or any chrome) the toast must clear, on top of the safe-area inset. */
@@ -28,12 +29,18 @@ export function ToastHost({ bottomOffset = 0 }: ToastHostProps) {
 
   if (!toast) return null;
 
-  const onAction = toast.onAction
-    ? () => {
-        toast.onAction?.();
-        hideToast();
-      }
-    : undefined;
+  const action = resolveToastAction(toast);
+  const onPress = action?.onPress;
+  const guardedAction =
+    action && onPress
+      ? {
+          label: action.label,
+          onPress: () => {
+            onPress();
+            hideToast();
+          },
+        }
+      : undefined;
 
   return (
     <View
@@ -48,10 +55,11 @@ export function ToastHost({ bottomOffset = 0 }: ToastHostProps) {
         transition={troveTransition(reducedMotion, motion.sheet)}
       >
         <Toast
-          actionLabel={toast.actionLabel}
+          action={guardedAction}
+          emoji={toast.emoji}
+          emphasis={toast.emphasis}
           icon={toast.icon}
           message={toast.message}
-          onAction={onAction}
           onDismiss={hideToast}
         />
       </EaseView>

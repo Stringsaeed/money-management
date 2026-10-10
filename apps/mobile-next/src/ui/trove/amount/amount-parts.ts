@@ -1,3 +1,5 @@
+import { DEFAULT_SIGNIFICANT, formatDecimalOrZero, type FormattedDecimal } from "./decimal-format";
+
 /** Currencies whose sign ships as an SVG glyph (`assets/currencies`) rather than a font character. */
 const GLYPHS = { AED: "dirham", SAR: "riyal" } as const satisfies Record<string, string>;
 
@@ -128,4 +130,67 @@ export function amountParts(
 export function amountAccessibilityLabel(minor: number, currency: string): string {
   const { whole, fraction } = amountParts(minor, currency, "never");
   return `${minor < 0 ? "minus " : ""}${whole}${fraction} ${currency}`;
+}
+
+export interface DecimalAmountParts extends AmountParts {
+  /** Significant digits past the minor unit (`001842` of `0.00001842`); empty for prices >= 1. */
+  readonly tail: string;
+}
+
+/** Locale group separator, derived from `format()` (no `formatToParts` on Hermes). */
+function groupSeparator(): string {
+  try {
+    const sample = new Intl.NumberFormat(undefined).format(1234567);
+    return sample.replace(/\d/g, "").charAt(0);
+  } catch {
+    return ",";
+  }
+}
+
+const groupDigits = (whole: string, separator: string): string =>
+  separator ? whole.replace(/\B(?=(\d{3})+(?!\d))/g, separator) : whole;
+
+function decimalSign(
+  { negative, zero }: Pick<FormattedDecimal, "negative" | "zero">,
+  signDisplay: SignDisplay,
+): AmountParts["sign"] {
+  if (signDisplay === "never" || zero) return "";
+  if (negative) return MINUS;
+  return signDisplay === "always" ? "+" : "";
+}
+
+/**
+ * Splits a decimal-string price into Trove's pieces. Prices >= 1 keep the currency's decimals;
+ * below 1, `significant` digits from the first non-zero one, the part past the cents landing
+ * in `tail`. Unparseable input falls back to zero rather than throwing during render.
+ */
+export function decimalAmountParts(
+  value: string,
+  currency: string,
+  signDisplay: SignDisplay = "auto",
+  significant: number = DEFAULT_SIGNIFICANT,
+): DecimalAmountParts {
+  const cent = currencyFractionDigits(currency);
+  const formatted = formatDecimalOrZero(value, significant, cent);
+  const glyph = hasGlyph(currency) ? GLYPHS[currency] : null;
+  const separator = decimalSeparator();
+  const hasFraction = cent > 0 || formatted.tail !== "";
+  return {
+    sign: decimalSign(formatted, signDisplay),
+    glyph,
+    symbol: glyph ? "" : currencySymbol(currency),
+    whole: groupDigits(formatted.whole, groupSeparator()),
+    fraction: hasFraction ? `${separator}${formatted.main}` : "",
+    tail: formatted.tail,
+  };
+}
+
+/** Screen-reader text for a decimal price, e.g. "0.00001842 USD" or "minus 61,240.18 USD". */
+export function decimalAmountAccessibilityLabel(
+  value: string,
+  currency: string,
+  significant: number = DEFAULT_SIGNIFICANT,
+): string {
+  const { sign, whole, fraction, tail } = decimalAmountParts(value, currency, "auto", significant);
+  return `${sign === MINUS ? "minus " : ""}${whole}${fraction}${tail} ${currency}`;
 }

@@ -29,4 +29,17 @@ describe("Banner", () => {
     await render(<Banner actionLabel="Reconnect" message="Info" />);
     expect(screen.queryByRole("button")).toBeNull();
   });
+
+  it("renders the positive tone", async () => {
+    await render(
+      <Banner message="Dining out is at 82%." title="Back under budget" tone="positive" />,
+    );
+    expect(screen.getByTestId("banner-positive")).toBeTruthy();
+    expect(screen.getByText("Back under budget")).toBeTruthy();
+  });
+
+  it("defaults to neutral", async () => {
+    await render(<Banner message="Rates update every 15 minutes." />);
+    expect(screen.getByTestId("banner-neutral")).toBeTruthy();
+  });
 });

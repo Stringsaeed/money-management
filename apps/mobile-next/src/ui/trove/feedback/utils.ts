@@ -5,6 +5,47 @@ import { motion } from "../tokens";
 export const TOAST_VISIBLE_MS = 4000;
 export const TOAST_VISIBLE_WITH_ACTION_MS = 6000;
 
+export interface ToastAction {
+  label: string;
+  onPress: () => void;
+}
+
+interface ToastActionSource {
+  action?: ToastAction;
+  actionLabel?: string;
+  onAction?: () => void;
+}
+
+/** Accepts the board's `action={ {label, onPress} }` or the legacy `actionLabel` + `onAction`. */
+export function resolveToastAction(source: ToastActionSource): ToastAction | undefined {
+  if (source.action) return source.action;
+  if (source.actionLabel && source.onAction) {
+    return { label: source.actionLabel, onPress: source.onAction };
+  }
+  return undefined;
+}
+
+export interface MessageSegment {
+  text: string;
+  bold: boolean;
+}
+
+/**
+ * Splits a message so the first occurrence of `emphasis` can be set bold:
+ * ("Filed under Groceries", "Groceries") -> ["Filed under ", "Groceries"(bold)].
+ * An absent or unmatched fragment leaves the message whole.
+ */
+export function splitEmphasis(message: string, emphasis?: string): MessageSegment[] {
+  const at = emphasis ? message.indexOf(emphasis) : -1;
+  if (!emphasis || at < 0) return [{ text: message, bold: false }];
+  const end = at + emphasis.length;
+  return [
+    { text: message.slice(0, at), bold: false },
+    { text: emphasis, bold: true },
+    { text: message.slice(end), bold: false },
+  ].filter((segment) => segment.text !== "");
+}
+
 /** Toasts with an action stay longer so there is time to reach "Undo". */
 export function toastDuration(hasAction: boolean): number {
   return hasAction ? TOAST_VISIBLE_WITH_ACTION_MS : TOAST_VISIBLE_MS;

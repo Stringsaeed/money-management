@@ -1,11 +1,17 @@
 import type { IconName } from "../icon";
-import { toastDuration } from "./utils";
+import { resolveToastAction, toastDuration, type ToastAction } from "./utils";
 
 export interface ToastOptions {
   message: string;
-  /** Leading icon; defaults to a check mark. */
+  /** Decorative emoji in a 40pt tile before the message; replaces the icon. */
+  emoji?: string;
+  /** Leading icon; defaults to a check mark. Ignored when `emoji` is set. */
   icon?: IconName;
-  /** Optional trailing action such as "Undo". Both fields are needed. */
+  /** Fragment of `message` to set bold, e.g. "Groceries" in "Filed under Groceries". */
+  emphasis?: string;
+  /** Trailing action such as "Undo" or "Change". */
+  action?: ToastAction;
+  /** Legacy form of `action`: both fields are needed. */
   actionLabel?: string;
   onAction?: () => void;
 }
@@ -46,5 +52,5 @@ export function hideToast() {
 export function showToast(options: ToastOptions) {
   if (hideTimer) clearTimeout(hideTimer);
   commit({ ...options, id: nextId++ });
-  hideTimer = setTimeout(hideToast, toastDuration(Boolean(options.actionLabel)));
+  hideTimer = setTimeout(hideToast, toastDuration(resolveToastAction(options) !== undefined));
 }
