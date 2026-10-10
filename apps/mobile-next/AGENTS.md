@@ -21,15 +21,18 @@
 
 ## Visual system
 
-- Rebuild components thoughtfully rather than copying old component implementations. Match the current Garden Ledger palette and Nunito typography from `apps/mobile/lib/design-tokens.ts`.
-- Use module-level native `StyleSheet` and dynamic native color tokens. This supersedes the root document's Tailwind requirement and stale typography description for this app.
-- Resolve iOS colors with `DynamicColorIOS` and Android colors through native day/night resources and `PlatformColor`.
-- Native control props that reject opaque color objects may bridge the canonical light/dark raw palette inside `src/ui`; keep ordinary React Native styles on dynamic tokens.
-- Use subtle shadows, thin rings, generous spacing, accessible text scaling, and clear pressed, loading, disabled, empty, and error states.
-- Use Phosphor icons with `Icon`-suffixed imports. Keep the icon boundary small so individual icons can be replaced. No emojis in UI.
-- Build a custom tab bar similar to the current app, not native tabs. Keep business actions injected through props.
+- The design source is the Claude Design canvas "Trove Design System" (https://claude.ai/artifact/9LXFeFuxSLfphLSzzs9iGH). Match it rather than the old app.
+- All UI lives in `src/ui/trove`; import components from `src/ui/trove/index.ts`. The legacy `src/ui` kit and `phosphor-react-native` are gone; only `src/ui/motion.ts` remains outside `trove`.
+- Tokens: `src/ui/trove/tokens/colors.json` is the single color source, read by `colors.ts` (iOS `DynamicColorIOS`, Android `PlatformColor`) and by `plugins/withAndroidThemeColor.js` (day/night resources). A new token needs `npx expo prebuild --platform android` before the next Android build.
+- Components read semantic tokens only. Native props that reject dynamic colors may use the raw light/dark pairs from `troveRawColors` inside `src/ui/trove`.
+- Typography: IBM Plex Mono for amounts and numbers, Nunito 400/700/800 for words.
+- Icons: the Trove SVG set in `src/ui/trove/icon/icon-paths.ts`, rendered through the Trove `Icon` component. No emojis in UI.
+- Use module-level native `StyleSheet`. This supersedes the root document's Tailwind requirement for this app.
+- Use the Trove tab bar (`src/ui/trove/tab-bar`), not native tabs. Keep business actions injected through props.
+- Preview components in the dev-only gallery at `trove-next://dev/trove?section=<key>`.
 - Use `react-native-ease` for soft fades and transitions, respecting reduced motion. Reanimated is permitted only for a documented interaction Ease cannot implement.
 - Use `@legendapp/list` for long lists. Use native controls where they improve platform behavior.
+- Keep clear pressed, loading, disabled, empty, and error states, and accessible text scaling.
 - One React component per file; meaningful hooks in separate files and pure business functions outside presentation components. Let React Compiler handle memoization.
 
 ## Verification
