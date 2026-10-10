@@ -2,7 +2,7 @@ import { StyleSheet, View } from "react-native";
 // oxlint-disable-next-line no-restricted-imports -- Only the SharedValue type, owned by the scroll-driven reveal.
 import type { SharedValue } from "react-native-reanimated";
 
-import { colors, Header, layout, space } from "@/ui/trove";
+import { colors, FilterButton, Header, layout, space } from "@/ui/trove";
 
 import { ActiveFilterBar } from "./active-filter-bar";
 import { CollapsibleRow } from "./collapsible-row";
@@ -22,16 +22,17 @@ export function LedgerHeader({ list, searchHidden }: LedgerHeaderProps) {
   const applied = list.chips.length;
   return (
     <View style={styles.header}>
-      <Header
-        title="Ledger"
-        actions={[
-          {
-            icon: "filter",
-            label: applied > 0 ? `Filters, ${applied} applied` : "Filters",
-            onPress: list.openFilters,
-          },
-        ]}
-      />
+      <View style={styles.titleRow}>
+        <View style={styles.title}>
+          <Header title="Ledger" />
+        </View>
+        <FilterButton
+          active={applied > 0}
+          count={applied}
+          label="Filters"
+          onPress={list.openFilters}
+        />
+      </View>
       <CollapsibleRow hidden={searchHidden}>
         <View style={styles.search}>
           <LedgerSearchField
@@ -50,6 +51,8 @@ export function LedgerHeader({ list, searchHidden }: LedgerHeaderProps) {
 }
 
 const styles = StyleSheet.create({
+  titleRow: { alignItems: "center", flexDirection: "row", gap: space[3] },
+  title: { flex: 1 },
   header: {
     backgroundColor: colors.bg.canvas,
     borderBottomColor: colors.border.subtle,

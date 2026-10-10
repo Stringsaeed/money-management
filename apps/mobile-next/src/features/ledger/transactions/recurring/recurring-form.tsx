@@ -1,16 +1,16 @@
 /* oxlint-disable complexity -- recurring authoring keeps cadence, bounds, and kind-specific fields together for a coherent editor. */
 
-import { useId, useState } from "react";
+import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import type { V2Account, V2Category, V2RecurringRule } from "@trove/api/v2/contracts";
 
 import type { RecurringRuleInput } from "@/data/ledger-client";
-// Legacy: the Trove TextField has no iOS "Done" accessory for number pads, so the legacy one stays.
-import { KeyboardAccessory } from "@/ui/keyboard-accessory";
 import {
   Banner,
   Button,
+  ListGroup,
+  NoteField,
   SegmentedControl,
   space,
   Text,
@@ -21,6 +21,7 @@ import { parseDateKey, todayDateKey } from "@/utils/date";
 import { decimalFromMinor, parseMoneyMinor } from "@/utils/money";
 
 import { TransactionOptionSheet } from "../transaction-option-sheet";
+import { RecurringDateRow } from "./recurring-date-row";
 
 type RuleKind = RecurringRuleInput["kind"];
 type RuleFrequency = RecurringRuleInput["frequency"];
@@ -57,7 +58,6 @@ export function RecurringForm({
   onCancel,
   onSubmit,
 }: RecurringFormProps) {
-  const accessoryId = useId();
   const firstAccount = accounts.find((item) => !item.archived);
   const [name, setName] = useState(rule?.name ?? "");
   const [kind, setKind] = useState<RuleKind>(rule?.kind ?? "expense");
@@ -114,7 +114,7 @@ export function RecurringForm({
       return;
     }
     if (!parseDateKey(startDate) || (endDate && !parseDateKey(endDate))) {
-      setValidationError("Enter valid start and end dates in YYYY-MM-DD format.");
+      setValidationError("Choose valid start and end dates.");
       return;
     }
     if (endDate && endDate < startDate) {
@@ -163,7 +163,6 @@ export function RecurringForm({
         value={amount}
         onChangeText={setAmount}
         keyboardType="decimal-pad"
-        inputAccessoryViewID={accessoryId}
         placeholder="0.00"
       />
       {activeAccounts.length > 0 ? (
@@ -217,33 +216,40 @@ export function RecurringForm({
         value={intervalCount}
         onChangeText={setIntervalCount}
         keyboardType="number-pad"
-        inputAccessoryViewID={accessoryId}
       />
-      <TextField
-        label="Starts on"
-        value={startDate}
-        onChangeText={setStartDate}
-        placeholder="YYYY-MM-DD"
-      />
-      <TextField
-        label="Ends on (optional)"
-        value={endDate}
-        onChangeText={setEndDate}
-        placeholder="YYYY-MM-DD"
-      />
+      <ListGroup dividerInset={60}>
+        <RecurringDateRow
+          title="Starts on"
+          value={startDate}
+          fallback={todayDateKey()}
+          onChange={setStartDate}
+        />
+        <RecurringDateRow
+          title="Ends on"
+          value={endDate}
+          fallback={startDate}
+          emptyLabel="No end date"
+          onChange={setEndDate}
+        />
+      </ListGroup>
+      {endDate ? (
+        <Button
+          label="Remove end date"
+          variant="tertiary"
+          size="sm"
+          onPress={() => setEndDate("")}
+        />
+      ) : null}
       <TextField
         label="Ends after N occurrences (optional)"
         value={endCount}
         onChangeText={setEndCount}
         keyboardType="number-pad"
-        inputAccessoryViewID={accessoryId}
       />
-      <TextField
-        label="Note"
+      <NoteField
         value={note}
         onChangeText={setNote}
-        placeholder="Optional note"
-        inputAccessoryViewID={accessoryId}
+        placeholder="Add a note (optional)"
         multiline
       />
       {(error ?? validationError) ? (
@@ -257,7 +263,6 @@ export function RecurringForm({
           loading={busy}
         />
       </View>
-      <KeyboardAccessory nativeID={accessoryId} />
     </View>
   );
 }

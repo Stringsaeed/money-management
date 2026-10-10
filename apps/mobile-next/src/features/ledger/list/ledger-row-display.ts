@@ -1,6 +1,6 @@
 import type { V2Account, V2Category, V2Transaction } from "@trove/api/v2/contracts";
 
-import type { IconName } from "@/ui/icon";
+import type { SystemKind } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { transactionTileIcon } from "../transactions/transaction-display";
@@ -15,19 +15,17 @@ export interface LedgerRowDisplay {
   readonly currency: string;
   /** Transfers carry no sign; spending and income always do. */
   readonly signDisplay: "always" | "never";
-  /** Trove tile content: the Category emoji, the transfer emoji, or the "other" icon. */
+  /**
+   * System kind tile for rows without a Category (transfers, uncategorised); `null` when the
+   * Category's emoji is shown on the neutral tile instead.
+   */
+  readonly kind: SystemKind | null;
+  /** Neutral tile content for rows with a Category emoji; legacy fallback otherwise. */
   readonly tile: string;
   readonly tone: "income" | "expense" | "transfer";
   readonly emoji: string | null;
   readonly tint: string | null;
-  readonly icon: IconName;
 }
-
-const KIND_ICONS = {
-  income: "arrow-down-left",
-  expense: "arrow-up-right",
-  transfer: "arrows-left-right",
-} satisfies Record<V2Transaction["kind"], IconName>;
 
 // oxlint-disable-next-line complexity -- one row maps kind, category, account, and date into copy.
 export function ledgerRowDisplay(
@@ -59,10 +57,10 @@ export function ledgerRowDisplay(
       transaction.kind === "expense" ? -transaction.amountMinor : transaction.amountMinor,
     currency: transaction.currency,
     signDisplay: transaction.kind === "transfer" ? "never" : "always",
+    kind: emoji ? null : transaction.kind,
     tile,
     tone: transaction.kind,
     emoji,
     tint: category?.color ?? null,
-    icon: KIND_ICONS[transaction.kind],
   };
 }

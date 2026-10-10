@@ -21,7 +21,7 @@ export function LedgerRow({ transaction, display, onPress }: LedgerRowProps) {
         subtitle={display.meta || undefined}
         minor={display.signedMinor}
         currency={display.currency}
-        icon={display.tile}
+        {...(display.kind ? { kind: display.kind } : { icon: display.tile })}
         signDisplay={display.signDisplay}
         onPress={() => onPress?.(transaction)}
       />
