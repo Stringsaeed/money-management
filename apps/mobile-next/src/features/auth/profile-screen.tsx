@@ -1,12 +1,21 @@
 import { useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 
 import { AiSettings } from "@/features/ai";
 import { SoundSettings } from "@/features/sound";
-import { Button, Screen, Surface, Text } from "@/ui";
-import { colors } from "@/ui/design-tokens";
 import { useLedgerScope } from "@/navigation/ledger-scope-context";
+import {
+  Banner,
+  Button,
+  Header,
+  layout,
+  ListGroup,
+  ListRow,
+  Screen,
+  space,
+  Text,
+} from "@/ui/trove";
 
 import { useSession } from "./use-session";
 import { profileIdentity } from "./profile-utils";
@@ -44,55 +53,58 @@ export function ProfileScreen() {
   };
 
   return (
-    <Screen style={styles.screen}>
-      <View style={styles.top}>
+    <Screen>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text variant="headline">Profile</Text>
-          <Text variant="body" style={styles.copy}>
+          <Header title="Profile" />
+          <Text tone="secondary" variant="bodyMd">
             {description}
           </Text>
         </View>
         <SoundSettings />
         <AiSettings />
-      </View>
-      <Surface variant="raised" style={styles.card}>
-        {isGuest ? (
-          <Button
-            title="Save guest ledger to account"
-            loading={busy}
-            onPress={() => {
-              setBusy(true);
-              void session.saveGuestToAccount().finally(() => setBusy(false));
-            }}
-          />
-        ) : null}
-        {user ? (
-          <Button title="Household" variant="secondary" onPress={() => router.push("/household")} />
-        ) : null}
-        {scope.kind === "household" ? (
-          <Button
-            title="Use personal ledger"
-            variant="secondary"
-            onPress={() => selectScope({ kind: "personal" })}
-          />
-        ) : null}
-        <Button
-          title={isGuest ? "End guest session" : "Sign out"}
-          variant="ghost"
-          onPress={signOut}
-          disabled={busy}
-        />
-        {session.error ? <Text style={styles.error}>{session.error}</Text> : null}
-      </Surface>
+        <View style={styles.actions}>
+          {isGuest ? (
+            <Button
+              fullWidth
+              label="Save guest ledger to account"
+              loading={busy}
+              onPress={() => {
+                setBusy(true);
+                void session.saveGuestToAccount().finally(() => setBusy(false));
+              }}
+            />
+          ) : null}
+          <ListGroup dividerInset={layout.cardPadding}>
+            {user ? (
+              <ListRow chevron onPress={() => router.push("/household")} title="Household" />
+            ) : null}
+            {scope.kind === "household" ? (
+              <ListRow
+                onPress={() => selectScope({ kind: "personal" })}
+                title="Use personal ledger"
+              />
+            ) : null}
+            <ListRow
+              destructive
+              onPress={busy ? undefined : signOut}
+              title={isGuest ? "End guest session" : "Sign out"}
+            />
+          </ListGroup>
+          {session.error ? <Banner message={session.error} tone="negative" /> : null}
+        </View>
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { justifyContent: "space-between", padding: 24 },
-  top: { gap: 24, paddingTop: 24 },
-  header: { gap: 12 },
-  copy: { color: colors.mutedForeground },
-  card: { gap: 12, marginBottom: 12 },
-  error: { color: colors.destructive },
+  content: {
+    gap: space[6],
+    paddingBottom: space[16] + space[8],
+    paddingHorizontal: layout.screenGutter,
+    paddingTop: space[3],
+  },
+  header: { gap: space[2] },
+  actions: { gap: space[4] },
 });

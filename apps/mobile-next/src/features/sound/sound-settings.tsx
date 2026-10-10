@@ -1,7 +1,7 @@
 import { StyleSheet, View } from "react-native";
 
-import { Slider, Surface, Switch, Text } from "@/ui";
-import { colors, spacing } from "@/ui/design-tokens";
+import { Slider } from "@/ui";
+import { layout, ListGroup, ListRow, space, Switch, Text } from "@/ui/trove";
 
 import { playCue } from "./sound-cues";
 import { updateSoundPreferences } from "./sound-store";
@@ -26,21 +26,22 @@ export function SoundSettings() {
   };
 
   return (
-    <Surface variant="raised" style={styles.card}>
-      <View style={styles.row}>
-        <View style={styles.copy}>
-          <Text variant="title">Sounds</Text>
-          <Text variant="caption">Soft cues when you save, delete, or type an amount.</Text>
-        </View>
-        <Switch accessibilityLabel="Sounds" value={enabled} onValueChange={toggleSound} />
-      </View>
+    <ListGroup dividerInset={0}>
+      <ListRow
+        subtitle="Soft cues when you save, delete, or type an amount."
+        title="Sounds"
+        trailing={
+          <Switch accessibilityLabel="Sounds" value={enabled} onValueChange={toggleSound} />
+        }
+      />
       <View style={[styles.volume, !enabled && styles.disabled]}>
-        <View style={styles.row}>
-          <Text variant="label">Volume</Text>
-          <Text variant="label" style={styles.value}>
-            {volumePercent}%
+        <View style={styles.volumeRow}>
+          <Text tone="secondary" variant="labelSm">
+            Volume
           </Text>
+          <Text variant="amountSm">{volumePercent}%</Text>
         </View>
+        {/* Gap: Trove has no slider; the legacy native slider stays. */}
         <Slider
           value={volume}
           step={VOLUME_STEP}
@@ -48,20 +49,16 @@ export function SoundSettings() {
           onValueChange={changeVolume}
         />
       </View>
-    </Surface>
+    </ListGroup>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { gap: spacing[4] },
-  row: {
+  volume: { gap: space[2], padding: layout.cardPadding },
+  volumeRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: spacing[3],
     justifyContent: "space-between",
   },
-  copy: { flex: 1, gap: spacing[1] },
-  volume: { gap: spacing[2] },
-  value: { color: colors.foreground, fontVariant: ["tabular-nums"] },
   disabled: { opacity: 0.48 },
 });

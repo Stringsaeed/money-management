@@ -25,8 +25,8 @@ import { hydrateAiPreferences } from "@/features/ai";
 import { AuthProvider } from "@/features/auth/auth-provider";
 import { hydrateSoundPreferences } from "@/features/sound";
 import { SessionGate } from "@/navigation/session-gate";
-import { colors } from "@/ui/design-tokens";
-import { ToastHost } from "@/ui/toast";
+import { ToastHost as LegacyToastHost } from "@/ui/toast";
+import { colors, space, ToastHost } from "@/ui/trove";
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 void disableDevMenu();
@@ -59,11 +59,13 @@ export default function RootLayout() {
         <AuthProvider>
           <SessionGate />
         </AuthProvider>
-        <ToastHost />
+        {/* Legacy host stays until every `@/ui/toast` showToast caller has migrated. */}
+        <LegacyToastHost />
+        <ToastHost bottomOffset={space[16]} />
         <StatusBar style="auto" />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
 
-const styles = StyleSheet.create({ root: { flex: 1, backgroundColor: colors.background } });
+const styles = StyleSheet.create({ root: { flex: 1, backgroundColor: colors.bg.canvas } });
