@@ -3,6 +3,7 @@ import { format, isToday, isYesterday } from "date-fns";
 import type { V2Category, V2Transaction } from "@trove/api/v2/contracts";
 
 import { parseDateKey } from "@/utils/date";
+import { currencyFractionDigits } from "@/utils/money";
 
 const FALLBACK_CATEGORY_EMOJI = "🏷️";
 
@@ -72,4 +73,14 @@ export function categoryChip(
     accessibilityLabel: `Category: ${category.name}`,
     active: true,
   };
+}
+
+/** "AED · 12,480.50": the currency and grouped balance an account tile shows under its name. */
+export function accountTileSubtitle(currency: string, balanceMinor: number): string {
+  const digits = currencyFractionDigits(currency);
+  const amount = new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(balanceMinor / 10 ** digits);
+  return `${currency} · ${amount}`;
 }

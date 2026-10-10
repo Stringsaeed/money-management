@@ -10,12 +10,15 @@ import { useTransactionActions } from "./use-transaction-actions";
 
 export interface TransactionScreenProps extends TransactionCreateActions {
   readonly id?: string;
-  readonly onBack?: () => void;
+  readonly onBack: () => void;
+  /** Opens a saved transaction for editing, so the AI-filed toast can offer "Change". */
+  readonly onChangeCategory?: (transactionId: string) => void;
 }
 
 export function TransactionScreen({
   id = "new",
   onBack,
+  onChangeCategory,
   onCreateAccount,
   onCreateCategory,
 }: TransactionScreenProps) {
@@ -23,7 +26,7 @@ export function TransactionScreen({
   const categories = useCategoriesQuery();
   const existing = useTransactionQuery(id === "new" ? undefined : id);
   const transaction = existing.data;
-  const actions = useTransactionActions(transaction, onBack);
+  const actions = useTransactionActions(transaction, onBack, onChangeCategory);
 
   if (accounts.isLoading || categories.isLoading || (id !== "new" && existing.isLoading))
     return (
@@ -43,11 +46,9 @@ export function TransactionScreen({
   if (id !== "new" && !transaction)
     return (
       <Screen>
-        {onBack ? (
-          <View style={styles.close}>
-            <IconButton icon="close" accessibilityLabel="Close" onPress={onBack} variant="ghost" />
-          </View>
-        ) : null}
+        <View style={styles.close}>
+          <IconButton icon="close" accessibilityLabel="Close" onPress={onBack} variant="ghost" />
+        </View>
         <View style={styles.empty}>
           <EmptyState
             actionLabel="Try again"

@@ -1,17 +1,19 @@
-import { useState } from "react";
+import { StyleSheet, View } from "react-native";
 
 import type { V2Category } from "@trove/api/v2/contracts";
 
-import { CategoryTile, colors, EmptyState, Icon, ListGroup, ListRow, Sheet } from "@/ui/trove";
+import { EmptyState, OptionTile, OptionTileGrid, Sheet, space, Text } from "@/ui/trove";
 
 import { hasAiPickChoice } from "./ai-pick";
-import { BreadcrumbSegment } from "./breadcrumb-segment";
+import { CategoryPickerSection } from "./category-picker-section";
 import { afterSheetCloses } from "./transaction-create-actions";
-import { categoryChip, categoryEmoji } from "./transaction-display";
+import { TRANSFER_EMOJI } from "./transaction-display";
 
 type CategoryKind = V2Category["kind"];
 
 interface CategoryPickerProps {
+  readonly open: boolean;
+  readonly onDismiss: () => void;
   readonly categories: readonly V2Category[];
   readonly selectedId: string | null;
   readonly isTransfer: boolean;
@@ -24,55 +26,13 @@ interface CategoryPickerProps {
   readonly onCreateCategory?: () => void;
 }
 
-/** 40pt category tile plus its 12pt gap inside the 16pt row padding. */
-const DIVIDER_INSET = 68;
-
-interface CategorySectionProps {
-  readonly title: string;
-  readonly categories: readonly V2Category[];
-  readonly selectedId: string | null;
-  readonly autoSelected: boolean;
-  readonly onSelect: (category: V2Category) => void;
-  readonly onSelectAuto?: () => void;
-}
-
-const checkMark = (selected: boolean) =>
-  selected ? <Icon color={colors.accent.text} name="check" size={20} /> : null;
-
-function CategorySection({
-  title,
-  categories,
-  selectedId,
-  autoSelected,
-  onSelect,
-  onSelectAuto,
-}: CategorySectionProps) {
-  if (categories.length === 0) return null;
-  return (
-    <ListGroup dividerInset={DIVIDER_INSET} header={title}>
-      {onSelectAuto ? (
-        <ListRow
-          key="auto"
-          leading={<CategoryTile icon="✨" />}
-          onPress={onSelectAuto}
-          title="AI pick"
-          trailing={checkMark(autoSelected)}
-        />
-      ) : null}
-      {categories.map((category) => (
-        <ListRow
-          key={category.id}
-          leading={<CategoryTile icon={categoryEmoji(category.icon)} />}
-          onPress={() => onSelect(category)}
-          title={category.name}
-          trailing={checkMark(category.id === selectedId)}
-        />
-      ))}
-    </ListGroup>
-  );
-}
-
+/**
+ * Sheet of category tile grids, one per kind plus the transfer tile. Sections stay (instead of
+ * one flat grid) because a category's kind decides the transaction type.
+ */
 export function CategoryPicker({
+  open,
+  onDismiss,
   categories,
   selectedId,
   isTransfer,
@@ -82,73 +42,68 @@ export function CategoryPicker({
   onSelectAuto,
   onCreateCategory,
 }: CategoryPickerProps) {
-  const [open, setOpen] = useState(false);
   const createCategory = onCreateCategory
     ? () => {
-        setOpen(false);
+        onDismiss();
         afterSheetCloses(onCreateCategory);
       }
     : undefined;
-  const chip = categoryChip(
-    categories.find((item) => item.id === selectedId),
-    isTransfer,
-    autoKind !== null,
-  );
   const highlightedId = isTransfer ? null : selectedId;
   const selectCategory = (category: V2Category) => {
     onSelectCategory(category);
-    setOpen(false);
+    onDismiss();
   };
   const selectAuto = (kind: CategoryKind) =>
     onSelectAuto && hasAiPickChoice(categories, kind)
       ? () => {
           onSelectAuto(kind);
-          setOpen(false);
+          onDismiss();
         }
       : undefined;
+  const section = (title: string, kind: CategoryKind) => (
+    <CategoryPickerSection
+      title={title}
+      categories={categories.filter((item) => item.kind === kind)}
+      selectedId={highlightedId}
+      autoSelected={autoKind === kind}
+      onSelect={selectCategory}
+      onSelectAuto={selectAuto(kind)}
+    />
+  );
 
   return (
-    <>
-      <BreadcrumbSegment {...chip} onPress={() => setOpen(true)} />
-      <Sheet open={open} onDismiss={() => setOpen(false)} title="Category">
-        {categories.length === 0 ? (
-          <EmptyState
-            actionLabel={createCategory ? "Add category" : undefined}
-            framed={false}
-            icon="category"
-            message="Add a category to sort your spending and income. You can still record a transfer below."
-            onAction={createCategory}
-            title="No categories yet"
-          />
-        ) : null}
-        <CategorySection
-          title="Expenses"
-          categories={categories.filter((item) => item.kind === "expense")}
-          selectedId={highlightedId}
-          autoSelected={autoKind === "expense"}
-          onSelect={selectCategory}
-          onSelectAuto={selectAuto("expense")}
+    <Sheet open={open} onDismiss={onDismiss} title="Category">
+      {categories.length === 0 ? (
+        <EmptyState
+          actionLabel={createCategory ? "Add category" : undefined}
+          framed={false}
+          icon="category"
+          message="Add a category to sort your spending and income. You can still record a transfer below."
+          onAction={createCategory}
+          title="No categories yet"
         />
-        <CategorySection
-          title="Income"
-          categories={categories.filter((item) => item.kind === "income")}
-          selectedId={highlightedId}
-          autoSelected={autoKind === "income"}
-          onSelect={selectCategory}
-          onSelectAuto={selectAuto("income")}
-        />
-        <ListGroup header="Move money">
-          <ListRow
-            icon="transfer"
+      ) : null}
+      {section("Expenses", "expense")}
+      {section("Income", "income")}
+      <View style={styles.section}>
+        <Text accessibilityRole="header" tone="secondary" variant="labelMd">
+          Move money
+        </Text>
+        <OptionTileGrid accessibilityLabel="Move money">
+          <OptionTile
+            emoji={TRANSFER_EMOJI}
+            layout="grid"
+            name="Transfer"
             onPress={() => {
               onSelectTransfer();
-              setOpen(false);
+              onDismiss();
             }}
-            title="Transfer"
-            trailing={checkMark(isTransfer)}
+            selected={isTransfer}
           />
-        </ListGroup>
-      </Sheet>
-    </>
+        </OptionTileGrid>
+      </View>
+    </Sheet>
   );
 }
+
+const styles = StyleSheet.create({ section: { gap: space[2] } });
