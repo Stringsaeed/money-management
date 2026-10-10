@@ -1,6 +1,7 @@
 import { StyleSheet, TextInput, View, type TextInputProps } from "react-native";
 
 import { Text, type TextTone } from "../text";
+import { useKeyboardAccessory } from "../pickers/use-keyboard-accessory";
 import { colors, radius, space, type } from "../tokens";
 import { FieldError } from "./field-error";
 import { useFocusState } from "./use-focus-state";
@@ -15,6 +16,14 @@ export interface TextFieldProps extends Omit<
   /** Shown under the field; also switches the field to the negative treatment. */
   error?: string;
   disabled?: boolean;
+  /**
+   * iOS only. Number pads and email keyboards have no return key, so a done bar is added
+   * above them automatically; pass false to opt out, or true to add it to any keyboard.
+   */
+  keyboardAccessory?: boolean;
+  /** Previous / next arrows on the done bar. The arrows show only when one is given. */
+  onPreviousField?: () => void;
+  onNextField?: () => void;
 }
 
 type FieldState = "default" | "focused" | "error" | "disabled";
@@ -32,13 +41,19 @@ const resolveState = (disabled: boolean, error: boolean, focused: boolean): Fiel
   return focused ? "focused" : "default";
 };
 
-/** Pill text field, 52pt: label above, ink ring on focus, negative ring and message on error. */
+/**
+ * Pill text field, 52pt: label above, ink ring on focus, negative ring and message on error.
+ * Number-pad, decimal-pad, phone-pad and email keyboards get a done bar on iOS.
+ */
 export function TextField({
   label,
   value,
   onChangeText,
   error,
   disabled = false,
+  keyboardAccessory,
+  onPreviousField,
+  onNextField,
   onFocus,
   onBlur,
   accessibilityLabel,
@@ -46,6 +61,13 @@ export function TextField({
 }: TextFieldProps) {
   const focus = useFocusState(onFocus, onBlur);
   const state = resolveState(disabled, Boolean(error), focus.focused);
+  const accessory = useKeyboardAccessory({
+    keyboardType: props.keyboardType,
+    inputAccessoryViewID: props.inputAccessoryViewID,
+    enabled: keyboardAccessory,
+    onPrevious: onPreviousField,
+    onNext: onNextField,
+  });
 
   return (
     <View style={styles.field}>
@@ -60,12 +82,14 @@ export function TextField({
         accessibilityState={{ disabled }}
         aria-invalid={Boolean(error)}
         editable={!disabled}
+        inputAccessoryViewID={accessory.inputAccessoryViewID}
         onBlur={focus.onBlur}
         onChangeText={onChangeText}
         onFocus={focus.onFocus}
         style={[styles.input, stateStyles[state]]}
         value={value}
       />
+      {accessory.bar}
       {error ? <FieldError message={error} /> : null}
     </View>
   );

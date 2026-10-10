@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from "react-native";
 
 import { Icon } from "../icon";
+import { useKeyboardAccessory } from "../pickers/use-keyboard-accessory";
 import { colors, layout, motion, radius, space, type } from "../tokens";
 
 export interface SearchFieldProps extends Omit<
@@ -10,6 +11,11 @@ export interface SearchFieldProps extends Omit<
   value: string;
   onChangeText: (value: string) => void;
   placeholder: string;
+  /** iOS only. Added automatically for number-pad and similar keyboards; false opts out. */
+  keyboardAccessory?: boolean;
+  /** Previous / next arrows on the done bar. The arrows show only when one is given. */
+  onPreviousField?: () => void;
+  onNextField?: () => void;
 }
 
 /** Pill search field, 44pt, on fill.neutral. Shows a clear button while it holds text. */
@@ -18,8 +24,18 @@ export function SearchField({
   onChangeText,
   placeholder,
   accessibilityLabel,
+  keyboardAccessory,
+  onPreviousField,
+  onNextField,
   ...props
 }: SearchFieldProps) {
+  const accessory = useKeyboardAccessory({
+    keyboardType: props.keyboardType,
+    inputAccessoryViewID: props.inputAccessoryViewID,
+    enabled: keyboardAccessory,
+    onPrevious: onPreviousField,
+    onNext: onNextField,
+  });
   return (
     <View style={styles.field}>
       <Icon color={colors.text.secondary} name="search" size={20} />
@@ -32,11 +48,13 @@ export function SearchField({
         selectionColor={colors.accent.fill}
         {...props}
         accessibilityLabel={accessibilityLabel ?? placeholder}
+        inputAccessoryViewID={accessory.inputAccessoryViewID}
         onChangeText={onChangeText}
         placeholder={placeholder}
         style={styles.input}
         value={value}
       />
+      {accessory.bar}
       {value ? (
         <Pressable
           accessibilityLabel="Clear search"

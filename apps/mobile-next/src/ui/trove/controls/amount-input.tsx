@@ -10,6 +10,7 @@ import {
   quickPickLabel,
   sanitizeAmountInput,
 } from "./amount-input-utils";
+import { useKeyboardAccessory } from "../pickers/use-keyboard-accessory";
 import { QuickPickChip } from "./quick-pick-chip";
 import { useFocusState } from "./use-focus-state";
 
@@ -24,6 +25,11 @@ export interface AmountInputProps {
   /** Chip amounts in major units, e.g. [50, 100, 250]. Tapping one fills the amount. */
   quickPicks?: readonly number[];
   autoFocus?: boolean;
+  /** iOS only. The decimal pad has no return key, so a done bar shows above it; false hides it. */
+  keyboardAccessory?: boolean;
+  /** Previous / next arrows on the done bar. The arrows show only when one is given. */
+  onPreviousField?: () => void;
+  onNextField?: () => void;
   testID?: string;
 }
 
@@ -38,9 +44,18 @@ export function AmountInput({
   label,
   quickPicks = [],
   autoFocus = false,
+  keyboardAccessory,
+  onPreviousField,
+  onNextField,
   testID,
 }: AmountInputProps) {
   const focus = useFocusState();
+  const accessory = useKeyboardAccessory({
+    keyboardType: "decimal-pad",
+    enabled: keyboardAccessory,
+    onPrevious: onPreviousField,
+    onNext: onNextField,
+  });
   const fractionDigits = currencyFractionDigits(currency);
   const empty = value === "";
 
@@ -71,6 +86,7 @@ export function AmountInput({
           accessibilityLabel={label ?? "Amount"}
           autoFocus={autoFocus}
           caretHidden
+          inputAccessoryViewID={accessory.inputAccessoryViewID}
           keyboardType="decimal-pad"
           onBlur={focus.onBlur}
           onChangeText={(text) => onChangeText(sanitizeAmountInput(text, fractionDigits))}
@@ -79,6 +95,7 @@ export function AmountInput({
           testID={testID}
           value={value}
         />
+        {accessory.bar}
       </View>
       {quickPicks.length > 0 ? (
         <View style={styles.chips}>
