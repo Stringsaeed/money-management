@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { TabBar } from "../tab-bar";
-import { tabWidthFor, indicatorOffset, scopeButtonLabel } from "../utils";
+import { indicatorOffset, scopeButtonLabel, tabBarLayout, tabHitSlop, tabWidthFor } from "../utils";
 import type { TabBarTab } from "../types";
 
 const METRICS = {
@@ -127,14 +127,17 @@ describe("tab bar layout", () => {
 
   it("gives tabs more room with fewer round buttons and never drops below 44pt", () => {
     expect(tabWidthFor(375, 4, 1)).toBe(56);
-    expect(tabWidthFor(375, 4, 3)).toBe(44);
+    expect(tabWidthFor(375, 4, 3)).toBe(40);
   });
 
-  it("uses 56pt tabs on a 390pt screen and shrinks on narrow ones, never below 44pt", () => {
+  it("uses 56pt tabs on a 390pt screen and shrinks on narrow ones, down to 40pt", () => {
     expect(tabWidthFor(390, 4)).toBe(56);
     expect(tabWidthFor(1024, 4)).toBe(56);
     expect(tabWidthFor(375, 4)).toBe(52);
-    expect(tabWidthFor(280, 4)).toBe(44);
+    expect(tabWidthFor(280, 4)).toBe(40);
+    // A 320pt screen fits four 40pt tabs, scope and Add with the compact gap.
+    expect(tabBarLayout(320, 4)).toEqual({ tabWidth: 40, sideGap: 6 });
+    expect(tabHitSlop(40)).toBe(2);
   });
 
   it("slides the indicator one tab plus the 2pt gap per step", () => {

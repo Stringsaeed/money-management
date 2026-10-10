@@ -4,20 +4,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useReducedMotion } from "../../motion";
 import { colors, motion, radius, space, troveTransition } from "../tokens";
-import {
-  BOTTOM_OFFSET,
-  PILL_HEIGHT,
-  PILL_PADDING,
-  SIDE_GAP,
-  TAB_GAP,
-  TAB_HEIGHT,
-} from "./constants";
+import { BOTTOM_OFFSET, PILL_HEIGHT, PILL_PADDING, TAB_GAP, TAB_HEIGHT } from "./constants";
 import { RoundButton } from "./round-button";
 import { SideButtons } from "./side-buttons";
 import { TabBarSurface } from "./tab-bar-surface";
 import { TabButton } from "./tab-button";
 import type { TabBarKey, TabBarScope, TabBarTab } from "./types";
-import { indicatorOffset, roundButtonCount, tabWidthFor } from "./utils";
+import { indicatorOffset, roundButtonCount, tabBarLayout } from "./utils";
 
 export interface TabBarProps {
   tabs: readonly TabBarTab[];
@@ -63,7 +56,7 @@ export function TabBar({
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const reducedMotion = useReducedMotion();
-  const tabWidth = tabWidthFor(
+  const { tabWidth, sideGap } = tabBarLayout(
     windowWidth,
     tabs.length,
     roundButtonCount(onScopePress, onAccounts),
@@ -73,7 +66,7 @@ export function TabBar({
   return (
     <View
       pointerEvents="box-none"
-      style={[styles.wrap, { paddingBottom: insets.bottom + BOTTOM_OFFSET }]}
+      style={[styles.wrap, { gap: sideGap, paddingBottom: insets.bottom + BOTTOM_OFFSET }]}
     >
       <TabBarSurface style={styles.pill}>
         <View accessibilityLabel="Main" accessibilityRole="tablist" style={styles.tabs}>
@@ -122,7 +115,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     bottom: 0,
     flexDirection: "row",
-    gap: SIDE_GAP,
     justifyContent: "center",
     left: 0,
     paddingHorizontal: space[1],

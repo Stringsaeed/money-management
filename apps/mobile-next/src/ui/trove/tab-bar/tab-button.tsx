@@ -7,6 +7,7 @@ import { colors, motion, radius, troveTransition } from "../tokens";
 import { TAB_HEIGHT } from "./constants";
 import { TabBadge } from "./tab-badge";
 import type { TabBarTab } from "./types";
+import { tabHitSlop } from "./utils";
 
 export interface TabButtonProps {
   tab: TabBarTab;
@@ -24,6 +25,7 @@ export function TabButton({ tab, width, fadeFill, reducedMotion, onPress }: TabB
       accessibilityLabel={tab.label}
       accessibilityRole="tab"
       accessibilityState={{ selected: tab.active }}
+      hitSlop={{ left: tabHitSlop(width), right: tabHitSlop(width) }}
       onPress={onPress}
       pressedStyle={tab.active ? undefined : styles.pressed}
       style={[styles.tab, { width }]}
