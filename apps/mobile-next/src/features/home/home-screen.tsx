@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { router } from "expo-router";
-import { useHeaderHeight } from "expo-router/react-navigation";
-import { Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease";
 
 import { useReducedMotion } from "@/ui/motion";
@@ -17,7 +16,6 @@ import { HomeFilters } from "./home-filters";
 
 export function HomeScreen() {
   const home = useHomeData();
-  const headerHeight = useHeaderHeight();
   const reducedMotion = useReducedMotion();
   const [refreshing, setRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState(false);
@@ -33,27 +31,23 @@ export function HomeScreen() {
     }
   };
   return (
-    <Screen edges={[]}>
+    <Screen edges={["top"]}>
       <HomeHeader
         name={home.name}
-        seed={home.seed}
+        initials={home.initials}
+        household={home.scope.kind === "household"}
         onOpenFilters={() => home.setFiltersOpen(true)}
         onOpenProfile={() => router.push("/(tabs)/settings")}
       />
       <ScrollView
         style={styles.screen}
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={[
-          styles.content,
-          Platform.OS === "android" && { paddingTop: headerHeight + space[4] },
-        ]}
+        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => void refresh()}
             tintColor={colors.accent.fill}
-            progressViewOffset={Platform.OS === "android" ? headerHeight : 0}
           />
         }
       >

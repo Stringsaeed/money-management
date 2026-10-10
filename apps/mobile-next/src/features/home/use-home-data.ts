@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import type { FlowChartView } from "@/ui/trove";
 import { ledgerClient } from "@/data/ledger-client";
 import {
   useLedgerData,
@@ -31,7 +32,7 @@ export function useHomeData() {
   const [range, setRange] = useState<HomeOverviewRange>("month");
   const [selectedCurrency, setSelectedCurrency] = useState<string>();
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
-  const [mode, setMode] = useState<"line" | "bar">("line");
+  const [mode, setMode] = useState<FlowChartView>("line");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const { currencies, currency, accountId, accountIds, accountLabel } = homeSelection(
     accounts.data,
@@ -98,10 +99,10 @@ export function useHomeData() {
     accountIds,
   );
   const upcomingItems = upcomingHomeActivity(upcoming.data, recurring.data, currency, accountId);
-  const { name, seed } = homeIdentity(session.principal);
+  const { name, initials } = homeIdentity(session.principal);
   return {
     name,
-    seed,
+    initials,
     scope,
     overview,
     accounts,

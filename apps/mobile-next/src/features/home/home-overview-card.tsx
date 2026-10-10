@@ -1,16 +1,24 @@
 import { StyleSheet, View } from "react-native";
 
-import { BalanceCard, Card, SegmentedControl, space, type SegmentOption } from "@/ui/trove";
-import { HomeChartPanel } from "./home-chart-panel";
+import {
+  BalanceCard,
+  Card,
+  FlowChart,
+  SegmentedControl,
+  space,
+  type FlowChartView,
+  type SegmentOption,
+} from "@/ui/trove";
+import { homeFlowData, homeFlowRangeLabel } from "./home-flow-data";
 import { HomeTotal } from "./home-total";
 import type { HomeOverview, HomeOverviewRange } from "./home-model-types";
 
 interface HomeOverviewCardProps {
   readonly overview: HomeOverview;
-  readonly mode: "line" | "bar";
+  readonly mode: FlowChartView;
   readonly range: HomeOverviewRange;
   readonly accountLabel: string;
-  readonly onMode: (mode: "line" | "bar") => void;
+  readonly onMode: (mode: FlowChartView) => void;
   readonly onRange: (range: HomeOverviewRange) => void;
 }
 
@@ -36,9 +44,13 @@ export function HomeOverviewCard({
         currency={overview.currency}
         caption={`${accountLabel} · ${overview.currency}`}
       />
-      <Card>
-        <HomeChartPanel overview={overview} mode={mode} range={range} onMode={onMode} />
-      </Card>
+      <FlowChart
+        data={homeFlowData(overview, range)}
+        currency={overview.currency}
+        rangeLabel={homeFlowRangeLabel(overview)}
+        view={mode}
+        onViewChange={onMode}
+      />
       <SegmentedControl
         accessibilityLabel="Overview period"
         options={RANGE_OPTIONS}

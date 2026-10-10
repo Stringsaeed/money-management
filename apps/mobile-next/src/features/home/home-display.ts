@@ -1,16 +1,17 @@
 import type { V2Account, V2RecurringRule, V2Transaction } from "@trove/api/v2/contracts";
 import type { UpcomingOccurrence } from "@/data/ledger-schemas";
 import type { AuthPrincipal } from "@/features/auth/auth-types";
-import { currencyFractionDigits } from "@/utils/money";
+import { initialsFor } from "@/ui/trove";
 
 export function homeIdentity(principal: AuthPrincipal | null) {
   if (principal?.kind === "user") {
+    const email = principal.email.trim();
     return {
       name: principal.name.trim().split(/\s+/)[0] || "there",
-      seed: principal.email.trim().toLowerCase(),
+      initials: initialsFor(principal.name) || initialsFor(email),
     };
   }
-  return { name: "friend", seed: principal?.guestSessionId ?? "guest" };
+  return { name: "friend", initials: "G" };
 }
 
 export function homeSelection(
@@ -82,15 +83,6 @@ export function upcomingHomeActivity(
       return [{ ...occurrence, name: rule.name }];
     })
     .slice(0, 5);
-}
-
-export function formatChartMoney(value: number, currency: string) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(value / 10 ** currencyFractionDigits(currency));
 }
 
 /** Trove `Amount` takes signed minor units: spending is negative, money in positive. */

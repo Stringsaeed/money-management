@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, View } from "react-native";
 
-import { Card, Icon, layout, space, Text, type IconName } from "@/ui/trove";
+import { Card, Icon, layout, SoonBadge, space, Text, type IconName } from "@/ui/trove";
 
 const TEASERS = [
   {
@@ -27,9 +27,7 @@ export function HomeBudgetPreview() {
     <View style={styles.section}>
       <View style={styles.heading}>
         <Text variant="titleSm">Budgets</Text>
-        <Text tone="tertiary" variant="stamp">
-          COMING SOON
-        </Text>
+        <SoonBadge />
       </View>
       <ScrollView
         horizontal

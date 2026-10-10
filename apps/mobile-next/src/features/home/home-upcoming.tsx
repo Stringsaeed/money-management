@@ -1,19 +1,18 @@
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { StyleSheet, View } from "react-native";
 import type { UpcomingOccurrence } from "@/data/ledger-schemas";
-import { colors as legacyColors, typography } from "@/ui/design-tokens";
-import { Text as LegacyText } from "@/ui/text";
 import {
-  Amount,
   Banner,
   Button,
   Card,
+  dueInLabel,
   layout,
   ListGroup,
-  ListRow,
+  nextUpcomingIndex,
   Skeleton,
   space,
   Text,
+  UpcomingRow,
 } from "@/ui/trove";
 import { signedMinor } from "./home-display";
 
@@ -30,6 +29,11 @@ const CHIP_WIDTH = 46;
 const DIVIDER_INSET = layout.cardPadding + CHIP_WIDTH + space[3];
 
 export function HomeUpcoming({ items, loading, failed, onOpen, onViewAll }: HomeUpcomingProps) {
+  const today = format(new Date(), "yyyy-MM-dd");
+  const nextIndex = nextUpcomingIndex(
+    items.map((item) => item.scheduledDate),
+    today,
+  );
   return (
     <View style={styles.section}>
       <View style={styles.heading}>
@@ -69,30 +73,16 @@ export function HomeUpcoming({ items, loading, failed, onOpen, onViewAll }: Home
         </Card>
       ) : (
         <ListGroup dividerInset={DIVIDER_INSET}>
-          {items.map((item) => (
-            <ListRow
+          {items.map((item, index) => (
+            <UpcomingRow
               key={`${item.ruleId}:${item.scheduledDate}`}
-              accessibilityLabel={`Open ${item.name}`}
+              date={item.scheduledDate}
               title={item.name}
-              // Gap: Trove has no calendar date chip; the legacy chip stays in the leading slot.
-              leading={
-                <View style={styles.calendar}>
-                  <LegacyText style={styles.month}>
-                    {format(parseISO(item.scheduledDate), "MMM").toUpperCase()}
-                  </LegacyText>
-                  <LegacyText style={styles.day}>
-                    {format(parseISO(item.scheduledDate), "dd")}
-                  </LegacyText>
-                </View>
-              }
-              trailing={
-                <Amount
-                  currency={item.currency}
-                  minor={signedMinor(item.kind, item.amountMinor)}
-                  signDisplay={item.kind === "transfer" ? "never" : "always"}
-                  size="md"
-                />
-              }
+              subtitle={`${dueInLabel(item.scheduledDate, today)} · RECURRING`}
+              minor={signedMinor(item.kind, item.amountMinor)}
+              currency={item.currency}
+              next={index === nextIndex}
+              signDisplay={item.kind === "transfer" ? "never" : "always"}
               onPress={() => onOpen(item.ruleId)}
             />
           ))}
@@ -107,25 +97,4 @@ const styles = StyleSheet.create({
   heading: { alignItems: "center", flexDirection: "row", gap: space[2] },
   copy: { flex: 1 },
   skeletons: { gap: space[3] },
-  calendar: {
-    alignItems: "center",
-    backgroundColor: legacyColors.muted,
-    borderColor: legacyColors.border,
-    borderRadius: 10,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 50,
-    width: CHIP_WIDTH,
-  },
-  month: {
-    color: legacyColors.foreground,
-    fontFamily: typography.fontBodyBold,
-    fontSize: 9,
-    letterSpacing: 1,
-  },
-  day: {
-    color: legacyColors.foreground,
-    fontFamily: typography.fontBodyBold,
-    fontSize: typography.textLg,
-  },
 });
