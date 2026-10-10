@@ -45,7 +45,14 @@ export function ToastHost({ bottomOffset = 0 }: ToastHostProps) {
   return (
     <View
       pointerEvents="box-none"
-      style={[styles.overlay, { bottom: insets.bottom + bottomOffset + space[2] }]}
+      style={[
+        styles.overlay,
+        {
+          bottom: insets.bottom + bottomOffset + space[2],
+          left: insets.left + space[5],
+          right: insets.right + space[5],
+        },
+      ]}
     >
       <EaseView
         key={toast.id}
@@ -70,9 +77,7 @@ export function ToastHost({ bottomOffset = 0 }: ToastHostProps) {
 const styles = StyleSheet.create({
   overlay: {
     alignItems: "center",
-    left: space[5],
     position: "absolute",
-    right: space[5],
   },
   slot: { maxWidth: 420, width: "100%" },
 });

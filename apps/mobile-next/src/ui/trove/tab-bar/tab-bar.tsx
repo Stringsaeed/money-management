@@ -57,7 +57,7 @@ export function TabBar({
   const { width: windowWidth } = useWindowDimensions();
   const reducedMotion = useReducedMotion();
   const { tabWidth, sideGap } = tabBarLayout(
-    windowWidth,
+    windowWidth - insets.left - insets.right,
     tabs.length,
     roundButtonCount(onScopePress, onAccounts),
   );
@@ -66,7 +66,15 @@ export function TabBar({
   return (
     <View
       pointerEvents="box-none"
-      style={[styles.wrap, { gap: sideGap, paddingBottom: insets.bottom + BOTTOM_OFFSET }]}
+      style={[
+        styles.wrap,
+        {
+          gap: sideGap,
+          paddingBottom: insets.bottom + BOTTOM_OFFSET,
+          paddingLeft: insets.left + space[1],
+          paddingRight: insets.right + space[1],
+        },
+      ]}
     >
       <TabBarSurface style={styles.pill}>
         <View accessibilityLabel="Main" accessibilityRole="tablist" style={styles.tabs}>
@@ -117,7 +125,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     left: 0,
-    paddingHorizontal: space[1],
     position: "absolute",
     right: 0,
   },

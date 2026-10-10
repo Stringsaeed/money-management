@@ -19,7 +19,12 @@ export function TroveGalleryScreen({ section }: TroveGalleryScreenProps) {
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: insets.bottom + space[16], paddingTop: insets.top + space[4] },
+          {
+            paddingBottom: insets.bottom + space[16],
+            paddingLeft: insets.left + layout.screenGutter,
+            paddingRight: insets.right + layout.screenGutter,
+            paddingTop: insets.top + space[4],
+          },
         ]}
         keyboardShouldPersistTaps="handled"
         style={styles.scroll}
@@ -46,7 +51,6 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: {
     gap: layout.sectionGap,
-    paddingHorizontal: layout.screenGutter,
   },
   header: { gap: space[1] },
 });
