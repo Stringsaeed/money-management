@@ -1,66 +1,65 @@
-import { StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 
-import { Icon } from "../icon";
-import { PressableScale } from "../pressable-scale";
-import { Text } from "../text";
-import { colors, DENSE_MAX_FONT_SCALE, radius } from "../tokens";
 import { keyPressHaptic } from "./keypad-haptic";
+import { KeyFace } from "./keypad-key-face";
+import { KeypadHoldKey } from "./keypad-hold-key";
 import { keypadKeyLabel, type KeypadKey } from "./keypad-input";
+import { keyStyles } from "./keypad-key-styles";
 
 export interface KeypadKeyButtonProps {
   keyName: KeypadKey;
   /** Character drawn on the decimal key. */
   decimalSeparator: string;
   onPress: (key: KeypadKey) => void;
+  /** Key grows to the row height (min 48) and wears the surface fill and ring. */
+  fill?: boolean;
+  /**
+   * Backspace only: holding it for 600 ms calls this instead of deleting one digit. Omit to keep
+   * the delete key a plain tap.
+   */
+  onClear?: () => void;
+  /** Backspace only: false when there is nothing to clear, so holding does nothing special. */
+  canClear?: boolean;
 }
 
-const KEY_HEIGHT = 64;
-
-/** One 64pt round key. Pressed fills with fill.neutral and taps a light haptic. */
-export function KeypadKeyButton({ keyName, decimalSeparator, onPress }: KeypadKeyButtonProps) {
+/** One round key: 64pt, or row-height in `fill` mode. Pressed fills with fill.neutral and taps a light haptic. */
+export function KeypadKeyButton({
+  keyName,
+  decimalSeparator,
+  onPress,
+  fill = false,
+  onClear,
+  canClear = true,
+}: KeypadKeyButtonProps) {
+  if (keyName === "backspace" && onClear) {
+    return (
+      <KeypadHoldKey
+        canClear={canClear}
+        decimalSeparator={decimalSeparator}
+        fill={fill}
+        onClear={onClear}
+        onPress={onPress}
+      />
+    );
+  }
   return (
-    <View style={styles.cell}>
-      <PressableScale
+    <View style={keyStyles.cell}>
+      <Pressable
         accessibilityLabel={keypadKeyLabel(keyName)}
         accessibilityRole="button"
         onPress={() => {
           keyPressHaptic();
           onPress(keyName);
         }}
-        pressedStyle={styles.pressed}
-        scaleOnPress={false}
-        style={styles.key}
+        pressRetentionOffset={12}
+        style={({ pressed }) => [
+          keyStyles.key,
+          fill ? keyStyles.keyFill : null,
+          pressed ? keyStyles.pressed : null,
+        ]}
       >
         <KeyFace decimalSeparator={decimalSeparator} keyName={keyName} />
-      </PressableScale>
+      </Pressable>
     </View>
   );
 }
-
-function KeyFace({ keyName, decimalSeparator }: Omit<KeypadKeyButtonProps, "onPress">) {
-  if (keyName === "backspace") return <Icon name="backspace" size={26} />;
-  return (
-    <Text maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE} style={styles.label} variant="amountLg">
-      {keyName === "decimal" ? decimalSeparator : keyName}
-    </Text>
-  );
-}
-
-const styles = StyleSheet.create({
-  cell: {
-    flex: 1,
-  },
-  key: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    height: KEY_HEIGHT,
-    justifyContent: "center",
-  },
-  pressed: {
-    backgroundColor: colors.fill.neutral,
-  },
-  label: {
-    fontSize: 26,
-    lineHeight: 32,
-  },
-});

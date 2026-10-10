@@ -19,6 +19,16 @@ export interface KeypadProps {
   maxIntegerDigits?: number;
   /** Character drawn on the decimal key. Defaults to the device locale's separator. */
   decimalSeparator?: string;
+  /**
+   * Fill the height the parent leaves: the pad flexes to 1 and each row shares it (keys never
+   * shorter than 48). Keys also wear the surface fill and `keypad.ring`. Off keeps the fixed 64pt keys.
+   */
+  fill?: boolean;
+  /**
+   * Holding delete for 600 ms clears the whole entry (ring draws, medium haptic) and calls this.
+   * Hold-to-clear is on when this is set or `fill` is on; with `fill` alone it reports `onChange("")`.
+   */
+  onClear?: () => void;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -34,6 +44,8 @@ export function Keypad({
   maxFractionDigits = 2,
   maxIntegerDigits = 9,
   decimalSeparator = DEVICE_DECIMAL_SEPARATOR,
+  fill = false,
+  onClear,
   style,
 }: KeypadProps) {
   const limits = { maxFractionDigits, maxIntegerDigits };
@@ -43,18 +55,27 @@ export function Keypad({
     if (next !== value) onChange(next);
   };
 
+  const handleClear = () => {
+    if (onClear) onClear();
+    else onChange("");
+  };
+  const holdToClear = fill || onClear !== undefined;
+
   return (
-    <View style={[styles.grid, style]}>
+    <View style={[styles.grid, fill ? styles.fill : null, style]}>
       {KEYPAD_ROWS.map((row) => (
-        <View key={row.join("")} style={styles.row}>
+        <View key={row.join("")} style={[styles.row, fill ? styles.fill : null]}>
           {row.map((key) =>
             key === "decimal" && maxFractionDigits === 0 ? (
               <View key={key} style={styles.gap} />
             ) : (
               <KeypadKeyButton
+                canClear={value !== ""}
                 decimalSeparator={decimalSeparator}
+                fill={fill}
                 key={key}
                 keyName={key}
+                onClear={holdToClear ? handleClear : undefined}
                 onPress={handlePress}
               />
             ),
@@ -68,6 +89,9 @@ export function Keypad({
 const styles = StyleSheet.create({
   grid: {
     gap: space[1],
+  },
+  fill: {
+    flex: 1,
   },
   row: {
     flexDirection: "row",

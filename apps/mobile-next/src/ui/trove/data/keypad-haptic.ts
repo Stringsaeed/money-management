@@ -6,3 +6,10 @@ export const keyPressHaptic = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
   }
 };
+
+/** Medium tap when holding delete clears the whole entry. */
+export const keyClearHaptic = () => {
+  if (process.env.EXPO_OS === "ios") {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
+  }
+};
