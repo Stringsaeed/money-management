@@ -1,8 +1,8 @@
 # Trove Next
 
-The replacement Expo app lives alongside `apps/mobile`. Both use Expo SDK 57,
-React Native 0.86, Nunito, and Garden Ledger colors. Trove Next has its own app
-identifier, callback scheme, credentials, and financial data.
+The replacement Expo app lives alongside `apps/mobile`. Both use Expo SDK 57 and
+React Native 0.86. Trove Next is built on the Trove design system (`src/ui/trove`)
+and has its own app identifier, callback scheme, credentials, and financial data.
 
 ## Run locally
 
