@@ -3,8 +3,7 @@ import { StyleSheet, View } from "react-native";
 import type { V2Account, V2Category, V2Transaction } from "@trove/api/v2/contracts";
 
 import type { TransactionInput } from "@/data/ledger-client";
-import { colors, spacing, typography } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { layout, space, Text } from "@/ui/trove";
 
 import { EditorHeader } from "../editor/editor-header";
 import { InlineField } from "../editor/inline-field";
@@ -81,7 +80,7 @@ export function TransactionForm({
             fractionDigits={form.fractionDigits}
           />
           {message ? (
-            <Text accessibilityRole="alert" style={styles.error}>
+            <Text accessibilityRole="alert" style={styles.error} tone="negative" variant="labelMd">
               {message}
             </Text>
           ) : null}
@@ -109,16 +108,12 @@ export function TransactionForm({
 const styles = StyleSheet.create({
   container: { flex: 1 },
   body: { flex: 1 },
-  controls: { paddingTop: spacing[1] },
+  controls: { paddingTop: space[1] },
   amount: {
     flex: 1,
-    gap: spacing[2],
+    gap: space[2],
     justifyContent: "center",
-    paddingHorizontal: spacing[5],
+    paddingHorizontal: layout.screenGutter,
   },
-  error: {
-    color: colors.destructive,
-    fontFamily: typography.fontBodyMedium,
-    textAlign: "center",
-  },
+  error: { textAlign: "center" },
 });

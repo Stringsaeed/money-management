@@ -1,8 +1,6 @@
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { Button } from "@/ui/button";
-import { Text } from "@/ui/text";
-import { colors, spacing, typography } from "@/ui/design-tokens";
+import { Button, Skeleton, space, Text } from "@/ui/trove";
 
 interface TransactionListFooterProps {
   readonly count: number;
@@ -22,31 +20,34 @@ export function TransactionListFooter({
 }: TransactionListFooterProps) {
   if (isFetchingNextPage)
     return (
-      <View style={styles.footer}>
-        <ActivityIndicator color={colors.mutedForeground} accessibilityLabel="Loading more" />
+      <View
+        accessibilityLabel="Loading more"
+        accessibilityState={{ busy: true }}
+        style={styles.footer}
+      >
+        <Skeleton height={space[3]} width={96} />
       </View>
     );
   if (nextPageFailed)
     return (
       <View style={styles.footer}>
-        <Text style={styles.caption}>Couldn’t load older entries.</Text>
-        <Button title="Try again" variant="ghost" onPress={onLoadMore} />
+        <Text tone="secondary" variant="bodySm">
+          Couldn’t load older entries.
+        </Text>
+        <Button label="Try again" onPress={onLoadMore} size="sm" variant="tertiary" />
       </View>
     );
   if (!hasNextPage && count > 0)
     return (
       <View style={styles.footer}>
-        <Text style={styles.caption}>{count === 1 ? "1 entry" : `${count} entries`} · end</Text>
+        <Text tone="secondary" variant="bodySm">
+          {count === 1 ? "1 entry" : `${count} entries`} · end
+        </Text>
       </View>
     );
   return null;
 }
 
 const styles = StyleSheet.create({
-  footer: { alignItems: "center", gap: spacing[2], paddingVertical: spacing[6] },
-  caption: {
-    color: colors.mutedForeground,
-    fontFamily: typography.fontBodyNormal,
-    fontSize: typography.textXs,
-  },
+  footer: { alignItems: "center", gap: space[2], paddingVertical: space[6] },
 });

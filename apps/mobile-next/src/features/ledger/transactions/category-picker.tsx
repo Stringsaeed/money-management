@@ -1,14 +1,8 @@
 import { useState } from "react";
-import { StyleSheet, Text as NativeText, View } from "react-native";
 
 import type { V2Category } from "@trove/api/v2/contracts";
 
-import { spacing, typography } from "@/ui/design-tokens";
-import { EmptyState } from "@/ui/empty-state";
-import { Sheet } from "@/ui/sheet";
-import { Text } from "@/ui/text";
-
-import { OptionTile } from "../editor/option-tile";
+import { CategoryTile, colors, EmptyState, Icon, ListGroup, ListRow, Sheet } from "@/ui/trove";
 
 import { hasAiPickChoice } from "./ai-pick";
 import { BreadcrumbSegment } from "./breadcrumb-segment";
@@ -30,6 +24,9 @@ interface CategoryPickerProps {
   readonly onCreateCategory?: () => void;
 }
 
+/** 40pt category tile plus its 12pt gap inside the 16pt row padding. */
+const DIVIDER_INSET = 68;
+
 interface CategorySectionProps {
   readonly title: string;
   readonly categories: readonly V2Category[];
@@ -38,6 +35,9 @@ interface CategorySectionProps {
   readonly onSelect: (category: V2Category) => void;
   readonly onSelectAuto?: () => void;
 }
+
+const checkMark = (selected: boolean) =>
+  selected ? <Icon color={colors.accent.text} name="check" size={20} /> : null;
 
 function CategorySection({
   title,
@@ -49,24 +49,26 @@ function CategorySection({
 }: CategorySectionProps) {
   if (categories.length === 0) return null;
   return (
-    <View style={styles.section}>
-      <Text variant="label">{title}</Text>
-      <View style={styles.grid}>
-        {onSelectAuto ? (
-          <OptionTile emoji="✨" label="AI pick" selected={autoSelected} onPress={onSelectAuto} />
-        ) : null}
-        {categories.map((category) => (
-          <OptionTile
-            key={category.id}
-            emoji={categoryEmoji(category.icon)}
-            label={category.name}
-            selected={category.id === selectedId}
-            tint={category.color}
-            onPress={() => onSelect(category)}
-          />
-        ))}
-      </View>
-    </View>
+    <ListGroup dividerInset={DIVIDER_INSET} header={title}>
+      {onSelectAuto ? (
+        <ListRow
+          key="auto"
+          leading={<CategoryTile icon="✨" />}
+          onPress={onSelectAuto}
+          title="AI pick"
+          trailing={checkMark(autoSelected)}
+        />
+      ) : null}
+      {categories.map((category) => (
+        <ListRow
+          key={category.id}
+          leading={<CategoryTile icon={categoryEmoji(category.icon)} />}
+          onPress={() => onSelect(category)}
+          title={category.name}
+          trailing={checkMark(category.id === selectedId)}
+        />
+      ))}
+    </ListGroup>
   );
 }
 
@@ -108,18 +110,19 @@ export function CategoryPicker({
   return (
     <>
       <BreadcrumbSegment {...chip} onPress={() => setOpen(true)} />
-      <Sheet open={open} onDismiss={() => setOpen(false)}>
-        <Text variant="title">🏷️ Category</Text>
+      <Sheet open={open} onDismiss={() => setOpen(false)} title="Category">
         {categories.length === 0 ? (
           <EmptyState
-            icon={<NativeText style={styles.emptyEmoji}>🌱</NativeText>}
-            title="No categories yet"
+            actionLabel={createCategory ? "Add category" : undefined}
+            framed={false}
+            icon="category"
             message="Add a category to sort your spending and income. You can still record a transfer below."
-            action={createCategory ? { label: "Add category", onPress: createCategory } : undefined}
+            onAction={createCategory}
+            title="No categories yet"
           />
         ) : null}
         <CategorySection
-          title="💸 Expenses"
+          title="Expenses"
           categories={categories.filter((item) => item.kind === "expense")}
           selectedId={highlightedId}
           autoSelected={autoKind === "expense"}
@@ -127,34 +130,25 @@ export function CategoryPicker({
           onSelectAuto={selectAuto("expense")}
         />
         <CategorySection
-          title="💰 Income"
+          title="Income"
           categories={categories.filter((item) => item.kind === "income")}
           selectedId={highlightedId}
           autoSelected={autoKind === "income"}
           onSelect={selectCategory}
           onSelectAuto={selectAuto("income")}
         />
-        <View style={styles.section}>
-          <Text variant="label">🏦 Move money</Text>
-          <View style={styles.grid}>
-            <OptionTile
-              emoji="🔁"
-              label="Transfer"
-              selected={isTransfer}
-              onPress={() => {
-                onSelectTransfer();
-                setOpen(false);
-              }}
-            />
-          </View>
-        </View>
+        <ListGroup header="Move money">
+          <ListRow
+            icon="transfer"
+            onPress={() => {
+              onSelectTransfer();
+              setOpen(false);
+            }}
+            title="Transfer"
+            trailing={checkMark(isTransfer)}
+          />
+        </ListGroup>
       </Sheet>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  section: { gap: spacing[2] },
-  emptyEmoji: { fontSize: typography.text2xl },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: spacing[2] },
-});

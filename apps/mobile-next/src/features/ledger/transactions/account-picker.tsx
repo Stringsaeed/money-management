@@ -1,13 +1,7 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text as NativeText, View } from "react-native";
-
 import type { V2Account } from "@trove/api/v2/contracts";
 
-import { colors, radii, spacing, typography } from "@/ui/design-tokens";
-import { EmptyState } from "@/ui/empty-state";
-import { Icon } from "@/ui/icon";
-import { Sheet } from "@/ui/sheet";
-import { Text } from "@/ui/text";
+import { colors, EmptyState, Icon, ListGroup, ListRow, Sheet } from "@/ui/trove";
 
 import { BreadcrumbSegment } from "./breadcrumb-segment";
 import { afterSheetCloses } from "./transaction-create-actions";
@@ -51,71 +45,39 @@ export function AccountPicker({
         active={Boolean(selected)}
         onPress={() => setOpen(true)}
       />
-      <Sheet open={open} onDismiss={() => setOpen(false)}>
-        <Text variant="title">
-          {emoji} {title}
-        </Text>
+      <Sheet open={open} onDismiss={() => setOpen(false)} title={title}>
         {accounts.length === 0 ? (
           <EmptyState
-            icon={<NativeText style={styles.emptyEmoji}>🏦</NativeText>}
-            title="No accounts to pick"
+            actionLabel={createAccount ? "Add account" : undefined}
+            framed={false}
+            icon="bank"
             message={emptyMessage}
-            action={createAccount ? { label: "Add account", onPress: createAccount } : undefined}
+            onAction={createAccount}
+            title="No accounts to pick"
           />
-        ) : null}
-        <View style={styles.options}>
-          {accounts.map((account) => {
-            const isSelected = account.id === selectedId;
-            return (
-              <Pressable
+        ) : (
+          <ListGroup>
+            {accounts.map((account) => (
+              <ListRow
                 key={account.id}
-                accessibilityRole="button"
                 accessibilityLabel={account.name}
-                accessibilityState={{ selected: isSelected }}
+                icon="bank"
                 onPress={() => {
                   onChange(account.id);
                   setOpen(false);
                 }}
-                style={[styles.row, isSelected && styles.rowSelected]}
-              >
-                <NativeText style={styles.emoji}>🏦</NativeText>
-                <View style={styles.text}>
-                  <Text style={[styles.name, isSelected && styles.selectedText]}>
-                    {account.name}
-                  </Text>
-                  <Text variant="caption" style={isSelected && styles.selectedSubtext}>
-                    {account.currency}
-                  </Text>
-                </View>
-                {isSelected ? (
-                  <Icon name="check" size={18} weight="bold" color={colors.primaryForeground} />
-                ) : null}
-              </Pressable>
-            );
-          })}
-        </View>
+                subtitle={account.currency}
+                title={account.name}
+                trailing={
+                  account.id === selectedId ? (
+                    <Icon color={colors.accent.text} name="check" size={20} />
+                  ) : null
+                }
+              />
+            ))}
+          </ListGroup>
+        )}
       </Sheet>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  options: { gap: spacing[2] },
-  emptyEmoji: { fontSize: typography.text2xl },
-  row: {
-    alignItems: "center",
-    backgroundColor: colors.surfaceContainer,
-    borderCurve: "continuous",
-    borderRadius: radii.xl,
-    flexDirection: "row",
-    gap: spacing[3],
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3.5],
-  },
-  rowSelected: { backgroundColor: colors.primary },
-  emoji: { fontSize: typography.textLg },
-  text: { flex: 1 },
-  name: { fontFamily: typography.fontBodySemibold, fontSize: typography.textLg },
-  selectedText: { color: colors.primaryForeground },
-  selectedSubtext: { color: colors.primaryForeground, opacity: 0.7 },
-});
