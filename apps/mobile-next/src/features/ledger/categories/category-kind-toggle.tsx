@@ -1,14 +1,12 @@
-import { StyleSheet, View } from "react-native";
-
 import type { CategoryInput } from "@/data/ledger-client";
-import { layout, SegmentedControl, space, type SegmentOption } from "@/ui/trove";
+import { Breadcrumb, type BreadcrumbSegmentSpec } from "@/ui/trove";
 
 type CategoryKind = CategoryInput["kind"];
 
-const OPTIONS = [
-  { value: "expense", label: "Expense" },
-  { value: "income", label: "Income" },
-] as const satisfies readonly SegmentOption<CategoryKind>[];
+const KINDS = [
+  { kind: "expense", emoji: "💸", label: "Expense" },
+  { kind: "income", emoji: "💰", label: "Income" },
+] as const satisfies readonly { kind: CategoryKind; emoji: string; label: string }[];
 
 interface CategoryKindToggleProps {
   readonly kind: CategoryKind;
@@ -17,18 +15,13 @@ interface CategoryKindToggleProps {
 
 /** Expense / income switch for the category editor. */
 export function CategoryKindToggle({ kind, onChange }: CategoryKindToggleProps) {
-  return (
-    <View style={styles.wrapper}>
-      <SegmentedControl
-        accessibilityLabel="Category kind"
-        options={OPTIONS}
-        value={kind}
-        onChange={onChange}
-      />
-    </View>
-  );
-}
+  const segments: readonly BreadcrumbSegmentSpec[] = KINDS.map((option) => ({
+    key: option.kind,
+    emoji: option.emoji,
+    label: option.label,
+    state: option.kind === kind ? "active" : "set",
+    onPress: () => onChange(option.kind),
+  }));
 
-const styles = StyleSheet.create({
-  wrapper: { paddingHorizontal: layout.screenGutter, paddingTop: space[1] },
-});
+  return <Breadcrumb accessibilityLabel="Category kind" segments={segments} variant="toggle" />;
+}

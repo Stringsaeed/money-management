@@ -6,13 +6,8 @@ import type { AccountInput, AccountType } from "@/data/ledger-client";
 import { playCue } from "@/features/sound";
 import { currencyFractionDigits, parseMoneyMinor } from "@/utils/money";
 
-import {
-  applyAmountKey,
-  fitAmountToPrecision,
-  normalizeAmountEntry,
-  type AmountKey,
-} from "../transactions/amount-entry";
-import { errorHaptic, keyHaptic } from "../transactions/transaction-haptics";
+import { fitEntryToPrecision, normalizeEntry } from "./account-entry";
+import { errorHaptic, pickHaptic } from "./editor-haptics";
 import {
   accountDraftError,
   accountInputFromDraft,
@@ -39,27 +34,24 @@ export function useAccountEditor({ account, defaultCurrency, onSubmit }: UseAcco
   const selectCurrency = (currency: string) =>
     update({
       currency,
-      amount: fitAmountToPrecision(draft.amount, currencyFractionDigits(currency)),
+      amount: fitEntryToPrecision(draft.amount, currencyFractionDigits(currency)),
     });
 
-  const toggleSign = () => {
-    keyHaptic();
+  const selectSign = (negative: boolean) => {
+    if (negative === draft.negative) return;
+    pickHaptic();
     playCue("toggle");
-    update({ negative: !draft.negative });
+    update({ negative });
   };
 
-  const pressKey = (key: AmountKey) => {
-    keyHaptic();
+  /** Keypad presses report the next canonical entry; the pad already supplies its own haptic. */
+  const changeAmount = (amount: string) => {
     playCue("key");
-    setValidationError(undefined);
-    setDraft((current) => ({
-      ...current,
-      amount: applyAmountKey(current.amount, key, fractionDigits),
-    }));
+    update({ amount });
   };
 
   const submit = async () => {
-    const amountMinor = parseMoneyMinor(normalizeAmountEntry(draft.amount), draft.currency);
+    const amountMinor = parseMoneyMinor(normalizeEntry(draft.amount), draft.currency);
     const error = accountDraftError(draft, amountMinor);
     if (error || amountMinor === null) {
       errorHaptic();
@@ -78,8 +70,8 @@ export function useAccountEditor({ account, defaultCurrency, onSubmit }: UseAcco
     selectType: (type: AccountType) => update({ type }),
     selectCurrency,
     setName: (name: string) => update({ name }),
-    toggleSign,
-    pressKey,
+    selectSign,
+    changeAmount,
     clearAmount: () => update({ amount: "" }),
     submit,
   };

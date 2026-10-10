@@ -3,6 +3,8 @@ import { StyleSheet, View } from "react-native";
 
 import { Button, CategoryTile, layout, ListGroup, ListRow, space } from "@/ui/trove";
 
+import { categoryEmoji } from "./category-emoji";
+
 export interface CategoryRowProps {
   readonly category: V2Category;
   readonly pendingAction?: string;
@@ -27,7 +29,7 @@ export function CategoryRow({
     // The inline actions sit under the row because a ListRow has a single press target.
     <ListGroup dividerInset={0}>
       <ListRow
-        leading={<CategoryTile icon={category.icon} />}
+        leading={<CategoryTile color={category.color} icon={categoryEmoji(category.icon)} />}
         title={category.name}
         subtitle={`${kind} · ${category.archived ? "Archived" : "Active"}`}
         accessibilityLabel={`Edit ${category.name}`}

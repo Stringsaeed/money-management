@@ -187,6 +187,7 @@ export function AccountScreen({ id, onBack, onEdit, onOpenTransaction }: Account
                 minor={display.minor}
                 currency={item.currency}
                 icon={display.icon}
+                kind={display.kind}
                 signDisplay={display.signDisplay}
                 onPress={() => onOpenTransaction?.(item.id)}
               />

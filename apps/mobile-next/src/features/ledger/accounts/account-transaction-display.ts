@@ -1,8 +1,8 @@
 import type { V2Category, V2Transaction } from "@trove/api/v2/contracts";
 
-import type { SignDisplay } from "@/ui/trove";
+import type { SignDisplay, SystemKind } from "@/ui/trove";
 
-import { transactionTileIcon } from "../transactions/transaction-display";
+import { categoryEmoji } from "../categories/category-emoji";
 
 export interface AccountTransactionDisplay {
   readonly title: string;
@@ -10,8 +10,10 @@ export interface AccountTransactionDisplay {
   /** Signed minor units: spending is negative, money in is positive. */
   readonly minor: number;
   readonly signDisplay: SignDisplay;
-  /** The category's emoji, the transfer emoji, or the neutral Trove "other" icon. */
-  readonly icon: string;
+  /** The category's emoji; undefined when the row shows a system kind tile instead. */
+  readonly icon: string | undefined;
+  /** Transfers and uncategorised rows wear their kind's stroke-icon tile. */
+  readonly kind: SystemKind | undefined;
 }
 
 function titleFor(transaction: V2Transaction, category: V2Category | undefined): string {
@@ -33,6 +35,7 @@ export function accountTransactionDisplay(
     subtitle: rowCategory ? `${transaction.date} · ${rowCategory.name}` : transaction.date,
     minor: transaction.kind === "expense" ? -transaction.amountMinor : transaction.amountMinor,
     signDisplay: isTransfer ? "never" : "always",
-    icon: transactionTileIcon(transaction.kind, rowCategory?.icon),
+    icon: rowCategory ? categoryEmoji(rowCategory.icon) : undefined,
+    kind: rowCategory ? undefined : transaction.kind,
   };
 }

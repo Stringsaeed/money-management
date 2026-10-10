@@ -5,7 +5,7 @@ import type { V2Category } from "@trove/api/v2/contracts";
 import type { CategoryInput } from "@/data/ledger-client";
 import { playCue } from "@/features/sound";
 
-import { errorHaptic, keyHaptic } from "../transactions/transaction-haptics";
+import { errorHaptic, pickHaptic } from "../accounts/editor-haptics";
 import {
   categoryDraftError,
   categoryInputFromDraft,
@@ -27,9 +27,9 @@ export function useCategoryEditor({ category, onSubmit }: UseCategoryEditorOptio
     setDraft((current) => ({ ...current, ...patch }));
   };
 
-  /** Picks from the pad give the same tactile tick as the transaction keypad. */
+  /** Colour and emoji picks give a tactile tick. */
   const pick = (patch: Partial<CategoryDraft>) => {
-    keyHaptic();
+    pickHaptic();
     playCue("key");
     update(patch);
   };
@@ -52,7 +52,7 @@ export function useCategoryEditor({ category, onSubmit }: UseCategoryEditorOptio
     setName: (name: string) => update({ name }),
     selectKind: (kind: CategoryInput["kind"]) => {
       if (kind === draft.kind) return;
-      keyHaptic();
+      pickHaptic();
       playCue("toggle");
       update({ kind });
     },

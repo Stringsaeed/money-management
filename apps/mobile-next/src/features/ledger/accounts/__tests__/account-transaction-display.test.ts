@@ -44,18 +44,32 @@ describe("accountTransactionDisplay", () => {
       minor: -1250,
       signDisplay: "always",
       icon: "🛒",
+      kind: undefined,
     });
   });
 
   it("keeps money in positive", () => {
     expect(
       accountTransactionDisplay(transaction({ kind: "income", note: "Salary" }), undefined),
-    ).toMatchObject({ title: "Salary", minor: 1250, icon: "other" });
+    ).toMatchObject({ title: "Salary", minor: 1250, icon: undefined, kind: "income" });
+  });
+
+  it("falls back to the expense kind tile when nothing is categorised", () => {
+    expect(accountTransactionDisplay(transaction({}), undefined)).toMatchObject({
+      icon: undefined,
+      kind: "expense",
+    });
+  });
+
+  it("renders legacy icon slugs as the fallback emoji", () => {
+    expect(
+      accountTransactionDisplay(transaction({ categoryId: "c1" }), { ...category, icon: "tag" }),
+    ).toMatchObject({ icon: "🏷️", kind: undefined });
   });
 
   it("hides the sign on transfers", () => {
     expect(
       accountTransactionDisplay(transaction({ kind: "transfer", categoryId: "c1" }), category),
-    ).toMatchObject({ title: "Transfer", signDisplay: "never", icon: "🔁" });
+    ).toMatchObject({ title: "Transfer", signDisplay: "never", icon: undefined, kind: "transfer" });
   });
 });
