@@ -3,8 +3,7 @@ import { StyleSheet, View } from "react-native";
 import type { V2Account } from "@trove/api/v2/contracts";
 
 import type { AccountInput } from "@/data/ledger-client";
-import { colors, spacing, typography } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { space, Text } from "@/ui/trove";
 
 import { BreadcrumbBar } from "../editor/breadcrumb-bar";
 import { EditorHeader } from "../editor/editor-header";
@@ -57,7 +56,7 @@ export function AccountEditorForm({
           </BreadcrumbBar>
         </View>
         <View style={styles.amount}>
-          <Text variant="label" style={styles.caption}>
+          <Text tone="secondary" variant="labelSm" style={styles.centered}>
             Opening balance
           </Text>
           <AmountDisplay
@@ -68,7 +67,7 @@ export function AccountEditorForm({
           />
           <BalanceSignToggle negative={form.draft.negative} onToggle={form.toggleSign} />
           {message ? (
-            <Text accessibilityRole="alert" style={styles.error}>
+            <Text accessibilityRole="alert" tone="negative" style={styles.centered}>
               {message}
             </Text>
           ) : null}
@@ -96,17 +95,12 @@ export function AccountEditorForm({
 const styles = StyleSheet.create({
   container: { flex: 1 },
   body: { flex: 1 },
-  controls: { paddingTop: spacing[1] },
+  controls: { paddingTop: space[1] },
   amount: {
     flex: 1,
-    gap: spacing[2],
+    gap: space[2],
     justifyContent: "center",
-    paddingHorizontal: spacing[5],
+    paddingHorizontal: space[5],
   },
-  caption: { textAlign: "center" },
-  error: {
-    color: colors.destructive,
-    fontFamily: typography.fontBodyMedium,
-    textAlign: "center",
-  },
+  centered: { textAlign: "center" },
 });

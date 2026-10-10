@@ -3,10 +3,8 @@ import { StyleSheet, View } from "react-native";
 import type { V2Category } from "@trove/api/v2/contracts";
 
 import type { CategoryInput } from "@/data/ledger-client";
-import { colors, spacing, typography } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { layout, space, Text } from "@/ui/trove";
 
-import { BreadcrumbBar } from "../editor/breadcrumb-bar";
 import { EditorHeader } from "../editor/editor-header";
 import { CategoryKindToggle } from "./category-kind-toggle";
 import { CategoryPreview } from "./category-preview";
@@ -42,11 +40,7 @@ export function CategoryEditorForm({
           onCancel={onCancel}
           onSave={() => void form.submit()}
         />
-        <View style={styles.controls}>
-          <BreadcrumbBar>
-            <CategoryKindToggle kind={form.draft.kind} onChange={form.selectKind} />
-          </BreadcrumbBar>
-        </View>
+        <CategoryKindToggle kind={form.draft.kind} onChange={form.selectKind} />
         <View style={styles.preview}>
           <CategoryPreview
             name={form.draft.name}
@@ -55,7 +49,7 @@ export function CategoryEditorForm({
             onNameChange={form.setName}
           />
           {message ? (
-            <Text accessibilityRole="alert" style={styles.error}>
+            <Text accessibilityRole="alert" tone="negative" style={styles.error}>
               {message}
             </Text>
           ) : null}
@@ -75,16 +69,13 @@ export function CategoryEditorForm({
 const styles = StyleSheet.create({
   container: { flex: 1 },
   body: { flex: 1 },
-  controls: { paddingTop: spacing[1] },
   preview: {
     flex: 1,
-    gap: spacing[2],
+    gap: space[2],
     justifyContent: "center",
   },
   error: {
-    color: colors.destructive,
-    fontFamily: typography.fontBodyMedium,
-    paddingHorizontal: spacing[5],
+    paddingHorizontal: layout.screenGutter,
     textAlign: "center",
   },
 });

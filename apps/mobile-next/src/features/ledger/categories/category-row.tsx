@@ -1,10 +1,7 @@
 import type { V2Category } from "@trove/api/v2/contracts";
 import { StyleSheet, View } from "react-native";
 
-import { Button } from "@/ui/button";
-import { spacing, typography } from "@/ui/design-tokens";
-import { Surface } from "@/ui/surface";
-import { Text } from "@/ui/text";
+import { Button, CategoryTile, layout, ListGroup, ListRow, space } from "@/ui/trove";
 
 export interface CategoryRowProps {
   readonly category: V2Category;
@@ -24,56 +21,64 @@ export function CategoryRow({
   onDelete,
 }: CategoryRowProps) {
   const actionId = (action: "archive" | "restore" | "delete") => `${action}:${category.id}`;
+  const kind = category.kind === "income" ? "Income" : "Expense";
 
   return (
-    <Surface variant="raised" style={styles.card}>
-      <Button
+    // The inline actions sit under the row because a ListRow has a single press target.
+    <ListGroup dividerInset={0}>
+      <ListRow
+        leading={<CategoryTile icon={category.icon} />}
         title={category.name}
-        variant="ghost"
-        disabled={Boolean(pendingAction)}
-        onPress={onEdit}
+        subtitle={`${kind} · ${category.archived ? "Archived" : "Active"}`}
+        accessibilityLabel={`Edit ${category.name}`}
+        onPress={pendingAction ? undefined : onEdit}
       />
-      <Text style={[styles.meta, { color: category.color }]}>
-        {category.kind} · {category.archived ? "Archived" : "Active"}
-      </Text>
       <View style={styles.rowActions}>
         <Button
-          title="Edit"
+          label="Edit"
           variant="secondary"
+          size="sm"
           disabled={Boolean(pendingAction)}
           onPress={onEdit}
         />
         {category.archived ? (
           <Button
-            title="Restore"
-            variant="ghost"
+            label="Restore"
+            variant="tertiary"
+            size="sm"
             loading={pendingAction === actionId("restore")}
             disabled={Boolean(pendingAction && pendingAction !== actionId("restore"))}
             onPress={onRestore}
           />
         ) : (
           <Button
-            title="Archive"
-            variant="ghost"
+            label="Archive"
+            variant="tertiary"
+            size="sm"
             loading={pendingAction === actionId("archive")}
             disabled={Boolean(pendingAction && pendingAction !== actionId("archive"))}
             onPress={onArchive}
           />
         )}
         <Button
-          title="Delete"
-          variant="destructive"
+          label="Delete"
+          variant="delete"
+          size="sm"
           loading={pendingAction === actionId("delete")}
           disabled={Boolean(pendingAction && pendingAction !== actionId("delete"))}
           onPress={onDelete}
         />
       </View>
-    </Surface>
+    </ListGroup>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { gap: spacing[1], padding: spacing[4] },
-  meta: { fontFamily: typography.fontBodyNormal, fontSize: typography.textSm },
-  rowActions: { flexDirection: "row", flexWrap: "wrap", gap: spacing[2] },
+  rowActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: space[2],
+    paddingBottom: space[3],
+    paddingHorizontal: layout.cardPadding,
+  },
 });

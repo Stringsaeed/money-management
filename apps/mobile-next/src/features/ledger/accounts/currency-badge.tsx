@@ -7,16 +7,15 @@ import { currencyGlyph, currencySymbol } from "@/utils/money";
 
 interface CurrencyBadgeProps {
   readonly code: string;
-  readonly inverted?: boolean;
 }
 
 /** Round symbol badge for a currency row: an SVG glyph (SAR, AED) or its text symbol. */
-export function CurrencyBadge({ code, inverted = false }: CurrencyBadgeProps) {
+export function CurrencyBadge({ code }: CurrencyBadgeProps) {
   const glyph = currencyGlyph(code);
   const symbol = currencySymbol(code);
 
   return (
-    <View style={[styles.badge, inverted && styles.badgeInverted]}>
+    <View style={styles.badge}>
       {glyph ? (
         <CurrencyGlyph active name={glyph} size={18} />
       ) : (
@@ -42,7 +41,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[1],
     width: spacing[10],
   },
-  badgeInverted: { backgroundColor: colors.primaryForeground },
   symbol: {
     color: colors.ink,
     fontFamily: typography.fontHeadingBold,

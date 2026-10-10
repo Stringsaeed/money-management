@@ -2,19 +2,28 @@ import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { LegendList } from "@legendapp/list/react-native";
 
-import { useAccountsQuery } from "@/data/ledger-queries";
+import { useAccountsQuery, useCategoriesQuery } from "@/data/ledger-queries";
 import { useTransactionPagesQuery } from "@/data/transaction-list-queries";
 import { useLedgerMutationsWithSound } from "@/features/sound";
-import { Button } from "@/ui/button";
-import { EmptyState } from "@/ui/empty-state";
-import { Screen } from "@/ui/screen";
-import { Text } from "@/ui/text";
-import { colors, spacing, typography } from "@/ui/design-tokens";
-import { formatMoneyMinor } from "@/utils/money";
+import {
+  BalanceCard,
+  Banner,
+  Button,
+  colors,
+  EmptyState,
+  Header,
+  layout,
+  Screen,
+  SectionHeader,
+  Skeleton,
+  space,
+  TransactionRow,
+} from "@/ui/trove";
 
 import { TransactionListFooter } from "../transactions/transaction-list-footer";
-import { TransactionRow } from "../transactions/transaction-row";
 import { confirmLedgerDeletion } from "../delete-confirmation";
+import { accountTransactionDisplay } from "./account-transaction-display";
+import { accountTypeOption } from "./account-display";
 
 export interface AccountScreenProps {
   readonly id?: string;
@@ -25,6 +34,7 @@ export interface AccountScreenProps {
 
 export function AccountScreen({ id, onBack, onEdit, onOpenTransaction }: AccountScreenProps) {
   const accounts = useAccountsQuery();
+  const categories = useCategoriesQuery();
   const account = accounts.data.find((item) => item.id === id);
   const transactions = useTransactionPagesQuery({ accountIds: id ? [id] : [] });
   const mutations = useLedgerMutationsWithSound();
@@ -34,40 +44,59 @@ export function AccountScreen({ id, onBack, onEdit, onOpenTransaction }: Account
   if (accounts.isLoading)
     return (
       <Screen>
-        <Text style={styles.status}>Loading account…</Text>
+        <View style={styles.top}>
+          <Header variant="compact" title="Account" onBack={onBack} />
+        </View>
+        <View accessibilityState={{ busy: true }} style={styles.loading}>
+          <Skeleton height={32} width="60%" />
+          <Skeleton height={96} />
+        </View>
       </Screen>
     );
   if (!account)
     return (
       <Screen>
-        <EmptyState
-          title="Account not found"
-          message="This account may have been removed."
-          onRetry={() => void accounts.retry()}
-        />
+        <View style={styles.top}>
+          <Header variant="compact" title="Account" onBack={onBack} />
+        </View>
+        <View style={styles.loading}>
+          <EmptyState
+            title="Account not found"
+            message="This account may have been removed."
+            icon="info"
+            actionLabel="Try again"
+            onAction={() => void accounts.retry()}
+          />
+        </View>
       </Screen>
     );
 
+  const typeLabel = accountTypeOption(account.type).label;
+
   return (
     <Screen>
+      <View style={styles.top}>
+        <Header variant="compact" title={account.name} onBack={onBack} />
+      </View>
       <LegendList
         data={transactions.data}
         keyExtractor={(item) => item.id}
-        estimatedItemSize={68}
+        estimatedItemSize={64}
         contentContainerStyle={styles.content}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Button title="Back" variant="ghost" onPress={onBack} />
-            <Text variant="headline">{account.name}</Text>
-            <Text variant="amount">{formatMoneyMinor(account.balanceMinor, account.currency)}</Text>
-            <Text style={styles.meta}>
-              {account.type.replace("_", " ")} · {account.currency}
-            </Text>
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+            <BalanceCard
+              label={typeLabel}
+              minor={account.balanceMinor}
+              currency={account.currency}
+              caption={`${typeLabel} · ${account.currency}`}
+            />
+            {error ? <Banner tone="negative" message={error} /> : null}
             <View style={styles.actions}>
               <Button
-                title="Edit"
+                label="Edit"
                 variant="secondary"
+                size="sm"
                 disabled={deleteBusy}
                 onPress={() => {
                   setError(undefined);
@@ -75,8 +104,9 @@ export function AccountScreen({ id, onBack, onEdit, onOpenTransaction }: Account
                 }}
               />
               <Button
-                title={account.archived ? "Restore" : "Archive"}
-                variant="ghost"
+                label={account.archived ? "Restore" : "Archive"}
+                variant="tertiary"
+                size="sm"
                 disabled={deleteBusy}
                 onPress={() =>
                   void (
@@ -89,8 +119,9 @@ export function AccountScreen({ id, onBack, onEdit, onOpenTransaction }: Account
                 }
               />
               <Button
-                title="Delete account"
-                variant="destructive"
+                label="Delete account"
+                variant="delete"
+                size="sm"
                 loading={deleteBusy}
                 disabled={deleteBusy}
                 onPress={() =>
@@ -112,7 +143,7 @@ export function AccountScreen({ id, onBack, onEdit, onOpenTransaction }: Account
                 }
               />
             </View>
-            <Text variant="title">Transactions</Text>
+            <SectionHeader title="Transactions" />
           </View>
         }
         onEndReached={transactions.loadMore}
@@ -131,21 +162,37 @@ export function AccountScreen({ id, onBack, onEdit, onOpenTransaction }: Account
             <EmptyState
               title="Transactions are unavailable"
               message="Check your connection and try again."
-              onRetry={() => void transactions.refresh()}
+              icon="info"
+              actionLabel="Try again"
+              onAction={() => void transactions.refresh()}
             />
           ) : (
             <EmptyState
               title="No transactions"
               message="Transactions for this account will appear here."
+              icon="receipt"
             />
           )
         }
-        renderItem={({ item }) => (
-          <TransactionRow
-            transaction={item}
-            onPress={(transaction) => onOpenTransaction?.(transaction.id)}
-          />
-        )}
+        renderItem={({ item }) => {
+          const display = accountTransactionDisplay(
+            item,
+            categories.data.find((category) => category.id === item.categoryId),
+          );
+          return (
+            <View style={styles.row}>
+              <TransactionRow
+                title={display.title}
+                subtitle={display.subtitle}
+                minor={display.minor}
+                currency={item.currency}
+                icon={display.icon}
+                signDisplay={display.signDisplay}
+                onPress={() => onOpenTransaction?.(item.id)}
+              />
+            </View>
+          );
+        }}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
     </Screen>
@@ -153,20 +200,16 @@ export function AccountScreen({ id, onBack, onEdit, onOpenTransaction }: Account
 }
 
 const styles = StyleSheet.create({
+  top: { paddingHorizontal: layout.screenGutter },
+  loading: { gap: space[4], padding: layout.screenGutter },
   content: {
-    gap: spacing[3],
-    paddingBottom: spacing[16],
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[4],
+    paddingBottom: space[16],
+    paddingHorizontal: layout.screenGutter,
+    paddingTop: space[4],
   },
-  header: { gap: spacing[3] },
-  actions: { flexDirection: "row", flexWrap: "wrap", gap: spacing[2] },
-  meta: {
-    color: colors.mutedForeground,
-    fontFamily: typography.fontBodyNormal,
-    fontSize: typography.textSm,
-  },
-  separator: { backgroundColor: colors.ledgerOutline, height: 1 },
-  status: { color: colors.mutedForeground, padding: spacing[5] },
-  error: { color: colors.destructive },
+  header: { gap: space[4], paddingBottom: space[2] },
+  actions: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
+  // The row carries its own card padding; bleed it so the tile lines up with the gutter.
+  row: { marginHorizontal: -layout.cardPadding },
+  separator: { backgroundColor: colors.border.subtle, height: StyleSheet.hairlineWidth },
 });
