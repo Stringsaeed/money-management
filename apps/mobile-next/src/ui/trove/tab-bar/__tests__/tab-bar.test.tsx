@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { TabBar } from "../tab-bar";
-import { tabWidthFor, indicatorOffset } from "../utils";
+import { tabWidthFor, indicatorOffset, scopeButtonLabel } from "../utils";
 import type { TabBarTab } from "../types";
 
 const METRICS = {
@@ -70,7 +70,66 @@ describe("TabBar", () => {
   });
 });
 
+describe("TabBar v2", () => {
+  const v2Tabs = (active: TabBarTab["key"]): TabBarTab[] => [
+    { key: "home", label: "Home", active: active === "home" },
+    { key: "ledger", label: "Ledger", active: active === "ledger" },
+    { key: "market", label: "Market", active: active === "market" },
+    { key: "settings", label: "Settings", active: active === "settings" },
+  ];
+
+  it("renders and reports the market tab", async () => {
+    const onTabPress = jest.fn();
+    await render(
+      <SafeAreaProvider initialMetrics={METRICS}>
+        <TabBar onAdd={jest.fn()} onTabPress={onTabPress} tabs={v2Tabs("market")} />
+      </SafeAreaProvider>,
+    );
+    expect(screen.getByRole("tab", { name: "Market" }).props.accessibilityState).toEqual({
+      selected: true,
+    });
+    await fireEvent.press(screen.getByRole("tab", { name: "Home" }));
+    await fireEvent.press(screen.getByRole("tab", { name: "Market" }));
+    expect(onTabPress).toHaveBeenLastCalledWith("market");
+  });
+
+  it("shows the scope button instead of Accounts and fires onScopePress", async () => {
+    const onScopePress = jest.fn();
+    await renderBar({ onAccounts: undefined, onScopePress, scope: "personal" });
+    expect(screen.queryByRole("button", { name: "Accounts" })).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Scope: Personal" }));
+    expect(onScopePress).toHaveBeenCalledTimes(1);
+  });
+
+  it("names the household scope and reports the open menu", async () => {
+    await renderBar({
+      onAccounts: undefined,
+      onScopePress: jest.fn(),
+      scope: "household",
+      scopeExpanded: true,
+    });
+    const button = screen.getByRole("button", { name: "Scope: Household" });
+    expect(button.props.accessibilityState).toEqual({ expanded: true });
+  });
+
+  it("can show Accounts and the scope button together", async () => {
+    await renderBar({ onScopePress: jest.fn() });
+    expect(screen.getByRole("button", { name: "Accounts" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Scope: Personal" })).toBeTruthy();
+  });
+});
+
 describe("tab bar layout", () => {
+  it("labels the scope button by scope", () => {
+    expect(scopeButtonLabel("personal")).toBe("Scope: Personal");
+    expect(scopeButtonLabel("household")).toBe("Scope: Household");
+  });
+
+  it("gives tabs more room with fewer round buttons and never drops below 44pt", () => {
+    expect(tabWidthFor(375, 4, 1)).toBe(56);
+    expect(tabWidthFor(375, 4, 3)).toBe(44);
+  });
+
   it("uses 56pt tabs on a 390pt screen and shrinks on narrow ones, never below 44pt", () => {
     expect(tabWidthFor(390, 4)).toBe(56);
     expect(tabWidthFor(1024, 4)).toBe(56);

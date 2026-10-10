@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, type ColorValue } from "react-native";
 
 import { Icon, type IconName } from "../icon";
 import { PressableScale } from "../pressable-scale";
@@ -9,6 +9,10 @@ export interface HeaderAction {
   /** Required: header actions are icon-only. */
   label: string;
   onPress: () => void;
+  /** `negative` tints a destructive action, e.g. delete. */
+  tone?: "negative";
+  /** Greys the action out and blocks presses, e.g. Save until the form is valid. */
+  disabled?: boolean;
 }
 
 export interface HeaderActionButtonProps extends HeaderAction {
@@ -18,10 +22,22 @@ export interface HeaderActionButtonProps extends HeaderAction {
   align?: "start" | "center" | "end";
 }
 
+function iconColor(tone: HeaderAction["tone"], disabled: boolean): ColorValue {
+  if (disabled) return colors.text.disabled;
+  return tone === "negative" ? colors.negative.text : colors.text.primary;
+}
+
+function fillStyle(tone: HeaderAction["tone"], disabled: boolean) {
+  if (disabled) return styles.filledDisabled;
+  return tone === "negative" ? styles.filledNegative : styles.filled;
+}
+
 export function HeaderActionButton({
   icon,
   label,
   onPress,
+  tone,
+  disabled = false,
   appearance,
   align = "end",
 }: HeaderActionButtonProps) {
@@ -31,11 +47,13 @@ export function HeaderActionButton({
     <PressableScale
       accessibilityLabel={label}
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
-      pressedStyle={filled ? styles.filledPressed : null}
-      style={[styles.base, filled ? styles.filled : alignStyles[align]]}
+      pressedStyle={filled && tone !== "negative" ? styles.filledPressed : null}
+      style={[styles.base, filled ? fillStyle(tone, disabled) : alignStyles[align]]}
     >
-      <Icon color={colors.text.primary} name={icon} size={filled ? 20 : 24} />
+      <Icon color={iconColor(tone, disabled)} name={icon} size={filled ? 20 : 24} />
     </PressableScale>
   );
 }
@@ -48,6 +66,8 @@ const styles = StyleSheet.create({
     width: layout.minTouchTarget,
   },
   filled: { backgroundColor: colors.fill.neutral, borderRadius: radius.full },
+  filledNegative: { backgroundColor: colors.negative.subtle, borderRadius: radius.full },
+  filledDisabled: { backgroundColor: colors.fill.neutral, borderRadius: radius.full },
   filledPressed: { backgroundColor: colors.border.default },
 });
 

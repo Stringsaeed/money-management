@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, type ColorValue } from "react-native";
 
 import { Icon, type IconName } from "../icon";
 import { PressableScale } from "../pressable-scale";
@@ -13,32 +13,53 @@ export interface RoundButtonProps {
   icon: IconName;
   /** `surface` is the bar's material; `accent` is the single highlighter button. */
   variant: "surface" | "accent";
+  /** Surface variant only: a household-tinted fill with a 2pt accent ring, no blur. */
+  tinted?: boolean;
+  /** Reports an open menu to assistive tech; leave undefined for plain buttons. */
+  expanded?: boolean;
   onPress: () => void;
   onLongPress?: () => void;
   badge?: boolean;
 }
 
-/** A 60pt circle beside the pill: Accounts (surface) or Add (accent fill, accent.on icon). */
+type Look = "surface" | "tinted" | "accent";
+
+const lookFor = (variant: RoundButtonProps["variant"], tinted: boolean): Look => {
+  if (variant === "accent") return "accent";
+  return tinted ? "tinted" : "surface";
+};
+
+const ICON_COLOR = {
+  surface: colors.text.primary,
+  tinted: colors.accent.text,
+  accent: colors.accent.on,
+} as const satisfies Record<Look, ColorValue>;
+
+/** A 60pt circle beside the pill: Accounts or Scope (surface) or Add (accent fill, accent.on icon). */
 export function RoundButton({
   label,
   icon,
   variant,
+  tinted = false,
+  expanded,
   onPress,
   onLongPress,
   badge = false,
 }: RoundButtonProps) {
-  const accent = variant === "accent";
+  const look = lookFor(variant, tinted);
+  const accent = look === "accent";
   const button = (
     <PressableScale
       accessibilityLabel={label}
       accessibilityRole="button"
+      accessibilityState={expanded === undefined ? undefined : { expanded }}
       onLongPress={onLongPress}
       onPress={onPress}
-      pressedStyle={accent ? styles.accentPressed : styles.surfacePressed}
-      style={[styles.button, accent && styles.accent]}
+      pressedStyle={pressedStyles[look]}
+      style={[styles.button, fillStyles[look]]}
     >
       <Icon
-        color={accent ? colors.accent.on : colors.text.primary}
+        color={ICON_COLOR[look]}
         name={icon}
         size={accent ? 26 : 24}
         strokeWidth={accent ? 2.25 : undefined}
@@ -47,10 +68,10 @@ export function RoundButton({
     </PressableScale>
   );
 
-  return accent ? (
-    <View style={styles.accentShell}>{button}</View>
-  ) : (
+  return look === "surface" ? (
     <TabBarSurface style={styles.surface}>{button}</TabBarSurface>
+  ) : (
+    <View style={styles.shell}>{button}</View>
   );
 }
 
@@ -63,12 +84,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: ROUND_BUTTON_SIZE,
   },
-  accentShell: {
+  shell: {
     borderRadius: radius.full,
     boxShadow: [{ offsetX: 0, offsetY: 8, blurRadius: 24, color: colors.tabBar.shadow }],
   },
-  accent: { backgroundColor: colors.accent.fill },
-  accentPressed: { backgroundColor: colors.accent.pressed },
-  surfacePressed: { backgroundColor: colors.fill.neutral },
   badge: { right: 14, top: 14 },
+});
+
+const fillStyles = StyleSheet.create({
+  surface: {},
+  accent: { backgroundColor: colors.accent.fill },
+  tinted: {
+    backgroundColor: colors.accent.subtle,
+    borderColor: colors.accent.text,
+    borderWidth: 2,
+  },
+});
+
+const pressedStyles = StyleSheet.create({
+  surface: { backgroundColor: colors.fill.neutral },
+  accent: { backgroundColor: colors.accent.pressed },
+  // The tinted ring button gives scale feedback only.
+  tinted: {},
 });

@@ -13,17 +13,26 @@ import {
   TAB_HEIGHT,
 } from "./constants";
 import { RoundButton } from "./round-button";
+import { SideButtons } from "./side-buttons";
 import { TabBarSurface } from "./tab-bar-surface";
 import { TabButton } from "./tab-button";
-import type { TabBarKey, TabBarTab } from "./types";
-import { indicatorOffset, tabWidthFor } from "./utils";
+import type { TabBarKey, TabBarScope, TabBarTab } from "./types";
+import { indicatorOffset, roundButtonCount, tabWidthFor } from "./utils";
 
 export interface TabBarProps {
   tabs: readonly TabBarTab[];
   /** Called for every tab press, including the active one (re-tap scrolls to top). */
   onTabPress: (key: TabBarKey) => void;
-  onAccounts: () => void;
+  /** Shows the round Accounts button. Omit it where the scope button takes that slot. */
+  onAccounts?: () => void;
   onAdd: () => void;
+  /** Current ledger scope; the scope button shows its icon, and a household keeps a tinted ring. */
+  scope?: TabBarScope;
+  /** Shows the round scope button, typically opening the Personal / Household menu. */
+  onScopePress?: () => void;
+  /** True while the scope menu is open (reported to screen readers). */
+  scopeExpanded?: boolean;
+  scopeLabel?: string;
   /** Long press on Add, e.g. to start a transfer. */
   onAddLongPress?: () => void;
   /** Dot on Accounts: a bank sync needs attention. */
@@ -33,14 +42,19 @@ export interface TabBarProps {
 }
 
 /**
- * Floating navigation: an icon-only pill of tabs, a round Accounts button and a round
- * accent Add button, 8pt above the safe-area inset. Business actions come in as props.
+ * Floating navigation: an icon-only pill of tabs, optional round scope and Accounts buttons
+ * and a round accent Add button, 8pt above the safe-area inset. Business actions come in
+ * as props.
  */
 export function TabBar({
   tabs,
   onTabPress,
   onAccounts,
   onAdd,
+  scope = "personal",
+  onScopePress,
+  scopeExpanded,
+  scopeLabel,
   onAddLongPress,
   accountsBadge = false,
   accountsLabel = "Accounts",
@@ -49,7 +63,11 @@ export function TabBar({
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const reducedMotion = useReducedMotion();
-  const tabWidth = tabWidthFor(windowWidth, tabs.length);
+  const tabWidth = tabWidthFor(
+    windowWidth,
+    tabs.length,
+    roundButtonCount(onScopePress, onAccounts),
+  );
   const activeIndex = tabs.findIndex((tab) => tab.active);
 
   return (
@@ -79,12 +97,14 @@ export function TabBar({
           ))}
         </View>
       </TabBarSurface>
-      <RoundButton
-        badge={accountsBadge}
-        icon="accounts"
-        label={accountsLabel}
-        onPress={onAccounts}
-        variant="surface"
+      <SideButtons
+        accountsBadge={accountsBadge}
+        accountsLabel={accountsLabel}
+        onAccounts={onAccounts}
+        onScopePress={onScopePress}
+        scope={scope}
+        scopeExpanded={scopeExpanded}
+        scopeLabel={scopeLabel}
       />
       <RoundButton
         icon="add"

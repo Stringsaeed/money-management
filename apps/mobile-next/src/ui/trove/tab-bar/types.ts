@@ -1,7 +1,13 @@
 import type { NavIconName } from "../icon";
 
 /** Destinations in the pill; each key picks its outline/filled icon pair. */
-export type TabBarKey = Extract<NavIconName, "home" | "ledger" | "insights" | "settings">;
+export type TabBarKey = Extract<
+  NavIconName,
+  "home" | "ledger" | "insights" | "market" | "settings"
+>;
+
+/** Which ledger every tab shows: the person's own, or the shared household one. */
+export type TabBarScope = "personal" | "household";
 
 export interface TabBarTab {
   key: TabBarKey;

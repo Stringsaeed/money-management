@@ -1,8 +1,11 @@
+import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { Text } from "../text";
 import { colors, layout, space } from "../tokens";
 import { HeaderActionButton, type HeaderAction } from "./header-action-button";
+import { HeaderPrimaryActionButton, type HeaderPrimaryAction } from "./header-primary-action";
+import { largeTitleVariant } from "./utils";
 
 interface HeaderBaseProps {
   title: string;
@@ -12,6 +15,12 @@ interface HeaderBaseProps {
 
 export interface LargeHeaderProps extends HeaderBaseProps {
   variant?: "large";
+  /** Slot before the title, typically an `<Avatar size={44} />`. */
+  leading?: ReactNode;
+  /** Mono date stamp above the title, e.g. "SAT 10.10.26". */
+  stamp?: string;
+  /** Accent pill after the icon actions, e.g. `{ label: "Add", icon: "add", onPress }`. */
+  primaryAction?: HeaderPrimaryAction;
 }
 
 export interface CompactHeaderProps extends HeaderBaseProps {
@@ -32,21 +41,27 @@ export function Header(props: HeaderProps) {
   return <LargeHeader {...props} />;
 }
 
-function LargeHeader({ title, actions = [] }: LargeHeaderProps) {
+function LargeHeader({ title, actions = [], leading, stamp, primaryAction }: LargeHeaderProps) {
+  const variant = largeTitleVariant(Boolean(leading || stamp || primaryAction));
+
   return (
     <View style={styles.large}>
-      <Text
-        accessibilityRole="header"
-        numberOfLines={1}
-        style={styles.largeTitle}
-        variant="display"
-      >
-        {title}
-      </Text>
+      {leading ? <View style={styles.leading}>{leading}</View> : null}
+      <View style={styles.titleBlock}>
+        {stamp ? (
+          <Text numberOfLines={1} tone="tertiary" variant="stamp">
+            {stamp}
+          </Text>
+        ) : null}
+        <Text accessibilityRole="header" numberOfLines={1} variant={variant}>
+          {title}
+        </Text>
+      </View>
       <View style={styles.actions}>
         {actions.map((action) => (
           <HeaderActionButton key={action.label} {...action} appearance="filled" />
         ))}
+        {primaryAction ? <HeaderPrimaryActionButton {...primaryAction} /> : null}
       </View>
     </View>
   );
@@ -99,8 +114,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     minHeight: layout.minTouchTarget,
   },
-  largeTitle: { flexShrink: 1 },
-  actions: { flexDirection: "row", gap: space[1] },
+  leading: { flexShrink: 0 },
+  titleBlock: { flex: 1, flexShrink: 1 },
+  actions: { alignItems: "center", flexDirection: "row", flexShrink: 0, gap: space[1] },
   compact: {
     alignItems: "center",
     borderBottomColor: colors.border.subtle,
