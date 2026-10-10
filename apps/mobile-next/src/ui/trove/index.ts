@@ -140,3 +140,5 @@ export type {
 } from "./charts";
 export { TabBar } from "./tab-bar";
 export type { TabBarKey, TabBarProps, TabBarTab } from "./tab-bar";
+export { Screen } from "./layout";
+export type { ScreenProps } from "./layout";
