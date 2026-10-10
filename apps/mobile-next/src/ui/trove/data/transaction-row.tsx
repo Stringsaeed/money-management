@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { amountAccessibilityLabel, Amount, type SignDisplay } from "../amount";
 import { Text } from "../text";
 import { DENSE_MAX_FONT_SCALE, layout, space, type CategoryKey } from "../tokens";
+import type { SystemKind } from "../category/kinds";
 import { CategoryTile } from "./category-tile";
 import { PressableRow } from "./pressable-row";
 import { joinSpoken } from "./utils";
@@ -14,10 +15,14 @@ export interface TransactionRowProps {
   /** Integer minor units. Negative is spending; positive is money in. */
   minor: number;
   currency: string;
-  /** Trove category icon name or emoji. */
-  icon: string;
+  /** Trove category icon name or emoji. Defaults to the neutral "other" icon. */
+  icon?: string;
+  /** System kind (no category): draws the kind stroke icon instead of `icon`. */
+  kind?: SystemKind;
   /** Tinted tile for category screens; lists keep the neutral tile. */
   tint?: CategoryKey;
+  /** The user's category colour, for category screens; lists keep the neutral tile. */
+  color?: string;
   /** `always` (default) prints `+` on money in. */
   signDisplay?: SignDisplay;
   onPress?: () => void;
@@ -38,8 +43,10 @@ export function TransactionRow({
   subtitle,
   minor,
   currency,
-  icon,
+  icon = "other",
+  kind,
   tint,
+  color,
   signDisplay = "always",
   onPress,
   testID,
@@ -51,7 +58,7 @@ export function TransactionRow({
       style={styles.row}
       testID={testID}
     >
-      <CategoryTile icon={icon} tint={tint} />
+      {kind ? <CategoryTile kind={kind} /> : <CategoryTile color={color} icon={icon} tint={tint} />}
       <View style={styles.text}>
         <Text maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE} numberOfLines={1} variant="labelMd">
           {title}
