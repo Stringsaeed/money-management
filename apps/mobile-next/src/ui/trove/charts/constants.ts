@@ -15,3 +15,14 @@ export const BALANCE_LABEL_ROW = 24;
 export const BALANCE_TOTAL_HEIGHT = BALANCE_TOOLTIP_ROW + BALANCE_PLOT_HEIGHT + BALANCE_LABEL_ROW;
 /** Keeps the end dots and their 2pt rings inside the SVG. */
 export const BALANCE_PAD_X = 6;
+
+/** Flow chart (income vs spending per period) geometry, in points. */
+export const FLOW_PLOT_HEIGHT = 128;
+export const FLOW_LABEL_ROW = 22;
+export const FLOW_TOTAL_HEIGHT = FLOW_PLOT_HEIGHT + FLOW_LABEL_ROW;
+/** Right gutter holding the y-axis tick labels. */
+export const FLOW_Y_GUTTER = 28;
+/** Widest a single income or spending bar may grow. */
+export const FLOW_MAX_BAR_WIDTH = 12;
+/** Space between the income and spending bars of one period. */
+export const FLOW_BAR_GAP = 2;

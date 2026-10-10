@@ -8,3 +8,6 @@ export { StatTile } from "./stat-tile";
 export type { StatTileProps } from "./stat-tile";
 export { foldCategories } from "./utils";
 export type { CategoryAmount, CategorySlice } from "./utils";
+export { FlowChart } from "./flow-chart";
+export type { FlowChartDatum, FlowChartProps } from "./flow-chart";
+export type { FlowChartView } from "./flow-view-toggle";
