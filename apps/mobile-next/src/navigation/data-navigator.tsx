@@ -56,7 +56,6 @@ export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) 
         <Stack.Screen name="recurring/[id]" options={{ ...pushedOptions, presentation: "modal" }} />
         <Stack.Screen name="household" options={pushedOptions} />
         <Stack.Screen name="callback" options={{ headerShown: false }} />
-        <Stack.Screen name="dev/trove" options={{ headerShown: false }} />
       </Stack>
     </LedgerDataProvider>
   );

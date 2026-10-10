@@ -23,11 +23,11 @@
 
 Trove is the only UI kit. The design source is the Claude Design canvas "Trove Design System" (https://claude.ai/artifact/9LXFeFuxSLfphLSzzs9iGH); the code is `src/ui/trove`, exported from `src/ui/trove/index.ts`. Feature code composes Trove components and owns layout and wiring only.
 
-1. **Look up the component.** Find it in `src/ui/trove/index.ts` and see it in the dev gallery, `trove-next://dev/trove?section=<key>` (keys in `src/dev/trove-gallery/gallery-sections.ts`). Done when every control on the screen maps to a Trove export.
-2. **Report a gap.** When a screen or the canvas needs a piece Trove lacks, report it (where, what it does, closest Trove option) and keep going with what exists. Build a new Trove component only when the user asks: inside `src/ui/trove`, matched to its canvas board, with tests and a gallery section.
+1. **Look up the component.** Find it in `src/ui/trove/index.ts` and its board on the canvas. Done when every control on the screen maps to a Trove export.
+2. **Report a gap.** When a screen or the canvas needs a piece Trove lacks, report it (where, what it does, closest Trove option) and keep going with what exists. Build a new Trove component only when the user asks: inside `src/ui/trove`, matched to its canvas board, with tests.
 3. **Compose the screen.** `Screen` is the root (left/right safe-area insets always on; pass `edges` for top/bottom). Tab roots use `Header` (large); pushed screens use `Header variant="compact" onBack` with the native header hidden in `src/navigation/data-navigator.tsx`; modal editors use `EditorHeader`.
 4. **Style with tokens.** Text through `Text variant tone`, colors from `colors.*`, spacing from `space`/`layout`, radii from `radius`, in a module-level `StyleSheet`. Hex values live only in `src/ui/trove/tokens/colors.json`.
-5. **Verify.** A new or changed Trove component is visible in its gallery section on iOS and Android; a screen change follows Verification below.
+5. **Verify.** Check the screen that uses the component on iOS and Android, following Verification below.
 
 Rules:
 
