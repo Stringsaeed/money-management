@@ -61,7 +61,14 @@
     "chartTooltipText": "#F2F1EC",
     "warningBar": "#D99A2B",
     "receiptLeader": "#B9B5AA",
-    "negativeOn": "#FFFFFF"
+    "negativeOn": "#FFFFFF",
+    "textFaded": "#B9B5AA",
+    "keyRing": "#E3DED2",
+    "entryGlyph": "#5E5B53",
+    "toastFill": "#151515",
+    "toastText": "#F2F1EC",
+    "toastTile": "#2A2A27",
+    "toastAction": "#D9FF43"
   },
   "dark": {
     "bgCanvas": "#151515",
@@ -125,6 +132,13 @@
     "chartTooltipText": "#1A1A1A",
     "warningBar": "#FFB547",
     "receiptLeader": "#B9B5AA",
-    "negativeOn": "#151515"
+    "negativeOn": "#151515",
+    "textFaded": "#5C5A53",
+    "keyRing": "#2E2E2A",
+    "entryGlyph": "#D9FF43",
+    "toastFill": "#F7F5EF",
+    "toastText": "#1A1A1A",
+    "toastTile": "#EAE6DC",
+    "toastAction": "#4A6B00"
   }
 }

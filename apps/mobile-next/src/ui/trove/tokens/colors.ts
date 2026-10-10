@@ -53,6 +53,8 @@ export const colors = {
     tertiary: colorToken("textTertiary"),
     onPaper: colorToken("textOnPaper"),
     disabled: colorToken("textDisabled"),
+    /** Unfilled digits of an amount being typed (e.g. the ".00" of "0.00"). */
+    faded: colorToken("textFaded"),
   },
   fill: {
     /** Secondary buttons, icon buttons, pressed keys. */
@@ -100,6 +102,17 @@ export const colors = {
     bar: colorToken("chartBar"),
     tooltipFill: colorToken("chartTooltipFill"),
     tooltipText: colorToken("chartTooltipText"),
+  },
+  /** Number pad keys: ring around each key. */
+  keypad: { ring: colorToken("keyRing") },
+  /** Currency glyph beside an amount being typed: secondary ink on paper, lime on dark. */
+  entry: { glyph: colorToken("entryGlyph") },
+  /** Inverted toast: ink on paper mode, paper on dark mode. */
+  toast: {
+    fill: colorToken("toastFill"),
+    text: colorToken("toastText"),
+    tile: colorToken("toastTile"),
+    action: colorToken("toastAction"),
   },
   /** Dotted leaders printed on receipts (always on paper). */
   receipt: { leader: colorToken("receiptLeader") },

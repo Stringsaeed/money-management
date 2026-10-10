@@ -46,6 +46,12 @@ export const NAV_ICONS = {
       "M3.25 3.25h1.5V19.25h16v1.5H4.5a1.25 1.25 0 0 1-1.25-1.25zM6.5 18V14.6l4.4-4.9 3 2.5L19.75 6.4V18z",
   },
   settings: { outline: gear() + circle(12, 12, 3), filled: gear() + circle(12, 12, 3) },
+  market: {
+    outline:
+      "M7.5 3.5v3.5M7.5 16v4.5M16.5 3.5v6M16.5 16.5v4M6 7h3a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1zM15 9.5h3a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1z",
+    filled:
+      "M6 7h3a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1zM15 9.5h3a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1zM6.75 3h1.5v4h-1.5zM6.75 16h1.5v5h-1.5zM15.75 3h1.5v6.5h-1.5zM15.75 16.5h1.5v4.5h-1.5z",
+  },
   accounts: {
     outline:
       "M4 7.5A2.5 2.5 0 0 1 6.5 5H18a1 1 0 0 1 1 1v2M4 7.5V17a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1H6.5A2.5 2.5 0 0 1 4 7.5z" +
@@ -86,6 +92,20 @@ export const UI_ICONS = {
   warning:
     "M10.3 4.5a2 2 0 0 1 3.4 0l7.5 13a2 2 0 0 1-1.7 3H4.5a2 2 0 0 1-1.7-3zM12 9.5v4M12 16.75v.01",
   backspace: "M20.5 5.5H9L3.5 12 9 18.5h11.5zM16.5 9.5l-5 5M11.5 9.5l5 5",
+  "chart-bar": "M4 4v15a1 1 0 0 0 1 1h15M8.5 16.5v-5M12.5 16.5V8M16.5 16.5v-3.5",
+  "chart-line": "M4 4v15a1 1 0 0 0 1 1h15M7.5 15l3.5-4 3 2.5 5.5-5.5",
+  sparkle:
+    "M12 3.5l1.6 4.9 4.9 1.6-4.9 1.6L12 16.5l-1.6-4.9L5.5 10l4.9-1.6zM18.5 15.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z",
+  "scope-personal": circle(12, 8.5, 3.5) + "M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5",
+  "scope-household":
+    "M3.5 11L12 4l8.5 7M5.5 9.5V20h13V9.5" +
+    circle(12, 13, 1.8) +
+    "M9 19c.4-1.8 1.5-2.8 3-2.8s2.6 1 3 2.8",
+  volume: "M4 9.5h3.5L12 5.5v13l-4.5-4H4zM15.5 9.5a3.5 3.5 0 0 1 0 5M18 7a7 7 0 0 1 0 10",
+  /** System kinds: shown in tiles so they can't be mistaken for a user-named category. */
+  "kind-income": "M17 7L7 17M15.5 17H7V8.5",
+  "kind-expense": "M7 17L17 7M8.5 7H17v8.5",
+  "kind-transfer": "M7 4.5L3.5 8 7 11.5M3.5 8h17M17 12.5l3.5 3.5-3.5 3.5M20.5 16h-17",
 } as const;
 
 export const CATEGORY_ICONS = {
