@@ -1,23 +1,22 @@
-import { Pressable, ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { EaseView } from "react-native-ease";
 
-import { Text } from "@/ui/text";
-import { colors, spacing, typography } from "@/ui/design-tokens";
 import { motionTransition, STATE_TRANSITION, useReducedMotion } from "@/ui/motion";
+import { Button, Chip, layout, space } from "@/ui/trove";
 
 import type { ActiveFilter } from "./ledger-filters";
-import { RemovableChip } from "./removable-chip";
 
 interface ActiveFilterBarProps {
   readonly chips: readonly ActiveFilter[];
   readonly onRemove: (chip: ActiveFilter) => void;
   readonly onClear: () => void;
-  /** Horizontal inset so chips can scroll edge to edge while aligning with the content. */
-  readonly inset?: number;
 }
 
-/** Applied filters as removable chips, with "Clear all" once more than one is applied. */
-export function ActiveFilterBar({ chips, onRemove, onClear, inset = 0 }: ActiveFilterBarProps) {
+/**
+ * Applied filters as removable chips, with "Clear all" once more than one is applied. The row
+ * bleeds past the screen gutter so chips scroll edge to edge while aligning with the content.
+ */
+export function ActiveFilterBar({ chips, onRemove, onClear }: ActiveFilterBarProps) {
   const reducedMotion = useReducedMotion();
   if (chips.length === 0) return null;
   return (
@@ -29,22 +28,26 @@ export function ActiveFilterBar({ chips, onRemove, onClear, inset = 0 }: ActiveF
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={[styles.row, { paddingHorizontal: inset }]}
-        style={{ marginHorizontal: -inset }}
+        contentContainerStyle={styles.row}
+        style={styles.scroll}
       >
         {chips.map((chip) => (
-          <RemovableChip key={chip.key} label={chip.label} onRemove={() => onRemove(chip)} />
+          <Chip
+            key={chip.key}
+            label={chip.label}
+            selected
+            onPress={() => onRemove(chip)}
+            onRemove={() => onRemove(chip)}
+          />
         ))}
         {chips.length > 1 ? (
-          <Pressable
-            accessibilityRole="button"
+          <Button
+            label="Clear all"
+            variant="tertiary"
+            size="sm"
             accessibilityLabel="Clear all filters"
-            hitSlop={8}
             onPress={onClear}
-            style={({ pressed }) => [styles.clear, pressed && styles.pressed]}
-          >
-            <Text style={styles.clearLabel}>Clear all</Text>
-          </Pressable>
+          />
         ) : null}
       </ScrollView>
     </EaseView>
@@ -52,12 +55,6 @@ export function ActiveFilterBar({ chips, onRemove, onClear, inset = 0 }: ActiveF
 }
 
 const styles = StyleSheet.create({
-  row: { alignItems: "center", gap: spacing[2] },
-  clear: { justifyContent: "center", paddingHorizontal: spacing[2], height: spacing[8] },
-  pressed: { opacity: 0.6 },
-  clearLabel: {
-    color: colors.terracotta,
-    fontFamily: typography.fontBodySemibold,
-    fontSize: typography.textSm,
-  },
+  scroll: { marginHorizontal: -layout.screenGutter },
+  row: { alignItems: "center", gap: space[2], paddingHorizontal: layout.screenGutter },
 });

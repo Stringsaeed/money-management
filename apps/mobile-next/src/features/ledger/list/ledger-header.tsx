@@ -2,16 +2,12 @@ import { StyleSheet, View } from "react-native";
 // oxlint-disable-next-line no-restricted-imports -- Only the SharedValue type, owned by the scroll-driven reveal.
 import type { SharedValue } from "react-native-reanimated";
 
-import { colors, spacing } from "@/ui/design-tokens";
+import { colors, Header, layout, space } from "@/ui/trove";
 
 import { ActiveFilterBar } from "./active-filter-bar";
 import { CollapsibleRow } from "./collapsible-row";
-import { FilterButton } from "./filter-button";
 import { LedgerSearchField } from "./ledger-search-field";
-import { LedgerTitle } from "./ledger-title";
 import type { LedgerListModel } from "./use-ledger-list";
-
-export const LEDGER_INSET = spacing[5];
 
 interface LedgerHeaderProps {
   readonly list: LedgerListModel;
@@ -19,14 +15,22 @@ interface LedgerHeaderProps {
 }
 
 /**
- * Pinned above the list: title with the filter button, the search bar (which tucks away while
+ * Pinned above the list: title with the filter action, the search bar (which tucks away while
  * scrolling down), and the applied filters.
  */
 export function LedgerHeader({ list, searchHidden }: LedgerHeaderProps) {
+  const applied = list.chips.length;
   return (
     <View style={styles.header}>
-      <LedgerTitle
-        accessory={<FilterButton count={list.chips.length} onPress={list.openFilters} />}
+      <Header
+        title="Ledger"
+        actions={[
+          {
+            icon: "filter",
+            label: applied > 0 ? `Filters, ${applied} applied` : "Filters",
+            onPress: list.openFilters,
+          },
+        ]}
       />
       <CollapsibleRow hidden={searchHidden}>
         <View style={styles.search}>
@@ -36,14 +40,9 @@ export function LedgerHeader({ list, searchHidden }: LedgerHeaderProps) {
           />
         </View>
       </CollapsibleRow>
-      {list.chips.length > 0 ? (
+      {applied > 0 ? (
         <View style={styles.chips}>
-          <ActiveFilterBar
-            chips={list.chips}
-            onRemove={list.remove}
-            onClear={list.clear}
-            inset={LEDGER_INSET}
-          />
+          <ActiveFilterBar chips={list.chips} onRemove={list.remove} onClear={list.clear} />
         </View>
       ) : null}
     </View>
@@ -52,14 +51,14 @@ export function LedgerHeader({ list, searchHidden }: LedgerHeaderProps) {
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: colors.background,
-    borderBottomColor: colors.ledgerOutline,
+    backgroundColor: colors.bg.canvas,
+    borderBottomColor: colors.border.subtle,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingBottom: spacing[3],
-    paddingHorizontal: LEDGER_INSET,
-    paddingTop: spacing[2],
+    paddingBottom: space[3],
+    paddingHorizontal: layout.screenGutter,
+    paddingTop: space[2],
   },
   // Spacing lives inside the collapsible row so it collapses along with the field.
-  search: { flexDirection: "row", paddingTop: spacing[3] },
-  chips: { paddingTop: spacing[3] },
+  search: { paddingTop: space[3] },
+  chips: { paddingTop: space[3] },
 });

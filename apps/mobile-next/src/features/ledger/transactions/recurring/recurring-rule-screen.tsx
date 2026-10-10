@@ -5,11 +5,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 
 import { useAccountsQuery, useCategoriesQuery, useRecurringQuery } from "@/data/ledger-queries";
 import { useLedgerMutationsWithSound } from "@/features/sound";
-import { Button } from "@/ui/button";
-import { EmptyState } from "@/ui/empty-state";
-import { Screen } from "@/ui/screen";
-import { Text } from "@/ui/text";
-import { colors, spacing } from "@/ui/design-tokens";
+import { Banner, Button, EmptyState, Header, layout, Screen, space } from "@/ui/trove";
 
 import { RecurringForm } from "./recurring-form";
 
@@ -30,10 +26,14 @@ export function RecurringRuleScreen({ id = "new", onBack }: RecurringRuleScreenP
   if (id !== "new" && !rule && !recurring.isLoading)
     return (
       <Screen>
+        <View style={styles.top}>
+          <Header variant="compact" title="Recurring rule" onBack={onBack} />
+        </View>
         <EmptyState
           title="Rule not found"
           message="This Rule may have been archived or removed."
-          onRetry={() => void recurring.retry()}
+          actionLabel="Try again"
+          onAction={() => void recurring.retry()}
         />
       </Screen>
     );
@@ -53,12 +53,14 @@ export function RecurringRuleScreen({ id = "new", onBack }: RecurringRuleScreenP
   };
   return (
     <Screen style={styles.screen}>
+      <View style={styles.top}>
+        <Header variant="compact" title={rule?.name ?? "Recurring rule"} onBack={onBack} />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={styles.actions}>
-          {onBack ? <Button title="Back" variant="ghost" onPress={onBack} /> : null}
           {rule && rule.lifecycle !== "completed" ? (
             <Button
-              title={rule.lifecycle === "paused" ? "Resume" : "Pause"}
+              label={rule.lifecycle === "paused" ? "Resume" : "Pause"}
               variant="secondary"
               disabled={busy}
               onPress={() =>
@@ -68,8 +70,8 @@ export function RecurringRuleScreen({ id = "new", onBack }: RecurringRuleScreenP
           ) : null}
           {rule ? (
             <Button
-              title={rule.lifecycle === "archived" ? "Restore" : "Archive"}
-              variant="ghost"
+              label={rule.lifecycle === "archived" ? "Restore" : "Archive"}
+              variant="tertiary"
               disabled={busy}
               onPress={() =>
                 void lifecycleAction(rule.lifecycle === "archived" ? "active" : "archived")
@@ -77,11 +79,7 @@ export function RecurringRuleScreen({ id = "new", onBack }: RecurringRuleScreenP
             />
           ) : null}
         </View>
-        {actionError ? (
-          <Text accessibilityRole="alert" style={styles.error}>
-            {actionError}
-          </Text>
-        ) : null}
+        {actionError ? <Banner tone="negative" message={actionError} /> : null}
         <RecurringForm
           rule={rule}
           accounts={accounts.data}
@@ -108,8 +106,8 @@ export function RecurringRuleScreen({ id = "new", onBack }: RecurringRuleScreenP
 }
 
 const styles = StyleSheet.create({
-  screen: { paddingHorizontal: spacing[5], paddingTop: spacing[4] },
-  scrollContent: { gap: spacing[3], paddingBottom: spacing[16] },
-  actions: { flexDirection: "row", flexWrap: "wrap", gap: spacing[2] },
-  error: { color: colors.destructive },
+  screen: { paddingHorizontal: layout.screenGutter },
+  top: { paddingBottom: space[2] },
+  scrollContent: { gap: space[3], paddingBottom: space[16] },
+  actions: { alignItems: "center", flexDirection: "row", flexWrap: "wrap", gap: space[2] },
 });

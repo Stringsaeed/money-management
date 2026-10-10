@@ -1,20 +1,42 @@
 /* oxlint-disable complexity -- recurring authoring keeps cadence, bounds, and kind-specific fields together for a coherent editor. */
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import type { V2Account, V2Category, V2RecurringRule } from "@trove/api/v2/contracts";
 
 import type { RecurringRuleInput } from "@/data/ledger-client";
-import { Button } from "@/ui/button";
-import { Chip } from "@/ui/chip";
-import { TextField } from "@/ui/text-field";
-import { Text } from "@/ui/text";
-import { colors, spacing } from "@/ui/design-tokens";
+// Legacy: the Trove TextField has no iOS "Done" accessory for number pads, so the legacy one stays.
+import { KeyboardAccessory } from "@/ui/keyboard-accessory";
+import {
+  Banner,
+  Button,
+  SegmentedControl,
+  space,
+  Text,
+  TextField,
+  type SegmentOption,
+} from "@/ui/trove";
 import { parseDateKey, todayDateKey } from "@/utils/date";
 import { decimalFromMinor, parseMoneyMinor } from "@/utils/money";
 
 import { TransactionOptionSheet } from "../transaction-option-sheet";
+
+type RuleKind = RecurringRuleInput["kind"];
+type RuleFrequency = RecurringRuleInput["frequency"];
+
+const KIND_OPTIONS = [
+  { value: "expense", label: "Expense" },
+  { value: "income", label: "Income" },
+  { value: "transfer", label: "Transfer" },
+] as const satisfies readonly SegmentOption<RuleKind>[];
+
+const FREQUENCY_OPTIONS = [
+  { value: "day", label: "Day" },
+  { value: "week", label: "Week" },
+  { value: "month", label: "Month" },
+  { value: "year", label: "Year" },
+] as const satisfies readonly SegmentOption<RuleFrequency>[];
 
 interface RecurringFormProps {
   readonly rule?: V2RecurringRule;
@@ -35,18 +57,17 @@ export function RecurringForm({
   onCancel,
   onSubmit,
 }: RecurringFormProps) {
+  const accessoryId = useId();
   const firstAccount = accounts.find((item) => !item.archived);
   const [name, setName] = useState(rule?.name ?? "");
-  const [kind, setKind] = useState<RecurringRuleInput["kind"]>(rule?.kind ?? "expense");
+  const [kind, setKind] = useState<RuleKind>(rule?.kind ?? "expense");
   const [accountId, setAccountId] = useState(rule?.accountId ?? firstAccount?.id ?? "");
   const [categoryId, setCategoryId] = useState(rule?.categoryId ?? null);
   const [toAccountId, setToAccountId] = useState(rule?.toAccountId ?? null);
   const [amount, setAmount] = useState(
     rule ? decimalFromMinor(rule.amountMinor, rule.currency) : "",
   );
-  const [frequency, setFrequency] = useState<RecurringRuleInput["frequency"]>(
-    rule?.frequency ?? "month",
-  );
+  const [frequency, setFrequency] = useState<RuleFrequency>(rule?.frequency ?? "month");
   const [intervalCount, setIntervalCount] = useState(String(rule?.intervalCount ?? 1));
   const [startDate, setStartDate] = useState(rule?.startDate ?? todayDateKey());
   const [endDate, setEndDate] = useState(rule?.endDate ?? "");
@@ -57,7 +78,7 @@ export function RecurringForm({
   const activeCategories = categories.filter(
     (item) => !item.archived && (kind === "transfer" || item.kind === kind),
   );
-  const selectKind = (nextKind: RecurringRuleInput["kind"]) => {
+  const selectKind = (nextKind: RuleKind) => {
     setKind(nextKind);
     setCategoryId(null);
     setToAccountId(null);
@@ -125,29 +146,24 @@ export function RecurringForm({
 
   return (
     <View style={styles.content}>
-      <Text variant="title">{rule ? "Edit Recurring Rule" : "Add Recurring Rule"}</Text>
       <TextField label="Name" value={name} onChangeText={setName} placeholder="Rent" />
       <View style={styles.group}>
-        <Text variant="label">Kind</Text>
-        <View style={styles.chips}>
-          <Chip
-            label="Expense"
-            selected={kind === "expense"}
-            onPress={() => selectKind("expense")}
-          />
-          <Chip label="Income" selected={kind === "income"} onPress={() => selectKind("income")} />
-          <Chip
-            label="Transfer"
-            selected={kind === "transfer"}
-            onPress={() => selectKind("transfer")}
-          />
-        </View>
+        <Text variant="labelSm" tone="secondary">
+          Kind
+        </Text>
+        <SegmentedControl
+          accessibilityLabel="Kind"
+          options={KIND_OPTIONS}
+          value={kind}
+          onChange={selectKind}
+        />
       </View>
       <TextField
         label="Amount"
         value={amount}
         onChangeText={setAmount}
         keyboardType="decimal-pad"
+        inputAccessoryViewID={accessoryId}
         placeholder="0.00"
       />
       {activeAccounts.length > 0 ? (
@@ -161,7 +177,9 @@ export function RecurringForm({
           onChange={setAccountId}
         />
       ) : (
-        <Text style={styles.error}>Create an account before adding a recurring rule.</Text>
+        <Text tone="negative" variant="bodySm">
+          Create an account before adding a recurring rule.
+        </Text>
       )}
       {kind !== "transfer" ? (
         <TransactionOptionSheet
@@ -184,23 +202,22 @@ export function RecurringForm({
         />
       )}
       <View style={styles.group}>
-        <Text variant="label">Frequency</Text>
-        <View style={styles.chips}>
-          {(["day", "week", "month", "year"] as const).map((item) => (
-            <Chip
-              key={item}
-              label={item}
-              selected={frequency === item}
-              onPress={() => setFrequency(item)}
-            />
-          ))}
-        </View>
+        <Text variant="labelSm" tone="secondary">
+          Frequency
+        </Text>
+        <SegmentedControl
+          accessibilityLabel="Frequency"
+          options={FREQUENCY_OPTIONS}
+          value={frequency}
+          onChange={setFrequency}
+        />
       </View>
       <TextField
         label="Every N periods"
         value={intervalCount}
         onChangeText={setIntervalCount}
         keyboardType="number-pad"
+        inputAccessoryViewID={accessoryId}
       />
       <TextField
         label="Starts on"
@@ -219,33 +236,39 @@ export function RecurringForm({
         value={endCount}
         onChangeText={setEndCount}
         keyboardType="number-pad"
+        inputAccessoryViewID={accessoryId}
       />
       <TextField
         label="Note"
         value={note}
         onChangeText={setNote}
         placeholder="Optional note"
+        inputAccessoryViewID={accessoryId}
         multiline
       />
       {(error ?? validationError) ? (
-        <Text style={styles.error}>{error ?? validationError}</Text>
+        <Banner tone="negative" message={error ?? validationError} />
       ) : null}
       <View style={styles.actions}>
-        {onCancel ? <Button title="Cancel" variant="ghost" onPress={onCancel} /> : null}
+        {onCancel ? <Button label="Cancel" variant="tertiary" onPress={onCancel} /> : null}
         <Button
-          title={rule ? "Save changes" : "Create rule"}
+          label={rule ? "Save changes" : "Create rule"}
           onPress={() => void submit()}
           loading={busy}
         />
       </View>
+      <KeyboardAccessory nativeID={accessoryId} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { gap: spacing[4], paddingBottom: spacing[8] },
-  group: { gap: spacing[2] },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing[2] },
-  actions: { flexDirection: "row", gap: spacing[2], justifyContent: "flex-end" },
-  error: { color: colors.destructive },
+  content: { gap: space[4] },
+  group: { gap: space[2] },
+  actions: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space[2],
+    justifyContent: "flex-end",
+  },
 });
