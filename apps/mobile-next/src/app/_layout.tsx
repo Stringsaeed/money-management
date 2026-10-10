@@ -6,14 +6,9 @@ import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import {
   useFonts,
-  Nunito_200ExtraLight,
-  Nunito_300Light,
   Nunito_400Regular,
-  Nunito_500Medium,
-  Nunito_600SemiBold,
   Nunito_700Bold,
   Nunito_800ExtraBold,
-  Nunito_900Black,
 } from "@expo-google-fonts/nunito";
 import {
   IBMPlexMono_400Regular,
@@ -25,7 +20,6 @@ import { hydrateAiPreferences } from "@/features/ai";
 import { AuthProvider } from "@/features/auth/auth-provider";
 import { hydrateSoundPreferences } from "@/features/sound";
 import { SessionGate } from "@/navigation/session-gate";
-import { ToastHost as LegacyToastHost } from "@/ui/toast";
 import { colors, space, ToastHost } from "@/ui/trove";
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -35,14 +29,9 @@ void hydrateAiPreferences();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Nunito_200ExtraLight,
-    Nunito_300Light,
     Nunito_400Regular,
-    Nunito_500Medium,
-    Nunito_600SemiBold,
     Nunito_700Bold,
     Nunito_800ExtraBold,
-    Nunito_900Black,
     IBMPlexMono_400Regular,
     IBMPlexMono_500Medium,
     IBMPlexMono_600SemiBold,
@@ -59,8 +48,6 @@ export default function RootLayout() {
         <AuthProvider>
           <SessionGate />
         </AuthProvider>
-        {/* Legacy host stays until every `@/ui/toast` showToast caller has migrated. */}
-        <LegacyToastHost />
         <ToastHost bottomOffset={space[16]} />
         <StatusBar style="auto" />
       </SafeAreaProvider>

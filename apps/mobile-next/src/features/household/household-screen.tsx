@@ -67,7 +67,7 @@ export function HouseholdScreen({ onBack }: HouseholdScreenProps) {
           <HouseholdCreateCard busy={state.busy} onCreate={state.create} />
         )}
 
-        {state.notice ? <Banner message={state.notice} /> : null}
+        {state.notice ? <Banner message={state.notice} tone="positive" /> : null}
         {state.error ? <Banner message={state.error} tone="negative" /> : null}
       </ScrollView>
     </Screen>

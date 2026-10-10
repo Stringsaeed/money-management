@@ -48,6 +48,7 @@ export function MarketScreen() {
     return (
       <Screen style={styles.empty}>
         <EmptyState
+          icon="market"
           title="Market is unavailable"
           message="Check your connection and try again."
           actionLabel="Try again"
@@ -85,6 +86,7 @@ export function MarketScreen() {
         }
         ListEmptyComponent={
           <EmptyState
+            icon="market"
             title="No quotes yet"
             message="Market data will appear when the feed responds."
             actionLabel="Try again"
@@ -92,7 +94,7 @@ export function MarketScreen() {
           />
         }
         renderItem={({ item }) => (
-          <ListGroup header={formatGroupLabel(item.group)}>
+          <ListGroup dividerInset={layout.cardPadding} header={formatGroupLabel(item.group)}>
             {item.quotes.map((quote) => (
               <MarketQuoteRow key={quote.id} quote={quote} />
             ))}

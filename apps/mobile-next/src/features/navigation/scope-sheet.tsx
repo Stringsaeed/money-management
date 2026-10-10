@@ -41,14 +41,14 @@ export function ScopeSheet({
     <Sheet open={open} onDismiss={onDismiss} testID="ledger-scope-sheet" title="Choose ledger">
       <ListGroup>
         <ListRow
-          icon="accounts"
+          icon="scope-personal"
           onPress={() => onSelect({ kind: "personal" })}
           title="Personal"
           trailing={scope.kind === "personal" ? <SelectedMark /> : undefined}
         />
         {household ? (
           <ListRow
-            icon="accounts"
+            icon="scope-household"
             onPress={() => onSelect({ kind: "household", householdId: household.householdId })}
             title={household.name}
             trailing={scope.kind === "household" ? <SelectedMark /> : undefined}
