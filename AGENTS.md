@@ -7,7 +7,8 @@
 - Treat guidance as source of truth even if your runtime defaults differ; override only when the user explicitly says so.
 - Default tone: concise, factual, high-signal commit-ready work with clear diffs and explanations.
 - Prefer action now, questions later—clarify only when output would materially diverge.
-- UI copy, labels, and decorative elements should use emojis freely to support the modern minimal design language; non-UI files (configs, scripts) remain ASCII-only.
+- Two apps, two UI systems. The UI rules in this file (Paper Ledger, NativeWind, Phosphor, emoji-forward copy) belong to `apps/mobile`. `apps/mobile-next` builds UI with the Trove design system: follow `apps/mobile-next/AGENTS.md`, which overrides every UI and styling rule here.
+- In `apps/mobile`, UI copy, labels, and decorative elements use emojis freely to support the modern minimal design language. Non-UI files (configs, scripts) stay ASCII-only in every app.
 - Never delete or revert user-owned changes unless they ask; keep the worktree state intact outside your edits.
 
 ## Agent skills
@@ -49,7 +50,7 @@ This is a single-context repository using root `CONTEXT.md` and repo-wide ADRs u
 - Keep commands succinct and never stream large logs; summarize key lines for the user.
 - When referencing files to the user, wrap the repository-relative path in backticks so the CLI can hyperlink it.
 - Tests are configured; still mention manual QA, simulator smoke checks, or component stories when relevant after UI changes.
-- Emojis are encouraged in UI copy, labels, and decorative elements to reinforce the modern minimal design language; keep non-UI files (configs, scripts) ASCII-only.
+- In `apps/mobile`, emojis are encouraged in UI copy, labels, and decorative elements; keep non-UI files (configs, scripts) ASCII-only.
 - Respect user-owned dirty changes; do not format unrelated files even if the formatter would touch them.
 
 ## Repository Map
@@ -71,9 +72,9 @@ This is a single-context repository using root `CONTEXT.md` and repo-wide ADRs u
 - `constants/`, `hooks/`, and `components/` share the `@/*` alias (configured in `tsconfig.json`) so prefer `import Foo from "@/components/Foo"` over relative `../../` walks.
 - `.oxlintrc.json` and `.oxfmtrc.json` codify lint/format behavior; read them before changing stylistic conventions.
 
-## Design System: Paper Ledger
+## Design System: Paper Ledger (apps/mobile)
 
-The app follows the **Paper Ledger** design system — a clean, editorial aesthetic inspired by financial ledgers and newspapers.
+`apps/mobile` follows the **Paper Ledger** design system — a clean, editorial aesthetic inspired by financial ledgers and newspapers.
 
 ### Typography
 
@@ -115,16 +116,16 @@ The app follows the **Paper Ledger** design system — a clean, editorial aesthe
 - Default naming: `PascalCase` for components/types, `camelCase` for functions/constants, `SCREAMING_SNAKE_CASE` for env fallback constants.
 - Error messages should explain the impact and next action, not just restate that something failed.
 - When defining React Navigation routes, leverage Expo Router file conventions instead of manual stack registration.
-- **Use `cn()` from `@/lib/utils`** for conditional class composition instead of template literals or inline styles. Example: `cn("base-classes", condition && "conditional-class")`.
+- **(apps/mobile) Use `cn()` from `@/lib/utils`** for conditional class composition instead of template literals or inline styles. Example: `cn("base-classes", condition && "conditional-class")`.
 - Keep optional chaining and nullish coalescing in place of defensive `&&` ladders when reading nested data.
 - Avoid `useMemo`/`useCallback` we use react-compiler to do it for us.
 - Export a default component per screen file; named helpers can live in the same module but keep them near usage.
-- For icons, use **phosphor-react-native**. Always import with the `Icon` suffix (e.g. `CaretRightIcon`, `GearIcon`) — the un-suffixed exports are deprecated and emit warnings. Use `weight={focused ? "fill" : "regular"}` to reflect active/inactive state.
+- (apps/mobile) For icons, use **phosphor-react-native**. Always import with the `Icon` suffix (e.g. `CaretRightIcon`, `GearIcon`) — the un-suffixed exports are deprecated and emit warnings. Use `weight={focused ? "fill" : "regular"}` to reflect active/inactive state.
 - Keep `eqeqeq` behavior in mind: `==` is only acceptable where `smart` semantics cover `null == undefined`; otherwise use `===`.
 - Do not mutate React state directly; clone arrays/objects or use functional updates.
 - Avoid `require` for JSON/TS modules in TypeScript; use `import` statements so type checking works.
 
-## Components & Theming
+## Components & Theming (apps/mobile)
 
 - Colors are defined in `global.css` `@theme` block; extend palettes there rather than scattering hex literals across files.
 - Layout spacing should follow an 8px baseline when possible; keep cross-platform parity by aligning with Tailwind spacing tokens.
@@ -137,7 +138,7 @@ The app follows the **Paper Ledger** design system — a clean, editorial aesthe
 - Animations should rely on Reanimated v4; never mix imperative Animated API unless Reanimated cannot cover the case.
 - Favor React Compiler friendly patterns (no dynamic hook order, no conditional hook definition) because the project has `reactCompiler` experiments on.
 
-## Picker / Bottom Sheet Pattern
+## Picker / Bottom Sheet Pattern (apps/mobile)
 
 When creating picker components (account, category, date, etc.), follow this established pattern:
 
@@ -207,14 +208,14 @@ When creating picker components (account, category, date, etc.), follow this est
 - [ ] Read this file and AGENTS.md before coding.
 - [ ] Load the skill bundle that matches the task scope.
 - [ ] Gather context with `glob`/`read` rather than editing blindly.
-- [ ] Implement the change using TypeScript strict-safe patterns and repo-specific theming.
-- [ ] Use tailwind `className` only — no inline `style` props for visual/layout rules.
-- [ ] Use `cn()` for conditional classes — no template literal class concatenation.
-- [ ] Use standard Tailwind size classes — no arbitrary values when a standard class exists.
-- [ ] Apply `safe-top` / `safe-bottom` classes on every screen's outermost container.
-- [ ] Wrap layout-changing elements in Reanimated `Animated.View` with `entering`/`exiting`/`layout` props.
+- [ ] Implement the change using TypeScript strict-safe patterns and the app's own UI system (`apps/mobile-next`: Trove, per its AGENTS.md).
+- [ ] (apps/mobile) Use tailwind `className` only — no inline `style` props for visual/layout rules.
+- [ ] (apps/mobile) Use `cn()` for conditional classes — no template literal class concatenation.
+- [ ] (apps/mobile) Use standard Tailwind size classes — no arbitrary values when a standard class exists.
+- [ ] (apps/mobile) Apply `safe-top` / `safe-bottom` classes on every screen's outermost container.
+- [ ] (apps/mobile) Wrap layout-changing elements in Reanimated `Animated.View` with `entering`/`exiting`/`layout` props.
 - [ ] Decompose into small, single-responsibility components; no large monoliths.
-- [ ] Use emojis in UI copy and labels to reinforce minimal modern design.
+- [ ] (apps/mobile) Use emojis in UI copy and labels to reinforce minimal modern design.
 - [ ] Run `npx tsc --noEmit` to verify no TypeScript errors.
 - [ ] Run `pnpm lint:fix`.
 - [ ] Run `pnpm format`.

@@ -8,13 +8,8 @@ import { playCue } from "@/features/sound";
 import { currencyFractionDigits, parseMoneyMinor } from "@/utils/money";
 
 import { hasAiPickChoice } from "./ai-pick";
-import {
-  applyAmountKey,
-  fitAmountToPrecision,
-  normalizeAmountEntry,
-  type AmountKey,
-} from "./amount-entry";
-import { errorHaptic, keyHaptic } from "./transaction-haptics";
+import { fitAmountToPrecision, normalizeAmountEntry } from "./amount-entry";
+import { errorHaptic } from "./transaction-haptics";
 import {
   initialTransactionDraft,
   transactionDraftError,
@@ -44,7 +39,8 @@ export function useTransactionForm({
     initialTransactionDraft(transaction, activeAccounts, canAutoCategorize),
   );
 
-  const [validationError, setValidationError] = useState<string>();
+  // Validation copy stays quiet until the person has touched the form.
+  const [touched, setTouched] = useState(false);
 
   // Currency always comes from the chosen account; until one exists there is no currency to show.
   const currencyOf = (accountId: string): string | null =>
@@ -57,8 +53,16 @@ export function useTransactionForm({
   const autoCategorize =
     canAutoCategorize && draft.autoCategorize && hasAiPickChoice(activeCategories, draft.kind);
 
+  const amountMinorOf = (amount: string) =>
+    currency ? parseMoneyMinor(normalizeAmountEntry(amount), currency) : null;
+  const draftError = transactionDraftError(
+    draft,
+    amountMinorOf(draft.amount),
+    activeAccounts.length > 0,
+  );
+
   const update = (patch: Partial<TransactionDraft>) => {
-    setValidationError(undefined);
+    setTouched(true);
     setDraft((current) => ({ ...current, ...patch }));
   };
 
@@ -85,28 +89,20 @@ export function useTransactionForm({
       amount: fitAmountToPrecision(draft.amount, digitsFor(currencyOf(accountId))),
     });
 
-  const pressKey = (key: AmountKey) => {
-    keyHaptic();
+  /** The keypad reports the next canonical entry; it already gives its own key haptic. */
+  const changeAmount = (amount: string) => {
     playCue("key");
-    setValidationError(undefined);
-    setDraft((current) => ({
-      ...current,
-      amount: applyAmountKey(current.amount, key, fractionDigits),
-    }));
+    update({ amount });
   };
 
   const submit = async () => {
-    const amountMinor = currency
-      ? parseMoneyMinor(normalizeAmountEntry(draft.amount), currency)
-      : null;
-    const error = transactionDraftError(draft, amountMinor, activeAccounts.length > 0);
-    if (error || amountMinor === null) {
+    const amountMinor = amountMinorOf(draft.amount);
+    if (draftError || amountMinor === null) {
       errorHaptic();
       playCue("error");
-      setValidationError(error);
+      setTouched(true);
       return;
     }
-    setValidationError(undefined);
     await onSubmit(transactionInputFromDraft({ ...draft, autoCategorize }, amountMinor));
   };
 
@@ -116,7 +112,8 @@ export function useTransactionForm({
     fractionDigits,
     activeAccounts,
     activeCategories,
-    validationError,
+    canSave: draftError === undefined,
+    validationError: touched ? draftError : undefined,
     autoCategorize,
     selectCategory,
     selectTransfer,
@@ -125,7 +122,7 @@ export function useTransactionForm({
     setToAccountId: (toAccountId: string) => update({ toAccountId }),
     setDate: (date: string) => update({ date }),
     setNote: (note: string) => update({ note }),
-    pressKey,
+    changeAmount,
     clearAmount: () => update({ amount: "" }),
     submit,
   };

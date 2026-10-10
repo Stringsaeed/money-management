@@ -1,106 +1,104 @@
 import { useState } from "react";
-import { StyleSheet, View } from "react-native";
-import { LegendList } from "@legendapp/list/react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 
 import { useAccountsQuery } from "@/data/ledger-queries";
-import { Button } from "@/ui/button";
-import { Chip } from "@/ui/chip";
-import { EmptyState } from "@/ui/empty-state";
-import { Screen } from "@/ui/screen";
-import { Surface } from "@/ui/surface";
-import { Text } from "@/ui/text";
-import { colors, spacing, typography } from "@/ui/design-tokens";
-import { formatMoneyMinor } from "@/utils/money";
+import {
+  Amount,
+  CategoryTile,
+  Chip,
+  EmptyState,
+  Header,
+  layout,
+  ListGroup,
+  ListRow,
+  Screen,
+  space,
+} from "@/ui/trove";
+
+import { accountTypeOption } from "./account-display";
 
 export interface AccountsScreenProps {
   readonly onOpenAccount?: (id: string) => void;
   readonly onAddAccount?: () => void;
+  readonly onBack?: () => void;
 }
 
-export function AccountsScreen({ onOpenAccount, onAddAccount }: AccountsScreenProps) {
+export function AccountsScreen({ onOpenAccount, onAddAccount, onBack }: AccountsScreenProps) {
   const accounts = useAccountsQuery();
   const [showArchived, setShowArchived] = useState(false);
   const active = accounts.data.filter((account) =>
     showArchived ? account.archived : !account.archived,
   );
+  const headerActions = onAddAccount
+    ? [{ icon: "add", label: "Add account", onPress: onAddAccount } as const]
+    : [];
 
   if (accounts.isError)
     return (
       <Screen>
-        <EmptyState
-          title="Accounts unavailable"
-          message="Check your connection and try again."
-          onRetry={() => void accounts.retry()}
-        />
+        <View style={styles.content}>
+          <Header variant="compact" title="Accounts" onBack={onBack} actions={headerActions} />
+          <EmptyState
+            title="Accounts unavailable"
+            message="Check your connection and try again."
+            icon="info"
+            actionLabel="Try again"
+            onAction={() => void accounts.retry()}
+          />
+        </View>
       </Screen>
     );
 
   return (
     <Screen>
-      <LegendList
-        data={active}
-        keyExtractor={(item) => item.id}
-        estimatedItemSize={84}
-        contentContainerStyle={styles.content}
-        ListHeaderComponent={
-          <View style={styles.header}>
-            <Text variant="headline">Accounts</Text>
-            <View style={styles.headerActions}>
-              <Button title="Add account" onPress={onAddAccount} />
-              <Chip
-                label="Archived"
-                selected={showArchived}
-                onPress={() => setShowArchived((value) => !value)}
-              />
-            </View>
-          </View>
-        }
-        ListEmptyComponent={
-          !accounts.isLoading ? (
-            <EmptyState
-              title="No accounts"
-              message="Create an account to start your ledger."
-              action={onAddAccount ? { label: "Add account", onPress: onAddAccount } : undefined}
-            />
-          ) : null
-        }
-        renderItem={({ item }) => (
-          <Surface variant="raised" style={styles.card}>
-            <Button title={item.name} variant="ghost" onPress={() => onOpenAccount?.(item.id)} />
-            <Text style={styles.meta}>
-              {item.type.replace("_", " ")} · {item.currency}
-            </Text>
-            <Text variant="amount" style={styles.amount}>
-              {formatMoneyMinor(item.balanceMinor, item.currency)}
-            </Text>
-          </Surface>
-        )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
+      <ScrollView contentContainerStyle={styles.content}>
+        <Header variant="compact" title="Accounts" onBack={onBack} actions={headerActions} />
+        <View style={styles.chips}>
+          <Chip
+            label="Archived"
+            selected={showArchived}
+            onPress={() => setShowArchived((value) => !value)}
+          />
+        </View>
+        {active.length > 0 ? (
+          <ListGroup>
+            {active.map((item) => {
+              const option = accountTypeOption(item.type);
+              return (
+                <ListRow
+                  key={item.id}
+                  leading={<CategoryTile icon={option.emoji} size="sm" />}
+                  title={item.name}
+                  subtitle={`${option.label} · ${item.currency}`}
+                  trailing={<Amount currency={item.currency} minor={item.balanceMinor} size="md" />}
+                  chevron
+                  onPress={() => onOpenAccount?.(item.id)}
+                  accessibilityLabel={`${item.name}, ${option.label}`}
+                />
+              );
+            })}
+          </ListGroup>
+        ) : null}
+        {active.length === 0 && !accounts.isLoading ? (
+          <EmptyState
+            title="No accounts"
+            message="Create an account to start your ledger."
+            icon="accounts"
+            actionLabel={onAddAccount ? "Add account" : undefined}
+            onAction={onAddAccount}
+          />
+        ) : null}
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   content: {
-    gap: spacing[2],
-    paddingBottom: spacing[16],
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[4],
+    gap: space[4],
+    paddingBottom: space[16],
+    paddingHorizontal: layout.screenGutter,
+    paddingTop: space[4],
   },
-  header: { gap: spacing[2], paddingBottom: spacing[2] },
-  headerActions: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing[2],
-    justifyContent: "space-between",
-  },
-  card: { gap: spacing[1], padding: spacing[4] },
-  meta: {
-    color: colors.mutedForeground,
-    fontFamily: typography.fontBodyNormal,
-    fontSize: typography.textSm,
-  },
-  amount: { fontSize: typography.textXl },
-  separator: { height: spacing[2] },
+  chips: { flexDirection: "row", gap: space[2] },
 });

@@ -10,6 +10,7 @@ export default function TransactionRoute() {
       onBack={() => router.back()}
       onCreateAccount={() => router.push("/accounts/new")}
       onCreateCategory={() => router.push("/categories/new")}
+      onChangeCategory={(transactionId) => router.push(`/transactions/${transactionId}`)}
     />
   );
 }

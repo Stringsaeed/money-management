@@ -1,12 +1,6 @@
 import { useState } from "react";
-import { StyleSheet, View } from "react-native";
 
-import { Sheet } from "@/ui/sheet";
-import { SelectRow } from "@/ui/select-row";
-import { Text } from "@/ui/text";
-import { Button } from "@/ui/button";
-import { Surface } from "@/ui/surface";
-import { spacing } from "@/ui/design-tokens";
+import { ListGroup, ListRow, Sheet } from "@/ui/trove";
 
 interface TransactionOptionSheetProps {
   readonly label: string;
@@ -24,26 +18,23 @@ export function TransactionOptionSheet({
   const [open, setOpen] = useState(false);
   return (
     <>
-      <SelectRow label={label} value={value} onPress={() => setOpen(true)} />
-      <Sheet open={open} onDismiss={() => setOpen(false)}>
-        <Text variant="title">{label}</Text>
-        <View style={styles.options}>
+      <ListGroup dividerInset={0}>
+        <ListRow chevron onPress={() => setOpen(true)} title={label} value={value} />
+      </ListGroup>
+      <Sheet open={open} onDismiss={() => setOpen(false)} title={label}>
+        <ListGroup dividerInset={0}>
           {options.map((option) => (
-            <Surface key={option.id} variant="recessed">
-              <Button
-                title={option.label}
-                variant="ghost"
-                onPress={() => {
-                  onChange(option.id);
-                  setOpen(false);
-                }}
-              />
-            </Surface>
+            <ListRow
+              key={option.id}
+              onPress={() => {
+                onChange(option.id);
+                setOpen(false);
+              }}
+              title={option.label}
+            />
           ))}
-        </View>
+        </ListGroup>
       </Sheet>
     </>
   );
 }
-
-const styles = StyleSheet.create({ options: { gap: spacing[2] } });

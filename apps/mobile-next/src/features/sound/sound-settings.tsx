@@ -1,7 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import { Slider, Surface, Switch, Text } from "@/ui";
-import { colors, spacing } from "@/ui/design-tokens";
+import { ListGroup, ListRow, Slider, space, Switch } from "@/ui/trove";
 
 import { playCue } from "./sound-cues";
 import { updateSoundPreferences } from "./sound-store";
@@ -13,7 +12,6 @@ const VOLUME_STEP = 0.05;
 export function SoundSettings() {
   const { enabled, volume } = useSoundPreferences();
   const previewVolume = useVolumePreview();
-  const volumePercent = Math.round(volume * 100);
 
   const toggleSound = (next: boolean) => {
     updateSoundPreferences({ enabled: next });
@@ -26,42 +24,27 @@ export function SoundSettings() {
   };
 
   return (
-    <Surface variant="raised" style={styles.card}>
-      <View style={styles.row}>
-        <View style={styles.copy}>
-          <Text variant="title">Sounds</Text>
-          <Text variant="caption">Soft cues when you save, delete, or type an amount.</Text>
-        </View>
-        <Switch accessibilityLabel="Sounds" value={enabled} onValueChange={toggleSound} />
-      </View>
-      <View style={[styles.volume, !enabled && styles.disabled]}>
-        <View style={styles.row}>
-          <Text variant="label">Volume</Text>
-          <Text variant="label" style={styles.value}>
-            {volumePercent}%
-          </Text>
-        </View>
-        <Slider
-          value={volume}
-          step={VOLUME_STEP}
-          disabled={!enabled}
-          onValueChange={changeVolume}
+    <View style={styles.root}>
+      <ListGroup dividerInset={0}>
+        <ListRow
+          subtitle="Soft cues when you save, delete, or type an amount."
+          title="Sounds"
+          trailing={
+            <Switch accessibilityLabel="Sounds" value={enabled} onValueChange={toggleSound} />
+          }
         />
-      </View>
-    </Surface>
+      </ListGroup>
+      <Slider
+        accessibilityLabel="Sound effects volume"
+        adornment="volume"
+        disabled={!enabled}
+        label="Volume"
+        onValueChange={changeVolume}
+        step={VOLUME_STEP}
+        value={volume}
+      />
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  card: { gap: spacing[4] },
-  row: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing[3],
-    justifyContent: "space-between",
-  },
-  copy: { flex: 1, gap: spacing[1] },
-  volume: { gap: spacing[2] },
-  value: { color: colors.foreground, fontVariant: ["tabular-nums"] },
-  disabled: { opacity: 0.48 },
-});
+const styles = StyleSheet.create({ root: { gap: space[3] } });

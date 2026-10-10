@@ -1,9 +1,4 @@
-import { StyleSheet, View } from "react-native";
-
-import { OptionTile } from "@/features/ledger/editor/option-tile";
-import { Sheet } from "@/ui/sheet";
-import { Text } from "@/ui/text";
-import { spacing } from "@/ui/design-tokens";
+import { ListGroup, ListRow, Sheet, type IconName } from "@/ui/trove";
 
 export type CreateAction = "transaction" | "account" | "category";
 
@@ -13,29 +8,32 @@ interface CreateActionSheetProps {
   readonly onSelect: (action: CreateAction) => void;
 }
 
-const ACTIONS: readonly { action: CreateAction; emoji: string; label: string }[] = [
-  { action: "transaction", emoji: "🧾", label: "Transaction" },
-  { action: "account", emoji: "🏦", label: "Account" },
-  { action: "category", emoji: "🏷️", label: "Category" },
-];
+const ACTIONS = [
+  { action: "transaction", icon: "receipt", label: "Transaction" },
+  { action: "account", icon: "accounts", label: "Account" },
+  { action: "category", icon: "category", label: "Category" },
+] as const satisfies readonly { action: CreateAction; icon: IconName; label: string }[];
 
 export function CreateActionSheet({ open, onDismiss, onSelect }: CreateActionSheetProps) {
   return (
-    <Sheet open={open} onDismiss={onDismiss} testID="create-action-sheet">
-      <Text variant="title">✨ Create</Text>
-      <View style={styles.actions}>
-        {ACTIONS.map(({ action, emoji, label }) => (
-          <OptionTile
+    <Sheet
+      open={open}
+      onDismiss={onDismiss}
+      snapPoints={["half"]}
+      testID="create-action-sheet"
+      title="Create"
+    >
+      <ListGroup>
+        {ACTIONS.map(({ action, icon, label }) => (
+          <ListRow
             key={action}
-            emoji={emoji}
-            label={label}
-            selected
+            chevron
+            icon={icon}
             onPress={() => onSelect(action)}
+            title={label}
           />
         ))}
-      </View>
+      </ListGroup>
     </Sheet>
   );
 }
-
-const styles = StyleSheet.create({ actions: { flexDirection: "row", gap: spacing[2] } });

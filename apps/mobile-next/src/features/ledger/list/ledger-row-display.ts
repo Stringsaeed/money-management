@@ -1,23 +1,31 @@
 import type { V2Account, V2Category, V2Transaction } from "@trove/api/v2/contracts";
 
-import type { IconName } from "@/ui/icon";
+import type { SystemKind } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
+
+import { transactionTileIcon } from "../transactions/transaction-display";
 
 export interface LedgerRowDisplay {
   readonly title: string;
   readonly meta: string;
+  /** Pre-formatted signed amount, kept for spoken labels and plain-text consumers. */
   readonly amount: string;
+  /** Signed minor units for `Amount`: expense negative, income positive. */
+  readonly signedMinor: number;
+  readonly currency: string;
+  /** Transfers carry no sign; spending and income always do. */
+  readonly signDisplay: "always" | "never";
+  /**
+   * System kind tile for rows without a Category (transfers, uncategorised); `null` when the
+   * Category's emoji is shown on the neutral tile instead.
+   */
+  readonly kind: SystemKind | null;
+  /** Neutral tile content for rows with a Category emoji; legacy fallback otherwise. */
+  readonly tile: string;
   readonly tone: "income" | "expense" | "transfer";
   readonly emoji: string | null;
   readonly tint: string | null;
-  readonly icon: IconName;
 }
-
-const KIND_ICONS = {
-  income: "arrow-down-left",
-  expense: "arrow-up-right",
-  transfer: "arrows-left-right",
-} satisfies Record<V2Transaction["kind"], IconName>;
 
 // oxlint-disable-next-line complexity -- one row maps kind, category, account, and date into copy.
 export function ledgerRowDisplay(
@@ -39,18 +47,20 @@ export function ledgerRowDisplay(
     account?.name,
   ].filter(Boolean);
   const sign = transaction.kind === "income" ? "+" : transaction.kind === "expense" ? "−" : "";
+  const emoji = transaction.kind === "transfer" ? null : (category?.icon ?? null);
+  const tile = transactionTileIcon(transaction.kind, emoji);
   return {
     title,
     meta: meta.join(" · "),
     amount: `${sign}${formatMoneyMinor(transaction.amountMinor, transaction.currency)}`,
+    signedMinor:
+      transaction.kind === "expense" ? -transaction.amountMinor : transaction.amountMinor,
+    currency: transaction.currency,
+    signDisplay: transaction.kind === "transfer" ? "never" : "always",
+    kind: emoji ? null : transaction.kind,
+    tile,
     tone: transaction.kind,
-    emoji: transaction.kind === "transfer" ? null : (category?.icon ?? null),
+    emoji,
     tint: category?.color ?? null,
-    icon: KIND_ICONS[transaction.kind],
   };
-}
-
-export function formatNet(minor: number, currency: string): string {
-  const sign = minor > 0 ? "+" : minor < 0 ? "−" : "";
-  return `${sign}${formatMoneyMinor(Math.abs(minor), currency)}`;
 }

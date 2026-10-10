@@ -19,18 +19,27 @@
 - Begin internet-first with TanStack DB. OP SQLite is the future local persistence layer; defer pull/push and offline mutation queues until separately designed. Show honest offline/error states.
 - Use small, concrete interfaces. Extract shared code only when it has a real consumer; avoid speculative frameworks.
 
-## Visual system
+## Building UI
 
-- Rebuild components thoughtfully rather than copying old component implementations. Match the current Garden Ledger palette and Nunito typography from `apps/mobile/lib/design-tokens.ts`.
-- Use module-level native `StyleSheet` and dynamic native color tokens. This supersedes the root document's Tailwind requirement and stale typography description for this app.
-- Resolve iOS colors with `DynamicColorIOS` and Android colors through native day/night resources and `PlatformColor`.
-- Native control props that reject opaque color objects may bridge the canonical light/dark raw palette inside `src/ui`; keep ordinary React Native styles on dynamic tokens.
-- Use subtle shadows, thin rings, generous spacing, accessible text scaling, and clear pressed, loading, disabled, empty, and error states.
-- Use Phosphor icons with `Icon`-suffixed imports. Keep the icon boundary small so individual icons can be replaced. No emojis in UI.
-- Build a custom tab bar similar to the current app, not native tabs. Keep business actions injected through props.
-- Use `react-native-ease` for soft fades and transitions, respecting reduced motion. Reanimated is permitted only for a documented interaction Ease cannot implement.
-- Use `@legendapp/list` for long lists. Use native controls where they improve platform behavior.
-- One React component per file; meaningful hooks in separate files and pure business functions outside presentation components. Let React Compiler handle memoization.
+Trove is the only UI kit. The design source is the Claude Design canvas "Trove Design System" (https://claude.ai/artifact/9LXFeFuxSLfphLSzzs9iGH); the code is `src/ui/trove`, exported from `src/ui/trove/index.ts`. Feature code composes Trove components and owns layout and wiring only.
+
+1. **Look up the component.** Find it in `src/ui/trove/index.ts` and its board on the canvas. Done when every control on the screen maps to a Trove export.
+2. **Report a gap.** When a screen or the canvas needs a piece Trove lacks, report it (where, what it does, closest Trove option) and keep going with what exists. Build a new Trove component only when the user asks: inside `src/ui/trove`, matched to its canvas board, with tests.
+3. **Compose the screen.** `Screen` is the root (left/right safe-area insets always on; pass `edges` for top/bottom). Tab roots use `Header` (large); pushed screens use `Header variant="compact" onBack` with the native header hidden in `src/navigation/data-navigator.tsx`; modal editors use `EditorHeader`.
+4. **Style with tokens.** Text through `Text variant tone`, colors from `colors.*`, spacing from `space`/`layout`, radii from `radius`, in a module-level `StyleSheet`. Hex values live only in `src/ui/trove/tokens/colors.json`.
+5. **Verify.** Check the screen that uses the component on iOS and Android, following Verification below.
+
+Rules:
+
+- **Money**: every amount is `<Amount>`. `minor` takes signed integer minor units (spending negative; income `signDisplay="always"`; transfers `signDisplay="never"`); `value` plus `significant` takes decimal-string prices below a cent.
+- **Tiles**: lists show the category emoji on a neutral `CategoryTile`; transfers and uncategorised entries use `kind`; the user's category `color` appears only on category screens and editors.
+- **Icons and emoji**: icons come from the Trove `Icon` set (`src/ui/trove/icon/icon-paths.ts`). Emoji appear only as user data (category and account emoji) or through a Trove prop that takes one (`Breadcrumb`, `OptionTile`, `NoteField`, toast `emoji`).
+- **New color token**: add it to `tokens/colors.json` and its group in `tokens/colors.ts`, then run `npx expo prebuild --platform android` and `stim android --no-build-cache`. A missing `@color/trove_*` resource crashes Android with "Error while updating property".
+- **Native color props** that reject dynamic colors read `troveRawColors[mode]`, inside `src/ui/trove` only.
+- **Hermes** lacks `Intl.NumberFormat#formatToParts`; format with `format()` as `src/ui/trove/amount/amount-parts.ts` does. Jest runs on Node and passes anyway, so check number formatting on a device.
+- **Motion**: `react-native-ease` through `troveTransition`, which honors reduced motion. Reanimated only for a documented interaction Ease cannot implement.
+- **Lists**: `@legendapp/list` for long lists.
+- **Files**: one React component per file; meaningful hooks in their own files; pure business functions outside components. React Compiler handles memoization.
 
 ## Verification
 

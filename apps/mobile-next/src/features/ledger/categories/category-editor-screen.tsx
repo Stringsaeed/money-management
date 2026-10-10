@@ -1,11 +1,7 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { useCategoriesQuery } from "@/data/ledger-queries";
-import { colors, spacing } from "@/ui/design-tokens";
-import { EmptyState } from "@/ui/empty-state";
-import { IconButton } from "@/ui/icon-button";
-import { Screen } from "@/ui/screen";
-import { Text } from "@/ui/text";
+import { EmptyState, Header, layout, Screen, Skeleton, space } from "@/ui/trove";
 
 import { CategoryEditorForm } from "./category-editor-form";
 import { useCategoryEditorActions } from "./use-category-editor-actions";
@@ -24,20 +20,25 @@ export function CategoryEditorScreen({ id, onDone }: CategoryEditorScreenProps) 
   if (id && categories.isLoading)
     return (
       <Screen>
-        <Text style={styles.status}>Loading category…</Text>
+        <View accessibilityState={{ busy: true }} style={styles.status}>
+          <Skeleton height={32} width="60%" />
+          <Skeleton height={96} />
+        </View>
       </Screen>
     );
   if (id && !category)
     return (
       <Screen>
-        {onDone ? (
-          <IconButton name="x" accessibilityLabel="Close" onPress={onDone} style={styles.close} />
-        ) : null}
-        <EmptyState
-          title="Category not found"
-          message="This category may have been deleted."
-          onRetry={() => void categories.retry()}
-        />
+        <View style={styles.status}>
+          <Header variant="compact" title="Category" onBack={onDone} />
+          <EmptyState
+            title="Category not found"
+            message="This category may have been deleted."
+            icon="info"
+            actionLabel="Try again"
+            onAction={() => void categories.retry()}
+          />
+        </View>
       </Screen>
     );
 
@@ -55,6 +56,5 @@ export function CategoryEditorScreen({ id, onDone }: CategoryEditorScreenProps) 
 }
 
 const styles = StyleSheet.create({
-  status: { color: colors.mutedForeground, padding: spacing[5] },
-  close: { margin: spacing[4] },
+  status: { gap: space[4], padding: layout.screenGutter },
 });

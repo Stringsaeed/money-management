@@ -4,24 +4,36 @@ import { LegendList } from "@legendapp/list/react-native";
 
 import { useCategoriesQuery } from "@/data/ledger-queries";
 import { useLedgerMutationsWithSound } from "@/features/sound";
-import { Button } from "@/ui/button";
-import { Chip } from "@/ui/chip";
-import { EmptyState } from "@/ui/empty-state";
-import { Screen } from "@/ui/screen";
-import { Text } from "@/ui/text";
-import { colors, spacing } from "@/ui/design-tokens";
+import {
+  Banner,
+  EmptyState,
+  Header,
+  layout,
+  Screen,
+  SegmentedControl,
+  space,
+  type SegmentOption,
+} from "@/ui/trove";
 
 import { CategoryRow } from "./category-row";
 import { confirmLedgerDeletion } from "../delete-confirmation";
 
 type CategoryFilter = "all" | "income" | "expense" | "archived";
 
+const FILTER_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "income", label: "Income" },
+  { value: "expense", label: "Expense" },
+  { value: "archived", label: "Archived" },
+] as const satisfies readonly SegmentOption<CategoryFilter>[];
+
 export interface CategoriesScreenProps {
   readonly onAddCategory?: () => void;
   readonly onEditCategory?: (id: string) => void;
+  readonly onBack?: () => void;
 }
 
-export function CategoriesScreen({ onAddCategory, onEditCategory }: CategoriesScreenProps) {
+export function CategoriesScreen({ onAddCategory, onEditCategory, onBack }: CategoriesScreenProps) {
   const categories = useCategoriesQuery();
   const mutations = useLedgerMutationsWithSound();
   const [filter, setFilter] = useState<CategoryFilter>("all");
@@ -57,46 +69,50 @@ export function CategoriesScreen({ onAddCategory, onEditCategory }: CategoriesSc
     confirmLedgerDeletion("category", item.name, () => runAction("delete", item));
   };
 
+  const addCategory = () => {
+    if (pendingAction) return;
+    setActionError(undefined);
+    onAddCategory?.();
+  };
+  const headerActions = onAddCategory
+    ? [{ icon: "add", label: "Add category", onPress: addCategory } as const]
+    : [];
+
   if (categories.isError)
     return (
       <Screen>
-        <EmptyState
-          title="Categories unavailable"
-          message="Check your connection and try again."
-          onRetry={() => void categories.retry()}
-        />
+        <View style={styles.top}>
+          <Header variant="compact" title="Categories" onBack={onBack} actions={headerActions} />
+          <EmptyState
+            title="Categories unavailable"
+            message="Check your connection and try again."
+            icon="info"
+            actionLabel="Try again"
+            onAction={() => void categories.retry()}
+          />
+        </View>
       </Screen>
     );
 
   return (
     <Screen>
+      <View style={styles.top}>
+        <Header variant="compact" title="Categories" onBack={onBack} actions={headerActions} />
+      </View>
       <LegendList
         data={visible}
         keyExtractor={(item) => item.id}
-        estimatedItemSize={200}
+        estimatedItemSize={140}
         contentContainerStyle={styles.content}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text variant="headline">Categories</Text>
-            <Button
-              title="Add category"
-              disabled={Boolean(pendingAction)}
-              onPress={() => {
-                setActionError(undefined);
-                onAddCategory?.();
-              }}
+            <SegmentedControl
+              accessibilityLabel="Filter categories"
+              options={FILTER_OPTIONS}
+              value={filter}
+              onChange={setFilter}
             />
-            <View style={styles.chips}>
-              {(["all", "income", "expense", "archived"] as const).map((item) => (
-                <Chip
-                  key={item}
-                  label={item[0].toUpperCase() + item.slice(1)}
-                  selected={filter === item}
-                  onPress={() => setFilter(item)}
-                />
-              ))}
-            </View>
-            {actionError ? <Text style={styles.error}>{actionError}</Text> : null}
+            {actionError ? <Banner tone="negative" message={actionError} /> : null}
           </View>
         }
         ListEmptyComponent={
@@ -104,7 +120,9 @@ export function CategoriesScreen({ onAddCategory, onEditCategory }: CategoriesSc
             <EmptyState
               title="No categories"
               message="Add categories to make entries easier to understand."
-              action={onAddCategory ? { label: "Add category", onPress: onAddCategory } : undefined}
+              icon="category"
+              actionLabel={onAddCategory ? "Add category" : undefined}
+              onAction={onAddCategory}
             />
           ) : null
         }
@@ -128,14 +146,12 @@ export function CategoriesScreen({ onAddCategory, onEditCategory }: CategoriesSc
 }
 
 const styles = StyleSheet.create({
+  top: { gap: space[4], paddingHorizontal: layout.screenGutter },
   content: {
-    gap: spacing[2],
-    paddingBottom: spacing[16],
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[4],
+    paddingBottom: space[16],
+    paddingHorizontal: layout.screenGutter,
+    paddingTop: space[4],
   },
-  header: { gap: spacing[3], paddingBottom: spacing[2] },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing[2] },
-  separator: { height: spacing[2] },
-  error: { color: colors.destructive },
+  header: { gap: space[3], paddingBottom: space[4] },
+  separator: { height: space[3] },
 });

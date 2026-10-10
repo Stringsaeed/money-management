@@ -1,16 +1,22 @@
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 
 import type { V2Category } from "@trove/api/v2/contracts";
 
 import type { CategoryInput } from "@/data/ledger-client";
-import { colors, spacing, typography } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import {
+  CategoryPreview,
+  EditorHeader,
+  EmojiGrid,
+  findSwatch,
+  layout,
+  NoteField,
+  space,
+  SwatchPicker,
+  Text,
+} from "@/ui/trove";
 
-import { BreadcrumbBar } from "../editor/breadcrumb-bar";
-import { EditorHeader } from "../editor/editor-header";
+import { CATEGORY_EMOJIS } from "./category-palette";
 import { CategoryKindToggle } from "./category-kind-toggle";
-import { CategoryPreview } from "./category-preview";
-import { CategoryStylePad } from "./category-style-pad";
 import { useCategoryEditor } from "./use-category-editor";
 
 interface CategoryEditorFormProps {
@@ -21,6 +27,11 @@ interface CategoryEditorFormProps {
   readonly onSubmit: (input: CategoryInput) => Promise<void>;
 }
 
+const KIND_LABEL = { expense: "Expense", income: "Income" } as const satisfies Record<
+  CategoryInput["kind"],
+  string
+>;
+
 export function CategoryEditorForm({
   category,
   busy = false,
@@ -30,61 +41,62 @@ export function CategoryEditorForm({
 }: CategoryEditorFormProps) {
   const form = useCategoryEditor({ category, onSubmit });
   const message = error ?? form.validationError;
+  const { color, icon, kind, name } = form.draft;
+  const swatchName = findSwatch(color)?.name ?? "Custom colour";
 
   return (
     <View style={styles.container}>
-      {/* The pad is taller than the system keyboard, so the name field above it stays
-          visible without keyboard avoidance. */}
-      <View style={styles.body}>
-        <EditorHeader
-          title={category ? "Edit category" : "New category"}
-          busy={busy}
-          onCancel={onCancel}
-          onSave={() => void form.submit()}
-        />
-        <View style={styles.controls}>
-          <BreadcrumbBar>
-            <CategoryKindToggle kind={form.draft.kind} onChange={form.selectKind} />
-          </BreadcrumbBar>
-        </View>
+      <EditorHeader
+        title={category ? "Edit category" : "New category"}
+        saveDisabled={busy}
+        onClose={() => onCancel?.()}
+        onSave={() => void form.submit()}
+      />
+      <ScrollView
+        automaticallyAdjustKeyboardInsets
+        contentContainerStyle={styles.content}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <CategoryKindToggle kind={kind} onChange={form.selectKind} />
         <View style={styles.preview}>
           <CategoryPreview
-            name={form.draft.name}
-            color={form.draft.color}
-            icon={form.draft.icon}
-            onNameChange={form.setName}
+            color={color}
+            emoji={icon}
+            name={name.trim() || "Category name"}
+            stamp={`${KIND_LABEL[kind]} · ${swatchName}`}
           />
-          {message ? (
-            <Text accessibilityRole="alert" style={styles.error}>
-              {message}
-            </Text>
-          ) : null}
         </View>
-      </View>
-      <CategoryStylePad
-        kind={form.draft.kind}
-        color={form.draft.color}
-        icon={form.draft.icon}
-        onColorChange={form.selectColor}
-        onIconChange={form.selectIcon}
-      />
+        <NoteField
+          autoCapitalize="words"
+          emoji="✏️"
+          maxLength={120}
+          onChangeText={form.setName}
+          placeholder="Category name"
+          testID="category-name-field"
+          value={name}
+        />
+        {message ? (
+          <Text accessibilityRole="alert" tone="negative">
+            {message}
+          </Text>
+        ) : null}
+        <SwatchPicker accessibilityLabel="Colour" onChange={form.selectColor} value={color} />
+        <EmojiGrid
+          accessibilityLabel="Emoji"
+          color={color}
+          onChange={form.selectIcon}
+          options={CATEGORY_EMOJIS[kind]}
+          value={icon}
+        />
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  body: { flex: 1 },
-  controls: { paddingTop: spacing[1] },
-  preview: {
-    flex: 1,
-    gap: spacing[2],
-    justifyContent: "center",
-  },
-  error: {
-    color: colors.destructive,
-    fontFamily: typography.fontBodyMedium,
-    paddingHorizontal: spacing[5],
-    textAlign: "center",
-  },
+  container: { flex: 1, paddingHorizontal: layout.screenGutter, paddingTop: space[2] },
+  content: { gap: space[4], paddingBottom: space[6], paddingTop: space[3] },
+  preview: { alignItems: "center" },
 });

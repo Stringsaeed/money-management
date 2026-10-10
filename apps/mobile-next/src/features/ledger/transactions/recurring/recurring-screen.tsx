@@ -4,28 +4,43 @@ import { LegendList } from "@legendapp/list/react-native";
 
 import { useAccountsQuery, useCategoriesQuery, useRecurringQuery } from "@/data/ledger-queries";
 import { useLedgerMutationsWithSound } from "@/features/sound";
-import { Button } from "@/ui/button";
-import { Chip } from "@/ui/chip";
-import { EmptyState } from "@/ui/empty-state";
-import { Screen } from "@/ui/screen";
-import { Sheet } from "@/ui/sheet";
-import { Surface } from "@/ui/surface";
-import { Text } from "@/ui/text";
-import { colors, spacing, typography } from "@/ui/design-tokens";
-import { formatMoneyMinor } from "@/utils/money";
+import {
+  Amount,
+  Banner,
+  EmptyState,
+  Header,
+  layout,
+  ListGroup,
+  ListRow,
+  Screen,
+  SegmentedControl,
+  Sheet,
+  space,
+  type SegmentOption,
+} from "@/ui/trove";
 
+import { RECURRING_KIND_ICONS, recurringAmount, recurringSubtitle } from "./recurring-display";
 import { RecurringForm } from "./recurring-form";
 
 export interface RecurringScreenProps {
   readonly onOpenRule?: (id: string) => void;
+  readonly onBack?: () => void;
 }
 
-export function RecurringScreen({ onOpenRule }: RecurringScreenProps) {
+type RecurringFilter = "current" | "needs_attention" | "archived";
+
+const FILTER_OPTIONS = [
+  { value: "current", label: "Current" },
+  { value: "needs_attention", label: "Needs attention" },
+  { value: "archived", label: "Archived" },
+] as const satisfies readonly SegmentOption<RecurringFilter>[];
+
+export function RecurringScreen({ onOpenRule, onBack }: RecurringScreenProps) {
   const recurring = useRecurringQuery();
   const accounts = useAccountsQuery();
   const categories = useCategoriesQuery();
   const mutations = useLedgerMutationsWithSound();
-  const [filter, setFilter] = useState<"current" | "needs_attention" | "archived">("current");
+  const [filter, setFilter] = useState<RecurringFilter>("current");
   const [createOpen, setCreateOpen] = useState(false);
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -36,66 +51,86 @@ export function RecurringScreen({ onOpenRule }: RecurringScreenProps) {
         ? rule.health === "needs_attention"
         : rule.lifecycle !== "archived",
   );
+  const openCreate = () => {
+    setError(undefined);
+    setCreateOpen(true);
+  };
+  const headerActions = [{ icon: "add", label: "Add rule", onPress: openCreate } as const];
+  const header = (
+    <View style={styles.top}>
+      <Header variant="compact" title="Recurring" onBack={onBack} actions={headerActions} />
+    </View>
+  );
   if (recurring.isError)
     return (
       <Screen>
+        {header}
         <EmptyState
           title="Recurring Rules unavailable"
           message="Check your connection and try again."
-          onRetry={() => void recurring.retry()}
+          actionLabel="Try again"
+          onAction={() => void recurring.retry()}
         />
       </Screen>
     );
   return (
     <Screen>
+      {header}
       <LegendList
         data={visible}
         keyExtractor={(item) => item.id}
-        estimatedItemSize={80}
+        estimatedItemSize={72}
         contentContainerStyle={styles.content}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text variant="headline">Recurring Rules</Text>
-            <Button
-              title="Add Rule"
-              onPress={() => {
-                setError(undefined);
-                setCreateOpen(true);
-              }}
+            {error ? <Banner tone="negative" message={error} /> : null}
+            <SegmentedControl
+              accessibilityLabel="Filter rules"
+              options={FILTER_OPTIONS}
+              value={filter}
+              onChange={setFilter}
             />
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-            <View style={styles.chips}>
-              {(["current", "needs_attention", "archived"] as const).map((item) => (
-                <Chip
-                  key={item}
-                  label={item.replace("_", " ")}
-                  selected={filter === item}
-                  onPress={() => setFilter(item)}
-                />
-              ))}
-            </View>
           </View>
         }
         ListEmptyComponent={
           <EmptyState
+            icon="recurring"
             title="No Rules"
             message="Schedule regular income, expenses, and transfers."
-            onRetry={() => setCreateOpen(true)}
+            actionLabel="Add rule"
+            onAction={openCreate}
           />
         }
-        renderItem={({ item }) => (
-          <Surface variant="raised" style={styles.card}>
-            <Button title={item.name} variant="ghost" onPress={() => onOpenRule?.(item.id)} />
-            <Text style={styles.meta}>
-              {item.frequency} · every {item.intervalCount} · {item.lifecycle}
-              {item.health === "needs_attention" ? " · Needs attention" : ""}
-            </Text>
-            <Text style={styles.amount}>{formatMoneyMinor(item.amountMinor, item.currency)}</Text>
-          </Surface>
-        )}
+        renderItem={({ item }) => {
+          const amount = recurringAmount(item);
+          return (
+            <ListGroup>
+              <ListRow
+                title={item.name}
+                subtitle={recurringSubtitle(item)}
+                icon={RECURRING_KIND_ICONS[item.kind]}
+                trailing={
+                  <Amount
+                    minor={amount.minor}
+                    currency={item.currency}
+                    signDisplay={amount.signDisplay}
+                    size="sm"
+                  />
+                }
+                chevron
+                onPress={() => onOpenRule?.(item.id)}
+              />
+            </ListGroup>
+          );
+        }}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
-      <Sheet open={createOpen} onDismiss={() => setCreateOpen(false)} snapPoints={["half", "full"]}>
+      <Sheet
+        open={createOpen}
+        onDismiss={() => setCreateOpen(false)}
+        title="Add recurring rule"
+        snapPoints={["half", "full"]}
+      >
         <RecurringForm
           accounts={accounts.data}
           categories={categories.data}
@@ -121,24 +156,10 @@ export function RecurringScreen({ onOpenRule }: RecurringScreenProps) {
 
 const styles = StyleSheet.create({
   content: {
-    gap: spacing[2],
-    paddingBottom: spacing[16],
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[4],
+    paddingBottom: space[16],
+    paddingHorizontal: layout.screenGutter,
   },
-  header: { gap: spacing[3], paddingBottom: spacing[2] },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing[2] },
-  card: { gap: spacing[1], padding: spacing[4] },
-  meta: {
-    color: colors.mutedForeground,
-    fontFamily: typography.fontBodyNormal,
-    fontSize: typography.textSm,
-  },
-  amount: {
-    color: colors.ink,
-    fontFamily: typography.fontHeadingMedium,
-    fontSize: typography.textBase,
-  },
-  error: { color: colors.destructive },
-  separator: { height: spacing[2] },
+  top: { paddingHorizontal: layout.screenGutter },
+  header: { gap: space[3], paddingBottom: space[4] },
+  separator: { height: space[2] },
 });

@@ -1,11 +1,7 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { useAccountsQuery } from "@/data/ledger-queries";
-import { colors, spacing } from "@/ui/design-tokens";
-import { EmptyState } from "@/ui/empty-state";
-import { IconButton } from "@/ui/icon-button";
-import { Screen } from "@/ui/screen";
-import { Text } from "@/ui/text";
+import { EmptyState, Header, layout, Screen, Skeleton, space } from "@/ui/trove";
 
 import { AccountEditorForm } from "./account-editor-form";
 import { useAccountEditorActions } from "./use-account-editor-actions";
@@ -29,20 +25,25 @@ export function AccountEditorScreen({ id, onDone }: AccountEditorScreenProps) {
   if (accounts.isLoading)
     return (
       <Screen>
-        <Text style={styles.status}>Loading account…</Text>
+        <View accessibilityState={{ busy: true }} style={styles.status}>
+          <Skeleton height={32} width="60%" />
+          <Skeleton height={96} />
+        </View>
       </Screen>
     );
   if (id && !account)
     return (
       <Screen>
-        {onDone ? (
-          <IconButton name="x" accessibilityLabel="Close" onPress={onDone} style={styles.close} />
-        ) : null}
-        <EmptyState
-          title="Account not found"
-          message="This account may have been deleted."
-          onRetry={() => void accounts.retry()}
-        />
+        <View style={styles.status}>
+          <Header variant="compact" title="Account" onBack={onDone} />
+          <EmptyState
+            title="Account not found"
+            message="This account may have been deleted."
+            icon="info"
+            actionLabel="Try again"
+            onAction={() => void accounts.retry()}
+          />
+        </View>
       </Screen>
     );
 
@@ -61,6 +62,5 @@ export function AccountEditorScreen({ id, onDone }: AccountEditorScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  status: { color: colors.mutedForeground, padding: spacing[5] },
-  close: { margin: spacing[4] },
+  status: { gap: space[4], padding: layout.screenGutter },
 });

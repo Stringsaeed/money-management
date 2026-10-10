@@ -4,28 +4,40 @@ import { useState, type ComponentProps } from "react";
 
 import { useSession } from "@/features/auth/use-session";
 import { useHousehold } from "@/features/household/use-household";
-import {
-  CreateActionSheet,
-  type CreateAction,
-  ScopeControl,
-  ScopeSheet,
-} from "@/features/navigation";
+import { CreateActionSheet, type CreateAction, ScopeSheet } from "@/features/navigation";
 import { playCue } from "@/features/sound";
-import { GlassTabBar } from "@/ui/glass-tab-bar";
+import { TabBar, type TabBarKey } from "@/ui/trove";
 
 import { useLedgerScope } from "./ledger-scope-context";
+import { buildTabEntries } from "./tab-bar-routes";
 
 type BottomTabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>["tabBar"]>>[0];
 
-export const AppTabBar = ({ state, navigation, descriptors, insets }: BottomTabBarProps) => {
+export const AppTabBar = ({ state, navigation, descriptors }: BottomTabBarProps) => {
   const { scope, selectScope } = useLedgerScope();
   const session = useSession();
   const [createOpen, setCreateOpen] = useState(false);
   const [scopeOpen, setScopeOpen] = useState(false);
   const household = useHousehold(session.status === "signed_in" && scopeOpen);
 
+  const entries = buildTabEntries({
+    routes: state.routes,
+    focusedKey: state.routes[state.index]?.key,
+    labelFor: (route) => descriptors[route.key]?.options.title ?? route.name,
+  });
   const scopeLabel =
     scope.kind === "household" ? (household.household?.name ?? "Household") : "Personal";
+
+  const pressTab = (key: TabBarKey) => {
+    const entry = entries.find((candidate) => candidate.tab.key === key);
+    if (!entry) return;
+    const event = navigation.emit({
+      type: "tabPress",
+      target: entry.route.key,
+      canPreventDefault: true,
+    });
+    if (!entry.tab.active && !event.defaultPrevented) navigation.navigate(entry.route.name);
+  };
   const selectCreateAction = (action: CreateAction) => {
     setCreateOpen(false);
     const paths = {
@@ -44,15 +56,16 @@ export const AppTabBar = ({ state, navigation, descriptors, insets }: BottomTabB
 
   return (
     <>
-      <GlassTabBar
-        state={state}
-        navigation={navigation}
-        insets={insets}
-        descriptors={descriptors}
-        createAccessibilityLabel="Create"
-        onCreate={() => router.push("/transactions/new")}
-        onCreateLongPress={() => setCreateOpen(true)}
-        scopeControl={<ScopeControl label={scopeLabel} onPress={() => setScopeOpen(true)} />}
+      <TabBar
+        addLabel="Create"
+        onAdd={() => router.push("/transactions/new")}
+        onAddLongPress={() => setCreateOpen(true)}
+        onScopePress={() => setScopeOpen(true)}
+        onTabPress={pressTab}
+        scope={scope.kind}
+        scopeExpanded={scopeOpen}
+        scopeLabel={`Ledger scope: ${scopeLabel}`}
+        tabs={entries.map((entry) => entry.tab)}
       />
       <CreateActionSheet
         open={createOpen}

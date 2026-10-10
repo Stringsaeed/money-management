@@ -1,11 +1,18 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import type { V2LedgerScope } from "@trove/api/v2/contracts";
 
 import type { HouseholdDetail } from "@/features/household/household-client";
-import { Button } from "@/ui/button";
-import { Sheet } from "@/ui/sheet";
-import { Text } from "@/ui/text";
-import { colors, spacing } from "@/ui/design-tokens";
+import {
+  Banner,
+  colors,
+  Icon,
+  ListGroup,
+  ListRow,
+  radius,
+  Sheet,
+  Skeleton,
+  space,
+} from "@/ui/trove";
 
 interface ScopeSheetProps {
   readonly open: boolean;
@@ -18,6 +25,8 @@ interface ScopeSheetProps {
   readonly onOpenHousehold: () => void;
 }
 
+const SelectedMark = () => <Icon color={colors.accent.text} name="check" size={20} />;
+
 export function ScopeSheet({
   open,
   onDismiss,
@@ -29,36 +38,36 @@ export function ScopeSheet({
   onOpenHousehold,
 }: ScopeSheetProps) {
   return (
-    <Sheet open={open} onDismiss={onDismiss} testID="ledger-scope-sheet">
-      <Text variant="title">Choose ledger</Text>
-      <View style={styles.options}>
-        <Button
-          title="Personal"
-          variant={scope.kind === "personal" ? "primary" : "secondary"}
+    <Sheet open={open} onDismiss={onDismiss} testID="ledger-scope-sheet" title="Choose ledger">
+      <ListGroup>
+        <ListRow
+          icon="scope-personal"
           onPress={() => onSelect({ kind: "personal" })}
+          title="Personal"
+          trailing={scope.kind === "personal" ? <SelectedMark /> : undefined}
         />
-        {loading ? <Text style={styles.muted}>Loading household…</Text> : null}
         {household ? (
-          <Button
-            title={household.name}
-            variant={scope.kind === "household" ? "primary" : "secondary"}
+          <ListRow
+            icon="scope-household"
             onPress={() => onSelect({ kind: "household", householdId: household.householdId })}
+            title={household.name}
+            trailing={scope.kind === "household" ? <SelectedMark /> : undefined}
           />
         ) : null}
-        {!loading && !household ? (
-          <>
-            <Text style={styles.muted}>
-              {error ?? "Create or join a household to share a ledger."}
-            </Text>
-            <Button title="Open household" variant="ghost" onPress={onOpenHousehold} />
-          </>
-        ) : null}
-      </View>
+      </ListGroup>
+      {loading ? (
+        <View accessible accessibilityLabel="Loading household" accessibilityState={{ busy: true }}>
+          <Skeleton borderRadius={radius.lg} height={space[12]} />
+        </View>
+      ) : null}
+      {!loading && !household ? (
+        <Banner
+          actionLabel="Open household"
+          message={error ?? "Create or join a household to share a ledger."}
+          onAction={onOpenHousehold}
+          tone={error ? "negative" : "neutral"}
+        />
+      ) : null}
     </Sheet>
   );
 }
-
-const styles = StyleSheet.create({
-  options: { gap: spacing[2] },
-  muted: { color: colors.mutedForeground },
-});

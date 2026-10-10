@@ -2,10 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import type { V2TransactionKind } from "@trove/api/v2/contracts";
 
-import { Button } from "@/ui/button";
-import { Sheet } from "@/ui/sheet";
-import { Text } from "@/ui/text";
-import { spacing } from "@/ui/design-tokens";
+import { Button, Sheet, space, Text } from "@/ui/trove";
 
 import { FilterSection } from "./filter-section";
 import { DATE_PRESETS, KIND_LABELS, presetRange, toggleValue } from "./ledger-filters";
@@ -32,11 +29,15 @@ export function LedgerFilterSheet({ list }: LedgerFilterSheetProps) {
     update((current) => ({ ...current, categoryIds: toggleValue(current.categoryIds, id) }));
 
   return (
-    <Sheet open={list.filtersOpen} onDismiss={list.closeFilters} snapPoints={["full"]}>
-      <View style={styles.header}>
-        <Text variant="headline">Filter ledger</Text>
-        <Text variant="caption">Choose within a group to widen, across groups to narrow.</Text>
-      </View>
+    <Sheet
+      open={list.filtersOpen}
+      onDismiss={list.closeFilters}
+      title="Filter ledger"
+      snapPoints={["full"]}
+    >
+      <Text variant="bodySm" tone="secondary">
+        Choose within a group to widen, across groups to narrow.
+      </Text>
       <LedgerSearchField
         value={filters.search}
         onSubmit={(search) => update((current) => ({ ...current, search }))}
@@ -84,19 +85,20 @@ export function LedgerFilterSheet({ list }: LedgerFilterSheetProps) {
         onToggle={toggleCategory}
       />
       <View style={styles.footer}>
-        <Button title="Reset" variant="ghost" onPress={list.clear} />
-        <Button
-          title={count === undefined ? "Show results" : `Show ${count.toLocaleString()} entries`}
-          onPress={list.closeFilters}
-          style={styles.primary}
-        />
+        <Button label="Reset" variant="tertiary" onPress={list.clear} />
+        <View style={styles.primary}>
+          <Button
+            label={count === undefined ? "Show results" : `Show ${count.toLocaleString()} entries`}
+            fullWidth
+            onPress={list.closeFilters}
+          />
+        </View>
       </View>
     </Sheet>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { gap: spacing[1], marginBottom: spacing[1] },
-  footer: { flexDirection: "row", gap: spacing[2], marginTop: spacing[3] },
+  footer: { alignItems: "center", flexDirection: "row", gap: space[2], marginTop: space[3] },
   primary: { flex: 1 },
 });
