@@ -1,12 +1,21 @@
 import { format, parseISO } from "date-fns";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import type { UpcomingOccurrence } from "@/data/ledger-schemas";
-import { Text } from "@/ui/text";
-import { Icon } from "@/ui/icon";
-import { TilePanel } from "@/ui/tiled-garden/tile-panel";
-import { colors, spacing, typography } from "@/ui/design-tokens";
-import { formatMoneyMinor } from "@/utils/money";
-import { homeAccent } from "./home-accent";
+import { colors as legacyColors, typography } from "@/ui/design-tokens";
+import { Text as LegacyText } from "@/ui/text";
+import {
+  Amount,
+  Banner,
+  Button,
+  Card,
+  layout,
+  ListGroup,
+  ListRow,
+  Skeleton,
+  space,
+  Text,
+} from "@/ui/trove";
+import { signedMinor } from "./home-display";
 
 interface HomeUpcomingProps {
   readonly items: readonly (UpcomingOccurrence & { readonly name: string })[];
@@ -16,105 +25,107 @@ interface HomeUpcomingProps {
   readonly onViewAll: () => void;
 }
 
+const CHIP_WIDTH = 46;
+// 16pt row padding, the date chip, then the 12pt gap before the title.
+const DIVIDER_INSET = layout.cardPadding + CHIP_WIDTH + space[3];
+
 export function HomeUpcoming({ items, loading, failed, onOpen, onViewAll }: HomeUpcomingProps) {
   return (
-    <TilePanel contentStyle={styles.section}>
+    <View style={styles.section}>
       <View style={styles.heading}>
         <View style={styles.copy}>
-          <Text variant="title" style={styles.title}>
-            Upcoming transactions
+          <Text variant="titleSm">Upcoming transactions</Text>
+          <Text tone="secondary" variant="bodySm">
+            Due now and in the next month
           </Text>
-          <Text variant="caption">Due now and in the next month</Text>
         </View>
-        <Pressable
-          accessibilityRole="button"
+        <Button
           accessibilityLabel="View recurring transactions"
+          label="View all"
           onPress={onViewAll}
-          style={({ pressed }) => [styles.link, pressed && styles.pressed]}
-        >
-          <Icon name="arrow-right" color={homeAccent.action.icon} />
-        </Pressable>
+          size="sm"
+          variant="tertiary"
+        />
       </View>
       {loading ? (
-        <Text style={styles.empty}>Loading upcoming transactions…</Text>
+        <Card
+          accessibilityLabel="Loading upcoming transactions"
+          accessibilityState={{ busy: true }}
+        >
+          <View style={styles.skeletons}>
+            <Skeleton height={20} width="60%" />
+            <Skeleton height={20} />
+            <Skeleton height={20} width="80%" />
+          </View>
+        </Card>
       ) : failed ? (
-        <Text style={styles.empty}>
-          Upcoming transactions are unavailable. Pull down to try again.
-        </Text>
+        <Banner
+          tone="warning"
+          message="Upcoming transactions are unavailable. Pull down to try again."
+        />
       ) : items.length === 0 ? (
-        <Text style={styles.empty}>Nothing scheduled. A little breathing room.</Text>
+        <Card>
+          <Text tone="secondary">Nothing scheduled. A little breathing room.</Text>
+        </Card>
       ) : (
-        items.map((item) => (
-          <Pressable
-            key={`${item.ruleId}:${item.scheduledDate}`}
-            accessibilityRole="button"
-            accessibilityLabel={`Open ${item.name}`}
-            onPress={() => onOpen(item.ruleId)}
-            style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-          >
-            <View style={styles.calendar}>
-              <Text style={styles.month}>
-                {format(parseISO(item.scheduledDate), "MMM").toUpperCase()}
-              </Text>
-              <Text style={styles.day}>{format(parseISO(item.scheduledDate), "dd")}</Text>
-            </View>
-            <Text numberOfLines={2} style={styles.name}>
-              {item.name}
-            </Text>
-            <Text style={styles.amount}>{formatMoneyMinor(item.amountMinor, item.currency)}</Text>
-          </Pressable>
-        ))
+        <ListGroup dividerInset={DIVIDER_INSET}>
+          {items.map((item) => (
+            <ListRow
+              key={`${item.ruleId}:${item.scheduledDate}`}
+              accessibilityLabel={`Open ${item.name}`}
+              title={item.name}
+              // Gap: Trove has no calendar date chip; the legacy chip stays in the leading slot.
+              leading={
+                <View style={styles.calendar}>
+                  <LegacyText style={styles.month}>
+                    {format(parseISO(item.scheduledDate), "MMM").toUpperCase()}
+                  </LegacyText>
+                  <LegacyText style={styles.day}>
+                    {format(parseISO(item.scheduledDate), "dd")}
+                  </LegacyText>
+                </View>
+              }
+              trailing={
+                <Amount
+                  currency={item.currency}
+                  minor={signedMinor(item.kind, item.amountMinor)}
+                  signDisplay={item.kind === "transfer" ? "never" : "always"}
+                  size="md"
+                />
+              }
+              onPress={() => onOpen(item.ruleId)}
+            />
+          ))}
+        </ListGroup>
       )}
-    </TilePanel>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { gap: spacing[2] },
-  heading: { flexDirection: "row", alignItems: "center", gap: spacing[2] },
+  section: { gap: space[2] },
+  heading: { alignItems: "center", flexDirection: "row", gap: space[2] },
   copy: { flex: 1 },
-  title: { fontFamily: typography.fontBodyBold, fontSize: typography.textLg },
-  link: {
-    alignItems: "center",
-    backgroundColor: homeAccent.action.background,
-    borderColor: homeAccent.action.border,
-    borderRadius: 22,
-    borderWidth: 1,
-    height: 44,
-    justifyContent: "center",
-    width: 44,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[3],
-    paddingVertical: spacing[2],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
+  skeletons: { gap: space[3] },
   calendar: {
-    width: 46,
-    minHeight: 50,
-    backgroundColor: colors.muted,
+    alignItems: "center",
+    backgroundColor: legacyColors.muted,
+    borderColor: legacyColors.border,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.border,
     justifyContent: "center",
-    alignItems: "center",
+    minHeight: 50,
+    width: CHIP_WIDTH,
   },
   month: {
-    color: colors.foreground,
-    fontSize: 9,
+    color: legacyColors.foreground,
     fontFamily: typography.fontBodyBold,
+    fontSize: 9,
     letterSpacing: 1,
   },
   day: {
-    color: colors.foreground,
-    fontSize: typography.textLg,
+    color: legacyColors.foreground,
     fontFamily: typography.fontBodyBold,
+    fontSize: typography.textLg,
   },
-  name: { flex: 1, fontFamily: typography.fontBodySemibold },
-  amount: { fontFamily: typography.fontBodyBold, fontVariant: ["tabular-nums"] },
-  empty: { color: colors.mutedForeground, paddingVertical: spacing[4] },
-  pressed: { opacity: 0.68 },
 });

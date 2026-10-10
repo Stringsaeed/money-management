@@ -4,11 +4,8 @@ import { useHeaderHeight } from "expo-router/react-navigation";
 import { Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease";
 
-import { Text } from "@/ui/text";
-import { EmptyState } from "@/ui/empty-state";
-import { Button } from "@/ui/button";
-import { colors, spacing } from "@/ui/design-tokens";
 import { useReducedMotion } from "@/ui/motion";
+import { Banner, colors, EmptyState, layout, radius, Screen, Skeleton, space } from "@/ui/trove";
 
 import { useHomeData } from "./use-home-data";
 import { HomeHeader } from "./home-header";
@@ -36,7 +33,7 @@ export function HomeScreen() {
     }
   };
   return (
-    <>
+    <Screen edges={[]}>
       <HomeHeader
         name={home.name}
         seed={home.seed}
@@ -48,25 +45,35 @@ export function HomeScreen() {
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={[
           styles.content,
-          Platform.OS === "android" && { paddingTop: headerHeight + spacing[4] },
+          Platform.OS === "android" && { paddingTop: headerHeight + space[4] },
         ]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => void refresh()}
-            tintColor={colors.primary}
+            tintColor={colors.accent.fill}
             progressViewOffset={Platform.OS === "android" ? headerHeight : 0}
           />
         }
       >
         {home.isLoading ? (
-          <Text style={styles.status}>Gathering your ledger…</Text>
+          <View
+            accessibilityLabel="Gathering your ledger"
+            accessibilityState={{ busy: true }}
+            style={styles.sections}
+          >
+            <Skeleton borderRadius={radius.lg} height={120} />
+            <Skeleton borderRadius={radius.lg} height={200} />
+            <Skeleton borderRadius={radius.lg} height={240} />
+          </View>
         ) : home.isError ? (
           <EmptyState
             title="Your overview is unavailable"
             message="Check your connection and try again."
-            onRetry={() => void refresh()}
+            icon="warning"
+            actionLabel="Try again"
+            onAction={() => void refresh()}
           />
         ) : (
           <EaseView
@@ -80,7 +87,7 @@ export function HomeScreen() {
             style={styles.sections}
           >
             {refreshError ? (
-              <Text style={styles.error}>Could not refresh. Pull down to try again.</Text>
+              <Banner tone="negative" message="Could not refresh. Pull down to try again." />
             ) : null}
             <HomeOverviewCard
               overview={home.overview}
@@ -91,10 +98,13 @@ export function HomeScreen() {
               onRange={home.setRange}
             />
             {home.accounts.data.length === 0 ? (
-              <View style={styles.emptyAccount}>
-                <Text>Add an account to start your overview.</Text>
-                <Button title="Add account" onPress={() => router.push("/accounts/new")} />
-              </View>
+              <EmptyState
+                title="No accounts yet"
+                message="Add an account to start your overview."
+                icon="accounts"
+                actionLabel="Add account"
+                onAction={() => router.push("/accounts/new")}
+              />
             ) : null}
             <HomeActivity
               transactions={home.recent}
@@ -128,20 +138,20 @@ export function HomeScreen() {
         onCurrency={home.setCurrency}
         onAccount={home.setAccount}
       />
-    </>
+    </Screen>
   );
 }
 
+// Clearance for the floating tab bar.
+const TAB_BAR_CLEARANCE = 140;
+
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
+  screen: { flex: 1 },
   content: {
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[4],
-    paddingBottom: 140,
-    gap: spacing[4],
+    paddingHorizontal: layout.screenGutter,
+    paddingTop: space[4],
+    paddingBottom: TAB_BAR_CLEARANCE,
+    gap: space[4],
   },
-  sections: { gap: spacing[5] },
-  status: { paddingVertical: spacing[8], color: colors.mutedForeground },
-  error: { color: colors.destructive },
-  emptyAccount: { gap: spacing[3] },
+  sections: { gap: layout.sectionGap },
 });

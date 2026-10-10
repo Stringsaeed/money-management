@@ -1,11 +1,7 @@
 import { StyleSheet, View } from "react-native";
 import type { V2Account } from "@trove/api/v2/contracts";
 
-import { Button } from "@/ui/button";
-import { Chip } from "@/ui/chip";
-import { Sheet } from "@/ui/sheet";
-import { Text } from "@/ui/text";
-import { spacing } from "@/ui/design-tokens";
+import { Button, Chip, Sheet, space, Text } from "@/ui/trove";
 
 interface HomeFiltersProps {
   readonly open: boolean;
@@ -33,10 +29,11 @@ export function HomeFilters({
   onRange,
 }: HomeFiltersProps) {
   return (
-    <Sheet open={open} onDismiss={onDismiss} snapPoints={["full"]}>
-      <Text variant="headline">Your overview</Text>
-      <Text>Choose the period, currency and accounts to include.</Text>
-      <Text variant="label">Period</Text>
+    <Sheet open={open} onDismiss={onDismiss} snapPoints={["full"]} title="Your overview">
+      <Text tone="secondary">Choose the period, currency and accounts to include.</Text>
+      <Text tone="secondary" variant="labelSm">
+        Period
+      </Text>
       <View style={styles.options}>
         {(["week", "month", "year"] as const).map((value) => (
           <Chip
@@ -47,7 +44,9 @@ export function HomeFilters({
           />
         ))}
       </View>
-      <Text variant="label">Currency</Text>
+      <Text tone="secondary" variant="labelSm">
+        Currency
+      </Text>
       <View style={styles.options}>
         {currencies.map((value) => (
           <Chip
@@ -58,7 +57,9 @@ export function HomeFilters({
           />
         ))}
       </View>
-      <Text variant="label">Accounts</Text>
+      <Text tone="secondary" variant="labelSm">
+        Accounts
+      </Text>
       <View style={styles.options}>
         <Chip label="All accounts" selected={accountId === null} onPress={() => onAccount(null)} />
         {accounts
@@ -72,11 +73,11 @@ export function HomeFilters({
             />
           ))}
       </View>
-      <Button title="Done" onPress={onDismiss} />
+      <Button fullWidth label="Done" onPress={onDismiss} />
     </Sheet>
   );
 }
 
 const styles = StyleSheet.create({
-  options: { flexDirection: "row", flexWrap: "wrap", gap: spacing[2], marginBottom: spacing[3] },
+  options: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
 });

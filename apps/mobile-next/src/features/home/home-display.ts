@@ -92,3 +92,8 @@ export function formatChartMoney(value: number, currency: string) {
     maximumFractionDigits: 1,
   }).format(value / 10 ** currencyFractionDigits(currency));
 }
+
+/** Trove `Amount` takes signed minor units: spending is negative, money in positive. */
+export function signedMinor(kind: V2Transaction["kind"], amountMinor: number) {
+  return kind === "expense" ? -Math.abs(amountMinor) : Math.abs(amountMinor);
+}

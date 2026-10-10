@@ -1,10 +1,8 @@
 import { Stack } from "expo-router/stack";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 
-import { colors, radii } from "@/ui/design-tokens";
-import { Icon } from "@/ui/icon";
 import { SeedAvatar } from "@/ui/tiled-garden/seed-avatar";
-import { homeAccent } from "./home-accent";
+import { colors, IconButton, layout, radius, space } from "@/ui/trove";
 
 interface HomeHeaderProps {
   readonly name: string;
@@ -13,6 +11,8 @@ interface HomeHeaderProps {
   readonly onOpenProfile: () => void;
 }
 
+// The native stack header keeps the profile avatar: Trove `Header` has no leading slot and
+// there is no Trove avatar, so `SeedAvatar` stays on its legacy implementation.
 export function HomeHeader({ name, seed, onOpenFilters, onOpenProfile }: HomeHeaderProps) {
   return (
     <Stack.Screen
@@ -32,14 +32,12 @@ export function HomeHeader({ name, seed, onOpenFilters, onOpenProfile }: HomeHea
           </Pressable>
         ),
         headerRight: () => (
-          <Pressable
-            accessibilityRole="button"
+          <IconButton
+            icon="filter"
             accessibilityLabel="Filter overview"
             onPress={onOpenFilters}
-            style={({ pressed }) => [styles.filter, pressed && styles.pressed]}
-          >
-            <Icon name="funnel" size={22} color={homeAccent.action.icon} />
-          </Pressable>
+            variant="neutral"
+          />
         ),
       }}
     />
@@ -47,25 +45,14 @@ export function HomeHeader({ name, seed, onOpenFilters, onOpenProfile }: HomeHea
 }
 
 const styles = StyleSheet.create({
-  scrim: { flex: 1, backgroundColor: colors.background, opacity: 0.92 },
+  scrim: { flex: 1, backgroundColor: colors.bg.canvas, opacity: 0.92 },
   avatar: {
-    marginRight: Platform.OS === "android" ? 8 : 0,
-    width: 44,
-    height: 44,
-    borderRadius: radii.full,
+    marginRight: Platform.OS === "android" ? space[2] : 0,
+    width: layout.minTouchTarget,
+    height: layout.minTouchTarget,
+    borderRadius: radius.full,
     alignItems: "center",
     justifyContent: "center",
-  },
-  filter: {
-    width: 44,
-    height: 44,
-    borderRadius: radii.full,
-    backgroundColor: homeAccent.action.background,
-    borderWidth: 1,
-    borderColor: homeAccent.action.border,
-    alignItems: "center",
-    justifyContent: "center",
-    boxShadow: "0 2px 3px rgba(32, 49, 33, 0.08)",
   },
   pressed: { opacity: 0.65 },
 });

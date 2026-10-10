@@ -1,5 +1,5 @@
 import { Stack } from "expo-router/stack";
-import { colors, typography } from "@/ui/design-tokens";
+import { colors, fonts } from "@/ui/trove";
 
 export default function HomeLayout() {
   return (
@@ -12,11 +12,11 @@ export default function HomeLayout() {
         // Let native header colors follow the window's system appearance.
         unstable_nativeProps: { headerConfig: { experimental_userInterfaceStyle: "unspecified" } },
         headerTitleStyle: {
-          fontFamily: typography.fontBodyBold,
-          color: colors.foreground,
+          fontFamily: fonts.bold,
+          color: colors.text.primary,
           fontSize: 20,
         },
-        contentStyle: { backgroundColor: colors.background },
+        contentStyle: { backgroundColor: colors.bg.canvas },
       }}
     >
       <Stack.Screen name="index" options={{ title: "Home" }} />
