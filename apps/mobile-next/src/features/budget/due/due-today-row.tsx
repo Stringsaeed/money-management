@@ -1,11 +1,8 @@
 import { router } from "expo-router";
-import { Pressable, StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { Icon } from "@/ui/icon";
-import { colors, radii, spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { ListGroup, ListRow } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import type { UseDue } from "./use-due";
@@ -24,31 +21,14 @@ export function DueTodayRow({ due }: { readonly due: UseDue }) {
       ? `${count} ${noun(count)} · ${formatMoneyMinor(totalMinor, BUDGET_CURRENCY)}`
       : `Nothing today. Next: ${next?.name ?? ""}`;
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`Due today, ${detail}`}
-      onPress={() => router.push("/budget/due")}
-      style={styles.row}
-    >
-      <View style={styles.text}>
-        <Text variant="body">Due today</Text>
-        <Text variant="caption">{detail}</Text>
-      </View>
-      <Icon name="caret-right" size={18} color={colors.mutedForeground} />
-    </Pressable>
+    <ListGroup dividerInset={0}>
+      <ListRow
+        accessibilityLabel={`Due today, ${detail}`}
+        chevron
+        onPress={() => router.push("/budget/due")}
+        subtitle={detail}
+        title="Due today"
+      />
+    </ListGroup>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    alignItems: "center",
-    backgroundColor: colors.card,
-    borderCurve: "continuous",
-    borderRadius: radii.lg,
-    flexDirection: "row",
-    gap: spacing[2],
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-  },
-  text: { flex: 1, gap: spacing[0.5] },
-});

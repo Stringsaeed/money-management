@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { V2DueOccurrence } from "@trove/api/v2/contracts";
 
 import { useLedgerMutationsWithSound } from "@/features/sound";
-import { showToast } from "@/ui/toast";
+import { showToast } from "@/ui/trove";
 import { decimalFromMinor } from "@/utils/money";
 
 import { checkMarkPaid, occurrenceErrorMessage } from "./mark-paid-model";

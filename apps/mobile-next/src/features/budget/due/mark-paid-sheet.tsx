@@ -1,5 +1,5 @@
 import { useAccountsQuery } from "@/data/ledger-queries";
-import { Sheet } from "@/ui/sheet";
+import { Sheet } from "@/ui/trove";
 
 import { MarkPaidForm } from "./mark-paid-form";
 import type { MarkPaidTarget } from "./use-mark-paid-target";

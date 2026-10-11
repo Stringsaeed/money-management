@@ -2,12 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import type { V2Account, V2DueOccurrence } from "@trove/api/v2/contracts";
 
-import { Button } from "@/ui/button";
-import { Chip } from "@/ui/chip";
-import { colors, radii, spacing, typography } from "@/ui/design-tokens";
-import { Switch } from "@/ui/switch";
-import { Text } from "@/ui/text";
-import { TextField } from "@/ui/text-field";
+import { AmountInput, Button, Chip, ListGroup, ListRow, space, Switch, Text } from "@/ui/trove";
 
 import { ChipRow } from "../quick-add/chip-row";
 import { QuickAddDate } from "../quick-add/quick-add-date";
@@ -28,15 +23,14 @@ export function MarkPaidForm({ item, accounts, muted, onMutedChange, onPaid }: M
   const form = useMarkPaidForm(item, onPaid);
   return (
     <View style={styles.container}>
-      <Text variant="title">Mark {item.name} paid</Text>
-      <TextField
+      <Text variant="titleMd">Mark {item.name} paid</Text>
+      <AmountInput
+        currency={item.currency}
         label="Amount"
         value={form.amountText}
         onChangeText={form.setAmountText}
-        keyboardType="decimal-pad"
-        returnKeyType="done"
       />
-      <Text variant="caption">
+      <Text tone="secondary" variant="bodySm">
         Changing the amount only affects this payment. The bill itself stays the same.
       </Text>
       <ChipRow label="Paid from">
@@ -50,43 +44,30 @@ export function MarkPaidForm({ item, accounts, muted, onMutedChange, onPaid }: M
         ))}
       </ChipRow>
       <QuickAddDate date={form.date} onChange={form.setDate} placementNote={null} />
-      <View style={styles.muteRow}>
-        <View style={styles.muteText}>
-          <Text variant="body">Mute reminders for this bill</Text>
-          <Text variant="caption">It stays on your Due list.</Text>
-        </View>
-        <Switch
-          accessibilityLabel="Mute reminders for this bill"
-          value={muted}
-          onValueChange={onMutedChange}
+      <ListGroup dividerInset={0}>
+        <ListRow
+          title="Mute reminders for this bill"
+          subtitle="It stays on your Due list."
+          trailing={
+            <Switch
+              accessibilityLabel="Mute reminders for this bill"
+              value={muted}
+              onValueChange={onMutedChange}
+            />
+          }
         />
-      </View>
+      </ListGroup>
       {form.error ? (
-        <Text accessibilityRole="alert" style={styles.error}>
+        <Text accessibilityRole="alert" style={styles.centered} tone="negative" variant="labelMd">
           {form.error}
         </Text>
       ) : null}
-      <Button title="Mark paid" loading={form.busy} onPress={() => void form.submit()} />
+      <Button fullWidth label="Mark paid" loading={form.busy} onPress={() => void form.submit()} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing[3] },
-  muteRow: {
-    alignItems: "center",
-    backgroundColor: colors.surfaceContainer,
-    borderCurve: "continuous",
-    borderRadius: radii.lg,
-    flexDirection: "row",
-    gap: spacing[3],
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-  },
-  muteText: { flex: 1 },
-  error: {
-    color: colors.destructive,
-    fontFamily: typography.fontBodyMedium,
-    textAlign: "center",
-  },
+  container: { gap: space[3] },
+  centered: { textAlign: "center" },
 });

@@ -1,8 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import { Button } from "@/ui/button";
-import { colors, radii, spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { Button, Card, space, Text } from "@/ui/trove";
 
 interface ReminderPromptProps {
   readonly onEnable: () => void;
@@ -12,27 +10,21 @@ interface ReminderPromptProps {
 /** Explains reminders before the system permission dialog, which only appears after "Turn on". */
 export function ReminderPrompt({ onEnable, onNotNow }: ReminderPromptProps) {
   return (
-    <View style={styles.card}>
-      <Text variant="title">Get a nudge when a bill is due</Text>
-      <Text variant="caption">
+    <Card style={styles.card}>
+      <Text variant="titleMd">Get a nudge when a bill is due</Text>
+      <Text tone="secondary" variant="bodySm">
         Trove can remind you on this phone: at most one reminder a day, plus one on payday. Nothing
         is paid or recorded until you tap Mark paid.
       </Text>
       <View style={styles.actions}>
-        <Button title="Turn on reminders" onPress={onEnable} />
-        <Button title="Not now" variant="ghost" onPress={onNotNow} />
+        <Button fullWidth label="Turn on reminders" onPress={onEnable} />
+        <Button fullWidth label="Not now" variant="tertiary" onPress={onNotNow} />
       </View>
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.card,
-    borderCurve: "continuous",
-    borderRadius: radii.lg,
-    gap: spacing[2],
-    padding: spacing[4],
-  },
-  actions: { gap: spacing[2], paddingTop: spacing[1] },
+  card: { gap: space[2] },
+  actions: { gap: space[2], paddingTop: space[1] },
 });

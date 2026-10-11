@@ -2,10 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import type { V2DueOccurrence } from "@trove/api/v2/contracts";
 
-import { Button } from "@/ui/button";
-import { Chip } from "@/ui/chip";
-import { colors, radii, spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { Amount, Button, Card, Chip, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { dueDateLabel } from "./due-date-label";
@@ -25,45 +22,42 @@ export function DueRow({ item, late, muted, onMarkPaid, onSnooze, onSkip }: DueR
   const amount = formatMoneyMinor(item.amountMinor, item.currency);
   const when = `${late ? "Was due" : "Due"} ${dueDateLabel(item.scheduledDate)}`;
   return (
-    <View
+    <Card
       accessibilityLabel={`${item.name}, ${amount}. ${when}${muted ? ". Reminders muted" : ""}`}
-      style={styles.row}
+      style={styles.card}
     >
       <View style={styles.top}>
-        <Text variant="body" style={styles.name} numberOfLines={1}>
+        <Text variant="labelMd" style={styles.name} numberOfLines={1}>
           {item.name}
         </Text>
-        <Text variant="body">{amount}</Text>
+        <Amount currency={item.currency} minor={item.amountMinor} />
       </View>
-      <Text variant="caption" style={late && styles.late}>
+      <Text tone={late ? "negative" : "secondary"} variant="bodySm">
         {muted ? `${when} · reminders muted` : when}
       </Text>
       <View style={styles.actions}>
-        <Button title="Mark paid" onPress={onMarkPaid} style={styles.primary} />
+        <Button label="Mark paid" onPress={onMarkPaid} size="sm" />
         {onSnooze ? <Chip label="Snooze 1 day" onPress={onSnooze} /> : null}
         <Chip label="Skip this month" onPress={onSkip} />
       </View>
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    backgroundColor: colors.card,
-    borderCurve: "continuous",
-    borderRadius: radii.lg,
-    gap: spacing[1],
-    padding: spacing[4],
+  card: { gap: space[1] },
+  top: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space[2],
+    justifyContent: "space-between",
   },
-  top: { flexDirection: "row", gap: spacing[2], justifyContent: "space-between" },
   name: { flex: 1 },
-  late: { color: colors.terracotta },
   actions: {
     alignItems: "center",
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing[2],
-    paddingTop: spacing[2],
+    gap: space[2],
+    paddingTop: space[2],
   },
-  primary: { minHeight: spacing[10], paddingHorizontal: spacing[4] },
 });

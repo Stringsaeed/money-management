@@ -1,20 +1,16 @@
-import { Alert, ScrollView, StyleSheet } from "react-native";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 
 import type { V2DueOccurrence } from "@trove/api/v2/contracts";
 
 import { useBudgetQuery } from "@/data/ledger-queries";
 import { useLedgerMutationsWithSound } from "@/features/sound";
-import { spacing } from "@/ui/design-tokens";
-import { EmptyState } from "@/ui/empty-state";
-import { Screen } from "@/ui/screen";
-import { Section } from "@/ui/section";
-import { showToast } from "@/ui/toast";
-import { Text } from "@/ui/text";
+import { EmptyState, layout, Screen, showToast, space, Text } from "@/ui/trove";
 
 import type { ActiveBudgetView } from "../home/home-model";
 import { useReminderSync } from "../reminders/use-reminder-sync";
 
 import { dueDateLabel } from "./due-date-label";
+import { DueHeader } from "./due-header";
 import { nextDay } from "./due-model";
 import { DueRow } from "./due-row";
 import { MarkPaidSheet } from "./mark-paid-sheet";
@@ -29,19 +25,23 @@ export function DueScreen() {
 
   if (budget.isError && !budget.data) {
     return (
-      <Screen edges={["bottom"]}>
+      <Screen style={styles.screen}>
+        <DueHeader />
         <EmptyState
           title="Couldn't load your bills"
           message="Check your connection and try again."
-          onRetry={() => void budget.retry()}
+          actionLabel="Try again"
+          onAction={() => void budget.retry()}
+          framed={false}
         />
       </Screen>
     );
   }
   if (!budget.data) {
     return (
-      <Screen edges={["bottom"]}>
-        <Text variant="caption" style={styles.status}>
+      <Screen style={styles.screen}>
+        <DueHeader />
+        <Text variant="bodySm" tone="secondary" style={styles.status}>
           Loading your bills…
         </Text>
       </Screen>
@@ -49,8 +49,13 @@ export function DueScreen() {
   }
   if (!budget.data.budget) {
     return (
-      <Screen edges={["bottom"]}>
-        <EmptyState title="No budget yet" message="Set up a budget to see the bills due." />
+      <Screen style={styles.screen}>
+        <DueHeader />
+        <EmptyState
+          title="No budget yet"
+          message="Set up a budget to see the bills due."
+          framed={false}
+        />
       </Screen>
     );
   }
@@ -92,19 +97,23 @@ function DueContent({ view }: { readonly view: ActiveBudgetView }) {
 
   if (due.isError && !due.loaded) {
     return (
-      <Screen edges={["bottom"]}>
+      <Screen style={styles.screen}>
+        <DueHeader />
         <EmptyState
           title="Couldn't load your bills"
           message="Check your connection and try again."
-          onRetry={() => void due.retry()}
+          actionLabel="Try again"
+          onAction={() => void due.retry()}
+          framed={false}
         />
       </Screen>
     );
   }
   if (!due.loaded) {
     return (
-      <Screen edges={["bottom"]}>
-        <Text variant="caption" style={styles.status}>
+      <Screen style={styles.screen}>
+        <DueHeader />
+        <Text variant="bodySm" tone="secondary" style={styles.status}>
           Loading your bills…
         </Text>
       </Screen>
@@ -114,19 +123,22 @@ function DueContent({ view }: { readonly view: ActiveBudgetView }) {
   const salary = view.budget.usualSalaryMinor;
   const empty = due.sections.every((section) => section.items.length === 0) && !salary;
   return (
-    <Screen edges={["bottom"]}>
+    <Screen style={styles.screen}>
+      <DueHeader />
       <ScrollView contentContainerStyle={styles.content}>
         {empty ? (
           <EmptyState
             title="Nothing due"
             message="Bills you set up as reminders show here before they are due. Nothing is recorded until you mark it paid."
+            framed={false}
           />
         ) : null}
         {due.sections.map((section) => {
           const showSalary = section.key === "payday" && salary !== null && salary > 0;
           if (section.items.length === 0 && !showSalary) return null;
           return (
-            <Section key={section.key} title={section.title}>
+            <View key={section.key} style={styles.section}>
+              <Text variant="titleMd">{section.title}</Text>
               {section.items.map((item) => (
                 <DueRow
                   key={`${item.ruleId}|${item.scheduledDate}`}
@@ -143,11 +155,11 @@ function DueContent({ view }: { readonly view: ActiveBudgetView }) {
                 />
               ))}
               {showSalary ? <SalaryRow amountMinor={salary} payday={due.nextPayday} /> : null}
-            </Section>
+            </View>
           );
         })}
         {due.snoozedCount > 0 ? (
-          <Text variant="caption">
+          <Text variant="bodySm" tone="secondary">
             {due.snoozedCount} {due.snoozedCount === 1 ? "bill is" : "bills are"} snoozed until
             tomorrow.
           </Text>
@@ -159,6 +171,8 @@ function DueContent({ view }: { readonly view: ActiveBudgetView }) {
 }
 
 const styles = StyleSheet.create({
-  content: { gap: spacing[5], padding: spacing[5], paddingBottom: spacing[10] },
-  status: { padding: spacing[5] },
+  screen: { paddingHorizontal: layout.screenGutter },
+  content: { gap: space[5], paddingBottom: space[10], paddingTop: space[3] },
+  section: { gap: space[3] },
+  status: { paddingVertical: space[5] },
 });
