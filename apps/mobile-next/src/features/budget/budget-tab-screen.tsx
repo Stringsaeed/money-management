@@ -19,7 +19,7 @@ import { useSetupDraft } from "./setup/use-setup-draft";
 export function BudgetTabScreen() {
   const budget = useBudgetQuery();
   const setup = useSetupDraft();
-  const { canEditPlan } = useBudgetRole();
+  const { canEditPlan, loading: roleLoading } = useBudgetRole();
   const scrollRef = useRef<ScrollView>(null);
 
   return (
@@ -54,6 +54,7 @@ export function BudgetTabScreen() {
           <BudgetIntro
             hasDraft={setup.exists}
             canStart={canEditPlan}
+            roleLoading={roleLoading}
             onStart={() => {
               if (!setup.exists) track("budget_setup_started", {});
               router.push(SETUP_STEP_ROUTES[setup.exists ? setup.draft.step : "payday"]);

@@ -1,6 +1,6 @@
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { colors, Icon, ListRow } from "@/ui/trove";
+import { ListRow } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import type { CoverTake, Place } from "./cover-move-model";
@@ -28,10 +28,10 @@ export function CoverSourceRow({ place, selected, take, onToggle }: CoverSourceR
   return (
     <ListRow
       accessibilityLabel={`${place.name}${place.kind === "saving" ? ", savings" : ""}, ${left}${after ? `. ${after}` : ""}`}
+      checked={selected}
       onPress={onToggle}
       subtitle={after ? `${detail}\n${after}` : detail}
       title={place.name}
-      trailing={selected ? <Icon name="check" size={20} color={colors.accent.text} /> : null}
     />
   );
 }

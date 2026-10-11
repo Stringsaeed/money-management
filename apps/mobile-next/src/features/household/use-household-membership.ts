@@ -10,6 +10,8 @@ export interface HouseholdMembership {
   readonly household: HouseholdDetail | null;
   /** True once the server has answered; `household` is only trustworthy after that. */
   readonly known: boolean;
+  /** True while the first answer is on its way (not after a failure, not when idle). */
+  readonly loading: boolean;
 }
 
 /**
@@ -28,5 +30,9 @@ export function useHouseholdMembership(householdId: string | null): HouseholdMem
     staleTime: 15_000,
     retry: 1,
   });
-  return { household: query.data ?? null, known: query.data !== undefined };
+  return {
+    household: query.data ?? null,
+    known: query.data !== undefined,
+    loading: householdId !== null && query.isPending,
+  };
 }

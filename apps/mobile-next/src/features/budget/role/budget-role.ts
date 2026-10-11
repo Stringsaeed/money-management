@@ -31,6 +31,24 @@ export function budgetRole(
   }
 }
 
+export interface BudgetAccess {
+  readonly role: BudgetRole;
+  /** The household's answer is still on its way: `role` is the safe default, not the truth. */
+  readonly loading: boolean;
+}
+
+/** `budgetRole` plus whether the role is still being worked out, so screens wait instead of flashing. */
+export function budgetAccess(
+  scope: V2LedgerScope,
+  householdRole: HouseholdRole | undefined,
+  membershipLoading: boolean,
+): BudgetAccess {
+  return {
+    role: budgetRole(scope, householdRole),
+    loading: scope.kind === "household" && householdRole === undefined && membershipLoading,
+  };
+}
+
 export const canEditPlan = (role: BudgetRole): boolean => role === "owner-like";
 
 /** Quick add, Mark paid, Cover and Move money. */

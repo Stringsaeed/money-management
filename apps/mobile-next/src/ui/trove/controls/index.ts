@@ -6,6 +6,8 @@ export type { ButtonProps } from "./button";
 export type { ButtonSize, ButtonVariant } from "./button-styles";
 export { Checkbox } from "./checkbox";
 export type { CheckboxProps } from "./checkbox";
+export { CheckboxBox } from "./checkbox-box";
+export type { CheckboxBoxProps } from "./checkbox-box";
 export { IconButton } from "./icon-button";
 export type { IconButtonProps, IconButtonVariant } from "./icon-button";
 export { QuickAction } from "./quick-action";

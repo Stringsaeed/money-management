@@ -92,6 +92,7 @@ export function PaydayScreen() {
         accounts={accounts.data}
         draft={draft}
         totalInvalid={funding.invalid}
+        loading={accounts.isLoading}
         onTick={(accountId, ticked) =>
           update({ funding: { ...draft.funding, [accountId]: ticked } })
         }

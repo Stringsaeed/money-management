@@ -35,15 +35,6 @@ export const isFundingTicked = (
   funding: Readonly<Record<string, boolean>>,
 ): boolean => funding[account.id] ?? DEFAULT_FUNDING_TYPES.has(account.type);
 
-/** Active AED credit cards: their spending comes out of envelopes and reserves cash. */
-export const cardAccountIds = (accounts: readonly V2Account[]): string[] =>
-  accounts
-    .filter(
-      (account) =>
-        !account.archived && account.currency === BUDGET_CURRENCY && account.type === "credit_card",
-    )
-    .map((account) => account.id);
-
 export interface FundingChoice {
   /** Ticked eligible accounts. Empty when the person types one total instead. */
   readonly accountIds: readonly string[];
@@ -93,7 +84,6 @@ export interface PlanInputs {
   readonly items: readonly SetupItem[];
   readonly amounts: Readonly<Record<string, string>>;
   readonly funding: FundingChoice;
-  readonly cardAccountIds: readonly string[];
 }
 
 export const plannedMinor = (item: SetupItem, amounts: Readonly<Record<string, string>>): number =>
@@ -122,7 +112,6 @@ export function previewPlan(inputs: PlanInputs): PlanPreview {
   const { facts, payday, items, amounts, funding } = inputs;
   const start = facts.period.start;
   const fundingIds = new Set(funding.accountIds);
-  const cardIds = new Set(inputs.cardAccountIds);
   const mappedCategoryIds = new Set(
     items.flatMap((item) => (item.categoryId ? [item.categoryId] : [])),
   );
@@ -156,24 +145,27 @@ export function previewPlan(inputs: PlanInputs): PlanPreview {
           ]
         : [];
     }),
+    // The server's rule: EVERY expense on an AED credit card (archived cards and unmapped
+    // Categories too: they reserve cash), plus expenses from a ticked funding account in a mapped
+    // Category.
     spending: facts.spendSincePeriodStart.flatMap((row) =>
-      row.categoryId &&
-      mappedCategoryIds.has(row.categoryId) &&
-      (fundingIds.has(row.accountId) || cardIds.has(row.accountId))
+      row.onCard ||
+      (fundingIds.has(row.accountId) &&
+        row.categoryId !== null &&
+        mappedCategoryIds.has(row.categoryId))
         ? [
             {
               date: start,
               categoryId: row.categoryId,
               amountMinor: row.amountMinor,
-              onCard: cardIds.has(row.accountId),
+              onCard: row.onCard,
             },
           ]
         : [],
     ),
+    // Every row already pays an AED credit card; only payments from a ticked account count.
     cardPayments: facts.cardPaymentsSincePeriodStart
-      .filter(
-        (payment) => fundingIds.has(payment.fromAccountId) && cardIds.has(payment.toAccountId),
-      )
+      .filter((payment) => fundingIds.has(payment.fromAccountId))
       .map((payment) => ({ date: start, amountMinor: payment.amountMinor })),
     cashMinor,
     openingCardDebtMinor: facts.openingCardDebtMinor,

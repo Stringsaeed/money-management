@@ -1,5 +1,11 @@
 import type { ReactNode } from "react";
-import { View, type StyleProp, type ViewStyle } from "react-native";
+import {
+  View,
+  type AccessibilityRole,
+  type AccessibilityState,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 
 import { PressableScale } from "../pressable-scale";
 import { colors } from "../tokens";
@@ -11,6 +17,9 @@ export interface PressableRowProps {
   /** Spoken label for the whole row. Without one, children stay individually reachable. */
   accessibilityLabel?: string;
   accessibilityHint?: string;
+  /** Defaults to button. A selectable row is a checkbox. */
+  accessibilityRole?: AccessibilityRole;
+  accessibilityState?: AccessibilityState;
   testID?: string;
 }
 
@@ -26,12 +35,16 @@ export function PressableRow({
   onPress,
   accessibilityLabel,
   accessibilityHint,
+  accessibilityRole = "button",
+  accessibilityState,
   testID,
 }: PressableRowProps) {
   if (!onPress) {
     return (
       <View
         accessibilityLabel={accessibilityLabel}
+        accessibilityRole={accessibilityState ? accessibilityRole : undefined}
+        accessibilityState={accessibilityState}
         accessible={accessibilityLabel !== undefined}
         style={style}
         testID={testID}
@@ -45,7 +58,8 @@ export function PressableRow({
     <PressableScale
       accessibilityHint={accessibilityHint}
       accessibilityLabel={accessibilityLabel}
-      accessibilityRole="button"
+      accessibilityRole={accessibilityRole}
+      accessibilityState={accessibilityState}
       onPress={onPress}
       pressedStyle={PRESSED}
       scaleOnPress={false}

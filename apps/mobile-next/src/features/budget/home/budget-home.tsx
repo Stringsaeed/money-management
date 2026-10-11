@@ -2,10 +2,7 @@ import { router } from "expo-router";
 import { useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
-import { Amount, Button, ListGroup, space, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
+import { Button, ListGroup, space, Text } from "@/ui/trove";
 
 import { pickAttention } from "./attention";
 import { AttentionLine } from "./attention-line";
@@ -16,7 +13,8 @@ import { PaydayActions } from "../payday/payday-actions";
 import { usePayday } from "../payday/use-payday";
 import { BudgetReminders } from "../reminders/budget-reminders";
 import { GroupSummaryRow } from "./group-summary-row";
-import { envelopeLines, groupSummary, perDayLine, type ActiveBudgetView } from "./home-model";
+import { envelopeLines, groupSummary, type ActiveBudgetView } from "./home-model";
+import { SafeToSpendHero } from "./safe-to-spend-hero";
 import { OverNotice } from "./over-notice";
 import { useHomeAnalytics } from "./use-home-analytics";
 import { HouseholdHomeExtras } from "../household/household-home-extras";
@@ -40,8 +38,6 @@ interface QuickAddTarget {
 /** Quick add's sheet needs this long to finish closing before Cover can present over it. */
 const SHEET_HANDOFF_MS = 400;
 
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
-
 /** M1: Safe to spend, the pace to payday, what needs attention, and the envelopes. */
 export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
   const { current } = view;
@@ -60,7 +56,7 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
     paydayLate: payday.status.pending && payday.status.late,
   });
   useHomeAnalytics(attention);
-  const over = current.safeToSpendMinor <= 0;
+  const over = current.safeToSpendMinor < 0;
   const everydayY = useRef(0);
   const [quickAdd, setQuickAdd] = useState<QuickAddTarget>({
     open: false,
@@ -72,30 +68,14 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
   const coverMove = useCoverMoveRequest();
   const { canAddSpending } = useBudgetRole();
   // The Everyday envelope that is furthest over; with none over, Cover points at the list instead.
+  // (`sort` on the fresh filtered array: Hermes has no `toSorted`.)
   const mostOver = everyday
     .filter((line) => line.totals.leftMinor < 0)
-    .toSorted((a, b) => a.totals.leftMinor - b.totals.leftMinor)[0];
+    .sort((a, b) => a.totals.leftMinor - b.totals.leftMinor)[0];
 
   return (
     <View style={styles.container}>
-      <View
-        accessible
-        accessibilityLabel={`Safe to spend ${money(current.safeToSpendMinor)}. ${perDayLine(current, money)}`}
-        style={styles.hero}
-      >
-        <Text tone="secondary" variant="labelSm">
-          Safe to spend
-        </Text>
-        <Amount
-          currency={BUDGET_CURRENCY}
-          minor={current.safeToSpendMinor}
-          size="hero"
-          tone={current.safeToSpendMinor < 0 ? "negative" : "primary"}
-        />
-        <Text tone="secondary" variant="bodySm">
-          {perDayLine(current, money)}
-        </Text>
-      </View>
+      <SafeToSpendHero current={current} />
 
       {over ? (
         <OverNotice
@@ -191,6 +171,5 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
 
 const styles = StyleSheet.create({
   container: { gap: space[5] },
-  hero: { gap: space[1] },
   section: { gap: space[3] },
 });

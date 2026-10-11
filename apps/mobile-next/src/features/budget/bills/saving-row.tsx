@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { Button, Card, colors, PressableScale, radius, space, Text } from "@/ui/trove";
+import { Button, Card, PressableScale, ProgressBar, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { REPEAT_LABELS } from "./big-payment-model";
@@ -57,11 +57,7 @@ export function SavingRow({ row, onPress, onMarkPaid }: SavingRowProps) {
             </Text>
           ) : null}
         </View>
-        {row.targetMinor !== null ? (
-          <View style={styles.track}>
-            <View style={[styles.fill, { width: `${Math.round(row.fraction * 100)}%` }]} />
-          </View>
-        ) : null}
+        {row.targetMinor !== null ? <ProgressBar fraction={row.fraction} /> : null}
         <Text tone="secondary" variant="labelSm">
           {progress}
         </Text>
@@ -97,11 +93,4 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   name: { flex: 1 },
-  track: {
-    backgroundColor: colors.fill.neutral,
-    borderRadius: radius.full,
-    height: space[2],
-    overflow: "hidden",
-  },
-  fill: { backgroundColor: colors.accent.fill, borderRadius: radius.full, height: "100%" },
 });

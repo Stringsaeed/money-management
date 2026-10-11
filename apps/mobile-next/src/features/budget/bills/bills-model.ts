@@ -69,7 +69,7 @@ export function savingRows(lines: readonly EnvelopeLine[]): SavingRow[] {
   return lines
     .filter((line) => line.envelope.group === "saving")
     .map(savingRow)
-    .toSorted((a, b) => {
+    .sort((a, b) => {
       const dueA = a.line.envelope.dueDate;
       const dueB = b.line.envelope.dueDate;
       if (dueA === dueB) return 0;

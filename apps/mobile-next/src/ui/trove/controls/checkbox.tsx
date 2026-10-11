@@ -1,8 +1,8 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 
-import { Icon } from "../icon";
 import { Text } from "../text";
-import { colors, layout, radius, space } from "../tokens";
+import { layout, space } from "../tokens";
+import { CheckboxBox } from "./checkbox-box";
 
 export interface CheckboxProps {
   checked: boolean;
@@ -15,7 +15,6 @@ export interface CheckboxProps {
   testID?: string;
 }
 
-const BOX = 22;
 /** Lifts the 22pt box to the 44pt touch target when it stands alone. */
 const HIT_SLOP = 11;
 
@@ -28,9 +27,6 @@ export function Checkbox({
   disabled = false,
   testID,
 }: CheckboxProps) {
-  const box = (disabled ? disabledBox : enabledBox)[checked ? "checked" : "unchecked"];
-  const tick = disabled ? colors.text.disabled : colors.accent.on;
-
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel ?? label}
@@ -42,9 +38,7 @@ export function Checkbox({
       style={label ? styles.row : null}
       testID={testID}
     >
-      <View style={[styles.box, box]}>
-        {checked ? <Icon color={tick} name="check" size={20} strokeWidth={2.5} /> : null}
-      </View>
+      <CheckboxBox checked={checked} disabled={disabled} />
       {label ? (
         <Text tone={disabled ? "disabled" : "primary"} variant="bodyMd">
           {label}
@@ -61,21 +55,4 @@ const styles = StyleSheet.create({
     gap: space[3],
     minHeight: layout.minTouchTarget,
   },
-  box: {
-    alignItems: "center",
-    borderRadius: radius.sm,
-    height: BOX,
-    justifyContent: "center",
-    width: BOX,
-  },
-});
-
-const enabledBox = StyleSheet.create({
-  checked: { backgroundColor: colors.accent.fill },
-  unchecked: { borderColor: colors.border.strong, borderWidth: 1.5 },
-});
-
-const disabledBox = StyleSheet.create({
-  checked: { backgroundColor: colors.fill.disabled },
-  unchecked: { borderColor: colors.border.default, borderWidth: 1.5 },
 });

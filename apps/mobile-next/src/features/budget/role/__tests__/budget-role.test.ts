@@ -3,6 +3,7 @@ import { ApiError } from "@/data/http";
 import {
   PLAN_ADMIN_ONLY,
   VIEW_ONLY,
+  budgetAccess,
   budgetRole,
   canAddSpending,
   canEditPlan,
@@ -25,6 +26,21 @@ describe("budgetRole", () => {
 
   it("reads a household whose role is not known yet as read-only", () => {
     expect(budgetRole(household, undefined)).toBe("viewer");
+  });
+});
+
+describe("budgetAccess", () => {
+  it("waits for a household role instead of reporting a refusal", () => {
+    expect(budgetAccess(household, undefined, true)).toEqual({ role: "viewer", loading: true });
+  });
+
+  it("is settled once the role is known, the lookup failed, or the budget is Personal", () => {
+    expect(budgetAccess(household, "admin", true)).toEqual({ role: "owner-like", loading: false });
+    expect(budgetAccess(household, undefined, false)).toEqual({ role: "viewer", loading: false });
+    expect(budgetAccess({ kind: "personal" }, undefined, true)).toEqual({
+      role: "owner-like",
+      loading: false,
+    });
   });
 });
 
