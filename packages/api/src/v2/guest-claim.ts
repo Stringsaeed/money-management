@@ -1,5 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 
+import { v2Budget } from "@trove/db/schema/v2-budget";
 import {
   v2Account,
   v2Category,
@@ -142,39 +143,50 @@ async function applyClaimDecision(
 }
 
 async function ledgerHasFacts(db: Pick<V2Database, "select">, ledgerId: string): Promise<boolean> {
-  const [account, category, transaction, rule, occurrence, idempotency] = await Promise.all([
-    db
-      .select({ id: v2Account.id })
-      .from(v2Account)
-      .where(eq(v2Account.ledgerId, ledgerId))
-      .limit(1),
-    db
-      .select({ id: v2Category.id })
-      .from(v2Category)
-      .where(eq(v2Category.ledgerId, ledgerId))
-      .limit(1),
-    db
-      .select({ id: v2Transaction.id })
-      .from(v2Transaction)
-      .where(eq(v2Transaction.ledgerId, ledgerId))
-      .limit(1),
-    db
-      .select({ id: v2RecurringRule.id })
-      .from(v2RecurringRule)
-      .where(eq(v2RecurringRule.ledgerId, ledgerId))
-      .limit(1),
-    db
-      .select({ id: v2RecurringOccurrence.id })
-      .from(v2RecurringOccurrence)
-      .where(eq(v2RecurringOccurrence.ledgerId, ledgerId))
-      .limit(1),
-    db
-      .select({ key: v2IdempotencyKey.key })
-      .from(v2IdempotencyKey)
-      .where(eq(v2IdempotencyKey.ledgerId, ledgerId))
-      .limit(1),
-  ]);
+  // Every budget table hangs off `v2_budgets` (FK cascade), so a budget row is
+  // the one fact that stands for envelopes, mappings, paydays, and assignments.
+  const [account, category, transaction, rule, occurrence, idempotency, budget] = await Promise.all(
+    [
+      db
+        .select({ id: v2Account.id })
+        .from(v2Account)
+        .where(eq(v2Account.ledgerId, ledgerId))
+        .limit(1),
+      db
+        .select({ id: v2Category.id })
+        .from(v2Category)
+        .where(eq(v2Category.ledgerId, ledgerId))
+        .limit(1),
+      db
+        .select({ id: v2Transaction.id })
+        .from(v2Transaction)
+        .where(eq(v2Transaction.ledgerId, ledgerId))
+        .limit(1),
+      db
+        .select({ id: v2RecurringRule.id })
+        .from(v2RecurringRule)
+        .where(eq(v2RecurringRule.ledgerId, ledgerId))
+        .limit(1),
+      db
+        .select({ id: v2RecurringOccurrence.id })
+        .from(v2RecurringOccurrence)
+        .where(eq(v2RecurringOccurrence.ledgerId, ledgerId))
+        .limit(1),
+      db
+        .select({ key: v2IdempotencyKey.key })
+        .from(v2IdempotencyKey)
+        .where(eq(v2IdempotencyKey.ledgerId, ledgerId))
+        .limit(1),
+      db.select({ id: v2Budget.id }).from(v2Budget).where(eq(v2Budget.ledgerId, ledgerId)).limit(1),
+    ],
+  );
   return Boolean(
-    account[0] || category[0] || transaction[0] || rule[0] || occurrence[0] || idempotency[0],
+    account[0] ||
+    category[0] ||
+    transaction[0] ||
+    rule[0] ||
+    occurrence[0] ||
+    idempotency[0] ||
+    budget[0],
   );
 }
