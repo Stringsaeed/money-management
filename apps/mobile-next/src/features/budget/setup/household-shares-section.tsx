@@ -3,9 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
 import type { HouseholdDetail } from "@/features/household/household-client";
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
-import { TextField } from "@/ui/text-field";
+import { space, Text, TextField } from "@/ui/trove";
 
 interface HouseholdSharesSectionProps {
   readonly household: HouseholdDetail | null;
@@ -25,8 +23,8 @@ export function HouseholdSharesSection({
   const members = household?.members.filter((member) => member.status === "active") ?? [];
   return (
     <View style={styles.group}>
-      <Text variant="title">Monthly share per member</Text>
-      <Text variant="caption">
+      <Text variant="titleMd">Monthly share per member</Text>
+      <Text variant="bodySm" tone="secondary">
         For your own reference. Nothing here changes your plan. In your Personal budget this shows
         as a Bill: Household share.
       </Text>
@@ -44,4 +42,4 @@ export function HouseholdSharesSection({
   );
 }
 
-const styles = StyleSheet.create({ group: { gap: spacing[3] } });
+const styles = StyleSheet.create({ group: { gap: space[3] } });

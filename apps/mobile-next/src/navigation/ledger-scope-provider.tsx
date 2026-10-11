@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import type { V2LedgerScope } from "@trove/api/v2/contracts";
 
 import { useHouseholdMembership } from "@/features/household/use-household-membership";
-import { showToast } from "@/ui/toast";
+import { showToast } from "@/ui/trove";
 
 import { LedgerScopeContext } from "./ledger-scope-context";
 

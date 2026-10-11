@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ledgerClient } from "@/data/ledger-client";
 import { budgetKey, useLedgerData } from "@/data/ledger-queries";
 import { createRequestKeyRunner } from "@/data/request-keys";
-import { showToast } from "@/ui/toast";
+import { showToast } from "@/ui/trove";
 
 import { writeErrorMessage } from "../envelope/envelope-model";
 import { useEnvelopeWrite } from "../envelope/use-envelope-write";

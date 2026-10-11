@@ -3,9 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { spacing } from "@/ui/design-tokens";
-import { Section } from "@/ui/section";
-import { Text } from "@/ui/text";
+import { ListGroup, ListRow, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { activitySentence } from "./activity-sentence";
@@ -18,17 +16,19 @@ export function RecentActivity() {
   const { items } = useBudgetActivity();
   if (items.length === 0) return null;
   return (
-    <Section title="Recent activity">
-      {items.map((item) => (
-        <View key={item.id} style={styles.row}>
-          <Text variant="body">{activitySentence(item, money)}</Text>
-          <Text variant="caption">
-            {formatDistanceToNowStrict(parseISO(item.createdAt), { addSuffix: true })}
-          </Text>
-        </View>
-      ))}
-    </Section>
+    <View style={styles.section}>
+      <Text variant="titleMd">Recent activity</Text>
+      <ListGroup dividerInset={0}>
+        {items.map((item) => (
+          <ListRow
+            key={item.id}
+            title={activitySentence(item, money)}
+            subtitle={formatDistanceToNowStrict(parseISO(item.createdAt), { addSuffix: true })}
+          />
+        ))}
+      </ListGroup>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({ row: { gap: spacing[0.5] } });
+const styles = StyleSheet.create({ section: { gap: space[3] } });
