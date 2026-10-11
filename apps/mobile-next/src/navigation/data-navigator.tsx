@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import type { QueryClient } from "@tanstack/react-query";
 import { LedgerDataProvider } from "@/data/ledger-queries";
 import { colors, fonts } from "@/ui/trove";
+import { useBudgetingEnabled } from "@/features/feature-flags";
 import { useReminderTapRouting } from "@/features/budget/reminders/use-reminder-tap-routing";
 import { useLedgerScope } from "./ledger-scope-context";
 
@@ -26,6 +27,7 @@ const screenOptions = {
 
 export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) => {
   const { scope } = useLedgerScope();
+  const budgeting = useBudgetingEnabled();
   useReminderTapRouting(identityKey);
   const scopeKey = scope.kind === "personal" ? "personal" : scope.householdId;
   return (
@@ -57,20 +59,22 @@ export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) 
         <Stack.Screen name="recurring/index" options={pushedOptions} />
         <Stack.Screen name="recurring/[id]" options={{ ...pushedOptions, presentation: "modal" }} />
         <Stack.Screen name="household" options={pushedOptions} />
-        <Stack.Screen name="budget/setup/payday" options={pushedOptions} />
-        <Stack.Screen name="budget/setup/items" options={pushedOptions} />
-        <Stack.Screen name="budget/setup/amounts" options={pushedOptions} />
-        <Stack.Screen name="budget/setup/review" options={pushedOptions} />
-        <Stack.Screen name="budget/envelope/[id]" options={pushedOptions} />
-        <Stack.Screen name="budget/due" options={pushedOptions} />
-        <Stack.Screen name="budget/bills" options={pushedOptions} />
-        <Stack.Screen
-          name="budget/payday/got-paid"
-          options={{ ...pushedOptions, presentation: "modal" }}
-        />
-        <Stack.Screen name="budget/payday/wrap-up" options={pushedOptions} />
-        <Stack.Screen name="budget/payday/leftovers" options={pushedOptions} />
-        <Stack.Screen name="budget/payday/plan" options={pushedOptions} />
+        <Stack.Protected guard={budgeting}>
+          <Stack.Screen name="budget/setup/payday" options={pushedOptions} />
+          <Stack.Screen name="budget/setup/items" options={pushedOptions} />
+          <Stack.Screen name="budget/setup/amounts" options={pushedOptions} />
+          <Stack.Screen name="budget/setup/review" options={pushedOptions} />
+          <Stack.Screen name="budget/envelope/[id]" options={pushedOptions} />
+          <Stack.Screen name="budget/due" options={pushedOptions} />
+          <Stack.Screen name="budget/bills" options={pushedOptions} />
+          <Stack.Screen
+            name="budget/payday/got-paid"
+            options={{ ...pushedOptions, presentation: "modal" }}
+          />
+          <Stack.Screen name="budget/payday/wrap-up" options={pushedOptions} />
+          <Stack.Screen name="budget/payday/leftovers" options={pushedOptions} />
+          <Stack.Screen name="budget/payday/plan" options={pushedOptions} />
+        </Stack.Protected>
         <Stack.Screen name="callback" options={{ headerShown: false }} />
       </Stack>
     </LedgerDataProvider>

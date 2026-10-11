@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { V2LedgerScope } from "@trove/api/v2/contracts";
 
+import { useBudgetingEnabled } from "@/features/feature-flags";
 import { useLedgerScope } from "@/navigation/ledger-scope-context";
 
 import { PAYDAY_ROUTES } from "../payday/payday-flow";
@@ -31,8 +32,10 @@ interface PendingRoute {
  * never opens the Personal Due list; a reminder for another identity is ignored.
  */
 export function useReminderTapRouting(identityKey: string): void {
-  const response = Notifications.useLastNotificationResponse();
+  const lastResponse = Notifications.useLastNotificationResponse();
   const { scope, selectScope } = useLedgerScope();
+  // Budget routes are closed while Budgeting is off; a tap waits for the flag instead of being lost.
+  const response = useBudgetingEnabled() ? lastResponse : null;
   const handled = useRef<string | null>(null);
   const [pending, setPending] = useState<PendingRoute | null>(null);
 

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
 import { useLedgerData } from "@/data/ledger-queries";
+import { useBudgetingEnabled } from "@/features/feature-flags";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { DUE_LOOKAHEAD_DAYS } from "../due/due-model";
@@ -34,6 +35,7 @@ export interface ReminderSync {
  */
 export function useReminderSync(view: ActiveBudgetView, due: UseDue): ReminderSync {
   const { identityKey, scope } = useLedgerData();
+  const budgeting = useBudgetingEnabled();
   const [permission, setPermission] = useState<ReminderPermission | null>(null);
   const { prefs, dismissPrompt, forgetEndedSnoozes } = due.reminders;
 
@@ -49,7 +51,7 @@ export function useReminderSync(view: ActiveBudgetView, due: UseDue): ReminderSy
   const { items, today, loaded } = due;
 
   useEffect(() => {
-    if (permission !== "granted" || !loaded) return;
+    if (!budgeting || permission !== "granted" || !loaded) return;
     const bills = planBillReminders({
       bills: items,
       prefs,
@@ -70,6 +72,7 @@ export function useReminderSync(view: ActiveBudgetView, due: UseDue): ReminderSy
       (cause: unknown) => console.warn("Budget reminders could not be scheduled.", cause),
     );
   }, [
+    budgeting,
     permission,
     loaded,
     identityKey,
@@ -90,7 +93,8 @@ export function useReminderSync(view: ActiveBudgetView, due: UseDue): ReminderSy
 
   const wanted = paydayOn || items.length > 0;
   return {
-    showPrompt: loaded && permission === "undetermined" && wanted && !prefs.promptDismissed,
+    showPrompt:
+      budgeting && loaded && permission === "undetermined" && wanted && !prefs.promptDismissed,
     enable: async () => {
       setPermission(await requestReminderPermission().catch(() => "denied" as const));
     },
