@@ -17,12 +17,10 @@ import { roleErrorMessage } from "../role/budget-role";
 
 import type { ActiveBudgetView } from "../home/home-model";
 
-const WHOLE_UNIT_MINOR = 100;
-
-/** "about AED 47.00 a day": what is left spread over the days to go, floored to whole AED. */
-export function paceMinor(leftMinor: number, daysLeft: number): number {
+/** "about AED 47.00 a day": what is left spread over the days to go, floored to whole units. */
+export function paceMinor(leftMinor: number, daysLeft: number, minorUnitsPerWhole: number): number {
   if (leftMinor <= 0 || daysLeft <= 0) return 0;
-  return Math.floor(leftMinor / daysLeft / WHOLE_UNIT_MINOR) * WHOLE_UNIT_MINOR;
+  return Math.floor(leftMinor / daysLeft / minorUnitsPerWhole) * minorUnitsPerWhole;
 }
 
 export type PlanChange =

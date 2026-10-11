@@ -75,8 +75,8 @@ export function wrapUpSummary(lines: readonly WrapUpEnvelope[]): WrapUpSummary {
 
 /** How many finished periods in a row an Everyday envelope must run over before we suggest more. */
 export const RAISE_PERIODS = 3;
-/** Suggestions round up to this step: AED 50, in minor units. */
-const RAISE_STEP_MINOR = 5_000;
+/** Suggestions round up to this many whole currency units (AED 50, USD 50). */
+const RAISE_STEP_WHOLE = 50;
 
 export interface RaiseSuggestion {
   readonly envelopeId: string;
@@ -86,12 +86,14 @@ export interface RaiseSuggestion {
 
 /**
  * One suggestion when an Everyday envelope spent more than it planned in each of the last three
- * finished periods: raise it to the most it spent in those periods, rounded up to AED 50.
+ * finished periods: raise it to the most it spent in those periods, rounded up to 50 whole units.
  * `history` is newest first and must hold exactly `RAISE_PERIODS` periods.
  */
 export function raiseSuggestion(
   history: readonly (readonly WrapUpEnvelope[])[],
+  minorUnitsPerWhole: number,
 ): RaiseSuggestion | null {
+  const stepMinor = RAISE_STEP_WHOLE * minorUnitsPerWhole;
   const [latest, ...older] = history;
   if (!latest || history.length !== RAISE_PERIODS) return null;
   const candidates = latest.flatMap((line) => {
@@ -100,7 +102,7 @@ export function raiseSuggestion(
     const overEvery = periods.every((period) => period && period.spentMinor > period.plannedMinor);
     if (!overEvery) return [];
     const mostSpent = Math.max(...periods.map((period) => period?.spentMinor ?? 0));
-    const suggestedMinor = Math.ceil(mostSpent / RAISE_STEP_MINOR) * RAISE_STEP_MINOR;
+    const suggestedMinor = Math.ceil(mostSpent / stepMinor) * stepMinor;
     return [
       {
         envelopeId: line.id,

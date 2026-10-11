@@ -1,6 +1,7 @@
 import { StyleSheet, View } from "react-native";
 
 import { Amount, ListGroup, ListRow, space, Text } from "@/ui/trove";
+import { currencyFractionDigits } from "@/utils/money";
 
 import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
 import type { EnvelopeLine } from "../home/home-model";
@@ -17,7 +18,7 @@ export function EnvelopeSummary({ line, daysLeft }: EnvelopeSummaryProps) {
   const money = useBudgetMoney();
   const currency = useBudgetCurrency();
   const { totals } = line;
-  const pace = paceMinor(totals.leftMinor, daysLeft);
+  const pace = paceMinor(totals.leftMinor, daysLeft, 10 ** currencyFractionDigits(currency));
   const days = `${daysLeft} ${daysLeft === 1 ? "day" : "days"} to go`;
   const rows = [
     ["Planned", totals.plannedMinor],
