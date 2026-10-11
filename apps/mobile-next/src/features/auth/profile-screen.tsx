@@ -3,6 +3,7 @@ import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 
 import { AiSettings } from "@/features/ai";
+import { AnalyticsSettings } from "@/features/analytics";
 import { SoundSettings } from "@/features/sound";
 import { useLedgerScope } from "@/navigation/ledger-scope-context";
 import {
@@ -63,6 +64,7 @@ export function ProfileScreen() {
         </View>
         <SoundSettings />
         <AiSettings />
+        <AnalyticsSettings />
         <View style={styles.actions}>
           {isGuest ? (
             <Button

@@ -17,6 +17,7 @@ import {
 } from "@expo-google-fonts/ibm-plex-mono";
 import { disableDevMenu } from "@/dev/disable-dev-menu";
 import { hydrateAiPreferences } from "@/features/ai";
+import { hydrateAnalyticsSharing } from "@/features/analytics";
 import { AuthProvider } from "@/features/auth/auth-provider";
 import { hydrateSoundPreferences } from "@/features/sound";
 import { SessionGate } from "@/navigation/session-gate";
@@ -26,6 +27,7 @@ void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 void disableDevMenu();
 void hydrateSoundPreferences();
 void hydrateAiPreferences();
+void hydrateAnalyticsSharing();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
