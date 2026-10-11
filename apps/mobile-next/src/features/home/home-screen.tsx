@@ -1,19 +1,23 @@
 import { useState } from "react";
 import { router } from "expo-router";
-import { RefreshControl, ScrollView, StyleSheet } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Banner, colors, EmptyState, layout, Screen } from "@/ui/trove";
+import { Banner, colors, layout, Screen } from "@/ui/trove";
 
-import { HomeContent } from "./home-content";
-import { HomeEmpty } from "./home-empty";
+import { HomeBody } from "./home-body";
+import { HomeEmptyHeader } from "./home-empty-header";
 import { HomeHeader } from "./home-header";
-import { HomeSkeleton } from "./home-skeleton";
 import { useHomeData } from "./use-home-data";
 
 /** Board spacing: 11pt under the status bar, 18pt between sections. */
 const TOP_GAP = 11;
 const SECTION_GAP = 18;
+/** The empty board sits 4pt lower and breathes 22pt between sections. */
+const EMPTY_TOP_SHIFT = 4;
+const EMPTY_SECTION_GAP = 22;
+/** Part of the gap under the pinned header that stays fixed while the content scrolls. */
+const HEADER_FOOT = 8;
 /** The floating tab bar plus the board's breathing room above it, over the bottom inset. */
 const TAB_BAR_CLEARANCE = 96;
 
@@ -39,9 +43,25 @@ export function HomeScreen() {
 
   return (
     <Screen edges={["top"]}>
+      <View style={[styles.header, empty ? styles.headerEmpty : null]}>
+        {empty ? (
+          <HomeEmptyHeader now={home.now} onOpenDue={openDue} />
+        ) : (
+          <HomeHeader
+            dueThisWeek={home.isLoading ? 0 : home.dueThisWeek}
+            household={home.household}
+            initials={home.initials}
+            now={home.now}
+            onOpenDue={openDue}
+            onOpenScope={home.openScope}
+            title={home.title}
+          />
+        )}
+      </View>
       <ScrollView
         contentContainerStyle={[
           styles.content,
+          empty ? styles.contentEmpty : null,
           { paddingBottom: insets.bottom + TAB_BAR_CLEARANCE },
         ]}
         refreshControl={
@@ -52,49 +72,31 @@ export function HomeScreen() {
           />
         }
         showsVerticalScrollIndicator={false}
+        style={styles.scroll}
       >
-        {empty ? (
-          <HomeEmpty
-            currency={home.currency}
-            now={home.now}
-            onAddAccount={() => router.push("/accounts/new")}
-            onOpenDue={openDue}
-            onSetUpCategories={() => router.push("/categories/new")}
-          />
-        ) : (
-          <>
-            <HomeHeader
-              dueThisWeek={home.isLoading ? 0 : home.dueThisWeek}
-              household={home.household}
-              initials={home.initials}
-              now={home.now}
-              onOpenDue={openDue}
-              onOpenScope={home.openScope}
-              title={home.title}
-            />
-            {refreshError ? (
-              <Banner message="Could not refresh. Pull down to try again." tone="negative" />
-            ) : null}
-            {home.isLoading ? (
-              <HomeSkeleton />
-            ) : home.isError ? (
-              <EmptyState
-                actionLabel="Try again"
-                icon="warning"
-                message="Check your connection and try again."
-                onAction={() => void refresh()}
-                title="Your overview is unavailable"
-              />
-            ) : (
-              <HomeContent home={home} onOpenDue={openDue} />
-            )}
-          </>
-        )}
+        {refreshError ? (
+          <Banner message="Could not refresh. Pull down to try again." tone="negative" />
+        ) : null}
+        <HomeBody empty={empty} home={home} onOpenDue={openDue} onRetry={() => void refresh()} />
       </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { gap: SECTION_GAP, paddingHorizontal: layout.screenGutter, paddingTop: TOP_GAP },
+  // Pinned under the status bar; the board's 18pt (22pt when empty) to the first section is split
+  // between the header's foot and the scroll's head, so content clips cleanly as it scrolls.
+  header: {
+    paddingBottom: HEADER_FOOT,
+    paddingHorizontal: layout.screenGutter,
+    paddingTop: TOP_GAP,
+  },
+  headerEmpty: { paddingTop: TOP_GAP + EMPTY_TOP_SHIFT },
+  scroll: { flex: 1 },
+  content: {
+    gap: SECTION_GAP,
+    paddingHorizontal: layout.screenGutter,
+    paddingTop: SECTION_GAP - HEADER_FOOT,
+  },
+  contentEmpty: { paddingTop: EMPTY_SECTION_GAP - HEADER_FOOT },
 });
