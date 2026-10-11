@@ -1,10 +1,12 @@
 import { format, parseISO, subDays } from "date-fns";
 
 import type {
+  V2Account,
   V2AssignmentsCreateInput,
   V2BudgetPeriod,
   V2Category,
   V2PaydayRule,
+  V2Transaction,
 } from "@trove/api/v2/contracts";
 import { periodContaining } from "@trove/domain/budget";
 
@@ -142,4 +144,30 @@ export function writeErrorMessage(cause: unknown): string {
     }
   }
   return "Couldn't save that. Nothing was changed, so try again.";
+}
+
+const WHY_COUNT = 3;
+
+/** The biggest expenses, which is what an overspend is usually "because of". */
+export function largestTransactions(
+  transactions: readonly V2Transaction[],
+  count: number = WHY_COUNT,
+): V2Transaction[] {
+  return transactions
+    .filter((transaction) => transaction.kind === "expense")
+    .toSorted((a, b) => b.amountMinor - a.amountMinor || b.date.localeCompare(a.date))
+    .slice(0, count);
+}
+
+/** Any of these expenses went on a credit card, so part of the overspend is owed on the card. */
+export function hasCardSpending(
+  transactions: readonly V2Transaction[],
+  accounts: readonly V2Account[],
+): boolean {
+  const cards = new Set(
+    accounts.filter((account) => account.type === "credit_card").map((account) => account.id),
+  );
+  return transactions.some(
+    (transaction) => transaction.kind === "expense" && cards.has(transaction.accountId),
+  );
 }

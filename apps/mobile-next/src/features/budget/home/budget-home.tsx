@@ -13,6 +13,8 @@ import { EverydayRow } from "./everyday-row";
 import { GroupSummaryRow } from "./group-summary-row";
 import { envelopeLines, groupSummary, perDayLine, type ActiveBudgetView } from "./home-model";
 import { OverNotice } from "./over-notice";
+import { CoverMoveSheet } from "../cover/cover-move-sheet";
+import { useCoverMoveRequest } from "../cover/use-cover-move-request";
 import { QuickAddSheet } from "../quick-add/quick-add-sheet";
 
 interface BudgetHomeProps {
@@ -26,6 +28,9 @@ interface QuickAddTarget {
   readonly envelopeId: string | null;
   readonly session: number;
 }
+
+/** Quick add's sheet needs this long to finish closing before Cover can present over it. */
+const SHEET_HANDOFF_MS = 400;
 
 const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
 
@@ -50,6 +55,11 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
   });
   const openQuickAdd = (envelopeId: string | null) =>
     setQuickAdd((current) => ({ open: true, envelopeId, session: current.session + 1 }));
+  const coverMove = useCoverMoveRequest();
+  // The Everyday envelope that is furthest over; with none over, Cover points at the list instead.
+  const mostOver = everyday
+    .filter((line) => line.totals.leftMinor < 0)
+    .toSorted((a, b) => a.totals.leftMinor - b.totals.leftMinor)[0];
 
   return (
     <View style={styles.container}>
@@ -75,6 +85,11 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
       {over ? (
         <OverNotice
           overMinor={-current.safeToSpendMinor}
+          onCover={() =>
+            mostOver
+              ? coverMove.show({ kind: "cover", targetId: mostOver.envelope.id })
+              : scrollToY(everydayY.current)
+          }
           onAdjust={() => scrollToY(everydayY.current)}
         />
       ) : null}
@@ -133,7 +148,14 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
         view={view}
         preselectedEnvelopeId={quickAdd.envelopeId}
         onDismiss={() => setQuickAdd((current) => ({ ...current, open: false }))}
+        onCover={(saved) =>
+          setTimeout(
+            () => coverMove.show({ kind: "cover", targetId: saved.envelopeId }),
+            SHEET_HANDOFF_MS,
+          )
+        }
       />
+      <CoverMoveSheet controller={coverMove} view={view} />
     </View>
   );
 }
