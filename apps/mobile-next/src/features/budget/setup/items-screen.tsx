@@ -1,9 +1,7 @@
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
-import { Button } from "@/ui/button";
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { Button, ListGroup, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { AddItemRow } from "./add-item-row";
@@ -52,10 +50,13 @@ export function ItemsScreen() {
       footer={
         <>
           {ticked.length === 0 ? (
-            <Text variant="caption">Tick at least one to continue.</Text>
+            <Text tone="secondary" variant="bodySm">
+              Tick at least one to continue.
+            </Text>
           ) : null}
           <Button
-            title="Next"
+            fullWidth
+            label="Next"
             disabled={ticked.length === 0}
             onPress={() => {
               setup.update({ step: "amounts" });
@@ -67,23 +68,25 @@ export function ItemsScreen() {
     >
       {GROUP_ORDER.map((group) => (
         <View key={group} style={styles.group}>
-          <Text variant="title">{GROUP_LABELS[group]}</Text>
-          {items
-            .filter((item) => item.group === group)
-            .map((item) => {
-              const isTicked = isItemTicked(item, draft.selection);
-              return (
-                <ChoiceRow
-                  key={item.key}
-                  label={item.name}
-                  detail={itemDetail(item)}
-                  ticked={isTicked}
-                  onPress={() =>
-                    setup.update({ selection: { ...draft.selection, [item.key]: !isTicked } })
-                  }
-                />
-              );
-            })}
+          <Text variant="titleMd">{GROUP_LABELS[group]}</Text>
+          <ListGroup dividerInset={0}>
+            {items
+              .filter((item) => item.group === group)
+              .map((item) => {
+                const isTicked = isItemTicked(item, draft.selection);
+                return (
+                  <ChoiceRow
+                    key={item.key}
+                    label={item.name}
+                    detail={itemDetail(item)}
+                    ticked={isTicked}
+                    onPress={() =>
+                      setup.update({ selection: { ...draft.selection, [item.key]: !isTicked } })
+                    }
+                  />
+                );
+              })}
+          </ListGroup>
         </View>
       ))}
       <AddItemRow onAdd={add} />
@@ -92,5 +95,5 @@ export function ItemsScreen() {
 }
 
 const styles = StyleSheet.create({
-  group: { gap: spacing[2] },
+  group: { gap: space[2] },
 });

@@ -3,8 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { Amount, ListGroup, ListRow, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import type { PlanPreview } from "./setup-plan";
@@ -23,31 +22,34 @@ export function ReviewSummary({ preview, periodStart }: ReviewSummaryProps) {
   return (
     <>
       <View style={styles.hero}>
-        <Text variant="label">Safe to spend</Text>
-        <Text variant="amount">{money(preview.safeToSpendMinor)}</Text>
-        <Text variant="caption">
+        <Text tone="secondary" variant="labelSm">
+          Safe to spend
+        </Text>
+        <Amount currency={BUDGET_CURRENCY} minor={preview.safeToSpendMinor} size="hero" />
+        <Text tone="secondary" variant="bodySm">
           {`${money(preview.perDayMinor)} a day for ${preview.daysLeft} ${preview.daysLeft === 1 ? "day" : "days"}`}
         </Text>
       </View>
-      <View style={styles.rows}>
+      <ListGroup dividerInset={0}>
         {GROUP_ORDER.map((group) => (
-          <View key={group} style={styles.row}>
-            <Text>{GROUP_LABELS[group]}</Text>
-            <Text>{money(preview.groupTotals[group])}</Text>
-          </View>
+          <ListRow
+            key={group}
+            title={GROUP_LABELS[group]}
+            trailing={<Amount currency={BUDGET_CURRENCY} minor={preview.groupTotals[group]} />}
+          />
         ))}
-        <View style={styles.row}>
-          <Text>Not planned yet</Text>
-          <Text>{money(preview.leftToPlanMinor)}</Text>
-        </View>
-      </View>
-      <Text variant="caption">{`Spending you already logged since ${since} is counted once.`}</Text>
+        <ListRow
+          title="Not planned yet"
+          trailing={<Amount currency={BUDGET_CURRENCY} minor={preview.leftToPlanMinor} />}
+        />
+      </ListGroup>
+      <Text tone="secondary" variant="bodySm">
+        {`Spending you already logged since ${since} is counted once.`}
+      </Text>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: { gap: spacing[1] },
-  rows: { gap: spacing[3] },
-  row: { flexDirection: "row", justifyContent: "space-between" },
+  hero: { gap: space[1] },
 });

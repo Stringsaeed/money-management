@@ -3,11 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import type { V2EnvelopeGroup } from "@trove/api/v2/contracts";
 
-import { Button } from "@/ui/button";
-import { Chip } from "@/ui/chip";
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
-import { TextField } from "@/ui/text-field";
+import { Button, Chip, space, Text, TextField } from "@/ui/trove";
 
 import { GROUP_LABELS, GROUP_ORDER } from "./setup-types";
 
@@ -23,7 +19,7 @@ export function AddItemRow({ onAdd }: AddItemRowProps) {
 
   return (
     <View style={styles.group}>
-      <Text variant="title">Add your own</Text>
+      <Text variant="titleMd">Add your own</Text>
       <TextField
         label="Name"
         placeholder="Gym, pets, gifts"
@@ -42,7 +38,8 @@ export function AddItemRow({ onAdd }: AddItemRowProps) {
         ))}
       </View>
       <Button
-        title="Add"
+        fullWidth
+        label="Add"
         variant="secondary"
         disabled={trimmed.length === 0}
         onPress={() => {
@@ -55,6 +52,6 @@ export function AddItemRow({ onAdd }: AddItemRowProps) {
 }
 
 const styles = StyleSheet.create({
-  group: { gap: spacing[3] },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing[2] },
+  group: { gap: space[3] },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
 });

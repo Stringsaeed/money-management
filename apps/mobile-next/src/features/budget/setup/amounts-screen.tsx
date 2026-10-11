@@ -1,9 +1,7 @@
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
-import { Button } from "@/ui/button";
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { Button, space, Text } from "@/ui/trove";
 
 import { AmountRow } from "./amount-row";
 import { LeftToPlanBar } from "./left-to-plan-bar";
@@ -52,7 +50,8 @@ export function AmountsScreen() {
       pinned={<LeftToPlanBar leftMinor={left} />}
       footer={
         <Button
-          title="Next"
+          fullWidth
+          label="Next"
           disabled={left === null || left < 0 || invalidAmounts}
           onPress={() => {
             setup.update({ step: "review" });
@@ -62,14 +61,18 @@ export function AmountsScreen() {
       }
     >
       <View style={styles.actions}>
-        <Button title="Use suggestions" variant="secondary" onPress={useSuggestions} />
-        <Button title="Clear all" variant="ghost" onPress={() => setup.update({ amounts: {} })} />
+        <Button label="Use suggestions" variant="secondary" onPress={useSuggestions} />
+        <Button
+          label="Clear all"
+          variant="tertiary"
+          onPress={() => setup.update({ amounts: {} })}
+        />
       </View>
       {GROUP_ORDER.map((group) => {
         const rows = ticked.filter((item) => item.group === group);
         return rows.length === 0 ? null : (
           <View key={group} style={styles.group}>
-            <Text variant="title">{GROUP_LABELS[group]}</Text>
+            <Text variant="titleMd">{GROUP_LABELS[group]}</Text>
             {rows.map((item) => (
               <AmountRow
                 key={item.key}
@@ -87,6 +90,6 @@ export function AmountsScreen() {
 }
 
 const styles = StyleSheet.create({
-  actions: { flexDirection: "row", gap: spacing[2] },
-  group: { gap: spacing[4] },
+  actions: { flexDirection: "row", gap: space[2] },
+  group: { gap: space[4] },
 });

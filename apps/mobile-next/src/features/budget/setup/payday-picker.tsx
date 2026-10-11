@@ -3,9 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import type { V2PaydayRule } from "@trove/api/v2/contracts";
 
-import { spacing } from "@/ui/design-tokens";
-import { Chip } from "@/ui/chip";
-import { Text } from "@/ui/text";
+import { Chip, space, Text } from "@/ui/trove";
 
 import { ordinal, paydayLabel } from "./payday-label";
 
@@ -55,7 +53,9 @@ export function PaydayPicker({ value, onChange }: PaydayPickerProps) {
       </View>
       {pickerOpen ? (
         <View style={styles.days}>
-          <Text variant="caption">Paid on the 29th to 31st? Choose Last workday.</Text>
+          <Text variant="bodySm" tone="secondary">
+            Paid on the 29th to 31st? Choose Last workday.
+          </Text>
           <View style={styles.chips}>
             {ALL_DAYS.map((day) => (
               <Chip
@@ -73,7 +73,7 @@ export function PaydayPicker({ value, onChange }: PaydayPickerProps) {
 }
 
 const styles = StyleSheet.create({
-  group: { gap: spacing[3] },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing[2] },
-  days: { gap: spacing[2] },
+  group: { gap: space[3] },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
+  days: { gap: space[2] },
 });

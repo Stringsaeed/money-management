@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
-import { colors, spacing } from "@/ui/design-tokens";
-import { Screen } from "@/ui/screen";
-import { Text } from "@/ui/text";
+import { colors, layout, Screen, space, Text } from "@/ui/trove";
+
+import { SetupHeader } from "./setup-header";
 
 interface SetupFrameProps {
   readonly step: string;
@@ -19,7 +19,8 @@ interface SetupFrameProps {
 /** The shared shell of setup screens 2 to 5: a step label, a title, scrolling content, and actions. */
 export function SetupFrame({ step, title, intro, pinned, footer, children }: SetupFrameProps) {
   return (
-    <Screen edges={["bottom"]}>
+    <Screen>
+      <SetupHeader />
       {pinned}
       <ScrollView
         contentContainerStyle={styles.content}
@@ -28,9 +29,15 @@ export function SetupFrame({ step, title, intro, pinned, footer, children }: Set
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.heading}>
-          <Text variant="label">{step}</Text>
-          <Text variant="headline">{title}</Text>
-          {intro ? <Text variant="caption">{intro}</Text> : null}
+          <Text tone="secondary" variant="labelSm">
+            {step}
+          </Text>
+          <Text variant="titleLg">{title}</Text>
+          {intro ? (
+            <Text tone="secondary" variant="bodySm">
+              {intro}
+            </Text>
+          ) : null}
         </View>
         {children}
       </ScrollView>
@@ -40,12 +47,12 @@ export function SetupFrame({ step, title, intro, pinned, footer, children }: Set
 }
 
 const styles = StyleSheet.create({
-  content: { gap: spacing[5], padding: spacing[5] },
-  heading: { gap: spacing[1] },
+  content: { gap: space[5], padding: layout.screenGutter },
+  heading: { gap: space[1] },
   footer: {
-    borderTopColor: colors.border,
+    borderTopColor: colors.border.subtle,
     borderTopWidth: StyleSheet.hairlineWidth,
-    gap: spacing[2],
-    padding: spacing[4],
+    gap: space[2],
+    padding: space[4],
   },
 });

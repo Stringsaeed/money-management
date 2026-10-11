@@ -4,11 +4,7 @@ import { StyleSheet, View } from "react-native";
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
 import { useAccountsQuery } from "@/data/ledger-queries";
-import { Button } from "@/ui/button";
-import { spacing } from "@/ui/design-tokens";
-import { Switch } from "@/ui/switch";
-import { Text } from "@/ui/text";
-import { TextField } from "@/ui/text-field";
+import { Button, ListGroup, ListRow, space, Switch, Text, TextField } from "@/ui/trove";
 
 import { FundingSection } from "./funding-section";
 import { PaydayPicker } from "./payday-picker";
@@ -43,10 +39,13 @@ export function PaydayScreen() {
       footer={
         <>
           {needsAccount ? (
-            <Text variant="caption">Tick at least one account that holds your money.</Text>
+            <Text tone="secondary" variant="bodySm">
+              Tick at least one account that holds your money.
+            </Text>
           ) : null}
           <Button
-            title="Next"
+            fullWidth
+            label="Next"
             disabled={!canContinue}
             onPress={() => {
               update({ step: "items" });
@@ -57,7 +56,7 @@ export function PaydayScreen() {
       }
     >
       <View style={styles.group}>
-        <Text variant="title">When do you get paid?</Text>
+        <Text variant="titleMd">When do you get paid?</Text>
         <PaydayPicker value={draft.payday} onChange={(payday) => update({ payday })} />
       </View>
       <TextField
@@ -68,17 +67,19 @@ export function PaydayScreen() {
         onChangeText={(usualSalary) => update({ usualSalary })}
         error={salaryInvalid ? "Enter an amount like 12000 or 12000.50." : undefined}
       />
-      <View style={styles.switchRow}>
-        <View style={styles.switchCopy}>
-          <Text>Remind me on payday</Text>
-          <Text variant="caption">A reminder only. Nothing is added to your ledger for you.</Text>
-        </View>
-        <Switch
-          accessibilityLabel="Remind me on payday"
-          value={draft.paydayReminder}
-          onValueChange={(paydayReminder) => update({ paydayReminder })}
+      <ListGroup dividerInset={0}>
+        <ListRow
+          title="Remind me on payday"
+          subtitle="A reminder only. Nothing is added to your ledger for you."
+          trailing={
+            <Switch
+              accessibilityLabel="Remind me on payday"
+              value={draft.paydayReminder}
+              onValueChange={(paydayReminder) => update({ paydayReminder })}
+            />
+          }
         />
-      </View>
+      </ListGroup>
       <FundingSection
         accounts={accounts.data}
         draft={draft}
@@ -93,7 +94,5 @@ export function PaydayScreen() {
 }
 
 const styles = StyleSheet.create({
-  group: { gap: spacing[3] },
-  switchRow: { alignItems: "center", flexDirection: "row", gap: spacing[3] },
-  switchCopy: { flex: 1, gap: spacing[0.5] },
+  group: { gap: space[3] },
 });

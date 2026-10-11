@@ -1,9 +1,6 @@
 import { router } from "expo-router";
-import { StyleSheet } from "react-native";
 
-import { Button } from "@/ui/button";
-import { colors } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { Banner, Button } from "@/ui/trove";
 
 interface ReviewActionsProps {
   readonly pending: boolean;
@@ -16,27 +13,21 @@ interface ReviewActionsProps {
 export function ReviewActions({ pending, error, blocked, onStart }: ReviewActionsProps) {
   return (
     <>
-      {error ? (
-        <Text variant="caption" style={styles.error}>
-          {error}
-        </Text>
-      ) : null}
+      {error ? <Banner message={error} tone="negative" /> : null}
       <Button
-        title={error ? "Retry" : "Start budget"}
+        fullWidth
+        label={error ? "Retry" : "Start budget"}
         loading={pending}
         disabled={blocked}
         onPress={onStart}
       />
       <Button
-        title="Edit amounts"
-        variant="ghost"
+        fullWidth
+        label="Edit amounts"
+        variant="tertiary"
         disabled={pending}
         onPress={() => router.back()}
       />
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  error: { color: colors.terracotta },
-});

@@ -2,9 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
-import { TextField } from "@/ui/text-field";
+import { space, Text, TextField } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import type { SetupItem } from "./setup-items";
@@ -38,7 +36,7 @@ export function AmountRow({ item, value, invalid, onChange }: AmountRowProps) {
         error={invalid ? "Enter an amount like 350 or 350.50." : undefined}
       />
       {hints(item).map((hint) => (
-        <Text key={hint} variant="caption">
+        <Text key={hint} tone="secondary" variant="bodySm">
           {hint}
         </Text>
       ))}
@@ -47,5 +45,5 @@ export function AmountRow({ item, value, invalid, onChange }: AmountRowProps) {
 }
 
 const styles = StyleSheet.create({
-  row: { gap: spacing[1] },
+  row: { gap: space[1] },
 });

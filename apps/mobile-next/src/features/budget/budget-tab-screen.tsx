@@ -2,10 +2,7 @@ import { router } from "expo-router";
 import { ScrollView, StyleSheet } from "react-native";
 
 import { useBudgetQuery } from "@/data/ledger-queries";
-import { spacing } from "@/ui/design-tokens";
-import { EmptyState } from "@/ui/empty-state";
-import { Screen } from "@/ui/screen";
-import { Text } from "@/ui/text";
+import { EmptyState, Header, layout, Screen, space, Text } from "@/ui/trove";
 
 import { BudgetActive } from "./budget-active";
 import { BudgetIntro } from "./budget-intro";
@@ -20,14 +17,19 @@ export function BudgetTabScreen() {
   return (
     <Screen edges={["top"]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Header title="Budget" />
         {budget.isError && !budget.data ? (
           <EmptyState
             title="Couldn't load your budget"
             message="Check your connection and try again."
-            onRetry={() => void budget.retry()}
+            actionLabel="Try again"
+            onAction={() => void budget.retry()}
+            framed={false}
           />
         ) : !budget.data || !setup.ready ? (
-          <Text variant="caption">Loading your budget…</Text>
+          <Text tone="secondary" variant="bodySm">
+            Loading your budget…
+          </Text>
         ) : budget.data.budget ? (
           <BudgetActive view={budget.data} />
         ) : (
@@ -45,5 +47,9 @@ export function BudgetTabScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: spacing[5], paddingBottom: 140 },
+  content: {
+    gap: space[4],
+    paddingBottom: space[16] + space[8],
+    paddingHorizontal: layout.screenGutter,
+  },
 });

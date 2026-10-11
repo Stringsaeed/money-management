@@ -2,10 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY, type V2Account } from "@trove/api/v2/contracts";
 
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
-import { TextField } from "@/ui/text-field";
-import { formatMoneyMinor } from "@/utils/money";
+import { Amount, ListGroup, space, Text, TextField } from "@/ui/trove";
 
 import { ChoiceRow } from "./choice-row";
 import { fundingEligibleAccounts, isFundingTicked } from "./setup-plan";
@@ -40,22 +37,32 @@ export function FundingSection({
 
   return (
     <View style={styles.group}>
-      <Text variant="title">Money you have right now</Text>
-      {shown.map((account) => {
-        const note = unavailableNote(account);
-        const ticked = !note && isFundingTicked(account, draft.funding);
-        return (
-          <ChoiceRow
-            key={account.id}
-            label={account.name}
-            note={note}
-            detail={formatMoneyMinor(account.balanceMinor, account.currency)}
-            ticked={ticked}
-            disabled={Boolean(note)}
-            onPress={() => onTick(account.id, !ticked)}
-          />
-        );
-      })}
+      <Text variant="titleMd">Money you have right now</Text>
+      {shown.length > 0 ? (
+        <ListGroup dividerInset={0}>
+          {shown.map((account) => {
+            const note = unavailableNote(account);
+            const ticked = !note && isFundingTicked(account, draft.funding);
+            return (
+              <ChoiceRow
+                key={account.id}
+                label={account.name}
+                note={note}
+                trailing={
+                  <Amount
+                    currency={account.currency}
+                    minor={account.balanceMinor}
+                    tone="secondary"
+                  />
+                }
+                ticked={ticked}
+                disabled={Boolean(note)}
+                onPress={() => onTick(account.id, !ticked)}
+              />
+            );
+          })}
+        </ListGroup>
+      ) : null}
       {eligible.length === 0 ? (
         <TextField
           label="How much do you have right now?"
@@ -67,7 +74,7 @@ export function FundingSection({
         />
       ) : null}
       {eligible.length === 0 ? (
-        <Text variant="caption">
+        <Text tone="secondary" variant="bodySm">
           This creates one My money cash account with that balance when you start your budget.
         </Text>
       ) : null}
@@ -76,5 +83,5 @@ export function FundingSection({
 }
 
 const styles = StyleSheet.create({
-  group: { gap: spacing[3] },
+  group: { gap: space[3] },
 });

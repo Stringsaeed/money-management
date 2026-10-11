@@ -1,9 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import { Button } from "@/ui/button";
-import { spacing } from "@/ui/design-tokens";
-import { Surface } from "@/ui/surface";
-import { Text } from "@/ui/text";
+import { Button, Card, space, Text } from "@/ui/trove";
 
 const STEPS = [
   { title: "Payday and money", detail: "When you get paid and what you have now." },
@@ -22,34 +19,37 @@ export function BudgetIntro({ hasDraft, onStart, onNotNow }: BudgetIntroProps) {
   return (
     <View style={styles.container}>
       <View style={styles.heading}>
-        <Text variant="headline">Know what is safe to spend</Text>
-        <Text variant="body">
-          Plan your month in about three minutes. No bank connection needed.
-        </Text>
+        <Text variant="titleLg">Know what is safe to spend</Text>
+        <Text>Plan your month in about three minutes. No bank connection needed.</Text>
       </View>
-      <Surface variant="recessed">
+      <Card style={styles.steps}>
         {STEPS.map((step, index) => (
           <View key={step.title} style={styles.step}>
-            <Text variant="label">{index + 1}</Text>
+            <Text tone="secondary" variant="labelSm">
+              {index + 1}
+            </Text>
             <View style={styles.stepCopy}>
               <Text>{step.title}</Text>
-              <Text variant="caption">{step.detail}</Text>
+              <Text tone="secondary" variant="bodySm">
+                {step.detail}
+              </Text>
             </View>
           </View>
         ))}
-      </Surface>
+      </Card>
       <View style={styles.actions}>
-        <Button title={hasDraft ? "Continue setup" : "Start"} onPress={onStart} />
-        <Button title="Not now" variant="ghost" onPress={onNotNow} />
+        <Button fullWidth label={hasDraft ? "Continue setup" : "Start"} onPress={onStart} />
+        <Button fullWidth label="Not now" variant="tertiary" onPress={onNotNow} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing[6] },
-  heading: { gap: spacing[2] },
-  step: { alignItems: "flex-start", flexDirection: "row", gap: spacing[3] },
-  stepCopy: { flex: 1, gap: spacing[0.5] },
-  actions: { gap: spacing[2] },
+  container: { gap: space[6] },
+  heading: { gap: space[2] },
+  steps: { gap: space[3] },
+  step: { alignItems: "flex-start", flexDirection: "row", gap: space[3] },
+  stepCopy: { flex: 1, gap: space[0.5] },
+  actions: { gap: space[2] },
 });

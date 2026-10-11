@@ -2,8 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY, type V2BudgetView } from "@trove/api/v2/contracts";
 
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { Amount, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 type ActiveBudget = Exclude<V2BudgetView, { budget: null }>;
@@ -13,11 +12,13 @@ export function BudgetActive({ view }: { readonly view: ActiveBudget }) {
   const { current } = view;
   return (
     <View style={styles.container}>
-      <Text variant="headline">Budget is active</Text>
+      <Text variant="titleLg">Budget is active</Text>
       <View style={styles.hero}>
-        <Text variant="label">Safe to spend</Text>
-        <Text variant="amount">{formatMoneyMinor(current.safeToSpendMinor, BUDGET_CURRENCY)}</Text>
-        <Text variant="caption">
+        <Text tone="secondary" variant="labelSm">
+          Safe to spend
+        </Text>
+        <Amount currency={BUDGET_CURRENCY} minor={current.safeToSpendMinor} size="hero" />
+        <Text tone="secondary" variant="bodySm">
           {`${formatMoneyMinor(current.perDayMinor, BUDGET_CURRENCY)} a day for ${current.daysLeft} ${current.daysLeft === 1 ? "day" : "days"}`}
         </Text>
       </View>
@@ -26,6 +27,6 @@ export function BudgetActive({ view }: { readonly view: ActiveBudget }) {
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing[4] },
-  hero: { gap: spacing[1] },
+  container: { gap: space[4] },
+  hero: { gap: space[1] },
 });

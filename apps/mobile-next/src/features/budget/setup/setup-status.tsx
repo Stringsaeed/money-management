@@ -1,9 +1,8 @@
 import { StyleSheet } from "react-native";
 
-import { spacing } from "@/ui/design-tokens";
-import { EmptyState } from "@/ui/empty-state";
-import { Screen } from "@/ui/screen";
-import { Text } from "@/ui/text";
+import { EmptyState, layout, Screen, Text } from "@/ui/trove";
+
+import { SetupHeader } from "./setup-header";
 
 interface SetupStatusProps {
   readonly loading?: string;
@@ -13,15 +12,18 @@ interface SetupStatusProps {
 /** Full-screen loading or retry state for a setup step that is waiting on the server. */
 export function SetupStatus({ loading, error }: SetupStatusProps) {
   return (
-    <Screen edges={["bottom"]}>
+    <Screen>
+      <SetupHeader />
       {error ? (
         <EmptyState
           title={error.title}
           message="Check your connection and try again."
-          onRetry={error.onRetry}
+          actionLabel="Try again"
+          onAction={error.onRetry}
+          framed={false}
         />
       ) : (
-        <Text variant="caption" style={styles.loading}>
+        <Text style={styles.loading} tone="secondary" variant="bodySm">
           {loading}
         </Text>
       )}
@@ -30,5 +32,5 @@ export function SetupStatus({ loading, error }: SetupStatusProps) {
 }
 
 const styles = StyleSheet.create({
-  loading: { padding: spacing[5] },
+  loading: { padding: layout.screenGutter },
 });

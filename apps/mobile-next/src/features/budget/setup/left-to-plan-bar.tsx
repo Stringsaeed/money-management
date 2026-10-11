@@ -2,8 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { colors, spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { Amount, colors, layout, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 interface LeftToPlanBarProps {
@@ -11,17 +10,26 @@ interface LeftToPlanBarProps {
   readonly leftMinor: number | null;
 }
 
-/** The sticky Left to plan summary: neutral above zero, a line at zero, orange below zero. */
+/** The sticky Left to plan summary: neutral above zero, a line at zero, red below zero. */
 export function LeftToPlanBar({ leftMinor }: LeftToPlanBarProps) {
   const over = leftMinor !== null && leftMinor < 0;
   return (
     <View style={styles.bar} accessibilityRole="summary" accessibilityLiveRegion="polite">
-      <Text variant="label">Left to plan</Text>
-      <Text variant="headline" style={over && styles.over}>
-        {leftMinor === null ? "…" : formatMoneyMinor(leftMinor, BUDGET_CURRENCY)}
+      <Text tone="secondary" variant="labelSm">
+        Left to plan
       </Text>
+      {leftMinor === null ? (
+        <Text variant="amountLg">…</Text>
+      ) : (
+        <Amount
+          currency={BUDGET_CURRENCY}
+          minor={leftMinor}
+          size="lg"
+          tone={over ? "negative" : "primary"}
+        />
+      )}
       {leftMinor === null ? null : (
-        <Text variant="caption" style={over && styles.over}>
+        <Text tone={over ? "negative" : "secondary"} variant="bodySm">
           {over
             ? `Planned ${formatMoneyMinor(-leftMinor, BUDGET_CURRENCY)} more than you have. Lower amounts.`
             : leftMinor === 0
@@ -35,12 +43,11 @@ export function LeftToPlanBar({ leftMinor }: LeftToPlanBarProps) {
 
 const styles = StyleSheet.create({
   bar: {
-    backgroundColor: colors.surfaceContainer,
-    borderBottomColor: colors.border,
+    backgroundColor: colors.bg.subtle,
+    borderBottomColor: colors.border.subtle,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: spacing[0.5],
-    paddingHorizontal: spacing[5],
-    paddingVertical: spacing[3],
+    gap: space[0.5],
+    paddingHorizontal: layout.screenGutter,
+    paddingVertical: space[3],
   },
-  over: { color: colors.terracotta },
 });

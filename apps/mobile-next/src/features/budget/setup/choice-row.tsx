@@ -1,12 +1,13 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import type { ReactNode } from "react";
 
-import { colors, radii, spacing } from "@/ui/design-tokens";
-import { Icon } from "@/ui/icon";
-import { Text } from "@/ui/text";
+import { Checkbox, ListRow } from "@/ui/trove";
 
 interface ChoiceRowProps {
   readonly label: string;
+  /** Quiet text before the end of the row, e.g. "AED 120 a month". */
   readonly detail?: string;
+  /** Trailing content such as an `Amount`. */
+  readonly trailing?: ReactNode;
   readonly note?: string;
   readonly ticked: boolean;
   /** Unavailable rows show their `note` and cannot be changed. */
@@ -14,58 +15,33 @@ interface ChoiceRowProps {
   readonly onPress?: () => void;
 }
 
-/** A tick-box row used for funding accounts and the What it's for checklist. */
+/** A tick-box row used for funding accounts and the What it's for checklist. Sits in a ListGroup. */
 export function ChoiceRow({
   label,
   detail,
+  trailing,
   note,
   ticked,
   disabled = false,
   onPress,
 }: ChoiceRowProps) {
+  const toggle = disabled ? undefined : onPress;
   return (
-    <Pressable
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked: ticked, disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed, disabled && styles.disabled]}
-    >
-      <View style={[styles.box, ticked && styles.boxTicked]}>
-        {ticked ? <Icon name="check" size={14} color={colors.primaryForeground} /> : null}
-      </View>
-      <View style={styles.copy}>
-        <Text>{label}</Text>
-        {note ? <Text variant="caption">{note}</Text> : null}
-      </View>
-      {detail ? <Text variant="caption">{detail}</Text> : null}
-    </Pressable>
+    <ListRow
+      accessibilityLabel={`${label}, ${ticked ? "ticked" : "not ticked"}`}
+      leading={
+        <Checkbox
+          accessibilityLabel={label}
+          checked={ticked}
+          disabled={disabled}
+          onCheckedChange={() => toggle?.()}
+        />
+      }
+      onPress={toggle}
+      subtitle={note}
+      title={label}
+      trailing={trailing}
+      value={detail}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    alignItems: "center",
-    backgroundColor: colors.card,
-    borderCurve: "continuous",
-    borderRadius: radii.lg,
-    flexDirection: "row",
-    gap: spacing[3],
-    minHeight: spacing[14],
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-  },
-  pressed: { backgroundColor: colors.surfaceDim },
-  disabled: { opacity: 0.56 },
-  box: {
-    alignItems: "center",
-    borderColor: colors.input,
-    borderRadius: radii.md,
-    borderWidth: 1.5,
-    height: spacing[6],
-    justifyContent: "center",
-    width: spacing[6],
-  },
-  boxTicked: { backgroundColor: colors.primary, borderColor: colors.primary },
-  copy: { flex: 1, gap: spacing[0.5] },
-});
