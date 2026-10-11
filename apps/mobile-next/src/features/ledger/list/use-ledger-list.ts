@@ -17,6 +17,7 @@ import {
   type ActiveFilter,
   type LedgerFilterState,
 } from "./ledger-filters";
+import { totalsPeriod } from "./ledger-totals";
 
 /** Filter state, the server-paged list, and lookups shared by every Ledger layout. */
 export function useLedgerList() {
@@ -28,6 +29,13 @@ export function useLedgerList() {
   const listFilters = toListFilters(filters);
   const pages = useTransactionPagesQuery(listFilters);
   const summary = useTransactionSummaryQuery(listFilters);
+  // The IN and OUT card counts the date filter, or this month when none is applied.
+  const period = totalsPeriod(filters.range, new Date());
+  const periodSummary = useTransactionSummaryQuery({
+    ...listFilters,
+    from: period.from,
+    to: period.to,
+  });
   const activeAccounts = accounts.data.filter((account) => !account.archived);
   const activeCategories = categories.data.filter((category) => !category.archived);
   const chips = activeFilters(filters, accounts.data, categories.data);
@@ -41,6 +49,7 @@ export function useLedgerList() {
     chips,
     pages,
     summary,
+    totals: { period, summary: periodSummary },
     accounts: activeAccounts,
     categories: activeCategories,
     accountById: new Map<string, V2Account>(accounts.data.map((item) => [item.id, item])),
@@ -53,6 +62,9 @@ export function useLedgerList() {
       setFilters((current) => change(pruneFilters(current, accounts.data, categories.data))),
     remove: (chip: ActiveFilter) => setFilters((current) => removeFilter(current, chip)),
     clear: () => setFilters(EMPTY_LEDGER_FILTERS),
+    refresh: async () => {
+      await Promise.all([pages.refresh(), summary.refresh(), periodSummary.refresh()]);
+    },
   };
 }
 

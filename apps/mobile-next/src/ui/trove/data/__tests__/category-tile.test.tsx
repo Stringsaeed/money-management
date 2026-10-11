@@ -41,4 +41,10 @@ describe("CategoryTile user colour", () => {
     await render(<CategoryTile icon="🍕" />);
     expect(tileStyle().borderRadius).toBe(8);
   });
+
+  it("rounds the neutral emoji tile on request", async () => {
+    await render(<CategoryTile icon="🍕" round />);
+    expect(screen.getByText("🍕", { includeHiddenElements: true })).toBeTruthy();
+    expect(tileStyle().borderRadius).toBe(999);
+  });
 });

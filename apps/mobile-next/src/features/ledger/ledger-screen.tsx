@@ -1,16 +1,15 @@
-import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { V2Transaction } from "@trove/api/v2/contracts";
 
-import { useReducedMotion } from "@/ui/motion";
-import { layout, Screen, space } from "@/ui/trove";
+import { Screen } from "@/ui/trove";
 
 import { LedgerFilterSheet } from "./list/ledger-filter-sheet";
 import { LedgerHeader } from "./list/ledger-header";
-import { LedgerManageLinks } from "./list/ledger-manage-links";
+import { LedgerListHeader } from "./list/ledger-list-header";
+import { LedgerListSkeleton } from "./list/ledger-list-skeleton";
 import { LedgerTransactionList } from "./list/ledger-transaction-list";
 import { useLedgerList } from "./list/use-ledger-list";
-import { useSearchReveal } from "./list/use-search-reveal";
 
 export interface LedgerScreenProps {
   readonly onAddTransaction?: () => void;
@@ -18,39 +17,57 @@ export interface LedgerScreenProps {
   readonly onOpenAccounts?: () => void;
   readonly onOpenCategories?: () => void;
   readonly onOpenRecurring?: () => void;
+  readonly onOpenSearch?: () => void;
 }
 
+/** The floating tab bar plus the board's breathing room above it, over the bottom inset. */
+const TAB_BAR_CLEARANCE = 96;
+
+/** Ledger tab: the "ledger feature" board — search, shortcuts, the month's totals, then days. */
 export function LedgerScreen({
   onAddTransaction,
   onOpenTransaction,
   onOpenAccounts,
   onOpenCategories,
   onOpenRecurring,
+  onOpenSearch,
 }: LedgerScreenProps) {
   const list = useLedgerList();
-  const reveal = useSearchReveal(useReducedMotion());
+  const insets = useSafeAreaInsets();
+  const bottomInset = insets.bottom + TAB_BAR_CLEARANCE;
+  const loading = list.pages.isLoading;
 
   return (
     <Screen edges={["top"]}>
-      <LedgerHeader list={list} searchHidden={reveal.hidden} />
-      <LedgerTransactionList
-        list={list}
-        scrollOffset={reveal.scrollOffset}
-        onOpenTransaction={onOpenTransaction}
-        onAddTransaction={onAddTransaction}
-        header={
-          <View style={styles.links}>
-            <LedgerManageLinks
-              navigation={{ onAddTransaction, onOpenAccounts, onOpenCategories, onOpenRecurring }}
-            />
-          </View>
-        }
+      <LedgerHeader
+        applied={list.chips.length}
+        loading={loading}
+        onOpenFilters={list.openFilters}
       />
+      {loading ? (
+        <LedgerListSkeleton bottomInset={bottomInset} />
+      ) : (
+        <LedgerTransactionList
+          bottomInset={bottomInset}
+          header={
+            <LedgerListHeader
+              list={list}
+              navigation={{
+                onAddTransaction,
+                onOpenAccounts,
+                onOpenCategories,
+                onOpenRecurring,
+                onOpenSearch,
+              }}
+              showTotals={list.pages.data.length > 0}
+            />
+          }
+          list={list}
+          onAddTransaction={onAddTransaction}
+          onOpenTransaction={onOpenTransaction}
+        />
+      )}
       <LedgerFilterSheet list={list} />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  links: { paddingHorizontal: layout.screenGutter, paddingTop: space[3] },
-});

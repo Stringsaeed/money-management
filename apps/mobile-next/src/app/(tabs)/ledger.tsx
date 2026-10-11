@@ -10,6 +10,7 @@ export default function LedgerRoute() {
       onOpenAccounts={() => router.push("/accounts")}
       onOpenCategories={() => router.push("/categories")}
       onOpenRecurring={() => router.push("/recurring")}
+      onOpenSearch={() => router.push("/transactions/search")}
     />
   );
 }

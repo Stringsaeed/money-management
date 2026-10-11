@@ -1,28 +1,40 @@
+import { format } from "date-fns";
 import { StyleSheet, View } from "react-native";
 
 import { EmptyState, layout, space } from "@/ui/trove";
 
-import { LedgerListSkeleton } from "./ledger-list-skeleton";
+import { LedgerEmptyReceipt } from "./ledger-empty-receipt";
+import { plainAmount } from "./ledger-money";
 
 interface LedgerListEmptyProps {
-  readonly loading: boolean;
   readonly failed: boolean;
   readonly filtered: boolean;
+  /** The ledger's first currency, to print the blank slip's total in. */
+  readonly currency: string | null;
   readonly onRetry: () => void;
   readonly onClearFilters: () => void;
   readonly onAddTransaction?: () => void;
 }
 
-/** Loading, failure, no-match, and first-run states for the Ledger list. */
+/** Failure, no-match, and first-run states for the Ledger list. */
 export function LedgerListEmpty({
-  loading,
   failed,
   filtered,
+  currency,
   onRetry,
   onClearFilters,
   onAddTransaction,
 }: LedgerListEmptyProps) {
-  if (loading) return <LedgerListSkeleton />;
+  if (!failed && !filtered) {
+    const zero = currency ? `${currency} ${plainAmount(0, currency)}` : "0.00";
+    return (
+      <LedgerEmptyReceipt
+        month={format(new Date(), "MMMM").toUpperCase()}
+        onAddTransaction={onAddTransaction}
+        total={zero}
+      />
+    );
+  }
   return (
     <View style={styles.empty}>
       {failed ? (
@@ -32,21 +44,13 @@ export function LedgerListEmpty({
           actionLabel="Try again"
           onAction={onRetry}
         />
-      ) : filtered ? (
+      ) : (
         <EmptyState
           icon="filter"
           title="Nothing matches"
           message="No entries fit every filter. Remove one to widen the list."
           actionLabel="Clear filters"
           onAction={onClearFilters}
-        />
-      ) : (
-        <EmptyState
-          icon="receipt"
-          title="No transactions yet"
-          message="Add your first entry and it will appear here."
-          actionLabel={onAddTransaction ? "Add transaction" : undefined}
-          onAction={onAddTransaction}
         />
       )}
     </View>

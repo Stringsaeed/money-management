@@ -1,35 +1,36 @@
 import { useEffect, useRef, useState, type ReactElement } from "react";
 import { StyleSheet } from "react-native";
-import type { LegendListRef } from "@legendapp/list/react-native";
-import { AnimatedLegendList } from "@legendapp/list/reanimated";
-// oxlint-disable-next-line no-restricted-imports -- Only the SharedValue type, fed by the list's UI-thread scroll offset.
-import type { SharedValue } from "react-native-reanimated";
+import { LegendList, type LegendListRef } from "@legendapp/list/react-native";
 
 import type { V2Transaction } from "@trove/api/v2/contracts";
 
 import { colors } from "@/ui/trove";
 
 import { TransactionListFooter } from "../transactions/transaction-list-footer";
+import { LedgerEntryRow } from "./ledger-entry-row";
 import { groupTransactions, headerIndices } from "./ledger-grouping";
 import { LedgerListEmpty } from "./ledger-list-empty";
-import { LedgerRow } from "./ledger-row";
 import { ledgerRowDisplay } from "./ledger-row-display";
 import { LedgerSectionHeader } from "./ledger-section-header";
 import type { LedgerListModel } from "./use-ledger-list";
 
 interface LedgerTransactionListProps {
   readonly list: LedgerListModel;
-  readonly scrollOffset: SharedValue<number>;
   readonly header: ReactElement;
+  /** Clears the floating tab bar under the last entry. */
+  readonly bottomInset: number;
   readonly onOpenTransaction?: (transaction: V2Transaction) => void;
   readonly onAddTransaction?: () => void;
 }
 
-/** Server-paged Transactions grouped by day, with sticky day headers and a paging footer. */
+/** Board rows are 62pt; day stamps 30pt. */
+const ESTIMATED_ROW = 62;
+
+/** Server-paged Transactions grouped by day, with sticky day stamps and a paging footer. */
 export function LedgerTransactionList({
   list,
-  scrollOffset,
   header,
+  bottomInset,
   onOpenTransaction,
   onAddTransaction,
 }: LedgerTransactionListProps) {
@@ -48,7 +49,7 @@ export function LedgerTransactionList({
   }, [pages.dataKey]);
 
   return (
-    <AnimatedLegendList
+    <LegendList
       ref={listRef}
       data={items}
       // Tells the list a filter change is a new dataset, so cached layout is not reused.
@@ -57,27 +58,28 @@ export function LedgerTransactionList({
       extraData={list.lookupVersion}
       keyExtractor={(item) => item.key}
       getItemType={(item) => item.type}
-      estimatedItemSize={64}
+      estimatedItemSize={ESTIMATED_ROW}
       stickyHeaderIndices={headerIndices(items)}
-      sharedValues={{ scrollOffset }}
       recycleItems
       style={[styles.list, pages.isStale && styles.stale]}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: bottomInset }]}
       keyboardDismissMode="on-drag"
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
       refreshing={pulling}
       onRefresh={() => {
         setPulling(true);
-        void pages.refresh().finally(() => setPulling(false));
+        void list.refresh().finally(() => setPulling(false));
       }}
       onEndReached={pages.loadMore}
       onEndReachedThreshold={0.6}
       ListHeaderComponent={header}
       ListEmptyComponent={
         <LedgerListEmpty
-          loading={pages.isLoading}
+          currency={list.accounts[0]?.currency ?? null}
           failed={pages.isError}
           filtered={list.chips.length > 0}
-          onRetry={() => void pages.refresh()}
+          onRetry={() => void list.refresh()}
           onClearFilters={list.clear}
           onAddTransaction={onAddTransaction}
         />
@@ -95,8 +97,9 @@ export function LedgerTransactionList({
         if (item.type === "header") return <LedgerSectionHeader header={item} />;
         const transaction = item.transaction;
         return (
-          <LedgerRow
+          <LedgerEntryRow
             transaction={transaction}
+            lastInSection={item.lastInSection}
             display={ledgerRowDisplay(transaction, {
               category: list.categoryById.get(transaction.categoryId ?? ""),
               account: list.accountById.get(transaction.accountId),
@@ -113,6 +116,6 @@ export function LedgerTransactionList({
 const styles = StyleSheet.create({
   list: { flex: 1 },
   stale: { opacity: 0.55 },
-  // Horizontal gutters live on each item so sticky headers span the full width.
-  content: { backgroundColor: colors.bg.canvas, paddingBottom: 140 },
+  // Horizontal gutters live on each item so sticky day stamps span the full width.
+  content: { backgroundColor: colors.bg.canvas },
 });

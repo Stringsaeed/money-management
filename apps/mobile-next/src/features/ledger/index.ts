@@ -1,5 +1,7 @@
 export { LedgerScreen } from "./ledger-screen";
 export type { LedgerScreenProps } from "./ledger-screen";
+export { LedgerSearchScreen } from "./search/ledger-search-screen";
+export type { LedgerSearchScreenProps } from "./search/ledger-search-screen";
 export { AccountsScreen } from "./accounts/accounts-screen";
 export type { AccountsScreenProps } from "./accounts/accounts-screen";
 export { AccountScreen } from "./accounts/account-screen";

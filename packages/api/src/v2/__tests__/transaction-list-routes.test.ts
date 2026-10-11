@@ -3,8 +3,11 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { createTestDb } from "../../test-support/db";
 import { v2GuestSession } from "@trove/db/schema/v2-identity";
+import { v2Transaction } from "@trove/db/schema/v2-ledger";
+import { eq } from "drizzle-orm";
 import { createAccount } from "../accounts";
 import { createCategory } from "../categories";
+import { createRecurringRule } from "../recurring";
 import { createV2LedgerRoutes } from "../ledger-routes";
 import { resolveV2LedgerContext, V2ApiError } from "../shared";
 import { createTransaction } from "../transactions";
@@ -55,6 +58,25 @@ describe("V2 Transaction list routes", () => {
       amountMinor: 300,
       date: "2026-09-06",
     });
+    // Rent stands in for an entry a Recurring Rule posted; a remind rule never settles itself.
+    await createRecurringRule(context, {
+      id: "rule-rent",
+      name: "Rent",
+      accountId: "wallet",
+      categoryId: "rent",
+      kind: "expense",
+      amountMinor: 2_000,
+      currency: "USD",
+      frequency: "month",
+      intervalCount: 1,
+      startDate: "2026-09-02",
+      timeZone: "UTC",
+      mode: "remind",
+    });
+    await db
+      .update(v2Transaction)
+      .set({ recurringRuleId: "rule-rent" })
+      .where(eq(v2Transaction.id, "t3"));
     app = new Hono();
     // Mirrors createV2Api: thrown V2ApiErrors surface through Hono's onError.
     app.onError((error) =>
@@ -111,6 +133,14 @@ describe("V2 Transaction list routes", () => {
     expect((await page("q=NOTE%20T6")).items.map((item) => item.id)).toEqual(["t6"]);
   });
 
+  it("keeps only entries a Recurring Rule posted", async () => {
+    expect((await page("recurring=true")).items.map((item) => item.id)).toEqual(["t3"]);
+    expect((await page("recurring=false")).items).toHaveLength(7);
+    const response = await app.request("http://test/api/v2/transactions/summary?recurring=true");
+    // SAFETY: a 200 from /transactions/summary is the documented summary contract.
+    expect(((await response.json()) as V2TransactionSummary).count).toBe(1);
+  });
+
   it("summarizes the full filtered set independent of paging", async () => {
     const response = await app.request(
       "http://test/api/v2/transactions/summary?kind=income&kind=expense",
@@ -137,6 +167,7 @@ describe("V2 Transaction list routes", () => {
     ["kind=refund", "invalid_kind"],
     ["from=yesterday", "invalid_from"],
     ["limit=-1", "invalid_limit"],
+    ["recurring=yes", "invalid_recurring"],
   ])("rejects %s", async (query, code) => {
     const response = await app.request(`http://test/api/v2/transactions?${query}`);
     expect(response.status).toBe(400);

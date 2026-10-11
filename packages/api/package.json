@@ -17,7 +17,8 @@
     "check-types": "tsc --noEmit",
     "test": "vitest run",
     "seed:next": "node scripts/seed-next-ledger.mjs",
-    "seed:next:home": "node scripts/seed-next-home.mjs"
+    "seed:next:home": "node scripts/seed-next-home.mjs",
+    "seed:next:ledger": "node scripts/seed-next-ledger-board.mjs"
   },
   "dependencies": {
     "@orpc/client": "catalog:",

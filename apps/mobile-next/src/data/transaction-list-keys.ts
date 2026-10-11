@@ -21,5 +21,6 @@ export function normalizeTransactionFilters(
     from: filters.from || undefined,
     to: filters.to || undefined,
     search: filters.search?.trim() || undefined,
+    recurring: filters.recurring || undefined,
   };
 }

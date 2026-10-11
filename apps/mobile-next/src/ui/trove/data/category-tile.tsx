@@ -22,6 +22,8 @@ interface CategoryTileBaseProps {
   color?: string;
   /** md is 40pt (rows), sm is 32pt. */
   size?: CategoryTileSize;
+  /** Round the neutral or tinted tile, as on the Ledger's day list. Kind and user tiles are always round. */
+  round?: boolean;
 }
 
 export type CategoryTileProps = CategoryTileBaseProps &
@@ -78,7 +80,14 @@ function tileAppearance(
 }
 
 /** Decorative tile; the row or button that holds it carries the accessible label. */
-export function CategoryTile({ icon, kind, tint, color, size = "md" }: CategoryTileProps) {
+export function CategoryTile({
+  icon,
+  kind,
+  tint,
+  color,
+  size = "md",
+  round: roundTile = false,
+}: CategoryTileProps) {
   const userColor = useUserColor(kind ? undefined : color);
   const { background, round, glyph } = tileAppearance(kind, userColor?.tint, tint);
 
@@ -89,7 +98,7 @@ export function CategoryTile({ icon, kind, tint, color, size = "md" }: CategoryT
       style={[
         styles.tile,
         tileSize[size],
-        round ? styles.round : null,
+        round || roundTile ? styles.round : null,
         { backgroundColor: background },
       ]}
     >

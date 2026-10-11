@@ -27,18 +27,21 @@ export type LedgerListItem = LedgerSectionHeader | LedgerRowItem;
 
 export type LedgerGrouping = "day" | "month";
 
+/** Receipt stamp for a day: `TODAY`, `YESTERDAY`, `WED 07.10`, or `WED 07.10.25` in other years. */
 export function dayTitle(date: string, today: Date): string {
   const parsed = parseDateKey(date);
   if (!parsed) return date;
   const days = differenceInCalendarDays(today, parsed);
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  return format(parsed, isSameYear(parsed, today) ? "EEEE, d MMMM" : "EEE, d MMM yyyy");
+  if (days === 0) return "TODAY";
+  if (days === 1) return "YESTERDAY";
+  return format(parsed, isSameYear(parsed, today) ? "EEE dd.MM" : "EEE dd.MM.yy").toUpperCase();
 }
 
-function monthTitle(date: string): string {
+/** Receipt stamp for a month: `OCTOBER`, or `OCTOBER 2025` in another year. */
+export function monthTitle(date: string, today: Date): string {
   const parsed = parseDateKey(date);
-  return parsed ? format(parsed, "MMMM yyyy") : date.slice(0, 7);
+  if (!parsed) return date.slice(0, 7);
+  return format(parsed, isSameYear(parsed, today) ? "MMMM" : "MMMM yyyy").toUpperCase();
 }
 
 const signed = (transaction: V2Transaction): number =>
@@ -76,7 +79,7 @@ export function groupTransactions(
     {
       type: "header" as const,
       key: `header:${key}`,
-      title: grouping === "day" ? dayTitle(key, today) : monthTitle(`${key}-01`),
+      title: grouping === "day" ? dayTitle(key, today) : monthTitle(`${key}-01`, today),
       net: hasMore && index === sections.length - 1 ? null : sectionNet(rows),
       count: rows.length,
     },

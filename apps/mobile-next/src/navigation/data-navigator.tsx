@@ -53,6 +53,10 @@ export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) 
           options={{ title: "Edit category", ...editorOptions }}
         />
         <Stack.Screen
+          name="transactions/search"
+          options={{ ...pushedOptions, animation: "fade" }}
+        />
+        <Stack.Screen
           name="transactions/[id]"
           options={{ title: "Transaction", ...editorOptions }}
         />

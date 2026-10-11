@@ -522,6 +522,7 @@ function parseTransactionFilters(context: Context): TransactionFilterOptions {
   if (search && search.length > MAX_SEARCH_LENGTH)
     throw new V2ApiError(400, "invalid_q", `q must be at most ${MAX_SEARCH_LENGTH} characters.`);
   return {
+    recurring: parseRecurringFilter(context.req.query("recurring")),
     accountIds: parseRepeated(context, "accountId"),
     categoryIds: parseRepeated(context, "categoryId"),
     kinds,
@@ -529,6 +530,13 @@ function parseTransactionFilters(context: Context): TransactionFilterOptions {
     to: parseOptionalDate(context.req.query("to"), "to"),
     search: search || undefined,
   };
+}
+
+/** `?recurring=true` keeps only entries a Recurring Rule posted; `false` or absent keeps all. */
+function parseRecurringFilter(value: string | undefined): boolean | undefined {
+  if (value === undefined || value === "" || value === "false") return undefined;
+  if (value === "true") return true;
+  throw new V2ApiError(400, "invalid_recurring", "recurring must be true or false.");
 }
 
 function parseRepeated(context: Context, name: string): string[] {

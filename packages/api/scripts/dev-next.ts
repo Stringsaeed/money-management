@@ -22,7 +22,12 @@ config({ path: resolve(repositoryRoot, "apps/server/.env"), quiet: true });
 config({ path: resolve(repositoryRoot, "packages/infra/.env"), quiet: true });
 config({ path: resolve(repositoryRoot, "packages/api/.env.next"), quiet: true, override: true });
 
-const dataDirectory = resolve(repositoryRoot, "packages/api/.next-data");
+// Parallel worktrees can each run one: override the data folder and ports per checkout.
+const dataDirectory = resolve(
+  process.env.TROVE_NEXT_DATA_DIR ?? resolve(repositoryRoot, "packages/api/.next-data"),
+);
+const apiPort = Number(process.env.TROVE_NEXT_API_PORT ?? 3012);
+const postgresPort = Number(process.env.TROVE_NEXT_PG_PORT ?? 5412);
 await mkdir(dataDirectory, { recursive: true });
 const engine = await PGlite.create(dataDirectory);
 await engine.exec(
@@ -53,9 +58,9 @@ for (const name of files) {
   });
 }
 
-const socket = new PGLiteSocketServer({ db: engine, host: "127.0.0.1", port: 5412 });
+const socket = new PGLiteSocketServer({ db: engine, host: "127.0.0.1", port: postgresPort });
 await socket.start();
-const client = postgres("postgres://postgres:postgres@127.0.0.1:5412/postgres", {
+const client = postgres(`postgres://postgres:postgres@127.0.0.1:${postgresPort}/postgres`, {
   max: 1,
   fetch_types: false,
   onnotice: () => undefined,
@@ -88,14 +93,14 @@ const api = new Hono().route(
     },
   }),
 );
-const server = serve({ fetch: api.fetch, hostname: "127.0.0.1", port: 3012 });
+const server = serve({ fetch: api.fetch, hostname: "127.0.0.1", port: apiPort });
 const settlementTimer = setInterval(() => {
   void settleV2DueRules(db).catch(() =>
     console.error("V2 recurring settlement failed; it will retry on the next interval."),
   );
 }, 60_000);
 console.log(
-  "Trove Next API: http://127.0.0.1:3012/api/v2 (isolated local Postgres; legacy data is not loaded)",
+  `Trove Next API: http://127.0.0.1:${apiPort}/api/v2 (isolated local Postgres; legacy data is not loaded)`,
 );
 
 const shutdown = async () => {
