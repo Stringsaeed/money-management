@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { BUDGET_CURRENCY, type V2Account, type V2Category } from "@trove/api/v2/contracts";
+import type { V2Account, V2Category } from "@trove/api/v2/contracts";
 
 import { playCue } from "@/features/sound";
 import { currencyFractionDigits, formatMoneyMinor, parseMoneyMinor } from "@/utils/money";
@@ -35,13 +35,12 @@ interface UseQuickAddFormOptions {
   readonly onSaved: (saved: SavedSpend) => void;
 }
 
-const FRACTION_DIGITS = currencyFractionDigits(BUDGET_CURRENCY);
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
-
 /** State and save for the Quick add sheet. Amount, envelope and Save need nothing else. */
 export function useQuickAddForm(options: UseQuickAddFormOptions) {
   const { view, lines, accounts, categories, memory, remember, preselectedEnvelopeId, onSaved } =
     options;
+  const { currency } = view.budget;
+  const money = (minor: number) => formatMoneyMinor(minor, currency);
   const saving = useSaveSpend({ remember, onSaved });
   const [amount, setAmount] = useState("");
   const [envelopeId, setEnvelopeId] = useState(preselectedEnvelopeId);
@@ -56,7 +55,7 @@ export function useQuickAddForm(options: UseQuickAddFormOptions) {
   const ordered = orderEnvelopes(lines, memory.recentEnvelopeIds);
   const selected = lines.find((line) => line.envelope.id === envelopeId) ?? null;
 
-  const { funding, cards } = paidWithAccounts(accounts, view.fundingAccountIds);
+  const { funding, cards } = paidWithAccounts(accounts, view.fundingAccountIds, currency);
   const eligible = [...funding, ...cards];
   const accountId = resolveDefaultAccountId(
     eligible.map((account) => account.id),
@@ -67,7 +66,7 @@ export function useQuickAddForm(options: UseQuickAddFormOptions) {
   const choices = envelopeCategories(selected, categories);
   const categoryId = pickCategoryId(choices, categoryOverride);
 
-  const amountMinor = parseMoneyMinor(normalizeAmountEntry(amount), BUDGET_CURRENCY) ?? 0;
+  const amountMinor = parseMoneyMinor(normalizeAmountEntry(amount), currency) ?? 0;
   const placement = datePlacement({
     date,
     today,
@@ -92,7 +91,7 @@ export function useQuickAddForm(options: UseQuickAddFormOptions) {
 
   return {
     amount,
-    fractionDigits: FRACTION_DIGITS,
+    fractionDigits: currencyFractionDigits(currency),
     /** The keypad applies the entry rules and its own key haptic; this records the result. */
     changeAmount: (next: string) => {
       playCue("key");

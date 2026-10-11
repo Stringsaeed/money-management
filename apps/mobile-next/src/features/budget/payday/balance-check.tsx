@@ -1,9 +1,11 @@
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY, type V2Account } from "@trove/api/v2/contracts";
+import { type V2Account } from "@trove/api/v2/contracts";
 
 import { Amount, Button, ListGroup, ListRow, space, Text } from "@/ui/trove";
+
+import { useBudgetCurrency } from "../currency/use-budget-currency";
 
 interface BalanceCheckProps {
   /** The accounts that hold money you have. */
@@ -12,6 +14,7 @@ interface BalanceCheckProps {
 
 /** "Do these still match?" The Adjust path is the account editor: V2 has no separate adjustment. */
 export function BalanceCheck({ accounts }: BalanceCheckProps) {
+  const currency = useBudgetCurrency();
   if (accounts.length === 0) return null;
   return (
     <View style={styles.section}>
@@ -26,7 +29,7 @@ export function BalanceCheck({ accounts }: BalanceCheckProps) {
             title={account.name}
             trailing={
               <View style={styles.trailing}>
-                <Amount currency={BUDGET_CURRENCY} minor={account.balanceMinor} tone="secondary" />
+                <Amount currency={currency} minor={account.balanceMinor} tone="secondary" />
                 <Button
                   label="Adjust"
                   size="sm"

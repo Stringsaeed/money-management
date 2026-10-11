@@ -1,4 +1,3 @@
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
@@ -10,24 +9,25 @@ import { AddItemRow } from "./add-item-row";
 import { ChoiceRow } from "./choice-row";
 import { isItemTicked, resolveItemKey, type SetupItem } from "./setup-items";
 import { SetupFrame } from "./setup-frame";
+import { setupHref } from "./setup-routes";
 import { SetupRestart } from "./setup-restart";
 import { SetupStatus } from "./setup-status";
 import { GROUP_LABELS, GROUP_ORDER } from "./setup-types";
 import { useSetupModel } from "./use-setup-model";
 
-const itemDetail = (item: SetupItem): string | undefined => {
-  if (item.recurringMinor)
-    return `${formatMoneyMinor(item.recurringMinor, BUDGET_CURRENCY)} a month`;
+const itemDetail = (item: SetupItem, currency: string): string | undefined => {
+  if (item.recurringMinor) return `${formatMoneyMinor(item.recurringMinor, currency)} a month`;
   if (item.lastPeriodMinor)
-    return `${formatMoneyMinor(item.lastPeriodMinor, BUDGET_CURRENCY)} last period`;
+    return `${formatMoneyMinor(item.lastPeriodMinor, currency)} last period`;
   return undefined;
 };
 
 /** S3: what the money is for, as a checklist of envelopes in three groups. */
 export function ItemsScreen() {
-  const { needsPayday, draft, setup, facts, categories, items, ticked } = useSetupModel();
+  const { currency, target, needsPayday, draft, setup, facts, categories, items, ticked } =
+    useSetupModel();
 
-  if (needsPayday) return <SetupRestart />;
+  if (needsPayday) return <SetupRestart target={target} />;
   if (facts.isError && !facts.data) {
     return (
       <SetupStatus
@@ -65,7 +65,7 @@ export function ItemsScreen() {
             onPress={() => {
               setup.update({ step: "amounts" });
               track("budget_setup_step_completed", { step: "items" });
-              router.push("/budget/setup/amounts");
+              router.push(setupHref("amounts", target));
             }}
           />
         </>
@@ -83,7 +83,7 @@ export function ItemsScreen() {
                   <ChoiceRow
                     key={item.key}
                     label={item.name}
-                    detail={itemDetail(item)}
+                    detail={itemDetail(item, currency)}
                     ticked={isTicked}
                     onPress={() =>
                       setup.update({ selection: { ...draft.selection, [item.key]: !isTicked } })

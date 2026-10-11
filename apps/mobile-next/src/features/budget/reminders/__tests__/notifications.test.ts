@@ -27,6 +27,7 @@ const personal = { identityKey: sara, scope: { kind: "personal" } } as const;
 const home = { identityKey: sara, scope: { kind: "household", householdId: "h1" } } as const;
 const bill = {
   kind: "bills",
+  currency: "USD",
   day: "2026-10-18",
   title: "Bill reminder",
   body: "du due today",
@@ -41,11 +42,38 @@ describe("budget reminders", () => {
     expect(reminderTap(content?.data)).toEqual({
       target: "due",
       ledger: { identityKey: sara, scope: { kind: "household", householdId: "h1" } },
+      currency: "USD",
     });
   });
 
+  it("keeps a payday notification per budget on the same day", async () => {
+    const { scheduled, reminders } = memorySchedule();
+    const payday = {
+      kind: "payday",
+      day: "2026-10-25",
+      title: "Payday",
+      body: "Did it land?",
+    } as const;
+    await reminders.sync(
+      personal,
+      [
+        { ...payday, currency: "AED" },
+        { ...payday, currency: "USD" },
+      ],
+      now,
+    );
+    expect([...scheduled.keys()]).toEqual([
+      "trove-budget:user:sara:personal:payday:AED:2026-10-25",
+      "trove-budget:user:sara:personal:payday:USD:2026-10-25",
+    ]);
+  });
+
   it("read an old reminder without a ledger as the current one", () => {
-    expect(reminderTap({ target: "budget" })).toEqual({ target: "payday", ledger: null });
+    expect(reminderTap({ target: "budget" })).toEqual({
+      target: "payday",
+      ledger: null,
+      currency: null,
+    });
     expect(reminderTap({ other: true })).toBeNull();
   });
 

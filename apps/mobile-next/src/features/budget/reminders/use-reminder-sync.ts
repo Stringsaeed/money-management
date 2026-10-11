@@ -1,15 +1,10 @@
 import { useEffect, useState } from "react";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { useLedgerData } from "@/data/ledger-queries";
 import { useBudgetingEnabled } from "@/features/feature-flags";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { DUE_LOOKAHEAD_DAYS } from "../due/due-model";
-import type { UseDue } from "../due/use-due";
-import type { ActiveBudgetView } from "../home/home-model";
-import { usePayday } from "../payday/use-payday";
 
 import {
   getReminderPermission,
@@ -17,10 +12,9 @@ import {
   syncReminders,
   type ReminderPermission,
 } from "./notifications";
-import { planBillReminders, planPaydayReminders } from "./reminder-plan";
-
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
-const UPCOMING_PAYDAYS = 2;
+import { planLedgerReminders, type PlannedReminder } from "./reminder-plan";
+import { useReminderPrefs } from "./use-reminder-prefs";
+import { useReminderSources } from "./use-reminder-sources";
 
 export interface ReminderSync {
   /** Explain reminders and offer to turn them on: undecided, wanted, and not dismissed. */
@@ -30,68 +24,45 @@ export interface ReminderSync {
 }
 
 /**
- * Keeps this ledger's local notifications in step with the Due list and the payday rule once the
- * Budget tab data has loaded. Never asks for permission itself: the prompt does, after explaining.
+ * Keeps this ledger's local notifications in step with every budget's Due list and payday rule
+ * once their data has loaded. Never asks for permission itself: the prompt does, after explaining.
  */
-export function useReminderSync(view: ActiveBudgetView, due: UseDue): ReminderSync {
+export function useReminderSync(): ReminderSync {
   const { identityKey, scope } = useLedgerData();
   const budgeting = useBudgetingEnabled();
   const [permission, setPermission] = useState<ReminderPermission | null>(null);
-  const { prefs, dismissPrompt, forgetEndedSnoozes } = due.reminders;
+  const { prefs, ready, dismissPrompt, forgetEndedSnoozes } = useReminderPrefs();
+  const { loaded, today, sources, wanted } = useReminderSources(prefs, ready);
 
   useEffect(() => {
     getReminderPermission().then(setPermission, () => setPermission("denied"));
   }, []);
 
-  const paydayOn = view.budget.paydayReminder;
-  const salaryPending = usePayday(view).status.pending;
-  const { paydaySnoozedOn } = prefs;
-  const { paydayRule } = view;
-  const periodStart = view.current.period.start;
-  const { items, today, loaded } = due;
+  const planned = loaded
+    ? planLedgerReminders({
+        sources,
+        prefs,
+        today,
+        horizonDays: DUE_LOOKAHEAD_DAYS,
+        money: formatMoneyMinor,
+      })
+    : null;
+  // The plan as text, so an unchanged plan does not re-run the effect on every render.
+  const planKey = planned ? JSON.stringify(planned) : null;
 
   useEffect(() => {
-    if (!budgeting || permission !== "granted" || !loaded) return;
-    const bills = planBillReminders({
-      bills: items,
-      prefs,
-      today,
-      horizonDays: DUE_LOOKAHEAD_DAYS,
-      money,
-    });
-    // Without the payday reminder only a "Not yet" retry is planned (count 0 skips the regular ones).
-    const paydays = planPaydayReminders({
-      rule: paydayRule,
-      currentPeriodStart: periodStart,
-      today,
-      count: paydayOn ? UPCOMING_PAYDAYS : 0,
-      pending: salaryPending,
-      snoozedOn: paydaySnoozedOn,
-    });
-    syncReminders({ identityKey, scope }, [...bills, ...paydays], new Date()).catch(
-      (cause: unknown) => console.warn("Budget reminders could not be scheduled.", cause),
+    if (!budgeting || permission !== "granted" || planKey === null) return;
+    // SAFETY: `planKey` is the JSON of the `PlannedReminder[]` built above, and nothing else.
+    const reminders = JSON.parse(planKey) as PlannedReminder[];
+    syncReminders({ identityKey, scope }, reminders, new Date()).catch((cause: unknown) =>
+      console.warn("Budget reminders could not be scheduled.", cause),
     );
-  }, [
-    budgeting,
-    permission,
-    loaded,
-    identityKey,
-    scope,
-    items,
-    prefs,
-    today,
-    paydayOn,
-    paydayRule,
-    periodStart,
-    salaryPending,
-    paydaySnoozedOn,
-  ]);
+  }, [budgeting, permission, planKey, identityKey, scope]);
 
   useEffect(() => {
     if (loaded) void forgetEndedSnoozes(today);
   }, [loaded, today, forgetEndedSnoozes]);
 
-  const wanted = paydayOn || items.length > 0;
   return {
     showPrompt:
       budgeting && loaded && permission === "undetermined" && wanted && !prefs.promptDismissed,

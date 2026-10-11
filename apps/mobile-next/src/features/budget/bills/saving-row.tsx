@@ -1,11 +1,9 @@
 import { format, parseISO } from "date-fns";
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { Button, Card, PressableScale, ProgressBar, space, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetMoney } from "../currency/use-budget-currency";
 import { REPEAT_LABELS } from "./big-payment-model";
 import type { SavingRow as SavingRowData, SavingWarning } from "./bills-model";
 
@@ -15,9 +13,7 @@ interface SavingRowProps {
   readonly onMarkPaid?: () => void;
 }
 
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
-
-const warningText = (warning: SavingWarning): string =>
+const warningText = (warning: SavingWarning, money: (minor: number) => string): string =>
   warning.kind === "short_before_payday"
     ? `Short ${money(warning.shortMinor)}: due before you're paid`
     : "Not planned: nothing is going into this one this payday";
@@ -31,6 +27,7 @@ function dueText(row: SavingRowData): string | null {
 
 /** One Saving-for envelope: progress to the target, the due date, and what to set aside. */
 export function SavingRow({ row, onPress, onMarkPaid }: SavingRowProps) {
+  const money = useBudgetMoney();
   const { envelope } = row.line;
   const due = dueText(row);
   const progress =
@@ -73,7 +70,7 @@ export function SavingRow({ row, onPress, onMarkPaid }: SavingRowProps) {
       </PressableScale>
       {row.warnings.map((warning) => (
         <Text key={warning.kind} accessibilityRole="alert" tone="warning" variant="bodySm">
-          {warningText(warning)}
+          {warningText(warning, money)}
         </Text>
       ))}
       {row.targetMinor !== null && onMarkPaid ? (

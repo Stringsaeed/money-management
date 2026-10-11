@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import type { Collection, UtilsRecord } from "@tanstack/db";
 import { keepPreviousData, useQueries, useQuery, type QueryClient } from "@tanstack/react-query";
@@ -7,6 +7,8 @@ import type {
   V2Account,
   V2AssignmentsCreateInput,
   V2BudgetActivateInput,
+  V2BudgetList,
+  V2BudgetSummary,
   V2BudgetPeriodView,
   V2BudgetSetupFacts,
   V2BudgetUpdateInput,
@@ -23,6 +25,20 @@ import type {
   V2Transaction,
 } from "@trove/api/v2/contracts";
 
+import {
+  budgetOperation,
+  dismissCurrencyPrompt,
+  pickBudgetCurrency,
+  type BudgetCurrencyState,
+  EMPTY_BUDGET_CURRENCY_STATE,
+} from "./budget-currency";
+import {
+  budgetCurrencyStorageKey,
+  getBudgetCurrencyState,
+  loadBudgetCurrencyState,
+  subscribeBudgetCurrency,
+  updateBudgetCurrencyState,
+} from "./budget-currency-store";
 import {
   ledgerClient,
   type AccountInput,
@@ -196,11 +212,14 @@ export interface BudgetQueryResult<T> {
 export const budgetKey = (identityKey: string, scope: LedgerScope) =>
   ["v2", "budget", scopeKey(identityKey, scope)] as const;
 
-export function useBudgetQuery(): BudgetQueryResult<V2BudgetView> {
+const NO_BUDGET: V2BudgetView = { budget: null };
+
+/** The ledger's budgets, one per currency, oldest first. */
+export function useBudgetsQuery(): BudgetQueryResult<V2BudgetList> {
   const { identityKey, scope } = useLedgerData();
   const query = useQuery({
-    queryKey: [...budgetKey(identityKey, scope), "view"],
-    queryFn: () => ledgerClient.budget.get(scope),
+    queryKey: [...budgetKey(identityKey, scope), "list"],
+    queryFn: () => ledgerClient.budget.list(scope),
     staleTime: 15_000,
     retry: 1,
   });
@@ -215,14 +234,100 @@ export function useBudgetQuery(): BudgetQueryResult<V2BudgetView> {
   };
 }
 
-/** AED facts for the period `payday` implies; idle until a payday is chosen. */
+export interface SelectedBudget {
+  /** One per currency, oldest first. Empty until loaded. */
+  readonly budgets: readonly V2BudgetSummary[];
+  /** The budget being shown. `null` while loading, after an error, or when the ledger has none. */
+  readonly currency: string | null;
+  readonly isLoading: boolean;
+  readonly isError: boolean;
+  readonly retry: () => Promise<void>;
+  readonly select: (currency: string) => Promise<void>;
+  /** What the person dismissed here; `EMPTY_BUDGET_CURRENCY_STATE` until it has loaded. */
+  readonly choice: BudgetCurrencyState;
+  readonly dismissPrompt: (currency: string, accounts: readonly V2Account[]) => Promise<void>;
+}
+
+/**
+ * The budget this device is looking at for the current ledger: the one the person last picked
+ * (kept on the device per identity and ledger), else the first budget.
+ */
+export function useSelectedBudget(): SelectedBudget {
+  const { identityKey, scope } = useLedgerData();
+  const storageKey = budgetCurrencyStorageKey(scopeKey(identityKey, scope));
+  const stored = useSyncExternalStore(subscribeBudgetCurrency, () =>
+    getBudgetCurrencyState(storageKey),
+  );
+  useEffect(() => {
+    void loadBudgetCurrencyState(storageKey);
+  }, [storageKey]);
+  const budgets = useBudgetsQuery();
+  const items = budgets.data?.items ?? [];
+
+  return {
+    budgets: items,
+    currency:
+      budgets.data && stored
+        ? pickBudgetCurrency(
+            items.map((item) => item.currency),
+            stored.selected,
+          )
+        : null,
+    isLoading: budgets.isLoading || stored === undefined,
+    isError: budgets.isError,
+    retry: budgets.retry,
+    select: (currency) =>
+      updateBudgetCurrencyState(storageKey, (state) => ({ ...state, selected: currency })),
+    choice: stored ?? EMPTY_BUDGET_CURRENCY_STATE,
+    dismissPrompt: (currency, accounts) =>
+      updateBudgetCurrencyState(storageKey, (state) =>
+        dismissCurrencyPrompt(state, currency, accounts),
+      ),
+  };
+}
+
+/** The selected budget's view; `{ budget: null }` when the ledger has no budget. */
+export function useBudgetQuery(): BudgetQueryResult<V2BudgetView> {
+  const { identityKey, scope } = useLedgerData();
+  const selected = useSelectedBudget();
+  const { currency } = selected;
+  const query = useQuery({
+    queryKey: [...budgetKey(identityKey, scope), "view", currency],
+    queryFn: () => ledgerClient.budget.get(scope, currency ?? ""),
+    enabled: currency !== null,
+    staleTime: 15_000,
+    retry: 1,
+  });
+  if (currency === null) {
+    return {
+      data: selected.isLoading || selected.isError ? undefined : NO_BUDGET,
+      isLoading: selected.isLoading,
+      isError: selected.isError,
+      isStale: false,
+      retry: selected.retry,
+    };
+  }
+  return {
+    data: query.data,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    isStale: false,
+    retry: async () => {
+      await query.refetch();
+    },
+  };
+}
+
+/** Facts in `currency` for the period `payday` implies; idle until a payday is chosen. */
 export function useBudgetSetupFactsQuery(
+  currency: string,
   payday: V2PaydayRule | null,
 ): BudgetQueryResult<V2BudgetSetupFacts> {
   const { identityKey, scope } = useLedgerData();
   const query = useQuery({
-    queryKey: [...budgetKey(identityKey, scope), "setup-facts", payday],
-    queryFn: () => ledgerClient.budget.setupFacts(scope, payday ?? { kind: "last_workday" }),
+    queryKey: [...budgetKey(identityKey, scope), "setup-facts", currency, payday],
+    queryFn: () =>
+      ledgerClient.budget.setupFacts(scope, currency, payday ?? { kind: "last_workday" }),
     enabled: payday !== null,
     // Keep the previous period's facts on screen while a changed payday loads.
     placeholderData: keepPreviousData,
@@ -250,13 +355,15 @@ export interface BudgetPeriodsResult {
   readonly retry: () => Promise<void>;
 }
 
-/** Per-envelope totals for earlier periods. */
+/** Per-envelope totals for earlier periods of the selected budget. */
 export function useBudgetPeriodsQuery(starts: readonly string[]): BudgetPeriodsResult {
   const { identityKey, scope } = useLedgerData();
+  const { currency } = useSelectedBudget();
   const results = useQueries({
     queries: starts.map((start) => ({
-      queryKey: [...budgetKey(identityKey, scope), "period", start],
-      queryFn: () => ledgerClient.budget.period(scope, start),
+      queryKey: [...budgetKey(identityKey, scope), "period", currency, start],
+      queryFn: () => ledgerClient.budget.period(scope, currency ?? "", start),
+      enabled: currency !== null,
       // Finished periods only change when a past transaction is edited.
       staleTime: 60_000,
       retry: false,
@@ -275,14 +382,16 @@ export function useBudgetPeriodsQuery(starts: readonly string[]): BudgetPeriodsR
 }
 
 /**
- * Reminder-mode bills pending through `through` (a Ledger Date). Lives under the Budget key
- * prefix, so every ledger write refreshes it with the rest of the Budget.
+ * Reminder-mode bills of the selected budget pending through `through` (a Ledger Date). Lives
+ * under the Budget key prefix, so every ledger write refreshes it with the rest of the Budget.
  */
 export function useDueQuery(through: string): BudgetQueryResult<V2DueList> {
   const { identityKey, scope } = useLedgerData();
+  const { currency } = useSelectedBudget();
   const query = useQuery({
-    queryKey: [...budgetKey(identityKey, scope), "due", through],
-    queryFn: () => ledgerClient.recurring.due(scope, through),
+    queryKey: [...budgetKey(identityKey, scope), "due", currency, through],
+    queryFn: () => ledgerClient.recurring.due(scope, currency ?? "", through),
+    enabled: currency !== null,
     staleTime: 15_000,
     retry: 1,
   });
@@ -350,13 +459,35 @@ export function useLedgerMutations() {
 
   /** Envelope and assignment writes answer with the fresh budget, so show it without a refetch. */
   const applyBudgetView = async (view: V2BudgetView) => {
-    queryClient.setQueryData([...budgetKey(identityKey, scope), "view"], view);
+    if (view.budget) {
+      queryClient.setQueryData(
+        [...budgetKey(identityKey, scope), "view", view.budget.currency],
+        view,
+      );
+    }
     // The view itself is fresh. Other period totals (a plan is per period) and Recent activity
     // (every plan, cover and move shows there) are not, so they refetch when next shown.
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: [...budgetKey(identityKey, scope), "period"] }),
       queryClient.invalidateQueries({ queryKey: [...budgetKey(identityKey, scope), "activity"] }),
     ]);
+  };
+
+  /**
+   * The budget a write applies to: the one on screen. Read when the write runs rather than
+   * subscribed to, so screens that never touch budgets do not load the budget list.
+   */
+  const selectedCurrency = (): string => {
+    const list = queryClient.getQueryData<V2BudgetList>([...budgetKey(identityKey, scope), "list"]);
+    const stored = getBudgetCurrencyState(
+      budgetCurrencyStorageKey(scopeKey(identityKey, scope)),
+    )?.selected;
+    const currency = pickBudgetCurrency(
+      (list?.items ?? []).map((item) => item.currency),
+      stored ?? null,
+    );
+    if (currency === null) throw new Error("There is no budget to change yet.");
+    return currency;
   };
 
   /** Paying posts a Transaction, so it refreshes Transactions, Accounts, the Due list and the Budget. */
@@ -602,9 +733,9 @@ export function useLedgerMutations() {
         },
       );
     },
-    activateBudget: async (input: V2BudgetActivateInput) => {
+    activateBudget: async (input: V2BudgetActivateInput & { readonly currency: string }) => {
       return runWithRequestKey(
-        "budget.activate",
+        budgetOperation("budget.activate", input.currency),
         fingerprint(JSON.stringify(input) ?? ""),
         async (requestKey) => {
           const result = await ledgerClient.budget.activate(scope, input, { requestKey });
@@ -614,11 +745,14 @@ export function useLedgerMutations() {
       );
     },
     createEnvelope: async (input: V2EnvelopeCreateInput) => {
+      const currency = selectedCurrency();
       return runWithRequestKey(
-        "budget.createEnvelope",
+        budgetOperation("budget.createEnvelope", currency),
         fingerprint(JSON.stringify(input) ?? ""),
         async (requestKey) => {
-          const result = await ledgerClient.budget.createEnvelope(scope, input, { requestKey });
+          const result = await ledgerClient.budget.createEnvelope(scope, currency, input, {
+            requestKey,
+          });
           // A new Category may have been created with it.
           await refresh("budget");
           return result;
@@ -626,11 +760,12 @@ export function useLedgerMutations() {
       );
     },
     updateEnvelope: async (id: string, input: V2EnvelopeUpdateInput, version?: number) => {
+      const currency = selectedCurrency();
       return runWithRequestKey(
-        "budget.updateEnvelope",
+        budgetOperation("budget.updateEnvelope", currency),
         fingerprint(JSON.stringify([id, input, version]) ?? ""),
         async (requestKey) => {
-          const result = await ledgerClient.budget.updateEnvelope(scope, id, input, {
+          const result = await ledgerClient.budget.updateEnvelope(scope, currency, id, input, {
             version,
             requestKey,
           });
@@ -640,11 +775,14 @@ export function useLedgerMutations() {
       );
     },
     payEnvelope: async (id: string, input: V2EnvelopePayInput) => {
+      const currency = selectedCurrency();
       return runWithRequestKey(
-        "budget.payEnvelope",
+        budgetOperation("budget.payEnvelope", currency),
         fingerprint(JSON.stringify([id, input]) ?? ""),
         async (requestKey) => {
-          const result = await ledgerClient.budget.payEnvelope(scope, id, input, { requestKey });
+          const result = await ledgerClient.budget.payEnvelope(scope, currency, id, input, {
+            requestKey,
+          });
           // A new expense Transaction moves balances, the envelope's Left and its next due date.
           await refresh("transactions");
           await refresh("accounts");
@@ -653,22 +791,29 @@ export function useLedgerMutations() {
       );
     },
     createAssignments: async (input: V2AssignmentsCreateInput) => {
+      const currency = selectedCurrency();
       return runWithRequestKey(
-        "budget.createAssignments",
+        budgetOperation("budget.createAssignments", currency),
         fingerprint(JSON.stringify(input) ?? ""),
         async (requestKey) => {
-          const result = await ledgerClient.budget.createAssignments(scope, input, { requestKey });
+          const result = await ledgerClient.budget.createAssignments(scope, currency, input, {
+            requestKey,
+          });
           await applyBudgetView(result);
           return result;
         },
       );
     },
     updateBudget: async (input: V2BudgetUpdateInput, version?: number) => {
+      const currency = selectedCurrency();
       return runWithRequestKey(
-        "budget.update",
+        budgetOperation("budget.update", currency),
         fingerprint(JSON.stringify([input, version]) ?? ""),
         async (requestKey) => {
-          const result = await ledgerClient.budget.update(scope, input, { version, requestKey });
+          const result = await ledgerClient.budget.update(scope, currency, input, {
+            version,
+            requestKey,
+          });
           await refresh("budget");
           return result;
         },

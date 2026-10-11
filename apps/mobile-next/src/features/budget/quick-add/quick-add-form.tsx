@@ -1,10 +1,9 @@
 import { StyleSheet, View } from "react-native";
 
 import type { V2Account, V2Category } from "@trove/api/v2/contracts";
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { Button, EntryAmount, Keypad, space, Text, TextField } from "@/ui/trove";
 
+import { useBudgetCurrency } from "../currency/use-budget-currency";
 import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
 
 import { CategoryChips } from "./category-chips";
@@ -40,6 +39,7 @@ export function QuickAddForm({
   onSaved,
   onAddCard,
 }: QuickAddFormProps) {
+  const currency = useBudgetCurrency();
   const form = useQuickAddForm({
     view,
     lines: envelopeLines(view),
@@ -54,7 +54,7 @@ export function QuickAddForm({
   return (
     <View style={styles.container}>
       <Text variant="titleMd">Add spending</Text>
-      <EntryAmount currency={BUDGET_CURRENCY} negative value={form.amount} />
+      <EntryAmount currency={currency} negative value={form.amount} />
       <Text
         accessibilityLiveRegion="polite"
         style={styles.centered}

@@ -1,10 +1,8 @@
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { Amount, Button, Card, colors, Icon, PressableScale, space, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
 import type { EnvelopeLine } from "../home/home-model";
 
 import type { BillStatus } from "./bills-model";
@@ -16,9 +14,7 @@ interface BillRowProps {
   readonly onCover?: () => void;
 }
 
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
-
-function statusText(status: BillStatus): string {
+function statusText(status: BillStatus, money: (minor: number) => string): string {
   switch (status.kind) {
     case "paid":
       return "Paid";
@@ -33,6 +29,8 @@ function statusText(status: BillStatus): string {
 
 /** One Bills envelope: paid, ready, or short, with Cover when it is short. */
 export function BillRow({ line, status, onPress, onCover }: BillRowProps) {
+  const money = useBudgetMoney();
+  const currency = useBudgetCurrency();
   const { envelope, totals } = line;
   const short = status.kind === "short";
   const left = `${money(totals.leftMinor)} left`;
@@ -40,7 +38,7 @@ export function BillRow({ line, status, onPress, onCover }: BillRowProps) {
     <Card style={styles.card}>
       <PressableScale
         accessibilityRole="button"
-        accessibilityLabel={`${envelope.name}, ${statusText(status)}, ${left}`}
+        accessibilityLabel={`${envelope.name}, ${statusText(status, money)}, ${left}`}
         onPress={onPress}
         scaleOnPress={false}
         style={styles.top}
@@ -54,12 +52,12 @@ export function BillRow({ line, status, onPress, onCover }: BillRowProps) {
               <Icon name="check" size={16} color={colors.positive.text} />
             ) : null}
             <Text tone={short ? "negative" : "secondary"} variant="bodySm">
-              {statusText(status)}
+              {statusText(status, money)}
             </Text>
           </View>
         </View>
         <View style={styles.left}>
-          <Amount currency={BUDGET_CURRENCY} minor={totals.leftMinor} size="sm" />
+          <Amount currency={currency} minor={totals.leftMinor} size="sm" />
           <Text tone="secondary" variant="labelSm">
             left
           </Text>

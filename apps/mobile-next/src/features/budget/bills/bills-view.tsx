@@ -38,7 +38,7 @@ export function BillsView({ view, initialTab }: BillsViewProps) {
   const due = useDue(view);
   const dueMinorByEnvelopeId =
     due.loaded && !due.isError
-      ? dueByEnvelope(due.items, view.envelopes, view.current.period.end)
+      ? dueByEnvelope(due.items, view.envelopes, view.budget.currency, view.current.period.end)
       : undefined;
   const coverMove = useCoverMoveRequest();
   const add = useSheetRequest<true>();

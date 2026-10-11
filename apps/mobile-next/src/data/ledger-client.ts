@@ -7,6 +7,7 @@ import type {
   V2AssignmentsCreateInput,
   V2BudgetActivateInput,
   V2BudgetActivity,
+  V2BudgetList,
   V2BudgetPeriodView,
   V2BudgetSetupFacts,
   V2BudgetUpdateInput,
@@ -37,6 +38,7 @@ import { apiRequest } from "@/data/http";
 import {
   parseAccount,
   parseBudgetActivity,
+  parseBudgetList,
   parseBudgetPeriodView,
   parseBudgetSetupFacts,
   parseBudgetView,
@@ -150,6 +152,13 @@ export const paydayParam = (rule: V2PaydayRule): string =>
 
 export const withScope = (path: string, scope: LedgerScope): string =>
   `${path}${path.includes("?") ? "&" : "?"}${scopeQuery(scope)}`;
+
+/** A path for one budget: every budget request names its currency. */
+export const withBudgetCurrency = (path: string, scope: LedgerScope, currency: string): string =>
+  withScope(
+    `${path}${path.includes("?") ? "&" : "?"}currency=${encodeURIComponent(currency)}`,
+    scope,
+  );
 
 const request = async <T>(
   path: string,
@@ -431,9 +440,13 @@ export const ledgerClient = {
       );
     },
     /** Pending occurrences of reminder-mode rules, oldest first, through the given Ledger Date. */
-    due(scope: LedgerScope, through: string): Promise<V2DueList> {
+    due(scope: LedgerScope, currency: string, through: string): Promise<V2DueList> {
       return request(
-        withScope(`/recurring/due?through=${encodeURIComponent(through)}`, scope),
+        withBudgetCurrency(
+          `/recurring/due?through=${encodeURIComponent(through)}`,
+          scope,
+          currency,
+        ),
         undefined,
         parseDueList,
       );
@@ -473,19 +486,28 @@ export const ledgerClient = {
   },
 
   budget: {
-    get(scope: LedgerScope): Promise<V2BudgetView> {
-      return request(withScope("/budget", scope), undefined, parseBudgetView);
+    /** The ledger's budgets, one per currency, oldest first. */
+    list(scope: LedgerScope): Promise<V2BudgetList> {
+      return request(withScope("/budgets", scope), undefined, parseBudgetList);
     },
-    setupFacts(scope: LedgerScope, payday: V2PaydayRule): Promise<V2BudgetSetupFacts> {
+    get(scope: LedgerScope, currency: string): Promise<V2BudgetView> {
+      return request(withBudgetCurrency("/budget", scope, currency), undefined, parseBudgetView);
+    },
+    setupFacts(
+      scope: LedgerScope,
+      currency: string,
+      payday: V2PaydayRule,
+    ): Promise<V2BudgetSetupFacts> {
       return request(
-        withScope(`/budget/setup-facts?payday=${paydayParam(payday)}`, scope),
+        withBudgetCurrency(`/budget/setup-facts?payday=${paydayParam(payday)}`, scope, currency),
         undefined,
         parseBudgetSetupFacts,
       );
     },
+    /** The body names the budget's currency. */
     activate(
       scope: LedgerScope,
-      input: V2BudgetActivateInput,
+      input: V2BudgetActivateInput & { readonly currency: string },
       options: MutationOptions = {},
     ): Promise<V2BudgetView> {
       return request(
@@ -496,30 +518,37 @@ export const ledgerClient = {
     },
     update(
       scope: LedgerScope,
+      currency: string,
       input: V2BudgetUpdateInput,
       options: MutationOptions = {},
     ): Promise<V2BudgetView> {
-      return request(withScope("/budget", scope), json("PATCH", input, options), parseBudgetView);
+      return request(
+        withBudgetCurrency("/budget", scope, currency),
+        json("PATCH", input, options),
+        parseBudgetView,
+      );
     },
     createEnvelope(
       scope: LedgerScope,
+      currency: string,
       input: V2EnvelopeCreateInput,
       options: MutationOptions = {},
     ): Promise<V2EnvelopeCreated> {
       return request(
-        withScope("/budget/envelopes", scope),
+        withBudgetCurrency("/budget/envelopes", scope, currency),
         json("POST", input, options),
         parseEnvelopeCreated,
       );
     },
     updateEnvelope(
       scope: LedgerScope,
+      currency: string,
       id: string,
       input: V2EnvelopeUpdateInput,
       options: MutationOptions = {},
     ): Promise<V2BudgetView> {
       return request(
-        withScope(`/budget/envelopes/${encodeURIComponent(id)}`, scope),
+        withBudgetCurrency(`/budget/envelopes/${encodeURIComponent(id)}`, scope, currency),
         json("PATCH", input, options),
         parseBudgetView,
       );
@@ -527,12 +556,13 @@ export const ledgerClient = {
     /** Mark a big payment paid: an expense in the envelope's Category and the next due date. */
     payEnvelope(
       scope: LedgerScope,
+      currency: string,
       id: string,
       input: V2EnvelopePayInput,
       options: MutationOptions = {},
     ): Promise<V2EnvelopePaid> {
       return request(
-        withScope(`/budget/envelopes/${encodeURIComponent(id)}/pay`, scope),
+        withBudgetCurrency(`/budget/envelopes/${encodeURIComponent(id)}/pay`, scope, currency),
         json("POST", input, options),
         parseEnvelopePaid,
       );
@@ -540,26 +570,27 @@ export const ledgerClient = {
     /** Plan, cover, and move all land here; the response is the refreshed budget. */
     createAssignments(
       scope: LedgerScope,
+      currency: string,
       input: V2AssignmentsCreateInput,
       options: MutationOptions = {},
     ): Promise<V2BudgetView> {
       return request(
-        withScope("/budget/assignments", scope),
+        withBudgetCurrency("/budget/assignments", scope, currency),
         json("POST", input, options),
         parseBudgetView,
       );
     },
     /** Who moved money lately, newest first. */
-    activity(scope: LedgerScope, limit: number): Promise<V2BudgetActivity> {
+    activity(scope: LedgerScope, currency: string, limit: number): Promise<V2BudgetActivity> {
       return request(
-        withScope(`/budget/activity?limit=${limit}`, scope),
+        withBudgetCurrency(`/budget/activity?limit=${limit}`, scope, currency),
         undefined,
         parseBudgetActivity,
       );
     },
-    period(scope: LedgerScope, start: string): Promise<V2BudgetPeriodView> {
+    period(scope: LedgerScope, currency: string, start: string): Promise<V2BudgetPeriodView> {
       return request(
-        withScope(`/budget/periods/${encodeURIComponent(start)}`, scope),
+        withBudgetCurrency(`/budget/periods/${encodeURIComponent(start)}`, scope, currency),
         undefined,
         parseBudgetPeriodView,
       );

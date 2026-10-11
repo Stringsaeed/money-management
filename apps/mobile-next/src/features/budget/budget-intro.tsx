@@ -7,7 +7,7 @@ import { PLAN_ADMIN_ONLY } from "./role/budget-role";
 const STEPS = [
   { title: "Payday and money", detail: "When you get paid and what you have now." },
   { title: "What it is for", detail: "Bills, everyday spending, and things you save for." },
-  { title: "Plan your month", detail: "Give every dirham a job." },
+  { title: "Plan your month", detail: "Give your money a job." },
 ] as const;
 
 interface BudgetIntroProps {

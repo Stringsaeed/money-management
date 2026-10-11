@@ -1,9 +1,7 @@
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { useAccountsQuery } from "@/data/ledger-queries";
 import { Sheet, showToast } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetMoney } from "../currency/use-budget-currency";
 import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
 
 import { MarkPaidForm } from "./mark-paid-form";
@@ -19,6 +17,7 @@ interface MarkPaidSheetProps {
 
 /** B3: Mark big payment paid, opened from a Saving-for row. */
 export function MarkPaidSheet({ open, session, envelopeId, view, onDismiss }: MarkPaidSheetProps) {
+  const money = useBudgetMoney();
   const accounts = useAccountsQuery();
   const line = envelopeLines(view).find((item) => item.envelope.id === envelopeId);
   return (
@@ -31,7 +30,7 @@ export function MarkPaidSheet({ open, session, envelopeId, view, onDismiss }: Ma
           accounts={accounts.data}
           onPaid={(amountMinor) => {
             showToast({
-              message: `${line.envelope.name} marked paid: ${formatMoneyMinor(amountMinor, BUDGET_CURRENCY)}`,
+              message: `${line.envelope.name} marked paid: ${money(amountMinor)}`,
             });
             onDismiss();
           }}

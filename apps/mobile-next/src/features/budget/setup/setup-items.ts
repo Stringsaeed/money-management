@@ -1,5 +1,4 @@
 import {
-  BUDGET_CURRENCY,
   type V2BudgetSetupFacts,
   type V2Category,
   type V2EnvelopeGroup,
@@ -25,17 +24,20 @@ export interface SetupItem {
   readonly lastPeriodMinor: number | null;
 }
 
-const MINOR_PER_WHOLE = 10 ** currencyFractionDigits(BUDGET_CURRENCY);
-
-const roundToWholeUnit = (minor: number): number =>
-  Math.round(minor / MINOR_PER_WHOLE) * MINOR_PER_WHOLE;
+const roundToWholeUnit = (minor: number, currency: string): number => {
+  const perWhole = 10 ** currencyFractionDigits(currency);
+  return Math.round(minor / perWhole) * perWhole;
+};
 
 /** A Recurring rule's amount as a monthly figure, in whole currency units. */
-export function monthlyEquivalentMinor(rule: {
-  readonly amountMinor: number;
-  readonly frequency: V2RecurringFrequency;
-  readonly intervalCount: number;
-}): number {
+export function monthlyEquivalentMinor(
+  rule: {
+    readonly amountMinor: number;
+    readonly frequency: V2RecurringFrequency;
+    readonly intervalCount: number;
+  },
+  currency: string,
+): number {
   const interval = Math.max(rule.intervalCount, 1);
   const perMonth = {
     day: (rule.amountMinor * 365) / 12 / interval,
@@ -43,7 +45,7 @@ export function monthlyEquivalentMinor(rule: {
     month: rule.amountMinor / interval,
     year: rule.amountMinor / 12 / interval,
   } satisfies Record<V2RecurringFrequency, number>;
-  return roundToWholeUnit(perMonth[rule.frequency]);
+  return roundToWholeUnit(perMonth[rule.frequency], currency);
 }
 
 const nameKey = (name: string): string => `new:${name.trim().toLowerCase()}`;
@@ -67,6 +69,7 @@ export function resolveItemKey(
 }
 
 interface Sources {
+  readonly currency: string;
   readonly facts: V2BudgetSetupFacts;
   readonly categories: readonly V2Category[];
   readonly custom: readonly CustomItem[];
@@ -77,7 +80,7 @@ interface Sources {
  * from the most used expense Categories (ticked), then the UAE presets and the person's own rows
  * (unticked until chosen). A Category or name appears once; Bills wins over Everyday.
  */
-export function buildSetupItems({ facts, categories, custom }: Sources): SetupItem[] {
+export function buildSetupItems({ currency, facts, categories, custom }: Sources): SetupItem[] {
   const active = activeExpenseCategories(categories);
   const lastPeriod = new Map(
     facts.lastPeriodSpend.map((entry) => [entry.categoryId, entry.amountMinor]),
@@ -105,7 +108,7 @@ export function buildSetupItems({ facts, categories, custom }: Sources): SetupIt
   };
 
   for (const rule of facts.recurringExpenses) {
-    if (rule.currency !== BUDGET_CURRENCY) continue;
+    if (rule.currency !== currency) continue;
     const category = active.find((candidate) => candidate.id === rule.categoryId);
     const name = category?.name ?? rule.name;
     const { key, categoryId } = category
@@ -117,7 +120,7 @@ export function buildSetupItems({ facts, categories, custom }: Sources): SetupIt
       group: "bills",
       categoryId,
       defaultTicked: true,
-      recurringMinor: monthlyEquivalentMinor(rule),
+      recurringMinor: monthlyEquivalentMinor(rule, currency),
     });
   }
   for (const top of facts.topCategories) {
@@ -149,5 +152,6 @@ export const isItemTicked = (
 ): boolean => selection[item.key] ?? item.defaultTicked;
 
 /** What "Use suggestions" fills in: the usual Recurring amount, else last period's spend. */
-export const suggestedMinor = (item: SetupItem): number | null =>
-  item.recurringMinor ?? (item.lastPeriodMinor ? roundToWholeUnit(item.lastPeriodMinor) : null);
+export const suggestedMinor = (item: SetupItem, currency: string): number | null =>
+  item.recurringMinor ??
+  (item.lastPeriodMinor ? roundToWholeUnit(item.lastPeriodMinor, currency) : null);

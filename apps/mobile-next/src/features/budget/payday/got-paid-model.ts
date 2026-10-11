@@ -1,9 +1,10 @@
 import { differenceInCalendarDays } from "date-fns";
 
-import { BUDGET_CURRENCY, type V2Account, type V2Category } from "@trove/api/v2/contracts";
+import type { V2Account, V2Category } from "@trove/api/v2/contracts";
 
 import { ApiError } from "@/data/http";
 
+import { currencyErrorMessage } from "../currency/currency-errors";
 import { roleErrorMessage } from "../role/budget-role";
 import { parseDateKey } from "@/utils/date";
 import { parseMoneyMinor } from "@/utils/money";
@@ -12,16 +13,15 @@ import { PAYDAY_ON_TIME_DAYS } from "./payday-status";
 
 export const SALARY_CATEGORY_NAME = "Salary";
 
-/** Active AED funding accounts: the places a salary can land and count as money to plan. */
+/** Active funding accounts in the budget's currency: the places a salary can land and count as money to plan. */
 export function salaryAccounts(
   accounts: readonly V2Account[],
   fundingAccountIds: readonly string[],
+  currency: string,
 ): V2Account[] {
   return accounts.filter(
     (account) =>
-      !account.archived &&
-      account.currency === BUDGET_CURRENCY &&
-      fundingAccountIds.includes(account.id),
+      !account.archived && account.currency === currency && fundingAccountIds.includes(account.id),
   );
 }
 
@@ -55,8 +55,8 @@ export type GotPaidCheck =
   | { readonly ok: true; readonly amountMinor: number; readonly accountId: string }
   | { readonly ok: false; readonly error: string };
 
-export function checkGotPaid(draft: GotPaidDraft, today: string): GotPaidCheck {
-  const amountMinor = parseMoneyMinor(draft.amountText, BUDGET_CURRENCY);
+export function checkGotPaid(draft: GotPaidDraft, currency: string, today: string): GotPaidCheck {
+  const amountMinor = parseMoneyMinor(draft.amountText, currency);
   if (amountMinor === null || amountMinor <= 0) {
     return { ok: false, error: "Enter the salary you received, like 9000 or 9000.50." };
   }
@@ -67,7 +67,7 @@ export function checkGotPaid(draft: GotPaidDraft, today: string): GotPaidCheck {
 
 /** What went wrong and that nothing was recorded. */
 export function gotPaidErrorMessage(cause: unknown): string {
-  const refused = roleErrorMessage(cause);
+  const refused = roleErrorMessage(cause) ?? currencyErrorMessage(cause);
   if (refused) return refused;
   if (cause instanceof ApiError && cause.code === "network_error") {
     return "You're offline. Nothing was recorded.";

@@ -2,13 +2,11 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { track } from "@/features/analytics";
 import { useAccountsQuery } from "@/data/ledger-queries";
 import { Button, ListGroup, space, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetMoney } from "../currency/use-budget-currency";
 import { CoverMoveSheet } from "../cover/cover-move-sheet";
 import { useCoverMoveRequest } from "../cover/use-cover-move-request";
 import { periodLabel } from "../envelope/envelope-model";
@@ -23,8 +21,6 @@ import { salaryAccounts } from "./got-paid-model";
 import { StatRow } from "./stat-row";
 import type { WrapUp } from "./use-wrap-up";
 
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
-
 interface WrapUpContentProps {
   readonly view: ActiveBudgetView;
   readonly wrapUp: Extract<WrapUp, { status: "ready" }>;
@@ -32,6 +28,7 @@ interface WrapUpContentProps {
 
 /** C1: last month at a glance, read-only apart from Cover now and the balance Adjust. */
 export function WrapUpContent({ view, wrapUp }: WrapUpContentProps) {
+  const money = useBudgetMoney();
   const { summary, suggestion, firstMonth } = wrapUp;
   const accounts = useAccountsQuery();
   const coverMove = useCoverMoveRequest();
@@ -106,7 +103,9 @@ export function WrapUpContent({ view, wrapUp }: WrapUpContentProps) {
 
       {suggestion && !firstMonth ? <RaiseCard suggestion={suggestion} /> : null}
 
-      <BalanceCheck accounts={salaryAccounts(accounts.data, view.fundingAccountIds)} />
+      <BalanceCheck
+        accounts={salaryAccounts(accounts.data, view.fundingAccountIds, view.budget.currency)}
+      />
 
       <CoverMoveSheet
         controller={coverMove}

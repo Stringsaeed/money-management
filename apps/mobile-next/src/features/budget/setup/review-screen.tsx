@@ -11,14 +11,24 @@ import { useStartBudget } from "./use-start-budget";
 
 /** S5: the numbers the budget starts with, and the single Start budget action. */
 export function ReviewScreen() {
-  const { needsPayday, draft, setup, facts, ticked, funding, preview, invalidAmounts } =
-    useSetupModel();
+  const {
+    currency,
+    target,
+    needsPayday,
+    draft,
+    setup,
+    facts,
+    ticked,
+    funding,
+    preview,
+    invalidAmounts,
+  } = useSetupModel();
   const starter = useStartBudget(() => {
     setup.clear();
     router.dismissTo("/(tabs)/envelopes");
   });
 
-  if (needsPayday) return <SetupRestart />;
+  if (needsPayday) return <SetupRestart target={target} />;
   if (facts.isError && !facts.data) {
     return (
       <SetupStatus error={{ title: "Couldn't calculate", onRetry: () => void facts.retry() }} />
@@ -38,11 +48,13 @@ export function ReviewScreen() {
           pending={starter.pending}
           error={starter.error}
           blocked={preview.leftToPlanMinor < 0 || invalidAmounts || ticked.length === 0}
-          onStart={() => void starter.start(buildActivateInput(draft, payday, funding, ticked))}
+          onStart={() =>
+            void starter.start(buildActivateInput(draft, payday, funding, ticked, currency))
+          }
         />
       }
     >
-      <ReviewSummary preview={preview} periodStart={facts.data.period.start} />
+      <ReviewSummary currency={currency} preview={preview} periodStart={facts.data.period.start} />
     </SetupFrame>
   );
 }

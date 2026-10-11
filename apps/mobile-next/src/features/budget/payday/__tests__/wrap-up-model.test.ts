@@ -52,7 +52,7 @@ describe("raiseSuggestion", () => {
     spent.map((value) => [line("dining", "everyday", planned, value)]);
 
   it("suggests the most spent, rounded up to AED 50", () => {
-    expect(raiseSuggestion(history([82_000, 84_100, 81_000]))).toEqual({
+    expect(raiseSuggestion(history([82_000, 84_100, 81_000]), 100)).toEqual({
       envelopeId: "dining",
       name: "dining",
       suggestedMinor: 85_000,
@@ -60,17 +60,24 @@ describe("raiseSuggestion", () => {
   });
 
   it("keeps an exact multiple of AED 50", () => {
-    expect(raiseSuggestion(history([82_000, 85_000, 81_000]))?.suggestedMinor).toBe(85_000);
+    expect(raiseSuggestion(history([82_000, 85_000, 81_000]), 100)?.suggestedMinor).toBe(85_000);
   });
 
   it("needs the envelope over in every one of the three periods", () => {
-    expect(raiseSuggestion(history([82_000, 79_000, 81_000]))).toBeNull();
+    expect(raiseSuggestion(history([82_000, 79_000, 81_000]), 100)).toBeNull();
+  });
+
+  it("rounds up to 50 whole units of a 3-decimal currency", () => {
+    // KWD 840.100 rounds up to KWD 850.000.
+    expect(raiseSuggestion(history([820_000, 840_100, 810_000]), 1_000)?.suggestedMinor).toBe(
+      850_000,
+    );
   });
 
   it("needs three finished periods and ignores non-Everyday envelopes", () => {
-    expect(raiseSuggestion(history([82_000, 84_000, 81_000]).slice(0, 2))).toBeNull();
+    expect(raiseSuggestion(history([82_000, 84_000, 81_000]).slice(0, 2), 100)).toBeNull();
     const bills = [82_000, 84_000, 81_000].map((value) => [line("rent", "bills", 80_000, value)]);
-    expect(raiseSuggestion(bills)).toBeNull();
+    expect(raiseSuggestion(bills, 100)).toBeNull();
   });
 
   it("picks the envelope that needs the biggest raise", () => {
@@ -78,6 +85,6 @@ describe("raiseSuggestion", () => {
       line("dining", "everyday", 80_000, value),
       line("fun", "everyday", 10_000, 12_000),
     ]);
-    expect(raiseSuggestion(periods)?.envelopeId).toBe("dining");
+    expect(raiseSuggestion(periods, 100)?.envelopeId).toBe("dining");
   });
 });

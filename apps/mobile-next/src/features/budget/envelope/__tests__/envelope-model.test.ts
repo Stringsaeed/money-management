@@ -3,14 +3,19 @@ import { historyStarts, paceMinor, planChange } from "../envelope-model";
 describe("paceMinor", () => {
   it("floors the daily pace to whole AED", () => {
     // AED 480.00 over 10 days is AED 48.00; AED 475.00 over 10 days is 47.50 -> 47.
-    expect(paceMinor(48_000, 10)).toBe(4_800);
-    expect(paceMinor(47_500, 10)).toBe(4_700);
+    expect(paceMinor(48_000, 10, 100)).toBe(4_800);
+    expect(paceMinor(47_500, 10, 100)).toBe(4_700);
+  });
+
+  it("floors to whole units of a 3-decimal currency", () => {
+    // KWD 47.500 over 10 days is KWD 4.750 -> KWD 4.000.
+    expect(paceMinor(47_500, 10, 1_000)).toBe(4_000);
   });
 
   it("is zero when nothing is left or the period is over", () => {
-    expect(paceMinor(0, 5)).toBe(0);
-    expect(paceMinor(-2_000, 5)).toBe(0);
-    expect(paceMinor(10_000, 0)).toBe(0);
+    expect(paceMinor(0, 5, 100)).toBe(0);
+    expect(paceMinor(-2_000, 5, 100)).toBe(0);
+    expect(paceMinor(10_000, 0, 100)).toBe(0);
   });
 });
 

@@ -76,6 +76,7 @@ describe("dueByEnvelope", () => {
         bill("du-next", "2026-10-25"),
       ],
       envelopes,
+      "AED",
       "2026-10-24",
     );
     expect([...due.entries()]).toEqual([
@@ -93,6 +94,7 @@ describe("dueByEnvelope", () => {
         bill("food", "2026-10-18", { categoryId: "food" }),
       ],
       envelopes,
+      "AED",
       "2026-10-24",
     );
     expect(due.size).toBe(0);
@@ -100,7 +102,7 @@ describe("dueByEnvelope", () => {
 
   it("makes a bill with Left below its next payment short, before anything is spent", () => {
     // du is due AED 450 on the 18th; the envelope has AED 300 Left (planned 300).
-    const due = dueByEnvelope([bill("du", "2026-10-18")], envelopes, "2026-10-24");
+    const due = dueByEnvelope([bill("du", "2026-10-18")], envelopes, "AED", "2026-10-24");
     expect(billStatus(totals(30_000, 0, 30_000), due.get("du"))).toEqual({
       kind: "short",
       shortMinor: 15_000,

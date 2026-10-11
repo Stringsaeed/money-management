@@ -27,7 +27,7 @@ export function DueContent({ view }: { readonly view: ActiveBudgetView }) {
   const markPaid = useMarkPaidTarget();
   const { canAddSpending } = useBudgetRole();
   // Keeps local reminders in step when a bill is snoozed, even if the Budget tab is not open.
-  useReminderSync(view, due);
+  useReminderSync();
 
   const snooze = (item: V2DueOccurrence) => {
     void due.reminders.snooze(item.ruleId, item.scheduledDate, nextDay(due.today));

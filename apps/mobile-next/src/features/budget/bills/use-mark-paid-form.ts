@@ -1,11 +1,12 @@
 import { useState } from "react";
 
-import { BUDGET_CURRENCY, type V2Account } from "@trove/api/v2/contracts";
+import { type V2Account } from "@trove/api/v2/contracts";
 
 import { track } from "@/features/analytics";
 import { useLedgerMutations } from "@/data/ledger-queries";
 import { decimalFromMinor } from "@/utils/money";
 
+import { useBudgetCurrency } from "../currency/use-budget-currency";
 import { budgetToday } from "../due/due-model";
 import { useEnvelopeWrite } from "../envelope/use-envelope-write";
 import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
@@ -22,11 +23,12 @@ interface UseMarkPaidFormOptions {
 
 /** State and save for Mark big payment paid. Funding accounts only, so Left drops as expected. */
 export function useMarkPaidForm({ view, line, accounts, onPaid }: UseMarkPaidFormOptions) {
+  const currency = useBudgetCurrency();
   const { payEnvelope } = useLedgerMutations();
   const write = useEnvelopeWrite(payErrorMessage);
-  const { funding } = paidWithAccounts(accounts, view.fundingAccountIds);
+  const { funding } = paidWithAccounts(accounts, view.fundingAccountIds, currency);
   const [amountText, setAmountText] = useState(
-    decimalFromMinor(line.envelope.targetMinor ?? 0, BUDGET_CURRENCY),
+    decimalFromMinor(line.envelope.targetMinor ?? 0, currency),
   );
   const [accountOverride, setAccountOverride] = useState<string | null>(null);
   const today = budgetToday(view.current);
@@ -40,7 +42,10 @@ export function useMarkPaidForm({ view, line, accounts, onPaid }: UseMarkPaidFor
       null,
       view.budget.defaultAccountId,
     );
-  const check = checkPayment({ amountText, accountId, date }, { start: periodStart, today });
+  const check = checkPayment(
+    { amountText, accountId, date },
+    { currency, start: periodStart, today },
+  );
 
   const edit =
     <T>(set: (value: T) => void) =>

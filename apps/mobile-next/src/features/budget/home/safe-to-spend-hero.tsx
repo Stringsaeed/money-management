@@ -1,16 +1,14 @@
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { Amount, space, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
 import { noSafeToSpendReason, perDayLine, type ActiveBudgetView } from "./home-model";
-
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
 
 /** Safe to spend, the pace to payday, and (at exactly zero) the neutral reason there is none. */
 export function SafeToSpendHero({ current }: { readonly current: ActiveBudgetView["current"] }) {
+  const money = useBudgetMoney();
+  const currency = useBudgetCurrency();
   const reason = current.safeToSpendMinor === 0 ? noSafeToSpendReason(0) : null;
   const pace = perDayLine(current, money);
   return (
@@ -23,7 +21,7 @@ export function SafeToSpendHero({ current }: { readonly current: ActiveBudgetVie
         Safe to spend
       </Text>
       <Amount
-        currency={BUDGET_CURRENCY}
+        currency={currency}
         minor={current.safeToSpendMinor}
         size="hero"
         tone={current.safeToSpendMinor < 0 ? "negative" : "primary"}

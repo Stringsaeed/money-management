@@ -1,10 +1,10 @@
 import { router } from "expo-router";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 import { StyleSheet, View } from "react-native";
 
 import { AmountInput, Button, Chip, showToast, space, Text } from "@/ui/trove";
 
+import { useBudgetCurrency } from "../currency/use-budget-currency";
 import type { ActiveBudgetView } from "../home/home-model";
 import { periodLabel } from "../envelope/envelope-model";
 import { ChipRow } from "../quick-add/chip-row";
@@ -15,6 +15,7 @@ import { useGotPaidForm } from "./use-got-paid-form";
 
 /** C0: log this payday's salary as one income into a funding account. */
 export function GotPaidForm({ view }: { readonly view: ActiveBudgetView }) {
+  const currency = useBudgetCurrency();
   const form = useGotPaidForm(view);
   const reminders = useReminderPrefs();
   return (
@@ -23,8 +24,8 @@ export function GotPaidForm({ view }: { readonly view: ActiveBudgetView }) {
         Got paid
       </Text>
       <AmountInput
-        currency={BUDGET_CURRENCY}
-        label="Salary amount (AED)"
+        currency={currency}
+        label={`Salary amount (${currency})`}
         value={form.amountText}
         onChangeText={form.setAmountText}
       />
@@ -41,8 +42,7 @@ export function GotPaidForm({ view }: { readonly view: ActiveBudgetView }) {
         </ChipRow>
       ) : (
         <Text variant="bodySm" tone="secondary">
-          None of your budget accounts can receive a salary. Add an AED account to the money you
-          have first.
+          {`None of your budget accounts can receive a salary. Add a ${currency} account to the money you have first.`}
         </Text>
       )}
       {form.categoryChoices.length > 1 ? (
@@ -73,7 +73,7 @@ export function GotPaidForm({ view }: { readonly view: ActiveBudgetView }) {
         label="Not yet: remind me tomorrow"
         variant="tertiary"
         onPress={() => {
-          void reminders.snoozePayday(form.today);
+          void reminders.snoozePayday(currency, form.today);
           showToast({ message: "We'll remind you again tomorrow." });
           router.back();
         }}

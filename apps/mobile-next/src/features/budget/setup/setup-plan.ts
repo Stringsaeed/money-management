@@ -1,6 +1,5 @@
 import { projectBudget } from "@trove/domain/budget";
 import {
-  BUDGET_CURRENCY,
   type V2Account,
   type V2BudgetActivateInput,
   type V2BudgetSetupFacts,
@@ -12,20 +11,22 @@ import { currencyFractionDigits, parseMoneyMinor } from "@/utils/money";
 import { isItemTicked, type SetupItem } from "./setup-items";
 import { type GROUP_ORDER, type SetupDraft } from "./setup-types";
 
-/** Typed money text: empty is 0, anything that is not a valid amount in the budget currency is `null`. */
-export function parseAmountText(text: string): number | null {
+/** Typed money text: empty is 0, anything that is not a valid amount in `currency` is `null`. */
+export function parseAmountText(text: string, currency: string): number | null {
   const value = text.trim();
   if (!value) return 0;
-  const minor = parseMoneyMinor(value, BUDGET_CURRENCY);
+  const minor = parseMoneyMinor(value, currency);
   return minor !== null && minor >= 0 ? minor : null;
 }
 
-const isFundingEligible = (account: V2Account): boolean =>
-  !account.archived && account.currency === BUDGET_CURRENCY && account.type !== "credit_card";
+const isFundingEligible = (account: V2Account, currency: string): boolean =>
+  !account.archived && account.currency === currency && account.type !== "credit_card";
 
 /** Accounts a person can tick as money they have now: active, in the budget currency, not a credit card. */
-export const fundingEligibleAccounts = (accounts: readonly V2Account[]): V2Account[] =>
-  accounts.filter(isFundingEligible);
+export const fundingEligibleAccounts = (
+  accounts: readonly V2Account[],
+  currency: string,
+): V2Account[] => accounts.filter((account) => isFundingEligible(account, currency));
 
 const DEFAULT_FUNDING_TYPES = new Set<V2Account["type"]>(["checking", "cash"]);
 
@@ -48,8 +49,9 @@ export interface FundingChoice {
 export function fundingChoice(
   accounts: readonly V2Account[],
   draft: Pick<SetupDraft, "funding" | "openingCash">,
+  currency: string,
 ): FundingChoice {
-  const eligible = fundingEligibleAccounts(accounts);
+  const eligible = fundingEligibleAccounts(accounts, currency);
   if (eligible.length > 0) {
     return {
       accountIds: eligible
@@ -59,7 +61,7 @@ export function fundingChoice(
       invalid: false,
     };
   }
-  const total = parseAmountText(draft.openingCash);
+  const total = parseAmountText(draft.openingCash, currency);
   return { accountIds: [], openingCashMinor: total ?? 0, invalid: total === null };
 }
 
@@ -67,17 +69,19 @@ export function fundingChoice(
 export function paydayStepReady(
   draft: Pick<SetupDraft, "payday" | "usualSalary">,
   funding: FundingChoice,
+  currency: string,
 ): boolean {
   const needsAccount = funding.openingCashMinor === null && funding.accountIds.length === 0;
   return (
     draft.payday !== null &&
-    parseAmountText(draft.usualSalary) !== null &&
+    parseAmountText(draft.usualSalary, currency) !== null &&
     !funding.invalid &&
     !needsAccount
   );
 }
 
 export interface PlanInputs {
+  readonly currency: string;
   readonly facts: V2BudgetSetupFacts;
   readonly payday: V2PaydayRule;
   /** The ticked items, in envelope order. */
@@ -86,13 +90,17 @@ export interface PlanInputs {
   readonly funding: FundingChoice;
 }
 
-export const plannedMinor = (item: SetupItem, amounts: Readonly<Record<string, string>>): number =>
-  parseAmountText(amounts[item.key] ?? "") ?? 0;
+export const plannedMinor = (
+  item: SetupItem,
+  amounts: Readonly<Record<string, string>>,
+  currency: string,
+): number => parseAmountText(amounts[item.key] ?? "", currency) ?? 0;
 
 export const hasInvalidAmount = (
   items: readonly SetupItem[],
   amounts: Readonly<Record<string, string>>,
-): boolean => items.some((item) => parseAmountText(amounts[item.key] ?? "") === null);
+  currency: string,
+): boolean => items.some((item) => parseAmountText(amounts[item.key] ?? "", currency) === null);
 
 export interface PlanPreview {
   /** Left to plan (S4) and Not planned yet (S5): the engine's Unassigned Money at activation. */
@@ -109,7 +117,7 @@ export interface PlanPreview {
  * the period counts once: it lowers what an envelope has left and is not added back.
  */
 export function previewPlan(inputs: PlanInputs): PlanPreview {
-  const { facts, payday, items, amounts, funding } = inputs;
+  const { currency, facts, payday, items, amounts, funding } = inputs;
   const start = facts.period.start;
   const fundingIds = new Set(funding.accountIds);
   const mappedCategoryIds = new Set(
@@ -132,7 +140,7 @@ export function previewPlan(inputs: PlanInputs): PlanPreview {
       startFresh: false,
     })),
     assignments: items.flatMap((item) => {
-      const amountMinor = plannedMinor(item, amounts);
+      const amountMinor = plannedMinor(item, amounts, currency);
       return amountMinor > 0
         ? [
             {
@@ -169,12 +177,12 @@ export function previewPlan(inputs: PlanInputs): PlanPreview {
       .map((payment) => ({ date: start, amountMinor: payment.amountMinor })),
     cashMinor,
     openingCardDebtMinor: facts.openingCardDebtMinor,
-    minorUnitsPerWhole: 10 ** currencyFractionDigits(BUDGET_CURRENCY),
+    minorUnitsPerWhole: 10 ** currencyFractionDigits(currency),
     today: facts.today,
   });
 
   const groupTotals = { bills: 0, everyday: 0, saving: 0 };
-  for (const item of items) groupTotals[item.group] += plannedMinor(item, amounts);
+  for (const item of items) groupTotals[item.group] += plannedMinor(item, amounts, currency);
   const current = projection.current;
   return {
     leftToPlanMinor: current.unassignedMinor,
@@ -197,9 +205,11 @@ export function buildActivateInput(
   payday: V2PaydayRule,
   funding: FundingChoice,
   items: readonly SetupItem[],
-): V2BudgetActivateInput {
-  const salary = parseAmountText(draft.usualSalary) ?? 0;
+  currency: string,
+): V2BudgetActivateInput & { readonly currency: string } {
+  const salary = parseAmountText(draft.usualSalary, currency) ?? 0;
   return {
+    currency,
     paydayRule: payday,
     ...(salary > 0 && { usualSalaryMinor: salary }),
     paydayReminder: draft.paydayReminder,
@@ -210,7 +220,7 @@ export function buildActivateInput(
       name: item.name,
       group: item.group,
       ...(item.categoryId ? { categoryId: item.categoryId } : { newCategory: { name: item.name } }),
-      plannedMinor: plannedMinor(item, draft.amounts),
+      plannedMinor: plannedMinor(item, draft.amounts, currency),
     })),
   };
 }

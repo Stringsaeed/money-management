@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import { Button, showToast, space } from "@/ui/trove";
 
+import { useBudgetCurrency } from "../currency/use-budget-currency";
 import type { UseReminderPrefs } from "../reminders/use-reminder-prefs";
 
 import { PAYDAY_ROUTES } from "./payday-flow";
@@ -14,7 +15,8 @@ interface PaydayActionsProps {
 
 /** Under the payday attention line: log the salary, or be reminded again tomorrow. */
 export function PaydayActions({ today, reminders }: PaydayActionsProps) {
-  const reminded = reminders.prefs.paydaySnoozedOn === today;
+  const currency = useBudgetCurrency();
+  const reminded = reminders.prefs.paydaySnoozedOn[currency] === today;
   return (
     <View style={styles.row}>
       <View style={styles.action}>
@@ -27,7 +29,7 @@ export function PaydayActions({ today, reminders }: PaydayActionsProps) {
           variant="secondary"
           disabled={reminded}
           onPress={() => {
-            void reminders.snoozePayday(today);
+            void reminders.snoozePayday(currency, today);
             showToast({ message: "We'll remind you again tomorrow." });
           }}
         />

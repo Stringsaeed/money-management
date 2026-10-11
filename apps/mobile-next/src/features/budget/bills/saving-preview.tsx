@@ -1,16 +1,14 @@
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { Amount, Card, space, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
 import type { SavingPreview as SavingPreviewData } from "./big-payment-model";
-
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
 
 /** "Set aside each payday", or the warning when the money is due before you're paid. */
 export function SavingPreview({ preview }: { readonly preview: SavingPreviewData | null }) {
+  const money = useBudgetMoney();
+  const currency = useBudgetCurrency();
   return (
     <Card style={styles.card}>
       {preview === null ? (
@@ -30,7 +28,7 @@ export function SavingPreview({ preview }: { readonly preview: SavingPreviewData
               <Text tone="secondary" variant="labelSm">
                 Set aside each payday
               </Text>
-              <Amount currency={BUDGET_CURRENCY} minor={preview.perPaydayMinor} size="lg" />
+              <Amount currency={currency} minor={preview.perPaydayMinor} size="lg" />
               <Text tone="secondary" variant="bodySm">
                 {`${preview.paydaysLeft} ${preview.paydaysLeft === 1 ? "payday" : "paydays"} until it's due`}
               </Text>

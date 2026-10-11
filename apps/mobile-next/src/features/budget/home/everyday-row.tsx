@@ -1,7 +1,5 @@
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import {
   Amount,
   colors,
@@ -12,8 +10,8 @@ import {
   space,
   Text,
 } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
 import { envelopeProgress, type EnvelopeLine } from "./home-model";
 
 interface EverydayRowProps {
@@ -25,9 +23,11 @@ interface EverydayRowProps {
 
 /** One Everyday envelope: name, what is left (or how far over), and a progress bar. */
 export function EverydayRow({ line, onPress, onLongPress }: EverydayRowProps) {
+  const money = useBudgetMoney();
+  const currency = useBudgetCurrency();
   const { envelope, totals } = line;
   const { fraction, over } = envelopeProgress(totals);
-  const amount = formatMoneyMinor(Math.abs(totals.leftMinor), BUDGET_CURRENCY);
+  const amount = money(Math.abs(totals.leftMinor));
   const status = over ? `${amount} over` : `${amount} left`;
   return (
     <PressableScale
@@ -46,7 +46,7 @@ export function EverydayRow({ line, onPress, onLongPress }: EverydayRowProps) {
         </Text>
         <View style={styles.status}>
           <Amount
-            currency={BUDGET_CURRENCY}
+            currency={currency}
             minor={Math.abs(totals.leftMinor)}
             size="sm"
             tone={over ? "negative" : "secondary"}

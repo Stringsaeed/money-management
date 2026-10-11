@@ -13,6 +13,7 @@ import {
   subscribeSetupDraft,
 } from "./setup-draft-store";
 import type { SetupDraft } from "./setup-types";
+import { useSetupTarget } from "./use-setup-target";
 
 export interface UseSetupDraft {
   /** False until the stored draft has been read. */
@@ -25,10 +26,14 @@ export interface UseSetupDraft {
   readonly clear: () => void;
 }
 
-/** The Setup Draft for this identity and ledger scope, saved on the device. */
+/**
+ * The Setup Draft for this identity and ledger scope, saved on the device. An additional
+ * currency's setup has its own draft, so starting USD never touches an unfinished AED one.
+ */
 export function useSetupDraft(): UseSetupDraft {
   const { identityKey, scope } = useLedgerData();
-  const storageKey = draftStorageKey(scopeKey(identityKey, scope));
+  const target = useSetupTarget();
+  const storageKey = draftStorageKey(scopeKey(identityKey, scope), target);
   const stored = useSyncExternalStore(subscribeSetupDraft, () => getSetupDraft(storageKey));
   useEffect(() => {
     void loadSetupDraft(storageKey);

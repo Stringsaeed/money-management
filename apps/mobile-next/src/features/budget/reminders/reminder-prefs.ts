@@ -7,22 +7,22 @@ export interface ReminderPrefs {
   readonly snoozes: Readonly<Record<string, string>>;
   /** The person said "Not now" to the notification explanation. */
   readonly promptDismissed: boolean;
-  /** The Ledger Date the person said "Not yet" to Got paid; the reminder comes back the next day. */
-  readonly paydaySnoozedOn: string | null;
+  /** Budget currency -> the Ledger Date the person said "Not yet" to Got paid; the reminder comes back the next day. */
+  readonly paydaySnoozedOn: Readonly<Record<string, string>>;
 }
 
 export const EMPTY_REMINDER_PREFS: ReminderPrefs = {
   mutedRuleIds: [],
   snoozes: {},
   promptDismissed: false,
-  paydaySnoozedOn: null,
+  paydaySnoozedOn: {},
 };
 
 const prefsSchema = z.object({
   mutedRuleIds: z.array(z.string()).catch([]),
   snoozes: z.record(z.string(), z.string()).catch({}),
   promptDismissed: z.boolean().catch(false),
-  paydaySnoozedOn: z.string().nullable().catch(null),
+  paydaySnoozedOn: z.record(z.string(), z.string()).catch({}),
 });
 
 export function parseReminderPrefs(raw: string | null): ReminderPrefs {
@@ -72,5 +72,11 @@ export function pruneSnoozes(prefs: ReminderPrefs, today: string): ReminderPrefs
 }
 
 /** "Not yet" on Got paid: remember today so tomorrow's reminder is scheduled (once a day at most). */
-export const snoozePayday = (prefs: ReminderPrefs, today: string): ReminderPrefs =>
-  prefs.paydaySnoozedOn === today ? prefs : { ...prefs, paydaySnoozedOn: today };
+export const snoozePayday = (
+  prefs: ReminderPrefs,
+  currency: string,
+  today: string,
+): ReminderPrefs =>
+  prefs.paydaySnoozedOn[currency] === today
+    ? prefs
+    : { ...prefs, paydaySnoozedOn: { ...prefs.paydaySnoozedOn, [currency]: today } };

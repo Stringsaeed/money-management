@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY, type V2Account } from "@trove/api/v2/contracts";
+import type { V2Account } from "@trove/api/v2/contracts";
 
 import { Amount, ListGroup, space, Text, TextField } from "@/ui/trove";
 
@@ -9,6 +9,8 @@ import { fundingEligibleAccounts, isFundingTicked } from "./setup-plan";
 import type { SetupDraft } from "./setup-types";
 
 interface FundingSectionProps {
+  /** The budget's currency: accounts in any other currency are not part of it. */
+  readonly currency: string;
   readonly accounts: readonly V2Account[];
   readonly draft: Pick<SetupDraft, "funding" | "openingCash">;
   readonly totalInvalid: boolean;
@@ -18,8 +20,8 @@ interface FundingSectionProps {
   readonly onTotal: (text: string) => void;
 }
 
-const unavailableNote = (account: V2Account): string | undefined => {
-  if (account.currency !== BUDGET_CURRENCY) return "AED budgets only for now";
+const unavailableNote = (account: V2Account, currency: string): string | undefined => {
+  if (account.currency !== currency) return "Not in this budget";
   if (account.type === "credit_card") {
     return "Card spending comes out of your envelopes, so cards are not counted as money you have.";
   }
@@ -28,6 +30,7 @@ const unavailableNote = (account: V2Account): string | undefined => {
 
 /** "Money you have right now": tick the accounts that hold it, or type one total when none can. */
 export function FundingSection({
+  currency,
   accounts,
   draft,
   totalInvalid,
@@ -36,7 +39,7 @@ export function FundingSection({
   onTotal,
 }: FundingSectionProps) {
   const shown = accounts.filter((account) => !account.archived);
-  const eligible = fundingEligibleAccounts(shown);
+  const eligible = fundingEligibleAccounts(shown, currency);
   const typeTotal = !loading && eligible.length === 0;
 
   return (
@@ -45,7 +48,7 @@ export function FundingSection({
       {shown.length > 0 ? (
         <ListGroup dividerInset={0}>
           {shown.map((account) => {
-            const note = unavailableNote(account);
+            const note = unavailableNote(account, currency);
             const ticked = !note && isFundingTicked(account, draft.funding);
             return (
               <ChoiceRow
@@ -75,7 +78,7 @@ export function FundingSection({
       {typeTotal ? (
         <TextField
           label="How much do you have right now?"
-          placeholder={`${BUDGET_CURRENCY} 0`}
+          placeholder={`${currency} 0`}
           keyboardType="decimal-pad"
           value={draft.openingCash}
           onChangeText={onTotal}

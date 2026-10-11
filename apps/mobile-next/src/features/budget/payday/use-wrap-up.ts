@@ -1,5 +1,7 @@
 import { useBudgetPeriodsQuery } from "@/data/ledger-queries";
+import { currencyFractionDigits } from "@/utils/money";
 
+import { useBudgetCurrency } from "../currency/use-budget-currency";
 import { historyStarts } from "../envelope/envelope-model";
 import type { ActiveBudgetView } from "../home/home-model";
 
@@ -31,6 +33,8 @@ export function useWrapUp(view: ActiveBudgetView): WrapUp {
   const starts = historyStarts(paydayRule, current.period.start, budget.activationPeriodStart);
   const recent = starts.slice(0, RAISE_PERIODS);
   const { periods, isLoading } = useBudgetPeriodsQuery(recent);
+  const currency = useBudgetCurrency();
+  const minorUnitsPerWhole = 10 ** currencyFractionDigits(currency);
 
   const [latest] = periods;
   if (recent.length === 0) return { status: "unavailable" };
@@ -45,6 +49,7 @@ export function useWrapUp(view: ActiveBudgetView): WrapUp {
     periodEnd: latest.period.end,
     firstMonth: latest.period.start === budget.activationPeriodStart,
     summary: wrapUpSummary(wrapUpEnvelopes(latest, envelopes)),
-    suggestion: complete.length === RAISE_PERIODS ? raiseSuggestion(complete) : null,
+    suggestion:
+      complete.length === RAISE_PERIODS ? raiseSuggestion(complete, minorUnitsPerWhole) : null,
   };
 }

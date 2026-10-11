@@ -1,9 +1,10 @@
 import { StyleSheet } from "react-native";
 
-import { BUDGET_CURRENCY, type V2EnvelopeGroup } from "@trove/api/v2/contracts";
+import { type V2EnvelopeGroup } from "@trove/api/v2/contracts";
 
 import { Button, Card, space, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
+
+import { useBudgetMoney } from "../currency/use-budget-currency";
 
 interface OverBannerProps {
   readonly overMinor: number;
@@ -16,7 +17,8 @@ interface OverBannerProps {
 
 /** O1: said in words, not only colour. Only Everyday overspend comes out of Safe to spend. */
 export function OverBanner({ overMinor, group, onCard, onCover }: OverBannerProps) {
-  const amount = formatMoneyMinor(overMinor, BUDGET_CURRENCY);
+  const money = useBudgetMoney();
+  const amount = money(overMinor);
   return (
     <Card style={styles.card}>
       <Text accessibilityRole="alert" tone="negative">

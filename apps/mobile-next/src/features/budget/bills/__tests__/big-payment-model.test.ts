@@ -65,7 +65,7 @@ describe("nextDueDate", () => {
 });
 
 describe("checkBigPayment", () => {
-  const context = { today: "2026-10-11", unassignedMinor: 500_000 };
+  const context = { currency: "AED", today: "2026-10-11", unassignedMinor: 500_000 };
   const draft = {
     name: " Rent cheque ",
     amountText: "12000",
@@ -117,7 +117,7 @@ describe("checkBigPayment", () => {
 });
 
 describe("checkPayment", () => {
-  const period = { start: "2026-10-25", today: "2026-11-02" };
+  const period = { currency: "AED", start: "2026-10-25", today: "2026-11-02" };
   const draft = { amountText: "12000", accountId: "bank", date: "2026-11-02" };
 
   it("pays today or earlier in this period", () => {

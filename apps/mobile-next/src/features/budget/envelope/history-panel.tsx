@@ -1,10 +1,9 @@
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { useBudgetPeriodsQuery } from "@/data/ledger-queries";
 import { Amount, Button, ListGroup, ListRow, space, Text } from "@/ui/trove";
 
+import { useBudgetCurrency } from "../currency/use-budget-currency";
 import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
 
 import { historyStarts, periodLabel } from "./envelope-model";
@@ -18,6 +17,7 @@ interface HistoryPanelProps {
 
 /** Planned, spent, and left in this envelope for each earlier period. */
 export function HistoryPanel({ view, line, onBack }: HistoryPanelProps) {
+  const currency = useBudgetCurrency();
   const starts = historyStarts(
     view.paydayRule,
     view.current.period.start,
@@ -60,17 +60,17 @@ export function HistoryPanel({ view, line, onBack }: HistoryPanelProps) {
           <ListGroup key={period.start} dividerInset={0} header={periodLabel(period)}>
             <ListRow
               title="Planned"
-              trailing={<Amount currency={BUDGET_CURRENCY} minor={totals.plannedMinor} />}
+              trailing={<Amount currency={currency} minor={totals.plannedMinor} />}
             />
             <ListRow
               title="Spent"
-              trailing={<Amount currency={BUDGET_CURRENCY} minor={totals.spentMinor} />}
+              trailing={<Amount currency={currency} minor={totals.spentMinor} />}
             />
             <ListRow
               title={totals.leftMinor < 0 ? "Over by" : "Left"}
               trailing={
                 <Amount
-                  currency={BUDGET_CURRENCY}
+                  currency={currency}
                   minor={Math.abs(totals.leftMinor)}
                   tone={totals.leftMinor < 0 ? "negative" : "primary"}
                 />

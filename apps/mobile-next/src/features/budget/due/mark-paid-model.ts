@@ -1,5 +1,4 @@
 import {
-  BUDGET_CURRENCY,
   type V2Account,
   type V2DueOccurrence,
   type V2RecurringPayInput,
@@ -10,10 +9,11 @@ import { ApiError } from "@/data/http";
 import { parseMoneyMinor } from "@/utils/money";
 
 import { paidWithAccounts } from "../quick-add/quick-add-model";
+import { currencyErrorMessage } from "../currency/currency-errors";
 import { roleErrorMessage } from "../role/budget-role";
 
 /**
- * Where an AED bill can be paid from: the budget's funding accounts and credit cards, the accounts
+ * Where a bill in the budget's currency can be paid from: the budget's funding accounts and credit cards, the accounts
  * whose spending the budget counts. A bill in another currency is outside the budget, so any
  * active account in its currency.
  */
@@ -21,11 +21,12 @@ export function markPaidAccounts(
   accounts: readonly V2Account[],
   item: Pick<V2DueOccurrence, "currency">,
   fundingAccountIds: readonly string[],
+  budgetCurrency: string,
 ): V2Account[] {
-  if (item.currency !== BUDGET_CURRENCY) {
+  if (item.currency !== budgetCurrency) {
     return accounts.filter((account) => !account.archived && account.currency === item.currency);
   }
-  const { funding, cards } = paidWithAccounts(accounts, fundingAccountIds);
+  const { funding, cards } = paidWithAccounts(accounts, fundingAccountIds, budgetCurrency);
   return [...funding, ...cards];
 }
 
@@ -68,7 +69,7 @@ export function checkMarkPaid(item: V2DueOccurrence, draft: MarkPaidDraft): Mark
 
 /** What went wrong and that nothing was recorded, for Mark paid and Skip. */
 export function occurrenceErrorMessage(cause: unknown, action: "pay" | "skip"): string {
-  const refused = roleErrorMessage(cause);
+  const refused = roleErrorMessage(cause) ?? currencyErrorMessage(cause);
   if (refused) return refused;
   if (cause instanceof ApiError) {
     if (cause.code === "network_error") return "You're offline. Nothing was recorded.";

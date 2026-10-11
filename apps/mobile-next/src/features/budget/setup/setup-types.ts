@@ -14,6 +14,8 @@ export interface CustomItem {
  */
 export interface SetupDraft {
   readonly step: SetupStep;
+  /** The first budget's currency when the person picked one; `null` keeps the suggested default. */
+  readonly currency: string | null;
   readonly payday: V2PaydayRule | null;
   readonly usualSalary: string;
   readonly paydayReminder: boolean;

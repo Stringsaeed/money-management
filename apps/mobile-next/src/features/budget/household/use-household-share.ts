@@ -1,8 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
+import type { V2BudgetView } from "@trove/api/v2/contracts";
+
+import { budgetOperation } from "@/data/budget-currency";
 import { ledgerClient } from "@/data/ledger-client";
-import { budgetKey, useLedgerData } from "@/data/ledger-queries";
+import { ApiError } from "@/data/http";
+import { budgetKey, useLedgerData, useSelectedBudget } from "@/data/ledger-queries";
 import { createRequestKeyRunner } from "@/data/request-keys";
 import { showToast } from "@/ui/trove";
 
@@ -17,36 +21,61 @@ const PERSONAL = { kind: "personal" } as const;
 /** Declined this launch. Not stored: the card comes back next time, which is what opt-in means. */
 const declined = new Set<string>();
 
-/**
- * The opt-in "Household share" Bills envelope in the caller's own Personal budget. Offered only
- * while the Personal budget exists and lacks one; with no Personal budget there is nothing to offer.
- * Reads and writes the Personal ledger directly and leaves the household data alone.
- */
-export function useHouseholdShare() {
-  const { identityKey, queryClient, scope } = useLedgerData();
-  const personalKey = [...budgetKey(identityKey, PERSONAL), "view"] as const;
+const NO_PERSONAL_BUDGET: V2BudgetView = { budget: null };
+
+/** The Personal budget in `currency`, or none when the person has not started one in it. */
+async function readPersonalBudget(currency: string): Promise<V2BudgetView> {
+  try {
+    return await ledgerClient.budget.get(PERSONAL, currency);
+  } catch (cause) {
+    if (cause instanceof ApiError && cause.status === 404) return NO_PERSONAL_BUDGET;
+    throw cause;
+  }
+}
+
+/** The caller's Personal budget in `currency`, read only while a household budget is on screen. */
+function usePersonalBudget(currency: string | null): ActiveBudgetView | null {
+  const { identityKey, scope } = useLedgerData();
   const personal = useQuery({
-    queryKey: personalKey,
-    queryFn: () => ledgerClient.budget.get(PERSONAL),
-    enabled: scope.kind === "household",
+    queryKey: [...budgetKey(identityKey, PERSONAL), "view", currency],
+    queryFn: () => readPersonalBudget(currency ?? ""),
+    enabled: scope.kind === "household" && currency !== null,
     staleTime: 15_000,
     retry: 1,
   });
+  return personal.data?.budget ? personal.data : null;
+}
+
+/**
+ * The opt-in "Household share" Bills envelope in the caller's own Personal budget. Offered only
+ * while the Personal budget exists and lacks one; with no Personal budget there is nothing to offer.
+ * Reads and writes the Personal ledger directly and leaves the household data alone. The share
+ * goes in the Personal budget of the household budget's currency.
+ */
+export function useHouseholdShare() {
+  const { identityKey, queryClient } = useLedgerData();
+  const { currency } = useSelectedBudget();
+  const view = usePersonalBudget(currency);
   const [runWithRequestKey] = useState(createRequestKeyRunner);
   const write = useEnvelopeWrite(writeErrorMessage);
   const [amountText, setAmountText] = useState("");
   const [hidden, setHidden] = useState(() => declined.has(identityKey));
 
-  const view: ActiveBudgetView | null = personal.data?.budget ? personal.data : null;
-  const check = view ? checkShare(amountText, view.current.unassignedMinor) : null;
+  const check =
+    view && currency !== null
+      ? checkShare(amountText, currency, view.current.unassignedMinor)
+      : null;
   const offered = !hidden && view !== null && lacksShareEnvelope(view);
 
   const add = async () => {
-    if (!check?.ok) return;
+    if (!check?.ok || currency === null) return;
     const { input } = check;
     const ok = await write.run(async () => {
-      await runWithRequestKey("household-share", JSON.stringify(input), (requestKey) =>
-        ledgerClient.budget.createEnvelope(PERSONAL, input, { requestKey }),
+      await runWithRequestKey(
+        budgetOperation("household-share", currency),
+        JSON.stringify(input),
+        (requestKey) =>
+          ledgerClient.budget.createEnvelope(PERSONAL, currency, input, { requestKey }),
       );
       await queryClient.invalidateQueries({ queryKey: budgetKey(identityKey, PERSONAL) });
     });

@@ -1,10 +1,9 @@
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { Amount, ListGroup, ListRow, space, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
+import { currencyFractionDigits } from "@/utils/money";
 
+import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
 import type { EnvelopeLine } from "../home/home-model";
 
 import { paceMinor } from "./envelope-model";
@@ -14,12 +13,12 @@ interface EnvelopeSummaryProps {
   readonly daysLeft: number;
 }
 
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
-
 /** M4 top: Left, the plan it came from, the daily pace, and the three numbers behind it. */
 export function EnvelopeSummary({ line, daysLeft }: EnvelopeSummaryProps) {
+  const money = useBudgetMoney();
+  const currency = useBudgetCurrency();
   const { totals } = line;
-  const pace = paceMinor(totals.leftMinor, daysLeft);
+  const pace = paceMinor(totals.leftMinor, daysLeft, 10 ** currencyFractionDigits(currency));
   const days = `${daysLeft} ${daysLeft === 1 ? "day" : "days"} to go`;
   const rows = [
     ["Planned", totals.plannedMinor],
@@ -37,7 +36,7 @@ export function EnvelopeSummary({ line, daysLeft }: EnvelopeSummaryProps) {
           Left
         </Text>
         <Amount
-          currency={BUDGET_CURRENCY}
+          currency={currency}
           minor={totals.leftMinor}
           size="hero"
           tone={totals.leftMinor < 0 ? "negative" : "primary"}
@@ -56,7 +55,7 @@ export function EnvelopeSummary({ line, daysLeft }: EnvelopeSummaryProps) {
           <ListRow
             key={label}
             title={label}
-            trailing={<Amount currency={BUDGET_CURRENCY} minor={minor} />}
+            trailing={<Amount currency={currency} minor={minor} />}
           />
         ))}
       </ListGroup>

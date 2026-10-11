@@ -12,16 +12,15 @@ import { periodContaining } from "@trove/domain/budget";
 
 import { ApiError } from "@/data/http";
 
+import { currencyErrorMessage } from "../currency/currency-errors";
 import { roleErrorMessage } from "../role/budget-role";
 
 import type { ActiveBudgetView } from "../home/home-model";
 
-const WHOLE_UNIT_MINOR = 100;
-
-/** "about AED 47.00 a day": what is left spread over the days to go, floored to whole AED. */
-export function paceMinor(leftMinor: number, daysLeft: number): number {
+/** "about AED 47.00 a day": what is left spread over the days to go, floored to whole units. */
+export function paceMinor(leftMinor: number, daysLeft: number, minorUnitsPerWhole: number): number {
   if (leftMinor <= 0 || daysLeft <= 0) return 0;
-  return Math.floor(leftMinor / daysLeft / WHOLE_UNIT_MINOR) * WHOLE_UNIT_MINOR;
+  return Math.floor(leftMinor / daysLeft / minorUnitsPerWhole) * minorUnitsPerWhole;
 }
 
 export type PlanChange =
@@ -127,7 +126,7 @@ export function categoryChoices(
 
 /** Plain-language failure copy for envelope writes. Nothing changed when one of these shows. */
 export function writeErrorMessage(cause: unknown): string {
-  const refused = roleErrorMessage(cause);
+  const refused = roleErrorMessage(cause) ?? currencyErrorMessage(cause);
   if (refused) return refused;
   if (cause instanceof ApiError) {
     switch (cause.code) {

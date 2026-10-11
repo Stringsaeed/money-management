@@ -1,9 +1,8 @@
 import { StyleSheet } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { AmountInput, Button, Card, space, Text } from "@/ui/trove";
 
+import { useBudgetCurrency } from "../currency/use-budget-currency";
 import { PanelError } from "../envelope/panel-error";
 
 import { HOUSEHOLD_SHARE_NAME } from "./share-model";
@@ -12,6 +11,7 @@ import { useHouseholdShare } from "./use-household-share";
 /** H2, after the household budget exists: offer your share as a Bill in your Personal budget. */
 export function HouseholdSharePrompt() {
   const share = useHouseholdShare();
+  const currency = useBudgetCurrency();
   if (!share.offered) return null;
   return (
     <Card style={styles.card}>
@@ -21,7 +21,7 @@ export function HouseholdSharePrompt() {
         budget stays separate.
       </Text>
       <AmountInput
-        currency={BUDGET_CURRENCY}
+        currency={currency}
         label="Your monthly share"
         value={share.amountText}
         onChangeText={share.setAmountText}

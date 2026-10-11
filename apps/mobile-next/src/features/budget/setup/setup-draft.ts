@@ -6,6 +6,7 @@ import type { SetupDraft } from "./setup-types";
 
 export const emptySetupDraft = (): SetupDraft => ({
   step: "payday",
+  currency: null,
   payday: null,
   usualSalary: "",
   paydayReminder: true,
@@ -19,6 +20,7 @@ export const emptySetupDraft = (): SetupDraft => ({
 
 const draftSchema = z.object({
   step: z.enum(["payday", "items", "amounts", "review"]),
+  currency: z.string().nullable().default(null),
   payday: paydayRuleSchema.nullable(),
   usualSalary: z.string(),
   paydayReminder: z.boolean(),

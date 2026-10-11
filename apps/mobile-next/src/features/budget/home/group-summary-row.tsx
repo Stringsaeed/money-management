@@ -1,8 +1,6 @@
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { ListRow } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetMoney } from "../currency/use-budget-currency";
 import type { GroupSummary } from "./home-model";
 
 interface GroupSummaryRowProps {
@@ -22,11 +20,10 @@ export function GroupSummaryRow({
   summary,
   onPress,
 }: GroupSummaryRowProps) {
+  const money = useBudgetMoney();
   const count = `${summary.count} ${summary.count === 1 ? noun.one : noun.many}`;
   const detail =
-    summary.count === 0
-      ? "None yet"
-      : `${count} · ${formatMoneyMinor(summary.leftMinor, BUDGET_CURRENCY)} ${leftLabel}`;
+    summary.count === 0 ? "None yet" : `${count} · ${money(summary.leftMinor)} ${leftLabel}`;
   return (
     <ListRow
       accessibilityLabel={`${title}, ${detail}`}

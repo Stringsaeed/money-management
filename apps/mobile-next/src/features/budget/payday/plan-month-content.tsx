@@ -1,12 +1,10 @@
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { track } from "@/features/analytics";
 import { Amount, Button, showToast, space, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
 import { PanelError } from "../envelope/panel-error";
 import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
 import { PLAN_ADMIN_ONLY } from "../role/budget-role";
@@ -17,13 +15,13 @@ import { PlanGroups } from "./plan-groups";
 import { pluralEnvelopes, RepeatCard } from "./repeat-card";
 import { usePlanMonth } from "./use-plan-month";
 
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
-
 /**
  * C3: plan the new month with the money you have; Repeat last month's plan is one atomic batch.
  * Repeat sets plan amounts, so only someone who can edit the plan sees it.
  */
 export function PlanMonthContent({ view }: { readonly view: ActiveBudgetView }) {
+  const money = useBudgetMoney();
+  const currency = useBudgetCurrency();
   const month = usePlanMonth(view);
   const { plan, lastMonth, repeatAccess } = month;
   const { unassignedMinor } = view.current;
@@ -71,7 +69,7 @@ export function PlanMonthContent({ view }: { readonly view: ActiveBudgetView }) 
           Money to plan
         </Text>
         <Amount
-          currency={BUDGET_CURRENCY}
+          currency={currency}
           minor={unassignedMinor}
           size="hero"
           tone={unassignedMinor < 0 ? "negative" : "primary"}

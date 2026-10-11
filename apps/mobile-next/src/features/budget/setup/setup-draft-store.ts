@@ -18,9 +18,15 @@ const emit = () => {
   for (const listener of listeners) listener();
 };
 
-/** Letters, digits, ".", "-" and "_": valid as a SecureStore key and as a file name. */
-export const draftStorageKey = (scopeId: string): string =>
-  `trove-next.budget-setup-draft.${scopeId.replace(/[^A-Za-z0-9._-]/g, "_")}`;
+/**
+ * Letters, digits, ".", "-" and "_": valid as a SecureStore key and as a file name. The first
+ * budget's draft has no currency in its key (it picks one); each additional budget's is keyed
+ * by the currency being set up, so two setups never share a draft.
+ */
+export const draftStorageKey = (scopeId: string, currency: string | null = null): string =>
+  `trove-next.budget-setup-draft.${scopeId.replace(/[^A-Za-z0-9._-]/g, "_")}${
+    currency === null ? "" : `.${currency.replace(/[^A-Za-z0-9._-]/g, "_")}`
+  }`;
 
 /**
  * The draft lives in a file in the app's document directory. It used to be in SecureStore, which

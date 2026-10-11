@@ -1,10 +1,10 @@
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY, type V2Account } from "@trove/api/v2/contracts";
+import { type V2Account } from "@trove/api/v2/contracts";
 
 import { AmountInput, Button, Chip, space, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
 import { PanelError } from "../envelope/panel-error";
 import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
 import { ChipRow } from "../quick-add/chip-row";
@@ -21,10 +21,10 @@ interface MarkPaidFormProps {
   readonly onCancel: () => void;
 }
 
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
-
 /** B3: record that a big payment was made, from which account and on what day. */
 export function MarkPaidForm({ view, line, accounts, onPaid, onCancel }: MarkPaidFormProps) {
+  const currency = useBudgetCurrency();
+  const money = useBudgetMoney();
   const form = useMarkPaidForm({ view, line, accounts, onPaid });
   const { envelope, totals } = line;
   const after = afterPaymentLine(totals.leftMinor, form.amountMinor, money);
@@ -35,14 +35,14 @@ export function MarkPaidForm({ view, line, accounts, onPaid, onCancel }: MarkPai
         {`Mark ${envelope.name} paid`}
       </Text>
       <AmountInput
-        currency={BUDGET_CURRENCY}
+        currency={currency}
         label="Amount"
         value={form.amountText}
         onChangeText={form.setAmountText}
       />
       {form.funding.length === 0 ? (
         <Text tone="warning" variant="bodySm">
-          No AED account is in your budget, so there is nothing to pay from.
+          {`No ${currency} account is in your budget, so there is nothing to pay from.`}
         </Text>
       ) : (
         <ChipRow label="Paid from">
