@@ -1,5 +1,5 @@
-import { addDays, addMonths, formatISO } from "date-fns";
-import { and, asc, eq, inArray, ne, or, sql } from "drizzle-orm";
+import { addMonths } from "date-fns";
+import { and, asc, eq, ne, or } from "drizzle-orm";
 
 import {
   settleRule,
@@ -22,13 +22,8 @@ import {
 
 import {
   recurringCreateSchema,
-  recurringPaySchema,
   recurringUpdateSchema,
   type V2AttentionReason,
-  type V2DueList,
-  type V2DueOccurrence,
-  type V2RecordedOccurrence,
-  type V2RecurringPayInput,
   type V2RecurringCreateInput,
   type V2RecurringUpdateInput,
   type V2RecurringRule,
@@ -90,7 +85,7 @@ async function findRule(db: V2DbExecutor, ledgerId: string, id: string): Promise
   return rows[0] ?? null;
 }
 
-async function validateRuleDependencies(
+export async function validateRuleDependencies(
   db: V2DbExecutor,
   ledgerId: string,
   rule: {
@@ -207,7 +202,7 @@ async function validateRecurringCategory(
     );
 }
 
-function settleableRule(row: RuleRow): SettleableRule {
+export function settleableRule(row: RuleRow): SettleableRule {
   return {
     id: row.id,
     name: row.name,
@@ -536,7 +531,7 @@ class V2RecurringStore implements SettlementStore {
  * update. `commit.settledDates[i]` is the scheduled date `commit.generated[i]` settles;
  * the transaction date can differ when Mark paid confirms another date.
  */
-async function applySettlementCommit(
+export async function applySettlementCommit(
   tx: V2TransactionDatabase,
   ledgerId: string,
   actorId: string,
@@ -657,259 +652,4 @@ export async function settleV2DueRules(
     generatedCount: results.reduce((total, result) => total + result.generatedCount, 0),
     rules: results,
   };
-}
-
-/** Most pending reminders one Due read returns; the rest are reported as `truncated`. */
-export const DUE_LIST_LIMIT = 200;
-/** Furthest a Due read looks ahead of the clock. */
-export const DUE_HORIZON_DAYS = 366;
-
-/**
- * Pending occurrences of active `remind` rules, from each rule's earliest unpaid and
- * unskipped date through `through`, so an overdue item stays until it is paid or skipped.
- */
-export async function listDue(
-  context: V2LedgerContext,
-  through: string,
-  now = new Date(),
-): Promise<V2DueList> {
-  if (through > formatISO(addDays(now, DUE_HORIZON_DAYS), { representation: "date" })) {
-    throw new V2ApiError(
-      422,
-      "due_horizon_exceeded",
-      `through must be within ${DUE_HORIZON_DAYS} days of today.`,
-    );
-  }
-  const rules = await context.db
-    .select()
-    .from(v2RecurringRule)
-    .where(
-      and(
-        eq(v2RecurringRule.ledgerId, context.ledgerId),
-        eq(v2RecurringRule.lifecycle, "active"),
-        eq(v2RecurringRule.mode, "remind"),
-      ),
-    );
-  if (rules.length === 0) return { items: [], truncated: false };
-  const recorded = await context.db
-    .select({
-      ruleId: v2RecurringOccurrence.ruleId,
-      scheduledDate: v2RecurringOccurrence.scheduledDate,
-    })
-    .from(v2RecurringOccurrence)
-    .where(
-      and(
-        eq(v2RecurringOccurrence.ledgerId, context.ledgerId),
-        inArray(
-          v2RecurringOccurrence.ruleId,
-          rules.map((rule) => rule.id),
-        ),
-      ),
-    );
-  const items: V2DueOccurrence[] = rules.flatMap((rule) => {
-    const today = localDateInTimeZone(now, rule.timeZone);
-    const recordedDates = recorded
-      .filter((occurrence) => occurrence.ruleId === rule.id)
-      .map((occurrence) => occurrence.scheduledDate);
-    return pendingDatesFrom(settleableRule(rule), through, recordedDates).map((date) => ({
-      ruleId: rule.id,
-      name: rule.name,
-      scheduledDate: date,
-      amountMinor: safeMinor(rule.amountMinor, "Recurring amount"),
-      currency: rule.currency,
-      accountId: rule.accountId,
-      categoryId: rule.categoryId,
-      kind: rule.kind,
-      overdue: date < today,
-    }));
-  });
-  items.sort(
-    (left, right) =>
-      left.scheduledDate.localeCompare(right.scheduledDate) ||
-      left.name.localeCompare(right.name) ||
-      left.ruleId.localeCompare(right.ruleId),
-  );
-  return { items: items.slice(0, DUE_LIST_LIMIT), truncated: items.length > DUE_LIST_LIMIT };
-}
-
-/**
- * Mark paid: settles one pending occurrence of a `remind` rule through the settlement
- * commit, as one Generated Transaction with the confirmed amount, account, and date.
- * Overrides apply to this occurrence only; the rule keeps its amount and account.
- */
-export async function payOccurrence(
-  context: V2LedgerContext,
-  ruleId: string,
-  scheduledDate: string,
-  input: V2RecurringPayInput,
-  idempotencyKey?: string,
-): Promise<V2RecordedOccurrence> {
-  const parsed = recurringPaySchema.parse(input);
-  return withLedgerMutation(context, "recurring.pay", idempotencyKey, async (db) => {
-    const { rule, recordedDates } = await pendingReminder(
-      db,
-      context.ledgerId,
-      ruleId,
-      scheduledDate,
-    );
-    const accountId = parsed.accountId ?? rule.accountId;
-    if (accountId === rule.toAccountId) {
-      throw new V2ApiError(
-        422,
-        "transfer_same_account",
-        "Pay a transfer from an Account other than its destination.",
-      );
-    }
-    await validateRuleDependencies(db, context.ledgerId, { ...rule, accountId });
-    const transactionId = crypto.randomUUID();
-    const now = new Date();
-    await applySettlementCommit(db, context.ledgerId, context.ownerId, {
-      ruleId: rule.id,
-      expectedRevision: rule.revision,
-      nextRevision: rule.revision + 1,
-      ...lifecycleAfterRecording(rule, [...recordedDates, scheduledDate]),
-      health: "ready",
-      attentionReasonsJson: null,
-      generated: [
-        {
-          transactionId,
-          type: rule.kind,
-          amountMinor: parsed.amountMinor ?? safeMinor(rule.amountMinor, "Recurring amount"),
-          currency: rule.currency,
-          date: parsed.date ?? scheduledDate,
-          accountId,
-          toAccountId: rule.toAccountId,
-          categoryId: rule.categoryId,
-          description: rule.note || rule.name,
-        },
-      ],
-      settledDates: [scheduledDate],
-      now: now.toISOString(),
-    });
-    return { ruleId: rule.id, scheduledDate, status: "settled", transactionId };
-  });
-}
-
-/** Skip this time: records the occurrence as skipped and posts no transaction. */
-export async function skipOccurrence(
-  context: V2LedgerContext,
-  ruleId: string,
-  scheduledDate: string,
-  idempotencyKey?: string,
-): Promise<V2RecordedOccurrence> {
-  return withLedgerMutation(context, "recurring.skip", idempotencyKey, async (db) => {
-    const { rule, recordedDates } = await pendingReminder(
-      db,
-      context.ledgerId,
-      ruleId,
-      scheduledDate,
-    );
-    const now = new Date();
-    await db.insert(v2RecurringOccurrence).values({
-      id: crypto.randomUUID(),
-      ledgerId: context.ledgerId,
-      ruleId: rule.id,
-      scheduledDate,
-      status: "skipped",
-      transactionId: null,
-      settledAt: now,
-    });
-    await db
-      .update(v2RecurringRule)
-      .set({
-        lifecycle: lifecycleAfterRecording(rule, [...recordedDates, scheduledDate]).lifecycle,
-        revision: rule.revision + 1,
-        updatedBy: context.ownerId,
-        updatedAt: now,
-      })
-      .where(and(eq(v2RecurringRule.ledgerId, context.ledgerId), eq(v2RecurringRule.id, rule.id)));
-    return { ruleId: rule.id, scheduledDate, status: "skipped", transactionId: null };
-  });
-}
-
-/** The active `remind` rule and its recorded dates, when `scheduledDate` is still pending. */
-async function pendingReminder(
-  db: V2TransactionDatabase,
-  ledgerId: string,
-  ruleId: string,
-  scheduledDate: string,
-): Promise<{ readonly rule: RuleRow; readonly recordedDates: readonly string[] }> {
-  const rule = await findRule(db, ledgerId, ruleId);
-  if (!rule) throw new V2ApiError(404, "recurring_rule_not_found", "Recurring Rule not found.");
-  if (rule.mode !== "remind") {
-    throw new V2ApiError(
-      409,
-      "recurring_rule_auto_posts",
-      "This Recurring Rule posts on its own. Switch it to reminders to mark it paid or skip it.",
-    );
-  }
-  if (rule.lifecycle !== "active") {
-    throw new V2ApiError(409, "recurring_rule_inactive", "This Recurring Rule is not active.");
-  }
-  const recorded = await db
-    .select({
-      scheduledDate: v2RecurringOccurrence.scheduledDate,
-      status: v2RecurringOccurrence.status,
-    })
-    .from(v2RecurringOccurrence)
-    .where(
-      and(eq(v2RecurringOccurrence.ledgerId, ledgerId), eq(v2RecurringOccurrence.ruleId, ruleId)),
-    );
-  const existing = recorded.find((occurrence) => occurrence.scheduledDate === scheduledDate);
-  if (existing?.status === "settled") {
-    throw new V2ApiError(409, "occurrence_already_paid", "This bill is already marked paid.");
-  }
-  if (existing?.status === "skipped") {
-    throw new V2ApiError(409, "occurrence_already_skipped", "This bill was already skipped.");
-  }
-  const recordedDates = recorded.map((occurrence) => occurrence.scheduledDate);
-  if (
-    !pendingDatesFrom(settleableRule(rule), scheduledDate, recordedDates).includes(scheduledDate)
-  ) {
-    throw new V2ApiError(
-      422,
-      "occurrence_not_scheduled",
-      "This Recurring Rule has no pending occurrence on that date.",
-    );
-  }
-  return { rule, recordedDates };
-}
-
-/** A rule completes once it has no scheduled date left to pay or skip. */
-function lifecycleAfterRecording(rule: RuleRow, recordedDates: readonly string[]) {
-  const exhausted =
-    (rule.endCount !== null && recordedDates.length >= rule.endCount) ||
-    (rule.endDate !== null &&
-      pendingDatesFrom(settleableRule(rule), rule.endDate, recordedDates).length === 0);
-  const lifecycle = exhausted ? "completed" : rule.lifecycle;
-  return { lifecycle, lifecycleChanged: lifecycle !== rule.lifecycle };
-}
-
-/**
- * Budget activation (#372 decision): active expense rules whose Category maps to a Bills
- * envelope stop auto-posting and become reminders. Runs inside the activation transaction.
- */
-export async function remindBillRules(
-  db: V2TransactionDatabase,
-  context: V2LedgerContext,
-  billCategoryIds: readonly string[],
-): Promise<void> {
-  if (billCategoryIds.length === 0) return;
-  await db
-    .update(v2RecurringRule)
-    .set({
-      mode: "remind",
-      revision: sql`${v2RecurringRule.revision} + 1`,
-      updatedBy: context.ownerId,
-      updatedAt: new Date(),
-    })
-    .where(
-      and(
-        eq(v2RecurringRule.ledgerId, context.ledgerId),
-        eq(v2RecurringRule.kind, "expense"),
-        eq(v2RecurringRule.lifecycle, "active"),
-        eq(v2RecurringRule.mode, "auto_post"),
-        inArray(v2RecurringRule.categoryId, [...billCategoryIds]),
-      ),
-    );
 }

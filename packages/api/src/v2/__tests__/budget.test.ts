@@ -27,7 +27,7 @@ import type {
   V2Principal,
   V2TransactionCreateInput,
 } from "../contracts";
-import { budgetToday } from "../budget";
+import { budgetToday } from "../budget-services";
 import { claimGuestLedger } from "../guest-claim";
 import { createV2LedgerRoutes } from "../ledger-routes";
 import { V2ApiError } from "../shared";

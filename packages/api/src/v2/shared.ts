@@ -209,22 +209,6 @@ export async function assertPrincipalActive(
   }
 }
 
-/**
- * Budget plan changes (activate, payday, funding, envelope create/edit) belong
- * to household admins (#365 decision 8). Members still move, cover, and pay;
- * viewers are already refused every write when the household is authorized.
- * Personal ledgers have no roles.
- */
-export function requireBudgetPlanAccess(context: V2LedgerContext): void {
-  if (context.scope.kind === "household" && context.householdRole !== "admin") {
-    throw new V2ApiError(
-      403,
-      "budget_role_forbidden",
-      "Only a household admin can change the budget plan. You can still add spending, move money, and mark bills paid.",
-    );
-  }
-}
-
 export function requireExpectedVersion(
   expectedVersion: number | undefined,
   actualVersion: number,

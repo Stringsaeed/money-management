@@ -1,4 +1,5 @@
-import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
+import { Effect } from "effect";
+import type { z } from "zod";
 
 import {
   nextPeriodStart,
@@ -7,34 +8,31 @@ import {
   type PaydayChange,
   type PaydayRule,
 } from "@trove/domain/budget";
-import {
-  v2Assignment,
-  v2Budget,
-  v2BudgetFundingAccount,
-  v2BudgetPayday,
-  v2Envelope,
-  v2EnvelopeCategory,
-} from "@trove/db/schema/v2-budget";
-import { v2Account, v2Category } from "@trove/db/schema/v2-ledger";
 
-import { budgetView, findBudget, loadBudget } from "./budget";
-import { remindBillRules } from "./recurring";
+import { budgetView, loadBudget, requireBudget } from "./budget";
+import { resolveCategories } from "./budget-categories";
 import {
-  BUDGET_CURRENCY,
-  budgetActivateSchema,
-  budgetUpdateSchema,
-  type V2BudgetActivateInput,
-  type V2BudgetUpdateInput,
-  type V2BudgetView,
-} from "./contracts";
+  BudgetAlreadyActive,
+  BudgetDefaultAccountInvalid,
+  BudgetFundingInvalid,
+  BudgetNotSaved,
+  BudgetOverplanned,
+} from "./budget-errors";
+import { LedgerFacts } from "./budget-ledger-facts";
+import { inLedgerMutation } from "./budget-mutation";
 import {
-  requireBudgetPlanAccess,
-  requireExpectedVersion,
-  V2ApiError,
-  withLedgerMutation,
-  type V2LedgerContext,
-  type V2TransactionDatabase,
-} from "./shared";
+  BudgetClock,
+  BudgetLedger,
+  budgetActor,
+  checkVersion,
+  requirePlanAccess,
+} from "./budget-services";
+import { BudgetStore, paydayColumns } from "./budget-store";
+import { BUDGET_CURRENCY, type budgetActivateSchema, type budgetUpdateSchema } from "./contracts";
+import { ReminderStore } from "./recurring-reminder-store";
+
+export type BudgetActivation = z.output<typeof budgetActivateSchema>;
+export type BudgetUpdate = z.output<typeof budgetUpdateSchema>;
 
 const MY_MONEY_ACCOUNT_NAME = "My money";
 
@@ -42,89 +40,74 @@ const MY_MONEY_ACCOUNT_NAME = "My money";
  * Activates the ledger's budget in one transaction (#367 S5): funding,
  * categories, envelopes, 1:1 mappings, payday history, and plan assignments.
  * The overplan guard projects the would-be state inside the same transaction
- * and throws (rolling everything back) when Not planned yet would go negative.
+ * and fails (rolling everything back) when Not planned yet would go negative.
  */
-export async function activateBudget(
-  context: V2LedgerContext,
-  input: V2BudgetActivateInput,
-  today: string,
-  idempotencyKey?: string,
-): Promise<V2BudgetView> {
-  const parsed = budgetActivateSchema.parse(input);
-  requireBudgetPlanAccess(context);
-  return withLedgerMutation(context, "budget.activate", idempotencyKey, async (db) => {
-    if (await findBudget(db, context.ledgerId)) {
-      throw new V2ApiError(409, "budget_already_active", "This ledger already has a budget.");
-    }
-    const actor = budgetActor(context);
-    const period = periodContaining(parsed.paydayRule, today);
+export const activateBudget = Effect.fn("activateBudget")(function* (
+  input: BudgetActivation,
+  idempotencyKey: string | undefined,
+) {
+  yield* requirePlanAccess;
+  return yield* inLedgerMutation("budget.activate", idempotencyKey, writeActivation(input));
+});
 
-    const fundingAccountIds = parsed.fundingAccountIds ?? [
-      await createMyMoneyAccount(db, context, parsed.openingCashMinor),
-    ];
-    if (parsed.fundingAccountIds)
-      await assertFundingAccounts(db, context.ledgerId, fundingAccountIds);
+const writeActivation = Effect.fn("writeActivation")(function* (input: BudgetActivation) {
+  const store = yield* BudgetStore;
+  const { ledgerId } = yield* BudgetLedger;
+  const { today } = yield* BudgetClock;
+  if (yield* store.findBudget) return yield* new BudgetAlreadyActive();
+  const actor = yield* budgetActor;
+  const period = periodContaining(input.paydayRule, today);
+  const fundingAccountIds = yield* fundingAccounts(input);
+  const categoryIds = yield* resolveCategories(input.envelopes);
 
-    const categoryIds = await resolveCategories(db, context, parsed.envelopes);
-
-    const budgetId = crypto.randomUUID();
-    await db.insert(v2Budget).values({
-      ledgerId: context.ledgerId,
+  const budgetId = crypto.randomUUID();
+  const envelopes = input.envelopes.map((envelope, index) => ({
+    input: envelope,
+    id: crypto.randomUUID(),
+    categoryId: categoryIds[index],
+  }));
+  yield* store.insertPlan({
+    budget: {
+      ledgerId,
       id: budgetId,
       currency: BUDGET_CURRENCY,
       activationPeriodStart: period.start,
-      usualSalaryMinor: parsed.usualSalaryMinor ?? null,
-      paydayReminder: parsed.paydayReminder,
-      defaultAccountId: parsed.defaultAccountId ?? fundingAccountIds[0],
+      usualSalaryMinor: input.usualSalaryMinor ?? null,
+      paydayReminder: input.paydayReminder,
+      defaultAccountId: input.defaultAccountId ?? fundingAccountIds[0],
       createdBy: actor,
       updatedBy: actor,
-    });
-    await db.insert(v2BudgetPayday).values({
-      ledgerId: context.ledgerId,
+    },
+    payday: {
+      ledgerId,
       budgetId,
       effectiveFrom: period.start,
-      ...paydayColumns(parsed.paydayRule),
+      ...paydayColumns(input.paydayRule),
       createdBy: actor,
-    });
-    await db
-      .insert(v2BudgetFundingAccount)
-      .values(
-        fundingAccountIds.map((accountId) => ({ ledgerId: context.ledgerId, budgetId, accountId })),
-      );
-
-    const envelopes = parsed.envelopes.map((envelope, index) => ({
-      input: envelope,
-      id: crypto.randomUUID(),
-      categoryId: categoryIds[index],
-      sortOrder: index,
-    }));
-    await db.insert(v2Envelope).values(
-      envelopes.map(({ input: envelope, id, sortOrder }) => ({
-        ledgerId: context.ledgerId,
-        id,
-        budgetId,
-        name: envelope.name,
-        group: envelope.group,
-        targetMinor: envelope.targetMinor ?? null,
-        dueDate: envelope.dueDate ?? null,
-        repeat: envelope.repeat ?? null,
-        sortOrder,
-        createdBy: actor,
-        updatedBy: actor,
-      })),
-    );
-    await db
-      .insert(v2EnvelopeCategory)
-      .values(
-        envelopes.flatMap(({ id, categoryId }) =>
-          categoryId ? [{ ledgerId: context.ledgerId, envelopeId: id, categoryId }] : [],
-        ),
-      );
-    const assignments = envelopes.flatMap(({ input: envelope, id }) =>
+    },
+    funding: fundingAccountIds.map((accountId) => ({ ledgerId, budgetId, accountId })),
+    envelopes: envelopes.map(({ input: envelope, id }, sortOrder) => ({
+      ledgerId,
+      id,
+      budgetId,
+      name: envelope.name,
+      group: envelope.group,
+      targetMinor: envelope.targetMinor ?? null,
+      dueDate: envelope.dueDate ?? null,
+      repeat: envelope.repeat ?? null,
+      sortOrder,
+      createdBy: actor,
+      updatedBy: actor,
+    })),
+    mappings: envelopes.flatMap(({ id, categoryId }) =>
+      categoryId ? [{ ledgerId, envelopeId: id, categoryId }] : [],
+    ),
+    // A Saving-for envelope's money already set aside is a second plan assignment.
+    assignments: envelopes.flatMap(({ input: envelope, id }) =>
       [envelope.plannedMinor, envelope.setAsideMinor]
         .filter((amountMinor) => amountMinor > 0)
         .map((amountMinor) => ({
-          ledgerId: context.ledgerId,
+          ledgerId,
           id: crypto.randomUUID(),
           budgetId,
           periodStart: period.start,
@@ -134,109 +117,115 @@ export async function activateBudget(
           reason: "plan" as const,
           createdBy: actor,
         })),
-    );
-    if (assignments.length > 0) await db.insert(v2Assignment).values(assignments);
-    await remindBillRules(
-      db,
-      context,
-      envelopes.flatMap(({ input: envelope, categoryId }) =>
-        envelope.group === "bills" && categoryId ? [categoryId] : [],
-      ),
-    );
-
-    const budget = await findBudget(db, context.ledgerId);
-    if (!budget) throw new V2ApiError(500, "budget_activation_failed", "The budget was not saved.");
-    const loaded = await loadBudget(db, budget, today);
-    const unassignedMinor = loaded.projection.current.unassignedMinor;
-    if (unassignedMinor < 0) {
-      throw new V2ApiError(
-        409,
-        "budget_overplanned",
-        "The plan uses more money than you have. Lower some amounts and try again.",
-        { unassignedMinor },
-      );
-    }
-    return budgetView(loaded);
+    ),
   });
-}
+  yield* (yield* ReminderStore).remindBillRules(
+    envelopes.flatMap(({ input: envelope, categoryId }) =>
+      envelope.group === "bills" && categoryId ? [categoryId] : [],
+    ),
+  );
+
+  const budget = yield* store.findBudget;
+  if (!budget) return yield* new BudgetNotSaved({ operation: "activation" });
+  const loaded = yield* loadBudget(budget);
+  const unassignedMinor = loaded.projection.current.unassignedMinor;
+  if (unassignedMinor < 0) {
+    return yield* new BudgetOverplanned({ change: "activation", unassignedMinor });
+  }
+  return budgetView(loaded);
+});
+
+/** The ticked funding accounts, or a new "My money" cash account holding the opening cash. */
+const fundingAccounts = Effect.fn("fundingAccounts")(function* (input: BudgetActivation) {
+  const facts = yield* LedgerFacts;
+  if (!input.fundingAccountIds) {
+    const id = crypto.randomUUID();
+    yield* facts.insertCashAccount(id, MY_MONEY_ACCOUNT_NAME, input.openingCashMinor ?? 0);
+    return [id];
+  }
+  const accountIds = input.fundingAccountIds;
+  const rows = yield* facts.accountsByIds(accountIds);
+  // Funding accounts hold spendable AED: active, AED, and not a credit card.
+  for (const accountId of accountIds) {
+    const account = rows.find((row) => row.id === accountId);
+    const reason =
+      !account || account.lifecycle !== "active"
+        ? "missing"
+        : account.currency !== BUDGET_CURRENCY
+          ? "currency"
+          : account.type === "credit_card"
+            ? "credit_card"
+            : undefined;
+    if (reason) return yield* new BudgetFundingInvalid({ accountId, reason });
+  }
+  return accountIds;
+});
 
 /**
  * Changes budget settings (If-Match). A payday change is recorded from the
  * current period start, so earlier periods never move.
  */
-export async function updateBudget(
-  context: V2LedgerContext,
-  input: V2BudgetUpdateInput,
-  today: string,
-  expectedVersion?: number,
-  idempotencyKey?: string,
-): Promise<V2BudgetView> {
-  const parsed = budgetUpdateSchema.parse(input);
-  requireBudgetPlanAccess(context);
-  return withLedgerMutation(context, "budget.update", idempotencyKey, async (db) => {
-    const budget = await findBudget(db, context.ledgerId);
-    if (!budget) throw new V2ApiError(404, "budget_not_found", "This ledger has no budget.");
-    requireExpectedVersion(expectedVersion, budget.version, budget.id);
-    const actor = budgetActor(context);
+export const updateBudget = Effect.fn("updateBudget")(function* (
+  input: BudgetUpdate,
+  expectedVersion: number | undefined,
+  idempotencyKey: string | undefined,
+) {
+  yield* requirePlanAccess;
+  return yield* inLedgerMutation(
+    "budget.update",
+    idempotencyKey,
+    writeUpdate(input, expectedVersion),
+  );
+});
 
-    if (parsed.paydayRule) {
-      const loaded = await loadBudget(db, budget, today);
-      const effectiveFrom = paydayEffectiveFrom(
-        loaded.paydays,
-        loaded.projection.current.period.start,
-        parsed.paydayRule,
-        today,
-      );
-      // A change that has not started yet is replaced by this one (or dropped
-      // when the person goes back to the rule in effect).
-      await db
-        .delete(v2BudgetPayday)
-        .where(
-          and(
-            eq(v2BudgetPayday.budgetId, budget.id),
-            gt(v2BudgetPayday.effectiveFrom, loaded.projection.current.period.start),
-            ...(effectiveFrom ? [ne(v2BudgetPayday.effectiveFrom, effectiveFrom)] : []),
-          ),
-        );
-      if (effectiveFrom) {
-        // History is insert-only per period start; a second change for the
-        // same start replaces only that start's row.
-        await db
-          .insert(v2BudgetPayday)
-          .values({
-            ledgerId: context.ledgerId,
-            budgetId: budget.id,
-            effectiveFrom,
-            ...paydayColumns(parsed.paydayRule),
-            createdBy: actor,
-          })
-          .onConflictDoUpdate({
-            target: [v2BudgetPayday.budgetId, v2BudgetPayday.effectiveFrom],
-            set: { ...paydayColumns(parsed.paydayRule), createdBy: actor, createdAt: new Date() },
-          });
-      }
-    }
-    if (parsed.defaultAccountId) {
-      await assertActiveAedAccount(db, context.ledgerId, parsed.defaultAccountId);
-    }
+const writeUpdate = Effect.fn("writeUpdate")(function* (
+  input: BudgetUpdate,
+  expectedVersion: number | undefined,
+) {
+  const store = yield* BudgetStore;
+  const budget = yield* requireBudget;
+  yield* checkVersion(expectedVersion, budget.version, budget.id);
+  const actor = yield* budgetActor;
 
-    await db
-      .update(v2Budget)
-      .set({
-        ...(parsed.usualSalaryMinor !== undefined && { usualSalaryMinor: parsed.usualSalaryMinor }),
-        ...(parsed.paydayReminder !== undefined && { paydayReminder: parsed.paydayReminder }),
-        ...(parsed.defaultAccountId !== undefined && { defaultAccountId: parsed.defaultAccountId }),
-        version: sql`${v2Budget.version} + 1`,
-        updatedBy: actor,
-        updatedAt: new Date(),
-      })
-      .where(eq(v2Budget.id, budget.id));
+  if (input.paydayRule) {
+    const { today } = yield* BudgetClock;
+    const loaded = yield* loadBudget(budget);
+    const currentStart = loaded.projection.current.period.start;
+    const effectiveFrom = paydayEffectiveFrom(
+      loaded.paydays,
+      currentStart,
+      input.paydayRule,
+      today,
+    );
+    yield* store.recordPaydayChange(
+      budget.id,
+      currentStart,
+      effectiveFrom,
+      input.paydayRule,
+      actor,
+    );
+  }
+  if (input.defaultAccountId) yield* requireDefaultAccount(input.defaultAccountId);
 
-    const updated = await findBudget(db, context.ledgerId);
-    if (!updated) throw new V2ApiError(500, "budget_update_failed", "The budget was not saved.");
-    return budgetView(await loadBudget(db, updated, today));
-  });
-}
+  const updated = yield* store.updateBudget(
+    budget.id,
+    {
+      ...(input.usualSalaryMinor !== undefined && { usualSalaryMinor: input.usualSalaryMinor }),
+      ...(input.paydayReminder !== undefined && { paydayReminder: input.paydayReminder }),
+      ...(input.defaultAccountId !== undefined && { defaultAccountId: input.defaultAccountId }),
+    },
+    actor,
+  );
+  if (!updated) return yield* new BudgetNotSaved({ operation: "update" });
+  return budgetView(yield* loadBudget(updated));
+});
+
+const requireDefaultAccount = Effect.fn("requireDefaultAccount")(function* (accountId: string) {
+  const [account] = yield* (yield* LedgerFacts).accountsByIds([accountId]);
+  if (!account || account.lifecycle !== "active" || account.currency !== BUDGET_CURRENCY) {
+    return yield* new BudgetDefaultAccountInvalid({ accountId });
+  }
+});
 
 /**
  * Where a payday change starts, or null when `rule` is already the rule in effect.
@@ -257,162 +246,9 @@ function paydayEffectiveFrom(
   return nextPeriodStart(inEffect, currentStart);
 }
 
-/** The person acting, for "who" lines; a household ledger's owner id would not say who. */
-export function budgetActor(context: V2LedgerContext): string {
-  return context.principal.kind === "user"
-    ? context.principal.userId
-    : context.principal.guestSessionId;
-}
-
-function paydayColumns(rule: PaydayRule) {
-  return rule.kind === "day"
-    ? { kind: "day" as const, day: rule.day }
-    : { kind: "last_workday" as const, day: null };
-}
-
 function samePaydayRule(left: PaydayRule, right: PaydayRule): boolean {
   return (
     left.kind === right.kind &&
     (left.kind !== "day" || right.kind !== "day" || left.day === right.day)
   );
-}
-
-async function createMyMoneyAccount(
-  db: V2TransactionDatabase,
-  context: V2LedgerContext,
-  openingBalanceMinor = 0,
-): Promise<string> {
-  const id = crypto.randomUUID();
-  await db.insert(v2Account).values({
-    ledgerId: context.ledgerId,
-    id,
-    name: MY_MONEY_ACCOUNT_NAME,
-    type: "cash",
-    currency: BUDGET_CURRENCY,
-    openingBalanceMinor,
-    createdBy: context.ownerId,
-    updatedBy: context.ownerId,
-  });
-  return id;
-}
-
-/** Funding accounts hold spendable AED: active, AED, and not a credit card. */
-async function assertFundingAccounts(
-  db: V2TransactionDatabase,
-  ledgerId: string,
-  accountIds: readonly string[],
-): Promise<void> {
-  const rows = await db
-    .select()
-    .from(v2Account)
-    .where(and(eq(v2Account.ledgerId, ledgerId), inArray(v2Account.id, [...accountIds])));
-  for (const accountId of accountIds) {
-    const account = rows.find((row) => row.id === accountId);
-    if (!account || account.lifecycle !== "active") {
-      throw new V2ApiError(422, "budget_funding_invalid", "A funding account was not found.", {
-        accountId,
-      });
-    }
-    if (account.currency !== BUDGET_CURRENCY) {
-      throw new V2ApiError(422, "budget_funding_invalid", "AED budgets only for now.", {
-        accountId,
-      });
-    }
-    if (account.type === "credit_card") {
-      throw new V2ApiError(
-        422,
-        "budget_funding_invalid",
-        "A credit card can't fund a budget. Pick the accounts that hold your money.",
-        { accountId },
-      );
-    }
-  }
-}
-
-async function assertActiveAedAccount(
-  db: V2TransactionDatabase,
-  ledgerId: string,
-  accountId: string,
-): Promise<void> {
-  const rows = await db
-    .select()
-    .from(v2Account)
-    .where(and(eq(v2Account.ledgerId, ledgerId), eq(v2Account.id, accountId)))
-    .limit(1);
-  const account = rows[0];
-  if (!account || account.lifecycle !== "active" || account.currency !== BUDGET_CURRENCY) {
-    throw new V2ApiError(
-      422,
-      "budget_default_account_invalid",
-      "Pick an active AED account as the default.",
-      { accountId },
-    );
-  }
-}
-
-/**
- * One Category per envelope, in input order. A new Category name reuses a
- * non-archived expense Category with the same name (case-insensitive).
- */
-export async function resolveCategories(
-  db: V2TransactionDatabase,
-  context: V2LedgerContext,
-  envelopes: readonly {
-    readonly categoryId?: string;
-    readonly newCategory?: { readonly name: string };
-  }[],
-): Promise<string[]> {
-  const expense = await db
-    .select({ id: v2Category.id, name: v2Category.name })
-    .from(v2Category)
-    .where(
-      and(
-        eq(v2Category.ledgerId, context.ledgerId),
-        eq(v2Category.kind, "expense"),
-        eq(v2Category.lifecycle, "active"),
-      ),
-    );
-  const knownIds = new Set(expense.map((row) => row.id));
-  const byName = new Map(expense.map((row) => [row.name.toLowerCase(), row.id]));
-
-  const resolved: string[] = [];
-  for (const envelope of envelopes) {
-    if (envelope.categoryId !== undefined) {
-      if (!knownIds.has(envelope.categoryId)) {
-        throw new V2ApiError(
-          422,
-          "budget_category_invalid",
-          "An envelope's Category was not found or is not an active expense Category.",
-          { categoryId: envelope.categoryId },
-        );
-      }
-      resolved.push(envelope.categoryId);
-      continue;
-    }
-    const name = envelope.newCategory?.name ?? "";
-    let id = byName.get(name.toLowerCase());
-    if (!id) {
-      id = crypto.randomUUID();
-      await db.insert(v2Category).values({
-        ledgerId: context.ledgerId,
-        id,
-        name,
-        kind: "expense",
-        createdBy: context.ownerId,
-        updatedBy: context.ownerId,
-      });
-      byName.set(name.toLowerCase(), id);
-    }
-    resolved.push(id);
-  }
-  const duplicate = resolved.find((id, index) => resolved.indexOf(id) !== index);
-  if (duplicate) {
-    throw new V2ApiError(
-      422,
-      "budget_category_duplicate",
-      "Two envelopes use the same Category. Merge them into one envelope.",
-      { categoryId: duplicate },
-    );
-  }
-  return resolved;
 }
