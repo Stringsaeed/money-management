@@ -4,12 +4,7 @@ import { Alert, StyleSheet, View } from "react-native";
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
 import { useLedgerMutations } from "@/data/ledger-queries";
-import { Button } from "@/ui/button";
-import { colors, radii, spacing } from "@/ui/design-tokens";
-import { SelectRow } from "@/ui/select-row";
-import { Switch } from "@/ui/switch";
-import { Text } from "@/ui/text";
-import { showToast } from "@/ui/toast";
+import { Amount, Button, ListGroup, ListRow, showToast, space, Switch, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import type { EnvelopeLine } from "../home/home-model";
@@ -60,55 +55,52 @@ export function MenuPanel({ line, onOpen, onClose }: MenuPanelProps) {
 
   return (
     <View style={styles.container}>
-      <Text variant="title" accessibilityRole="header">
+      <Text variant="titleMd" accessibilityRole="header">
         {envelope.name}
       </Text>
-      <SelectRow
-        label="Change plan"
-        value={formatMoneyMinor(totals.plannedMinor, BUDGET_CURRENCY)}
-        onPress={() => onOpen("plan")}
-      />
-      <SelectRow
-        label="Change group"
-        value={GROUP_LABEL[envelope.group]}
-        onPress={() => onOpen("group")}
-      />
-      <SelectRow
-        label="Categories"
-        value={`${envelope.categoryIds.length} mapped`}
-        onPress={() => onOpen("categories")}
-      />
-      <SelectRow label="History" onPress={() => onOpen("history")} />
-      <View style={styles.toggle}>
-        <View style={styles.toggleCopy}>
-          <Text variant="body">Start fresh each month</Text>
-          <Text variant="caption">{"Leftover money doesn't carry into the next month."}</Text>
-        </View>
-        <Switch
-          accessibilityLabel="Start fresh each month"
-          value={envelope.startFresh}
-          disabled={write.busy}
-          onValueChange={setStartFresh}
+      <ListGroup dividerInset={0}>
+        <ListRow
+          chevron
+          title="Change plan"
+          trailing={
+            <Amount currency={BUDGET_CURRENCY} minor={totals.plannedMinor} tone="secondary" />
+          }
+          onPress={() => onOpen("plan")}
         />
-      </View>
+        <ListRow
+          chevron
+          title="Change group"
+          value={GROUP_LABEL[envelope.group]}
+          onPress={() => onOpen("group")}
+        />
+        <ListRow
+          chevron
+          title="Categories"
+          value={`${envelope.categoryIds.length} mapped`}
+          onPress={() => onOpen("categories")}
+        />
+        <ListRow chevron title="History" onPress={() => onOpen("history")} />
+      </ListGroup>
+      <ListGroup dividerInset={0}>
+        <ListRow
+          title="Start fresh each month"
+          subtitle={"Leftover money doesn't carry into the next month."}
+          trailing={
+            <Switch
+              accessibilityLabel="Start fresh each month"
+              value={envelope.startFresh}
+              disabled={write.busy}
+              onValueChange={setStartFresh}
+            />
+          }
+        />
+      </ListGroup>
       <PanelError message={write.error} />
-      <Button title="Archive envelope" variant="destructive" onPress={archive} />
+      <Button fullWidth label="Archive envelope" variant="delete" onPress={archive} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing[3] },
-  toggle: {
-    alignItems: "center",
-    backgroundColor: colors.card,
-    borderCurve: "continuous",
-    borderRadius: radii.lg,
-    flexDirection: "row",
-    gap: spacing[3],
-    justifyContent: "space-between",
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-  },
-  toggleCopy: { flex: 1, gap: spacing[1] },
+  container: { gap: space[3] },
 });

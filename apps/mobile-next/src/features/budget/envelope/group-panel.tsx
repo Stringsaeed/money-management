@@ -3,9 +3,7 @@ import { StyleSheet, View } from "react-native";
 import type { V2EnvelopeGroup } from "@trove/api/v2/contracts";
 
 import { useLedgerMutations } from "@/data/ledger-queries";
-import { Chip } from "@/ui/chip";
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { Chip, space, Text } from "@/ui/trove";
 
 import type { EnvelopeLine } from "../home/home-model";
 
@@ -52,7 +50,7 @@ export function GroupPanel({ line, onBack, onDone }: GroupPanelProps) {
           />
         ))}
       </View>
-      <Text variant="caption">
+      <Text variant="bodySm" tone="secondary">
         Only Everyday envelopes count toward Safe to spend. Past months stay as they were.
       </Text>
       <PanelError message={write.error} />
@@ -61,6 +59,6 @@ export function GroupPanel({ line, onBack, onDone }: GroupPanelProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing[3] },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing[2] },
+  container: { gap: space[3] },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
 });

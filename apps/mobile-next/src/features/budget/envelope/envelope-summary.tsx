@@ -2,9 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { colors, spacing } from "@/ui/design-tokens";
-import { Surface } from "@/ui/surface";
-import { Text } from "@/ui/text";
+import { Amount, ListGroup, ListRow, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import type { EnvelopeLine } from "../home/home-model";
@@ -35,28 +33,38 @@ export function EnvelopeSummary({ line, daysLeft }: EnvelopeSummaryProps) {
         accessibilityLabel={`${line.envelope.name}, ${money(totals.leftMinor)} left of ${money(totals.plannedMinor)} planned, ${days}`}
         style={styles.hero}
       >
-        <Text variant="label">Left</Text>
-        <Text variant="amount" style={totals.leftMinor < 0 && styles.negative}>
-          {money(totals.leftMinor)}
+        <Text tone="secondary" variant="labelSm">
+          Left
         </Text>
-        <Text variant="caption">{`of ${money(totals.plannedMinor)} planned · ${days}`}</Text>
-        {pace > 0 ? <Text variant="caption">{`about ${money(pace)} a day`}</Text> : null}
+        <Amount
+          currency={BUDGET_CURRENCY}
+          minor={totals.leftMinor}
+          size="hero"
+          tone={totals.leftMinor < 0 ? "negative" : "primary"}
+        />
+        <Text tone="secondary" variant="bodySm">
+          {`of ${money(totals.plannedMinor)} planned · ${days}`}
+        </Text>
+        {pace > 0 ? (
+          <Text tone="secondary" variant="bodySm">
+            {`about ${money(pace)} a day`}
+          </Text>
+        ) : null}
       </View>
-      <Surface>
+      <ListGroup dividerInset={0}>
         {rows.map(([label, minor]) => (
-          <View key={label} style={styles.row}>
-            <Text variant="body">{label}</Text>
-            <Text variant="body">{money(minor)}</Text>
-          </View>
+          <ListRow
+            key={label}
+            title={label}
+            trailing={<Amount currency={BUDGET_CURRENCY} minor={minor} />}
+          />
         ))}
-      </Surface>
+      </ListGroup>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing[4] },
-  hero: { gap: spacing[1] },
-  negative: { color: colors.terracotta },
-  row: { flexDirection: "row", justifyContent: "space-between" },
+  container: { gap: space[4] },
+  hero: { gap: space[1] },
 });

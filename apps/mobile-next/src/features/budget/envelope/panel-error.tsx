@@ -1,18 +1,11 @@
-import { StyleSheet } from "react-native";
-
-import { colors, typography } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { Text } from "@/ui/trove";
 
 /** Failure copy under a panel's action. Announced so it is not colour only. */
 export function PanelError({ message }: { readonly message: string | undefined }) {
   if (!message) return null;
   return (
-    <Text accessibilityRole="alert" style={styles.error}>
+    <Text accessibilityRole="alert" tone="negative" variant="labelMd">
       {message}
     </Text>
   );
 }
-
-const styles = StyleSheet.create({
-  error: { color: colors.destructive, fontFamily: typography.fontBodyMedium },
-});

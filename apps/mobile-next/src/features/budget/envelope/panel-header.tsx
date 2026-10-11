@@ -1,7 +1,4 @@
-import { StyleSheet, View } from "react-native";
-
-import { Button } from "@/ui/button";
-import { Text } from "@/ui/text";
+import { Header } from "@/ui/trove";
 
 interface PanelHeaderProps {
   readonly title: string;
@@ -10,17 +7,5 @@ interface PanelHeaderProps {
 
 /** Title of one ••• panel with a way back to the menu. */
 export function PanelHeader({ title, onBack }: PanelHeaderProps) {
-  return (
-    <View style={styles.header}>
-      <Text variant="title" accessibilityRole="header" style={styles.title}>
-        {title}
-      </Text>
-      <Button title="Back" variant="ghost" onPress={onBack} />
-    </View>
-  );
+  return <Header variant="compact" title={title} onBack={onBack} />;
 }
-
-const styles = StyleSheet.create({
-  header: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
-  title: { flex: 1 },
-});

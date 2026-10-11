@@ -4,11 +4,7 @@ import { StyleSheet, View } from "react-native";
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
 import { useLedgerMutations } from "@/data/ledger-queries";
-import { Button } from "@/ui/button";
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
-import { TextField } from "@/ui/text-field";
-import { showToast } from "@/ui/toast";
+import { AmountInput, Button, showToast, space, Text } from "@/ui/trove";
 import { decimalFromMinor, formatMoneyMinor, parseMoneyMinor } from "@/utils/money";
 
 import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
@@ -70,22 +66,28 @@ export function PlanPanel({ view, line, onBack, onDone }: PlanPanelProps) {
   return (
     <View style={styles.container}>
       <PanelHeader title="Change plan" onBack={onBack} />
-      <TextField
+      <AmountInput
+        currency={BUDGET_CURRENCY}
         label={`${envelope.name} this period`}
-        keyboardType="decimal-pad"
         value={text}
         onChangeText={(value) => {
           write.clearError();
           setText(value);
         }}
       />
-      <Text variant="caption" accessibilityLiveRegion="polite">
+      <Text variant="bodySm" tone="secondary" accessibilityLiveRegion="polite">
         {hint}
       </Text>
       <PanelError message={write.error} />
-      <Button title="Save" loading={write.busy} disabled={invalid} onPress={() => void save()} />
+      <Button
+        fullWidth
+        label="Save"
+        loading={write.busy}
+        disabled={invalid}
+        onPress={() => void save()}
+      />
     </View>
   );
 }
 
-const styles = StyleSheet.create({ container: { gap: spacing[3] } });
+const styles = StyleSheet.create({ container: { gap: space[3] } });

@@ -2,10 +2,7 @@ import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { useCategoriesQuery, useLedgerMutations } from "@/data/ledger-queries";
-import { Button } from "@/ui/button";
-import { Chip } from "@/ui/chip";
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { Button, Chip, space, Text } from "@/ui/trove";
 
 import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
 
@@ -52,7 +49,7 @@ export function CategoriesPanel({ view, line, onBack, onDone }: CategoriesPanelP
   return (
     <View style={styles.container}>
       <PanelHeader title="Categories" onBack={onBack} />
-      <Text variant="caption">
+      <Text variant="bodySm" tone="secondary">
         Spending in these categories comes out of {envelope.name}. A category can belong to one
         envelope.
       </Text>
@@ -66,10 +63,15 @@ export function CategoriesPanel({ view, line, onBack, onDone }: CategoriesPanelP
           />
         ))}
       </View>
-      {selected.size === 0 ? <Text variant="caption">Pick at least one category.</Text> : null}
+      {selected.size === 0 ? (
+        <Text variant="bodySm" tone="secondary">
+          Pick at least one category.
+        </Text>
+      ) : null}
       <PanelError message={write.error} />
       <Button
-        title="Save"
+        fullWidth
+        label="Save"
         loading={write.busy}
         disabled={selected.size === 0 || unchanged}
         onPress={() => void save()}
@@ -79,6 +81,6 @@ export function CategoriesPanel({ view, line, onBack, onDone }: CategoriesPanelP
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing[3] },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing[2] },
+  container: { gap: space[3] },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
 });

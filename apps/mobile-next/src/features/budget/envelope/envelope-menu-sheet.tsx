@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Sheet } from "@/ui/sheet";
+import { Sheet } from "@/ui/trove";
 
 import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
 

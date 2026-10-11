@@ -1,17 +1,12 @@
-import { Stack } from "expo-router";
+import { router } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 import { useBudgetQuery } from "@/data/ledger-queries";
-import { Button } from "@/ui/button";
-import { spacing } from "@/ui/design-tokens";
-import { EmptyState } from "@/ui/empty-state";
-import { Screen } from "@/ui/screen";
-import { Text } from "@/ui/text";
+import { Button, EmptyState, Header, layout, Screen, space, Text } from "@/ui/trove";
 
 import { envelopeLines } from "../home/home-model";
 
-import { EnvelopeMenuButton } from "./envelope-menu-button";
 import { EnvelopeMenuSheet } from "./envelope-menu-sheet";
 import { EnvelopeSummary } from "./envelope-summary";
 import { EnvelopeTransactions } from "./envelope-transactions";
@@ -23,22 +18,27 @@ export function EnvelopeDetailScreen({ id }: { readonly id: string }) {
   const [menu, setMenu] = useState({ open: false, session: 0 });
   const view = budget.data?.budget ? budget.data : null;
   const line = view ? envelopeLines(view).find((item) => item.envelope.id === id) : null;
+  const back = () => router.back();
 
   if (budget.isError && !line) {
     return (
-      <Screen edges={["bottom"]}>
+      <Screen style={styles.screen}>
+        <Header variant="compact" title="Envelope" onBack={back} />
         <EmptyState
           title="Couldn't calculate"
           message="Check your connection and try again."
-          onRetry={() => void budget.retry()}
+          actionLabel="Try again"
+          onAction={() => void budget.retry()}
+          framed={false}
         />
       </Screen>
     );
   }
   if (!budget.data) {
     return (
-      <Screen edges={["bottom"]}>
-        <Text variant="caption" style={styles.status}>
+      <Screen style={styles.screen}>
+        <Header variant="compact" title="Envelope" onBack={back} />
+        <Text style={styles.status} tone="secondary" variant="bodySm">
           Loading envelope…
         </Text>
       </Screen>
@@ -46,37 +46,46 @@ export function EnvelopeDetailScreen({ id }: { readonly id: string }) {
   }
   if (!view || !line) {
     return (
-      <Screen edges={["bottom"]}>
-        <EmptyState title="Envelope not found" message="It may have been archived." />
+      <Screen style={styles.screen}>
+        <Header variant="compact" title="Envelope" onBack={back} />
+        <EmptyState
+          title="Envelope not found"
+          message="It may have been archived."
+          framed={false}
+        />
       </Screen>
     );
   }
 
   const { envelope } = line;
   return (
-    <Screen edges={["bottom"]}>
-      <Stack.Screen
-        options={{
-          title: envelope.name,
-          headerRight: () => (
-            <EnvelopeMenuButton
-              onPress={() => setMenu((current) => ({ open: true, session: current.session + 1 }))}
-            />
-          ),
-        }}
+    <Screen style={styles.screen}>
+      <Header
+        variant="compact"
+        title={envelope.name}
+        onBack={back}
+        actions={[
+          {
+            icon: "more",
+            label: "More actions",
+            onPress: () => setMenu((current) => ({ open: true, session: current.session + 1 })),
+          },
+        ]}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.heading}>
-          <Text variant="headline">{envelope.name}</Text>
-          <Text variant="caption">{GROUP_LABEL[envelope.group]}</Text>
+          <Text variant="titleLg">{envelope.name}</Text>
+          <Text tone="secondary" variant="bodySm">
+            {GROUP_LABEL[envelope.group]}
+          </Text>
         </View>
         <EnvelopeSummary line={line} daysLeft={view.current.daysLeft} />
         {/* The Move money sheet arrives with the cover-and-move layer. */}
-        <Button title="Move money" variant="secondary" disabled />
+        <Button fullWidth label="Move money" variant="secondary" disabled />
         {envelope.categoryIds.length > 0 ? (
           <EnvelopeTransactions categoryIds={envelope.categoryIds} period={view.current.period} />
         ) : (
-          <Text variant="caption">
+          <Text tone="secondary" variant="bodySm">
             No category is mapped to this envelope. Add one under More actions to count spending.
           </Text>
         )}
@@ -93,7 +102,8 @@ export function EnvelopeDetailScreen({ id }: { readonly id: string }) {
 }
 
 const styles = StyleSheet.create({
-  content: { gap: spacing[5], padding: spacing[5], paddingBottom: spacing[10] },
-  heading: { gap: spacing[1] },
-  status: { padding: spacing[5] },
+  screen: { paddingHorizontal: layout.screenGutter },
+  content: { gap: space[5], paddingBottom: space[10], paddingTop: space[3] },
+  heading: { gap: space[1] },
+  status: { paddingVertical: space[5] },
 });
