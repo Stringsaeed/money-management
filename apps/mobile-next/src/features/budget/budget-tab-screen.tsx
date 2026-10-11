@@ -6,6 +6,8 @@ import { useBudgetQuery } from "@/data/ledger-queries";
 import { EmptyState, Header, layout, Screen, space } from "@/ui/trove";
 
 import { BudgetIntro } from "./budget-intro";
+import { BudgetScopeLabel } from "./household/budget-scope-label";
+import { useBudgetRole } from "./role/use-budget-role";
 import { BudgetHome } from "./home/budget-home";
 import { BudgetHomeError } from "./home/budget-home-error";
 import { BudgetHomeSkeleton } from "./home/budget-home-skeleton";
@@ -16,6 +18,7 @@ import { useSetupDraft } from "./setup/use-setup-draft";
 export function BudgetTabScreen() {
   const budget = useBudgetQuery();
   const setup = useSetupDraft();
+  const { canEditPlan } = useBudgetRole();
   const scrollRef = useRef<ScrollView>(null);
 
   return (
@@ -28,6 +31,7 @@ export function BudgetTabScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        <BudgetScopeLabel />
         {budget.isError && !budget.data ? (
           <EmptyState
             title="Couldn't load your budget"
@@ -48,6 +52,7 @@ export function BudgetTabScreen() {
         ) : (
           <BudgetIntro
             hasDraft={setup.exists}
+            canStart={canEditPlan}
             onStart={() =>
               router.push(SETUP_STEP_ROUTES[setup.exists ? setup.draft.step : "payday"])
             }

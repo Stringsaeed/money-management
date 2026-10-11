@@ -4,6 +4,9 @@ import type { V2LedgerScope } from "@trove/api/v2/contracts";
 interface LedgerScopeValue {
   readonly scope: V2LedgerScope;
   readonly selectScope: (scope: V2LedgerScope) => void;
+  /** The "Choose ledger" sheet lives in the tab bar; any screen can open it. */
+  readonly scopeSheetOpen: boolean;
+  readonly setScopeSheetOpen: (open: boolean) => void;
 }
 
 export const LedgerScopeContext = createContext<LedgerScopeValue | null>(null);

@@ -15,10 +15,14 @@ import { buildTabEntries } from "./tab-bar-routes";
 type BottomTabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>["tabBar"]>>[0];
 
 export const AppTabBar = ({ state, navigation, descriptors }: BottomTabBarProps) => {
-  const { scope, selectScope } = useLedgerScope();
+  const {
+    scope,
+    selectScope,
+    scopeSheetOpen: scopeOpen,
+    setScopeSheetOpen: setScopeOpen,
+  } = useLedgerScope();
   const session = useSession();
   const [createOpen, setCreateOpen] = useState(false);
-  const [scopeOpen, setScopeOpen] = useState(false);
   const household = useHousehold(session.status === "signed_in" && scopeOpen);
 
   const entries = buildTabEntries({

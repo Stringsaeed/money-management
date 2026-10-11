@@ -18,6 +18,8 @@ import { BudgetReminders } from "../reminders/budget-reminders";
 import { GroupSummaryRow } from "./group-summary-row";
 import { envelopeLines, groupSummary, perDayLine, type ActiveBudgetView } from "./home-model";
 import { OverNotice } from "./over-notice";
+import { HouseholdHomeExtras } from "../household/household-home-extras";
+import { useBudgetRole } from "../role/use-budget-role";
 import { CoverMoveSheet } from "../cover/cover-move-sheet";
 import { useCoverMoveRequest } from "../cover/use-cover-move-request";
 import { QuickAddSheet } from "../quick-add/quick-add-sheet";
@@ -66,6 +68,7 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
   const openQuickAdd = (envelopeId: string | null) =>
     setQuickAdd((current) => ({ open: true, envelopeId, session: current.session + 1 }));
   const coverMove = useCoverMoveRequest();
+  const { canAddSpending } = useBudgetRole();
   // The Everyday envelope that is furthest over; with none over, Cover points at the list instead.
   const mostOver = everyday
     .filter((line) => line.totals.leftMinor < 0)
@@ -95,10 +98,13 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
       {over ? (
         <OverNotice
           overMinor={-current.safeToSpendMinor}
-          onCover={() =>
-            mostOver
-              ? coverMove.show({ kind: "cover", targetId: mostOver.envelope.id })
-              : scrollToY(everydayY.current)
+          onCover={
+            canAddSpending
+              ? () =>
+                  mostOver
+                    ? coverMove.show({ kind: "cover", targetId: mostOver.envelope.id })
+                    : scrollToY(everydayY.current)
+              : undefined
           }
           onAdjust={() => scrollToY(everydayY.current)}
         />
@@ -133,7 +139,7 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
                     params: { id: line.envelope.id },
                   })
                 }
-                onLongPress={() => openQuickAdd(line.envelope.id)}
+                onLongPress={canAddSpending ? () => openQuickAdd(line.envelope.id) : undefined}
               />
             ))
           )}
@@ -157,7 +163,11 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
         />
       </ListGroup>
 
-      <Button fullWidth icon="add" label="Add spending" onPress={() => openQuickAdd(null)} />
+      {canAddSpending ? (
+        <Button fullWidth icon="add" label="Add spending" onPress={() => openQuickAdd(null)} />
+      ) : null}
+
+      <HouseholdHomeExtras />
 
       <QuickAddSheet
         open={quickAdd.open}

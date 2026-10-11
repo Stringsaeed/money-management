@@ -14,6 +14,7 @@ export const emptySetupDraft = (): SetupDraft => ({
   selection: {},
   custom: [],
   amounts: {},
+  householdShares: {},
 });
 
 const draftSchema = z.object({
@@ -26,6 +27,7 @@ const draftSchema = z.object({
   selection: z.record(z.string(), z.boolean()),
   custom: z.array(z.object({ name: z.string(), group: envelopeGroupSchema })),
   amounts: z.record(z.string(), z.string()),
+  householdShares: z.record(z.string(), z.string()).default({}),
 });
 
 const STORED_VERSION = 1;

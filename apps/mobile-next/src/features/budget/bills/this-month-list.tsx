@@ -15,7 +15,8 @@ interface ThisMonthListProps {
    * Without an entry the bill is judged from its own plan and spending.
    */
   readonly dueMinorByEnvelopeId?: ReadonlyMap<string, number>;
-  readonly onCover: (envelopeId: string) => void;
+  /** Absent when the caller may not move money. */
+  readonly onCover?: (envelopeId: string) => void;
 }
 
 /** B1 "This month": every Bills envelope as paid, ready, or short. */
@@ -38,7 +39,7 @@ export function ThisMonthList({ lines, dueMinorByEnvelopeId, onCover }: ThisMont
           onPress={() =>
             router.push({ pathname: "/budget/envelope/[id]", params: { id: line.envelope.id } })
           }
-          onCover={() => onCover(line.envelope.id)}
+          onCover={onCover ? () => onCover(line.envelope.id) : undefined}
         />
       ))}
     </View>

@@ -21,7 +21,7 @@ export function OverNotice({ overMinor, onCover, onAdjust }: OverNoticeProps) {
         {`You've planned or spent ${formatMoneyMinor(overMinor, BUDGET_CURRENCY)} more than you have`}
       </Text>
       <View style={styles.actions}>
-        <Button label="Cover" variant="secondary" onPress={onCover} disabled={!onCover} />
+        {onCover ? <Button label="Cover" variant="secondary" onPress={onCover} /> : null}
         <Button label="Adjust" variant="secondary" onPress={onAdjust} />
       </View>
     </Card>

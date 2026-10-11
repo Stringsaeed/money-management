@@ -25,6 +25,8 @@ export interface SetupDraft {
   readonly custom: readonly CustomItem[];
   /** Item key -> typed monthly amount. */
   readonly amounts: Readonly<Record<string, string>>;
+  /** Household only, informational: member user id -> typed expected monthly share. */
+  readonly householdShares: Readonly<Record<string, string>>;
 }
 
 export const GROUP_ORDER = [

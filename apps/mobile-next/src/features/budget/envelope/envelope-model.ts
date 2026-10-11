@@ -12,6 +12,8 @@ import { periodContaining } from "@trove/domain/budget";
 
 import { ApiError } from "@/data/http";
 
+import { roleErrorMessage } from "../role/budget-role";
+
 import type { ActiveBudgetView } from "../home/home-model";
 
 const WHOLE_UNIT_MINOR = 100;
@@ -125,6 +127,8 @@ export function categoryChoices(
 
 /** Plain-language failure copy for envelope writes. Nothing changed when one of these shows. */
 export function writeErrorMessage(cause: unknown): string {
+  const refused = roleErrorMessage(cause);
+  if (refused) return refused;
   if (cause instanceof ApiError) {
     switch (cause.code) {
       case "network_error":

@@ -10,7 +10,8 @@ interface OverBannerProps {
   readonly group: V2EnvelopeGroup;
   /** Some of the overspend went on a credit card. */
   readonly onCard: boolean;
-  readonly onCover: () => void;
+  /** Absent when the caller may not move money. */
+  readonly onCover?: () => void;
 }
 
 /** O1: said in words, not only colour. Only Everyday overspend comes out of Safe to spend. */
@@ -28,7 +29,7 @@ export function OverBanner({ overMinor, group, onCard, onCover }: OverBannerProp
           Part of this was paid by card and is kept for your card bill.
         </Text>
       ) : null}
-      <Button fullWidth label={`Cover ${amount}`} onPress={onCover} />
+      {onCover ? <Button fullWidth label={`Cover ${amount}`} onPress={onCover} /> : null}
     </Card>
   );
 }
