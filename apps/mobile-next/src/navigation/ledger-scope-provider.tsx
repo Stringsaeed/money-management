@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { V2LedgerScope } from "@trove/api/v2/contracts";
 
+import { track } from "@/features/analytics";
 import { useHouseholdMembership } from "@/features/household/use-household-membership";
 import { showToast } from "@/ui/trove";
 
@@ -9,7 +10,15 @@ import { LedgerScopeContext } from "./ledger-scope-context";
 const PERSONAL: V2LedgerScope = { kind: "personal" };
 
 export const LedgerScopeProvider = ({ children }: { readonly children: ReactNode }) => {
-  const [scope, selectScope] = useState<V2LedgerScope>(PERSONAL);
+  const [scope, setScope] = useState<V2LedgerScope>(PERSONAL);
+  const selectScope = (next: V2LedgerScope) => {
+    const same =
+      next.kind === scope.kind &&
+      (next.kind !== "household" ||
+        (scope.kind === "household" && next.householdId === scope.householdId));
+    setScope(next);
+    if (!same) track("ledger_switched", { to: next.kind });
+  };
   const [scopeSheetOpen, setScopeSheetOpen] = useState(false);
   const membership = useHouseholdMembership(scope.kind === "household" ? scope.householdId : null);
 
@@ -18,7 +27,7 @@ export const LedgerScopeProvider = ({ children }: { readonly children: ReactNode
   const revoked = scope.kind === "household" && membership.known && membership.household === null;
   useEffect(() => {
     if (!revoked) return;
-    selectScope(PERSONAL);
+    setScope(PERSONAL);
     showToast({ message: "You no longer have access to that household. Showing Personal." });
   }, [revoked]);
 

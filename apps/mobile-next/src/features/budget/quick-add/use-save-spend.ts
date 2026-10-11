@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
+import { track } from "@/features/analytics";
 import { playCue, useLedgerMutationsWithSound } from "@/features/sound";
 import { showToast } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
@@ -72,6 +73,11 @@ export function useSaveSpend({ remember, onSaved }: UseSaveSpendOptions) {
     } finally {
       setBusy(false);
     }
+    track("spend_quick_added", {
+      has_account: Boolean(spend.accountId),
+      has_note: note.trim().length > 0,
+      backdated: placement.kind === "earlier" || placement.kind === "before_budget",
+    });
     const { envelope } = spend;
     void remember({ accountId: spend.accountId, envelopeId: envelope.envelope.id });
     showToast({

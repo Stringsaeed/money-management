@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import type { V2DueOccurrence } from "@trove/api/v2/contracts";
 
+import { track } from "@/features/analytics";
 import { useLedgerMutationsWithSound } from "@/features/sound";
 import { showToast } from "@/ui/trove";
 import { decimalFromMinor } from "@/utils/money";
@@ -36,6 +37,7 @@ export function useMarkPaidForm(item: V2DueOccurrence, onPaid: () => void) {
     } finally {
       setBusy(false);
     }
+    track("bill_marked_paid", {});
     showToast({ message: `Marked ${item.name} as paid` });
     onPaid();
   };

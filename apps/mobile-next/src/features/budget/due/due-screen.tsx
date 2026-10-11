@@ -2,6 +2,7 @@ import { Alert, ScrollView, StyleSheet, View } from "react-native";
 
 import type { V2DueOccurrence } from "@trove/api/v2/contracts";
 
+import { track } from "@/features/analytics";
 import { useBudgetQuery } from "@/data/ledger-queries";
 import { useLedgerMutationsWithSound } from "@/features/sound";
 import { EmptyState, layout, Screen, showToast, space, Text } from "@/ui/trove";
@@ -91,6 +92,7 @@ function DueContent({ view }: { readonly view: ActiveBudgetView }) {
   const skip = async (item: V2DueOccurrence) => {
     try {
       await mutations.skipOccurrence(item.ruleId, item.scheduledDate);
+      track("bill_skipped", {});
       showToast({ message: `Skipped ${item.name}` });
     } catch (cause) {
       showToast({ message: occurrenceErrorMessage(cause, "skip") });

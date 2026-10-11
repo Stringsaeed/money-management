@@ -18,6 +18,7 @@ import { BudgetReminders } from "../reminders/budget-reminders";
 import { GroupSummaryRow } from "./group-summary-row";
 import { envelopeLines, groupSummary, perDayLine, type ActiveBudgetView } from "./home-model";
 import { OverNotice } from "./over-notice";
+import { useHomeAnalytics } from "./use-home-analytics";
 import { HouseholdHomeExtras } from "../household/household-home-extras";
 import { useBudgetRole } from "../role/use-budget-role";
 import { CoverMoveSheet } from "../cover/cover-move-sheet";
@@ -58,6 +59,7 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
     paydayPending: payday.status.pending,
     paydayLate: payday.status.pending && payday.status.late,
   });
+  useHomeAnalytics(attention);
   const over = current.safeToSpendMinor <= 0;
   const everydayY = useRef(0);
   const [quickAdd, setQuickAdd] = useState<QuickAddTarget>({

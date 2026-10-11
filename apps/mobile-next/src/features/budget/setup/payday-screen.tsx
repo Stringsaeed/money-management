@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
+import { track } from "@/features/analytics";
 import { useAccountsQuery, useLedgerData } from "@/data/ledger-queries";
 import { useHouseholdMembership } from "@/features/household/use-household-membership";
 import { Button, ListGroup, ListRow, space, Switch, Text, TextField } from "@/ui/trove";
@@ -55,6 +56,7 @@ export function PaydayScreen() {
             disabled={!canContinue}
             onPress={() => {
               update({ step: "items" });
+              track("budget_setup_step_completed", { step: "payday" });
               router.push("/budget/setup/items");
             }}
           />
