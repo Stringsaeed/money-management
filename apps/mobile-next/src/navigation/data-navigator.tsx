@@ -59,6 +59,7 @@ export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) 
         <Stack.Screen name="budget/setup/items" options={pushedOptions} />
         <Stack.Screen name="budget/setup/amounts" options={pushedOptions} />
         <Stack.Screen name="budget/setup/review" options={pushedOptions} />
+        <Stack.Screen name="budget/envelope/[id]" options={pushedOptions} />
         <Stack.Screen name="callback" options={{ headerShown: false }} />
       </Stack>
     </LedgerDataProvider>

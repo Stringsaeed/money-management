@@ -1,22 +1,30 @@
 import { router } from "expo-router";
+import { useRef } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 
 import { useBudgetQuery } from "@/data/ledger-queries";
-import { EmptyState, Header, layout, Screen, space, Text } from "@/ui/trove";
+import { EmptyState, Header, layout, Screen, space } from "@/ui/trove";
 
-import { BudgetActive } from "./budget-active";
 import { BudgetIntro } from "./budget-intro";
+import { BudgetHome } from "./home/budget-home";
+import { BudgetHomeError } from "./home/budget-home-error";
+import { BudgetHomeSkeleton } from "./home/budget-home-skeleton";
 import { SETUP_STEP_ROUTES } from "./setup/setup-routes";
 import { useSetupDraft } from "./setup/use-setup-draft";
 
-/** The Budget tab: the intro while there is no budget, a placeholder once there is one. */
+/** The Budget tab: the intro while there is no budget, Budget home once there is one. */
 export function BudgetTabScreen() {
   const budget = useBudgetQuery();
   const setup = useSetupDraft();
+  const scrollRef = useRef<ScrollView>(null);
 
   return (
     <Screen edges={["top"]}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <Header title="Budget" />
         {budget.isError && !budget.data ? (
           <EmptyState
@@ -26,12 +34,15 @@ export function BudgetTabScreen() {
             onAction={() => void budget.retry()}
             framed={false}
           />
+        ) : budget.isError && budget.data?.budget ? (
+          <BudgetHomeError onRetry={() => void budget.retry()} />
         ) : !budget.data || !setup.ready ? (
-          <Text tone="secondary" variant="bodySm">
-            Loading your budget…
-          </Text>
+          <BudgetHomeSkeleton />
         ) : budget.data.budget ? (
-          <BudgetActive view={budget.data} />
+          <BudgetHome
+            view={budget.data}
+            scrollToY={(y) => scrollRef.current?.scrollTo({ y, animated: true })}
+          />
         ) : (
           <BudgetIntro
             hasDraft={setup.exists}
