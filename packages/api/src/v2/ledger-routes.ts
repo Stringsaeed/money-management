@@ -6,6 +6,7 @@ import { listAccounts, createAccount, deleteAccount, getAccount, updateAccount }
 import { autoCategorizeTransaction } from "./auto-categorize";
 import { budgetToday, getBudget } from "./budget";
 import { activateBudget, updateBudget } from "./budget-activate";
+import { listBudgetActivity } from "./budget-activity";
 import { createAssignments, getBudgetPeriod } from "./budget-assignments";
 import { createEnvelope, payEnvelope, updateEnvelope } from "./budget-envelopes";
 import { getBudgetSetupFacts } from "./budget-setup-facts";
@@ -388,6 +389,12 @@ export function createV2LedgerRoutes(dependencies: V2LedgerRouteDependencies): H
         idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
       ),
       201,
+    );
+  });
+  routes.get("/budget/activity", async (context) => {
+    const ledger = await resolveContext(dependencies, context);
+    return context.json(
+      await listBudgetActivity(ledger, parseOptionalInteger(context.req.query("limit"), "limit")),
     );
   });
   routes.get("/budget/periods/:start", async (context) => {
