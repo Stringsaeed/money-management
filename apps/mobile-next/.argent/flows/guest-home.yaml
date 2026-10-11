@@ -4,11 +4,11 @@ steps:
   - launch: { native: com.stringsaeed.moneymanagement.next }
   - await: { idle: true, timeout: 15000 }
   - await:
-      visible: { text: { matches: "Continue as guest|Latest activity" } }
+      visible: { text: { matches: "Continue as guest|Nothing printed yet|UPCOMING" } }
       timeout: 45000
   - when: { visible: { text: Continue as guest } }
     steps:
       - tap: { text: Continue as guest }
-  - await: { visible: { text: Latest activity }, timeout: 45000 }
+  - await: { visible: { text: { matches: "Nothing printed yet|UPCOMING" } }, timeout: 45000 }
   - await: { idle: true }
   - assert: { visible: { text: "Ledger scope: Personal" } }

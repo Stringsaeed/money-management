@@ -24,3 +24,7 @@ export function resolveBudgetingFlag(inputs: BudgetingFlagInputs): BudgetingFlag
 
 export const parseCachedBudgeting = (raw: string | null): boolean | undefined =>
   raw === "on" ? true : raw === "off" ? false : undefined;
+
+/** True only in a dev build whose env sets `EXPO_PUBLIC_DEV_BUDGETING=on`; release builds ignore it. */
+export const devBudgetingOverride = (isDev: boolean, value: string | undefined): boolean =>
+  isDev && value === "on";

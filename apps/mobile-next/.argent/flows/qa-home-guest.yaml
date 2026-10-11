@@ -1,7 +1,14 @@
 steps:
   - run: guest-home
-  - scroll-to: { target: { text: Budgets }, direction: down }
-  - assert: { visible: { text: COMING SOON } }
-  - scroll-to: { target: { text: Nothing scheduled }, direction: down }
-  - assert: { visible: { text: Upcoming transactions } }
+  - echo: "A fresh guest gets receipt #0001; a seeded ledger gets the full board."
+  - when: { visible: { text: Nothing printed yet } }
+    steps:
+      - assert: { visible: { text: Add your first account } }
+      - assert: { visible: { text: Set up categories } }
+      - assert: { visible: { text: Nothing due this week } }
+  - when: { visible: { text: UPCOMING } }
+    steps:
+      - assert: { visible: { text: NET WORTH } }
+      - assert: { visible: { text: Income vs spending } }
+      - assert: { visible: { text: Line chart } }
   - await: { idle: true }

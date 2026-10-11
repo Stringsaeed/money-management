@@ -29,9 +29,16 @@ export interface CurrencySignProps {
   variant?: TypeVariant;
   /** `accent` is the hero treatment: lime on dark, ink on paper. */
   tone?: GlyphTone;
+  /** Glyph height in points when a board sets it apart from the variant's cap height. */
+  size?: number;
 }
 
-export function CurrencySign({ code, variant = "amountMd", tone = "primary" }: CurrencySignProps) {
+export function CurrencySign({
+  code,
+  variant = "amountMd",
+  tone = "primary",
+  size,
+}: CurrencySignProps) {
   const scheme = useColorScheme() === "dark" ? "dark" : "light";
   const { glyph, symbol } = amountParts(0, code);
   if (glyph) {
@@ -42,7 +49,7 @@ export function CurrencySign({ code, variant = "amountMd", tone = "primary" }: C
         color={troveRawColors[scheme][GLYPH_COLOR[tone]]}
         importantForAccessibility="no"
         name={glyph}
-        size={Math.round(CAP_HEIGHT_RATIO * FONT_SIZE[variant])}
+        size={size ?? Math.round(CAP_HEIGHT_RATIO * FONT_SIZE[variant])}
       />
     );
   }
@@ -50,6 +57,7 @@ export function CurrencySign({ code, variant = "amountMd", tone = "primary" }: C
     <Text
       accessibilityElementsHidden
       importantForAccessibility="no"
+      style={size ? { fontSize: size / CAP_HEIGHT_RATIO } : null}
       tone={tone === "accent" ? "secondary" : tone}
       variant={variant}
     >

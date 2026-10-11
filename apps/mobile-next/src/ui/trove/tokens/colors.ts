@@ -116,6 +116,27 @@ export const colors = {
   },
   /** Dotted leaders printed on receipts (always on paper). */
   receipt: { leader: colorToken("receiptLeader") },
+  /**
+   * Ink printed on a paper slip (`surface.paper`). The slip stays light in both modes, so these
+   * hold the paper-mode values in dark mode too.
+   */
+  paper: {
+    ink: colorToken("paperInk"),
+    textSecondary: colorToken("paperTextSecondary"),
+    textTertiary: colorToken("paperTextTertiary"),
+    accentText: colorToken("paperAccentText"),
+    negative: colorToken("paperNegative"),
+    rule: colorToken("paperRule"),
+    ruleStrong: colorToken("paperRuleStrong"),
+    /** Paper lifts with a soft shadow on canvas; none on dark. */
+    shadow: colorToken("paperShadow"),
+  },
+  /** Spending series on Home's income vs spending card: the same warm grey in both modes. */
+  chartSpend: colorToken("chartSpend"),
+  /** Selected segment of a compact toggle: paper white, or a lifted ring tone on dark. */
+  segmentOn: colorToken("segmentOn"),
+  /** Label on a solid warning.text fill, e.g. the due-count badge. */
+  warningOn: colorToken("warningOn"),
   tabBar: {
     fill: colorToken("tabBarFill"),
     ring: colorToken("tabBarRing"),

@@ -1,43 +1,53 @@
 import { format } from "date-fns";
 import { StyleSheet, View } from "react-native";
 
-import { Avatar, Header, layout, space } from "@/ui/trove";
+import { Avatar, fonts, space, Text } from "@/ui/trove";
+
+import { HomeBellButton } from "./home-bell-button";
 
 interface HomeHeaderProps {
-  readonly name: string;
+  readonly now: Date;
+  readonly title: string;
   readonly initials: string;
   readonly household: boolean;
-  readonly onOpenFilters: () => void;
-  readonly onOpenProfile: () => void;
+  readonly dueThisWeek: number;
+  readonly onOpenScope: () => void;
+  readonly onOpenDue: () => void;
 }
 
-/** Pinned above the scroll: the profile avatar, a greeting under today's stamp, and the filter. */
+/** Avatar (opens the ledger switch), today's stamp over the greeting, and the due bell. */
 export function HomeHeader({
-  name,
+  now,
+  title,
   initials,
   household,
-  onOpenFilters,
-  onOpenProfile,
+  dueThisWeek,
+  onOpenScope,
+  onOpenDue,
 }: HomeHeaderProps) {
   return (
     <View style={styles.header}>
-      <Header
-        title={`Hello, ${name}`}
-        stamp={format(new Date(), "EEE dd.MM.yy").toUpperCase()}
-        leading={
-          <Avatar
-            accessibilityLabel="Open profile"
-            initials={initials}
-            onPress={onOpenProfile}
-            scope={household ? "household" : "personal"}
-          />
-        }
-        actions={[{ icon: "filter", label: "Filter overview", onPress: onOpenFilters }]}
+      <Avatar
+        accessibilityLabel="Profile and ledger"
+        initials={initials}
+        onPress={onOpenScope}
+        scope={household ? "household" : "personal"}
       />
+      <View style={styles.titleBlock}>
+        <Text numberOfLines={1} tone="tertiary" variant="stamp">
+          {format(now, "EEE dd.MM.yy")}
+        </Text>
+        <Text accessibilityRole="header" numberOfLines={1} style={styles.title} variant="titleLg">
+          {title}
+        </Text>
+      </View>
+      <HomeBellButton count={dueThisWeek} onPress={onOpenDue} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { paddingBottom: space[2], paddingHorizontal: layout.screenGutter, paddingTop: space[2] },
+  header: { alignItems: "center", flexDirection: "row", gap: space[3] },
+  titleBlock: { flex: 1, minWidth: 0 },
+  title: { fontFamily: fonts.extrabold, fontSize: 24, letterSpacing: -0.4, lineHeight: 30 },
 });
