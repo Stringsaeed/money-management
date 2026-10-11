@@ -1,0 +1,63 @@
+---
+import TornEdge from "@/components/ui/TornEdge.astro";
+
+interface Props {
+  n: string;
+  title: string;
+  /** Paper slip or the lime "answer" slip. */
+  tone: "paper" | "lime";
+}
+
+const { n, title, tone } = Astro.props;
+const fill = tone === "lime" ? "var(--dark-highlight)" : "var(--dark-surface-paper)";
+---
+
+<li class="card">
+  <div class:list={["slip", tone]}>
+    <span class="n" aria-hidden="true">{n}</span>
+    <h3 class="title">{title}</h3>
+    <slot />
+  </div>
+  <TornEdge span={360} width="100%" fill={fill} />
+</li>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .slip {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 330px;
+    padding: 26px 24px 20px;
+  }
+
+  .paper {
+    background: var(--dark-surface-paper);
+    color: var(--light-text-on-paper);
+  }
+
+  .lime {
+    background: var(--dark-highlight);
+    color: var(--dark-bg-canvas);
+  }
+
+  .n {
+    font-family: var(--font-mono);
+    font-size: 64px;
+    line-height: 64px;
+    font-weight: 500;
+    letter-spacing: -3px;
+  }
+
+  .title {
+    margin: 0;
+    font-size: 26px;
+    line-height: 30px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
+</style>

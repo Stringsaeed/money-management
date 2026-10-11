@@ -1,0 +1,52 @@
+---
+/**
+ * Device bezel holding a 390×844 app screen at 0.8 scale (312×675 visible), as on the
+ * canvas. Decorative: the screen inside is inert and hidden from assistive tech.
+ */
+interface Props {
+  /** Bezel color. */
+  bezel: string;
+  /** Hairline ring inside the bezel; omit for none. */
+  ring?: string;
+  shadow: string;
+  class?: string;
+  style?: string;
+}
+
+const { bezel, ring, shadow, class: className, style } = Astro.props;
+const boxShadow = ring ? `inset 0 0 0 1.5px ${ring}, ${shadow}` : shadow;
+---
+
+<div
+  class:list={["phone", className]}
+  aria-hidden="true"
+  inert
+  style={`background:${bezel};box-shadow:${boxShadow};${style ?? ""}`}
+>
+  <div class="viewport">
+    <div class="screen"><slot /></div>
+  </div>
+</div>
+
+<style>
+  .phone {
+    padding: 10px;
+    border-radius: 52px;
+  }
+
+  .viewport {
+    width: 312px;
+    height: 675px;
+    overflow: hidden;
+    border-radius: 42px;
+    /* Promote once so the scaled screen composites on the GPU instead of repainting. */
+    contain: strict;
+  }
+
+  .screen {
+    width: 390px;
+    height: 844px;
+    transform: scale(0.8);
+    transform-origin: top left;
+  }
+</style>

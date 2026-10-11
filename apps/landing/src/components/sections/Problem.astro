@@ -1,0 +1,130 @@
+---
+import type { RegionTerms } from "@/lib/region";
+import { lumps } from "@/lib/landing-data";
+
+interface Props {
+  region: RegionTerms;
+}
+
+const { region } = Astro.props;
+---
+
+<section aria-labelledby="problem-title" class="wrap problem">
+  <div class="copy">
+    <span class="eyebrow">THE PROBLEM</span>
+    <h2 id="problem-title" class="display-2">It's the 20th.<br /><span class="dim">Where did it go?</span></h2>
+    <p class="body">
+      Salary lands around the 25th. Bills land on the 1st. And every few months a lump arrives that
+      the monthly budget never saw coming.
+    </p>
+  </div>
+  <ul class="lumps">
+    {
+      lumps(region).map((lump) => (
+        <li class="lump">
+          <span aria-hidden="true" class="tile">
+            {lump.emoji}
+          </span>
+          <span class="what">
+            <span class="name">{lump.title}</span>
+            <span class="when">{lump.when}</span>
+          </span>
+          <span class:list={["amount", { accent: lump.accent }]}>{lump.amount}</span>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .problem {
+    padding-top: var(--section-pad);
+    padding-bottom: var(--section-pad);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 56px;
+    align-items: flex-start;
+  }
+
+  .copy {
+    flex: 1 1 460px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .dim {
+    color: var(--dark-border-strong);
+  }
+
+  .body {
+    margin: 0;
+    max-width: 480px;
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--dark-text-secondary);
+  }
+
+  .lumps {
+    flex: 1 1 460px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .lump {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 22px 0;
+    border-bottom: 1.5px dashed var(--dark-border-default);
+  }
+
+  .tile {
+    width: 56px;
+    height: 56px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--tile-ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+
+  .what {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .name {
+    font-size: 21px;
+    line-height: 26px;
+    font-weight: 800;
+  }
+
+  .when {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--dark-text-tertiary);
+  }
+
+  .amount {
+    font-family: var(--font-mono);
+    font-size: clamp(16px, 1.6vw, 20px);
+    font-weight: 500;
+    color: var(--dark-text-primary);
+  }
+
+  .accent {
+    color: var(--dark-highlight);
+  }
+</style>

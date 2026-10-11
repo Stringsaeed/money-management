@@ -1,0 +1,238 @@
+---
+import type { RegionTerms } from "@/lib/region";
+import BudgetHomeScreen from "@/components/screens/BudgetHomeScreen.astro";
+import PhoneFrame from "@/components/ui/PhoneFrame.astro";
+import CurrencySign from "@/components/ui/CurrencySign.astro";
+import { type Currency, currencyLineup, currencyName, signHeight } from "@/lib/currency";
+import { headline } from "@/lib/landing-data";
+import { availability } from "@/lib/site";
+
+import HeroReceipt from "./HeroReceipt.astro";
+
+interface Props {
+  currency: Currency;
+  region: RegionTerms;
+}
+
+const { currency, region } = Astro.props;
+const lineup = currencyLineup(currency);
+const lumpPhrase =
+  region.monthlyLump.kind === "send-home"
+    ? "what you send home"
+    : `the ${region.monthlyLump.name.toLowerCase()}`;
+---
+
+<section id="top" aria-labelledby="hero-title" class="hero">
+  <div class="copy">
+    <span class="badge"><span aria-hidden="true" class="dot"></span>NEW · BUDGETS THAT START ON PAYDAY</span>
+    <h1 id="hero-title" class="title">
+      <span class="marker">{headline.a}</span><br />{headline.b}
+    </h1>
+    <p class="lede">
+      Trove adds up {region.rent.the}, the bills, the school term and {lumpPhrase}, then tells
+      you what you can actually spend today. <strong>No spreadsheet. 100% free and open source.</strong> Just the
+      receipt.
+    </p>
+    <p id="get" class="soon">
+      <span class="soon-tag"><span aria-hidden="true" class="soon-dot"></span>{availability.label}</span>
+      <span class="soon-where">to {availability.platforms}</span>
+    </p>
+    <span class="availability">
+      {
+        lineup.map((entry, index) => (
+          <>
+            {index > 0 && <span aria-hidden="true"> · </span>}
+            <CurrencySign currency={entry} height={signHeight(entry)} label={currencyName(entry.code)} />
+          </>
+        ))
+      }
+    </span>
+  </div>
+
+  <div aria-hidden="true" class="visual">
+    <HeroReceipt {currency} {region} />
+    <div class="phone-slot">
+      <PhoneFrame
+        bezel="var(--dark-bg-subtle)"
+        ring="var(--dark-border-default)"
+        shadow="0 40px 80px rgba(0, 0, 0, 0.55)"
+      >
+        <BudgetHomeScreen mode="dark" {currency} {region} />
+      </PhoneFrame>
+    </div>
+    <div class="sticker">
+      <span class="sticker-cap">≈ {currency.code}</span>
+      <span class="sticker-num">142</span>
+      <span class="sticker-cap">A DAY</span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: clamp(28px, 5vw, 64px) var(--gutter) clamp(60px, 7vw, 100px);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 56px;
+  }
+
+  .copy {
+    flex: 1 1 520px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .badge {
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 14px 7px 10px;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px var(--dark-border-default);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+    color: var(--dark-text-secondary);
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--dark-highlight);
+  }
+
+  .title {
+    margin: 0;
+    font-size: clamp(54px, 8.6vw, 128px);
+    line-height: 0.92;
+    font-weight: 900;
+    letter-spacing: -0.045em;
+  }
+
+  .lede {
+    margin: 0;
+    max-width: 560px;
+    font-size: clamp(18px, 1.6vw, 21px);
+    line-height: 1.5;
+    color: var(--dark-text-secondary);
+  }
+
+  .lede strong {
+    color: var(--dark-text-primary);
+  }
+
+  /* A status, not a button: ringed like the badge above, so nothing reads as tappable. */
+  .soon {
+    align-self: flex-start;
+    margin: 0;
+    height: 58px;
+    padding: 0 26px 0 7px;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1.5px var(--dark-border-default);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .soon-tag {
+    height: 44px;
+    padding: 0 18px 0 14px;
+    border-radius: 999px;
+    background: var(--dark-highlight);
+    color: var(--dark-bg-canvas);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .soon-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--dark-bg-canvas);
+    animation: soon-pulse 1.6s cubic-bezier(0.2, 0, 0, 1) infinite;
+  }
+
+  .soon-where {
+    color: var(--dark-text-secondary);
+  }
+
+  @keyframes soon-pulse {
+    50% {
+      opacity: 0.25;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .soon-dot {
+      animation: none;
+    }
+  }
+
+  .availability {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+    color: var(--dark-text-tertiary);
+  }
+
+  .visual {
+    flex: 1 1 440px;
+    min-width: 0;
+    position: relative;
+    height: 720px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .phone-slot {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    margin-left: -60px;
+    transform: rotate(4deg);
+  }
+
+  .sticker {
+    position: absolute;
+    right: max(0px, calc(50% - 300px));
+    top: 470px;
+    width: 132px;
+    height: 132px;
+    border-radius: 999px;
+    background: var(--dark-highlight);
+    color: var(--dark-bg-canvas);
+    transform: rotate(-12deg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.4);
+    font-family: var(--font-mono);
+  }
+
+  .sticker-cap {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+  }
+
+  .sticker-num {
+    font-size: 42px;
+    line-height: 44px;
+    font-weight: 600;
+    letter-spacing: -2px;
+  }
+</style>

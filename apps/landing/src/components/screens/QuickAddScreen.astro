@@ -1,0 +1,464 @@
+---
+import CurrencySign from "@/components/ui/CurrencySign.astro";
+import type { Currency } from "@/lib/currency";
+
+import {
+  QUICK_ADD_KEYS,
+  QUICK_ADD_KINDS,
+  QUICK_ADD_META,
+  quickAddAmount,
+  quickAddEnvelopes,
+} from "./quick-add-data";
+import type { QuickAddImpact } from "./quick-add-data";
+import type { ScreenMode } from "./tab-bar-data";
+
+interface Props {
+  mode: ScreenMode;
+  impact: QuickAddImpact;
+  currency: Currency;
+}
+
+const { mode, impact, currency } = Astro.props;
+const amount = quickAddAmount(impact, currency);
+const over = impact === "over";
+---
+
+<div class:list={["screen", mode]}>
+  <div class="sheet">
+    <div class="header">
+      <div class="heading">
+        <span class="label">👤 PERSONAL BUDGET</span>
+        <div class="title">Add spending</div>
+      </div>
+      <div class="close">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg
+        >
+      </div>
+    </div>
+
+    <div class="kinds">
+      {
+        QUICK_ADD_KINDS.map((kind) => (
+          <div class:list={["kind", { selected: kind.selected }]}>
+            <span>{kind.emoji}</span>
+            {kind.label}
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="amount-area">
+      <div class="amount">
+        <CurrencySign {currency} height="34px" width="40px" class="qa-glyph" />
+        <span class="whole">{amount.whole}</span>{amount.cents && <span class="cents">{amount.cents}</span>}
+        <span class="caret"></span>
+      </div>
+      <span class:list={["impact", impact]}><span>{amount.impactIcon}</span>{amount.impact}</span>
+    </div>
+
+    <div class="envelopes">
+      <span class="eyebrow">ENVELOPE · RECENT FIRST</span>
+      <div class="envelope-row">
+        {
+          quickAddEnvelopes(currency).map((env) => (
+            <div class:list={["envelope", { selected: env.selected }]}>
+              <span class="envelope-emoji">{env.emoji}</span>
+              {env.label}
+              <span class="envelope-left">{env.left}</span>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="meta-row">
+      {
+        QUICK_ADD_META.map((meta) => (
+          <div class:list={["meta", { grow: meta.grow }]}>
+            <span>{meta.emoji}</span>
+            {meta.label}
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="keys">
+      {
+        QUICK_ADD_KEYS.map((key) => (
+          <div class="key">
+            {key.backspace ? (
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M20.5 5.5H9L3.5 12 9 18.5h11.5zM16.5 9.5l-5 5M11.5 9.5l5 5" />
+              </svg>
+            ) : (
+              <span>{key.label}</span>
+            )}
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="actions">
+      {over && <div class="cover">Save &amp; cover it</div>}
+      <div class="save">Save</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .dark {
+    --t-backdrop: #000;
+    --t-canvas: var(--dark-bg-canvas);
+    --t-sheet-edge: inset 0 1px 0 var(--dark-border-default);
+    --t-fill: #232320;
+    --t-ring: var(--dark-border-default);
+    --t-text: var(--dark-text-primary);
+    --t-text2: var(--dark-text-secondary);
+    --t-text3: var(--dark-text-tertiary);
+    --t-faded: var(--dark-text-faded);
+    --t-accent: var(--dark-accent-fill);
+    --t-on-accent: var(--dark-accent-on);
+    --t-glyph: var(--dark-accent-fill);
+    --t-key: var(--dark-surface-default);
+    --t-key-ring: var(--dark-key-ring);
+    --t-seg-on: var(--dark-border-default);
+    --t-seg-on-fg: var(--dark-text-primary);
+    --t-seg-off-fg: var(--dark-text-secondary);
+    --t-sel-bg: var(--dark-accent-fill);
+    --t-sel-fg: var(--dark-accent-on);
+    --t-neg: var(--dark-negative-text);
+    --t-neg-subtle: var(--dark-negative-subtle);
+    --t-ok-bg: var(--dark-accent-subtle);
+    --t-ok-fg: var(--dark-accent-text);
+  }
+
+  .paper {
+    --t-backdrop: #b9b5aa;
+    --t-canvas: var(--light-bg-canvas);
+    --t-sheet-edge: 0 -8px 24px rgba(21, 21, 21, 0.1);
+    --t-fill: var(--light-fill-neutral);
+    --t-ring: var(--light-border-default);
+    --t-text: var(--light-text-primary);
+    --t-text2: var(--light-text-secondary);
+    --t-text3: var(--light-text-tertiary);
+    --t-faded: var(--light-text-faded);
+    --t-accent: var(--light-accent-fill);
+    --t-on-accent: var(--light-accent-on);
+    --t-glyph: var(--light-accent-fill);
+    --t-key: var(--light-surface-default);
+    --t-key-ring: var(--light-key-ring);
+    --t-seg-on: var(--light-fill-selected);
+    --t-seg-on-fg: var(--light-text-primary);
+    --t-seg-off-fg: var(--light-text-secondary);
+    --t-sel-bg: var(--light-accent-fill);
+    --t-sel-fg: var(--light-accent-on);
+    --t-neg: var(--light-negative-text);
+    --t-neg-subtle: var(--light-negative-subtle);
+    --t-ok-bg: var(--light-accent-subtle);
+    --t-ok-fg: var(--light-positive-text);
+  }
+
+  .screen {
+    position: relative;
+    width: 390px;
+    height: 844px;
+    overflow: hidden;
+    background: var(--t-backdrop);
+    color: var(--t-text);
+    font-family: var(--font-ui);
+  }
+
+  .sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 56px;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px 20px 34px;
+    border-radius: 28px 28px 44px 44px;
+    background: var(--t-canvas);
+    box-shadow: var(--t-sheet-edge);
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .heading {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    color: var(--t-text3);
+  }
+
+  .title {
+    margin: 0;
+    font-size: 26px;
+    line-height: 32px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .close {
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: var(--t-fill);
+    box-shadow: inset 0 0 0 1px var(--t-ring);
+    color: var(--t-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .kinds {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--t-fill);
+    box-shadow: inset 0 0 0 1px var(--t-ring);
+  }
+
+  .kind {
+    height: 34px;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--t-seg-off-fg);
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .kind.selected {
+    background: var(--t-seg-on);
+    color: var(--t-seg-on-fg);
+  }
+
+  .amount-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .amount {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-mono);
+  }
+
+  :global(.qa-glyph) {
+    color: var(--t-glyph);
+  }
+
+  .whole {
+    font-size: 56px;
+    line-height: 60px;
+    font-weight: 500;
+    letter-spacing: -3px;
+  }
+
+  .cents {
+    font-size: 28px;
+    line-height: 32px;
+    color: var(--t-faded);
+  }
+
+  .caret {
+    width: 3px;
+    height: 44px;
+    align-self: center;
+    background: var(--t-glyph);
+  }
+
+  .impact {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 800;
+  }
+
+  .impact.over {
+    background: var(--t-neg-subtle);
+    color: var(--t-neg);
+  }
+
+  .impact.fits {
+    background: var(--t-ok-bg);
+    color: var(--t-ok-fg);
+  }
+
+  .envelopes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    color: var(--t-text3);
+  }
+
+  .envelope-row {
+    display: flex;
+    gap: 8px;
+    margin-right: -20px;
+    overflow: hidden;
+  }
+
+  .envelope {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 40px;
+    padding: 0 14px 0 10px;
+    border-radius: 999px;
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--t-ring);
+    color: var(--t-text);
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .envelope.selected {
+    background: var(--t-sel-bg);
+    box-shadow: inset 0 0 0 0 var(--t-ring);
+    color: var(--t-sel-fg);
+  }
+
+  .envelope-emoji {
+    font-size: 17px;
+  }
+
+  .envelope-left {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.8;
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .meta {
+    flex: none;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--t-ring);
+    color: var(--t-text2);
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .meta.grow {
+    flex: 1;
+  }
+
+  .keys {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .key {
+    height: 48px;
+    border-radius: 999px;
+    background: var(--t-key);
+    box-shadow: inset 0 0 0 1px var(--t-key-ring);
+    color: var(--t-text);
+    font-family: var(--font-mono);
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .cover {
+    flex: 1;
+    height: 52px;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1.5px var(--t-ring);
+    color: var(--t-text);
+    font-size: 16px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .save {
+    flex: 1;
+    height: 52px;
+    border-radius: 999px;
+    background: var(--t-accent);
+    color: var(--t-on-accent);
+    font-size: 17px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>

@@ -1,0 +1,59 @@
+---
+import BigPayments from "@/components/sections/BigPayments.astro";
+import Cta from "@/components/sections/Cta.astro";
+import Currencies from "@/components/sections/Currencies.astro";
+import Hero from "@/components/sections/Hero.astro";
+import Household from "@/components/sections/Household.astro";
+import HowItWorks from "@/components/sections/HowItWorks.astro";
+import Modes from "@/components/sections/Modes.astro";
+import Problem from "@/components/sections/Problem.astro";
+import Promise from "@/components/sections/Promise.astro";
+import QuickAdd from "@/components/sections/QuickAdd.astro";
+import Ritual from "@/components/sections/Ritual.astro";
+import SiteFooter from "@/components/sections/SiteFooter.astro";
+import SiteHeader from "@/components/sections/SiteHeader.astro";
+import Ticker from "@/components/sections/Ticker.astro";
+import Features from "@/components/sections/Features.astro";
+import Base from "@/layouts/Base.astro";
+import type { Currency } from "@/lib/currency";
+import { regionFor } from "@/lib/region";
+
+interface Props {
+  currency: Currency;
+}
+
+const { currency } = Astro.props;
+const region = regionFor(currency.code);
+---
+
+<Base canonicalPath="/">
+  <div class="page">
+    <SiteHeader />
+    <main>
+      <Hero {currency} {region} />
+      <Ticker {currency} {region} />
+      <Problem {region} />
+      <HowItWorks {currency} />
+      <QuickAdd {currency} />
+      <BigPayments {currency} {region} />
+      <Ritual {currency} />
+      <Features {currency} {region} />
+      <Household {currency} />
+      <Modes {currency} {region} />
+      <Currencies {currency} />
+      <Promise />
+      <Cta />
+    </main>
+    <SiteFooter />
+  </div>
+</Base>
+
+<style>
+  .page {
+    width: 100%;
+    min-width: 320px;
+    overflow: hidden;
+    background: var(--dark-bg-canvas);
+    color: var(--dark-text-primary);
+  }
+</style>

@@ -1,0 +1,148 @@
+---
+import QuickAddScreen from "@/components/screens/QuickAddScreen.astro";
+import PhoneFrame from "@/components/ui/PhoneFrame.astro";
+import { type Currency, withCode } from "@/lib/currency";
+import { quickTaps } from "@/lib/landing-data";
+
+interface Props {
+  currency: Currency;
+}
+
+const { currency } = Astro.props;
+---
+
+<section aria-labelledby="quick-title" class="band">
+  <div class="wrap inner">
+    <div class="device">
+      <PhoneFrame bezel="var(--light-text-primary)" shadow="0 40px 80px rgba(21, 21, 21, 0.22)">
+        <QuickAddScreen mode="paper" impact="fits" {currency} />
+      </PhoneFrame>
+    </div>
+    <div class="copy">
+      <span class="eyebrow">QUICK ADD</span>
+      <h2 id="quick-title" class="display-2">Three taps.<br />Phone back<br />in pocket.</h2>
+      <ol class="taps">
+        {
+          quickTaps.map((tap) => (
+            <li class="tap">
+              <span class="n" aria-hidden="true">
+                {tap.n}
+              </span>
+              <span class="text">
+                <span class="tap-title">{tap.title}</span>
+                <span class="tap-detail">{tap.detail}</span>
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+      <span class="impact"><span aria-hidden="true">⚠︎</span>Dining &amp; coffee will be {withCode(175, currency)} over</span>
+      <span class="impact-note"
+        >Before you save, you see what it does to the envelope. Then one tap covers it.</span
+      >
+    </div>
+  </div>
+</section>
+
+<style>
+  .band {
+    background: var(--light-bg-canvas);
+    color: var(--light-text-primary);
+  }
+
+  .inner {
+    padding-top: var(--section-pad);
+    padding-bottom: var(--section-pad);
+    display: flex;
+    flex-wrap: wrap-reverse;
+    align-items: center;
+    gap: 64px;
+  }
+
+  .device {
+    flex: 1 1 380px;
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+  }
+
+  .copy {
+    flex: 1 1 480px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+
+  .copy .eyebrow {
+    color: var(--light-text-secondary);
+  }
+
+  .taps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tap {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 0;
+    border-bottom: 1.5px dashed var(--light-border-default);
+  }
+
+  .n {
+    width: 52px;
+    height: 52px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--light-accent-fill);
+    color: var(--light-accent-on);
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tap-title {
+    font-size: 22px;
+    line-height: 28px;
+    font-weight: 800;
+  }
+
+  .tap-detail {
+    font-size: 16px;
+    line-height: 22px;
+    color: var(--light-text-secondary);
+  }
+
+  .impact {
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: var(--light-negative-subtle);
+    color: var(--light-negative-text);
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  .impact-note {
+    margin-top: -14px;
+    font-size: 15px;
+    line-height: 22px;
+    color: var(--light-text-secondary);
+  }
+</style>

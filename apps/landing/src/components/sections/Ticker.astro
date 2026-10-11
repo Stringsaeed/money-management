@@ -1,0 +1,81 @@
+---
+import type { RegionTerms } from "@/lib/region";
+import type { Currency } from "@/lib/currency";
+import { withCode } from "@/lib/currency";
+import { tickerWords } from "@/lib/landing-data";
+
+interface Props {
+  currency: Currency;
+  region: RegionTerms;
+}
+
+const { currency, region } = Astro.props;
+const words = tickerWords(currency, region);
+// Two copies back to back: the track slides by exactly half its width, then loops seamlessly.
+const items = [...words, ...words];
+---
+
+<div class="ticker">
+  <p class="visually-hidden">
+    Safe to spend {withCode(1988, currency)}. About 142 a day. 14 days to payday. {region.rent.one} set aside. {region.utility} paid.
+  </p>
+  <div class="track" aria-hidden="true">
+    {
+      items.map((word) => (
+        <span class="item">
+          {word}
+          <span class="star">✳</span>
+        </span>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .ticker {
+    overflow: hidden;
+    background: var(--dark-highlight);
+    color: var(--dark-bg-canvas);
+    border-top: 2px solid var(--dark-bg-canvas);
+    border-bottom: 2px solid var(--dark-bg-canvas);
+  }
+
+  .track {
+    display: flex;
+    width: max-content;
+    animation: marquee 38s linear infinite;
+    will-change: transform;
+  }
+
+  .item {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding: 18px 11px;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    white-space: nowrap;
+  }
+
+  .star {
+    font-size: 14px;
+  }
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .track {
+      animation: none;
+    }
+  }
+</style>

@@ -1,0 +1,158 @@
+---
+import type { RegionTerms } from "@/lib/region";
+import type { Currency } from "@/lib/currency";
+
+import AccountsPreview from "./features/AccountsPreview.astro";
+import FeatureCard from "./features/FeatureCard.astro";
+import GuestPreview from "./features/GuestPreview.astro";
+import LedgerPreview from "./features/LedgerPreview.astro";
+import MarketPreview from "./features/MarketPreview.astro";
+import OverviewPreview from "./features/OverviewPreview.astro";
+import RecurringPreview from "./features/RecurringPreview.astro";
+import SmartCategoryPreview from "./features/SmartCategoryPreview.astro";
+
+interface Props {
+  currency: Currency;
+  region: RegionTerms;
+}
+
+const { currency, region } = Astro.props;
+---
+
+<section id="features" aria-labelledby="features-title" class="band">
+  <div class="wrap inner">
+    <div class="head">
+      <div class="copy">
+        <span class="eyebrow">BEYOND THE BUDGET</span>
+        <h2 id="features-title" class="display-2">
+          One number up top.<br /><span class="dim">Everything else underneath.</span>
+        </h2>
+      </div>
+      <p class="intro">
+        Trove is a full money app. Every account, entry and repeat payment sits in one ledger, next
+        to the markets you keep an eye on.
+      </p>
+    </div>
+    <ul class="grid">
+      <FeatureCard
+        wide
+        eyebrow="LEDGER"
+        title="Every entry, findable."
+        detail="Income, spending and transfers between your own accounts. Search the notes, then filter by account, category or date."
+      >
+        <LedgerPreview {currency} />
+      </FeatureCard>
+      <FeatureCard
+        eyebrow="ACCOUNTS"
+        title="Each account in its own currency."
+        detail="Cash, cards and savings, kept in the currency they really hold. Fourteen to choose from."
+      >
+        <AccountsPreview {currency} />
+      </FeatureCard>
+      <FeatureCard
+        eyebrow="RECURRING"
+        title="Repeats on its own."
+        detail="Salary, rent and subscriptions: every day, week, month or year, until a date or a count. What's next waits on Home."
+      >
+        <RecurringPreview {currency} {region} />
+      </FeatureCard>
+      <FeatureCard
+        tone="ink"
+        eyebrow="MARKET"
+        title="Markets, at a glance."
+        detail="Live quotes for stocks, gold and silver, and crypto. Read-only, in US dollars, and the last prices stay if you lose signal."
+      >
+        <MarketPreview />
+      </FeatureCard>
+      <FeatureCard
+        eyebrow="SMART CATEGORIES"
+        title="Type the note. It picks the category."
+        detail="It sees the note, its currency and your category names. Never amounts, balances or who you are. Switch it off any time."
+      >
+        <SmartCategoryPreview {region} />
+      </FeatureCard>
+      <FeatureCard
+        wide
+        eyebrow="HOME"
+        title="Money in, money out."
+        detail="The week, the month or the year, for one account or all of them, with what's coming up next."
+      >
+        <OverviewPreview />
+      </FeatureCard>
+      <FeatureCard
+        eyebrow="GUEST MODE"
+        title="Try it without signing up."
+        detail="Start as a guest. Sign in when you're ready and bring your ledger with you."
+      >
+        <GuestPreview />
+      </FeatureCard>
+    </ul>
+  </div>
+</section>
+
+<style>
+  .band {
+    background: var(--light-bg-canvas);
+    color: var(--light-text-primary);
+  }
+
+  .inner {
+    padding-top: var(--section-pad);
+    padding-bottom: var(--section-pad);
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+  }
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .copy {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    max-width: 820px;
+  }
+
+  .copy .eyebrow {
+    color: var(--light-text-secondary);
+  }
+
+  .dim {
+    color: var(--light-border-strong);
+  }
+
+  .intro {
+    margin: 0;
+    max-width: 380px;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--light-text-secondary);
+  }
+
+  .grid {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  @media (min-width: 720px) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1080px) {
+    .grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>

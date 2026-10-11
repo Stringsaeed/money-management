@@ -1,0 +1,200 @@
+---
+import BudgetTabBar from "@/components/screens/BudgetTabBar.astro";
+import { type Currency, withCode } from "@/lib/currency";
+import { ledgers } from "@/lib/landing-data";
+
+interface Props {
+  currency: Currency;
+}
+
+const { currency } = Astro.props;
+---
+
+<section id="household" aria-labelledby="house-title" class="wrap household">
+  <div class="copy">
+    <span class="eyebrow">👤 PERSONAL · 🏠 HOUSEHOLD</span>
+    <h2 id="house-title" class="display-2">
+      One shared budget.<br /><span class="dim">Two separate lives.</span>
+    </h2>
+    <p class="body">
+      Run the house from the joint account together. Your personal budget never mixes in, and one
+      button switches every tab between the two.
+    </p>
+  </div>
+  <div class="ledgers">
+    {
+      ledgers.map((ledger) => (
+        <div class:list={["ledger", { shared: ledger.shared }]}>
+          <span aria-hidden="true" class="tile">
+            {ledger.emoji}
+          </span>
+          <span class="who">
+            <span class="name">{ledger.name}</span>
+            <span class="sub">{ledger.sub}</span>
+          </span>
+          <span class="safe">
+            <span class="safe-label">SAFE</span>
+            <span class="safe-value">{ledger.safe}</span>
+          </span>
+        </div>
+      ))
+    }
+    <div class="activity">
+      <span aria-hidden="true" class="avatar">S</span>
+      <span class="activity-text">
+        <span class="activity-title">Sara added {withCode(120, currency)} · Groceries</span>
+        <span class="activity-sub">Cash · 2 minutes ago</span>
+      </span>
+    </div>
+    <div aria-hidden="true" inert class="tabbar">
+      <BudgetTabBar active="budget" scope="household" mode="dark" />
+    </div>
+  </div>
+</section>
+
+<style>
+  .household {
+    padding-top: var(--section-pad);
+    padding-bottom: var(--section-pad);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 56px;
+    align-items: center;
+  }
+
+  .copy {
+    flex: 1 1 480px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .dim {
+    color: var(--dark-border-strong);
+  }
+
+  .body {
+    margin: 0;
+    max-width: 500px;
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--dark-text-secondary);
+  }
+
+  .ledgers {
+    flex: 1 1 420px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 470px;
+  }
+
+  .ledger {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 22px;
+    border-radius: 24px;
+    background: var(--dark-surface-default);
+    box-shadow: inset 0 0 0 1px var(--dark-border-default);
+  }
+
+  .ledger.shared {
+    background: var(--dark-accent-subtle);
+    box-shadow: inset 0 0 0 2px var(--dark-highlight);
+  }
+
+  .tile {
+    width: 56px;
+    height: 56px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--tile-ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+
+  .who {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .name {
+    font-size: 22px;
+    line-height: 28px;
+    font-weight: 900;
+  }
+
+  .sub {
+    font-size: 15px;
+    color: var(--dark-text-secondary);
+  }
+
+  .safe {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-family: var(--font-mono);
+  }
+
+  .safe-label {
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    color: var(--dark-text-tertiary);
+  }
+
+  .safe-value {
+    font-size: 22px;
+    font-weight: 500;
+  }
+
+  .activity {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: 24px;
+    background: var(--dark-accent-subtle);
+    box-shadow: inset 4px 0 0 var(--dark-highlight);
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--member-sky);
+    color: var(--dark-bg-canvas);
+    font-weight: 900;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .activity-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .activity-title {
+    font-size: 17px;
+    font-weight: 800;
+  }
+
+  .activity-sub {
+    font-size: 14px;
+    color: var(--dark-text-secondary);
+  }
+
+  .tabbar {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+  }
+</style>

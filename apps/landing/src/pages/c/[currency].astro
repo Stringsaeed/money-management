@@ -1,0 +1,24 @@
+---
+/**
+ * One prerendered home page per display currency. The edge worker serves the visitor's
+ * variant at `/`; these URLs stay out of the index (see `worker/index.ts`).
+ */
+import type { GetStaticPaths } from "astro";
+
+import LandingPage from "@/components/LandingPage.astro";
+import { CURRENCY_CODES, type CurrencyCode, currencyFor } from "@/lib/currency";
+
+export const getStaticPaths = (() =>
+  CURRENCY_CODES.map((code) => ({
+    params: { currency: code.toLowerCase() },
+    props: { code },
+  }))) satisfies GetStaticPaths;
+
+interface Props {
+  code: CurrencyCode;
+}
+
+const { code } = Astro.props;
+---
+
+<LandingPage currency={currencyFor(code)} />

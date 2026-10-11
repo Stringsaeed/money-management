@@ -1,0 +1,61 @@
+---
+import { footerLinks } from "@/lib/site";
+---
+
+<footer class="footer">
+  <div class="wrap bar">
+    <nav aria-label="Footer" class="links">
+      {footerLinks.map((link) => <a href={link.href}>{link.label}</a>)}
+    </nav>
+    <span>© 2026 TROVE · MADE FOR PAYDAY PEOPLE</span>
+  </div>
+  <div aria-hidden="true" class="outline">trove</div>
+</footer>
+
+<style>
+  .footer {
+    position: relative;
+    background: var(--dark-bg-canvas);
+    overflow: hidden;
+  }
+
+  .bar {
+    padding-top: 56px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 24px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 1.2px;
+    color: var(--dark-text-tertiary);
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 28px;
+  }
+
+  .links a {
+    color: var(--dark-text-secondary);
+    text-decoration: none;
+  }
+
+  .links a:hover {
+    color: var(--dark-text-primary);
+  }
+
+  .outline {
+    margin-top: 20px;
+    text-align: center;
+    font-size: clamp(120px, 27vw, 420px);
+    line-height: 0.78;
+    font-weight: 900;
+    letter-spacing: -0.07em;
+    color: transparent;
+    -webkit-text-stroke: 2px var(--dark-border-default);
+    white-space: nowrap;
+    transform: translateY(14%);
+  }
+</style>

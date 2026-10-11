@@ -1,0 +1,84 @@
+---
+import type { RegionTerms } from "@/lib/region";
+import HomeScreen from "@/components/screens/HomeScreen.astro";
+import PhoneFrame from "@/components/ui/PhoneFrame.astro";
+import type { Currency } from "@/lib/currency";
+
+interface Props {
+  currency: Currency;
+  region: RegionTerms;
+}
+
+const { currency, region } = Astro.props;
+---
+
+<section aria-labelledby="modes-title" class="modes">
+  <div class="wrap inner">
+    <h2 id="modes-title" class="title">
+      <span class="night">Ink at night.</span><span class="day">Paper by day.</span>
+    </h2>
+    <div aria-hidden="true" class="phones">
+      <PhoneFrame
+        bezel="var(--dark-bg-subtle)"
+        ring="var(--dark-border-default)"
+        shadow="0 40px 80px rgba(0, 0, 0, 0.5)"
+      >
+        <HomeScreen mode="dark" {currency} {region} />
+      </PhoneFrame>
+      <PhoneFrame
+        bezel="var(--light-surface-raised)"
+        ring="var(--light-border-default)"
+        shadow="0 40px 80px rgba(21, 21, 21, 0.18)"
+      >
+        <HomeScreen mode="paper" {currency} {region} />
+      </PhoneFrame>
+    </div>
+  </div>
+</section>
+
+<style>
+  .modes {
+    position: relative;
+    background: linear-gradient(90deg, var(--dark-bg-canvas) 50%, var(--light-bg-canvas) 50%);
+  }
+
+  .inner {
+    padding-top: var(--section-pad);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .title {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0 0.3em;
+    font-size: clamp(40px, 5.6vw, 80px);
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    text-align: center;
+  }
+
+  .night {
+    color: var(--dark-text-primary);
+    mix-blend-mode: difference;
+  }
+
+  .day {
+    padding: 0 0.1em;
+    background: var(--dark-highlight);
+    color: var(--dark-bg-canvas);
+  }
+
+  .phones {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 28px;
+    margin-bottom: -170px;
+  }
+</style>

@@ -1,0 +1,149 @@
+---
+import type { Currency } from "@/lib/currency";
+import { ritual } from "@/lib/landing-data";
+
+interface Props {
+  currency: Currency;
+}
+
+const { currency } = Astro.props;
+---
+
+<section aria-labelledby="ritual-title" class="band">
+  <div class="wrap inner">
+    <div class="head">
+      <h2 id="ritual-title" class="display-2 title">Payday becomes a two-minute ritual.</h2>
+      <span class="eyebrow">EVERY 25TH · OR WHENEVER YOURS IS</span>
+    </div>
+    <ol class="steps">
+      {
+        ritual(currency).map((step) => (
+          <li class:list={["step", step.tone]}>
+            <span class="top">
+              <span aria-hidden="true" class="emoji">
+                {step.emoji}
+              </span>
+              <span class="n">{step.n}</span>
+            </span>
+            <h3 class="step-title">{step.title}</h3>
+            <span class="detail">{step.detail}</span>
+            <span class="stamp">{step.stamp}</span>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .band {
+    background: var(--dark-bg-subtle);
+    border-top: 1px solid var(--dark-border-subtle);
+    border-bottom: 1px solid var(--dark-border-subtle);
+  }
+
+  .inner {
+    padding-top: var(--section-pad);
+    padding-bottom: var(--section-pad);
+    display: flex;
+    flex-direction: column;
+    gap: 52px;
+  }
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .title {
+    max-width: 820px;
+  }
+
+  .steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 16px;
+  }
+
+  .step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 230px;
+    padding: 26px 22px;
+    border-radius: 24px;
+    background: var(--step-bg);
+    color: var(--step-fg);
+    box-shadow: inset 0 0 0 1px var(--step-ring);
+  }
+
+  .lime {
+    --step-bg: var(--dark-highlight);
+    --step-fg: var(--dark-bg-canvas);
+    --step-ring: var(--dark-highlight);
+  }
+
+  .ink {
+    --step-bg: var(--dark-surface-default);
+    --step-fg: var(--dark-text-primary);
+    --step-ring: var(--dark-border-default);
+  }
+
+  .paper {
+    --step-bg: var(--dark-surface-paper);
+    --step-fg: var(--dark-bg-canvas);
+    --step-ring: var(--dark-surface-paper);
+  }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .emoji {
+    font-size: 36px;
+  }
+
+  .n {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+    opacity: 0.8;
+  }
+
+  .step-title {
+    margin: 0;
+    font-size: 26px;
+    line-height: 30px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
+
+  .detail {
+    font-size: 16px;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+
+  .stamp {
+    margin-top: auto;
+    align-self: flex-start;
+    padding: 3px 10px;
+    border: 1.5px solid currentColor;
+    border-radius: 6px;
+    transform: rotate(-3deg);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+  }
+</style>

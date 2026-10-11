@@ -1,0 +1,88 @@
+---
+/**
+ * The currency sign beside an amount. Dirham and riyal are drawn (fonts lack the new signs);
+ * every other sign is Plex Mono text sized so its cap height matches a drawn sign of the same
+ * `height`. Three-letter codes (CHF, KWD) step down like the stamp beside a figure.
+ */
+import { DIRHAM_PATH, DIRHAM_VIEWBOX } from "@/lib/dirham";
+import type { Currency } from "@/lib/currency";
+import { RIYAL_PATHS, RIYAL_VIEWBOX } from "@/lib/riyal";
+
+interface Props {
+  currency: Currency;
+  /** CSS length of the drawn sign, e.g. `32px` or `0.72em`. */
+  height: string;
+  /** Dirham width; defaults to the canvas proportion (7:6). */
+  width?: string;
+  /** Accessible name; omit when the amount's label already names the currency. */
+  label?: string;
+  class?: string;
+}
+
+const { currency, height, width, label, class: className } = Astro.props;
+const role = label ? "img" : undefined;
+const hidden = label ? undefined : "true";
+const sign = currency.sign;
+const compact = "text" in sign && sign.text.length >= 3;
+---
+
+{
+  "drawn" in sign && sign.drawn === "dirham" && (
+    <svg
+      viewBox={DIRHAM_VIEWBOX}
+      fill="currentColor"
+      class:list={["sign", className]}
+      style={`height:${height};width:${width ?? `calc(${height} * 7 / 6)`}`}
+      role={role} aria-label={label} aria-hidden={hidden}
+    >
+      <path d={DIRHAM_PATH} />
+    </svg>
+  )
+}
+{
+  "drawn" in sign && sign.drawn === "riyal" && (
+    <svg
+      viewBox={RIYAL_VIEWBOX}
+      fill="currentColor"
+      class:list={["sign", className]}
+      style={`height:${height};width:calc(${height} * 1124.14 / 1256.39)`}
+      role={role} aria-label={label} aria-hidden={hidden}
+    >
+      {RIYAL_PATHS.map((d) => (
+        <path d={d} />
+      ))}
+    </svg>
+  )
+}
+{
+  "text" in sign && (
+    <span
+      class:list={["sign", "text", { compact }, className]}
+      style={`--sign-h:${height}`}
+      role={role} aria-label={label} aria-hidden={hidden}
+    >
+      {sign.text}
+    </span>
+  )
+}
+
+<style>
+  .sign {
+    flex: none;
+  }
+
+  .text {
+    font-family: var(--font-mono);
+    /* Plex Mono caps are 0.698em tall. */
+    font-size: calc(var(--sign-h) / 0.698);
+    line-height: 1;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: currentColor;
+  }
+
+  .compact {
+    font-size: calc(var(--sign-h) * 0.62);
+    letter-spacing: 0;
+  }
+</style>

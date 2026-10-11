@@ -1,0 +1,51 @@
+---
+import SiteFooter from "@/components/sections/SiteFooter.astro";
+import SiteHeader from "@/components/sections/SiteHeader.astro";
+import Base from "@/layouts/Base.astro";
+---
+
+<Base title="Not found — Trove" description="This page isn't on the receipt.">
+  <meta slot="head" name="robots" content="noindex" />
+  <div class="page">
+    <SiteHeader />
+    <main class="wrap missing">
+      <span class="eyebrow">ERROR 404 · VOID</span>
+      <h1 class="display-2">This page isn't<br /><span class="marker">on the receipt.</span></h1>
+      <a href="/" class="home">Back to Trove</a>
+    </main>
+    <SiteFooter />
+  </div>
+</Base>
+
+<style>
+  .page {
+    min-width: 320px;
+    overflow: hidden;
+  }
+
+  .missing {
+    padding-top: var(--section-pad);
+    padding-bottom: var(--section-pad);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 26px;
+  }
+
+  .home,
+  .home:hover {
+    color: var(--dark-bg-canvas);
+  }
+
+  .home {
+    height: 52px;
+    padding: 0 24px;
+    border-radius: 999px;
+    background: var(--dark-highlight);
+    font-size: 17px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+  }
+</style>

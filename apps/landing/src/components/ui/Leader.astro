@@ -1,0 +1,18 @@
+---
+/** Dotted leader between a receipt label and its amount. */
+interface Props {
+  color?: string;
+}
+
+const { color = "var(--light-receipt-leader)" } = Astro.props;
+---
+
+<span class="leader" aria-hidden="true" style={`color:${color}`}>································</span>
+
+<style>
+  .leader {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+</style>

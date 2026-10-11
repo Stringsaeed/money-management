@@ -1,0 +1,92 @@
+---
+import { CURRENCY_CODES, type Currency } from "@/lib/currency";
+
+interface Props {
+  currency: Currency;
+}
+
+const { currency } = Astro.props;
+---
+
+<div class="accounts">
+  <div class="account">
+    <span class="tile">💵</span><span class="name">Cash</span><span class="code">{currency.code}</span>
+  </div>
+  <div class="account">
+    <span class="tile">💳</span><span class="name">Travel card</span><span class="code">{currency.code === "USD" ? "EUR" : "USD"}</span>
+  </div>
+  <div class="codes">
+    {CURRENCY_CODES.map((code) => <span class:list={["chip", { on: code === currency.code }]}>{code}</span>)}
+  </div>
+</div>
+
+<style>
+  .accounts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .account {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 48px;
+    padding: 0 14px 0 6px;
+    border-radius: 999px;
+    background: var(--light-surface-raised);
+    box-shadow: inset 0 0 0 1px var(--light-border-subtle);
+  }
+
+  .tile {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background: var(--light-fill-neutral);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--light-text-secondary);
+  }
+
+  .codes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 6px;
+  }
+
+  .chip {
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px var(--light-border-default);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    color: var(--light-text-secondary);
+    display: flex;
+    align-items: center;
+  }
+
+  .chip.on {
+    background: var(--light-accent-fill);
+    color: var(--light-accent-on);
+    box-shadow: none;
+  }
+</style>
