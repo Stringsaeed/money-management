@@ -31,7 +31,8 @@ export function SearchBar({ value, onChange, onCancel }: SearchBarProps) {
           placeholderTextColor={colors.text.secondary}
           returnKeyType="search"
           selectionColor={colors.accent.fill}
-          style={styles.input}
+          // The typed query is bold; the placeholder stays regular.
+          style={[styles.input, value ? styles.inputFilled : null]}
           value={value}
         />
         {value ? (
@@ -77,12 +78,13 @@ const styles = StyleSheet.create({
   input: {
     color: colors.text.primary,
     flex: 1,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.regular,
     fontSize: 17,
     height: "100%",
     minWidth: 0,
     paddingVertical: 0,
   },
+  inputFilled: { fontFamily: fonts.bold },
   clear: {
     alignItems: "center",
     backgroundColor: colors.border.default,

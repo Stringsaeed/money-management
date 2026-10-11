@@ -36,7 +36,7 @@ export function SearchSheets({ search }: SearchSheetsProps) {
         open={search.sheet === "account"}
         options={[
           { key: ALL, label: "All accounts", icon: "bank" },
-          ...search.accounts.toSorted(byName).map((account) => ({
+          ...[...search.accounts].sort(byName).map((account) => ({
             key: account.id,
             label: account.name,
             icon: "accounts" as const,
@@ -51,8 +51,9 @@ export function SearchSheets({ search }: SearchSheetsProps) {
         open={search.sheet === "category"}
         options={[
           { key: ALL, label: "All categories", icon: "category" },
-          ...search.categories
-            .toSorted((a, b) => a.kind.localeCompare(b.kind) || byName(a, b))
+          // Copied before sorting: Hermes on Android lacks Array#toSorted.
+          ...[...search.categories]
+            .sort((a, b) => a.kind.localeCompare(b.kind) || byName(a, b))
             .map((category) => ({
               key: category.id,
               label: category.name,
