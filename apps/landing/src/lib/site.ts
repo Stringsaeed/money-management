@@ -21,7 +21,5 @@ export const sourceUrl = "https://github.com/Stringsaeed/money-management";
 export const footerLinks = [
   { label: "PRIVACY", href: "#privacy" },
   { label: "TERMS", href: "#terms" },
-  { label: "SUPPORT", href: "#support" },
-  { label: "PRESS KIT", href: "#press" },
   { label: "SOURCE", href: sourceUrl },
 ] as const;
