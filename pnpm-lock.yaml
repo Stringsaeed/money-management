@@ -678,9 +678,15 @@ importers:
       '@trove/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.1
       typescript:
         specifier: ~7.0.2
         version: 7.0.2
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.1)(jiti@2.7.0)(jsdom@20.0.3(supports-color@8.1.1))(lightningcss@1.30.1)(supports-color@8.1.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0)
 
   packages/env:
     dependencies:

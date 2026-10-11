@@ -26,12 +26,17 @@
     "./settlement": {
       "types": "./dist/settlement.d.ts",
       "default": "./dist/settlement.js"
+    },
+    "./budget": {
+      "types": "./dist/budget/index.d.ts",
+      "default": "./dist/budget/index.js"
     }
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "check-types": "tsc --project tsconfig.json --noEmit",
-    "postinstall": "pnpm build"
+    "check-types": "tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json",
+    "postinstall": "pnpm build",
+    "test": "vitest run"
   },
   "dependencies": {
     "@trove/protocol": "workspace:*",
@@ -39,6 +44,8 @@
   },
   "devDependencies": {
     "@trove/typescript-config": "workspace:*",
-    "typescript": "~7.0.2"
+    "@types/node": "catalog:",
+    "typescript": "~7.0.2",
+    "vitest": "^3.2.4"
   }
 }
