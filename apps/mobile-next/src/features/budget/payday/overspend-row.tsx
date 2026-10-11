@@ -24,7 +24,7 @@ export function OverspendRow({ item, resolution, onCover, onAccept }: OverspendR
       <Text tone="negative">{`${item.name} was ${over} over`}</Text>
       {resolution === "covered" ? (
         <Text tone="secondary" variant="bodySm">
-          Covered from other money this month.
+          Paid back into Not planned yet from your envelopes.
         </Text>
       ) : resolution === "accepted" ? (
         <Text tone="secondary" variant="bodySm">
