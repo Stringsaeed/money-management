@@ -55,10 +55,15 @@ export interface BudgetFacts {
   /** Sum of current balances of the funding accounts. */
   cashMinor: number;
   /**
-   * What the AED credit cards owed just before the activation period started (0 when they owed
+   * What the credit cards owed just before the activation period started (0 when they owed
    * nothing). Card payments since activation pay this off first; it was never reserved.
    */
   openingCardDebtMinor: number;
+  /**
+   * Minor units in one whole unit of the budget's currency: 100 for AED, 1000 for KWD, 1 for JPY.
+   * The caller derives it from the currency; the engine never looks a currency up itself.
+   */
+  minorUnitsPerWhole: number;
   today: string;
 }
 
@@ -91,8 +96,6 @@ export interface BudgetProjection {
   periods: PeriodTotals[];
   current: CurrentPeriodTotals;
 }
-
-const WHOLE_AED_MINOR = 100;
 
 export function projectBudget(facts: BudgetFacts): BudgetProjection {
   const periods = budgetPeriods(facts.paydays, facts.activationStart, facts.today);
@@ -182,7 +185,7 @@ function currentTotals(facts: BudgetFacts, current: PeriodTotals): CurrentPeriod
     ...current,
     unassignedMinor,
     safeToSpendMinor,
-    perDayMinor: perDay(safeToSpendMinor, daysLeft),
+    perDayMinor: perDay(safeToSpendMinor, daysLeft, facts.minorUnitsPerWhole),
     daysLeft,
     cardReserveMinor,
   };
@@ -216,10 +219,10 @@ function cardReserve(facts: BudgetFacts): number {
   return Math.max(spentMinor - paidTowardNewSpendMinor, 0);
 }
 
-/** Safe to spend per remaining day, floored to whole AED; 0 when nothing is safe to spend. */
-function perDay(safeToSpendMinor: number, daysLeft: number): number {
+/** Safe to spend per remaining day, floored to whole currency units; 0 when nothing is safe to spend. */
+function perDay(safeToSpendMinor: number, daysLeft: number, minorUnitsPerWhole: number): number {
   if (safeToSpendMinor <= 0) return 0;
-  return Math.floor(safeToSpendMinor / (daysLeft * WHOLE_AED_MINOR)) * WHOLE_AED_MINOR;
+  return Math.floor(safeToSpendMinor / (daysLeft * minorUnitsPerWhole)) * minorUnitsPerWhole;
 }
 
 function netInto(assignment: BudgetAssignment, envelopeId: string): number {

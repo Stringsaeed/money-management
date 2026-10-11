@@ -43,6 +43,7 @@ function facts(overrides: Partial<BudgetFacts>): BudgetFacts {
     cardPayments: [],
     cashMinor: 0,
     openingCardDebtMinor: 0,
+    minorUnitsPerWhole: 100,
     today: "2026-02-10",
     ...overrides,
   };
@@ -225,6 +226,15 @@ describe("safe to spend", () => {
     expect(current.safeToSpendMinor).toBe(700_000);
     // 700,000 / 15 = 46,666.67 minor units -> AED 466 per day.
     expect(current.perDayMinor).toBe(46_600);
+  });
+
+  it("floors per day to whole units of the currency's own minor unit", () => {
+    // Same 700,000 over 15 days = 46,666.67 minor units per day.
+    // KWD (1000 minor per whole unit): 46 whole -> 46,000. JPY (1 per whole): 46,666.
+    expect(projectBudget({ ...planned, minorUnitsPerWhole: 1000 }).current.perDayMinor).toBe(
+      46_000,
+    );
+    expect(projectBudget({ ...planned, minorUnitsPerWhole: 1 }).current.perDayMinor).toBe(46_666);
   });
 
   it("gives 0 per day when safe to spend is negative", () => {

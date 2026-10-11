@@ -7,12 +7,12 @@ import {
   type V2PaydayRule,
 } from "@trove/api/v2/contracts";
 
-import { parseMoneyMinor } from "@/utils/money";
+import { currencyFractionDigits, parseMoneyMinor } from "@/utils/money";
 
 import { isItemTicked, type SetupItem } from "./setup-items";
 import { type GROUP_ORDER, type SetupDraft } from "./setup-types";
 
-/** Typed money text: empty is 0, anything that is not a valid AED amount is `null`. */
+/** Typed money text: empty is 0, anything that is not a valid amount in the budget currency is `null`. */
 export function parseAmountText(text: string): number | null {
   const value = text.trim();
   if (!value) return 0;
@@ -23,7 +23,7 @@ export function parseAmountText(text: string): number | null {
 const isFundingEligible = (account: V2Account): boolean =>
   !account.archived && account.currency === BUDGET_CURRENCY && account.type !== "credit_card";
 
-/** Accounts a person can tick as money they have now: active, AED, not a credit card. */
+/** Accounts a person can tick as money they have now: active, in the budget currency, not a credit card. */
 export const fundingEligibleAccounts = (accounts: readonly V2Account[]): V2Account[] =>
   accounts.filter(isFundingEligible);
 
@@ -145,7 +145,7 @@ export function previewPlan(inputs: PlanInputs): PlanPreview {
           ]
         : [];
     }),
-    // The server's rule: EVERY expense on an AED credit card (archived cards and unmapped
+    // The server's rule: EVERY expense on a budget-currency credit card (archived cards and unmapped
     // Categories too: they reserve cash), plus expenses from a ticked funding account in a mapped
     // Category.
     spending: facts.spendSincePeriodStart.flatMap((row) =>
@@ -163,12 +163,13 @@ export function previewPlan(inputs: PlanInputs): PlanPreview {
           ]
         : [],
     ),
-    // Every row already pays an AED credit card; only payments from a ticked account count.
+    // Every row already pays a budget-currency credit card; only payments from a ticked account count.
     cardPayments: facts.cardPaymentsSincePeriodStart
       .filter((payment) => fundingIds.has(payment.fromAccountId))
       .map((payment) => ({ date: start, amountMinor: payment.amountMinor })),
     cashMinor,
     openingCardDebtMinor: facts.openingCardDebtMinor,
+    minorUnitsPerWhole: 10 ** currencyFractionDigits(BUDGET_CURRENCY),
     today: facts.today,
   });
 

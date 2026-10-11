@@ -11,6 +11,7 @@ import {
   type PaydayChange,
 } from "@trove/domain/budget";
 
+import { minorUnitsPerWhole } from "./budget-currency";
 import { BudgetNotFound } from "./budget-errors";
 import { LedgerFacts } from "./budget-ledger-facts";
 import { BudgetClock, budgetToday } from "./budget-services";
@@ -89,6 +90,7 @@ export const loadBudget = Effect.fn("loadBudget")(function* (budget: BudgetRow) 
     cardPayments,
     cashMinor,
     openingCardDebtMinor,
+    minorUnitsPerWhole: minorUnitsPerWhole(budget.currency),
     today,
   });
   return {

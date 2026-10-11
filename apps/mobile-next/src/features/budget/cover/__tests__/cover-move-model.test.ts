@@ -178,6 +178,7 @@ describe("cover-past (C1)", () => {
       cardPayments: [],
       cashMinor: 780_000,
       openingCardDebtMinor: 0,
+      minorUnitsPerWhole: 100,
       today: "2026-10-05",
     };
     const before = projectBudget(facts).current;
