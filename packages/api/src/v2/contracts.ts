@@ -229,6 +229,112 @@ export const recurringUpdateSchema = recurringFieldsSchema
   .extend({ lifecycle: recurringLifecycleSchema.optional() })
   .refine((value) => Object.keys(value).length > 0, "Provide at least one Recurring Rule field.");
 
+/** Budgeting v1 plans in AED only (#365 decision 9). */
+export const BUDGET_CURRENCY = "AED";
+
+export const paydayRuleSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("day"), day: z.number().int().min(1).max(28) }),
+  z.object({ kind: z.literal("last_workday") }),
+]);
+export type V2PaydayRule = z.infer<typeof paydayRuleSchema>;
+
+export const envelopeGroupSchema = z.enum(["bills", "everyday", "saving"]);
+export type V2EnvelopeGroup = z.infer<typeof envelopeGroupSchema>;
+
+export const envelopeRepeatSchema = z.enum(["once", "every_3_months", "every_6_months", "yearly"]);
+export type V2EnvelopeRepeat = z.infer<typeof envelopeRepeatSchema>;
+
+const nonNegativeMoneyMinorSchema = moneyMinorSchema.nonnegative();
+const entityIdSchema = z.string().trim().min(1);
+
+export const budgetActivateEnvelopeSchema = z
+  .object({
+    name: z.string().trim().min(1).max(120),
+    group: envelopeGroupSchema,
+    /** An existing expense Category, or `newCategory` to reuse-or-create one by name. */
+    categoryId: entityIdSchema.optional(),
+    newCategory: z.object({ name: z.string().trim().min(1).max(120) }).optional(),
+    plannedMinor: nonNegativeMoneyMinorSchema,
+    targetMinor: positiveMoneyMinorSchema.optional(),
+    dueDate: ledgerDateSchema.optional(),
+    repeat: envelopeRepeatSchema.optional(),
+    /** Money already set aside for a Saving-for goal; assigned from Not planned yet. */
+    setAsideMinor: nonNegativeMoneyMinorSchema.default(0),
+  })
+  .superRefine((value, context) => {
+    if ((value.categoryId === undefined) === (value.newCategory === undefined)) {
+      context.addIssue({
+        code: "custom",
+        path: ["categoryId"],
+        message: "Give either categoryId or newCategory.",
+      });
+    }
+    const hasSavingFields =
+      value.targetMinor !== undefined ||
+      value.dueDate !== undefined ||
+      value.repeat !== undefined ||
+      value.setAsideMinor > 0;
+    if (value.group !== "saving" && hasSavingFields) {
+      context.addIssue({
+        code: "custom",
+        path: ["group"],
+        message: "Only Saving-for envelopes have a target, due date, repeat, or set-aside amount.",
+      });
+    }
+  });
+
+export const budgetActivateSchema = z
+  .object({
+    paydayRule: paydayRuleSchema,
+    usualSalaryMinor: positiveMoneyMinorSchema.nullable().optional(),
+    paydayReminder: z.boolean().default(true),
+    /** The AED accounts that hold the money planned with. Exclusive with `openingCashMinor`. */
+    fundingAccountIds: z.array(entityIdSchema).min(1).max(20).optional(),
+    /** One typed total: activation creates a "My money" cash Account with this opening balance. */
+    openingCashMinor: nonNegativeMoneyMinorSchema.optional(),
+    /** Must be a funding account; defaults to the first funding account or "My money". */
+    defaultAccountId: entityIdSchema.optional(),
+    envelopes: z.array(budgetActivateEnvelopeSchema).min(1).max(100),
+  })
+  .superRefine((value, context) => {
+    if ((value.fundingAccountIds === undefined) === (value.openingCashMinor === undefined)) {
+      context.addIssue({
+        code: "custom",
+        path: ["fundingAccountIds"],
+        message: "Give either fundingAccountIds or openingCashMinor.",
+      });
+    }
+    if (
+      value.fundingAccountIds &&
+      new Set(value.fundingAccountIds).size !== value.fundingAccountIds.length
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["fundingAccountIds"],
+        message: "Funding accounts must be distinct.",
+      });
+    }
+    if (
+      value.defaultAccountId !== undefined &&
+      !value.fundingAccountIds?.includes(value.defaultAccountId)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["defaultAccountId"],
+        message: "The default account must be one of the funding accounts.",
+      });
+    }
+  });
+
+export const budgetUpdateSchema = z
+  .object({
+    paydayRule: paydayRuleSchema.optional(),
+    usualSalaryMinor: positiveMoneyMinorSchema.nullable().optional(),
+    paydayReminder: z.boolean().optional(),
+    defaultAccountId: entityIdSchema.nullable().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, "Provide at least one Budget field.");
+
 export type V2AccountCreateInput = z.input<typeof accountCreateSchema>;
 export type V2AccountUpdateInput = z.input<typeof accountUpdateSchema>;
 export type V2CategoryCreateInput = z.input<typeof categoryCreateSchema>;
@@ -237,6 +343,8 @@ export type V2TransactionCreateInput = z.input<typeof transactionCreateSchema>;
 export type V2TransactionUpdateInput = z.input<typeof transactionUpdateSchema>;
 export type V2RecurringCreateInput = z.input<typeof recurringCreateSchema>;
 export type V2RecurringUpdateInput = z.input<typeof recurringUpdateSchema>;
+export type V2BudgetActivateInput = z.input<typeof budgetActivateSchema>;
+export type V2BudgetUpdateInput = z.input<typeof budgetUpdateSchema>;
 
 export interface V2Account {
   readonly id: string;
@@ -372,6 +480,111 @@ export interface V2TransactionCurrencyTotal {
 export interface V2TransactionSummary {
   readonly count: number;
   readonly totals: readonly V2TransactionCurrencyTotal[];
+}
+
+export interface V2Budget {
+  readonly id: string;
+  readonly ledgerId: string;
+  readonly currency: string;
+  readonly activationPeriodStart: string;
+  readonly usualSalaryMinor: number | null;
+  readonly paydayReminder: boolean;
+  readonly defaultAccountId: string | null;
+  readonly version: number;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface V2Envelope {
+  readonly id: string;
+  readonly name: string;
+  readonly group: V2EnvelopeGroup;
+  readonly startFresh: boolean;
+  readonly targetMinor: number | null;
+  readonly dueDate: string | null;
+  readonly repeat: V2EnvelopeRepeat | null;
+  readonly archived: boolean;
+  readonly sortOrder: number;
+  readonly categoryIds: readonly string[];
+  readonly version: number;
+}
+
+export interface V2BudgetPeriod {
+  readonly start: string;
+  readonly end: string;
+}
+
+export interface V2EnvelopeTotals {
+  readonly id: string;
+  readonly plannedMinor: number;
+  readonly spentMinor: number;
+  readonly rolloverMinor: number;
+  readonly leftMinor: number;
+}
+
+export interface V2BudgetCurrent {
+  readonly period: V2BudgetPeriod;
+  /** Not planned yet (Unassigned Money); may be negative. */
+  readonly unassignedMinor: number;
+  readonly safeToSpendMinor: number;
+  readonly perDayMinor: number;
+  readonly daysLeft: number;
+  readonly cardReserveMinor: number;
+  readonly envelopes: readonly V2EnvelopeTotals[];
+}
+
+/** `GET /budget`. Envelopes are the active ones, in sort order. */
+export type V2BudgetView =
+  | { readonly budget: null }
+  | {
+      readonly budget: V2Budget;
+      readonly paydayRule: V2PaydayRule;
+      readonly fundingAccountIds: readonly string[];
+      readonly envelopes: readonly V2Envelope[];
+      readonly current: V2BudgetCurrent;
+    };
+
+/** `GET /budget/setup-facts`: AED facts the setup flow previews the plan with. */
+export interface V2BudgetSetupFacts {
+  readonly today: string;
+  readonly period: V2BudgetPeriod;
+  /** Active accounts with balances counting transactions dated on or before today. */
+  readonly accountBalances: readonly {
+    readonly accountId: string;
+    readonly balanceMinor: number;
+  }[];
+  /** AED expenses dated from the period start through today. */
+  readonly spendSincePeriodStart: readonly {
+    readonly categoryId: string | null;
+    readonly accountId: string;
+    readonly amountMinor: number;
+  }[];
+  /** AED transfers into credit-card accounts dated from the period start through today. */
+  readonly cardPaymentsSincePeriodStart: readonly {
+    readonly fromAccountId: string;
+    readonly toAccountId: string;
+    readonly amountMinor: number;
+  }[];
+  readonly lastPeriod: V2BudgetPeriod;
+  readonly lastPeriodSpend: readonly {
+    readonly categoryId: string;
+    readonly amountMinor: number;
+  }[];
+  readonly recurringExpenses: readonly {
+    readonly ruleId: string;
+    readonly name: string;
+    readonly amountMinor: number;
+    readonly currency: string;
+    readonly categoryId: string | null;
+    readonly frequency: V2RecurringFrequency;
+    readonly intervalCount: number;
+  }[];
+  /** Non-archived expense Categories by number of expenses in the last 90 days. */
+  readonly topCategories: readonly {
+    readonly categoryId: string;
+    readonly name: string;
+    readonly transactionCount: number;
+  }[];
 }
 
 export function principalOwner(principal: V2Principal): {

@@ -4,6 +4,9 @@ import { z } from "zod";
 
 import { listAccounts, createAccount, deleteAccount, getAccount, updateAccount } from "./accounts";
 import { autoCategorizeTransaction } from "./auto-categorize";
+import { budgetToday, getBudget } from "./budget";
+import { activateBudget, updateBudget } from "./budget-activate";
+import { getBudgetSetupFacts } from "./budget-setup-facts";
 import type { TransactionCategorizer } from "./categorizer";
 import {
   listCategories,
@@ -34,6 +37,8 @@ import {
 import {
   accountCreateSchema,
   accountUpdateSchema,
+  budgetActivateSchema,
+  budgetUpdateSchema,
   categoryCreateSchema,
   ledgerDateSchema,
   categoryUpdateSchema,
@@ -45,6 +50,7 @@ import {
   currencySchema,
   v2ScopeSchema,
   type V2LedgerScope,
+  type V2PaydayRule,
   type V2Principal,
 } from "./contracts";
 import {
@@ -62,6 +68,8 @@ export interface V2LedgerRouteDependencies {
   readonly authorizeHousehold?: AuthorizeV2Household;
   /** Absent when no AI Gateway key is configured; `autoCategorize` then leaves Transactions uncategorized. */
   readonly categorizer?: TransactionCategorizer;
+  /** Clock seam for budget "today"; defaults to the system clock. */
+  readonly now?: () => Date;
 }
 
 export function createV2LedgerRoutes(dependencies: V2LedgerRouteDependencies): Hono {
@@ -285,6 +293,43 @@ export function createV2LedgerRoutes(dependencies: V2LedgerRouteDependencies): H
     );
   });
 
+  const today = () => budgetToday(dependencies.now?.() ?? new Date());
+
+  routes.get("/budget", async (context) => {
+    const ledger = await resolveContext(dependencies, context);
+    return context.json(await getBudget(ledger, today()));
+  });
+  routes.get("/budget/setup-facts", async (context) => {
+    const ledger = await resolveContext(dependencies, context);
+    return context.json(
+      await getBudgetSetupFacts(ledger, parsePaydayQuery(context.req.query("payday")), today()),
+    );
+  });
+  routes.post("/budget/activate", async (context) => {
+    const ledger = await resolveContext(dependencies, context);
+    return context.json(
+      await activateBudget(
+        ledger,
+        await readJson(context, budgetActivateSchema),
+        today(),
+        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
+      ),
+      201,
+    );
+  });
+  routes.patch("/budget", async (context) => {
+    const ledger = await resolveContext(dependencies, context);
+    return context.json(
+      await updateBudget(
+        ledger,
+        await readJson(context, budgetUpdateSchema),
+        today(),
+        parseExpectedVersion(context.req.header("If-Match")),
+        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
+      ),
+    );
+  });
+
   routes.get("/recurring/upcoming", async (context) => {
     const ledger = await resolveContext(dependencies, context);
     return context.json({ items: await listUpcoming(ledger), nextCursor: null });
@@ -408,6 +453,16 @@ function parseOptionalDate(value: string | undefined, name: string): string | un
   if (!ledgerDateSchema.safeParse(value).success)
     throw new V2ApiError(400, `invalid_${name}`, `${name} must be a YYYY-MM-DD date.`);
   return value;
+}
+
+/** `?payday=day:25` or `?payday=last_workday`. */
+function parsePaydayQuery(value: string | undefined): V2PaydayRule {
+  if (value === "last_workday") return { kind: "last_workday" };
+  const match = /^day:(\d{1,2})$/.exec(value ?? "");
+  const day = match ? Number(match[1]) : Number.NaN;
+  if (!Number.isInteger(day) || day < 1 || day > 28)
+    throw new V2ApiError(400, "invalid_payday", "payday must be day:1 to day:28 or last_workday.");
+  return { kind: "day", day };
 }
 
 function parseOptionalInteger(value: string | undefined, name: string): number | undefined {
