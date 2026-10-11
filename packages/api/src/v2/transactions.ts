@@ -19,6 +19,7 @@ import {
   safeMinor,
   type V2DbExecutor,
   type V2LedgerContext,
+  type V2TransactionDatabase,
   V2ApiError,
   withLedgerMutation,
 } from "./shared";
@@ -300,46 +301,59 @@ export async function createTransaction(
   idempotencyKey?: string,
 ): Promise<V2Transaction> {
   const parsed = transactionCreateSchema.parse(input);
-  return withLedgerMutation(context, "transactions.create", idempotencyKey, async (db) => {
-    const id = parsed.id ?? crypto.randomUUID();
-    const existing = await db
-      .select({ id: v2Transaction.id })
-      .from(v2Transaction)
-      .where(and(eq(v2Transaction.ledgerId, context.ledgerId), eq(v2Transaction.id, id)))
-      .limit(1);
-    if (existing[0])
-      throw new V2ApiError(409, "transaction_exists", "A Transaction with this id already exists.");
-    const ownership = await validateTransactionOwnership(db, context.ledgerId, {
+  return withLedgerMutation(context, "transactions.create", idempotencyKey, (db) =>
+    insertTransaction(db, context, parsed),
+  );
+}
+
+/**
+ * Writes one Transaction inside a ledger mutation that is already open, so a
+ * caller can combine it with other writes atomically (e.g. an envelope's
+ * Mark paid).
+ */
+export async function insertTransaction(
+  db: V2TransactionDatabase,
+  context: V2LedgerContext,
+  parsed: ReturnType<typeof transactionCreateSchema.parse>,
+): Promise<V2Transaction> {
+  const id = parsed.id ?? crypto.randomUUID();
+  const existing = await db
+    .select({ id: v2Transaction.id })
+    .from(v2Transaction)
+    .where(and(eq(v2Transaction.ledgerId, context.ledgerId), eq(v2Transaction.id, id)))
+    .limit(1);
+  if (existing[0])
+    throw new V2ApiError(409, "transaction_exists", "A Transaction with this id already exists.");
+  const ownership = await validateTransactionOwnership(db, context.ledgerId, {
+    kind: parsed.kind,
+    accountId: parsed.accountId,
+    toAccountId: parsed.toAccountId ?? null,
+    categoryId: parsed.categoryId ?? null,
+  });
+  const now = new Date();
+  const inserted = await db
+    .insert(v2Transaction)
+    .values({
+      ledgerId: context.ledgerId,
+      id,
       kind: parsed.kind,
+      amountMinor: parsed.amountMinor,
+      currency: ownership.currency,
+      date: parsed.date,
       accountId: parsed.accountId,
       toAccountId: parsed.toAccountId ?? null,
       categoryId: parsed.categoryId ?? null,
-    });
-    const now = new Date();
-    const inserted = await db
-      .insert(v2Transaction)
-      .values({
-        ledgerId: context.ledgerId,
-        id,
-        kind: parsed.kind,
-        amountMinor: parsed.amountMinor,
-        currency: ownership.currency,
-        date: parsed.date,
-        accountId: parsed.accountId,
-        toAccountId: parsed.toAccountId ?? null,
-        categoryId: parsed.categoryId ?? null,
-        note: parsed.note,
-        createdBy: context.ownerId,
-        updatedBy: context.ownerId,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .returning();
-    const row = inserted[0];
-    if (!row)
-      throw new V2ApiError(500, "transaction_create_failed", "Transaction could not be created.");
-    return transactionRow(row);
-  });
+      note: parsed.note,
+      createdBy: context.ownerId,
+      updatedBy: context.ownerId,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning();
+  const row = inserted[0];
+  if (!row)
+    throw new V2ApiError(500, "transaction_create_failed", "Transaction could not be created.");
+  return transactionRow(row);
 }
 
 export async function updateTransaction(

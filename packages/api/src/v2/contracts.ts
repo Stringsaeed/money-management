@@ -339,6 +339,15 @@ export const envelopeUpdateSchema = z
     "Categories must be distinct.",
   );
 
+/** `POST /budget/envelopes/:id/pay`: Mark a big payment paid. */
+export const envelopePaySchema = z
+  .object({
+    amountMinor: positiveMoneyMinorSchema,
+    accountId: entityIdSchema,
+    date: ledgerDateSchema,
+  })
+  .strict();
+
 export const assignmentReasonSchema = z.enum(["plan", "cover", "move", "leftover", "repeat"]);
 export type V2AssignmentReason = z.infer<typeof assignmentReasonSchema>;
 
@@ -426,6 +435,7 @@ export type V2BudgetActivateInput = z.input<typeof budgetActivateSchema>;
 export type V2BudgetUpdateInput = z.input<typeof budgetUpdateSchema>;
 export type V2EnvelopeCreateInput = z.input<typeof envelopeCreateSchema>;
 export type V2EnvelopeUpdateInput = z.input<typeof envelopeUpdateSchema>;
+export type V2EnvelopePayInput = z.input<typeof envelopePaySchema>;
 export type V2AssignmentsCreateInput = z.input<typeof assignmentsCreateSchema>;
 
 export interface V2Account {
@@ -618,6 +628,15 @@ export interface V2Envelope {
   readonly sortOrder: number;
   readonly categoryIds: readonly string[];
   readonly version: number;
+  /**
+   * Saving-for envelopes with a target and due date only: what to set aside each
+   * payday, counting the envelope's current Left as already set aside, and how
+   * many paydays that spreads over.
+   */
+  readonly savingPerPaydayMinor?: number;
+  readonly paydaysLeft?: number;
+  /** Present when the due date falls before the next payday and Left < target. */
+  readonly shortBeforePaydayMinor?: number;
 }
 
 export interface V2BudgetPeriod {
@@ -658,6 +677,11 @@ export type V2BudgetView =
 /** `POST /budget/envelopes`: the refreshed budget plus the new envelope's id. */
 export type V2EnvelopeCreated = Extract<V2BudgetView, { readonly budget: object }> & {
   readonly envelopeId: string;
+};
+
+/** `POST /budget/envelopes/:id/pay`: the refreshed budget plus the expense Transaction. */
+export type V2EnvelopePaid = Extract<V2BudgetView, { readonly budget: object }> & {
+  readonly transactionId: string;
 };
 
 /** `GET /budget/periods/:start`: per-envelope totals for one period since activation. */
