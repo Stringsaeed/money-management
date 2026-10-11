@@ -68,7 +68,18 @@
     "toastFill": "#151515",
     "toastText": "#F2F1EC",
     "toastTile": "#2A2A27",
-    "toastAction": "#D9FF43"
+    "toastAction": "#D9FF43",
+    "paperInk": "#151515",
+    "paperTextSecondary": "#5E5B53",
+    "paperTextTertiary": "#6E6B62",
+    "paperAccentText": "#4A6B00",
+    "paperNegative": "#B93A27",
+    "paperRule": "#E3DED2",
+    "paperRuleStrong": "#D3CFC4",
+    "paperShadow": "#15151514",
+    "chartSpend": "#8C887D",
+    "segmentOn": "#FFFFFF",
+    "warningOn": "#FFFFFF"
   },
   "dark": {
     "bgCanvas": "#151515",
@@ -139,6 +150,17 @@
     "toastFill": "#F7F5EF",
     "toastText": "#1A1A1A",
     "toastTile": "#EAE6DC",
-    "toastAction": "#4A6B00"
+    "toastAction": "#4A6B00",
+    "paperInk": "#151515",
+    "paperTextSecondary": "#5E5B53",
+    "paperTextTertiary": "#6E6B62",
+    "paperAccentText": "#4A6B00",
+    "paperNegative": "#B93A27",
+    "paperRule": "#E3DED2",
+    "paperRuleStrong": "#D3CFC4",
+    "paperShadow": "#00000000",
+    "chartSpend": "#8C887D",
+    "segmentOn": "#34342F",
+    "warningOn": "#151515"
   }
 }

@@ -4,6 +4,7 @@ import { AppState } from "react-native";
 import { featureFlagSource } from "@/features/analytics";
 
 import {
+  devBudgetingOverride,
   parseCachedBudgeting,
   resolveBudgetingFlag,
   type BudgetingFlagState,
@@ -19,8 +20,13 @@ let cacheRead = false;
 let started = false;
 const listeners = new Set<() => void>();
 
-const compute = () =>
-  resolveBudgetingFlag({ hasClient: featureFlagSource !== null, live, cached, cacheRead });
+/** Dev builds can force Budgeting on with `EXPO_PUBLIC_DEV_BUDGETING=on`, e.g. against a local API. */
+const devForcedOn = devBudgetingOverride(__DEV__, process.env.EXPO_PUBLIC_DEV_BUDGETING);
+
+const compute = (): BudgetingFlagState =>
+  devForcedOn
+    ? "on"
+    : resolveBudgetingFlag({ hasClient: featureFlagSource !== null, live, cached, cacheRead });
 let state: BudgetingFlagState = compute();
 
 const refresh = () => {

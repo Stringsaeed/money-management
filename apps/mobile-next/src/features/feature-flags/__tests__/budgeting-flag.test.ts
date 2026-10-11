@@ -1,4 +1,8 @@
-import { parseCachedBudgeting, resolveBudgetingFlag } from "../budgeting-flag";
+import {
+  devBudgetingOverride,
+  parseCachedBudgeting,
+  resolveBudgetingFlag,
+} from "../budgeting-flag";
 
 const base = { hasClient: true, live: undefined, cached: undefined, cacheRead: true } as const;
 
@@ -38,5 +42,14 @@ describe("parseCachedBudgeting", () => {
     expect(parseCachedBudgeting("off")).toBe(false);
     expect(parseCachedBudgeting(null)).toBeUndefined();
     expect(parseCachedBudgeting("true")).toBeUndefined();
+  });
+});
+
+describe("devBudgetingOverride", () => {
+  it("forces Budgeting on only in a dev build that opts in", () => {
+    expect(devBudgetingOverride(true, "on")).toBe(true);
+    expect(devBudgetingOverride(true, undefined)).toBe(false);
+    expect(devBudgetingOverride(true, "true")).toBe(false);
+    expect(devBudgetingOverride(false, "on")).toBe(false);
   });
 });

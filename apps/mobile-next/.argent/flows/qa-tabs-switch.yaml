@@ -15,5 +15,5 @@ steps:
   - await: { idle: true }
   - assert: { visible: { text: Your guest ledger is stored in a private guest session. } }
   - tap: { text: Home }
-  - await: { visible: { text: Latest activity } }
+  - await: { visible: { text: { matches: "Nothing printed yet|UPCOMING" } } }
   - await: { idle: true }

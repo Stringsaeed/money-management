@@ -1,142 +1,136 @@
 import { useState } from "react";
+import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
-import type { FlowChartView } from "@/ui/trove";
+
 import { ledgerClient } from "@/data/ledger-client";
+import { scopeKey } from "@/data/ledger-collections";
 import {
-  useLedgerData,
   useAccountsQuery,
+  useBudgetQuery,
   useCategoriesQuery,
+  useLedgerData,
   useRecurringQuery,
+  useSelectedBudget,
+  useTransactionsQuery,
   useUpcomingQuery,
 } from "@/data/ledger-queries";
-import { scopeKey } from "@/data/ledger-collections";
 import { useSession } from "@/features/auth/use-session";
+import { useBudgetingEnabled } from "@/features/feature-flags";
 import { useLedgerScope } from "@/navigation/ledger-scope-context";
-import { homeRangeDates, overviewFromBuckets } from "./home-model";
-import type { HomeOverviewRange } from "./home-model-types";
-import {
-  homeIdentity,
-  homeSelection,
-  recentHomeActivity,
-  upcomingHomeActivity,
-} from "./home-display";
+
+import { activeBudgetOf, homeBudget } from "./home-budget";
+import type { HomeChartView } from "./home-chart-view";
+import { homeCurrency, homeGreeting, homeIdentity } from "./home-display";
+import { homeChartWindow, homeSummary } from "./home-summary";
+import { homeUpcoming } from "./home-upcoming-model";
+
+const EMPTY_BUCKETS = { openingBalanceMinor: 0, buckets: [] } as const;
+
+interface QueryState {
+  readonly isLoading: boolean;
+  readonly isError: boolean;
+}
+
+/** Home waits on accounts and the chart, and on the budget only while Budgeting is on. */
+function loadState(input: {
+  readonly accounts: QueryState;
+  readonly overview: QueryState;
+  readonly budget: QueryState;
+  readonly budgeting: boolean;
+}) {
+  const { accounts, overview, budget, budgeting } = input;
+  return {
+    isLoading: accounts.isLoading || overview.isLoading || (budgeting && budget.isLoading),
+    isError: accounts.isError || overview.isError,
+  };
+}
 
 export function useHomeData() {
+  const now = new Date();
+  const today = format(now, "yyyy-MM-dd");
   const session = useSession();
-  const { scope } = useLedgerScope();
+  const { scope, setScopeSheetOpen } = useLedgerScope();
   const ledger = useLedgerData();
+  const budgeting = useBudgetingEnabled();
   const accounts = useAccountsQuery();
   const categories = useCategoriesQuery();
   const recurring = useRecurringQuery();
   const upcoming = useUpcomingQuery();
-  const [range, setRange] = useState<HomeOverviewRange>("month");
-  const [selectedCurrency, setSelectedCurrency] = useState<string>();
-  const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
-  const [mode, setMode] = useState<FlowChartView>("line");
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const { currencies, currency, accountId, accountIds, accountLabel } = homeSelection(
-    accounts.data,
-    selectedCurrency,
-    selectedAccount,
-  );
-  const dates = homeRangeDates(range);
-  const home = useQuery({
+  const selectedBudget = useSelectedBudget();
+  const budget = useBudgetQuery();
+  const [chartView, setChartView] = useState<HomeChartView>("bar");
+
+  const activeBudget = activeBudgetOf(budgeting, budget.data);
+  const currency = homeCurrency(accounts.data, activeBudget ? selectedBudget.currency : null);
+  const chartWindow = homeChartWindow(now);
+  const overview = useQuery({
     queryKey: [
       "v2",
       "home",
       scopeKey(ledger.identityKey, ledger.scope),
-      "recent",
+      "months",
       currency,
-      accountId,
-      dates.from,
-      dates.to,
-      [...accountIds].sort(),
+      chartWindow.from,
+      chartWindow.to,
     ],
     queryFn: () =>
-      ledgerClient.home(ledger.scope, {
-        currency,
-        accountIds: [...accountIds],
-        from: dates.from,
-        to: dates.to,
-      }),
+      ledgerClient.homeOverview(ledger.scope, { range: "year", currency, ...chartWindow }),
     enabled: !accounts.isLoading,
     staleTime: 15_000,
     retry: 1,
   });
-  const chart = useQuery({
-    queryKey: [
-      "v2",
-      "home",
-      scopeKey(ledger.identityKey, ledger.scope),
-      "overview",
-      range,
-      currency,
-      accountId,
-      dates.from,
-      dates.to,
-    ],
-    queryFn: () =>
-      ledgerClient.homeOverview(ledger.scope, {
-        range,
-        currency,
-        accountId: accountId ?? undefined,
-        from: dates.from,
-        to: dates.to,
-      }),
-    staleTime: 15_000,
-    retry: 1,
+  const summary = homeSummary(overview.data ?? EMPTY_BUCKETS, now);
+  const expenses = useTransactionsQuery({
+    kind: "expense",
+    fromDate: activeBudget?.current.period.start ?? today,
+    toDate: today,
   });
-  const overview = overviewFromBuckets(
-    chart.data ?? { openingBalanceMinor: 0, buckets: [] },
-    currency,
-    range,
-  );
-  const recent = recentHomeActivity(
-    home.data?.recentTransactions ?? [],
-    currency,
-    overview.startDate,
-    overview.endDate,
-    accountIds,
-  );
-  const upcomingItems = upcomingHomeActivity(upcoming.data, recurring.data, currency, accountId);
-  const { name, initials } = homeIdentity(session.principal);
-  return {
-    name,
-    initials,
-    scope,
-    overview,
-    accounts,
-    currencies,
-    currency,
+  const upcomingView = homeUpcoming({
+    occurrences: upcoming.data,
+    rules: recurring.data,
     categories: categories.data,
-    upcoming: upcomingItems,
-    upcomingError: upcoming.isError || recurring.isError,
+    currency,
+    today,
+    budget: activeBudget,
+  });
+  const { name, initials } = homeIdentity(session.principal);
+
+  return {
+    now,
+    title: `${homeGreeting(now.getHours())}, ${name}`,
+    initials,
+    household: scope.kind === "household",
+    openScope: () => setScopeSheetOpen(true),
+    currency,
+    netWorth: summary.netWorth,
+    months: summary.months,
+    budget: homeBudget({
+      budgeting,
+      view: budget.data,
+      failed: budget.isError,
+      currency: selectedBudget.currency ?? currency,
+      expenses: expenses.data,
+      today,
+    }),
+    upcoming: upcomingView.items,
     upcomingLoading: upcoming.isLoading || recurring.isLoading,
-    recent,
-    range,
-    mode,
-    setMode,
-    setRange,
-    accountId,
-    accountLabel,
-    filtersOpen,
-    setFiltersOpen,
-    isLoading: accounts.isLoading || home.isLoading || chart.isLoading,
-    isError: accounts.isError || home.isError || chart.isError,
-    setCurrency: (value: string) => {
-      setSelectedCurrency(value);
-      setSelectedAccount(null);
-    },
-    setAccount: setSelectedAccount,
+    upcomingError: upcoming.isError || recurring.isError,
+    dueThisWeek: upcomingView.dueThisWeek,
+    chartView,
+    setChartView,
+    hasAccounts: accounts.data.some((account) => !account.archived),
+    ...loadState({ accounts, overview, budget, budgeting }),
     retry: async () => {
       await Promise.all([
         accounts.retry(),
-        home.refetch(),
-        chart.refetch(),
+        overview.refetch(),
         categories.retry(),
         recurring.retry(),
         upcoming.retry(),
+        budget.retry(),
       ]);
     },
   };
 }
+
+export type HomeData = ReturnType<typeof useHomeData>;

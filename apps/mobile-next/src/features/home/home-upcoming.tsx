@@ -1,100 +1,96 @@
-import { format } from "date-fns";
-import { StyleSheet, View } from "react-native";
-import type { UpcomingOccurrence } from "@/data/ledger-schemas";
+import { Pressable, StyleSheet, Text as NativeText, View } from "react-native";
+import { EaseView } from "react-native-ease";
+
+import { useReducedMotion } from "@/ui/motion";
 import {
-  Banner,
-  Button,
-  Card,
-  dueInLabel,
-  layout,
-  ListGroup,
-  nextUpcomingIndex,
-  Skeleton,
+  colors,
+  DENSE_MAX_FONT_SCALE,
+  fonts,
+  motion,
   space,
   Text,
-  UpcomingRow,
+  troveTransition,
 } from "@/ui/trove";
-import { signedMinor } from "./home-display";
+
+import type { HomeUpcomingItem } from "./home-upcoming-model";
+import { HomeUpcomingRow } from "./home-upcoming-row";
 
 interface HomeUpcomingProps {
-  readonly items: readonly (UpcomingOccurrence & { readonly name: string })[];
+  readonly items: readonly HomeUpcomingItem[];
+  readonly currency: string;
+  /** Rows still loading: print nothing rather than a premature "nothing scheduled". */
   readonly loading: boolean;
   readonly failed: boolean;
-  readonly onOpen: (id: string) => void;
-  readonly onViewAll: () => void;
+  readonly onOpen: (ruleId: string) => void;
+  readonly onSeeAll: () => void;
 }
 
-const CHIP_WIDTH = 46;
-// 16pt row padding, the date chip, then the 12pt gap before the title.
-const DIVIDER_INSET = layout.cardPadding + CHIP_WIDTH + space[3];
-
-export function HomeUpcoming({ items, loading, failed, onOpen, onViewAll }: HomeUpcomingProps) {
-  const today = format(new Date(), "yyyy-MM-dd");
-  const nextIndex = nextUpcomingIndex(
-    items.map((item) => item.scheduledDate),
-    today,
-  );
+/** The next few bills and paydays, nearest first. */
+export function HomeUpcoming({
+  items,
+  currency,
+  loading,
+  failed,
+  onOpen,
+  onSeeAll,
+}: HomeUpcomingProps) {
+  const reducedMotion = useReducedMotion();
   return (
-    <View style={styles.section}>
+    <View>
       <View style={styles.heading}>
-        <View style={styles.copy}>
-          <Text variant="titleSm">Upcoming transactions</Text>
-          <Text tone="secondary" variant="bodySm">
-            Due now and in the next month
-          </Text>
-        </View>
-        <Button
-          accessibilityLabel="View recurring transactions"
-          label="View all"
-          onPress={onViewAll}
-          size="sm"
-          variant="tertiary"
-        />
-      </View>
-      {loading ? (
-        <Card
-          accessibilityLabel="Loading upcoming transactions"
-          accessibilityState={{ busy: true }}
+        <NativeText
+          accessibilityRole="header"
+          maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE}
+          style={styles.stamp}
         >
-          <View style={styles.skeletons}>
-            <Skeleton height={20} width="60%" />
-            <Skeleton height={20} />
-            <Skeleton height={20} width="80%" />
-          </View>
-        </Card>
-      ) : failed ? (
-        <Banner
-          tone="warning"
-          message="Upcoming transactions are unavailable. Pull down to try again."
-        />
-      ) : items.length === 0 ? (
-        <Card>
-          <Text tone="secondary">Nothing scheduled. A little breathing room.</Text>
-        </Card>
+          UPCOMING
+        </NativeText>
+        <Pressable
+          accessibilityLabel="See all upcoming"
+          accessibilityRole="link"
+          hitSlop={12}
+          onPress={onSeeAll}
+        >
+          <Text tone="accent" variant="labelMd">
+            See all
+          </Text>
+        </Pressable>
+      </View>
+      {loading && !failed ? null : failed || items.length === 0 ? (
+        <Text style={styles.note} tone="tertiary" variant="bodySm">
+          {failed
+            ? "Upcoming bills are unavailable. Pull down to try again."
+            : "Nothing scheduled. A little breathing room."}
+        </Text>
       ) : (
-        <ListGroup dividerInset={DIVIDER_INSET}>
-          {items.map((item, index) => (
-            <UpcomingRow
-              key={`${item.ruleId}:${item.scheduledDate}`}
-              date={item.scheduledDate}
-              title={item.name}
-              subtitle={`${dueInLabel(item.scheduledDate, today)} · RECURRING`}
-              minor={signedMinor(item.kind, item.amountMinor)}
-              currency={item.currency}
-              next={index === nextIndex}
-              signDisplay={item.kind === "transfer" ? "never" : "always"}
-              onPress={() => onOpen(item.ruleId)}
-            />
-          ))}
-        </ListGroup>
+        items.map((item) => (
+          <EaseView
+            animate={{ opacity: 1 }}
+            initialAnimate={{ opacity: 0 }}
+            key={item.key}
+            transition={troveTransition(reducedMotion, motion.base)}
+          >
+            <HomeUpcomingRow currency={currency} item={item} onPress={onOpen} />
+          </EaseView>
+        ))
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { gap: space[2] },
-  heading: { alignItems: "center", flexDirection: "row", gap: space[2] },
-  copy: { flex: 1 },
-  skeletons: { gap: space[3] },
+  heading: {
+    alignItems: "baseline",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: space[0.5],
+  },
+  stamp: {
+    color: colors.text.tertiary,
+    fontFamily: fonts.monoSemibold,
+    fontSize: 11,
+    letterSpacing: 1.2,
+    lineHeight: 14,
+  },
+  note: { paddingVertical: space[4] },
 });
