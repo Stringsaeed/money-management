@@ -16,8 +16,10 @@ import {
   transactionKindSchema,
   type V2Account,
   type V2AutoCategorization,
+  type V2BudgetPeriodView,
   type V2BudgetSetupFacts,
   type V2BudgetView,
+  type V2EnvelopeCreated,
   type V2Category,
   type V2CreatedTransaction,
   type V2Home,
@@ -218,6 +220,14 @@ const envelopeSchema = z.object({
   version: z.number().int(),
 });
 
+const envelopeTotalsSchema = z.object({
+  id: z.string(),
+  plannedMinor: money,
+  spentMinor: money,
+  rolloverMinor: money,
+  leftMinor: money,
+});
+
 const budgetCurrentSchema = z.object({
   period: budgetPeriodSchema,
   unassignedMinor: money,
@@ -225,27 +235,30 @@ const budgetCurrentSchema = z.object({
   perDayMinor: money,
   daysLeft: z.number().int(),
   cardReserveMinor: money,
-  envelopes: z.array(
-    z.object({
-      id: z.string(),
-      plannedMinor: money,
-      spentMinor: money,
-      rolloverMinor: money,
-      leftMinor: money,
-    }),
-  ),
+  envelopes: z.array(envelopeTotalsSchema),
+});
+
+const activeBudgetViewSchema = z.object({
+  budget: budgetSchema,
+  paydayRule: paydayRuleSchema,
+  fundingAccountIds: z.array(z.string()),
+  envelopes: z.array(envelopeSchema),
+  current: budgetCurrentSchema,
 });
 
 export const budgetViewSchema: z.ZodType<V2BudgetView> = z.union([
   z.object({ budget: z.null() }),
-  z.object({
-    budget: budgetSchema,
-    paydayRule: paydayRuleSchema,
-    fundingAccountIds: z.array(z.string()),
-    envelopes: z.array(envelopeSchema),
-    current: budgetCurrentSchema,
-  }),
+  activeBudgetViewSchema,
 ]);
+
+export const envelopeCreatedSchema: z.ZodType<V2EnvelopeCreated> = activeBudgetViewSchema.extend({
+  envelopeId: z.string(),
+});
+
+export const budgetPeriodViewSchema: z.ZodType<V2BudgetPeriodView> = z.object({
+  period: budgetPeriodSchema,
+  envelopes: z.array(envelopeTotalsSchema),
+});
 
 export const budgetSetupFactsSchema: z.ZodType<V2BudgetSetupFacts> = z.object({
   today: ledgerDateSchema,
@@ -280,5 +293,9 @@ export const budgetSetupFactsSchema: z.ZodType<V2BudgetSetupFacts> = z.object({
 });
 
 export const parseBudgetView = (payload: unknown): V2BudgetView => budgetViewSchema.parse(payload);
+export const parseEnvelopeCreated = (payload: unknown): V2EnvelopeCreated =>
+  envelopeCreatedSchema.parse(payload);
+export const parseBudgetPeriodView = (payload: unknown): V2BudgetPeriodView =>
+  budgetPeriodViewSchema.parse(payload);
 export const parseBudgetSetupFacts = (payload: unknown): V2BudgetSetupFacts =>
   budgetSetupFactsSchema.parse(payload);

@@ -1,0 +1,106 @@
+import { router } from "expo-router";
+import { Alert, StyleSheet, View } from "react-native";
+
+import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
+
+import { useLedgerMutations } from "@/data/ledger-queries";
+import { Amount, Button, ListGroup, ListRow, showToast, space, Switch, Text } from "@/ui/trove";
+import { formatMoneyMinor } from "@/utils/money";
+
+import type { EnvelopeLine } from "../home/home-model";
+
+import { GROUP_LABEL } from "./group-panel";
+import { PanelError } from "./panel-error";
+import { useEnvelopeWrite } from "./use-envelope-write";
+
+export type EnvelopePanel = "menu" | "plan" | "group" | "categories" | "history";
+
+interface MenuPanelProps {
+  readonly line: EnvelopeLine;
+  readonly onOpen: (panel: EnvelopePanel) => void;
+  readonly onClose: () => void;
+}
+
+/** The ••• menu: every advanced envelope action lives here and nowhere else. */
+export function MenuPanel({ line, onOpen, onClose }: MenuPanelProps) {
+  const { updateEnvelope } = useLedgerMutations();
+  const write = useEnvelopeWrite();
+  const { envelope, totals } = line;
+
+  const setStartFresh = (startFresh: boolean) =>
+    void write.run(() => updateEnvelope(envelope.id, { startFresh }, envelope.version));
+
+  const archive = () =>
+    Alert.alert(
+      `Archive ${envelope.name}?`,
+      `Its ${formatMoneyMinor(Math.max(totals.leftMinor, 0), BUDGET_CURRENCY)} left goes back to Not planned yet, and spending in its categories stops counting. You can't undo this.`,
+      [
+        { text: "Keep it", style: "cancel" },
+        {
+          text: "Archive",
+          style: "destructive",
+          onPress: () => {
+            void write
+              .run(() => updateEnvelope(envelope.id, { lifecycle: "archived" }, envelope.version))
+              .then((ok) => {
+                if (!ok) return;
+                onClose();
+                showToast({ message: `${envelope.name} archived` });
+                router.back();
+              });
+          },
+        },
+      ],
+    );
+
+  return (
+    <View style={styles.container}>
+      <Text variant="titleMd" accessibilityRole="header">
+        {envelope.name}
+      </Text>
+      <ListGroup dividerInset={0}>
+        <ListRow
+          chevron
+          title="Change plan"
+          trailing={
+            <Amount currency={BUDGET_CURRENCY} minor={totals.plannedMinor} tone="secondary" />
+          }
+          onPress={() => onOpen("plan")}
+        />
+        <ListRow
+          chevron
+          title="Change group"
+          value={GROUP_LABEL[envelope.group]}
+          onPress={() => onOpen("group")}
+        />
+        <ListRow
+          chevron
+          title="Categories"
+          value={`${envelope.categoryIds.length} mapped`}
+          onPress={() => onOpen("categories")}
+        />
+        <ListRow chevron title="History" onPress={() => onOpen("history")} />
+      </ListGroup>
+      <ListGroup dividerInset={0}>
+        <ListRow
+          title="Start fresh each month"
+          subtitle={"Leftover money doesn't carry into the next month."}
+          trailing={
+            <Switch
+              accessibilityLabel="Start fresh each month"
+              value={envelope.startFresh}
+              disabled={write.busy}
+              onValueChange={setStartFresh}
+            />
+          }
+        />
+      </ListGroup>
+      <PanelError message={write.error} />
+      <Button fullWidth label="Archive envelope" variant="delete" onPress={archive} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { gap: space[3] },
+});
