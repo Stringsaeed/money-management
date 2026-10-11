@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import { useAccountsQuery, useCategoriesQuery, useLedgerMutations } from "@/data/ledger-queries";
 import { useLedgerMutationsWithSound } from "@/features/sound";
-import { showToast } from "@/ui/toast";
+import { showToast } from "@/ui/trove";
 import { decimalFromMinor } from "@/utils/money";
 
 import { budgetToday } from "../due/due-model";
@@ -40,7 +40,8 @@ export function useGotPaidForm(view: ActiveBudgetView) {
   const [error, setError] = useState<string>();
 
   const accountChoices = salaryAccounts(accounts.data, view.fundingAccountIds);
-  const accountId = pickedAccountId ?? defaultSalaryAccountId(accountChoices, budget.defaultAccountId);
+  const accountId =
+    pickedAccountId ?? defaultSalaryAccountId(accountChoices, budget.defaultAccountId);
   const categoryChoices = incomeCategories(categories.data);
   const categoryId = pickedCategoryId ?? defaultIncomeCategoryId(categories.data);
 

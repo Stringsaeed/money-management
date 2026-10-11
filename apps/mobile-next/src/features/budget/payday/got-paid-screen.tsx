@@ -1,7 +1,8 @@
 import { ScrollView, StyleSheet } from "react-native";
 
-import { spacing } from "@/ui/design-tokens";
-import { Screen } from "@/ui/screen";
+import { layout, Screen, space } from "@/ui/trove";
+
+import { SetupHeader } from "../setup/setup-header";
 
 import { GotPaidForm } from "./got-paid-form";
 import { PaydayGate } from "./payday-gate";
@@ -9,9 +10,10 @@ import { PaydayGate } from "./payday-gate";
 /** C0: Got paid. Opened from the Budget home banner or the payday reminder. */
 export function GotPaidScreen() {
   return (
-    <PaydayGate>
+    <PaydayGate title="Got paid">
       {(view) => (
-        <Screen edges={["bottom"]}>
+        <Screen>
+          <SetupHeader title="Got paid" />
           <ScrollView
             contentContainerStyle={styles.content}
             keyboardShouldPersistTaps="handled"
@@ -26,5 +28,5 @@ export function GotPaidScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: spacing[5], paddingBottom: spacing[10] },
+  content: { padding: layout.screenGutter, paddingBottom: space[10] },
 });

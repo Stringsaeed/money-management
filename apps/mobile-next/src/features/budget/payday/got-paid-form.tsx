@@ -1,12 +1,9 @@
 import { router } from "expo-router";
+
+import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 import { StyleSheet, View } from "react-native";
 
-import { Button } from "@/ui/button";
-import { Chip } from "@/ui/chip";
-import { colors, spacing, typography } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
-import { TextField } from "@/ui/text-field";
-import { showToast } from "@/ui/toast";
+import { AmountInput, Button, Chip, showToast, space, Text } from "@/ui/trove";
 
 import type { ActiveBudgetView } from "../home/home-model";
 import { periodLabel } from "../envelope/envelope-model";
@@ -22,15 +19,14 @@ export function GotPaidForm({ view }: { readonly view: ActiveBudgetView }) {
   const reminders = useReminderPrefs();
   return (
     <View style={styles.container}>
-      <Text variant="headline" accessibilityRole="header">
+      <Text variant="titleLg" accessibilityRole="header">
         Got paid
       </Text>
-      <TextField
+      <AmountInput
+        currency={BUDGET_CURRENCY}
         label="Salary amount (AED)"
         value={form.amountText}
         onChangeText={form.setAmountText}
-        keyboardType="decimal-pad"
-        returnKeyType="done"
       />
       {form.accountChoices.length > 0 ? (
         <ChipRow label="Into account">
@@ -44,7 +40,7 @@ export function GotPaidForm({ view }: { readonly view: ActiveBudgetView }) {
           ))}
         </ChipRow>
       ) : (
-        <Text variant="caption">
+        <Text variant="bodySm" tone="secondary">
           None of your budget accounts can receive a salary. Add an AED account to the money you
           have first.
         </Text>
@@ -62,16 +58,20 @@ export function GotPaidForm({ view }: { readonly view: ActiveBudgetView }) {
         </ChipRow>
       ) : null}
       <QuickAddDate date={form.date} onChange={form.setDate} placementNote={null} />
-      <Text variant="caption">{`This starts your new month: ${periodLabel(view.current.period)}`}</Text>
+      <Text
+        variant="bodySm"
+        tone="secondary"
+      >{`This starts your new month: ${periodLabel(view.current.period)}`}</Text>
       {form.error ? (
-        <Text accessibilityRole="alert" style={styles.error}>
+        <Text accessibilityRole="alert" tone="negative" variant="labelMd">
           {form.error}
         </Text>
       ) : null}
-      <Button title="Got paid" loading={form.busy} onPress={() => void form.submit()} />
+      <Button fullWidth label="Got paid" loading={form.busy} onPress={() => void form.submit()} />
       <Button
-        title="Not yet: remind me tomorrow"
-        variant="ghost"
+        fullWidth
+        label="Not yet: remind me tomorrow"
+        variant="tertiary"
         onPress={() => {
           void reminders.snoozePayday(form.today);
           showToast({ message: "We'll remind you again tomorrow." });
@@ -83,6 +83,5 @@ export function GotPaidForm({ view }: { readonly view: ActiveBudgetView }) {
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing[3] },
-  error: { color: colors.destructive, fontFamily: typography.fontBodyMedium },
+  container: { gap: space[3] },
 });

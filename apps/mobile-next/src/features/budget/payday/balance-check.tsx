@@ -3,11 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY, type V2Account } from "@trove/api/v2/contracts";
 
-import { Button } from "@/ui/button";
-import { colors, radii, spacing } from "@/ui/design-tokens";
-import { Section } from "@/ui/section";
-import { Text } from "@/ui/text";
-import { formatMoneyMinor } from "@/utils/money";
+import { Amount, Button, ListGroup, ListRow, space, Text } from "@/ui/trove";
 
 interface BalanceCheckProps {
   /** The accounts that hold money you have. */
@@ -18,39 +14,37 @@ interface BalanceCheckProps {
 export function BalanceCheck({ accounts }: BalanceCheckProps) {
   if (accounts.length === 0) return null;
   return (
-    <Section title="Do these still match?">
-      <Text variant="caption">
+    <View style={styles.section}>
+      <Text variant="titleMd">Do these still match?</Text>
+      <Text tone="secondary" variant="bodySm">
         Compare with your bank or wallet. If one is off, adjust it before you plan.
       </Text>
-      {accounts.map((account) => (
-        <View key={account.id} style={styles.row}>
-          <View style={styles.copy}>
-            <Text variant="body">{account.name}</Text>
-            <Text variant="caption">{formatMoneyMinor(account.balanceMinor, BUDGET_CURRENCY)}</Text>
-          </View>
-          <Button
-            title="Adjust"
-            variant="secondary"
-            onPress={() =>
-              router.push({ pathname: "/accounts/[id]/edit", params: { id: account.id } })
+      <ListGroup dividerInset={0}>
+        {accounts.map((account) => (
+          <ListRow
+            key={account.id}
+            title={account.name}
+            trailing={
+              <View style={styles.trailing}>
+                <Amount currency={BUDGET_CURRENCY} minor={account.balanceMinor} tone="secondary" />
+                <Button
+                  label="Adjust"
+                  size="sm"
+                  variant="secondary"
+                  onPress={() =>
+                    router.push({ pathname: "/accounts/[id]/edit", params: { id: account.id } })
+                  }
+                />
+              </View>
             }
           />
-        </View>
-      ))}
-    </Section>
+        ))}
+      </ListGroup>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    alignItems: "center",
-    backgroundColor: colors.card,
-    borderCurve: "continuous",
-    borderRadius: radii.lg,
-    flexDirection: "row",
-    gap: spacing[3],
-    justifyContent: "space-between",
-    padding: spacing[4],
-  },
-  copy: { flex: 1, gap: spacing[0.5] },
+  section: { gap: space[3] },
+  trailing: { alignItems: "center", flexDirection: "row", gap: space[3] },
 });

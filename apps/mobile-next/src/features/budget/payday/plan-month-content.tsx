@@ -3,10 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { Button } from "@/ui/button";
-import { colors, spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
-import { showToast } from "@/ui/toast";
+import { Amount, Button, showToast, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { PanelError } from "../envelope/panel-error";
@@ -37,6 +34,7 @@ export function PlanMonthContent({ view }: { readonly view: ActiveBudgetView }) 
 
   return (
     <SetupFrame
+      header="Plan new month"
       step="Plan new month"
       title="Money to plan"
       intro="Only money you have counts. Your expected salary is never planned before it lands."
@@ -45,34 +43,41 @@ export function PlanMonthContent({ view }: { readonly view: ActiveBudgetView }) 
           <PanelError message={month.error} />
           {month.hasLastMonth ? (
             <Button
-              title="Repeat last month's plan"
+              fullWidth
+              label="Repeat last month's plan"
               loading={month.busy}
               disabled={month.isLoading || !plan.canRepeat}
               onPress={() => void repeat()}
             />
           ) : null}
           <Button
-            title={month.hasLastMonth ? "Plan later" : "Done"}
-            variant={month.hasLastMonth ? "ghost" : "primary"}
+            fullWidth
+            label={month.hasLastMonth ? "Plan later" : "Done"}
+            variant={month.hasLastMonth ? "tertiary" : "primary"}
             onPress={finish}
           />
         </>
       }
     >
       <View accessible accessibilityLiveRegion="polite" style={styles.hero}>
-        <Text variant="label">Money to plan</Text>
-        <Text variant="amount" style={unassignedMinor < 0 && styles.over}>
-          {money(unassignedMinor)}
+        <Text tone="secondary" variant="labelSm">
+          Money to plan
         </Text>
+        <Amount
+          currency={BUDGET_CURRENCY}
+          minor={unassignedMinor}
+          size="hero"
+          tone={unassignedMinor < 0 ? "negative" : "primary"}
+        />
         {unassignedMinor < 0 ? (
-          <Text variant="caption" style={styles.over}>
+          <Text tone="negative" variant="bodySm">
             You&apos;ve planned or spent more than you have. Lower an envelope below.
           </Text>
         ) : null}
       </View>
       {month.hasLastMonth ? <RepeatCard plan={plan} onAdjust={finish} /> : null}
       <PlanGroups lines={envelopeLines(view)} />
-      <Text variant="caption">
+      <Text variant="bodySm" tone="secondary">
         Salary late? Plan with what you have now. You can plan more any time once it lands.
       </Text>
     </SetupFrame>
@@ -80,6 +85,5 @@ export function PlanMonthContent({ view }: { readonly view: ActiveBudgetView }) 
 }
 
 const styles = StyleSheet.create({
-  hero: { gap: spacing[1] },
-  over: { color: colors.terracotta },
+  hero: { gap: space[1] },
 });

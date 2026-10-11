@@ -1,11 +1,8 @@
-
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { Button } from "@/ui/button";
-import { colors, radii, spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { Button, Card, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import type { RepeatPlan } from "./repeat-plan-model";
@@ -23,33 +20,28 @@ export const pluralEnvelopes = (count: number) =>
 /** The result line for Repeat last month's plan, or "Short AED X" when the money is not there. */
 export function RepeatCard({ plan, onAdjust }: RepeatCardProps) {
   return (
-    <View style={styles.card}>
-      <Text variant="body">Repeat last month&apos;s plan</Text>
+    <Card style={styles.card}>
+      <Text variant="labelMd">Repeat last month&apos;s plan</Text>
       {plan.items.length === 0 ? (
-        <Text variant="caption">This month already matches last month&apos;s plan.</Text>
+        <Text tone="secondary" variant="bodySm">
+          This month already matches last month&apos;s plan.
+        </Text>
       ) : plan.shortMinor > 0 ? (
         <>
-          <Text accessibilityRole="alert" style={styles.short}>
+          <Text accessibilityRole="alert" tone="negative">
             {`Short ${money(plan.shortMinor)}: lower Everyday or Saving for`}
           </Text>
-          <Button title="Adjust" variant="secondary" onPress={onAdjust} />
+          <Button fullWidth label="Adjust" variant="secondary" onPress={onAdjust} />
         </>
       ) : (
-        <Text variant="caption">
+        <Text tone="secondary" variant="bodySm">
           {`Plans ${money(plan.totalMinor)} across ${pluralEnvelopes(plan.items.length)}, leaving ${money(plan.availableMinor - plan.totalMinor)} to plan.`}
         </Text>
       )}
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surfaceContainer,
-    borderCurve: "continuous",
-    borderRadius: radii.lg,
-    gap: spacing[2],
-    padding: spacing[4],
-  },
-  short: { color: colors.terracotta },
+  card: { gap: space[2] },
 });

@@ -5,10 +5,7 @@ import { StyleSheet, View } from "react-native";
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
 import { useLedgerMutations } from "@/data/ledger-queries";
-import { Button } from "@/ui/button";
-import { Chip } from "@/ui/chip";
-import { spacing } from "@/ui/design-tokens";
-import { showToast } from "@/ui/toast";
+import { Button, Chip, ListGroup, showToast, space } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { PanelError } from "../envelope/panel-error";
@@ -65,35 +62,45 @@ export function LeftoversContent({ view }: { readonly view: ActiveBudgetView }) 
 
   return (
     <SetupFrame
+      header="Leftovers"
       step="Leftovers"
       title={`${money(leftoverTotal(lines))} rolled over`}
       intro="Everyday money you didn't spend last month. Choose where it goes."
       footer={
         <>
           <PanelError message={write.error} />
-          <Button title="Continue" loading={write.busy} onPress={() => void apply()} />
-          <Button title="Skip" variant="ghost" onPress={next} />
+          <Button fullWidth label="Continue" loading={write.busy} onPress={() => void apply()} />
+          <Button fullWidth label="Skip" variant="tertiary" onPress={next} />
         </>
       }
     >
       <View style={styles.options}>
-        <ChoiceRow
-          label="Keep in the same envelopes"
-          note="They carry over as they are. Nothing changes."
-          ticked={option === "keep"}
-          onPress={() => pick("keep")}
-        />
-        <ChoiceRow
-          label="Move to a Saving for envelope"
-          note={
-            savings.length === 0
-              ? "Add a Saving for envelope first."
-              : (cannotMove ?? `Moves ${money(movableMinor)}.`)
-          }
-          ticked={option === "saving"}
-          disabled={savings.length === 0 || movableMinor === 0}
-          onPress={() => pick("saving")}
-        />
+        <ListGroup dividerInset={0}>
+          <ChoiceRow
+            label="Keep in the same envelopes"
+            note="They carry over as they are. Nothing changes."
+            ticked={option === "keep"}
+            onPress={() => pick("keep")}
+          />
+          <ChoiceRow
+            label="Move to a Saving for envelope"
+            note={
+              savings.length === 0
+                ? "Add a Saving for envelope first."
+                : (cannotMove ?? `Moves ${money(movableMinor)}.`)
+            }
+            ticked={option === "saving"}
+            disabled={savings.length === 0 || movableMinor === 0}
+            onPress={() => pick("saving")}
+          />
+          <ChoiceRow
+            label="Add to next month's money to plan"
+            note={cannotMove ?? `Moves ${money(movableMinor)} to money to plan.`}
+            ticked={option === "plan"}
+            disabled={movableMinor === 0}
+            onPress={() => pick("plan")}
+          />
+        </ListGroup>
         {option === "saving" ? (
           <ChipRow label="Move it to">
             {savings.map((line) => (
@@ -106,18 +113,11 @@ export function LeftoversContent({ view }: { readonly view: ActiveBudgetView }) 
             ))}
           </ChipRow>
         ) : null}
-        <ChoiceRow
-          label="Add to next month's money to plan"
-          note={cannotMove ?? `Moves ${money(movableMinor)} to money to plan.`}
-          ticked={option === "plan"}
-          disabled={movableMinor === 0}
-          onPress={() => pick("plan")}
-        />
       </View>
     </SetupFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  options: { gap: spacing[2] },
+  options: { gap: space[3] },
 });

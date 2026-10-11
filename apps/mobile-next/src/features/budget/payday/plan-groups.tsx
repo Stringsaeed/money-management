@@ -1,7 +1,7 @@
 import type { V2EnvelopeGroup } from "@trove/api/v2/contracts";
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { Section } from "@/ui/section";
+import { ListGroup } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import type { EnvelopeLine } from "../home/home-model";
@@ -21,11 +21,15 @@ export function PlanGroups({ lines }: { readonly lines: readonly EnvelopeLine[] 
     if (inGroup.length === 0) return null;
     const planned = inGroup.reduce((total, line) => total + line.totals.plannedMinor, 0);
     return (
-      <Section key={group} title={`${title} · ${formatMoneyMinor(planned, BUDGET_CURRENCY)}`}>
+      <ListGroup
+        key={group}
+        dividerInset={0}
+        header={`${title} · ${formatMoneyMinor(planned, BUDGET_CURRENCY)}`}
+      >
         {inGroup.map((line) => (
           <PlanEnvelopeRow key={line.envelope.id} line={line} />
         ))}
-      </Section>
+      </ListGroup>
     );
   });
 }

@@ -5,10 +5,7 @@ import { StyleSheet, View } from "react-native";
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
 import { useAccountsQuery } from "@/data/ledger-queries";
-import { Button } from "@/ui/button";
-import { spacing } from "@/ui/design-tokens";
-import { Section } from "@/ui/section";
-import { Text } from "@/ui/text";
+import { Button, ListGroup, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { CoverMoveSheet } from "../cover/cover-move-sheet";
@@ -49,6 +46,7 @@ export function WrapUpContent({ view, wrapUp }: WrapUpContentProps) {
 
   return (
     <SetupFrame
+      header="Month wrap-up"
       step={`Month wrap-up · ${range}`}
       title={title}
       intro={
@@ -58,12 +56,12 @@ export function WrapUpContent({ view, wrapUp }: WrapUpContentProps) {
       }
       footer={
         <>
-          <Button title="Next" onPress={next} />
-          <Button title="Skip" variant="ghost" onPress={next} />
+          <Button fullWidth label="Next" onPress={next} />
+          <Button fullWidth label="Skip" variant="tertiary" onPress={next} />
         </>
       }
     >
-      <View style={styles.stats}>
+      <ListGroup dividerInset={0}>
         <StatRow
           label="Everyday spent"
           value={`${money(summary.everyday.spentMinor)} of ${money(summary.everyday.plannedMinor)}`}
@@ -71,18 +69,16 @@ export function WrapUpContent({ view, wrapUp }: WrapUpContentProps) {
         />
         {firstMonth ? null : (
           <>
-            <StatRow
-              label="Bills paid"
-              value={`${summary.bills.paid} of ${summary.bills.total}`}
-            />
+            <StatRow label="Bills paid" value={`${summary.bills.paid} of ${summary.bills.total}`} />
             <StatRow label="Saved for big payments" value={money(summary.savedMinor)} />
           </>
         )}
-      </View>
+      </ListGroup>
 
       {summary.overspent.length > 0 ? (
-        <Section title="Overspent">
-          <Text variant="caption">
+        <View style={styles.section}>
+          <Text variant="titleMd">Overspent</Text>
+          <Text variant="bodySm" tone="secondary">
             Overspending is never covered for you. Accepting leaves it out of this month&apos;s
             envelopes: it already came out of your money to plan.
           </Text>
@@ -97,7 +93,7 @@ export function WrapUpContent({ view, wrapUp }: WrapUpContentProps) {
               onAccept={() => resolve(item.id, "accepted")}
             />
           ))}
-        </Section>
+        </View>
       ) : null}
 
       {suggestion && !firstMonth ? <RaiseCard suggestion={suggestion} /> : null}
@@ -114,5 +110,5 @@ export function WrapUpContent({ view, wrapUp }: WrapUpContentProps) {
 }
 
 const styles = StyleSheet.create({
-  stats: { gap: spacing[2] },
+  section: { gap: space[3] },
 });

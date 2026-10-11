@@ -1,9 +1,7 @@
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
-import { Button } from "@/ui/button";
-import { spacing } from "@/ui/design-tokens";
-import { showToast } from "@/ui/toast";
+import { Button, showToast, space } from "@/ui/trove";
 
 import type { UseReminderPrefs } from "../reminders/use-reminder-prefs";
 
@@ -20,11 +18,12 @@ export function PaydayActions({ today, reminders }: PaydayActionsProps) {
   return (
     <View style={styles.row}>
       <View style={styles.action}>
-        <Button title="Got paid" onPress={() => router.push(PAYDAY_ROUTES.gotPaid)} />
+        <Button fullWidth label="Got paid" onPress={() => router.push(PAYDAY_ROUTES.gotPaid)} />
       </View>
       <View style={styles.action}>
         <Button
-          title={reminded ? "Reminding tomorrow" : "Not yet"}
+          fullWidth
+          label={reminded ? "Reminding tomorrow" : "Not yet"}
           variant="secondary"
           disabled={reminded}
           onPress={() => {
@@ -38,6 +37,6 @@ export function PaydayActions({ today, reminders }: PaydayActionsProps) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", gap: spacing[2] },
+  row: { flexDirection: "row", gap: space[2] },
   action: { flex: 1 },
 });
