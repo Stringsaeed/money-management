@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { space, Text } from "@/ui/trove";
 
 interface ChipRowProps {
   readonly label: string;
@@ -13,7 +12,9 @@ interface ChipRowProps {
 export function ChipRow({ label, children }: ChipRowProps) {
   return (
     <View style={styles.row}>
-      <Text variant="label">{label}</Text>
+      <Text tone="secondary" variant="labelSm">
+        {label}
+      </Text>
       <ScrollView
         horizontal
         keyboardShouldPersistTaps="handled"
@@ -27,6 +28,6 @@ export function ChipRow({ label, children }: ChipRowProps) {
 }
 
 const styles = StyleSheet.create({
-  row: { gap: spacing[1] },
-  chips: { gap: spacing[2] },
+  row: { gap: space[1] },
+  chips: { gap: space[2] },
 });

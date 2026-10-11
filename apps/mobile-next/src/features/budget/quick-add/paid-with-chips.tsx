@@ -1,6 +1,6 @@
 import type { V2Account } from "@trove/api/v2/contracts";
 
-import { Chip } from "@/ui/chip";
+import { Chip } from "@/ui/trove";
 
 import { ChipRow } from "./chip-row";
 

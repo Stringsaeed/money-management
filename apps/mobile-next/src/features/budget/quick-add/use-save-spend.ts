@@ -3,7 +3,7 @@ import { useState } from "react";
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
 import { playCue, useLedgerMutationsWithSound } from "@/features/sound";
-import { showToast } from "@/ui/toast";
+import { showToast } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { errorHaptic } from "../../ledger/transactions/transaction-haptics";

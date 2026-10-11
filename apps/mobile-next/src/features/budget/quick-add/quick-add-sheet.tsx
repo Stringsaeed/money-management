@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 
 import { useAccountsQuery, useCategoriesQuery } from "@/data/ledger-queries";
-import { Sheet } from "@/ui/sheet";
+import { Sheet } from "@/ui/trove";
 
 import { afterSheetCloses } from "../../ledger/transactions/transaction-create-actions";
 import type { ActiveBudgetView } from "../home/home-model";

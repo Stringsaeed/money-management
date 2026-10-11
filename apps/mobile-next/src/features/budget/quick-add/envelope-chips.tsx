@@ -1,8 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import { spacing } from "@/ui/design-tokens";
-import { Chip } from "@/ui/chip";
-import { TextField } from "@/ui/text-field";
+import { Chip, space, TextField } from "@/ui/trove";
 
 import type { EnvelopeLine } from "../home/home-model";
 
@@ -54,4 +52,4 @@ export function EnvelopeChips({
   );
 }
 
-const styles = StyleSheet.create({ container: { gap: spacing[2] } });
+const styles = StyleSheet.create({ container: { gap: space[2] } });

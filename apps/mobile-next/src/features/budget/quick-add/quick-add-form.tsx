@@ -3,13 +3,8 @@ import { StyleSheet, View } from "react-native";
 import type { V2Account, V2Category } from "@trove/api/v2/contracts";
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { Button } from "@/ui/button";
-import { colors, spacing, typography } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
-import { TextField } from "@/ui/text-field";
+import { Button, EntryAmount, Keypad, space, Text, TextField } from "@/ui/trove";
 
-import { AmountDisplay } from "../../ledger/transactions/amount-display";
-import { NumPad } from "../../ledger/transactions/num-pad";
 import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
 
 import { CategoryChips } from "./category-chips";
@@ -19,6 +14,9 @@ import type { QuickAddMemory } from "./quick-add-memory";
 import { QuickAddDate } from "./quick-add-date";
 import { useQuickAddForm } from "./use-quick-add-form";
 import type { SavedSpend } from "./use-save-spend";
+
+/** Whole digits the amount accepts, as in the transaction editor. */
+const MAX_INTEGER_DIGITS = 12;
 
 interface QuickAddFormProps {
   readonly view: ActiveBudgetView;
@@ -55,16 +53,13 @@ export function QuickAddForm({
 
   return (
     <View style={styles.container}>
-      <Text variant="title">Add spending</Text>
-      <AmountDisplay
-        amount={form.amount}
-        currency={BUDGET_CURRENCY}
-        fractionDigits={form.fractionDigits}
-      />
+      <Text variant="titleMd">Add spending</Text>
+      <EntryAmount currency={BUDGET_CURRENCY} negative value={form.amount} />
       <Text
-        variant="label"
         accessibilityLiveRegion="polite"
-        style={[styles.impact, form.impact?.over && styles.over]}
+        style={styles.centered}
+        tone={form.impact?.over ? "negative" : "secondary"}
+        variant="labelSm"
       >
         {form.impact?.text ?? " "}
       </Text>
@@ -90,21 +85,24 @@ export function QuickAddForm({
         onAddCard={onAddCard}
       />
 
-      <NumPad
-        allowDecimal={form.fractionDigits > 0}
-        onKey={form.pressKey}
+      <Keypad
+        maxFractionDigits={form.fractionDigits}
+        maxIntegerDigits={MAX_INTEGER_DIGITS}
+        onChange={form.changeAmount}
         onClear={form.clearAmount}
+        value={form.amount}
       />
 
       {form.error ? (
-        <Text accessibilityRole="alert" style={styles.error}>
+        <Text accessibilityRole="alert" style={styles.centered} tone="negative" variant="labelMd">
           {form.error}
         </Text>
       ) : null}
-      <Button title="Save" loading={form.busy} onPress={() => void form.submit(false)} />
+      <Button fullWidth label="Save" loading={form.busy} onPress={() => void form.submit(false)} />
       {form.impact?.over ? (
         <Button
-          title="Save & cover it"
+          fullWidth
+          label="Save & cover it"
           variant="secondary"
           loading={form.busy}
           onPress={() => void form.submit(true)}
@@ -123,12 +121,6 @@ export function QuickAddForm({
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing[3] },
-  impact: { textAlign: "center" },
-  over: { color: colors.terracotta },
-  error: {
-    color: colors.destructive,
-    fontFamily: typography.fontBodyMedium,
-    textAlign: "center",
-  },
+  container: { gap: space[3] },
+  centered: { textAlign: "center" },
 });

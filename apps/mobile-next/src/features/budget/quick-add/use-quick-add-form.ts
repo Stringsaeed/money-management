@@ -6,12 +6,7 @@ import { playCue } from "@/features/sound";
 import { todayDateKey } from "@/utils/date";
 import { currencyFractionDigits, formatMoneyMinor, parseMoneyMinor } from "@/utils/money";
 
-import {
-  applyAmountKey,
-  normalizeAmountEntry,
-  type AmountKey,
-} from "../../ledger/transactions/amount-entry";
-import { keyHaptic } from "../../ledger/transactions/transaction-haptics";
+import { normalizeAmountEntry } from "../../ledger/transactions/amount-entry";
 import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
 
 import {
@@ -96,11 +91,11 @@ export function useQuickAddForm(options: UseQuickAddFormOptions) {
   return {
     amount,
     fractionDigits: FRACTION_DIGITS,
-    pressKey: (key: AmountKey) => {
-      keyHaptic();
+    /** The keypad applies the entry rules and its own key haptic; this records the result. */
+    changeAmount: (next: string) => {
       playCue("key");
       saving.clearError();
-      setAmount((current) => applyAmountKey(current, key, FRACTION_DIGITS));
+      setAmount(next);
     },
     clearAmount: () => setAmount(""),
     envelopes: filterEnvelopes(ordered, query, envelopeId),
