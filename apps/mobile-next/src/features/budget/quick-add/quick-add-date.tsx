@@ -12,10 +12,16 @@ interface QuickAddDateProps {
   readonly onChange: (date: string) => void;
   /** Where this date lands when it is not the current period, e.g. "Added to 25 Oct – 24 Nov". */
   readonly placementNote: string | null;
+  readonly label?: string;
 }
 
 /** Defaults to today; tapping the row opens the date picker in place. */
-export function QuickAddDate({ date, onChange, placementNote }: QuickAddDateProps) {
+export function QuickAddDate({
+  date,
+  onChange,
+  placementNote,
+  label: title = "Date",
+}: QuickAddDateProps) {
   const [open, setOpen] = useState(false);
   const label = transactionDateLabel(date);
 
@@ -23,9 +29,9 @@ export function QuickAddDate({ date, onChange, placementNote }: QuickAddDateProp
     <View style={styles.container}>
       <ListGroup dividerInset={0}>
         <ListRow
-          accessibilityLabel={`Date: ${label}`}
+          accessibilityLabel={`${title}: ${label}`}
           onPress={() => setOpen((current) => !current)}
-          title="Date"
+          title={title}
           value={label}
         />
       </ListGroup>

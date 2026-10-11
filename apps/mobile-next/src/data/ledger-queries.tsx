@@ -13,6 +13,7 @@ import type {
   V2BudgetView,
   V2Category,
   V2EnvelopeCreateInput,
+  V2EnvelopePayInput,
   V2EnvelopeUpdateInput,
   V2DueList,
   V2Home,
@@ -620,6 +621,19 @@ export function useLedgerMutations() {
             requestKey,
           });
           await applyBudgetView(result);
+          return result;
+        },
+      );
+    },
+    payEnvelope: async (id: string, input: V2EnvelopePayInput) => {
+      return runWithRequestKey(
+        "budget.payEnvelope",
+        fingerprint(JSON.stringify([id, input]) ?? ""),
+        async (requestKey) => {
+          const result = await ledgerClient.budget.payEnvelope(scope, id, input, { requestKey });
+          // A new expense Transaction moves balances, the envelope's Left and its next due date.
+          await refresh("transactions");
+          await refresh("accounts");
           return result;
         },
       );

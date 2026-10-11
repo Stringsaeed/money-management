@@ -3,7 +3,7 @@ import { useState } from "react";
 import { writeErrorMessage } from "./envelope-model";
 
 /** Runs one envelope write: tracks busy, keeps the failure copy, and says whether it went through. */
-export function useEnvelopeWrite() {
+export function useEnvelopeWrite(errorMessage: (cause: unknown) => string = writeErrorMessage) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -15,7 +15,7 @@ export function useEnvelopeWrite() {
       await write();
       return true;
     } catch (cause) {
-      setError(writeErrorMessage(cause));
+      setError(errorMessage(cause));
       return false;
     } finally {
       setBusy(false);

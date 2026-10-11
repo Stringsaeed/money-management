@@ -20,6 +20,7 @@ import {
   type V2BudgetSetupFacts,
   type V2BudgetView,
   type V2EnvelopeCreated,
+  type V2EnvelopePaid,
   type V2Category,
   type V2CreatedTransaction,
   type V2DueList,
@@ -220,6 +221,9 @@ const envelopeSchema = z.object({
   sortOrder: z.number().int(),
   categoryIds: z.array(z.string()),
   version: z.number().int(),
+  savingPerPaydayMinor: money.optional(),
+  paydaysLeft: z.number().int().optional(),
+  shortBeforePaydayMinor: money.optional(),
 });
 
 const envelopeTotalsSchema = z.object({
@@ -255,6 +259,10 @@ export const budgetViewSchema: z.ZodType<V2BudgetView> = z.union([
 
 export const envelopeCreatedSchema: z.ZodType<V2EnvelopeCreated> = activeBudgetViewSchema.extend({
   envelopeId: z.string(),
+});
+
+export const envelopePaidSchema: z.ZodType<V2EnvelopePaid> = activeBudgetViewSchema.extend({
+  transactionId: z.string(),
 });
 
 export const budgetPeriodViewSchema: z.ZodType<V2BudgetPeriodView> = z.object({
@@ -297,6 +305,8 @@ export const budgetSetupFactsSchema: z.ZodType<V2BudgetSetupFacts> = z.object({
 export const parseBudgetView = (payload: unknown): V2BudgetView => budgetViewSchema.parse(payload);
 export const parseEnvelopeCreated = (payload: unknown): V2EnvelopeCreated =>
   envelopeCreatedSchema.parse(payload);
+export const parseEnvelopePaid = (payload: unknown): V2EnvelopePaid =>
+  envelopePaidSchema.parse(payload);
 export const parseBudgetPeriodView = (payload: unknown): V2BudgetPeriodView =>
   budgetPeriodViewSchema.parse(payload);
 export const parseBudgetSetupFacts = (payload: unknown): V2BudgetSetupFacts =>
