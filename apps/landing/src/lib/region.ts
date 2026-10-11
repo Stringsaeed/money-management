@@ -101,7 +101,8 @@ const PROFILES = {
   INR: {
     ...INTERNATIONAL,
     phone: "Jio",
-    season: { name: "Diwali", emoji: "🪔", month: "OCTOBER" },
+    // The example is dated October 2026; Diwali falls on 8 November that year.
+    season: { name: "Diwali", emoji: "🪔", month: "NOVEMBER" },
     groceryNote: "BigBasket",
   },
   JPY: { ...INTERNATIONAL, groceryNote: "Konbini" },

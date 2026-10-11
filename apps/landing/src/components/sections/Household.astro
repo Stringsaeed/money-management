@@ -1,6 +1,6 @@
 ---
 import BudgetTabBar from "@/components/screens/BudgetTabBar.astro";
-import { type Currency, withCode } from "@/lib/currency";
+import { type Currency, formatAmount, withCode } from "@/lib/currency";
 import { ledgers } from "@/lib/landing-data";
 
 interface Props {
@@ -34,7 +34,7 @@ const { currency } = Astro.props;
           </span>
           <span class="safe">
             <span class="safe-label">SAFE</span>
-            <span class="safe-value">{ledger.safe}</span>
+            <span class="safe-value">{formatAmount(ledger.safe, currency)}</span>
           </span>
         </div>
       ))

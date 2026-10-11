@@ -91,9 +91,11 @@ export function currencyFor(code: CurrencyCode): Currency {
 export const isCurrencyCode = (value: string): value is CurrencyCode =>
   CURRENCY_CODES.some((code) => code === value);
 
+/** Euro members (Bulgaria joined on 1 January 2026) plus territories that use it. */
 const EURO_AREA = [
   "AT",
   "BE",
+  "BG",
   "HR",
   "CY",
   "EE",

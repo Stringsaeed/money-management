@@ -187,14 +187,14 @@ export const ledgers = [
     emoji: "👤",
     name: "Personal",
     sub: "Just you · your own accounts",
-    safe: "1,988",
+    safe: 1988,
     shared: false,
   },
   {
     emoji: "🏠",
     name: "Household",
     sub: "With Sara · the joint account",
-    safe: "2,410",
+    safe: 2410,
     shared: true,
   },
 ] as const;

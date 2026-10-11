@@ -23,6 +23,7 @@ describe("pickCurrency", () => {
   it("covers the rest of the app's currency list", () => {
     assert.equal(pickCurrency(null, "DE"), "EUR");
     assert.equal(pickCurrency(null, "IE"), "EUR");
+    assert.equal(pickCurrency(null, "BG"), "EUR");
     assert.equal(pickCurrency(null, "GB"), "GBP");
     assert.equal(pickCurrency(null, "KW"), "KWD");
     assert.equal(pickCurrency(null, "JP"), "JPY");
