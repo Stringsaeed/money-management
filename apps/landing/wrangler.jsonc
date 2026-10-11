@@ -1,9 +1,13 @@
 {
-  // Static site + a small router Worker (geo currency). `pnpm build` first, then deploy.
+  // Static site + a small router Worker (geo currency). Deployed by .github/workflows/deploy-landing.yml.
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "trove-landing",
   "main": "worker/index.ts",
   "compatibility_date": "2026-09-01",
+  // Production answers on the apex; workers.dev stays on for per-PR preview aliases.
+  "routes": [{ "pattern": "trove.ing", "custom_domain": true }],
+  "workers_dev": true,
+  "preview_urls": true,
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
