@@ -85,6 +85,13 @@
       "when": 1791700000000,
       "tag": "0018_v2_budget",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791800000000,
+      "tag": "0019_v2_recurring_remind",
+      "breakpoints": true
     }
   ]
 }

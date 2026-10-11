@@ -98,6 +98,7 @@ const recurring = (id: string): V2RecurringRule => ({
   timeZone: "Asia/Dubai",
   lifecycle: "active",
   health: "ready",
+  mode: "auto_post",
   attentionReasons: [],
   eligibilityFloor: "2026-09-21",
   revision: 1,
