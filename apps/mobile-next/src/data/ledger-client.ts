@@ -14,6 +14,8 @@ import type {
   V2CreatedTransaction,
   V2EnvelopeCreateInput,
   V2EnvelopeCreated,
+  V2EnvelopePaid,
+  V2EnvelopePayInput,
   V2EnvelopeUpdateInput,
   V2DueList,
   V2Home,
@@ -40,6 +42,7 @@ import {
   parseCreatedTransaction,
   parseEnvelopeCreated,
   parseDueList,
+  parseEnvelopePaid,
   parseHome,
   homeOverviewBucketsSchema,
   parsePage,
@@ -517,6 +520,19 @@ export const ledgerClient = {
         withScope(`/budget/envelopes/${encodeURIComponent(id)}`, scope),
         json("PATCH", input, options),
         parseBudgetView,
+      );
+    },
+    /** Mark a big payment paid: an expense in the envelope's Category and the next due date. */
+    payEnvelope(
+      scope: LedgerScope,
+      id: string,
+      input: V2EnvelopePayInput,
+      options: MutationOptions = {},
+    ): Promise<V2EnvelopePaid> {
+      return request(
+        withScope(`/budget/envelopes/${encodeURIComponent(id)}/pay`, scope),
+        json("POST", input, options),
+        parseEnvelopePaid,
       );
     },
     /** Plan, cover, and move all land here; the response is the refreshed budget. */

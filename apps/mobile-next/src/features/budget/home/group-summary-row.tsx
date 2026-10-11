@@ -11,14 +11,29 @@ interface GroupSummaryRowProps {
   /** What "left" means for this group, e.g. "left" for bills or "set aside" for saving. */
   readonly leftLabel: string;
   readonly summary: GroupSummary;
+  readonly onPress: () => void;
 }
 
-/** Bills and Saving-for summary: count and totals only. Not tappable until Bills & big payments. */
-export function GroupSummaryRow({ title, noun, leftLabel, summary }: GroupSummaryRowProps) {
+/** Bills and Saving-for summary: count and totals. Tapping opens Bills & big payments. */
+export function GroupSummaryRow({
+  title,
+  noun,
+  leftLabel,
+  summary,
+  onPress,
+}: GroupSummaryRowProps) {
   const count = `${summary.count} ${summary.count === 1 ? noun.one : noun.many}`;
   const detail =
     summary.count === 0
       ? "None yet"
       : `${count} · ${formatMoneyMinor(summary.leftMinor, BUDGET_CURRENCY)} ${leftLabel}`;
-  return <ListRow accessibilityLabel={`${title}, ${detail}`} subtitle={detail} title={title} />;
+  return (
+    <ListRow
+      accessibilityLabel={`${title}, ${detail}`}
+      chevron
+      onPress={onPress}
+      subtitle={detail}
+      title={title}
+    />
+  );
 }

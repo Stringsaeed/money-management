@@ -138,12 +138,14 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
           noun={{ one: "bill", many: "bills" }}
           leftLabel="left"
           summary={groupSummary(lines, "bills")}
+          onPress={() => router.push({ pathname: "/budget/bills", params: { tab: "month" } })}
         />
         <GroupSummaryRow
           title="Saving for"
           noun={{ one: "goal", many: "goals" }}
           leftLabel="set aside"
           summary={groupSummary(lines, "saving")}
+          onPress={() => router.push({ pathname: "/budget/bills", params: { tab: "saving" } })}
         />
       </ListGroup>
 
