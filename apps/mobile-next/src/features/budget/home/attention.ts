@@ -1,6 +1,10 @@
 /** Kinds are listed highest priority first: Got paid, overspend, due today, not planned. */
 export type AttentionItem =
-  | { readonly kind: "payday" }
+  | {
+      readonly kind: "payday";
+      /** The first days of the period have passed with no salary logged. */
+      readonly late: boolean;
+    }
   | {
       readonly kind: "overspend";
       /** The most overspent envelope's name. */
@@ -17,8 +21,10 @@ export interface AttentionInputs {
   /** Every active envelope with its Left this period. */
   readonly envelopes: readonly { readonly name: string; readonly leftMinor: number }[];
   readonly unassignedMinor: number;
-  /** Plugs in with Got paid (payday layer): true on or after payday while the salary is unlogged. */
+  /** True on or after payday while the salary is unlogged. */
   readonly paydayPending?: boolean;
+  /** With `paydayPending`: the salary is late, not just new. */
+  readonly paydayLate?: boolean;
   /** Plugs in with Due & reminders: how many bills are due today. */
   readonly dueTodayCount?: number;
 }
@@ -47,7 +53,7 @@ function overspendItem(envelopes: AttentionInputs["envelopes"]): AttentionItem |
 
 /** Every attention item that applies, in priority order. */
 export function attentionItems(inputs: AttentionInputs): AttentionItem[] {
-  const payday: AttentionItem | null = inputs.paydayPending ? { kind: "payday" } : null;
+  const payday: AttentionItem | null = inputs.paydayPending ? { kind: "payday", late: inputs.paydayLate ?? false } : null;
   const dueToday: AttentionItem | null =
     inputs.dueTodayCount && inputs.dueTodayCount > 0
       ? { kind: "due_today", count: inputs.dueTodayCount }
@@ -70,7 +76,7 @@ export function pickAttention(inputs: AttentionInputs): Attention {
 export function attentionText(item: AttentionItem, money: (minor: number) => string): string {
   switch (item.kind) {
     case "payday":
-      return "Payday today: did your salary land?";
+      return item.late ? "Payday: salary not logged yet" : "Payday: did your salary land?";
     case "overspend":
       return item.count === 1
         ? `${item.name} is ${money(item.overMinor)} over`

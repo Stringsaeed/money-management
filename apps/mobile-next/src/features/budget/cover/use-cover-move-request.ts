@@ -1,8 +1,11 @@
 import { useState } from "react";
 
 export type CoverMoveRequest =
-  /** O2: cover this envelope's overspend. The amount is read live from its Left. */
-  | { readonly kind: "cover"; readonly targetId: string }
+  /**
+   * O2: cover this envelope's overspend. The amount is read live from its Left, unless
+   * `amountMinor` is given (the month wrap-up covers last month's overspend this month).
+   */
+  | { readonly kind: "cover"; readonly targetId: string; readonly amountMinor?: number }
   /** O3: move money, starting from this envelope (or Not planned yet when `null`). */
   | { readonly kind: "move"; readonly fromId: string | null };
 

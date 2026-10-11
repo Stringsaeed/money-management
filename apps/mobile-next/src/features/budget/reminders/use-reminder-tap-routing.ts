@@ -2,9 +2,11 @@ import { router } from "expo-router";
 import * as Notifications from "expo-notifications";
 import { useEffect, useRef } from "react";
 
+import { PAYDAY_ROUTES } from "../payday/payday-flow";
+
 import { configureNotifications, reminderTarget } from "./notifications";
 
-/** Shows reminders in the foreground, and opens the Due list or the Budget tab when a reminder is tapped, including a cold start. */
+/** Shows reminders in the foreground, and opens the Due list or Got paid when a reminder is tapped, including a cold start. */
 export function useReminderTapRouting(): void {
   const response = Notifications.useLastNotificationResponse();
   const handled = useRef<string | null>(null);
@@ -24,6 +26,6 @@ export function useReminderTapRouting(): void {
     const target = reminderTarget(response.notification.request.content.data);
     if (!target) return;
     if (target === "due") router.push("/budget/due");
-    else router.navigate("/(tabs)/envelopes");
+    else router.push(PAYDAY_ROUTES.gotPaid);
   }, [response]);
 }
