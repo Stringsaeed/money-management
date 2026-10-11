@@ -8,7 +8,7 @@ import { formatMoneyMinor } from "@/utils/money";
 interface OverNoticeProps {
   /** How far below zero Safe to spend is, positive. */
   readonly overMinor: number;
-  /** Cover money into the plan. Disabled until the Cover flow exists. */
+  /** Open the Cover flow for the envelope that is over. */
   readonly onCover?: () => void;
   readonly onAdjust: () => void;
 }

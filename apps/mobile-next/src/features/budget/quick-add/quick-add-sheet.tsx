@@ -18,10 +18,7 @@ interface QuickAddSheetProps {
   /** Pre-selected envelope, e.g. from a long-press on its row. */
   readonly preselectedEnvelopeId: string | null;
   readonly onDismiss: () => void;
-  /**
-   * "Save & cover it" saved the spending and the envelope is over. The Cover flow (#371) plugs in
-   * here; until it does, the sheet only saves and closes.
-   */
+  /** "Save & cover it" saved the spending and the envelope is over: open the Cover flow. */
   readonly onCover?: (saved: SavedSpend) => void;
 }
 

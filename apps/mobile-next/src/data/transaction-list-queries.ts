@@ -30,7 +30,10 @@ export interface TransactionPagesResult {
 const FIRST_PAGE: string | null = null;
 
 /** Newest-first Transactions filtered and paged by the server, one page per `loadMore`. */
-export function useTransactionPagesQuery(filters: TransactionListFilters): TransactionPagesResult {
+export function useTransactionPagesQuery(
+  filters: TransactionListFilters,
+  options: { readonly enabled?: boolean } = {},
+): TransactionPagesResult {
   const { identityKey, scope } = useLedgerData();
   const normalized = normalizeTransactionFilters(filters);
   const query = useInfiniteQuery({
@@ -43,6 +46,7 @@ export function useTransactionPagesQuery(filters: TransactionListFilters): Trans
       }),
     initialPageParam: FIRST_PAGE,
     getNextPageParam: (page) => page.nextCursor,
+    enabled: options.enabled ?? true,
     // Keep the current rows on screen while a changed filter loads, instead of blanking.
     placeholderData: keepPreviousData,
     staleTime: 15_000,
