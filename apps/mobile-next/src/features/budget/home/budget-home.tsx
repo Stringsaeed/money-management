@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
@@ -13,11 +13,18 @@ import { EverydayRow } from "./everyday-row";
 import { GroupSummaryRow } from "./group-summary-row";
 import { envelopeLines, groupSummary, perDayLine, type ActiveBudgetView } from "./home-model";
 import { OverNotice } from "./over-notice";
+import { QuickAddSheet } from "../quick-add/quick-add-sheet";
 
 interface BudgetHomeProps {
   readonly view: ActiveBudgetView;
   /** Scrolls the enclosing list so `y` is at the top. */
   readonly scrollToY: (y: number) => void;
+}
+
+interface QuickAddTarget {
+  readonly open: boolean;
+  readonly envelopeId: string | null;
+  readonly session: number;
 }
 
 const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
@@ -36,6 +43,13 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
   });
   const over = current.safeToSpendMinor <= 0;
   const everydayY = useRef(0);
+  const [quickAdd, setQuickAdd] = useState<QuickAddTarget>({
+    open: false,
+    envelopeId: null,
+    session: 0,
+  });
+  const openQuickAdd = (envelopeId: string | null) =>
+    setQuickAdd((current) => ({ open: true, envelopeId, session: current.session + 1 }));
 
   return (
     <View style={styles.container}>
@@ -89,6 +103,7 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
                     params: { id: line.envelope.id },
                   })
                 }
+                onLongPress={() => openQuickAdd(line.envelope.id)}
               />
             ))
           )}
@@ -110,11 +125,14 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
         />
       </ListGroup>
 
-      <Button
-        fullWidth
-        icon="add"
-        label="Add spending"
-        onPress={() => router.push("/transactions/new")}
+      <Button fullWidth icon="add" label="Add spending" onPress={() => openQuickAdd(null)} />
+
+      <QuickAddSheet
+        open={quickAdd.open}
+        session={quickAdd.session}
+        view={view}
+        preselectedEnvelopeId={quickAdd.envelopeId}
+        onDismiss={() => setQuickAdd((current) => ({ ...current, open: false }))}
       />
     </View>
   );

@@ -10,10 +10,12 @@ import { envelopeProgress, type EnvelopeLine } from "./home-model";
 interface EverydayRowProps {
   readonly line: EnvelopeLine;
   readonly onPress: () => void;
+  /** Quick add with this envelope already chosen. */
+  readonly onLongPress?: () => void;
 }
 
 /** One Everyday envelope: name, what is left (or how far over), and a progress bar. */
-export function EverydayRow({ line, onPress }: EverydayRowProps) {
+export function EverydayRow({ line, onPress, onLongPress }: EverydayRowProps) {
   const { envelope, totals } = line;
   const { fraction, over } = envelopeProgress(totals);
   const amount = formatMoneyMinor(Math.abs(totals.leftMinor), BUDGET_CURRENCY);
@@ -22,7 +24,9 @@ export function EverydayRow({ line, onPress }: EverydayRowProps) {
     <PressableScale
       accessibilityRole="button"
       accessibilityLabel={`${envelope.name}, ${status}`}
+      accessibilityHint={onLongPress ? "Touch and hold to add spending" : undefined}
       onPress={onPress}
+      onLongPress={onLongPress}
       pressedStyle={styles.pressed}
       scaleOnPress={false}
       style={styles.row}
