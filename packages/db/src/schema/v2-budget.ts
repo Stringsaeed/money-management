@@ -29,7 +29,7 @@ const moneyMinor = (name: string) => bigint(name, { mode: "number" });
 const positiveMoney = (column: SQLWrapper) => sql`${column} BETWEEN 1 AND 9007199254740991`;
 const ledgerDate = (column: SQLWrapper) => sql`${column} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'`;
 
-/** One budget per ledger. */
+/** One budget per currency per ledger (ADR-0002: Money is never converted between budgets). */
 export const v2Budget = pgTable(
   "v2_budgets",
   {
@@ -52,7 +52,7 @@ export const v2Budget = pgTable(
       .notNull(),
   },
   (table) => [
-    uniqueIndex("v2_budgets_ledger_unique").on(table.ledgerId),
+    uniqueIndex("v2_budgets_ledger_currency_unique").on(table.ledgerId, table.currency),
     uniqueIndex("v2_budgets_ledger_id_id_unique").on(table.ledgerId, table.id),
     check("v2_budgets_currency_valid", sql`${table.currency} ~ '^[A-Z]{3}$'`),
     check("v2_budgets_activation_start_valid", ledgerDate(table.activationPeriodStart)),
@@ -155,6 +155,12 @@ export const v2Envelope = pgTable(
   },
   (table) => [
     uniqueIndex("v2_envelopes_ledger_id_id_unique").on(table.ledgerId, table.id),
+    // Target of the Category mapping FK, so a mapping's budget is its envelope's budget.
+    uniqueIndex("v2_envelopes_ledger_budget_id_unique").on(
+      table.ledgerId,
+      table.budgetId,
+      table.id,
+    ),
     index("v2_envelopes_budget_lifecycle_idx").on(table.budgetId, table.lifecycle),
     check("v2_envelopes_group_valid", sql`${table.group} IN ('bills', 'everyday', 'saving')`),
     check("v2_envelopes_lifecycle_valid", sql`${table.lifecycle} IN ('active', 'archived')`),
@@ -178,27 +184,33 @@ export const v2Envelope = pgTable(
   ],
 );
 
-/** A Category maps to at most one Envelope per ledger. */
+/**
+ * A Category maps to at most one Envelope per budget, so the same Category can
+ * be an envelope in the AED and the USD budget. `budget_id` is the envelope's
+ * budget (enforced by the composite envelope FK).
+ */
 export const v2EnvelopeCategory = pgTable(
   "v2_envelope_categories",
   {
     ledgerId: text("ledger_id")
       .notNull()
       .references(() => v2Ledger.id, { onDelete: "cascade" }),
+    budgetId: text("budget_id").notNull(),
     envelopeId: text("envelope_id").notNull(),
     categoryId: text("category_id").notNull(),
     createdAt: timestamptz("created_at").defaultNow().notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.envelopeId, table.categoryId] }),
-    uniqueIndex("v2_envelope_categories_ledger_category_unique").on(
-      table.ledgerId,
+    uniqueIndex("v2_envelope_categories_budget_category_unique").on(
+      table.budgetId,
       table.categoryId,
     ),
+    index("v2_envelope_categories_ledger_category_idx").on(table.ledgerId, table.categoryId),
     foreignKey({
       name: "v2_envelope_categories_envelope_fk",
-      columns: [table.ledgerId, table.envelopeId],
-      foreignColumns: [v2Envelope.ledgerId, v2Envelope.id],
+      columns: [table.ledgerId, table.budgetId, table.envelopeId],
+      foreignColumns: [v2Envelope.ledgerId, v2Envelope.budgetId, v2Envelope.id],
     }).onDelete("cascade"),
     foreignKey({
       name: "v2_envelope_categories_category_fk",

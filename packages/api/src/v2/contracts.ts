@@ -243,8 +243,18 @@ export const recurringPaySchema = z
   })
   .strict();
 
-/** Budgeting v1 plans in AED only (#365 decision 9). */
+/**
+ * The currency a setup-facts read or an activation uses when the request names
+ * none (the app before #402 always meant AED). Not a gate: a ledger has one
+ * budget per ISO currency (#400, ADR-0002).
+ */
 export const BUDGET_CURRENCY = "AED";
+
+/** An ISO 4217 code the runtime knows, so its minor units are known too. */
+export const budgetCurrencySchema = currencySchema.refine(
+  (value) => Intl.supportedValuesOf("currency").includes(value),
+  "Currency must be an ISO 4217 code.",
+);
 
 export const paydayRuleSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("day"), day: z.number().int().min(1).max(28) }),
@@ -372,10 +382,12 @@ export const assignmentsCreateSchema = z.object({
 
 export const budgetActivateSchema = z
   .object({
+    /** The budget's currency; one budget per currency per ledger. */
+    currency: budgetCurrencySchema.default(BUDGET_CURRENCY),
     paydayRule: paydayRuleSchema,
     usualSalaryMinor: positiveMoneyMinorSchema.nullable().optional(),
     paydayReminder: z.boolean().default(true),
-    /** The AED accounts that hold the money planned with. Exclusive with `openingCashMinor`. */
+    /** Accounts in the budget's currency that hold the money planned with. Exclusive with `openingCashMinor`. */
     fundingAccountIds: z.array(entityIdSchema).min(1).max(20).optional(),
     /** One typed total: activation creates a "My money" cash Account with this opening balance. */
     openingCashMinor: nonNegativeMoneyMinorSchema.optional(),
@@ -668,6 +680,22 @@ export interface V2BudgetCurrent {
   readonly envelopes: readonly V2EnvelopeTotals[];
 }
 
+/** One budget in `GET /budgets`: which currency it plans, and its Safe to spend today. */
+export interface V2BudgetSummary {
+  readonly id: string;
+  readonly currency: string;
+  readonly activatedOn: string;
+  readonly period: V2BudgetPeriod;
+  readonly safeToSpendMinor: number;
+}
+
+/** `GET /budgets`: the ledger's budgets, oldest first, bounded. */
+export interface V2BudgetList {
+  readonly items: readonly V2BudgetSummary[];
+  /** True when the ledger has more budgets than the list returns. */
+  readonly truncated: boolean;
+}
+
 /** `GET /budget`. Envelopes are the active ones, in sort order. */
 export type V2BudgetView =
   | { readonly budget: null }
@@ -718,17 +746,17 @@ export interface V2BudgetPeriodView {
   readonly envelopes: readonly V2EnvelopeTotals[];
 }
 
-/** `GET /budget/setup-facts`: AED facts the setup flow previews the plan with. */
+/** `GET /budget/setup-facts?currency=`: one currency's facts the setup flow previews the plan with. */
 export interface V2BudgetSetupFacts {
   readonly today: string;
   readonly period: V2BudgetPeriod;
-  /** Active accounts with balances counting transactions dated on or before today. */
+  /** Active accounts in the currency, with balances counting transactions dated on or before today. */
   readonly accountBalances: readonly {
     readonly accountId: string;
     readonly balanceMinor: number;
   }[];
   /**
-   * AED expenses dated from the period start through today. `onCard` marks AED credit-card
+   * Expenses in the currency dated from the period start through today. `onCard` marks credit-card
    * accounts (archived ones included): the engine reserves EVERY card expense, mapped or not.
    */
   readonly spendSincePeriodStart: readonly {
@@ -738,11 +766,11 @@ export interface V2BudgetSetupFacts {
     readonly onCard: boolean;
   }[];
   /**
-   * What the AED credit cards owed just before the period start (never below 0): the engine's
+   * What the credit cards in the currency owed just before the period start (never below 0): the engine's
    * `openingCardDebtMinor` if the budget is activated in this period.
    */
   readonly openingCardDebtMinor: number;
-  /** AED transfers into credit-card accounts dated from the period start through today. */
+  /** Transfers in the currency into credit-card accounts dated from the period start through today. */
   readonly cardPaymentsSincePeriodStart: readonly {
     readonly fromAccountId: string;
     readonly toAccountId: string;

@@ -13,6 +13,7 @@ import { budgetView, loadBudget, requireBudget } from "./budget";
 import { resolveCategories } from "./budget-categories";
 import {
   BudgetAlreadyActive,
+  BudgetCurrencyMismatch,
   BudgetDefaultAccountInvalid,
   BudgetFundingInvalid,
   BudgetNotSaved,
@@ -28,7 +29,7 @@ import {
   requirePlanAccess,
 } from "./budget-services";
 import { BudgetStore, paydayColumns } from "./budget-store";
-import { BUDGET_CURRENCY, type budgetActivateSchema, type budgetUpdateSchema } from "./contracts";
+import type { budgetActivateSchema, budgetUpdateSchema } from "./contracts";
 import { ReminderStore } from "./recurring-reminder-store";
 
 export type BudgetActivation = z.output<typeof budgetActivateSchema>;
@@ -37,7 +38,8 @@ export type BudgetUpdate = z.output<typeof budgetUpdateSchema>;
 const MY_MONEY_ACCOUNT_NAME = "My money";
 
 /**
- * Activates the ledger's budget in one transaction (#367 S5): funding,
+ * Activates the ledger's budget in `input.currency` (one per currency, #400)
+ * in one transaction (#367 S5): funding,
  * categories, envelopes, 1:1 mappings, payday history, and plan assignments.
  * The overplan guard projects the would-be state inside the same transaction
  * and fails (rolling everything back) when Not planned yet would go negative.
@@ -54,7 +56,8 @@ const writeActivation = Effect.fn("writeActivation")(function* (input: BudgetAct
   const store = yield* BudgetStore;
   const { ledgerId } = yield* BudgetLedger;
   const { today } = yield* BudgetClock;
-  if (yield* store.findBudget) return yield* new BudgetAlreadyActive();
+  const { currency } = input;
+  if (yield* store.findBudget(currency)) return yield* new BudgetAlreadyActive({ currency });
   const actor = yield* budgetActor;
   const period = periodContaining(input.paydayRule, today);
   const fundingAccountIds = yield* fundingAccounts(input);
@@ -70,7 +73,7 @@ const writeActivation = Effect.fn("writeActivation")(function* (input: BudgetAct
     budget: {
       ledgerId,
       id: budgetId,
-      currency: BUDGET_CURRENCY,
+      currency,
       activationPeriodStart: period.start,
       usualSalaryMinor: input.usualSalaryMinor ?? null,
       paydayReminder: input.paydayReminder,
@@ -100,7 +103,7 @@ const writeActivation = Effect.fn("writeActivation")(function* (input: BudgetAct
       updatedBy: actor,
     })),
     mappings: envelopes.flatMap(({ id, categoryId }) =>
-      categoryId ? [{ ledgerId, envelopeId: id, categoryId }] : [],
+      categoryId ? [{ ledgerId, budgetId, envelopeId: id, categoryId }] : [],
     ),
     // A Saving-for envelope's money already set aside is a second plan assignment.
     assignments: envelopes.flatMap(({ input: envelope, id }) =>
@@ -120,12 +123,13 @@ const writeActivation = Effect.fn("writeActivation")(function* (input: BudgetAct
     ),
   });
   yield* (yield* ReminderStore).remindBillRules(
+    currency,
     envelopes.flatMap(({ input: envelope, categoryId }) =>
       envelope.group === "bills" && categoryId ? [categoryId] : [],
     ),
   );
 
-  const budget = yield* store.findBudget;
+  const budget = yield* store.findBudget(currency);
   if (!budget) return yield* new BudgetNotSaved({ operation: "activation" });
   const loaded = yield* loadBudget(budget);
   const unassignedMinor = loaded.projection.current.unassignedMinor;
@@ -140,23 +144,28 @@ const fundingAccounts = Effect.fn("fundingAccounts")(function* (input: BudgetAct
   const facts = yield* LedgerFacts;
   if (!input.fundingAccountIds) {
     const id = crypto.randomUUID();
-    yield* facts.insertCashAccount(id, MY_MONEY_ACCOUNT_NAME, input.openingCashMinor ?? 0);
+    yield* facts.insertCashAccount(
+      id,
+      MY_MONEY_ACCOUNT_NAME,
+      input.currency,
+      input.openingCashMinor ?? 0,
+    );
     return [id];
   }
   const accountIds = input.fundingAccountIds;
   const rows = yield* facts.accountsByIds(accountIds);
-  // Funding accounts hold spendable AED: active, AED, and not a credit card.
+  // Funding accounts hold spendable money in the budget's currency: active, same currency, not a card.
   for (const accountId of accountIds) {
     const account = rows.find((row) => row.id === accountId);
-    const reason =
-      !account || account.lifecycle !== "active"
-        ? "missing"
-        : account.currency !== BUDGET_CURRENCY
-          ? "currency"
-          : account.type === "credit_card"
-            ? "credit_card"
-            : undefined;
-    if (reason) return yield* new BudgetFundingInvalid({ accountId, reason });
+    if (!account || account.lifecycle !== "active") {
+      return yield* new BudgetFundingInvalid({ accountId, reason: "missing" });
+    }
+    if (account.currency !== input.currency) {
+      return yield* new BudgetCurrencyMismatch({ accountId, budgetCurrency: input.currency });
+    }
+    if (account.type === "credit_card") {
+      return yield* new BudgetFundingInvalid({ accountId, reason: "credit_card" });
+    }
   }
   return accountIds;
 });
@@ -205,7 +214,7 @@ const writeUpdate = Effect.fn("writeUpdate")(function* (
       actor,
     );
   }
-  if (input.defaultAccountId) yield* requireDefaultAccount(input.defaultAccountId);
+  if (input.defaultAccountId) yield* requireDefaultAccount(input.defaultAccountId, budget.currency);
 
   const updated = yield* store.updateBudget(
     budget.id,
@@ -220,10 +229,16 @@ const writeUpdate = Effect.fn("writeUpdate")(function* (
   return budgetView(yield* loadBudget(updated));
 });
 
-const requireDefaultAccount = Effect.fn("requireDefaultAccount")(function* (accountId: string) {
+const requireDefaultAccount = Effect.fn("requireDefaultAccount")(function* (
+  accountId: string,
+  budgetCurrency: string,
+) {
   const [account] = yield* (yield* LedgerFacts).accountsByIds([accountId]);
-  if (!account || account.lifecycle !== "active" || account.currency !== BUDGET_CURRENCY) {
+  if (!account || account.lifecycle !== "active") {
     return yield* new BudgetDefaultAccountInvalid({ accountId });
+  }
+  if (account.currency !== budgetCurrency) {
+    return yield* new BudgetCurrencyMismatch({ accountId, budgetCurrency });
   }
 });
 

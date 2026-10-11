@@ -12,18 +12,30 @@ import {
 } from "@trove/domain/budget";
 
 import { minorUnitsPerWhole } from "./budget-currency";
-import { BudgetNotFound } from "./budget-errors";
+import { BudgetCurrencyRequired, BudgetNotFound } from "./budget-errors";
 import { LedgerFacts } from "./budget-ledger-facts";
-import { BudgetClock, budgetToday } from "./budget-services";
+import { BudgetClock, BudgetSelection, budgetToday } from "./budget-services";
 import { BudgetStore, type BudgetRow, type EnvelopeRow, type MappedEnvelope } from "./budget-store";
-import type { V2Budget, V2BudgetView, V2Envelope, V2EnvelopeTotals } from "./contracts";
+import type {
+  V2Budget,
+  V2BudgetList,
+  V2BudgetSummary,
+  V2BudgetView,
+  V2Envelope,
+  V2EnvelopeTotals,
+} from "./contracts";
 import { iso } from "./shared";
 
 /**
  * Budget reads (#366/#367). Every total is derived on read by `projectBudget`
  * from the stored plan plus bounded, ledger-scoped aggregates over
- * transactions. Facts dated after today do not count yet.
+ * transactions. Facts dated after today do not count yet. A ledger has one
+ * budget per currency (#400); each read and write acts on the one budget the
+ * request selects, and every fact it counts is in that budget's currency.
  */
+
+/** Most budgets `GET /budgets` returns (one per currency; more would be unusual). */
+export const BUDGET_LIST_LIMIT = 20;
 
 export type ActiveBudgetView = Extract<V2BudgetView, { readonly budget: object }>;
 
@@ -36,18 +48,43 @@ export interface LoadedBudget {
   readonly projection: BudgetProjection;
 }
 
-/** `GET /budget`. */
-export const getBudget = Effect.gen(function* () {
-  const budget = yield* (yield* BudgetStore).findBudget;
-  if (!budget) return { budget: null } satisfies V2BudgetView;
-  return budgetView(yield* loadBudget(budget));
+/**
+ * The selected budget: the one in the named currency, or the ledger's only
+ * budget when none is named. Undefined when that budget does not exist; a
+ * ledger with several budgets must name one (`BudgetCurrencyRequired`).
+ */
+export const selectBudget = Effect.gen(function* () {
+  const store = yield* BudgetStore;
+  const { currency } = yield* BudgetSelection;
+  if (currency) return yield* store.findBudget(currency);
+  const budgets = yield* store.listBudgets(2);
+  if (budgets.length > 1) return yield* new BudgetCurrencyRequired();
+  return budgets[0];
 });
 
-/** The ledger's budget, or `BudgetNotFound`. */
+/** The selected budget, or `BudgetNotFound`. */
 export const requireBudget = Effect.gen(function* () {
-  const budget = yield* (yield* BudgetStore).findBudget;
-  if (!budget) return yield* new BudgetNotFound();
+  const budget = yield* selectBudget;
+  if (!budget) return yield* new BudgetNotFound({ currency: (yield* BudgetSelection).currency });
   return budget;
+});
+
+/** `GET /budget`: `{ budget: null }` only when no currency was named and the ledger has no budget. */
+export const getBudget = Effect.gen(function* () {
+  const budget = yield* selectBudget;
+  if (budget) return budgetView(yield* loadBudget(budget));
+  const { currency } = yield* BudgetSelection;
+  if (currency) return yield* new BudgetNotFound({ currency });
+  return { budget: null } satisfies V2BudgetView;
+});
+
+/** `GET /budgets`: each budget's currency and Safe to spend today, oldest first. */
+export const listBudgets = Effect.gen(function* () {
+  const rows = yield* (yield* BudgetStore).listBudgets(BUDGET_LIST_LIMIT + 1);
+  const items = yield* Effect.forEach(rows.slice(0, BUDGET_LIST_LIMIT), (row) =>
+    Effect.map(loadBudget(row), budgetSummary),
+  );
+  return { items, truncated: rows.length > BUDGET_LIST_LIMIT } satisfies V2BudgetList;
 });
 
 /** Loads the plan and bounded transaction aggregates, then projects them for today. */
@@ -55,9 +92,12 @@ export const loadBudget = Effect.fn("loadBudget")(function* (budget: BudgetRow) 
   const store = yield* BudgetStore;
   const facts = yield* LedgerFacts;
   const { today } = yield* BudgetClock;
-  const [plan, cardIds] = yield* Effect.all([store.loadPlan(budget), facts.cardAccountIds], {
-    concurrency: "unbounded",
-  });
+  const [plan, cardIds] = yield* Effect.all(
+    [store.loadPlan(budget), facts.cardAccountIds(budget.currency)],
+    {
+      concurrency: "unbounded",
+    },
+  );
   const range = { from: budget.activationPeriodStart, to: today };
   const [balances, spending, cardPayments, openingCardDebtMinor] = yield* Effect.all(
     [
@@ -165,6 +205,16 @@ function savingSuggestion(
     paydaysLeft: paydaysLeft(goal),
     ...(dueBeforePayday &&
       leftMinor < targetMinor && { shortBeforePaydayMinor: targetMinor - Math.max(leftMinor, 0) }),
+  };
+}
+
+function budgetSummary({ budget, projection }: LoadedBudget): V2BudgetSummary {
+  return {
+    id: budget.id,
+    currency: budget.currency,
+    activatedOn: budgetToday(budget.createdAt),
+    period: projection.current.period,
+    safeToSpendMinor: projection.current.safeToSpendMinor,
   };
 }
 

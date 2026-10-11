@@ -207,8 +207,8 @@ export function payErrorMessage(cause: unknown): string {
     switch (cause.code) {
       case "envelope_category_missing":
         return "This payment has no category to record the expense in. Add one from the envelope's menu. Nothing was saved.";
-      case "budget_account_invalid":
-        return "That account isn't in AED. Pick an AED account. Nothing was saved.";
+      case "budget_currency_mismatch":
+        return "That account is in another currency. Pick one in this budget's currency. Nothing was saved.";
       case "envelope_not_saving_for":
         return "This envelope is no longer a big payment. Nothing was saved.";
       default:

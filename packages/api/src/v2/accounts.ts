@@ -8,7 +8,6 @@ import {
 import { v2BudgetFundingAccount } from "@trove/db/schema/v2-budget";
 
 import {
-  BUDGET_CURRENCY,
   accountCreateSchema,
   accountUpdateSchema,
   type V2AccountCreateInput,
@@ -254,8 +253,9 @@ export async function updateAccount(
 }
 
 /**
- * A budget funding account must stay a non-card AED account: as a card its
- * spending would count twice and transfers into it would count as card payments.
+ * A budget funding account must stay a non-card account in its budget's
+ * currency: as a card its spending would count twice and transfers into it
+ * would count as card payments; in another currency it would mix currencies.
  */
 async function assertFundingAccountKept(
   db: V2DbExecutor,
@@ -265,11 +265,8 @@ async function assertFundingAccountKept(
   changes: ReturnType<typeof accountUpdateSchema.parse>,
 ): Promise<void> {
   const becomesCard = changes.type === "credit_card" && current.type !== "credit_card";
-  const leavesAed =
-    changes.currency !== undefined &&
-    changes.currency !== current.currency &&
-    changes.currency !== BUDGET_CURRENCY;
-  if (!becomesCard && !leavesAed) return;
+  const changesCurrency = changes.currency !== undefined && changes.currency !== current.currency;
+  if (!becomesCard && !changesCurrency) return;
   const funding = await db
     .select({ accountId: v2BudgetFundingAccount.accountId })
     .from(v2BudgetFundingAccount)
@@ -284,7 +281,7 @@ async function assertFundingAccountKept(
     throw new ApiError(
       422,
       "funding_account_locked",
-      "This account pays for your budget, so it has to stay an AED account that is not a credit card. Remove it from the budget's money first.",
+      "This account pays for your budget, so it has to keep the budget's currency and not be a credit card. Remove it from the budget's money first.",
     );
   }
 }

@@ -5,7 +5,7 @@ import { localDateInTimeZone } from "@trove/domain/clock";
 import { BudgetRoleForbidden, VersionConflict } from "./budget-errors";
 import type { V2DbExecutor, V2LedgerContext } from "./shared";
 
-/** v1 budgets are AED, so "today" is the UAE Ledger Date. */
+/** Budget "today" is the UAE Ledger Date for every currency (no per-budget time zone yet). */
 export const BUDGET_TIME_ZONE = "Asia/Dubai";
 
 export function budgetToday(now: Date): string {
@@ -33,6 +33,15 @@ export class BudgetClock extends Context.Service<
     return Layer.succeed(BudgetClock, BudgetClock.of({ now, today: budgetToday(now) }));
   }
 }
+
+/**
+ * Which budget the request names: `?currency=XXX`, or undefined to mean the
+ * ledger's only budget (#400 rule 1). Validated by the route.
+ */
+export class BudgetSelection extends Context.Service<
+  BudgetSelection,
+  { readonly currency: string | undefined }
+>()("@trove/api/v2/BudgetSelection") {}
 
 /**
  * Budget plan changes (activate, payday, funding, envelope create/edit, plan

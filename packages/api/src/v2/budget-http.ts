@@ -2,15 +2,16 @@ import { Cause, Effect, Exit, Layer, Match, Option } from "effect";
 
 import type { BudgetFailure, BudgetStoreError } from "./budget-errors";
 import { budgetStoresLayer, type BudgetStores } from "./budget-mutation";
-import { BudgetClock, BudgetLedger, LedgerDb } from "./budget-services";
+import { BudgetClock, BudgetLedger, BudgetSelection, LedgerDb } from "./budget-services";
 import { V2ApiError, type V2LedgerContext } from "./shared";
 
 /** Every service a budget route program may require; `runBudgetRoute` supplies them all. */
-export type BudgetServices = BudgetStores | BudgetLedger | BudgetClock | LedgerDb;
+export type BudgetServices = BudgetStores | BudgetLedger | BudgetClock | BudgetSelection | LedgerDb;
 
 /**
  * The one boundary between the Hono V2 routes and the budget Effect programs.
- * It supplies the request's ledger, clock, and stores, runs the program, and
+ * It supplies the request's ledger, clock, budget selection (`?currency=`),
+ * and stores, runs the program, and
  * answers with its value or throws the `V2ApiError` its failure maps to, so the
  * routes' existing error handler renders the same REST error as before. A
  * defect (an unexpected throw) is rethrown as it was, which the handler
@@ -20,6 +21,7 @@ export async function runBudgetRoute<A>(
   ledger: V2LedgerContext,
   now: Date,
   program: Effect.Effect<A, BudgetFailure, BudgetServices>,
+  currency?: string,
 ): Promise<A> {
   const services = budgetStoresLayer.pipe(
     Layer.provideMerge(
@@ -27,6 +29,7 @@ export async function runBudgetRoute<A>(
         Layer.succeed(BudgetLedger, ledger),
         Layer.succeed(LedgerDb, ledger.db),
         BudgetClock.layer(now),
+        Layer.succeed(BudgetSelection, { currency }),
       ),
     ),
   );
@@ -43,9 +46,27 @@ export async function runBudgetRoute<A>(
 /** Status, code, message, and details of each budget failure: the REST contract. */
 export function httpFailure(error: Exclude<BudgetFailure, BudgetStoreError>): V2ApiError {
   return Match.valueTags(error, {
-    BudgetNotFound: () => new V2ApiError(404, "budget_not_found", "This ledger has no budget."),
-    BudgetAlreadyActive: () =>
-      new V2ApiError(409, "budget_already_active", "This ledger already has a budget."),
+    BudgetNotFound: ({ currency }) =>
+      new V2ApiError(
+        404,
+        "budget_not_found",
+        currency ? `This ledger has no ${currency} budget.` : "This ledger has no budget.",
+      ),
+    BudgetCurrencyRequired: () =>
+      new V2ApiError(
+        422,
+        "budget_currency_required",
+        "This ledger has a budget in more than one currency. Say which one with currency.",
+      ),
+    BudgetAlreadyActive: ({ currency }) =>
+      new V2ApiError(409, "budget_already_active", `This ledger already has a ${currency} budget.`),
+    BudgetCurrencyMismatch: ({ accountId, budgetCurrency }) =>
+      new V2ApiError(
+        422,
+        "budget_currency_mismatch",
+        `This account is in another currency. Pick a ${budgetCurrency} account for this budget.`,
+        { accountId, budgetCurrency },
+      ),
     BudgetOverplanned: ({ change, unassignedMinor }) =>
       new V2ApiError(
         409,
@@ -61,11 +82,9 @@ export function httpFailure(error: Exclude<BudgetFailure, BudgetStoreError>): V2
       new V2ApiError(
         422,
         "budget_default_account_invalid",
-        "Pick an active AED account as the default.",
+        "Pick an active account as the default.",
         { accountId },
       ),
-    BudgetAccountInvalid: () =>
-      new V2ApiError(422, "budget_account_invalid", "Budgets are in AED. Pay from an AED account."),
     BudgetCategoryInvalid: ({ categoryId }) =>
       new V2ApiError(
         422,
@@ -186,6 +205,5 @@ export function httpFailure(error: Exclude<BudgetFailure, BudgetStoreError>): V2
 
 const FUNDING_MESSAGES = {
   missing: "A funding account was not found.",
-  currency: "AED budgets only for now.",
   credit_card: "A credit card can't fund a budget. Pick the accounts that hold your money.",
 } as const;

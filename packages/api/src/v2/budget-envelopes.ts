@@ -5,7 +5,7 @@ import type { z } from "zod";
 import { budgetView, loadBudget, requireBudget } from "./budget";
 import { requireCategoriesUnmapped, resolveCategories } from "./budget-categories";
 import {
-  BudgetAccountInvalid,
+  BudgetCurrencyMismatch,
   BudgetOverplanned,
   EnvelopeArchived,
   EnvelopeCategoryMissing,
@@ -18,7 +18,6 @@ import { inLedgerMutation } from "./budget-mutation";
 import { BudgetLedger, budgetActor, checkVersion, requirePlanAccess } from "./budget-services";
 import { BudgetStore, type EnvelopePatch, type EnvelopeRow } from "./budget-store";
 import {
-  BUDGET_CURRENCY,
   transactionCreateSchema,
   type envelopeCreateSchema,
   type envelopePaySchema,
@@ -58,7 +57,7 @@ const writeEnvelope = Effect.fn("writeEnvelope")(function* (input: EnvelopeCreat
   const periodStart = (yield* loadBudget(budget)).projection.current.period.start;
 
   const [categoryId] = yield* resolveCategories([input]);
-  yield* requireCategoriesUnmapped([categoryId], undefined);
+  yield* requireCategoriesUnmapped(budget.id, [categoryId], undefined);
 
   const envelopeId = crypto.randomUUID();
   yield* store.insertEnvelope(
@@ -127,12 +126,12 @@ const writeEnvelopeUpdate = Effect.fn("writeEnvelopeUpdate")(function* (
   const savingFields = yield* savingFieldsPatch(input, envelope.group);
   if (input.categoryIds) {
     yield* resolveCategories(input.categoryIds.map((categoryId) => ({ categoryId })));
-    yield* requireCategoriesUnmapped(input.categoryIds, envelope.id);
-    yield* store.replaceMappings(envelope.id, input.categoryIds);
+    yield* requireCategoriesUnmapped(budget.id, input.categoryIds, envelope.id);
+    yield* store.replaceMappings(budget.id, envelope.id, input.categoryIds);
   }
   if (input.lifecycle === "archived") {
     // Frees the Categories for a new envelope; spending in them stops counting.
-    yield* store.replaceMappings(envelope.id, []);
+    yield* store.replaceMappings(budget.id, envelope.id, []);
   }
 
   yield* store.updateEnvelope(
@@ -195,7 +194,13 @@ const writeEnvelopePayment = Effect.fn("writeEnvelopePayment")(function* (
   // The pay body is already valid, so a refusal here is a contract bug; it surfaces as before.
   if (!expense.success) return yield* Effect.die(expense.error);
   const transaction = yield* (yield* LedgerFacts).insertTransaction(expense.data);
-  if (transaction.currency !== BUDGET_CURRENCY) return yield* new BudgetAccountInvalid();
+  // Rolls the expense back: a budget pays only from accounts in its own currency.
+  if (transaction.currency !== budget.currency) {
+    return yield* new BudgetCurrencyMismatch({
+      accountId: input.accountId,
+      budgetCurrency: budget.currency,
+    });
+  }
 
   yield* store.updateEnvelope(envelope.id, nextTarget(envelope), yield* budgetActor);
   return { ...budgetView(yield* loadBudget(budget)), transactionId: transaction.id };

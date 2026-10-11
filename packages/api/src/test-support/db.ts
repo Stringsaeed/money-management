@@ -29,20 +29,26 @@ CREATE TRIGGER test_household_mirror_ledger AFTER INSERT ON "household"
   FOR EACH ROW EXECUTE FUNCTION test_mirror_household_ledger();
 `;
 
+type TestDb = ReturnType<typeof createDb>;
+
 export interface TestDbOptions {
   /** Mirror an organization ledger row for every seeded household (default true). */
   readonly householdLedgerMirror?: boolean;
+  /**
+   * Runs before each migration file is applied, so a test can seed rows in the
+   * shape an earlier schema had and prove a migration carries them forward.
+   */
+  readonly beforeMigration?: (file: string, client: PGlite) => Promise<void>;
 }
 
-export async function createTestDb(
-  options: TestDbOptions = {},
-): Promise<ReturnType<typeof createDb>> {
+export async function createTestDb(options: TestDbOptions = {}): Promise<TestDb> {
   const client = new PGlite();
   const migrationsDir = join(dirname(fileURLToPath(import.meta.url)), "../../../db/src/migrations");
   const migrationFiles = readdirSync(migrationsDir)
     .filter((file) => file.endsWith(".sql"))
     .sort();
   for (const file of migrationFiles) {
+    await options.beforeMigration?.(file, client);
     const sql = readFileSync(join(migrationsDir, file), "utf8");
     for (const statement of sql.split("--> statement-breakpoint")) {
       const trimmed = statement.trim();
@@ -55,5 +61,5 @@ export async function createTestDb(
   if (options.householdLedgerMirror ?? true) {
     await client.exec(TEST_HOUSEHOLD_LEDGER_MIRROR);
   }
-  return drizzle({ client }) as unknown as ReturnType<typeof createDb>;
+  return drizzle({ client }) as unknown as TestDb;
 }
