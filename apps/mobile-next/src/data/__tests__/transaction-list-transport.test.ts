@@ -42,6 +42,7 @@ describe("V2 Transaction list transport", () => {
         from: "2026-09-01",
         to: null,
         search: "  lunch  ",
+        recurring: true,
       },
     );
     const url = urls[0] ?? MISSING;
@@ -54,6 +55,7 @@ describe("V2 Transaction list transport", () => {
     expect(params.get("from")).toBe("2026-09-01");
     expect(params.has("to")).toBe(false);
     expect(params.get("q")).toBe("lunch");
+    expect(params.get("recurring")).toBe("true");
     expect(params.get("scope")).toBe("personal");
   });
 
@@ -81,6 +83,7 @@ describe("normalizeTransactionFilters", () => {
         kinds: ["transfer", "expense"],
         from: "",
         search: "   ",
+        recurring: false,
       }),
     ).toEqual({
       accountIds: ["a", "b"],
@@ -89,6 +92,7 @@ describe("normalizeTransactionFilters", () => {
       from: undefined,
       to: undefined,
       search: undefined,
+      recurring: undefined,
     });
   });
 });

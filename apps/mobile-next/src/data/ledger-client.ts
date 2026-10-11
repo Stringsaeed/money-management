@@ -128,6 +128,8 @@ export interface TransactionListFilters {
   readonly from?: string | null;
   readonly to?: string | null;
   readonly search?: string;
+  /** Only entries a Recurring Rule posted. */
+  readonly recurring?: boolean;
 }
 
 export interface MutationOptions {
@@ -204,6 +206,7 @@ const appendFilters = (params: URLSearchParams, filters: TransactionListFilters)
   if (filters.to) params.set("to", filters.to);
   const search = filters.search?.trim();
   if (search) params.set("q", search);
+  if (filters.recurring) params.set("recurring", "true");
 };
 
 export const ledgerClient = {

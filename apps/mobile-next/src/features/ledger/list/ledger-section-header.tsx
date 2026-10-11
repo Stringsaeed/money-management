@@ -7,12 +7,14 @@ import { plainAmount } from "./ledger-money";
 
 interface LedgerSectionHeaderProps {
   readonly header: Header;
+  /** Search results' month stamps sit tighter than the day list's. */
+  readonly compact?: boolean;
 }
 
 const LEADER = "·".repeat(64);
 
 /** Sticky day stamp: `TODAY ········ −82.20`, carrying the net of the entries beneath it. */
-export function LedgerSectionHeader({ header }: LedgerSectionHeaderProps) {
+export function LedgerSectionHeader({ header, compact = false }: LedgerSectionHeaderProps) {
   const net = header.net && header.net.minor !== 0 ? header.net : null;
   const spokenNet = net
     ? `, net ${net.minor > 0 ? "plus " : ""}${amountAccessibilityLabel(net.minor, net.currency)}`
@@ -22,7 +24,7 @@ export function LedgerSectionHeader({ header }: LedgerSectionHeaderProps) {
       accessibilityLabel={`${header.title.toLowerCase()}${spokenNet}`}
       accessibilityRole="header"
       accessible
-      style={styles.header}
+      style={[styles.header, compact ? styles.compact : null]}
     >
       <NativeText maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE} style={styles.stamp}>
         {header.title}
@@ -55,6 +57,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout.screenGutter,
     paddingTop: 10,
   },
+  compact: { paddingBottom: 2, paddingTop: 6 },
   stamp: {
     color: colors.text.tertiary,
     fontFamily: fonts.monoSemibold,

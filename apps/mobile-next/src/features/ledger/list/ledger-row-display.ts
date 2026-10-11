@@ -4,7 +4,7 @@ import type { SystemKind } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { transactionTileIcon } from "../transactions/transaction-display";
-import { ledgerRowStamp } from "./ledger-row-stamp";
+import { ledgerRowStamp, type LedgerRowStampOptions } from "./ledger-row-stamp";
 
 export interface LedgerRowDisplay {
   readonly title: string;
@@ -38,6 +38,7 @@ export function ledgerRowDisplay(
     readonly account?: V2Account;
     readonly toAccount?: V2Account;
   },
+  stampOptions: LedgerRowStampOptions = {},
 ): LedgerRowDisplay {
   const { category, account, toAccount } = lookups;
   const note = transaction.note.trim();
@@ -55,7 +56,7 @@ export function ledgerRowDisplay(
   return {
     title,
     meta: meta.join(" · "),
-    stamp: ledgerRowStamp(transaction, lookups),
+    stamp: ledgerRowStamp(transaction, lookups, stampOptions),
     amount: `${sign}${formatMoneyMinor(transaction.amountMinor, transaction.currency)}`,
     signedMinor:
       transaction.kind === "expense" ? -transaction.amountMinor : transaction.amountMinor,

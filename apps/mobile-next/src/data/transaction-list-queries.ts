@@ -85,12 +85,14 @@ export interface TransactionSummaryResult {
 /** Count and per-currency totals for every Transaction matching `filters`, not just loaded pages. */
 export function useTransactionSummaryQuery(
   filters: TransactionListFilters,
+  options: { readonly enabled?: boolean } = {},
 ): TransactionSummaryResult {
   const { identityKey, scope } = useLedgerData();
   const normalized = normalizeTransactionFilters(filters);
   const query = useQuery({
     queryKey: [...transactionListKey(identityKey, scope), "summary", normalized],
     queryFn: () => ledgerClient.transactions.summary(scope, normalized),
+    enabled: options.enabled ?? true,
     placeholderData: keepPreviousData,
     staleTime: 15_000,
     retry: 1,

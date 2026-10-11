@@ -17,6 +17,7 @@ export interface LedgerScreenProps {
   readonly onOpenAccounts?: () => void;
   readonly onOpenCategories?: () => void;
   readonly onOpenRecurring?: () => void;
+  readonly onOpenSearch?: () => void;
 }
 
 /** The floating tab bar plus the board's breathing room above it, over the bottom inset. */
@@ -29,6 +30,7 @@ export function LedgerScreen({
   onOpenAccounts,
   onOpenCategories,
   onOpenRecurring,
+  onOpenSearch,
 }: LedgerScreenProps) {
   const list = useLedgerList();
   const insets = useSafeAreaInsets();
@@ -50,7 +52,13 @@ export function LedgerScreen({
           header={
             <LedgerListHeader
               list={list}
-              navigation={{ onAddTransaction, onOpenAccounts, onOpenCategories, onOpenRecurring }}
+              navigation={{
+                onAddTransaction,
+                onOpenAccounts,
+                onOpenCategories,
+                onOpenRecurring,
+                onOpenSearch,
+              }}
               showTotals={list.pages.data.length > 0}
             />
           }

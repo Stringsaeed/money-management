@@ -1,4 +1,17 @@
-import { and, desc, eq, gte, ilike, inArray, lt, lte, or, sql, type SQL } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  isNotNull,
+  lt,
+  lte,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 
 import { v2Account, v2Category, v2Transaction } from "@trove/db/schema/v2-ledger";
 
@@ -159,6 +172,8 @@ export interface TransactionFilterOptions {
   readonly from?: string;
   readonly to?: string;
   readonly search?: string;
+  /** Only entries a Recurring Rule posted. */
+  readonly recurring?: boolean;
 }
 
 export interface TransactionCursor {
@@ -286,6 +301,7 @@ function transactionFilters(ledgerId: string, options: TransactionFilterOptions)
   if (options.to) conditions.push(lte(v2Transaction.date, options.to));
   const search = options.search?.trim();
   if (search) conditions.push(ilike(v2Transaction.note, likeContains(search)));
+  if (options.recurring) conditions.push(isNotNull(v2Transaction.recurringRuleId));
   return conditions;
 }
 

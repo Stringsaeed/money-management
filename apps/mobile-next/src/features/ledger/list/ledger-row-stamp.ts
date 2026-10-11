@@ -1,6 +1,8 @@
-import { format, isValid, parseISO } from "date-fns";
+import { differenceInCalendarDays, format, isSameYear, isValid, parseISO } from "date-fns";
 
 import type { V2Account, V2Category, V2Transaction } from "@trove/api/v2/contracts";
+
+import { parseDateKey } from "@/utils/date";
 
 export interface LedgerRowStampLookups {
   readonly category?: V2Category;
@@ -30,10 +32,37 @@ function sourceLabel(transaction: V2Transaction, lookups: LedgerRowStampLookups)
   return `${from} → ${lookups.toAccount?.name ?? "account"}`;
 }
 
+/**
+ * When the entry is dated, for lists that are not grouped by day: `TODAY 08:12`, `YESTERDAY`,
+ * `THU 1 OCT`, or `THU 1 OCT 25` in another year.
+ */
+function datedLabel(transaction: V2Transaction, today: Date): string {
+  const date = parseDateKey(transaction.date);
+  const time = loggedTime(transaction);
+  if (!date) return transaction.date;
+  const days = differenceInCalendarDays(today, date);
+  const day =
+    days === 0
+      ? "Today"
+      : days === 1
+        ? "Yesterday"
+        : format(date, isSameYear(date, today) ? "EEE d MMM" : "EEE d MMM yy");
+  return time ? `${day} ${time}` : day;
+}
+
+export interface LedgerRowStampOptions {
+  /** Lead with the entry's date, for month-grouped lists such as search results. */
+  readonly datedFrom?: Date;
+}
+
 /** The mono line under a Ledger row: `08:12 · GROCERIES · ENBD CARD`. */
-export function ledgerRowStamp(transaction: V2Transaction, lookups: LedgerRowStampLookups): string {
+export function ledgerRowStamp(
+  transaction: V2Transaction,
+  lookups: LedgerRowStampLookups,
+  options: LedgerRowStampOptions = {},
+): string {
   return [
-    loggedTime(transaction),
+    options.datedFrom ? datedLabel(transaction, options.datedFrom) : loggedTime(transaction),
     categoryLabel(transaction, lookups.category),
     sourceLabel(transaction, lookups),
   ]

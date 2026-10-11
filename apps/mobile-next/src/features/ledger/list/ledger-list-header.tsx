@@ -24,10 +24,7 @@ const GAP = space[4];
 export function LedgerListHeader({ list, navigation, showTotals }: LedgerListHeaderProps) {
   return (
     <View style={styles.stack}>
-      <LedgerSearchPill
-        onSubmit={(search) => list.update((current) => ({ ...current, search }))}
-        value={list.filters.search}
-      />
+      <LedgerSearchPill onPress={navigation.onOpenSearch} />
       <LedgerShortcuts navigation={navigation} />
       {list.chips.length > 0 ? (
         <ActiveFilterBar chips={list.chips} onClear={list.clear} onRemove={list.remove} />

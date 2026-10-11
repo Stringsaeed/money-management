@@ -9,6 +9,7 @@ export interface LedgerNavigation {
   readonly onOpenAccounts?: () => void;
   readonly onOpenCategories?: () => void;
   readonly onOpenRecurring?: () => void;
+  readonly onOpenSearch?: () => void;
 }
 
 interface LedgerShortcutsProps {
