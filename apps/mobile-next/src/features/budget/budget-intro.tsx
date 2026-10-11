@@ -14,12 +14,20 @@ interface BudgetIntroProps {
   readonly hasDraft: boolean;
   /** False for a household member who is not the admin: only the admin starts the budget. */
   readonly canStart: boolean;
+  /** The household role is still loading: show neither Start nor the admin-only message yet. */
+  readonly roleLoading?: boolean;
   readonly onStart: () => void;
   readonly onNotNow: () => void;
 }
 
 /** S1: one pitch and one way in. A saved draft turns Start into Continue setup. */
-export function BudgetIntro({ hasDraft, canStart, onStart, onNotNow }: BudgetIntroProps) {
+export function BudgetIntro({
+  hasDraft,
+  canStart,
+  roleLoading = false,
+  onStart,
+  onNotNow,
+}: BudgetIntroProps) {
   return (
     <View style={styles.container}>
       <View style={styles.heading}>
@@ -42,7 +50,7 @@ export function BudgetIntro({ hasDraft, canStart, onStart, onNotNow }: BudgetInt
         ))}
       </Card>
       <View style={styles.actions}>
-        {canStart ? (
+        {roleLoading ? null : canStart ? (
           <Button fullWidth label={hasDraft ? "Continue setup" : "Start"} onPress={onStart} />
         ) : (
           <Text accessibilityRole="alert" tone="secondary" variant="bodySm">

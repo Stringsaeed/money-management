@@ -51,9 +51,7 @@ const KIND_RANK = { unplanned: 0, everyday: 1, bills: 2, saving: 3 } as const sa
 export function rankCoverSources(places: readonly Place[], targetKey: string): Place[] {
   return places
     .filter((place) => place.key !== targetKey && place.availableMinor > 0)
-    .toSorted(
-      (a, b) => KIND_RANK[a.kind] - KIND_RANK[b.kind] || b.availableMinor - a.availableMinor,
-    );
+    .sort((a, b) => KIND_RANK[a.kind] - KIND_RANK[b.kind] || b.availableMinor - a.availableMinor);
 }
 
 export interface CoverTake {

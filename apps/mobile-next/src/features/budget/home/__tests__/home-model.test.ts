@@ -1,4 +1,4 @@
-import { envelopeProgress, perDayLine } from "../home-model";
+import { envelopeProgress, noSafeToSpendReason, perDayLine } from "../home-model";
 
 const money = (minor: number) => `AED ${minor / 100}`;
 
@@ -38,5 +38,13 @@ describe("perDayLine", () => {
     expect(perDayLine({ safeToSpendMinor: -500, perDayMinor: 0, daysLeft: 1 }, money)).toBe(
       "AED 0 a day · 1 day to payday",
     );
+  });
+});
+
+describe("noSafeToSpendReason", () => {
+  it("is neutral at exactly zero, an over message below zero, and absent above", () => {
+    expect(noSafeToSpendReason(0)).toBe("Everything is planned");
+    expect(noSafeToSpendReason(-1)).toBe("You've planned or spent more than you have");
+    expect(noSafeToSpendReason(100)).toBeNull();
   });
 });

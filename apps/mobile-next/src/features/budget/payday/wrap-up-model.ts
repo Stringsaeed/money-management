@@ -1,8 +1,4 @@
-import type {
-  V2BudgetPeriodView,
-  V2Envelope,
-  V2EnvelopeGroup,
-} from "@trove/api/v2/contracts";
+import type { V2BudgetPeriodView, V2Envelope, V2EnvelopeGroup } from "@trove/api/v2/contracts";
 
 /** One envelope's numbers for a finished period, with the name and group it has today. */
 export interface WrapUpEnvelope {
@@ -73,7 +69,7 @@ export function wrapUpSummary(lines: readonly WrapUpEnvelope[]): WrapUpSummary {
     overspent: lines
       .filter((line) => line.leftMinor < 0)
       .map((line) => ({ id: line.id, name: line.name, overMinor: -line.leftMinor }))
-      .toSorted((a, b) => b.overMinor - a.overMinor),
+      .sort((a, b) => b.overMinor - a.overMinor),
   };
 }
 
@@ -105,8 +101,17 @@ export function raiseSuggestion(
     if (!overEvery) return [];
     const mostSpent = Math.max(...periods.map((period) => period?.spentMinor ?? 0));
     const suggestedMinor = Math.ceil(mostSpent / RAISE_STEP_MINOR) * RAISE_STEP_MINOR;
-    return [{ envelopeId: line.id, name: line.name, suggestedMinor, raiseMinor: suggestedMinor - line.plannedMinor }];
+    return [
+      {
+        envelopeId: line.id,
+        name: line.name,
+        suggestedMinor,
+        raiseMinor: suggestedMinor - line.plannedMinor,
+      },
+    ];
   });
-  const [best] = candidates.toSorted((a, b) => b.raiseMinor - a.raiseMinor);
-  return best ? { envelopeId: best.envelopeId, name: best.name, suggestedMinor: best.suggestedMinor } : null;
+  const [best] = candidates.sort((a, b) => b.raiseMinor - a.raiseMinor);
+  return best
+    ? { envelopeId: best.envelopeId, name: best.name, suggestedMinor: best.suggestedMinor }
+    : null;
 }

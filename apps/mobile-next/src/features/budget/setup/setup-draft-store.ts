@@ -1,3 +1,4 @@
+import { File, Paths } from "expo-file-system";
 import * as SecureStore from "expo-secure-store";
 
 import { parseSetupDraft, serializeSetupDraft } from "./setup-draft";
@@ -17,9 +18,39 @@ const emit = () => {
   for (const listener of listeners) listener();
 };
 
-/** SecureStore keys allow letters, digits, ".", "-" and "_". */
+/** Letters, digits, ".", "-" and "_": valid as a SecureStore key and as a file name. */
 export const draftStorageKey = (scopeId: string): string =>
   `trove-next.budget-setup-draft.${scopeId.replace(/[^A-Za-z0-9._-]/g, "_")}`;
+
+/**
+ * The draft lives in a file in the app's document directory. It used to be in SecureStore, which
+ * documents a ~2 KB limit per value: a plan with 25+ envelopes did not fit and silently failed.
+ */
+const draftFile = (storageKey: string) => new File(Paths.document, `${storageKey}.json`);
+
+/** The stored draft text, or null. A draft left in SecureStore by an older build moves over once. */
+async function readStored(storageKey: string): Promise<string | null> {
+  const file = draftFile(storageKey);
+  if (file.exists) return file.text();
+  const legacy = await SecureStore.getItemAsync(storageKey);
+  if (legacy === null) return null;
+  writeStored(storageKey, legacy);
+  await SecureStore.deleteItemAsync(storageKey).catch(() => undefined);
+  return legacy;
+}
+
+function writeStored(storageKey: string, raw: string) {
+  const file = draftFile(storageKey);
+  if (!file.exists) file.create();
+  file.write(raw);
+}
+
+function removeStored(storageKey: string) {
+  const file = draftFile(storageKey);
+  if (file.exists) file.delete();
+  // A draft an older build left behind must not come back after Clear.
+  SecureStore.deleteItemAsync(storageKey).catch(() => undefined);
+}
 
 export const subscribeSetupDraft = (listener: () => void) => {
   listeners.add(listener);
@@ -34,7 +65,7 @@ export const getSetupDraft = (storageKey: string): Entry => entries.get(storageK
 export function loadSetupDraft(storageKey: string): Promise<void> {
   const pending = loads.get(storageKey);
   if (pending) return pending;
-  const load = SecureStore.getItemAsync(storageKey)
+  const load = readStored(storageKey)
     .catch(() => null)
     .then((raw) => {
       if (entries.get(storageKey) === undefined) {
@@ -47,12 +78,12 @@ export function loadSetupDraft(storageKey: string): Promise<void> {
 }
 
 const persist = (storageKey: string, draft: SetupDraft | null) => {
-  const write = draft
-    ? SecureStore.setItemAsync(storageKey, serializeSetupDraft(draft))
-    : SecureStore.deleteItemAsync(storageKey);
-  write.catch((cause: unknown) =>
-    console.warn("The budget draft was not saved; it may be lost on relaunch.", cause),
-  );
+  try {
+    if (draft) writeStored(storageKey, serializeSetupDraft(draft));
+    else removeStored(storageKey);
+  } catch (cause) {
+    console.warn("The budget draft was not saved; it may be lost on relaunch.", cause);
+  }
 };
 
 const clearTimer = (storageKey: string) => {

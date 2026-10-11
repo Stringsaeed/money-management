@@ -122,7 +122,7 @@ export function categoryChoices(
     .filter((category) => category.kind === "expense" && !category.archived)
     .filter((category) => own.has(category.id) || !taken.has(category.id))
     .map((category) => ({ category, mapped: own.has(category.id) }))
-    .toSorted((a, b) => a.category.name.localeCompare(b.category.name));
+    .sort((a, b) => a.category.name.localeCompare(b.category.name));
 }
 
 /** Plain-language failure copy for envelope writes. Nothing changed when one of these shows. */
@@ -159,7 +159,7 @@ export function largestTransactions(
 ): V2Transaction[] {
   return transactions
     .filter((transaction) => transaction.kind === "expense")
-    .toSorted((a, b) => b.amountMinor - a.amountMinor || b.date.localeCompare(a.date))
+    .sort((a, b) => b.amountMinor - a.amountMinor || b.date.localeCompare(a.date))
     .slice(0, count);
 }
 

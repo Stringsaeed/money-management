@@ -3,10 +3,10 @@ import { useState } from "react";
 import { BUDGET_CURRENCY, type V2Account, type V2Category } from "@trove/api/v2/contracts";
 
 import { playCue } from "@/features/sound";
-import { todayDateKey } from "@/utils/date";
 import { currencyFractionDigits, formatMoneyMinor, parseMoneyMinor } from "@/utils/money";
 
 import { normalizeAmountEntry } from "../../ledger/transactions/amount-entry";
+import { budgetToday } from "../due/due-model";
 import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
 
 import {
@@ -48,7 +48,9 @@ export function useQuickAddForm(options: UseQuickAddFormOptions) {
   const [accountOverride, setAccountOverride] = useState<string | null>(null);
   const [categoryOverride, setCategoryOverride] = useState<string | null>(null);
   const [note, setNote] = useState("");
-  const [date, setDate] = useState(todayDateKey);
+  // The engine's date (Asia/Dubai), not the device clock, so the sheet and the server agree on today.
+  const today = budgetToday(view.current);
+  const [date, setDate] = useState(today);
   const [query, setQuery] = useState("");
 
   const ordered = orderEnvelopes(lines, memory.recentEnvelopeIds);
@@ -68,7 +70,7 @@ export function useQuickAddForm(options: UseQuickAddFormOptions) {
   const amountMinor = parseMoneyMinor(normalizeAmountEntry(amount), BUDGET_CURRENCY) ?? 0;
   const placement = datePlacement({
     date,
-    today: todayDateKey(),
+    today,
     currentStart: view.current.period.start,
     activationStart: view.budget.activationPeriodStart,
     rule: view.paydayRule,

@@ -17,7 +17,9 @@ const createClient = (): AnalyticsClient | null => {
   }
 };
 
-let sharing = true;
+// Off until the saved choice has been read: an event fired before SecureStore answers must not
+// be sent for someone who opted out, and optIn() must not re-open a stored opt-out.
+let sharing = false;
 let changedBeforeHydration = false;
 const analytics = createAnalytics(createClient(), sharing);
 const listeners = new Set<() => void>();

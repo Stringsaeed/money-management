@@ -21,6 +21,8 @@ export { ListGroup } from "./list-group";
 export type { ListGroupProps } from "./list-group";
 export { ListRow } from "./list-row";
 export type { ListRowProps } from "./list-row";
+export { ProgressBar } from "./progress-bar";
+export type { ProgressBarProps } from "./progress-bar";
 export { SectionHeader } from "./section-header";
 export type { SectionHeaderProps } from "./section-header";
 export { TransactionRow } from "./transaction-row";

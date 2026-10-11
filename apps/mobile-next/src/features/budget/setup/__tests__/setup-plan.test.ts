@@ -47,7 +47,6 @@ const preview = (
     payday: { kind: "day", day: 1 },
     items: [groceries, rent],
     funding: accountsFunding,
-    cardAccountIds: [],
     ...overrides,
   });
 
@@ -95,7 +94,6 @@ describe("Left to plan", () => {
           { categoryId: "groceries", accountId: "card", amountMinor: aed(200), onCard: true },
         ],
       }),
-      cardAccountIds: ["card"],
       amounts: { "cat:groceries": "300" },
     };
 
@@ -111,6 +109,37 @@ describe("Left to plan", () => {
         }),
       }).leftToPlanMinor,
     ).toBe(aed(5000) - aed(100));
+  });
+
+  it("matches activation: an archived card and unmapped card spending reserve cash, old debt is paid first", () => {
+    const spending: V2BudgetSetupFacts["spendSincePeriodStart"] = [
+      // Archived card, mapped Category: lowers Groceries and reserves.
+      { categoryId: "groceries", accountId: "old-card", amountMinor: aed(150), onCard: true },
+      // Unmapped Categories on a card: reserve only.
+      { categoryId: "fuel", accountId: "card", amountMinor: aed(80), onCard: true },
+      { categoryId: null, accountId: "card", amountMinor: aed(20), onCard: true },
+      // Already inside the balance, or from an account that is not ticked: never counted twice.
+      { categoryId: "fuel", accountId: "current", amountMinor: aed(70), onCard: false },
+      { categoryId: "groceries", accountId: "savings", amountMinor: aed(999), onCard: false },
+    ];
+    const amounts = { "cat:groceries": "1000" };
+
+    // Cash 5000. Groceries: 1000 planned - 150 spent = 850 left. Card reserve 150 + 80 + 20 = 250.
+    expect(
+      preview({ facts: facts({ spendSincePeriodStart: spending }), amounts }).leftToPlanMinor,
+    ).toBe(aed(5000) - aed(850) - aed(250));
+
+    // The card owed 100 before the period; paying 200 from Current settles it and leaves 100 of
+    // the payment against new spending, so the reserve is 150. A payment from savings is ignored.
+    const paid = facts({
+      spendSincePeriodStart: spending,
+      openingCardDebtMinor: aed(100),
+      cardPaymentsSincePeriodStart: [
+        { fromAccountId: "current", toAccountId: "card", amountMinor: aed(200) },
+        { fromAccountId: "savings", toAccountId: "card", amountMinor: aed(500) },
+      ],
+    });
+    expect(preview({ facts: paid, amounts }).leftToPlanMinor).toBe(aed(5000) - aed(850) - aed(150));
   });
 
   it("starts from the typed total when there are no accounts", () => {

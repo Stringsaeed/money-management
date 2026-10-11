@@ -341,8 +341,12 @@ export function useLedgerMutations() {
   /** Envelope and assignment writes answer with the fresh budget, so show it without a refetch. */
   const applyBudgetView = async (view: V2BudgetView) => {
     queryClient.setQueryData([...budgetKey(identityKey, scope), "view"], view);
-    // Earlier-period totals can move too (a plan is per period); they refetch when next shown.
-    await queryClient.invalidateQueries({ queryKey: [...budgetKey(identityKey, scope), "period"] });
+    // The view itself is fresh. Other period totals (a plan is per period) and Recent activity
+    // (every plan, cover and move shows there) are not, so they refetch when next shown.
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: [...budgetKey(identityKey, scope), "period"] }),
+      queryClient.invalidateQueries({ queryKey: [...budgetKey(identityKey, scope), "activity"] }),
+    ]);
   };
 
   /** Paying posts a Transaction, so it refreshes Transactions, Accounts, the Due list and the Budget. */

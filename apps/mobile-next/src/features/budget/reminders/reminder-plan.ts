@@ -116,7 +116,7 @@ export function planPaydayReminders({
   const paydays = days.slice(0, count);
   const retry = snoozedOn ? shiftDay(snoozedOn, 1) : null;
   if (pending && retry && retry >= today && !paydays.includes(retry)) paydays.push(retry);
-  return paydays.toSorted().map((day) => ({
+  return paydays.sort().map((day) => ({
     kind: "payday",
     day,
     title: "Payday",

@@ -12,6 +12,8 @@ interface FundingSectionProps {
   readonly accounts: readonly V2Account[];
   readonly draft: Pick<SetupDraft, "funding" | "openingCash">;
   readonly totalInvalid: boolean;
+  /** Accounts are still loading: the typed-total field would flash and then vanish. */
+  readonly loading: boolean;
   readonly onTick: (accountId: string, ticked: boolean) => void;
   readonly onTotal: (text: string) => void;
 }
@@ -29,11 +31,13 @@ export function FundingSection({
   accounts,
   draft,
   totalInvalid,
+  loading,
   onTick,
   onTotal,
 }: FundingSectionProps) {
   const shown = accounts.filter((account) => !account.archived);
   const eligible = fundingEligibleAccounts(shown);
+  const typeTotal = !loading && eligible.length === 0;
 
   return (
     <View style={styles.group}>
@@ -63,7 +67,12 @@ export function FundingSection({
           })}
         </ListGroup>
       ) : null}
-      {eligible.length === 0 ? (
+      {loading ? (
+        <Text tone="secondary" variant="bodySm">
+          Loading your accounts…
+        </Text>
+      ) : null}
+      {typeTotal ? (
         <TextField
           label="How much do you have right now?"
           placeholder={`${BUDGET_CURRENCY} 0`}
@@ -73,7 +82,7 @@ export function FundingSection({
           error={totalInvalid ? "Enter an amount like 2500 or 2500.50." : undefined}
         />
       ) : null}
-      {eligible.length === 0 ? (
+      {typeTotal ? (
         <Text tone="secondary" variant="bodySm">
           This creates one My money cash account with that balance when you start your budget.
         </Text>

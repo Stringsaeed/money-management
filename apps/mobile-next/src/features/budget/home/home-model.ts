@@ -69,3 +69,14 @@ export function perDayLine(
     ? `${money(0)} a day · ${days} to payday`
     : `about ${money(view.perDayMinor)} a day · ${days} to payday`;
 }
+
+/**
+ * Why nothing is safe to spend, or `null` when something is. Exactly zero is not a problem (all
+ * the money has a job); below zero the person has planned or spent more than they have.
+ */
+export function noSafeToSpendReason(safeToSpendMinor: number): string | null {
+  if (safeToSpendMinor > 0) return null;
+  return safeToSpendMinor === 0
+    ? "Everything is planned"
+    : "You've planned or spent more than you have";
+}

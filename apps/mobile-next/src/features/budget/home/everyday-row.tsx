@@ -2,7 +2,16 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { Amount, colors, layout, PressableScale, radius, space, Text } from "@/ui/trove";
+import {
+  Amount,
+  colors,
+  layout,
+  PressableScale,
+  ProgressBar,
+  radius,
+  space,
+  Text,
+} from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { envelopeProgress, type EnvelopeLine } from "./home-model";
@@ -47,15 +56,7 @@ export function EverydayRow({ line, onPress, onLongPress }: EverydayRowProps) {
           </Text>
         </View>
       </View>
-      <View style={styles.track}>
-        <View
-          style={[
-            styles.fill,
-            over && styles.fillOver,
-            { width: `${Math.round(fraction * 100)}%` },
-          ]}
-        />
-      </View>
+      <ProgressBar fraction={fraction} tone={over ? "negative" : "accent"} />
     </PressableScale>
   );
 }
@@ -78,12 +79,4 @@ const styles = StyleSheet.create({
   },
   name: { flex: 1 },
   status: { alignItems: "baseline", flexDirection: "row", gap: space[1] },
-  track: {
-    backgroundColor: colors.fill.neutral,
-    borderRadius: radius.full,
-    height: space[2],
-    overflow: "hidden",
-  },
-  fill: { backgroundColor: colors.accent.fill, borderRadius: radius.full, height: "100%" },
-  fillOver: { backgroundColor: colors.negative.text },
 });

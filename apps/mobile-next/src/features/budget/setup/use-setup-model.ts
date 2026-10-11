@@ -5,13 +5,7 @@ import {
 } from "@/data/ledger-queries";
 
 import { buildSetupItems } from "./setup-items";
-import {
-  cardAccountIds,
-  fundingChoice,
-  hasInvalidAmount,
-  previewPlan,
-  tickedItems,
-} from "./setup-plan";
+import { fundingChoice, hasInvalidAmount, previewPlan, tickedItems } from "./setup-plan";
 import { useSetupDraft } from "./use-setup-draft";
 
 /** Everything the setup screens read: the draft joined with the ledger and the AED facts. */
@@ -39,7 +33,6 @@ export function useSetupModel() {
           items: ticked,
           amounts: draft.amounts,
           funding,
-          cardAccountIds: cardAccountIds(accounts.data),
         })
       : null;
 

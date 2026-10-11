@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { Checkbox, ListRow } from "@/ui/trove";
+import { ListRow } from "@/ui/trove";
 
 interface ChoiceRowProps {
   readonly label: string;
@@ -25,19 +25,12 @@ export function ChoiceRow({
   disabled = false,
   onPress,
 }: ChoiceRowProps) {
-  const toggle = disabled ? undefined : onPress;
   return (
     <ListRow
-      accessibilityLabel={`${label}, ${ticked ? "ticked" : "not ticked"}`}
-      leading={
-        <Checkbox
-          accessibilityLabel={label}
-          checked={ticked}
-          disabled={disabled}
-          onCheckedChange={() => toggle?.()}
-        />
-      }
-      onPress={toggle}
+      accessibilityLabel={[label, detail, note].filter(Boolean).join(", ")}
+      checked={ticked}
+      disabled={disabled}
+      onPress={onPress}
       subtitle={note}
       title={label}
       trailing={trailing}

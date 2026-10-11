@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 
 import { Icon, type IconName } from "../icon";
 import { Text } from "../text";
 import { colors, DENSE_MAX_FONT_SCALE, layout, space } from "../tokens";
-import { ListRowIcon } from "./list-row-icon";
+import { ListRowLead } from "./list-row-lead";
+import { ListRowText } from "./list-row-text";
 import { PressableRow } from "./pressable-row";
+import { selectableRowProps } from "./utils";
 
 export interface ListRowProps {
   title: string;
@@ -22,7 +24,14 @@ export interface ListRowProps {
   chevron?: boolean;
   /** Red title and tile, for "Sign out" or "Delete account". */
   destructive?: boolean;
-  /** Makes the whole row a button. Leave out when `trailing` holds its own control. */
+  /**
+   * Makes the row selectable: a checkbox in the leading slot, and the whole row becomes a
+   * `checkbox` for assistive tech with this checked state. Ignored when `leading` is given.
+   */
+  checked?: boolean;
+  /** A selectable row that cannot change: dimmed box and title, not pressable. */
+  disabled?: boolean;
+  /** Makes the whole row a button (a checkbox when `checked` is set). Leave out when `trailing` holds its own control. */
   onPress?: () => void;
   accessibilityLabel?: string;
   testID?: string;
@@ -38,34 +47,35 @@ export function ListRow({
   trailing,
   chevron = false,
   destructive = false,
+  checked,
+  disabled = false,
   onPress,
   accessibilityLabel,
   testID,
 }: ListRowProps) {
-  const lead = leading ?? (icon ? <ListRowIcon destructive={destructive} name={icon} /> : null);
+  const lead = (
+    <ListRowLead
+      checked={checked}
+      destructive={destructive}
+      disabled={disabled}
+      icon={icon}
+      leading={leading}
+    />
+  );
 
   return (
     <PressableRow
-      accessibilityLabel={accessibilityLabel}
-      onPress={onPress}
+      {...selectableRowProps({ checked, disabled, title, accessibilityLabel })}
+      onPress={disabled ? undefined : onPress}
       style={[styles.row, subtitle ? styles.rowWithSubtitle : null]}
       testID={testID}
     >
       {lead}
-      <View style={styles.text}>
-        <Text
-          maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE}
-          tone={destructive ? "negative" : "primary"}
-          variant="labelMd"
-        >
-          {title}
-        </Text>
-        {subtitle ? (
-          <Text maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE} tone="secondary" variant="bodySm">
-            {subtitle}
-          </Text>
-        ) : null}
-      </View>
+      <ListRowText
+        subtitle={subtitle}
+        title={title}
+        tone={destructive ? "negative" : disabled ? "disabled" : "primary"}
+      />
       {trailing}
       {value ? (
         <Text maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE} tone="secondary" variant="bodyMd">
@@ -88,10 +98,5 @@ const styles = StyleSheet.create({
   },
   rowWithSubtitle: {
     minHeight: layout.listRowMinHeight,
-  },
-  text: {
-    flex: 1,
-    gap: space[0.5],
-    minWidth: 0,
   },
 });
