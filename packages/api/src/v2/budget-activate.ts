@@ -22,6 +22,7 @@ import {
   type V2BudgetView,
 } from "./contracts";
 import {
+  requireBudgetPlanAccess,
   requireExpectedVersion,
   V2ApiError,
   withLedgerMutation,
@@ -44,6 +45,7 @@ export async function activateBudget(
   idempotencyKey?: string,
 ): Promise<V2BudgetView> {
   const parsed = budgetActivateSchema.parse(input);
+  requireBudgetPlanAccess(context);
   return withLedgerMutation(context, "budget.activate", idempotencyKey, async (db) => {
     if (await findBudget(db, context.ledgerId)) {
       throw new V2ApiError(409, "budget_already_active", "This ledger already has a budget.");
@@ -164,6 +166,7 @@ export async function updateBudget(
   idempotencyKey?: string,
 ): Promise<V2BudgetView> {
   const parsed = budgetUpdateSchema.parse(input);
+  requireBudgetPlanAccess(context);
   return withLedgerMutation(context, "budget.update", idempotencyKey, async (db) => {
     const budget = await findBudget(db, context.ledgerId);
     if (!budget) throw new V2ApiError(404, "budget_not_found", "This ledger has no budget.");

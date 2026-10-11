@@ -679,6 +679,29 @@ export type V2EnvelopeCreated = Extract<V2BudgetView, { readonly budget: object 
   readonly envelopeId: string;
 };
 
+/** One recent money move, with who made it (H3 "who" lines). */
+export interface V2BudgetActivityItem {
+  readonly id: string;
+  readonly periodStart: string;
+  /** Null side is Not planned yet. */
+  readonly fromEnvelopeId: string | null;
+  readonly fromName: string | null;
+  readonly toEnvelopeId: string | null;
+  readonly toName: string | null;
+  readonly amountMinor: number;
+  readonly reason: V2AssignmentReason;
+  /** The person (user id) or guest session that made the move. */
+  readonly createdBy: string;
+  /** Display name when the person has an identity; null for guests. */
+  readonly createdByName: string | null;
+  readonly createdAt: string;
+}
+
+/** `GET /budget/activity`: newest first, bounded by `limit`. */
+export interface V2BudgetActivity {
+  readonly items: readonly V2BudgetActivityItem[];
+}
+
 /** `POST /budget/envelopes/:id/pay`: the refreshed budget plus the expense Transaction. */
 export type V2EnvelopePaid = Extract<V2BudgetView, { readonly budget: object }> & {
   readonly transactionId: string;

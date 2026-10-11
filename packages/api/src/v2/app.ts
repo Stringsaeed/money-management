@@ -50,11 +50,12 @@ export function createV2Api(dependencies: V2ApiDependencies) {
       getPrincipal: (context) => resolveV2Principal(context.req.raw, dependencies),
       authorizeHousehold: async (principal, householdId, access) => {
         const user = requireUserPrincipal(principal);
-        await authorizeV2Household(dependencies, {
+        const { role } = await authorizeV2Household(dependencies, {
           userId: user.userId,
           householdId,
           write: access === "write",
         });
+        return { role };
       },
     }),
   );

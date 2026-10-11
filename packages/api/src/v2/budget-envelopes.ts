@@ -22,6 +22,7 @@ import {
 } from "./contracts";
 import { insertTransaction } from "./transactions";
 import {
+  requireBudgetPlanAccess,
   requireExpectedVersion,
   V2ApiError,
   withLedgerMutation,
@@ -47,6 +48,7 @@ export async function createEnvelope(
   idempotencyKey?: string,
 ): Promise<V2EnvelopeCreated> {
   const parsed = envelopeCreateSchema.parse(input);
+  requireBudgetPlanAccess(context);
   return withLedgerMutation(context, "budget.envelope.create", idempotencyKey, async (db) => {
     const budget = await requireBudget(db, context);
     const actor = budgetActor(context);
@@ -115,6 +117,7 @@ export async function updateEnvelope(
   idempotencyKey?: string,
 ): Promise<V2BudgetView> {
   const parsed = envelopeUpdateSchema.parse(input);
+  requireBudgetPlanAccess(context);
   return withLedgerMutation(context, "budget.envelope.update", idempotencyKey, async (db) => {
     const budget = await requireBudget(db, context);
     const rows = await db

@@ -2,7 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import type { createDb } from "@trove/db";
-import { v2GuestSession } from "@trove/db/schema/v2-identity";
+import { v2GuestSession, type V2HouseholdRole } from "@trove/db/schema/v2-identity";
 import { v2IdempotencyKey, v2Ledger } from "@trove/db/schema/v2-ledger";
 
 import { principalOwner, type V2LedgerScope, type V2Principal } from "./contracts";
@@ -34,13 +34,15 @@ export interface V2LedgerContext {
   readonly ledgerId: string;
   readonly ownerType: "user" | "guest" | "household";
   readonly ownerId: string;
+  /** The caller's live role; set only for household scope. */
+  readonly householdRole?: V2HouseholdRole;
 }
 
 export type AuthorizeV2Household = (
   principal: V2Principal,
   householdId: string,
   access: "read" | "write",
-) => Promise<void>;
+) => Promise<{ readonly role: V2HouseholdRole }>;
 
 export interface V2LedgerContextOptions {
   readonly authorizeHousehold?: AuthorizeV2Household;
@@ -62,7 +64,11 @@ export async function resolveV2LedgerContext(
         "Household access is unavailable.",
       );
     }
-    await options.authorizeHousehold(principal, scope.householdId, options.access ?? "read");
+    const { role } = await options.authorizeHousehold(
+      principal,
+      scope.householdId,
+      options.access ?? "read",
+    );
     const ownerType = "household" as const;
     const ownerId = scope.householdId;
     return {
@@ -72,6 +78,7 @@ export async function resolveV2LedgerContext(
       ledgerId: await ensureLedger(db, ownerType, ownerId, principal),
       ownerType,
       ownerId,
+      householdRole: role,
     };
   }
 
@@ -199,6 +206,22 @@ export async function assertPrincipalActive(
   const session = rows[0];
   if (!session || session.status !== "active" || session.expiresAt <= new Date()) {
     throw new V2ApiError(401, "guest_session_invalid", "This guest session is no longer valid.");
+  }
+}
+
+/**
+ * Budget plan changes (activate, payday, funding, envelope create/edit) belong
+ * to household admins (#365 decision 8). Members still move, cover, and pay;
+ * viewers are already refused every write when the household is authorized.
+ * Personal ledgers have no roles.
+ */
+export function requireBudgetPlanAccess(context: V2LedgerContext): void {
+  if (context.scope.kind === "household" && context.householdRole !== "admin") {
+    throw new V2ApiError(
+      403,
+      "budget_role_forbidden",
+      "Only a household admin can change the budget plan. You can still add spending, move money, and mark bills paid.",
+    );
   }
 }
 
