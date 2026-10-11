@@ -41,7 +41,7 @@ describe("pickAttention", () => {
       paydayPending: true,
       dueTodayCount: 2,
     };
-    expect(pickAttention(everything)).toEqual({ top: { kind: "payday" }, moreCount: 3 });
+    expect(pickAttention(everything)).toEqual({ top: { kind: "payday", late: false }, moreCount: 3 });
     expect(pickAttention({ ...everything, paydayPending: false }).top?.kind).toBe("overspend");
     expect(
       pickAttention({ ...everything, paydayPending: false, envelopes: base.envelopes }),
@@ -50,6 +50,15 @@ describe("pickAttention", () => {
 });
 
 describe("attentionText", () => {
+  it("asks about the salary at first and says it is not logged once it is late", () => {
+    expect(attentionText({ kind: "payday", late: false }, money)).toBe(
+      "Payday: did your salary land?",
+    );
+    expect(attentionText({ kind: "payday", late: true }, money)).toBe(
+      "Payday: salary not logged yet",
+    );
+  });
+
   it("names the envelope when exactly one is over", () => {
     expect(
       attentionText({ kind: "overspend", name: "Groceries", count: 1, overMinor: 12_000 }, money),

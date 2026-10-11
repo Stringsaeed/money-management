@@ -64,6 +64,13 @@ export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) 
         <Stack.Screen name="budget/envelope/[id]" options={pushedOptions} />
         <Stack.Screen name="budget/due" options={pushedOptions} />
         <Stack.Screen name="budget/bills" options={pushedOptions} />
+        <Stack.Screen
+          name="budget/payday/got-paid"
+          options={{ ...pushedOptions, presentation: "modal" }}
+        />
+        <Stack.Screen name="budget/payday/wrap-up" options={pushedOptions} />
+        <Stack.Screen name="budget/payday/leftovers" options={pushedOptions} />
+        <Stack.Screen name="budget/payday/plan" options={pushedOptions} />
         <Stack.Screen name="callback" options={{ headerShown: false }} />
       </Stack>
     </LedgerDataProvider>

@@ -7,6 +7,7 @@ import {
   EMPTY_REMINDER_PREFS,
   pruneSnoozes,
   setMuted,
+  snoozePayday,
   snoozeUntil,
   type ReminderPrefs,
 } from "./reminder-prefs";
@@ -26,6 +27,8 @@ export interface UseReminderPrefs {
   readonly snooze: (ruleId: string, scheduledDate: string, until: string) => Promise<void>;
   readonly forgetEndedSnoozes: (today: string) => Promise<void>;
   readonly dismissPrompt: () => Promise<void>;
+  /** "Not yet" on Got paid: remind again tomorrow. */
+  readonly snoozePayday: (today: string) => Promise<void>;
 }
 
 /** Per-bill mutes, snoozes and the notification prompt choice for this identity and ledger. */
@@ -48,5 +51,7 @@ export function useReminderPrefs(): UseReminderPrefs {
       updateReminderPrefs(storageKey, (prefs) => pruneSnoozes(prefs, today)),
     dismissPrompt: () =>
       updateReminderPrefs(storageKey, (prefs) => ({ ...prefs, promptDismissed: true })),
+    snoozePayday: (today) =>
+      updateReminderPrefs(storageKey, (prefs) => snoozePayday(prefs, today)),
   };
 }

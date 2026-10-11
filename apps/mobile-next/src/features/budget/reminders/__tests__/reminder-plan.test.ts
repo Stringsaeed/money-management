@@ -90,4 +90,30 @@ describe("planPaydayReminders", () => {
     });
     expect(planned.map((reminder) => reminder.day)).toEqual(["2026-10-25", "2026-11-25"]);
   });
+
+  const late = {
+    rule: { kind: "day", day: 25 } as const,
+    currentPeriodStart: "2026-10-25",
+    today: "2026-10-26",
+    count: 2,
+  };
+
+  it("brings the reminder back tomorrow after Not yet while the salary is unlogged", () => {
+    const planned = planPaydayReminders({ ...late, pending: true, snoozedOn: "2026-10-26" });
+    expect(planned.map((reminder) => reminder.day)).toEqual(["2026-10-27", "2026-11-25", "2026-12-25"]);
+  });
+
+  it("keeps one reminder per day and drops the retry once the salary is logged", () => {
+    expect(planPaydayReminders({ ...late, pending: false, snoozedOn: "2026-10-26" })).toHaveLength(
+      2,
+    );
+    const twice = planPaydayReminders({
+      ...late,
+      today: "2026-11-24",
+      currentPeriodStart: "2026-10-25",
+      pending: true,
+      snoozedOn: "2026-11-24",
+    });
+    expect(new Set(twice.map((reminder) => reminder.day)).size).toBe(twice.length);
+  });
 });

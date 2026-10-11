@@ -88,14 +88,24 @@ interface PlanPaydayInput {
   readonly today: string;
   /** How many upcoming paydays to schedule. */
   readonly count: number;
+  /** Salary is still unlogged this period, so a "Not yet" can bring the reminder back. */
+  readonly pending?: boolean;
+  /** The Ledger Date the person last said "Not yet"; the reminder returns the day after. */
+  readonly snoozedOn?: string | null;
 }
 
-/** Payday reminders for today (if it is payday) and the next paydays under the current rule. */
+/**
+ * Payday reminders for today (if it is payday) and the next paydays under the current rule, plus
+ * one for tomorrow when the person said "Not yet" today and the salary is still unlogged. One per
+ * day at most.
+ */
 export function planPaydayReminders({
   rule,
   currentPeriodStart,
   today,
   count,
+  pending = false,
+  snoozedOn = null,
 }: PlanPaydayInput): PlannedReminder[] {
   const days: string[] = [];
   let start = currentPeriodStart;
@@ -103,7 +113,10 @@ export function planPaydayReminders({
     if (start >= today) days.push(start);
     start = nextPeriodStart(rule, start);
   }
-  return days.slice(0, count).map((day) => ({
+  const paydays = days.slice(0, count);
+  const retry = snoozedOn ? shiftDay(snoozedOn, 1) : null;
+  if (pending && retry && retry >= today && !paydays.includes(retry)) paydays.push(retry);
+  return paydays.toSorted().map((day) => ({
     kind: "payday",
     day,
     title: "Payday",

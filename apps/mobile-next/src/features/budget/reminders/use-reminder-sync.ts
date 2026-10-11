@@ -9,6 +9,7 @@ import { formatMoneyMinor } from "@/utils/money";
 import { DUE_LOOKAHEAD_DAYS } from "../due/due-model";
 import type { UseDue } from "../due/use-due";
 import type { ActiveBudgetView } from "../home/home-model";
+import { usePayday } from "../payday/use-payday";
 
 import {
   getReminderPermission,
@@ -43,6 +44,8 @@ export function useReminderSync(view: ActiveBudgetView, due: UseDue): ReminderSy
   }, []);
 
   const paydayOn = view.budget.paydayReminder;
+  const salaryPending = usePayday(view).status.pending;
+  const { paydaySnoozedOn } = prefs;
   const { paydayRule } = view;
   const periodStart = view.current.period.start;
   const { items, today, loaded } = due;
@@ -56,18 +59,31 @@ export function useReminderSync(view: ActiveBudgetView, due: UseDue): ReminderSy
       horizonDays: DUE_LOOKAHEAD_DAYS,
       money,
     });
-    const paydays = paydayOn
-      ? planPaydayReminders({
-          rule: paydayRule,
-          currentPeriodStart: periodStart,
-          today,
-          count: UPCOMING_PAYDAYS,
-        })
-      : [];
+    // Without the payday reminder only a "Not yet" retry is planned (count 0 skips the regular ones).
+    const paydays = planPaydayReminders({
+      rule: paydayRule,
+      currentPeriodStart: periodStart,
+      today,
+      count: paydayOn ? UPCOMING_PAYDAYS : 0,
+      pending: salaryPending,
+      snoozedOn: paydaySnoozedOn,
+    });
     syncReminders(scopeId, [...bills, ...paydays], new Date()).catch((cause: unknown) =>
       console.warn("Budget reminders could not be scheduled.", cause),
     );
-  }, [permission, loaded, scopeId, items, prefs, today, paydayOn, paydayRule, periodStart]);
+  }, [
+    permission,
+    loaded,
+    scopeId,
+    items,
+    prefs,
+    today,
+    paydayOn,
+    paydayRule,
+    periodStart,
+    salaryPending,
+    paydaySnoozedOn,
+  ]);
 
   useEffect(() => {
     if (loaded) void forgetEndedSnoozes(today);

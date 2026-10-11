@@ -10,7 +10,7 @@ import type { PlannedReminder } from "./reminder-plan";
 export type ReminderPermission = "granted" | "denied" | "undetermined";
 
 /** Where a tapped reminder lands. */
-export type ReminderTarget = "due" | "budget";
+export type ReminderTarget = "due" | "payday";
 
 const CHANNEL_ID = "budget-reminders";
 /** Reminders go out at 09:00 on the device's clock. */
@@ -18,16 +18,17 @@ const REMINDER_HOUR = 9;
 
 const TARGETS = {
   bills: "due",
-  // The Got paid flow lands with the payday layer; until then payday opens the Budget tab.
-  payday: "budget",
+  payday: "payday",
 } as const satisfies Record<PlannedReminder["kind"], ReminderTarget>;
 
-const targetSchema = z.enum(["due", "budget"]);
+// Payday notifications scheduled before Got paid existed carry "budget"; they open Got paid too.
+const targetSchema = z.enum(["due", "payday", "budget"]);
 
 /** The target a notification's data names, or null for anything else. */
 export const reminderTarget = (data: Notifications.NotificationContent["data"]) => {
   const parsed = z.object({ target: targetSchema }).safeParse(data);
-  return parsed.success ? parsed.data.target : null;
+  if (!parsed.success) return null;
+  return parsed.data.target === "budget" ? "payday" : parsed.data.target;
 };
 
 /** Shows a reminder that arrives while the app is open, as a banner without sound. */

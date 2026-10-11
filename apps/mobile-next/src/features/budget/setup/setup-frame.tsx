@@ -6,6 +6,8 @@ import { colors, layout, Screen, space, Text } from "@/ui/trove";
 import { SetupHeader } from "./setup-header";
 
 interface SetupFrameProps {
+  /** Compact header title; setup steps keep the default. */
+  readonly header?: string;
   readonly step: string;
   readonly title: string;
   readonly intro?: string;
@@ -17,10 +19,18 @@ interface SetupFrameProps {
 }
 
 /** The shared shell of setup screens 2 to 5: a step label, a title, scrolling content, and actions. */
-export function SetupFrame({ step, title, intro, pinned, footer, children }: SetupFrameProps) {
+export function SetupFrame({
+  header,
+  step,
+  title,
+  intro,
+  pinned,
+  footer,
+  children,
+}: SetupFrameProps) {
   return (
     <Screen>
-      <SetupHeader />
+      <SetupHeader title={header} />
       {pinned}
       <ScrollView
         contentContainerStyle={styles.content}
