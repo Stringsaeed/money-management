@@ -1,36 +1,22 @@
-import { and, asc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
-import { format, parseISO, subDays } from "date-fns";
+import { Effect } from "effect";
 
-import { localDateInTimeZone } from "@trove/domain/clock";
 import {
   nextPeriodStart,
   paydaysLeft,
   projectBudget,
   ruleInEffect,
   savingPerPayday,
-  type BudgetFacts,
   type BudgetProjection,
   type EnvelopePeriodTotals,
   type PaydayChange,
 } from "@trove/domain/budget";
-import {
-  v2Assignment,
-  v2Budget,
-  v2BudgetFundingAccount,
-  v2BudgetPayday,
-  v2Envelope,
-  v2EnvelopeCategory,
-} from "@trove/db/schema/v2-budget";
-import { v2Account, v2Transaction } from "@trove/db/schema/v2-ledger";
 
-import {
-  BUDGET_CURRENCY,
-  type V2Budget,
-  type V2BudgetView,
-  type V2Envelope,
-  type V2EnvelopeTotals,
-} from "./contracts";
-import { iso, safeMinor, type V2DbExecutor, type V2LedgerContext } from "./shared";
+import { BudgetNotFound } from "./budget-errors";
+import { LedgerFacts } from "./budget-ledger-facts";
+import { BudgetClock, budgetToday } from "./budget-services";
+import { BudgetStore, type BudgetRow, type EnvelopeRow, type MappedEnvelope } from "./budget-store";
+import type { V2Budget, V2BudgetView, V2Envelope, V2EnvelopeTotals } from "./contracts";
+import { iso } from "./shared";
 
 /**
  * Budget reads (#366/#367). Every total is derived on read by `projectBudget`
@@ -38,37 +24,83 @@ import { iso, safeMinor, type V2DbExecutor, type V2LedgerContext } from "./share
  * transactions. Facts dated after today do not count yet.
  */
 
-/** v1 budgets are AED, so "today" is the UAE Ledger Date. */
-export const BUDGET_TIME_ZONE = "Asia/Dubai";
-
-export function budgetToday(now: Date): string {
-  return localDateInTimeZone(now, BUDGET_TIME_ZONE);
-}
-
-type BudgetRow = typeof v2Budget.$inferSelect;
-type EnvelopeRow = typeof v2Envelope.$inferSelect;
+export type ActiveBudgetView = Extract<V2BudgetView, { readonly budget: object }>;
 
 /** The stored plan plus the projection derived from it. */
 export interface LoadedBudget {
   readonly budget: BudgetRow;
   readonly paydays: readonly PaydayChange[];
   readonly fundingAccountIds: readonly string[];
-  readonly envelopes: readonly (EnvelopeRow & { readonly categoryIds: readonly string[] })[];
+  readonly envelopes: readonly MappedEnvelope[];
   readonly projection: BudgetProjection;
 }
 
-export async function findBudget(db: V2DbExecutor, ledgerId: string): Promise<BudgetRow | null> {
-  const rows = await db.select().from(v2Budget).where(eq(v2Budget.ledgerId, ledgerId)).limit(1);
-  return rows[0] ?? null;
-}
+/** `GET /budget`. */
+export const getBudget = Effect.gen(function* () {
+  const budget = yield* (yield* BudgetStore).findBudget;
+  if (!budget) return { budget: null } satisfies V2BudgetView;
+  return budgetView(yield* loadBudget(budget));
+});
 
-export async function getBudget(context: V2LedgerContext, today: string): Promise<V2BudgetView> {
-  const budget = await findBudget(context.db, context.ledgerId);
-  if (!budget) return { budget: null };
-  return budgetView(await loadBudget(context.db, budget, today));
-}
+/** The ledger's budget, or `BudgetNotFound`. */
+export const requireBudget = Effect.gen(function* () {
+  const budget = yield* (yield* BudgetStore).findBudget;
+  if (!budget) return yield* new BudgetNotFound();
+  return budget;
+});
 
-export function budgetView(loaded: LoadedBudget): V2BudgetView {
+/** Loads the plan and bounded transaction aggregates, then projects them for today. */
+export const loadBudget = Effect.fn("loadBudget")(function* (budget: BudgetRow) {
+  const store = yield* BudgetStore;
+  const facts = yield* LedgerFacts;
+  const { today } = yield* BudgetClock;
+  const [plan, cardIds] = yield* Effect.all([store.loadPlan(budget), facts.cardAccountIds], {
+    concurrency: "unbounded",
+  });
+  const range = { from: budget.activationPeriodStart, to: today };
+  const [balances, spending, cardPayments, openingCardDebtMinor] = yield* Effect.all(
+    [
+      facts.balancesAsOf(plan.fundingAccountIds, today),
+      facts.spending(
+        plan.envelopes.flatMap((envelope) => envelope.categoryIds),
+        plan.fundingAccountIds,
+        cardIds,
+        range,
+      ),
+      facts.cardPayments(plan.fundingAccountIds, cardIds, range),
+      facts.openingCardDebt(cardIds, budget.activationPeriodStart),
+    ],
+    { concurrency: "unbounded" },
+  );
+  let cashMinor = 0;
+  for (const value of balances.values()) cashMinor += value;
+
+  const projection = projectBudget({
+    paydays: plan.paydays,
+    activationStart: budget.activationPeriodStart,
+    envelopes: plan.envelopes.map((envelope) => ({
+      id: envelope.id,
+      group: envelope.group,
+      categoryIds: envelope.categoryIds,
+      startFresh: envelope.startFresh,
+    })),
+    assignments: plan.assignments,
+    spending,
+    cardPayments,
+    cashMinor,
+    openingCardDebtMinor,
+    today,
+  });
+  return {
+    budget,
+    paydays: plan.paydays,
+    fundingAccountIds: plan.fundingAccountIds,
+    envelopes: plan.envelopes,
+    projection,
+  } satisfies LoadedBudget;
+});
+
+export function budgetView(loaded: LoadedBudget): ActiveBudgetView {
   const { budget, projection } = loaded;
   const current = projection.current;
   return {
@@ -111,10 +143,8 @@ function savingSuggestion(
   loaded: LoadedBudget,
   envelope: EnvelopeRow,
 ): Pick<V2Envelope, "savingPerPaydayMinor" | "paydaysLeft" | "shortBeforePaydayMinor"> {
-  if (envelope.group !== "saving" || envelope.targetMinor === null || envelope.dueDate === null) {
-    return {};
-  }
-  const targetMinor = safeMinor(envelope.targetMinor, "Envelope target");
+  const { targetMinor, dueDate } = envelope;
+  if (envelope.group !== "saving" || targetMinor === null || dueDate === null) return {};
   const currentStart = loaded.projection.current.period.start;
   const rule = ruleInEffect(loaded.paydays, currentStart);
   const leftMinor =
@@ -123,298 +153,16 @@ function savingSuggestion(
   const goal = {
     targetMinor,
     setAsideMinor: Math.max(leftMinor, 0),
-    dueDate: envelope.dueDate,
+    dueDate,
     rule,
     currentPeriodStart: currentStart,
   };
-  const dueBeforePayday = envelope.dueDate < nextPeriodStart(rule, currentStart);
+  const dueBeforePayday = dueDate < nextPeriodStart(rule, currentStart);
   return {
     savingPerPaydayMinor: savingPerPayday(goal),
     paydaysLeft: paydaysLeft(goal),
     ...(dueBeforePayday &&
       leftMinor < targetMinor && { shortBeforePaydayMinor: targetMinor - Math.max(leftMinor, 0) }),
-  };
-}
-
-/** Loads the plan and bounded transaction aggregates, then projects them. */
-export async function loadBudget(
-  db: V2DbExecutor,
-  budget: BudgetRow,
-  today: string,
-): Promise<LoadedBudget> {
-  const ledgerId = budget.ledgerId;
-  const [paydayRows, fundingRows, envelopeRows, assignmentRows, cardIds] = await Promise.all([
-    db.select().from(v2BudgetPayday).where(eq(v2BudgetPayday.budgetId, budget.id)),
-    db
-      .select({ accountId: v2BudgetFundingAccount.accountId })
-      .from(v2BudgetFundingAccount)
-      .where(eq(v2BudgetFundingAccount.budgetId, budget.id))
-      .orderBy(asc(v2BudgetFundingAccount.createdAt), asc(v2BudgetFundingAccount.accountId)),
-    db
-      .select()
-      .from(v2Envelope)
-      .where(and(eq(v2Envelope.budgetId, budget.id), eq(v2Envelope.lifecycle, "active")))
-      .orderBy(asc(v2Envelope.sortOrder), asc(v2Envelope.id)),
-    // One row per (period, from, to, reason): bounded by periods x envelope pairs, not by moves.
-    db
-      .select({
-        periodStart: v2Assignment.periodStart,
-        fromEnvelopeId: v2Assignment.fromEnvelopeId,
-        toEnvelopeId: v2Assignment.toEnvelopeId,
-        reason: v2Assignment.reason,
-        amountMinor: sql<string>`sum(${v2Assignment.amountMinor})`,
-      })
-      .from(v2Assignment)
-      .where(eq(v2Assignment.budgetId, budget.id))
-      .groupBy(
-        v2Assignment.periodStart,
-        v2Assignment.fromEnvelopeId,
-        v2Assignment.toEnvelopeId,
-        v2Assignment.reason,
-      ),
-    budgetCardAccountIds(db, ledgerId),
-  ]);
-
-  const paydays = paydayRows.map(paydayChange);
-  const fundingAccountIds = fundingRows.map((row) => row.accountId);
-  const envelopeIds = envelopeRows.map((row) => row.id);
-  const mappingRows =
-    envelopeIds.length === 0
-      ? []
-      : await db
-          .select({
-            envelopeId: v2EnvelopeCategory.envelopeId,
-            categoryId: v2EnvelopeCategory.categoryId,
-          })
-          .from(v2EnvelopeCategory)
-          .where(
-            and(
-              eq(v2EnvelopeCategory.ledgerId, ledgerId),
-              inArray(v2EnvelopeCategory.envelopeId, envelopeIds),
-            ),
-          );
-  const envelopes = envelopeRows.map((row) => ({
-    ...row,
-    categoryIds: mappingRows
-      .filter((mapping) => mapping.envelopeId === row.id)
-      .map((mapping) => mapping.categoryId)
-      .sort(),
-  }));
-  const mappedCategoryIds = mappingRows.map((mapping) => mapping.categoryId);
-  const range = { from: budget.activationPeriodStart, to: today };
-
-  const [balances, spending, cardPayments, openingCardDebtMinor] = await Promise.all([
-    balancesAsOf(db, ledgerId, fundingAccountIds, today),
-    budgetSpending(db, ledgerId, mappedCategoryIds, fundingAccountIds, cardIds, range),
-    cardPaymentsSince(db, ledgerId, fundingAccountIds, cardIds, range),
-    openingCardDebt(db, ledgerId, cardIds, budget.activationPeriodStart),
-  ]);
-  let cashMinor = 0;
-  for (const value of balances.values()) cashMinor += value;
-
-  const facts: BudgetFacts = {
-    paydays,
-    activationStart: budget.activationPeriodStart,
-    envelopes: envelopes.map((envelope) => ({
-      id: envelope.id,
-      group: envelope.group,
-      categoryIds: envelope.categoryIds,
-      startFresh: envelope.startFresh,
-    })),
-    assignments: assignmentRows.map((row) => ({
-      periodStart: row.periodStart,
-      fromEnvelopeId: row.fromEnvelopeId,
-      toEnvelopeId: row.toEnvelopeId,
-      amountMinor: safeMinor(row.amountMinor, "Assignment total"),
-      reason: row.reason,
-    })),
-    spending,
-    cardPayments,
-    cashMinor,
-    openingCardDebtMinor,
-    today,
-  };
-  return { budget, paydays, fundingAccountIds, envelopes, projection: projectBudget(facts) };
-}
-
-/** Opening balance plus every transaction dated on or before `today`. */
-export async function balancesAsOf(
-  db: V2DbExecutor,
-  ledgerId: string,
-  accountIds: readonly string[],
-  today: string,
-): Promise<Map<string, number>> {
-  if (accountIds.length === 0) return new Map();
-  const [accounts, rows] = await Promise.all([
-    db
-      .select({ id: v2Account.id, openingBalanceMinor: v2Account.openingBalanceMinor })
-      .from(v2Account)
-      .where(and(eq(v2Account.ledgerId, ledgerId), inArray(v2Account.id, [...accountIds]))),
-    db
-      .select({
-        accountId: v2Transaction.accountId,
-        toAccountId: v2Transaction.toAccountId,
-        kind: v2Transaction.kind,
-        amountMinor: sql<string>`sum(${v2Transaction.amountMinor})`,
-      })
-      .from(v2Transaction)
-      .where(
-        and(
-          eq(v2Transaction.ledgerId, ledgerId),
-          lte(v2Transaction.date, today),
-          or(
-            inArray(v2Transaction.accountId, [...accountIds]),
-            inArray(v2Transaction.toAccountId, [...accountIds]),
-          ),
-        ),
-      )
-      .groupBy(v2Transaction.accountId, v2Transaction.toAccountId, v2Transaction.kind),
-  ]);
-  const balances = new Map(
-    accounts.map((row) => [row.id, safeMinor(row.openingBalanceMinor, "Opening balance")]),
-  );
-  for (const row of rows) {
-    const amount = safeMinor(row.amountMinor, "Transaction total");
-    const source = balances.get(row.accountId);
-    if (source !== undefined) {
-      balances.set(row.accountId, source + (row.kind === "income" ? amount : -amount));
-    }
-    const destination = row.toAccountId ? balances.get(row.toAccountId) : undefined;
-    if (row.kind === "transfer" && row.toAccountId && destination !== undefined) {
-      balances.set(row.toAccountId, destination + amount);
-    }
-  }
-  return balances;
-}
-
-interface DateRange {
-  readonly from: string;
-  readonly to: string;
-}
-
-/** Every AED credit-card account of the ledger, archived ones included (their spending still counts). */
-export async function budgetCardAccountIds(db: V2DbExecutor, ledgerId: string): Promise<string[]> {
-  const rows = await db
-    .select({ id: v2Account.id })
-    .from(v2Account)
-    .where(
-      and(
-        eq(v2Account.ledgerId, ledgerId),
-        eq(v2Account.type, "credit_card"),
-        eq(v2Account.currency, BUDGET_CURRENCY),
-      ),
-    );
-  return rows.map((row) => row.id);
-}
-
-/**
- * What the cards owed just before `periodStart`: their balances counting every transaction
- * dated before it, negated (a card balance is negative while it owes), never below zero.
- */
-export async function openingCardDebt(
-  db: V2DbExecutor,
-  ledgerId: string,
-  cardAccountIds: readonly string[],
-  periodStart: string,
-): Promise<number> {
-  const balances = await balancesAsOf(db, ledgerId, cardAccountIds, dayBefore(periodStart));
-  let balanceMinor = 0;
-  for (const value of balances.values()) balanceMinor += value;
-  return Math.max(-balanceMinor, 0);
-}
-
-function dayBefore(date: string): string {
-  return format(subDays(parseISO(date), 1), "yyyy-MM-dd");
-}
-
-/**
- * Expenses in mapped Categories from funding accounts plus EVERY expense from a credit-card
- * account (mapped or not, so unmapped card spending is reserved), one row per day/category/account.
- */
-async function budgetSpending(
-  db: V2DbExecutor,
-  ledgerId: string,
-  categoryIds: readonly string[],
-  fundingAccountIds: readonly string[],
-  cardAccountIds: readonly string[],
-  range: DateRange,
-): Promise<BudgetFacts["spending"]> {
-  const fromFunding =
-    categoryIds.length === 0 || fundingAccountIds.length === 0
-      ? undefined
-      : and(
-          inArray(v2Transaction.categoryId, [...categoryIds]),
-          inArray(v2Transaction.accountId, [...fundingAccountIds]),
-        );
-  const fromCard =
-    cardAccountIds.length === 0 ? undefined : inArray(v2Transaction.accountId, [...cardAccountIds]);
-  if (!fromFunding && !fromCard) return [];
-  const rows = await db
-    .select({
-      date: v2Transaction.date,
-      categoryId: v2Transaction.categoryId,
-      accountId: v2Transaction.accountId,
-      amountMinor: sql<string>`sum(${v2Transaction.amountMinor})`,
-    })
-    .from(v2Transaction)
-    .where(
-      and(
-        eq(v2Transaction.ledgerId, ledgerId),
-        eq(v2Transaction.kind, "expense"),
-        gte(v2Transaction.date, range.from),
-        lte(v2Transaction.date, range.to),
-        or(fromFunding, fromCard),
-      ),
-    )
-    .groupBy(v2Transaction.date, v2Transaction.categoryId, v2Transaction.accountId);
-  const cards = new Set(cardAccountIds);
-  return rows.map((row) => ({
-    date: row.date,
-    categoryId: row.categoryId,
-    amountMinor: safeMinor(row.amountMinor, "Spending total"),
-    onCard: cards.has(row.accountId),
-  }));
-}
-
-/** Transfers from a funding account to a credit-card account, one row per day. */
-async function cardPaymentsSince(
-  db: V2DbExecutor,
-  ledgerId: string,
-  fundingAccountIds: readonly string[],
-  cardAccountIds: readonly string[],
-  range: DateRange,
-): Promise<BudgetFacts["cardPayments"]> {
-  if (fundingAccountIds.length === 0 || cardAccountIds.length === 0) return [];
-  const rows = await db
-    .select({
-      date: v2Transaction.date,
-      amountMinor: sql<string>`sum(${v2Transaction.amountMinor})`,
-    })
-    .from(v2Transaction)
-    .where(
-      and(
-        eq(v2Transaction.ledgerId, ledgerId),
-        eq(v2Transaction.kind, "transfer"),
-        gte(v2Transaction.date, range.from),
-        lte(v2Transaction.date, range.to),
-        inArray(v2Transaction.accountId, [...fundingAccountIds]),
-        inArray(v2Transaction.toAccountId, [...cardAccountIds]),
-      ),
-    )
-    .groupBy(v2Transaction.date);
-  return rows.map((row) => ({
-    date: row.date,
-    amountMinor: safeMinor(row.amountMinor, "Card payment total"),
-  }));
-}
-
-function paydayChange(row: typeof v2BudgetPayday.$inferSelect): PaydayChange {
-  return {
-    effectiveFrom: row.effectiveFrom,
-    rule:
-      row.kind === "day" && row.day !== null
-        ? { kind: "day", day: row.day }
-        : { kind: "last_workday" },
   };
 }
 
@@ -425,8 +173,7 @@ function budgetRow(row: BudgetRow): V2Budget {
     currency: row.currency,
     activationPeriodStart: row.activationPeriodStart,
     activatedOn: budgetToday(row.createdAt),
-    usualSalaryMinor:
-      row.usualSalaryMinor === null ? null : safeMinor(row.usualSalaryMinor, "Usual salary"),
+    usualSalaryMinor: row.usualSalaryMinor,
     paydayReminder: row.paydayReminder,
     defaultAccountId: row.defaultAccountId,
     version: row.version,
@@ -435,13 +182,13 @@ function budgetRow(row: BudgetRow): V2Budget {
   };
 }
 
-function envelopeRow(row: EnvelopeRow & { readonly categoryIds: readonly string[] }): V2Envelope {
+function envelopeRow(row: MappedEnvelope): V2Envelope {
   return {
     id: row.id,
     name: row.name,
     group: row.group,
     startFresh: row.startFresh,
-    targetMinor: row.targetMinor === null ? null : safeMinor(row.targetMinor, "Envelope target"),
+    targetMinor: row.targetMinor,
     dueDate: row.dueDate,
     repeat: row.repeat,
     archived: row.lifecycle === "archived",

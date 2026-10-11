@@ -32,6 +32,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.2",
+    "effect": "4.0.0-rc.108",
     "hono": "catalog:",
     "jose": "6.2.9",
     "zod": "catalog:"

@@ -1,23 +1,26 @@
-import { nextPeriodStart, ruleInEffect } from "@trove/domain/budget";
-import { v2Assignment } from "@trove/db/schema/v2-budget";
+import { Effect } from "effect";
+import type { z } from "zod";
 
-import { budgetActor } from "./budget-activate";
-import { budgetView, envelopeTotals, findBudget, loadBudget, type LoadedBudget } from "./budget";
+import { nextPeriodStart, ruleInEffect } from "@trove/domain/budget";
+
+import { budgetView, envelopeTotals, loadBudget, requireBudget, type LoadedBudget } from "./budget";
 import {
-  assignmentsCreateSchema,
-  type V2AssignmentsCreateInput,
-  type V2BudgetPeriodView,
-  type V2BudgetView,
-} from "./contracts";
-import {
-  requireBudgetPlanAccess,
-  V2ApiError,
-  withLedgerMutation,
-  type V2LedgerContext,
-} from "./shared";
+  EnvelopeNotFound,
+  InsufficientFunds,
+  InvalidFutureSource,
+  InvalidPeriodStart,
+  PeriodNotFound,
+} from "./budget-errors";
+import { inLedgerMutation } from "./budget-mutation";
+import { BudgetLedger, budgetActor, requirePlanAccess } from "./budget-services";
+import { BudgetStore } from "./budget-store";
+import type { assignmentsCreateSchema, V2BudgetPeriodView } from "./contracts";
 
 /** How many periods ahead a plan may be written. */
 const MAX_FUTURE_PERIODS = 24;
+
+export type AssignmentsCreate = z.output<typeof assignmentsCreateSchema>;
+type AssignmentItem = AssignmentsCreate["items"][number];
 
 /**
  * Writes money moves (#371) atomically, one append-only row per item. Items
@@ -25,47 +28,42 @@ const MAX_FUTURE_PERIODS = 24;
  * earlier item can fund a later one. Nothing is written when any item fails.
  * Returns the refreshed budget so the client updates in one round trip.
  */
-export async function createAssignments(
-  context: V2LedgerContext,
-  input: V2AssignmentsCreateInput,
-  today: string,
-  idempotencyKey?: string,
-): Promise<V2BudgetView> {
-  const parsed = assignmentsCreateSchema.parse(input);
+export const createAssignments = Effect.fn("createAssignments")(function* (
+  input: AssignmentsCreate,
+  idempotencyKey: string | undefined,
+) {
   // Setting the plan is the admin's job; members still cover, move and hand back leftovers.
-  if (parsed.items.some((item) => item.reason === "plan" || item.reason === "repeat")) {
-    requireBudgetPlanAccess(context);
+  if (input.items.some((item) => item.reason === "plan" || item.reason === "repeat")) {
+    yield* requirePlanAccess;
   }
-  return withLedgerMutation(context, "budget.assignments.create", idempotencyKey, async (db) => {
-    const budget = await findBudget(db, context.ledgerId);
-    if (!budget) throw new V2ApiError(404, "budget_not_found", "This ledger has no budget.");
-    const loaded = await loadBudget(db, budget, today);
-    const currentStart = loaded.projection.current.period.start;
-    const periodStart = parsed.periodStart ?? currentStart;
-    assertPeriodStart(loaded, periodStart);
-    const isCurrent = periodStart === currentStart;
+  return yield* inLedgerMutation("budget.assignments.create", idempotencyKey, writeMoves(input));
+});
 
-    checkItems(loaded, parsed.items, isCurrent);
+const writeMoves = Effect.fn("writeMoves")(function* (input: AssignmentsCreate) {
+  const { ledgerId } = yield* BudgetLedger;
+  const budget = yield* requireBudget;
+  const loaded = yield* loadBudget(budget);
+  const currentStart = loaded.projection.current.period.start;
+  const periodStart = input.periodStart ?? currentStart;
+  yield* requirePlannablePeriod(loaded, periodStart);
+  yield* checkItems(loaded, input.items, periodStart === currentStart);
 
-    const actor = budgetActor(context);
-    await db.insert(v2Assignment).values(
-      parsed.items.map((item) => ({
-        ledgerId: context.ledgerId,
-        id: crypto.randomUUID(),
-        budgetId: budget.id,
-        periodStart,
-        fromEnvelopeId: item.fromEnvelopeId,
-        toEnvelopeId: item.toEnvelopeId,
-        amountMinor: item.amountMinor,
-        reason: item.reason,
-        createdBy: actor,
-      })),
-    );
-    return budgetView(await loadBudget(db, budget, today));
-  });
-}
-
-type AssignmentItem = ReturnType<typeof assignmentsCreateSchema.parse>["items"][number];
+  const actor = yield* budgetActor;
+  yield* (yield* BudgetStore).insertAssignments(
+    input.items.map((item) => ({
+      ledgerId,
+      id: crypto.randomUUID(),
+      budgetId: budget.id,
+      periodStart,
+      fromEnvelopeId: item.fromEnvelopeId,
+      toEnvelopeId: item.toEnvelopeId,
+      amountMinor: item.amountMinor,
+      reason: item.reason,
+      createdBy: actor,
+    })),
+  );
+  return budgetView(yield* loadBudget(budget));
+});
 
 /**
  * Walks the items against a running copy of the current balances. `null` is
@@ -77,25 +75,20 @@ type AssignmentItem = ReturnType<typeof assignmentsCreateSchema.parse>["items"][
  * future-period balance is not today's Left, so taking from it would be checked
  * against the wrong number and would hand Not planned yet money it never had.
  */
-function checkItems(
+const checkItems = Effect.fn("checkItems")(function* (
   loaded: LoadedBudget,
   items: readonly AssignmentItem[],
   isCurrent: boolean,
-): void {
+) {
   const current = loaded.projection.current;
   const available = new Map<string | null, number>([[null, current.unassignedMinor]]);
   for (const totals of current.envelopes) available.set(totals.envelopeId, totals.leftMinor);
 
   for (const [index, item] of items.entries()) {
     if (!isCurrent && item.fromEnvelopeId !== null) {
-      throw new V2ApiError(
-        422,
-        "invalid_future_source",
-        "An upcoming period can only be planned from Not planned yet.",
-        { index },
-      );
+      return yield* new InvalidFutureSource({ index });
     }
-    assertAffordable(available, item, index);
+    yield* requireAffordable(available, item, index);
     if (isCurrent || item.fromEnvelopeId === null) {
       adjust(available, item.fromEnvelopeId, -item.amountMinor);
     }
@@ -103,60 +96,47 @@ function checkItems(
       adjust(available, item.toEnvelopeId, item.amountMinor);
     }
   }
-}
+});
 
-function assertAffordable(
+function requireAffordable(
   available: ReadonlyMap<string | null, number>,
   item: AssignmentItem,
   index: number,
-): void {
-  for (const id of [item.fromEnvelopeId, item.toEnvelopeId]) {
-    if (id !== null && !available.has(id)) {
-      throw new V2ApiError(404, "envelope_not_found", "An envelope was not found.", {
-        envelopeId: id,
-      });
-    }
-  }
-  const source = Math.max(available.get(item.fromEnvelopeId) ?? 0, 0);
-  if (item.amountMinor > source) {
-    throw new V2ApiError(
-      409,
-      "insufficient_funds",
-      "There isn't enough to move. Lower the amount.",
-      { index, availableMinor: source },
-    );
-  }
+): Effect.Effect<void, EnvelopeNotFound | InsufficientFunds> {
+  const unknown = [item.fromEnvelopeId, item.toEnvelopeId].find(
+    (id) => id !== null && !available.has(id),
+  );
+  if (unknown) return Effect.fail(new EnvelopeNotFound({ envelopeId: unknown, source: "item" }));
+  const availableMinor = Math.max(available.get(item.fromEnvelopeId) ?? 0, 0);
+  return item.amountMinor > availableMinor
+    ? Effect.fail(new InsufficientFunds({ index, availableMinor }))
+    : Effect.void;
 }
 
 function adjust(available: Map<string | null, number>, id: string | null, deltaMinor: number) {
   available.set(id, (available.get(id) ?? 0) + deltaMinor);
 }
 
-/** Per-envelope totals for one period since activation. */
-export async function getBudgetPeriod(
-  context: V2LedgerContext,
-  start: string,
-  today: string,
-): Promise<V2BudgetPeriodView> {
-  const budget = await findBudget(context.db, context.ledgerId);
-  if (!budget) throw new V2ApiError(404, "budget_not_found", "This ledger has no budget.");
-  const { projection } = await loadBudget(context.db, budget, today);
+/** Plans may target the current period or one of the next few starts, never the past. */
+function requirePlannablePeriod(
+  loaded: LoadedBudget,
+  periodStart: string,
+): Effect.Effect<void, InvalidPeriodStart> {
+  let start = loaded.projection.current.period.start;
+  for (let ahead = 0; ahead <= MAX_FUTURE_PERIODS; ahead += 1) {
+    if (start === periodStart) return Effect.void;
+    start = nextPeriodStart(ruleInEffect(loaded.paydays, start), start);
+  }
+  return Effect.fail(new InvalidPeriodStart({ periodStart }));
+}
+
+/** `GET /budget/periods/:start`: per-envelope totals for one period since activation. */
+export const getBudgetPeriod = Effect.fn("getBudgetPeriod")(function* (start: string) {
+  const { projection } = yield* loadBudget(yield* requireBudget);
   const found = projection.periods.find((totals) => totals.period.start === start);
-  if (!found) throw new V2ApiError(404, "period_not_found", "This is not a period of your budget.");
+  if (!found) return yield* new PeriodNotFound();
   return {
     period: found.period,
     envelopes: found.envelopes.map(envelopeTotals),
-  };
-}
-
-/** Plans may target the current period or one of the next few starts, never the past. */
-function assertPeriodStart(loaded: LoadedBudget, periodStart: string): void {
-  let start = loaded.projection.current.period.start;
-  for (let ahead = 0; ahead <= MAX_FUTURE_PERIODS; ahead += 1) {
-    if (start === periodStart) return;
-    start = nextPeriodStart(ruleInEffect(loaded.paydays, start), start);
-  }
-  throw new V2ApiError(422, "invalid_period_start", "Pick the current period or an upcoming one.", {
-    periodStart,
-  });
-}
+  } satisfies V2BudgetPeriodView;
+});

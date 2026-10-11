@@ -1,14 +1,17 @@
 import { Hono, type Context } from "hono";
+import type { Effect } from "effect";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { z } from "zod";
 
 import { listAccounts, createAccount, deleteAccount, getAccount, updateAccount } from "./accounts";
 import { autoCategorizeTransaction } from "./auto-categorize";
-import { budgetToday, getBudget } from "./budget";
+import { getBudget } from "./budget";
 import { activateBudget, updateBudget } from "./budget-activate";
 import { listBudgetActivity } from "./budget-activity";
 import { createAssignments, getBudgetPeriod } from "./budget-assignments";
 import { createEnvelope, payEnvelope, updateEnvelope } from "./budget-envelopes";
+import type { BudgetFailure } from "./budget-errors";
+import { runBudgetRoute, type BudgetServices } from "./budget-http";
 import { getBudgetSetupFacts } from "./budget-setup-facts";
 import type { TransactionCategorizer } from "./categorizer";
 import {
@@ -22,14 +25,12 @@ import { getHome, getHomeOverviewBuckets } from "./home";
 import {
   createRecurringRule,
   getRecurringRule,
-  listDue,
   listRecurringRules,
   listUpcoming,
-  payOccurrence,
   settleRecurringRule,
-  skipOccurrence,
   updateRecurringRule,
 } from "./recurring";
+import { listDue, payOccurrence, skipOccurrence } from "./recurring-reminders";
 import {
   decodeTransactionCursor,
   getTransaction,
@@ -70,6 +71,7 @@ import {
   resolveV2LedgerContext,
   type AuthorizeV2Household,
   type V2Database,
+  type V2LedgerContext,
   V2ApiError,
 } from "./shared";
 
@@ -304,108 +306,74 @@ export function createV2LedgerRoutes(dependencies: V2LedgerRouteDependencies): H
     );
   });
 
-  const today = () => budgetToday(dependencies.now?.() ?? new Date());
+  /** Budget and bill-reminder routes run Effect programs through one boundary. */
+  const runBudget = <A>(
+    ledger: V2LedgerContext,
+    program: Effect.Effect<A, BudgetFailure, BudgetServices>,
+  ) => runBudgetRoute(ledger, dependencies.now?.() ?? new Date(), program);
 
   routes.get("/budget", async (context) => {
     const ledger = await resolveContext(dependencies, context);
-    return context.json(await getBudget(ledger, today()));
+    return context.json(await runBudget(ledger, getBudget));
   });
   routes.get("/budget/setup-facts", async (context) => {
     const ledger = await resolveContext(dependencies, context);
-    return context.json(
-      await getBudgetSetupFacts(ledger, parsePaydayQuery(context.req.query("payday")), today()),
-    );
+    const rule = parsePaydayQuery(context.req.query("payday"));
+    return context.json(await runBudget(ledger, getBudgetSetupFacts(rule)));
   });
   routes.post("/budget/activate", async (context) => {
     const ledger = await resolveContext(dependencies, context);
-    return context.json(
-      await activateBudget(
-        ledger,
-        await readJson(context, budgetActivateSchema),
-        today(),
-        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
-      ),
-      201,
-    );
+    const input = await readJson(context, budgetActivateSchema);
+    const key = idempotencyKeyFromHeader(context.req.header("Idempotency-Key"));
+    return context.json(await runBudget(ledger, activateBudget(input, key)), 201);
   });
   routes.patch("/budget", async (context) => {
     const ledger = await resolveContext(dependencies, context);
-    return context.json(
-      await updateBudget(
-        ledger,
-        await readJson(context, budgetUpdateSchema),
-        today(),
-        parseExpectedVersion(context.req.header("If-Match")),
-        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
-      ),
-    );
+    const input = await readJson(context, budgetUpdateSchema);
+    const version = parseExpectedVersion(context.req.header("If-Match"));
+    const key = idempotencyKeyFromHeader(context.req.header("Idempotency-Key"));
+    return context.json(await runBudget(ledger, updateBudget(input, version, key)));
   });
 
   routes.post("/budget/envelopes", async (context) => {
     const ledger = await resolveContext(dependencies, context);
-    return context.json(
-      await createEnvelope(
-        ledger,
-        await readJson(context, envelopeCreateSchema),
-        today(),
-        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
-      ),
-      201,
-    );
+    const input = await readJson(context, envelopeCreateSchema);
+    const key = idempotencyKeyFromHeader(context.req.header("Idempotency-Key"));
+    return context.json(await runBudget(ledger, createEnvelope(input, key)), 201);
   });
   routes.patch("/budget/envelopes/:id", async (context) => {
     const ledger = await resolveContext(dependencies, context);
+    const input = await readJson(context, envelopeUpdateSchema);
+    const version = parseExpectedVersion(context.req.header("If-Match"));
+    const key = idempotencyKeyFromHeader(context.req.header("Idempotency-Key"));
     return context.json(
-      await updateEnvelope(
-        ledger,
-        context.req.param("id"),
-        await readJson(context, envelopeUpdateSchema),
-        today(),
-        parseExpectedVersion(context.req.header("If-Match")),
-        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
-      ),
+      await runBudget(ledger, updateEnvelope(context.req.param("id"), input, version, key)),
     );
   });
   routes.post("/budget/envelopes/:id/pay", async (context) => {
     const ledger = await resolveContext(dependencies, context);
+    const input = await readJson(context, envelopePaySchema);
+    const key = idempotencyKeyFromHeader(context.req.header("Idempotency-Key"));
     return context.json(
-      await payEnvelope(
-        ledger,
-        context.req.param("id"),
-        await readJson(context, envelopePaySchema),
-        today(),
-        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
-      ),
+      await runBudget(ledger, payEnvelope(context.req.param("id"), input, key)),
       201,
     );
   });
   routes.post("/budget/assignments", async (context) => {
     const ledger = await resolveContext(dependencies, context);
-    return context.json(
-      await createAssignments(
-        ledger,
-        await readJson(context, assignmentsCreateSchema),
-        today(),
-        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
-      ),
-      201,
-    );
+    const input = await readJson(context, assignmentsCreateSchema);
+    const key = idempotencyKeyFromHeader(context.req.header("Idempotency-Key"));
+    return context.json(await runBudget(ledger, createAssignments(input, key)), 201);
   });
   routes.get("/budget/activity", async (context) => {
     const ledger = await resolveContext(dependencies, context);
-    return context.json(
-      await listBudgetActivity(ledger, parseOptionalInteger(context.req.query("limit"), "limit")),
-    );
+    const limit = parseOptionalInteger(context.req.query("limit"), "limit");
+    return context.json(await runBudget(ledger, listBudgetActivity(limit)));
   });
   routes.get("/budget/periods/:start", async (context) => {
     const ledger = await resolveContext(dependencies, context);
-    return context.json(
-      await getBudgetPeriod(
-        ledger,
-        parseOptionalDate(context.req.param("start"), "start") ?? "",
-        today(),
-      ),
-    );
+    const start = parseOptionalDate(context.req.param("start"), "start") ?? "";
+    return context.json(await runBudget(ledger, getBudgetPeriod(start)));
   });
 
   routes.get("/recurring/upcoming", async (context) => {
@@ -417,7 +385,7 @@ export function createV2LedgerRoutes(dependencies: V2LedgerRouteDependencies): H
     const through = parseOptionalDate(context.req.query("through"), "through");
     if (!through)
       throw new V2ApiError(400, "invalid_through", "through must be a YYYY-MM-DD date.");
-    return context.json(await listDue(ledger, through, dependencies.now?.() ?? new Date()));
+    return context.json(await runBudget(ledger, listDue(through)));
   });
   routes.get("/recurring", async (context) => {
     const ledger = await resolveContext(dependencies, context);
@@ -458,26 +426,20 @@ export function createV2LedgerRoutes(dependencies: V2LedgerRouteDependencies): H
   });
   routes.post("/recurring/:id/occurrences/:date/pay", async (context) => {
     const ledger = await resolveContext(dependencies, context);
+    const date = parseOccurrenceDate(context.req.param("date"));
+    const input = await readJson(context, recurringPaySchema);
+    const key = idempotencyKeyFromHeader(context.req.header("Idempotency-Key"));
     return context.json(
-      await payOccurrence(
-        ledger,
-        context.req.param("id"),
-        parseOccurrenceDate(context.req.param("date")),
-        await readJson(context, recurringPaySchema),
-        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
-      ),
+      await runBudget(ledger, payOccurrence(context.req.param("id"), date, input, key)),
       201,
     );
   });
   routes.post("/recurring/:id/occurrences/:date/skip", async (context) => {
     const ledger = await resolveContext(dependencies, context);
+    const date = parseOccurrenceDate(context.req.param("date"));
+    const key = idempotencyKeyFromHeader(context.req.header("Idempotency-Key"));
     return context.json(
-      await skipOccurrence(
-        ledger,
-        context.req.param("id"),
-        parseOccurrenceDate(context.req.param("date")),
-        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
-      ),
+      await runBudget(ledger, skipOccurrence(context.req.param("id"), date, key)),
       201,
     );
   });
