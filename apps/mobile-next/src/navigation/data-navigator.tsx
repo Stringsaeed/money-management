@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import type { QueryClient } from "@tanstack/react-query";
 import { LedgerDataProvider } from "@/data/ledger-queries";
 import { colors, fonts } from "@/ui/trove";
+import { useReminderTapRouting } from "@/features/budget/reminders/use-reminder-tap-routing";
 import { useLedgerScope } from "./ledger-scope-context";
 
 interface DataNavigatorProps {
@@ -25,6 +26,7 @@ const screenOptions = {
 
 export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) => {
   const { scope } = useLedgerScope();
+  useReminderTapRouting();
   const scopeKey = scope.kind === "personal" ? "personal" : scope.householdId;
   return (
     <LedgerDataProvider
@@ -60,6 +62,7 @@ export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) 
         <Stack.Screen name="budget/setup/amounts" options={pushedOptions} />
         <Stack.Screen name="budget/setup/review" options={pushedOptions} />
         <Stack.Screen name="budget/envelope/[id]" options={pushedOptions} />
+        <Stack.Screen name="budget/due" options={pushedOptions} />
         <Stack.Screen name="callback" options={{ headerShown: false }} />
       </Stack>
     </LedgerDataProvider>

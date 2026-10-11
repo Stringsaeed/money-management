@@ -15,11 +15,14 @@ import type {
   V2EnvelopeCreateInput,
   V2EnvelopeCreated,
   V2EnvelopeUpdateInput,
+  V2DueList,
   V2Home,
   V2HomeOverviewBuckets,
   V2LedgerScope,
   V2Page,
   V2PaydayRule,
+  V2RecordedOccurrence,
+  V2RecurringPayInput,
   V2RecurringRule,
   V2Transaction,
   V2TransactionKind,
@@ -36,9 +39,11 @@ import {
   parseCategory,
   parseCreatedTransaction,
   parseEnvelopeCreated,
+  parseDueList,
   parseHome,
   homeOverviewBucketsSchema,
   parsePage,
+  parseRecordedOccurrence,
   parseRecurringRule,
   parseTransaction,
   parseTransactionSummary,
@@ -418,6 +423,46 @@ export const ledgerClient = {
         withScope(`/recurring/${encodeURIComponent(id)}`, scope),
         json("PATCH", input, options),
         parseRecurringRule,
+      );
+    },
+    /** Pending occurrences of reminder-mode rules, oldest first, through the given Ledger Date. */
+    due(scope: LedgerScope, through: string): Promise<V2DueList> {
+      return request(
+        withScope(`/recurring/due?through=${encodeURIComponent(through)}`, scope),
+        undefined,
+        parseDueList,
+      );
+    },
+    /** Mark paid: posts one Generated Transaction. Overrides apply to this occurrence only. */
+    pay(
+      scope: LedgerScope,
+      ruleId: string,
+      date: string,
+      input: V2RecurringPayInput,
+      options: MutationOptions = {},
+    ): Promise<V2RecordedOccurrence> {
+      return request(
+        withScope(
+          `/recurring/${encodeURIComponent(ruleId)}/occurrences/${encodeURIComponent(date)}/pay`,
+          scope,
+        ),
+        json("POST", input, options),
+        parseRecordedOccurrence,
+      );
+    },
+    skip(
+      scope: LedgerScope,
+      ruleId: string,
+      date: string,
+      options: MutationOptions = {},
+    ): Promise<V2RecordedOccurrence> {
+      return request(
+        withScope(
+          `/recurring/${encodeURIComponent(ruleId)}/occurrences/${encodeURIComponent(date)}/skip`,
+          scope,
+        ),
+        { method: "POST", requestKey: options.requestKey },
+        parseRecordedOccurrence,
       );
     },
   },

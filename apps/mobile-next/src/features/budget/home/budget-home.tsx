@@ -10,6 +10,9 @@ import { formatMoneyMinor } from "@/utils/money";
 import { pickAttention } from "./attention";
 import { AttentionLine } from "./attention-line";
 import { EverydayRow } from "./everyday-row";
+import { DueTodayRow } from "../due/due-today-row";
+import { useDue } from "../due/use-due";
+import { BudgetReminders } from "../reminders/budget-reminders";
 import { GroupSummaryRow } from "./group-summary-row";
 import { envelopeLines, groupSummary, perDayLine, type ActiveBudgetView } from "./home-model";
 import { OverNotice } from "./over-notice";
@@ -39,12 +42,14 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
   const { current } = view;
   const lines = envelopeLines(view);
   const everyday = lines.filter((line) => line.envelope.group === "everyday");
+  const due = useDue(view);
   const attention = pickAttention({
     envelopes: lines.map(({ envelope, totals }) => ({
       name: envelope.name,
       leftMinor: totals.leftMinor,
     })),
     unassignedMinor: current.unassignedMinor,
+    dueTodayCount: due.dueNow.count,
   });
   const over = current.safeToSpendMinor <= 0;
   const everydayY = useRef(0);
@@ -95,6 +100,8 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
       ) : null}
 
       <AttentionLine attention={attention} />
+      <DueTodayRow due={due} />
+      <BudgetReminders view={view} due={due} />
 
       <View
         onLayout={(event) => {
