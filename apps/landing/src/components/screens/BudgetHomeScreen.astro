@@ -1,0 +1,568 @@
+---
+import type { RegionTerms } from "@/lib/region";
+import TornEdge from "@/components/ui/TornEdge.astro";
+import CurrencySign from "@/components/ui/CurrencySign.astro";
+import type { Currency } from "@/lib/currency";
+
+import BudgetTabBar from "./BudgetTabBar.astro";
+import { budgetHomeToday } from "./budget-home-data";
+import type { ScreenMode } from "./tab-bar-data";
+
+interface Props {
+  mode: ScreenMode;
+  currency: Currency;
+  region: RegionTerms;
+}
+
+const { mode, currency, region } = Astro.props;
+const data = budgetHomeToday(currency, region);
+---
+
+<div class:list={["screen", mode]}>
+  <div class="content">
+    <div class="header">
+      <div class="heading">
+        <span class="label">{data.dateLine}</span>
+        <div class="title">Budget</div>
+      </div>
+      <div class="bell">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          ><path d="M6 9.5a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15.5 6 9.5M10 20.5a2.2 2.2 0 0 0 4 0"
+          ></path></svg
+        >
+        <span class="badge">{data.dueCount}</span>
+      </div>
+    </div>
+
+    <div class="hero">
+      <span class="label">SAFE TO SPEND</span>
+      <div class="safe">
+        <CurrencySign {currency} height="32px" width="37px" class="bh-glyph" />
+        <span class="safe-amount">{data.safe}</span>
+      </div>
+      <span class="chip">{data.chip}</span>
+      <div class="runway">
+        <div class="ticks">
+          {data.ticks.map((kind) => <span class={`tick ${kind}`} />)}
+        </div>
+        <span class="days">{data.daysLeft} DAYS 💰</span>
+      </div>
+    </div>
+
+    <div class="attention">
+      <span class="attention-icon">🧾</span>
+      <span class="attention-text">
+        <span class="attention-title">{data.attentionTitle}</span>
+        <span class="attention-sub">{data.attentionSub}</span>
+      </span>
+      <div class="attention-action">Mark paid</div>
+    </div>
+
+    <div class="envelopes">
+      <div class="envelopes-head">
+        <div class="label">EVERYDAY</div>
+        <span class="label">{data.everydayLine}</span>
+      </div>
+      {
+        data.rows.map((row) => (
+          <div class="row">
+            <span class="row-main">
+              <span class="row-emoji">{row.emoji}</span>
+              <span class="row-name">
+                <span class="row-title">{row.name}</span>
+                <span class:list={["row-sub", { over: row.over }]}>{row.sub}</span>
+              </span>
+              <span class="row-amount">
+                <span class:list={["row-left", { over: row.over }]}>{row.left}</span>
+                <span class="row-of">{row.of}</span>
+              </span>
+            </span>
+            <span class="track">
+              <span class:list={["fill", { over: row.over }]} style={`width:${row.pct}%`} />
+              <span class="pace" style={`left:${data.pace}%`} />
+            </span>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="tickets">
+      {
+        data.tickets.map((ticket) => (
+          <div class="ticket">
+            <span class="paper-card">
+              <span class="paper-top">
+                <span>{ticket.label}</span>
+                <span class="paper-emoji">{ticket.emoji}</span>
+              </span>
+              <span class="paper-big">{ticket.big}</span>
+              <span class="paper-sub">{ticket.sub}</span>
+            </span>
+            <TornEdge span={170} tooth={10} depth={8} fill="var(--t-paper)" width="100%" />
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <BudgetTabBar active="budget" scope="personal" {mode} />
+  </div>
+</div>
+
+<style>
+  .dark {
+    --t-canvas: var(--dark-bg-canvas);
+    --t-fill: #232320;
+    --t-ring: var(--dark-border-default);
+    --t-divider: var(--dark-border-subtle);
+    --t-text: var(--dark-text-primary);
+    --t-text2: var(--dark-text-secondary);
+    --t-text3: var(--dark-text-tertiary);
+    --t-neg: var(--dark-negative-text);
+    --t-warn: var(--dark-warning-text);
+    --t-warn-subtle: var(--dark-warning-subtle);
+    --t-paper: var(--dark-surface-paper);
+    --t-paper-shadow: none;
+    --t-glyph: var(--dark-accent-fill);
+    --t-track: var(--dark-border-subtle);
+    --t-bar: var(--dark-text-secondary);
+    --t-tick-under: #8fb300;
+    --t-tick-now: var(--dark-accent-fill);
+    --t-marker: var(--dark-highlight);
+    --t-on-marker: var(--dark-accent-on);
+    --t-on-warn-badge: var(--dark-accent-on);
+    --t-on-warn-pill: var(--dark-accent-on);
+  }
+
+  .paper {
+    --t-canvas: var(--light-bg-canvas);
+    --t-fill: var(--light-fill-neutral);
+    --t-ring: var(--light-border-default);
+    --t-divider: var(--light-border-subtle);
+    --t-text: var(--light-text-primary);
+    --t-text2: var(--light-text-secondary);
+    --t-text3: var(--light-text-tertiary);
+    --t-neg: var(--light-negative-text);
+    --t-warn: var(--light-warning-text);
+    --t-warn-subtle: var(--light-warning-subtle);
+    --t-paper: var(--light-surface-paper);
+    --t-paper-shadow: 0 1px 2px rgba(21, 21, 21, 0.08);
+    --t-glyph: var(--light-accent-fill);
+    --t-track: var(--light-border-subtle);
+    --t-bar: var(--light-text-secondary);
+    --t-tick-under: var(--light-accent-text);
+    --t-tick-now: var(--light-accent-fill);
+    --t-marker: var(--light-highlight);
+    --t-on-marker: var(--light-accent-fill);
+    --t-on-warn-badge: var(--light-surface-raised);
+    --t-on-warn-pill: var(--light-surface-raised);
+  }
+
+  .screen {
+    position: relative;
+    width: 390px;
+    height: 844px;
+    overflow: hidden;
+    background: var(--t-canvas);
+    color: var(--t-text);
+    font-family: var(--font-ui);
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 58px 20px 130px;
+  }
+
+  .label {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    color: var(--t-text3);
+  }
+
+  .header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .heading {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .title {
+    margin: 0;
+    font-size: 34px;
+    line-height: 40px;
+    font-weight: 800;
+    letter-spacing: -0.7px;
+  }
+
+  .bell {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--t-fill);
+    box-shadow: inset 0 0 0 1px var(--t-ring);
+    color: var(--t-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    box-sizing: border-box;
+    border-radius: 999px;
+    background: var(--t-warn);
+    color: var(--t-on-warn-badge);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 18px;
+    font-weight: 600;
+    text-align: center;
+    opacity: 1;
+  }
+
+  .hero {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .safe {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-mono);
+    color: var(--t-text);
+  }
+
+  :global(.bh-glyph) {
+    color: var(--t-glyph);
+  }
+
+  .safe-amount {
+    font-size: 52px;
+    line-height: 56px;
+    font-weight: 500;
+    letter-spacing: -2.5px;
+  }
+
+  .chip {
+    align-self: flex-start;
+    padding: 3px 8px;
+    background: var(--t-marker);
+    color: var(--t-on-marker);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+  }
+
+  .runway {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .ticks {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 16px;
+  }
+
+  .tick {
+    flex: 1;
+    border-radius: 2px;
+  }
+
+  .tick.now {
+    height: 16px;
+    background: var(--t-tick-now);
+  }
+
+  .tick.future {
+    height: 4px;
+    background: var(--t-track);
+  }
+
+  .tick.over {
+    height: 12px;
+    background: var(--t-neg);
+  }
+
+  .tick.under {
+    height: 7px;
+    background: var(--t-tick-under);
+  }
+
+  .days {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--t-text2);
+  }
+
+  .attention {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 12px 12px 14px;
+    border-radius: 16px;
+    background: var(--t-warn-subtle);
+    box-shadow: inset 4px 0 0 var(--t-warn);
+  }
+
+  .attention-icon {
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--t-warn);
+    color: var(--dark-accent-on);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .attention-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .attention-title {
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 800;
+  }
+
+  .attention-sub {
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+    color: var(--t-text2);
+  }
+
+  .attention-action {
+    flex: none;
+    display: flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: var(--t-warn);
+    color: var(--t-on-warn-pill);
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .envelopes {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .envelopes-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+
+  .row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 0 12px;
+    border-bottom: 1px solid var(--t-divider);
+    color: var(--t-text);
+  }
+
+  .row-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .row-emoji {
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--t-fill);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+  }
+
+  .row-name {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .row-title {
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 700;
+  }
+
+  .row-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 15px;
+    color: var(--t-text3);
+  }
+
+  .row-amount {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .row-left {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 500;
+    color: var(--t-text);
+  }
+
+  .row-sub.over,
+  .row-left.over {
+    color: var(--t-neg);
+  }
+
+  .row-of {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 15px;
+    color: var(--t-text3);
+  }
+
+  .track {
+    position: relative;
+    display: block;
+    height: 6px;
+    margin-left: 46px;
+    border-radius: 999px;
+    background: var(--t-track);
+  }
+
+  .fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    border-radius: 999px;
+    background: var(--t-bar);
+  }
+
+  .fill.over {
+    background: var(--t-neg);
+  }
+
+  .pace {
+    position: absolute;
+    top: -3px;
+    width: 2px;
+    height: 12px;
+    border-radius: 1px;
+    background: var(--t-text);
+  }
+
+  .tickets {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .ticket {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .paper-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 12px 8px;
+    border-radius: 10px 10px 0 0;
+    background: var(--t-paper);
+    box-shadow: var(--t-paper-shadow);
+    color: var(--dark-text-on-paper);
+    font-family: var(--font-mono);
+  }
+
+  .paper-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    line-height: 12px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    color: var(--light-text-tertiary);
+  }
+
+  .paper-emoji {
+    font-family: var(--font-ui);
+    font-size: 13px;
+  }
+
+  .paper-big {
+    font-size: 17px;
+    line-height: 22px;
+    font-weight: 600;
+  }
+
+  .paper-sub {
+    font-size: 11px;
+    line-height: 14px;
+    color: var(--light-text-secondary);
+  }
+
+  .tab-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 34px;
+  }
+</style>

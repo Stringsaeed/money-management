@@ -271,6 +271,17 @@ export default defineConfig({
       plugins: ["typescript"],
     },
     {
+      // Landing site: `.astro` frontmatter gets the `Astro` render global; pages and
+      // endpoints run on Node at build time.
+      files: ["apps/landing/**/*.astro", "apps/landing/src/pages/**/*.ts"],
+      env: {
+        node: true,
+      },
+      globals: {
+        Astro: "readonly",
+      },
+    },
+    {
       // test patterns
       files: [
         "**/*.test.ts",

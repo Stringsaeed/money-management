@@ -1,0 +1,17 @@
+---
+/** Trove mark: a torn receipt with three printed lines. */
+interface Props {
+  width?: number;
+  height?: number;
+}
+
+const { width = 30, height = 34 } = Astro.props;
+---
+
+<svg {width} {height} viewBox="0 0 30 34" aria-hidden="true"
+  ><path d="M3 2h24v26l-3-2.5-3 2.5-3-2.5-3 2.5-3-2.5-3 2.5-3-2.5-3 2.5z" fill="#D9FF43"></path><path
+    d="M8 10h14M8 15h9M8 20h11"
+    stroke="#151515"
+    stroke-width="2.4"
+    stroke-linecap="round"></path></svg
+>

@@ -1,0 +1,98 @@
+/*
+ * Base layer. Box sizing stays content-box on purpose: every measurement on the canvas
+ * board is authored against the browser default, so a global border-box reset would shift
+ * pills, phone frames and receipts.
+ */
+:root {
+  --font-ui: var(--font-nunito), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  /* Off-token tones the canvas uses for avatar tiles and a household member. */
+  --tile-ink: #232320;
+  --member-sky: #7fb8ff;
+  --gutter: clamp(20px, 4vw, 48px);
+  --section-pad: clamp(72px, 9vw, 130px);
+  --content-max: 1240px;
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--dark-bg-canvas);
+  color: var(--dark-text-primary);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--dark-highlight);
+}
+
+a:hover {
+  color: var(--dark-text-primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--dark-highlight);
+  outline-offset: 3px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Section shell shared by every band: centred, gutters, fluid vertical rhythm. */
+.wrap {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1.6px;
+  color: var(--dark-text-tertiary);
+}
+
+.display-2 {
+  margin: 0;
+  font-size: clamp(40px, 5.6vw, 80px);
+  line-height: 0.98;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.marker {
+  padding: 0 0.08em;
+  background: var(--dark-highlight);
+  color: var(--dark-bg-canvas);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}

@@ -1,0 +1,68 @@
+---
+import CurrencySign from "@/components/ui/CurrencySign.astro";
+import { type Currency, currencyLineup, currencyName, signHeight } from "@/lib/currency";
+
+interface Props {
+  currency: Currency;
+}
+
+const { currency } = Astro.props;
+const [local, ...others] = currencyLineup(currency);
+---
+
+<section aria-labelledby="money-title" class="money">
+  <div class="wrap inner">
+    <h2 id="money-title" class="eyebrow heading">{currency.unit.toUpperCase()} FIRST · YOUR OTHER CURRENCIES TOO</h2>
+    <div class="row">
+      {local && <CurrencySign currency={local} height={signHeight(local)} width="0.84em" label={currencyName(local.code)} class="local" />}
+      {
+        others.map((other) => (
+          <CurrencySign currency={other} height={signHeight(other)} width="0.84em" label={currencyName(other.code)} class="other" />
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .money {
+    padding-top: 210px;
+    background: var(--dark-bg-canvas);
+  }
+
+  .inner {
+    padding-bottom: clamp(72px, 9vw, 120px);
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+
+  .heading {
+    margin: 0;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px 28px;
+    padding: 26px 0;
+    border-top: 1.5px dashed var(--dark-border-default);
+    border-bottom: 1.5px dashed var(--dark-border-default);
+    font-family: var(--font-mono);
+    font-size: clamp(64px, 11vw, 168px);
+    line-height: 1;
+    font-weight: 500;
+    letter-spacing: -0.04em;
+  }
+
+  /* The visitor's currency leads in lime; the rest sit back in the strong border tone. */
+  .row :global(.local) {
+    color: var(--dark-highlight);
+  }
+
+  .row :global(.other) {
+    color: var(--dark-border-strong);
+  }
+</style>

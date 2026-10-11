@@ -1,0 +1,117 @@
+---
+import type { RegionTerms } from "@/lib/region";
+import Leader from "@/components/ui/Leader.astro";
+import TornEdge from "@/components/ui/TornEdge.astro";
+import { type Currency, formatAmount } from "@/lib/currency";
+import { heroReceipt, type ReceiptLine } from "@/lib/landing-data";
+
+interface Props {
+  currency: Currency;
+  region: RegionTerms;
+}
+
+const { currency, region } = Astro.props;
+const print = (line: ReceiptLine) =>
+  "amount" in line ? formatAmount(line.amount, currency, true) : line.status;
+---
+
+<div class="receipt">
+  <div class="paper">
+    <div class="title">TROVE · OCTOBER</div>
+    <div class="meta">25 SEP — 24 OCT · DAY 17/30</div>
+    <div class="rule"></div>
+    {
+      heroReceipt(region).map((line) => (
+        <div class="line">
+          <span class="emoji">{line.emoji}</span>
+          <span>{line.label}</span>
+          <Leader />
+          <span style={`color:${line.color}`}>{print(line)}</span>
+        </div>
+      ))
+    }
+    <div class="rule"></div>
+    <div class="total"><span>SAFE TO SPEND</span><span class="hl">{formatAmount(1988, currency, true)}</span></div>
+    <div class="stamp">ON PLAN</div>
+    <div class="meta">*** THANK YOU, FUTURE YOU ***</div>
+  </div>
+  <TornEdge span={300} fill="var(--dark-surface-paper)" />
+</div>
+
+<style>
+  .receipt {
+    position: absolute;
+    left: 50%;
+    top: 40px;
+    width: 300px;
+    margin-left: -270px;
+    transform: rotate(-6deg);
+    display: flex;
+    flex-direction: column;
+    filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.45));
+  }
+
+  .paper {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 22px 20px 16px;
+    background: var(--dark-surface-paper);
+    color: var(--light-text-on-paper);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .title {
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 2px;
+  }
+
+  .meta {
+    text-align: center;
+    font-size: 11px;
+    color: var(--light-text-tertiary);
+    letter-spacing: 1px;
+  }
+
+  .rule {
+    border-top: 1.5px dashed var(--light-border-default);
+  }
+
+  .line {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .emoji {
+    font-family: var(--font-ui);
+    font-size: 14px;
+  }
+
+  .total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .hl {
+    padding: 0 4px;
+    background: var(--dark-highlight);
+  }
+
+  .stamp {
+    align-self: center;
+    margin: 8px 0 2px;
+    padding: 3px 10px;
+    border: 2px solid var(--light-text-on-paper);
+    border-radius: 6px;
+    transform: rotate(-8deg);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+  }
+</style>

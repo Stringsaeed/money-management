@@ -1,0 +1,124 @@
+---
+import { overviewBars } from "@/lib/features-data";
+
+const max = 14000;
+const px = (value: number) => Math.round((value / max) * 120);
+const ranges = ["Week", "Month", "Year"] as const;
+---
+
+<div class="overview">
+  <div class="top">
+    <span class="caption">MONEY IN · MONEY OUT</span>
+    <span class="segments">{ranges.map((range) => <span class:list={["segment", { on: range === "Month" }]}>{range}</span>)}</span>
+  </div>
+  <div class="bars">
+    {
+      overviewBars.map((bar) => (
+        <span class="group">
+          <span class="bar in" style={`height:${px(bar.income)}px`} />
+          <span class="bar out" style={`height:${px(bar.spend)}px`} />
+        </span>
+      ))
+    }
+  </div>
+  <div class="legend">
+    <span><span class="dot in"></span>Income</span><span><span class="dot out"></span>Spending</span>
+  </div>
+</div>
+
+<style>
+  .overview {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .caption {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    color: var(--light-text-tertiary);
+  }
+
+  .segments {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: var(--light-fill-neutral);
+    box-shadow: inset 0 0 0 1px var(--light-border-default);
+  }
+
+  .segment {
+    height: 30px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--light-text-secondary);
+    display: flex;
+    align-items: center;
+  }
+
+  .segment.on {
+    background: var(--light-fill-selected);
+    color: var(--light-text-primary);
+  }
+
+  .bars {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    align-items: end;
+    height: 120px;
+    border-bottom: 1px solid var(--light-border-default);
+  }
+
+  .group {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 3px;
+  }
+
+  .bar {
+    width: 14px;
+    border-radius: 4px 4px 0 0;
+  }
+
+  .in {
+    background: var(--light-positive-text);
+  }
+
+  .out {
+    background: var(--light-border-strong);
+  }
+
+  .legend {
+    display: flex;
+    gap: 14px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--light-text-secondary);
+  }
+
+  .legend > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+  }
+</style>

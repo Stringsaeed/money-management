@@ -2,6 +2,7 @@
   "name": "money-management",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "build": "turbo run build",
     "start": "turbo run build && pnpm -C apps/mobile start",
@@ -26,6 +27,8 @@
     "push:storage": "node apps/mobile/scripts/push-code-storage.mjs",
     "dev:server": "pnpm --filter @trove/infra dev",
     "dev:server:next": "pnpm --filter @trove/api dev:next",
+    "dev:landing": "pnpm --filter @trove/landing dev",
+    "build:landing": "pnpm --filter @trove/landing build",
     "db:generate": "turbo run db:generate -F @trove/db --",
     "deploy": "turbo run deploy -F @trove/infra --",
     "destroy": "turbo run destroy -F @trove/infra --"

@@ -1,0 +1,212 @@
+---
+import Leader from "@/components/ui/Leader.astro";
+import { type Currency, withCode } from "@/lib/currency";
+import { jobs, paydays, runwayTicks } from "@/lib/landing-data";
+
+import StepCard from "./StepCard.astro";
+
+interface Props {
+  currency: Currency;
+}
+
+const { currency } = Astro.props;
+const ticks = runwayTicks();
+---
+
+<section id="how" aria-labelledby="how-title" class="band">
+  <div class="wrap inner">
+    <div class="head">
+      <h2 id="how-title" class="display-2 title">
+        Three steps.<br />Three minutes.<br /><span class="lime">One number.</span>
+      </h2>
+      <p class="intro">
+        Type what you have. Tick what it's for. Plan the amounts. Trove does the maths every time you
+        add a spend.
+      </p>
+    </div>
+    <ol class="steps">
+      <StepCard n="01" title="Tell it when payday is" tone="paper">
+        <span class="note">Your month runs payday to payday, not the 1st to the 31st.</span>
+        <div class="paydays">
+          {paydays.map((day) => <span class:list={["chip", { on: day.selected }]}>{day.label}</span>)}
+        </div>
+      </StepCard>
+
+      <StepCard n="02" title={`Give every ${currency.unit} a job`} tone="paper">
+        <div class="jobs">
+          {
+            jobs.map((job) => (
+              <div class:list={["job", { strong: job.strong }]}>
+                <span class="emoji">{job.emoji}</span>
+                <span>{job.label}</span>
+                <Leader />
+                <span class="job-value">{job.value}</span>
+              </div>
+            ))
+          }
+        </div>
+      </StepCard>
+
+      <StepCard n="03" title="Spend the one number" tone="lime">
+        <div class="answer">
+          <span class="stamp">SAFE TO SPEND</span>
+          <span class="safe">{withCode(1988, currency)}</span>
+          <div class="runway" aria-hidden="true">
+            {ticks.map((tick) => <span style={`height:${tick.height}px;background:${tick.color}`} />)}
+          </div>
+          <span class="stamp runway-caption">≈ 142 A DAY · 14 DAYS TO PAYDAY</span>
+        </div>
+      </StepCard>
+    </ol>
+  </div>
+</section>
+
+<style>
+  .band {
+    background: var(--dark-bg-subtle);
+    border-top: 1px solid var(--dark-border-subtle);
+    border-bottom: 1px solid var(--dark-border-subtle);
+  }
+
+  .inner {
+    padding-top: var(--section-pad);
+    padding-bottom: var(--section-pad);
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+  }
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .title {
+    max-width: 760px;
+  }
+
+  .lime {
+    color: var(--dark-highlight);
+  }
+
+  .intro {
+    margin: 0;
+    max-width: 360px;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--dark-text-secondary);
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
+    gap: 28px;
+    align-items: start;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .note {
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--light-text-secondary);
+  }
+
+  .paydays {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  .chip {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    color: var(--light-text-on-paper);
+    box-shadow: inset 0 0 0 1px var(--light-border-default);
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+  }
+
+  .chip.on {
+    background: var(--light-accent-fill);
+    color: var(--light-accent-on);
+  }
+
+  .jobs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: auto;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+
+  .job {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-weight: 400;
+  }
+
+  .job.strong {
+    font-weight: 600;
+  }
+
+  .emoji {
+    font-family: var(--font-ui);
+  }
+
+  .job-value {
+    padding: 0 3px;
+  }
+
+  .job.strong .job-value {
+    background: var(--dark-highlight);
+  }
+
+  .answer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: auto;
+  }
+
+  .stamp {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+  }
+
+  .runway-caption {
+    letter-spacing: 1.2px;
+  }
+
+  .safe {
+    font-family: var(--font-mono);
+    font-size: 46px;
+    line-height: 48px;
+    font-weight: 500;
+    letter-spacing: -2px;
+  }
+
+  .runway {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 16px;
+  }
+
+  .runway span {
+    flex: 1;
+    border-radius: 2px;
+  }
+</style>

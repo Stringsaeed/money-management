@@ -1,0 +1,96 @@
+---
+import { Font } from "astro:assets";
+
+import { site } from "@/lib/site";
+import { tokenDeclarations } from "@/styles/tokens";
+import "@/styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Currency variants of the home page all canonicalise to `/`. */
+  canonicalPath?: string;
+}
+
+const { title = site.title, description = site.description, canonicalPath } = Astro.props;
+const canonical = new URL(canonicalPath ?? Astro.url.pathname, Astro.site);
+const ogImage = new URL("/og.png", Astro.site);
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${Astro.site}#organization`,
+      name: site.name,
+      url: Astro.site?.href,
+      logo: new URL("/icon-512.png", Astro.site).href,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${Astro.site}#website`,
+      name: site.name,
+      url: Astro.site?.href,
+      inLanguage: "en",
+      publisher: { "@id": `${Astro.site}#organization` },
+    },
+    {
+      "@type": "MobileApplication",
+      name: site.name,
+      description,
+      url: canonical.href,
+      image: ogImage.href,
+      applicationCategory: "FinanceApplication",
+      operatingSystem: "iOS, Android",
+      isAccessibleForFree: true,
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      publisher: { "@id": `${Astro.site}#organization` },
+    },
+  ],
+};
+---
+
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content={site.themeColor} />
+    <meta name="color-scheme" content="dark" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content={site.locale} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Trove — One number until payday. A printed receipt showing 1,988.00 safe to spend." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <Font cssVariable="--font-nunito" preload />
+    <Font cssVariable="--font-plex-mono" preload={[{ weight: 500 }, { weight: 600 }]} />
+    <style is:global set:html={`:root{${tokenDeclarations}}`}></style>
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(structuredData)} />
+    <slot name="head" />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

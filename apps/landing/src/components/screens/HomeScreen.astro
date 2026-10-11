@@ -1,0 +1,657 @@
+---
+import type { RegionTerms } from "@/lib/region";
+import CurrencySign from "@/components/ui/CurrencySign.astro";
+import TornEdge from "@/components/ui/TornEdge.astro";
+import { formatAmount, withCode } from "@/lib/currency";
+import type { Currency } from "@/lib/currency";
+
+import BudgetTabBar from "./BudgetTabBar.astro";
+import { BAR_GROUPS, HOME_TICKS, netWorth, upcoming } from "./home-data";
+import type { ScreenMode } from "./tab-bar-data";
+
+interface Props {
+  mode: ScreenMode;
+  currency: Currency;
+  region: RegionTerms;
+}
+
+const { mode, currency, region } = Astro.props;
+const worth = netWorth(currency);
+---
+
+<div class:list={["screen", mode]}>
+  <div class="content">
+    <div class="header">
+      <div class="avatar">MS</div>
+      <div class="greeting">
+        <span class="label">SUN 11.10.26</span>
+        <div class="title">Morning, Muhammed</div>
+      </div>
+      <div class="bell">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          ><path d="M6 9.5a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15.5 6 9.5M10 20.5a2.2 2.2 0 0 0 4 0"
+          ></path></svg
+        >
+        <span class="badge">2</span>
+      </div>
+    </div>
+
+    <div class="worth">
+      <span class="label">NET WORTH</span>
+      <div class="worth-line">
+        <CurrencySign {currency} height="28px" width="33px" class="hs-glyph" />
+        <span class="worth-amount">{worth.whole}</span>{worth.cents && <span class="worth-cents">{worth.cents}</span>}
+        <span class="worth-delta">{`▲ ${formatAmount(1320, currency)}`}</span>
+      </div>
+    </div>
+
+    <div class="safe-link">
+      <span class="paper-card">
+        <span class="paper-top">
+          <span class="paper-label">SAFE TO SPEND</span><span class="paper-cta">Budget ›</span>
+        </span>
+        <span class="paper-main">
+          <span class="paper-amount">{withCode(1988, currency)}</span><span class="paper-chip">{`≈ ${formatAmount(142, currency)} A DAY`}</span>
+        </span>
+        <span class="paper-runway">
+          <span class="ticks">
+            {HOME_TICKS.map((kind) => <span class={`tick ${kind}`} />)}
+          </span>
+          <span class="paper-days">14 DAYS 💰</span>
+        </span>
+      </span>
+      <TornEdge span={350} tooth={10} depth={8} fill="var(--t-paper)" />
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <span class="chart-titles">
+          <span class="chart-eyebrow">{`MAY – OCT · ${currency.code}`}</span>
+          <span class="chart-title">Income vs spending</span>
+        </span>
+        <div class="segmented">
+          <span class="seg">
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"><path d="M4 4v15a1 1 0 0 0 1 1h15M7.5 15l3.5-4 3 2.5 5.5-5.5"></path></svg
+            >
+          </span>
+          <span class="seg on">
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"><path d="M4 4v15a1 1 0 0 0 1 1h15M8.5 16.5v-5M12.5 16.5V8M16.5 16.5v-3.5"></path></svg
+            >
+          </span>
+        </div>
+      </div>
+      <div class="bars">
+        {
+          BAR_GROUPS.map((group) => (
+            <div class="group">
+              <div class="bar income" style={`height:${group.inH}px`} />
+              <div class="bar spend" style={`height:${group.outH}px`} />
+            </div>
+          ))
+        }
+      </div>
+      <div class="legend">
+        <span class="legend-keys">
+          <span class="legend-key"><span class="dot income"></span>Income</span>
+          <span class="legend-key"><span class="dot spend"></span>Spending</span>
+        </span>
+        <span>MAY → OCT</span>
+      </div>
+    </div>
+
+    <div class="upcoming">
+      <div class="upcoming-head">
+        <div class="label">UPCOMING</div>
+        <span class="see-all">See all</span>
+      </div>
+      {
+        upcoming(currency, region).map((item) => (
+          <div class="bill">
+            <div class="date">
+              <div class:list={["band", { next: item.next }]}>{item.mon}</div>
+              <div class="day">{item.day}</div>
+            </div>
+            <span class="bill-text">
+              <span class="bill-title"><span>{`${item.emoji} `}</span>{item.title}</span>
+              <span class:list={["bill-meta", { warn: item.warn }]}>{item.meta}</span>
+            </span>
+            <span class="bill-amount">{item.amt}</span>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <BudgetTabBar active="home" scope="personal" {mode} />
+  </div>
+</div>
+
+<style>
+  .dark {
+    --t-canvas: var(--dark-bg-canvas);
+    --t-surface: var(--dark-surface-default);
+    --t-fill: #232320;
+    --t-ring: var(--dark-border-default);
+    --t-divider: var(--dark-border-subtle);
+    --t-text: var(--dark-text-primary);
+    --t-text2: var(--dark-text-secondary);
+    --t-text3: var(--dark-text-tertiary);
+    --t-faded: var(--dark-text-faded);
+    --t-accent-text: var(--dark-accent-text);
+    --t-warn: var(--dark-warning-text);
+    --t-on-warn: var(--dark-accent-on);
+    --t-paper: var(--dark-surface-paper);
+    --t-paper-shadow: none;
+    --t-marker: var(--dark-highlight);
+    --t-glyph: var(--dark-accent-fill);
+    --t-income: var(--dark-accent-fill);
+    --t-spend: #8c887d;
+    --t-seg-on: var(--dark-border-default);
+  }
+
+  .paper {
+    --t-canvas: var(--light-bg-canvas);
+    --t-surface: var(--light-surface-default);
+    --t-fill: var(--light-fill-neutral);
+    --t-ring: var(--light-border-default);
+    --t-divider: var(--light-border-subtle);
+    --t-text: var(--light-text-primary);
+    --t-text2: var(--light-text-secondary);
+    --t-text3: var(--light-text-tertiary);
+    --t-faded: var(--light-text-faded);
+    --t-accent-text: var(--light-accent-text);
+    --t-warn: var(--light-warning-text);
+    --t-on-warn: var(--light-surface-raised);
+    --t-paper: var(--light-surface-paper);
+    --t-paper-shadow: 0 1px 2px rgba(21, 21, 21, 0.08);
+    --t-marker: var(--light-highlight);
+    --t-glyph: var(--light-accent-fill);
+    --t-income: var(--light-positive-text);
+    --t-spend: #8c887d;
+    --t-seg-on: var(--light-fill-selected);
+  }
+
+  .screen {
+    position: relative;
+    width: 390px;
+    height: 844px;
+    overflow: hidden;
+    background: var(--t-canvas);
+    color: var(--t-text);
+    font-family: var(--font-ui);
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 58px 20px 130px;
+  }
+
+  .label {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    color: var(--t-text3);
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .avatar {
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--t-fill);
+    box-shadow: inset 0 0 0 1px var(--t-ring);
+    color: var(--t-text);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .greeting {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .title {
+    margin: 0;
+    font-size: 24px;
+    line-height: 30px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+  }
+
+  .bell {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--t-fill);
+    box-shadow: inset 0 0 0 1px var(--t-ring);
+    color: var(--t-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    box-sizing: border-box;
+    border-radius: 999px;
+    background: var(--t-warn);
+    color: var(--t-on-warn);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 18px;
+    font-weight: 600;
+    text-align: center;
+    opacity: 1;
+  }
+
+  .worth {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .worth-line {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-mono);
+  }
+
+  :global(.hs-glyph) {
+    color: var(--t-glyph);
+  }
+
+  .worth-amount {
+    font-size: 42px;
+    line-height: 46px;
+    font-weight: 500;
+    letter-spacing: -2px;
+  }
+
+  .worth-cents {
+    font-size: 20px;
+    color: var(--t-faded);
+  }
+
+  .worth-delta {
+    margin-left: auto;
+    padding: 2px 8px;
+    background: var(--t-marker);
+    color: var(--dark-bg-canvas);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+  }
+
+  .safe-link {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .paper-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px 10px;
+    border-radius: 12px 12px 0 0;
+    background: var(--t-paper);
+    box-shadow: var(--t-paper-shadow);
+    color: var(--dark-text-on-paper);
+    font-family: var(--font-mono);
+  }
+
+  .paper-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .paper-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    color: var(--light-text-tertiary);
+  }
+
+  .paper-cta {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--light-accent-text);
+  }
+
+  .paper-main {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .paper-amount {
+    font-size: 26px;
+    line-height: 30px;
+    font-weight: 600;
+  }
+
+  .paper-chip {
+    padding: 0 4px;
+    background: var(--light-highlight);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .paper-runway {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ticks {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 12px;
+  }
+
+  .tick {
+    flex: 1;
+    border-radius: 1px;
+  }
+
+  .tick.now {
+    height: 12px;
+    background: var(--light-text-primary);
+  }
+
+  .tick.future {
+    height: 3px;
+    background: var(--light-border-subtle);
+  }
+
+  .tick.over {
+    height: 9px;
+    background: var(--light-negative-text);
+  }
+
+  .tick.under {
+    height: 5px;
+    background: var(--light-accent-text);
+  }
+
+  .paper-days {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--light-text-secondary);
+  }
+
+  .chart-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: var(--t-surface);
+    box-shadow: inset 0 0 0 1px var(--t-divider);
+  }
+
+  .chart-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .chart-titles {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chart-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    color: var(--t-text3);
+  }
+
+  .chart-title {
+    font-size: 16px;
+    line-height: 21px;
+    font-weight: 800;
+  }
+
+  .segmented {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: var(--t-fill);
+    box-shadow: inset 0 0 0 1px var(--t-ring);
+  }
+
+  .seg {
+    width: 36px;
+    height: 30px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--t-text2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .seg.on {
+    background: var(--t-seg-on);
+    color: var(--t-text);
+  }
+
+  .bars {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    align-items: end;
+    height: 96px;
+    border-bottom: 1px solid var(--t-ring);
+  }
+
+  .group {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 2px;
+    height: 96px;
+  }
+
+  .bar {
+    width: 11px;
+    border-radius: 3px 3px 0 0;
+  }
+
+  .bar.income,
+  .dot.income {
+    background: var(--t-income);
+  }
+
+  .bar.spend,
+  .dot.spend {
+    background: var(--t-spend);
+  }
+
+  .legend {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--t-text3);
+  }
+
+  .legend-keys {
+    display: flex;
+    gap: 12px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--t-text2);
+  }
+
+  .legend-key {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+  }
+
+  .upcoming {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .upcoming-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2px;
+  }
+
+  .see-all {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--t-accent-text);
+  }
+
+  .bill {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    border-bottom: 1px solid var(--t-divider);
+  }
+
+  .date {
+    width: 44px;
+    flex: none;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px var(--t-ring);
+    background: var(--t-surface);
+    text-align: center;
+    font-family: var(--font-mono);
+  }
+
+  .band {
+    padding: 2px 0;
+    background: var(--t-fill);
+    color: var(--t-text2);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .band.next {
+    background: var(--dark-highlight);
+    color: var(--dark-bg-canvas);
+  }
+
+  .day {
+    padding: 2px 0 3px;
+    font-size: 18px;
+    line-height: 22px;
+    font-weight: 500;
+  }
+
+  .bill-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bill-title {
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 700;
+  }
+
+  .bill-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 16px;
+    color: var(--t-text3);
+  }
+
+  .bill-meta.warn {
+    color: var(--t-warn);
+  }
+
+  .bill-amount {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--t-text);
+  }
+
+  .tab-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 34px;
+  }
+</style>

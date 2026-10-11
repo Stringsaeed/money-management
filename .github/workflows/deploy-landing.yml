@@ -1,0 +1,132 @@
+name: Deploy Landing
+
+# trove.ing marketing site: static Astro build + a tiny geo-routing Worker
+# (apps/landing/worker). Pull requests get a preview URL; main goes live.
+
+concurrency:
+  group: deploy-landing-${{ github.event.pull_request.number || 'production' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "apps/landing/**"
+      # Trove tokens are read from the app at build time.
+      - "apps/mobile-next/src/ui/trove/tokens/colors.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/deploy-landing.yml"
+  pull_request:
+    paths:
+      - "apps/landing/**"
+      # Trove tokens are read from the app at build time.
+      - "apps/mobile-next/src/ui/trove/tokens/colors.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/deploy-landing.yml"
+
+jobs:
+  build:
+    name: Check & build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v7
+
+      - name: 🧰 Setup project
+        uses: ./.github/actions/setup
+
+      - name: 🔍 Type-check site and Worker
+        run: pnpm --filter @trove/landing run check-types
+
+      - name: 🧪 Test currency + region routing
+        run: pnpm --filter @trove/landing test
+
+      - name: 📦 Build static site
+        run: pnpm --filter @trove/landing build
+
+      - name: 📤 Keep the build for deploy
+        uses: actions/upload-artifact@v4
+        with:
+          name: landing-dist
+          path: apps/landing/dist
+          retention-days: 3
+
+  deploy:
+    name: ${{ github.event_name == 'pull_request' && 'Preview' || 'Production' }} deploy
+    needs: build
+    # Fork PRs get no secrets; skip rather than fail.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    environment:
+      name: ${{ github.event_name == 'pull_request' && 'landing-preview' || 'landing-production' }}
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v7
+
+      - name: 🧰 Setup project
+        uses: ./.github/actions/setup
+
+      - name: 📥 Restore the checked build
+        uses: actions/download-artifact@v4
+        with:
+          name: landing-dist
+          path: apps/landing/dist
+
+      - name: 🚀 Deploy with Wrangler
+        id: deploy
+        working-directory: apps/landing
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          # GitHub UI pastes often carry a trailing newline, which Cloudflare
+          # rejects as code 10000 (see deploy-worker.yml).
+          export CLOUDFLARE_API_TOKEN=$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '\r\n')
+          export CLOUDFLARE_ACCOUNT_ID=$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '\r\n' | tr '[:upper:]' '[:lower:]')
+          if [ -n "${PR_NUMBER:-}" ]; then
+            # A new version under a stable alias; production traffic is untouched.
+            # Versions need an existing Worker, which only the first production
+            # deploy from main creates. Until then, report it instead of failing:
+            # a PR must never create the Worker (that would publish it on trove.ing).
+            if ! pnpm exec wrangler versions upload --preview-alias "pr-${PR_NUMBER}" --message "PR #${PR_NUMBER}" > wrangler.log 2>&1; then
+              cat wrangler.log
+              if grep -q "does not yet exist" wrangler.log; then
+                echo "::notice title=No landing preview yet::The trove-landing Worker is created by the first deploy from main. Previews start after that."
+                echo "url=" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              exit 1
+            fi
+            cat wrangler.log
+          else
+            pnpm exec wrangler deploy --message "${GITHUB_SHA::7}" | tee wrangler.log
+          fi
+          url=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' wrangler.log | tail -1 || true)
+          if [ -z "${PR_NUMBER:-}" ]; then url="https://trove.ing"; fi
+          echo "url=${url}" >> "$GITHUB_OUTPUT"
+
+      - name: 💬 Post the preview link
+        if: github.event_name == 'pull_request' && steps.deploy.outputs.url != ''
+        uses: actions/github-script@v7
+        env:
+          URL: ${{ steps.deploy.outputs.url }}
+        with:
+          script: |
+            const marker = "<!-- landing-preview -->";
+            const url = process.env.URL;
+            const body = `${marker}\n**Landing preview:** ${url}\n\nTry a currency: [SAR](${url}/?currency=sar) · [EGP](${url}/?currency=egp) · [USD](${url}/?currency=usd)`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const { data: comments } = await github.rest.issues.listComments({ owner, repo, issue_number });
+            const mine = comments.find((comment) => comment.body?.startsWith(marker));
+            if (mine) await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+            else await github.rest.issues.createComment({ owner, repo, issue_number, body });

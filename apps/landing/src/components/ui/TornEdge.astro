@@ -1,0 +1,32 @@
+---
+import { zigzagPath } from "@/lib/zigzag";
+
+interface Props {
+  /** viewBox width the teeth are laid out on. */
+  span: number;
+  fill: string;
+  /** Rendered width; `100%` stretches the teeth with the card. */
+  width?: number | "100%";
+  tooth?: number;
+  depth?: number;
+  class?: string;
+}
+
+const { span, fill, width = span, tooth = 12, depth = tooth, class: className } = Astro.props;
+---
+
+<svg
+  aria-hidden="true"
+  class:list={["torn-edge", className]}
+  width={width}
+  height={depth}
+  viewBox={`0 0 ${span} ${depth}`}
+  preserveAspectRatio="none"
+  ><path d={zigzagPath(span, tooth, depth)} fill={fill}></path></svg
+>
+
+<style>
+  .torn-edge {
+    display: block;
+  }
+</style>

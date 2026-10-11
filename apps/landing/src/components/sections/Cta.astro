@@ -1,0 +1,97 @@
+---
+import { availability, sourceUrl } from "@/lib/site";
+---
+
+<section id="soon" aria-labelledby="cta-title" class="cta">
+  <div class="wrap inner">
+    <span class="cut" aria-hidden="true"
+      >✂ - - - - - - - - - - - - - KEEP THIS - - - - - - - - - - - - -</span
+    >
+    <h2 id="cta-title" class="title">Your month, planned. Total time: three minutes.</h2>
+    <p class="soon">
+      <span class="soon-tag">{availability.label}</span>
+      <span>to {availability.platforms}</span>
+    </p>
+    <span class="fine"
+      >100% FREE AND OPEN SOURCE · <a href={sourceUrl} class="source">READ THE CODE</a></span
+    >
+  </div>
+</section>
+
+<style>
+  .cta {
+    background: var(--dark-highlight);
+    color: var(--dark-bg-canvas);
+  }
+
+  .inner {
+    padding-top: var(--section-pad);
+    padding-bottom: var(--section-pad);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    text-align: center;
+  }
+
+  .cut {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+  }
+
+  .title {
+    margin: 0;
+    max-width: 1000px;
+    font-size: clamp(48px, 7.6vw, 116px);
+    line-height: 0.94;
+    font-weight: 900;
+    letter-spacing: -0.045em;
+  }
+
+  .soon {
+    margin: 0;
+    height: 60px;
+    padding: 0 28px 0 8px;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 2px var(--dark-bg-canvas);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .soon-tag {
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 999px;
+    background: var(--light-accent-fill);
+    color: var(--light-accent-on);
+    display: flex;
+    align-items: center;
+  }
+
+  .source,
+  .source:hover {
+    color: inherit;
+  }
+
+  .source {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+
+  .source:hover {
+    text-decoration-thickness: 3px;
+  }
+
+  .fine {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+  }
+</style>
