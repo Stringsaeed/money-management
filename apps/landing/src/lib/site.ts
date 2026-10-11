@@ -18,8 +18,15 @@ export const availability = {
 
 export const sourceUrl = "https://github.com/Stringsaeed/money-management";
 
+/** The party behind Trove in the privacy policy and terms. */
+export const legal = {
+  owner: "Muhammed Ibrahim",
+  contactEmail: "privacy@trove.ing",
+  governingLaw: "the United Arab Emirates, as applied in the Emirate of Dubai",
+} as const;
+
 export const footerLinks = [
-  { label: "PRIVACY", href: "#privacy" },
-  { label: "TERMS", href: "#terms" },
+  { label: "PRIVACY", href: "/privacy" },
+  { label: "TERMS", href: "/terms" },
   { label: "SOURCE", href: sourceUrl },
 ] as const;

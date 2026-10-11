@@ -2,23 +2,23 @@
 import Logo from "@/components/ui/Logo.astro";
 
 const links = [
-  { href: "#how", label: "How it works" },
-  { href: "#features", label: "Features" },
-  { href: "#big", label: "Big payments" },
-  { href: "#household", label: "Household" },
-  { href: "#promise", label: "Our promise" },
+  { href: "/#how", label: "How it works" },
+  { href: "/#features", label: "Features" },
+  { href: "/#big", label: "Big payments" },
+  { href: "/#household", label: "Household" },
+  { href: "/#promise", label: "Our promise" },
 ];
 ---
 
 <header class="site-header">
-  <a href="#top" aria-label="Trove home" class="brand">
+  <a href="/" aria-label="Trove home" class="brand">
     <Logo />
     <span class="wordmark">trove</span>
   </a>
   <nav aria-label="Main" class="nav">
     {links.map((link) => <a href={link.href}>{link.label}</a>)}
   </nav>
-  <a href="#soon" class="cta">Coming soon</a>
+  <a href="/#soon" class="cta">Coming soon</a>
 </header>
 
 <style>
