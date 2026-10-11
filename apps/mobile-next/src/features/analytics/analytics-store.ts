@@ -1,17 +1,22 @@
 import PostHog from "posthog-react-native";
 import * as SecureStore from "expo-secure-store";
 
-import { createAnalytics, type AnalyticsClient } from "./analytics";
+import { createAnalytics } from "./analytics";
 
 const STORAGE_KEY = "trove-next.analytics-sharing";
 const PERSIST_FAILED = "Analytics preference was not saved; it resets on next launch.";
 const API_KEY = process.env.EXPO_PUBLIC_POSTHOG_API_KEY;
 const HOST = process.env.EXPO_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
 
-const createClient = (): AnalyticsClient | null => {
+const createClient = (): PostHog | null => {
   if (!API_KEY) return null;
   try {
-    return new PostHog(API_KEY, { host: HOST, captureAppLifecycleEvents: false });
+    // sendFeatureFlagEvent: false keeps reading a flag from ever capturing $feature_flag_called.
+    return new PostHog(API_KEY, {
+      host: HOST,
+      captureAppLifecycleEvents: false,
+      sendFeatureFlagEvent: false,
+    });
   } catch {
     return null;
   }
@@ -21,7 +26,8 @@ const createClient = (): AnalyticsClient | null => {
 // be sent for someone who opted out, and optIn() must not re-open a stored opt-out.
 let sharing = false;
 let changedBeforeHydration = false;
-const analytics = createAnalytics(createClient(), sharing);
+const client = createClient();
+const analytics = createAnalytics(client, sharing);
 const listeners = new Set<() => void>();
 
 const commit = (next: boolean) => {
@@ -31,6 +37,28 @@ const commit = (next: boolean) => {
 };
 
 export const track = analytics.track;
+
+/** What a feature flag needs from the PostHog client; null with no client (no API key). */
+export interface FeatureFlagSource {
+  /** The boolean value of a flag: undefined until flags have loaded. Never captures an event. */
+  readonly read: (key: string) => boolean | undefined;
+  readonly subscribe: (listener: () => void) => () => void;
+  readonly reload: () => void;
+}
+
+/**
+ * Flags are fetched whether or not "Share anonymous usage" is on: the SDK's opt-out only drops
+ * captured events (`enqueue`), never the flags request. Reading goes through `getFeatureFlags()`,
+ * which does not capture, and the client is built with `sendFeatureFlagEvent: false` anyway.
+ */
+export const featureFlagSource: FeatureFlagSource | null = client && {
+  read: (key) => {
+    const flags = client.getFeatureFlags();
+    return flags ? flags[key] === true : undefined;
+  },
+  subscribe: (listener) => client.onFeatureFlags(() => listener()),
+  reload: () => client.reloadFeatureFlags(),
+};
 
 export const getAnalyticsSharing = () => sharing;
 

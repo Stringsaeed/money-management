@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, View } from "react-native";
 
-import { BUDGETS_ENABLED } from "@/config/features";
+import { useBudgetingEnabled } from "@/features/feature-flags";
 import { Card, Icon, layout, SoonBadge, space, Text, type IconName } from "@/ui/trove";
 
 import { HomeBudgetCard } from "./home-budget-card";
@@ -26,7 +26,8 @@ const TEASERS = [
 }[];
 
 export function HomeBudgetPreview() {
-  if (BUDGETS_ENABLED) return <HomeBudgetCard />;
+  const budgeting = useBudgetingEnabled();
+  if (budgeting) return <HomeBudgetCard />;
   return (
     <View style={styles.section}>
       <View style={styles.heading}>

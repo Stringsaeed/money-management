@@ -6,7 +6,7 @@
 - Use the existing Expo SDK, React, and React Native versions. Keep a separate bundle id, URL scheme, SecureStore keys, database filename, and update identity.
 - All financial data starts fresh in V2 storage. Use `/api/v2` APIs, never legacy commands, sync providers, PowerSync, budget projections, or old app business modules.
 - Deliver Home; Ledger with transactions, recurring transactions, accounts, and categories; Market; and optional Household. Market retains the existing read-only quotes feature.
-- Onboarding remains disabled. Budgeting v1 (#365) is built on V2 `/budget` APIs (`@trove/domain/budget` for the engine) behind `BUDGETS_ENABLED`; never use the legacy budget engine.
+- Onboarding remains disabled. Budgeting v1 (#365) is built on V2 `/budget` APIs (`@trove/domain/budget` for the engine) behind the PostHog `budgeting` flag (`useBudgetingEnabled`, fails closed); never use the legacy budget engine.
 - A person may have a personal ledger without a household. Enforce at most one active household membership on the backend; leaving permits joining another. Keep WorkOS invitations.
 - Offer sign-in first and Continue as guest. WorkOS owns registered authentication. A small backend-issued guest session owns its own data and can be explicitly claimed after verified sign-in.
 

@@ -19,6 +19,7 @@ import { disableDevMenu } from "@/dev/disable-dev-menu";
 import { hydrateAiPreferences } from "@/features/ai";
 import { hydrateAnalyticsSharing } from "@/features/analytics";
 import { AuthProvider } from "@/features/auth/auth-provider";
+import { startBudgetingFlag } from "@/features/feature-flags";
 import { hydrateSoundPreferences } from "@/features/sound";
 import { SessionGate } from "@/navigation/session-gate";
 import { colors, space, ToastHost } from "@/ui/trove";
@@ -28,6 +29,7 @@ void disableDevMenu();
 void hydrateSoundPreferences();
 void hydrateAiPreferences();
 void hydrateAnalyticsSharing();
+startBudgetingFlag();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({

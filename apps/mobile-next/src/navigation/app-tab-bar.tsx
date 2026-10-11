@@ -2,7 +2,7 @@ import { router, type Tabs } from "expo-router";
 import type { V2LedgerScope } from "@trove/api/v2/contracts";
 import { useState, type ComponentProps } from "react";
 
-import { BUDGETS_ENABLED } from "@/config/features";
+import { useBudgetingEnabled } from "@/features/feature-flags";
 import { useSession } from "@/features/auth/use-session";
 import { useHousehold } from "@/features/household/use-household";
 import { CreateActionSheet, type CreateAction, ScopeSheet } from "@/features/navigation";
@@ -21,6 +21,7 @@ export const AppTabBar = ({ state, navigation, descriptors }: BottomTabBarProps)
     scopeSheetOpen: scopeOpen,
     setScopeSheetOpen: setScopeOpen,
   } = useLedgerScope();
+  const budgeting = useBudgetingEnabled();
   const session = useSession();
   const [createOpen, setCreateOpen] = useState(false);
   const household = useHousehold(session.status === "signed_in" && scopeOpen);
@@ -29,7 +30,7 @@ export const AppTabBar = ({ state, navigation, descriptors }: BottomTabBarProps)
     routes: state.routes,
     focusedKey: state.routes[state.index]?.key,
     labelFor: (route) => descriptors[route.key]?.options.title ?? route.name,
-    hiddenRoutes: BUDGETS_ENABLED ? undefined : ["envelopes"],
+    hiddenRoutes: budgeting ? undefined : ["envelopes"],
   });
   const scopeLabel =
     scope.kind === "household" ? (household.household?.name ?? "Household") : "Personal";
