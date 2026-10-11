@@ -608,6 +608,8 @@ export interface V2Budget {
   readonly ledgerId: string;
   readonly currency: string;
   readonly activationPeriodStart: string;
+  /** The Ledger Date (Asia/Dubai) the budget was activated on; may be after `activationPeriodStart`. */
+  readonly activatedOn: string;
   readonly usualSalaryMinor: number | null;
   readonly paydayReminder: boolean;
   readonly defaultAccountId: string | null;
@@ -646,7 +648,10 @@ export interface V2BudgetPeriod {
 
 export interface V2EnvelopeTotals {
   readonly id: string;
+  /** Net of every assignment into the envelope in the period (plan, cover, move, leftover, repeat). */
   readonly plannedMinor: number;
+  /** Net of the `plan` and `repeat` assignments only: what the plan set before money moved. */
+  readonly budgetedMinor: number;
   readonly spentMinor: number;
   readonly rolloverMinor: number;
   readonly leftMinor: number;
@@ -722,12 +727,21 @@ export interface V2BudgetSetupFacts {
     readonly accountId: string;
     readonly balanceMinor: number;
   }[];
-  /** AED expenses dated from the period start through today. */
+  /**
+   * AED expenses dated from the period start through today. `onCard` marks AED credit-card
+   * accounts (archived ones included): the engine reserves EVERY card expense, mapped or not.
+   */
   readonly spendSincePeriodStart: readonly {
     readonly categoryId: string | null;
     readonly accountId: string;
     readonly amountMinor: number;
+    readonly onCard: boolean;
   }[];
+  /**
+   * What the AED credit cards owed just before the period start (never below 0): the engine's
+   * `openingCardDebtMinor` if the budget is activated in this period.
+   */
+  readonly openingCardDebtMinor: number;
   /** AED transfers into credit-card accounts dated from the period start through today. */
   readonly cardPaymentsSincePeriodStart: readonly {
     readonly fromAccountId: string;

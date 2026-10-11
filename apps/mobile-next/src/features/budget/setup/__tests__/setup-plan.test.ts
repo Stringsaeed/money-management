@@ -12,6 +12,7 @@ const facts = (overrides: Partial<V2BudgetSetupFacts> = {}): V2BudgetSetupFacts 
   accountBalances: [{ accountId: "current", balanceMinor: aed(5000) }],
   spendSincePeriodStart: [],
   cardPaymentsSincePeriodStart: [],
+  openingCardDebtMinor: 0,
   lastPeriod: { start: "2026-09-01", end: "2026-09-30" },
   lastPeriodSpend: [],
   recurringExpenses: [],
@@ -62,7 +63,7 @@ describe("Left to plan", () => {
     const result = preview({
       facts: facts({
         spendSincePeriodStart: [
-          { categoryId: "groceries", accountId: "current", amountMinor: aed(400) },
+          { categoryId: "groceries", accountId: "current", amountMinor: aed(400), onCard: false },
         ],
       }),
       amounts: { "cat:groceries": "1000" },
@@ -77,8 +78,8 @@ describe("Left to plan", () => {
     const result = preview({
       facts: facts({
         spendSincePeriodStart: [
-          { categoryId: "fuel", accountId: "current", amountMinor: aed(300) },
-          { categoryId: "groceries", accountId: "savings", amountMinor: aed(300) },
+          { categoryId: "fuel", accountId: "current", amountMinor: aed(300), onCard: false },
+          { categoryId: "groceries", accountId: "savings", amountMinor: aed(300), onCard: false },
         ],
       }),
       amounts: { "cat:groceries": "1000" },
@@ -91,7 +92,7 @@ describe("Left to plan", () => {
     const card = {
       facts: facts({
         spendSincePeriodStart: [
-          { categoryId: "groceries", accountId: "card", amountMinor: aed(200) },
+          { categoryId: "groceries", accountId: "card", amountMinor: aed(200), onCard: true },
         ],
       }),
       cardAccountIds: ["card"],

@@ -203,6 +203,7 @@ const budgetSchema = z.object({
   ledgerId: z.string(),
   currency: z.string(),
   activationPeriodStart: ledgerDateSchema,
+  activatedOn: ledgerDateSchema,
   usualSalaryMinor: money.nullable(),
   paydayReminder: z.boolean(),
   defaultAccountId: z.string().nullable(),
@@ -231,6 +232,7 @@ const envelopeSchema = z.object({
 const envelopeTotalsSchema = z.object({
   id: z.string(),
   plannedMinor: money,
+  budgetedMinor: money,
   spentMinor: money,
   rolloverMinor: money,
   leftMinor: money,
@@ -277,8 +279,14 @@ export const budgetSetupFactsSchema: z.ZodType<V2BudgetSetupFacts> = z.object({
   period: budgetPeriodSchema,
   accountBalances: z.array(z.object({ accountId: z.string(), balanceMinor: money })),
   spendSincePeriodStart: z.array(
-    z.object({ categoryId: z.string().nullable(), accountId: z.string(), amountMinor: money }),
+    z.object({
+      categoryId: z.string().nullable(),
+      accountId: z.string(),
+      amountMinor: money,
+      onCard: z.boolean(),
+    }),
   ),
+  openingCardDebtMinor: money,
   cardPaymentsSincePeriodStart: z.array(
     z.object({ fromAccountId: z.string(), toAccountId: z.string(), amountMinor: money }),
   ),

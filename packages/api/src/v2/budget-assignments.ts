@@ -2,14 +2,19 @@ import { nextPeriodStart, ruleInEffect } from "@trove/domain/budget";
 import { v2Assignment } from "@trove/db/schema/v2-budget";
 
 import { budgetActor } from "./budget-activate";
-import { budgetView, findBudget, loadBudget, type LoadedBudget } from "./budget";
+import { budgetView, envelopeTotals, findBudget, loadBudget, type LoadedBudget } from "./budget";
 import {
   assignmentsCreateSchema,
   type V2AssignmentsCreateInput,
   type V2BudgetPeriodView,
   type V2BudgetView,
 } from "./contracts";
-import { V2ApiError, withLedgerMutation, type V2LedgerContext } from "./shared";
+import {
+  requireBudgetPlanAccess,
+  V2ApiError,
+  withLedgerMutation,
+  type V2LedgerContext,
+} from "./shared";
 
 /** How many periods ahead a plan may be written. */
 const MAX_FUTURE_PERIODS = 24;
@@ -27,6 +32,10 @@ export async function createAssignments(
   idempotencyKey?: string,
 ): Promise<V2BudgetView> {
   const parsed = assignmentsCreateSchema.parse(input);
+  // Setting the plan is the admin's job; members still cover, move and hand back leftovers.
+  if (parsed.items.some((item) => item.reason === "plan" || item.reason === "repeat")) {
+    requireBudgetPlanAccess(context);
+  }
   return withLedgerMutation(context, "budget.assignments.create", idempotencyKey, async (db) => {
     const budget = await findBudget(db, context.ledgerId);
     if (!budget) throw new V2ApiError(404, "budget_not_found", "This ledger has no budget.");
@@ -63,6 +72,10 @@ type AssignmentItem = ReturnType<typeof assignmentsCreateSchema.parse>["items"][
  * Not planned yet; envelopes are keyed by id. A future period's plan changes
  * only Not planned yet today (futureAssigned); the current period also moves
  * the envelope balances.
+ *
+ * A future period may only be funded FROM Not planned yet: an envelope's
+ * future-period balance is not today's Left, so taking from it would be checked
+ * against the wrong number and would hand Not planned yet money it never had.
  */
 function checkItems(
   loaded: LoadedBudget,
@@ -74,6 +87,14 @@ function checkItems(
   for (const totals of current.envelopes) available.set(totals.envelopeId, totals.leftMinor);
 
   for (const [index, item] of items.entries()) {
+    if (!isCurrent && item.fromEnvelopeId !== null) {
+      throw new V2ApiError(
+        422,
+        "invalid_future_source",
+        "An upcoming period can only be planned from Not planned yet.",
+        { index },
+      );
+    }
     assertAffordable(available, item, index);
     if (isCurrent || item.fromEnvelopeId === null) {
       adjust(available, item.fromEnvelopeId, -item.amountMinor);
@@ -124,13 +145,7 @@ export async function getBudgetPeriod(
   if (!found) throw new V2ApiError(404, "period_not_found", "This is not a period of your budget.");
   return {
     period: found.period,
-    envelopes: found.envelopes.map((totals) => ({
-      id: totals.envelopeId,
-      plannedMinor: totals.plannedMinor,
-      spentMinor: totals.spentMinor,
-      rolloverMinor: totals.rolloverMinor,
-      leftMinor: totals.leftMinor,
-    })),
+    envelopes: found.envelopes.map(envelopeTotals),
   };
 }
 

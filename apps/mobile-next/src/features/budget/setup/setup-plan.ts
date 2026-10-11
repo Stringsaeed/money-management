@@ -145,7 +145,15 @@ export function previewPlan(inputs: PlanInputs): PlanPreview {
     assignments: items.flatMap((item) => {
       const amountMinor = plannedMinor(item, amounts);
       return amountMinor > 0
-        ? [{ periodStart: start, fromEnvelopeId: null, toEnvelopeId: item.key, amountMinor }]
+        ? [
+            {
+              periodStart: start,
+              fromEnvelopeId: null,
+              toEnvelopeId: item.key,
+              amountMinor,
+              reason: "plan" as const,
+            },
+          ]
         : [];
     }),
     spending: facts.spendSincePeriodStart.flatMap((row) =>
@@ -168,6 +176,7 @@ export function previewPlan(inputs: PlanInputs): PlanPreview {
       )
       .map((payment) => ({ date: start, amountMinor: payment.amountMinor })),
     cashMinor,
+    openingCardDebtMinor: facts.openingCardDebtMinor,
     today: facts.today,
   });
 

@@ -5,8 +5,10 @@ import {
   v2RecurringRule,
   v2Transaction,
 } from "@trove/db/schema/v2-ledger";
+import { v2BudgetFundingAccount } from "@trove/db/schema/v2-budget";
 
 import {
+  BUDGET_CURRENCY,
   accountCreateSchema,
   accountUpdateSchema,
   type V2AccountCreateInput,
@@ -251,6 +253,42 @@ export async function updateAccount(
   });
 }
 
+/**
+ * A budget funding account must stay a non-card AED account: as a card its
+ * spending would count twice and transfers into it would count as card payments.
+ */
+async function assertFundingAccountKept(
+  db: V2DbExecutor,
+  ledgerId: string,
+  accountId: string,
+  current: AccountRow,
+  changes: ReturnType<typeof accountUpdateSchema.parse>,
+): Promise<void> {
+  const becomesCard = changes.type === "credit_card" && current.type !== "credit_card";
+  const leavesAed =
+    changes.currency !== undefined &&
+    changes.currency !== current.currency &&
+    changes.currency !== BUDGET_CURRENCY;
+  if (!becomesCard && !leavesAed) return;
+  const funding = await db
+    .select({ accountId: v2BudgetFundingAccount.accountId })
+    .from(v2BudgetFundingAccount)
+    .where(
+      and(
+        eq(v2BudgetFundingAccount.ledgerId, ledgerId),
+        eq(v2BudgetFundingAccount.accountId, accountId),
+      ),
+    )
+    .limit(1);
+  if (funding[0]) {
+    throw new ApiError(
+      422,
+      "funding_account_locked",
+      "This account pays for your budget, so it has to stay an AED account that is not a credit card. Remove it from the budget's money first.",
+    );
+  }
+}
+
 async function assertAccountUpdateAllowed(
   db: V2DbExecutor,
   ledgerId: string,
@@ -261,6 +299,7 @@ async function assertAccountUpdateAllowed(
   if (current.lifecycle === "archived" && changes.archived !== false) {
     throw new ApiError(409, "account_archived", "Restore the Account before editing it.");
   }
+  await assertFundingAccountKept(db, ledgerId, accountId, current, changes);
   if (changes.currency === undefined || changes.currency === current.currency) return;
   const history = await db
     .select({ id: v2Transaction.id })

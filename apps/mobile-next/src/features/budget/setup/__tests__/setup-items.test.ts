@@ -24,6 +24,7 @@ const facts: V2BudgetSetupFacts = {
   accountBalances: [],
   spendSincePeriodStart: [],
   cardPaymentsSincePeriodStart: [],
+  openingCardDebtMinor: 0,
   lastPeriod: { start: "2026-09-01", end: "2026-09-30" },
   lastPeriodSpend: [{ categoryId: "groceries", amountMinor: 123_456 }],
   recurringExpenses: [

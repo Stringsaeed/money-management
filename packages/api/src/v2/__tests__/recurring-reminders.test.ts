@@ -16,6 +16,7 @@ import type {
   V2RecurringCreateInput,
   V2RecurringPayInput,
   V2RecurringRule,
+  V2RecurringUpdateInput,
 } from "../contracts";
 import { createV2LedgerRoutes } from "../ledger-routes";
 import { settleV2DueRules } from "../recurring";
@@ -27,6 +28,7 @@ type RequestBody =
   | V2CategoryCreateInput
   | V2RecurringCreateInput
   | V2RecurringPayInput
+  | V2RecurringUpdateInput
   | V2BudgetActivateInput;
 interface ErrorBody {
   readonly error: { readonly code: string };
@@ -153,6 +155,25 @@ describe("V2 recurring reminders over HTTP", () => {
       ["rent-rule", "2026-10-01", true],
       ["rent-rule", "2026-11-01", false],
     ]);
+  });
+
+  // Review B-M2: Sep and Oct reminders are unpaid when the rule goes back to auto-post on 11 Oct.
+  it("switching a reminder to auto_post does not back-post unpaid reminders", async () => {
+    await seedRentReminder();
+
+    const switched = await send<V2RecurringRule>(
+      "PATCH",
+      "/recurring/rent-rule",
+      { mode: "auto_post" },
+      "auto-post",
+    );
+    expect(switched.status).toBe(200);
+    expect(switched.body.mode).toBe("auto_post");
+
+    expect((await settleV2DueRules(db, NOW)).generatedCount).toBe(0);
+    expect(await ruleTransactions("rent-rule")).toEqual([]);
+    await settleV2DueRules(db, new Date("2026-11-01T08:00:00Z"));
+    expect((await ruleTransactions("rent-rule")).map((row) => row.date)).toEqual(["2026-11-01"]);
   });
 
   it("Mark paid posts one transaction with the confirmed values and replays its key", async () => {

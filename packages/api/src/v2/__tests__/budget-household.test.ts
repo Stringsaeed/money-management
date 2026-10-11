@@ -213,6 +213,27 @@ describe("V2 household budget roles over HTTP", () => {
     await forbidden(
       send<ErrorBody>("bob", "PATCH", `/budget/envelopes/${idOf(view, "Fun")}`, { name: "Treats" }),
     );
+    // Review B-L1: plan amounts are the admin's, also through POST /budget/assignments.
+    for (const reason of ["plan", "repeat"] as const) {
+      await forbidden(
+        send<ErrorBody>("bob", "POST", "/budget/assignments", {
+          items: [
+            { fromEnvelopeId: null, toEnvelopeId: idOf(view, "Fun"), amountMinor: 1_000, reason },
+          ],
+        }),
+      );
+    }
+    const covered = await send("bob", "POST", "/budget/assignments", {
+      items: [
+        {
+          fromEnvelopeId: null,
+          toEnvelopeId: idOf(view, "Fun"),
+          amountMinor: 1_000,
+          reason: "cover",
+        },
+      ],
+    });
+    expect(covered.status).toBe(201);
 
     const edited = await send("alice", "PATCH", `/budget/envelopes/${idOf(view, "Fun")}`, {
       name: "Treats",
