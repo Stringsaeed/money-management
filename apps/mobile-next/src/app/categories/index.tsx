@@ -7,6 +7,7 @@ export default function CategoriesRoute() {
     <CategoriesScreen
       onAddCategory={() => router.push("/categories/new")}
       onEditCategory={(id) => router.push({ pathname: "/categories/[id]", params: { id } })}
+      onBack={() => router.back()}
     />
   );
 }

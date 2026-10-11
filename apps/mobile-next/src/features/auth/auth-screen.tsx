@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { Button, Screen, Surface, Text } from "@/ui";
-import { colors } from "@/ui/design-tokens";
+import { Banner, Button, Card, layout, Screen, space, Text } from "@/ui/trove";
 
 import type { AuthActionResult } from "./auth-types";
 import { useSession } from "./use-session";
@@ -21,33 +20,40 @@ export function AuthScreen() {
   return (
     <Screen style={styles.screen}>
       <View style={styles.header}>
-        <Text variant="headline">Your money, clearly.</Text>
-        <Text variant="body" style={styles.copy}>
+        <Text variant="titleLg">Your money, clearly.</Text>
+        <Text style={styles.copy} tone="secondary" variant="bodyMd">
           Sign in to keep your ledger with your account, or start privately as a guest.
         </Text>
       </View>
-      <Surface variant="raised" style={styles.card}>
+      <Card style={styles.card}>
         <Button
-          title="Sign in with WorkOS"
+          fullWidth
+          label="Sign in with WorkOS"
           loading={busy || session.status === "loading"}
           onPress={() => void run(session.signIn)}
+          size="lg"
         />
         <Button
-          title="Continue as guest"
-          variant="secondary"
+          fullWidth
+          label="Continue as guest"
           loading={busy || session.status === "loading"}
           onPress={() => void run(session.continueAsGuest)}
+          size="lg"
+          variant="secondary"
         />
-        {session.error ? <Text style={styles.error}>{session.error}</Text> : null}
-      </Surface>
+        {session.error ? <Banner message={session.error} tone="negative" /> : null}
+      </Card>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { justifyContent: "space-between", padding: 24 },
-  header: { gap: 12, paddingTop: 40 },
-  copy: { color: colors.mutedForeground, maxWidth: 320 },
-  card: { gap: 12, marginBottom: 12 },
-  error: { color: colors.destructive },
+  screen: {
+    justifyContent: "space-between",
+    padding: layout.screenGutter,
+    paddingBottom: space[3],
+  },
+  header: { gap: space[3], paddingTop: space[10] },
+  copy: { maxWidth: 320 },
+  card: { gap: space[3] },
 });

@@ -2,7 +2,7 @@ import type { V2Category } from "@trove/api/v2/contracts";
 
 import type { CategoryInput } from "@/data/ledger-client";
 
-import { categoryEmoji } from "../transactions/transaction-display";
+import { categoryEmoji } from "./category-emoji";
 import { DEFAULT_CATEGORY_COLOR, DEFAULT_CATEGORY_ICON } from "./category-palette";
 
 export interface CategoryDraft {
@@ -23,6 +23,7 @@ export function initialCategoryDraft(category: V2Category | undefined): Category
   return {
     name: category.name,
     kind: category.kind,
+    // A stored colour outside the Trove palette stays as saved until the person picks another.
     color: category.color || DEFAULT_CATEGORY_COLOR,
     // Legacy icon slugs ("tag") have no glyph here; they already render as the fallback emoji.
     icon: categoryEmoji(category.icon),

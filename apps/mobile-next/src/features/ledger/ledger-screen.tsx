@@ -2,9 +2,8 @@ import { StyleSheet, View } from "react-native";
 
 import type { V2Transaction } from "@trove/api/v2/contracts";
 
-import { spacing } from "@/ui/design-tokens";
 import { useReducedMotion } from "@/ui/motion";
-import { Screen } from "@/ui/screen";
+import { layout, Screen, space } from "@/ui/trove";
 
 import { LedgerFilterSheet } from "./list/ledger-filter-sheet";
 import { LedgerHeader } from "./list/ledger-header";
@@ -53,5 +52,5 @@ export function LedgerScreen({
 }
 
 const styles = StyleSheet.create({
-  links: { paddingTop: spacing[3] },
+  links: { paddingHorizontal: layout.screenGutter, paddingTop: space[3] },
 });

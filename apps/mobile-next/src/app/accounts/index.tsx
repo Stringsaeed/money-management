@@ -7,6 +7,7 @@ export default function AccountsRoute() {
     <AccountsScreen
       onOpenAccount={(id) => router.push(`/accounts/${id}`)}
       onAddAccount={() => router.push("/accounts/new")}
+      onBack={() => router.back()}
     />
   );
 }

@@ -7,11 +7,10 @@ import type { SharedValue } from "react-native-reanimated";
 
 import type { V2Transaction } from "@trove/api/v2/contracts";
 
-import { colors } from "@/ui/design-tokens";
+import { colors } from "@/ui/trove";
 
 import { TransactionListFooter } from "../transactions/transaction-list-footer";
 import { groupTransactions, headerIndices } from "./ledger-grouping";
-import { LEDGER_INSET } from "./ledger-header";
 import { LedgerListEmpty } from "./ledger-list-empty";
 import { LedgerRow } from "./ledger-row";
 import { ledgerRowDisplay } from "./ledger-row-display";
@@ -103,7 +102,6 @@ export function LedgerTransactionList({
               account: list.accountById.get(transaction.accountId),
               toAccount: list.accountById.get(transaction.toAccountId ?? ""),
             })}
-            divider={!item.lastInSection}
             onPress={onOpenTransaction}
           />
         );
@@ -115,9 +113,6 @@ export function LedgerTransactionList({
 const styles = StyleSheet.create({
   list: { flex: 1 },
   stale: { opacity: 0.55 },
-  content: {
-    backgroundColor: colors.background,
-    paddingBottom: 140,
-    paddingHorizontal: LEDGER_INSET,
-  },
+  // Horizontal gutters live on each item so sticky headers span the full width.
+  content: { backgroundColor: colors.bg.canvas, paddingBottom: 140 },
 });

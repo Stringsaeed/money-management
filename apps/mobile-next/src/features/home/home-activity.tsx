@@ -1,12 +1,8 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import type { V2Category, V2Transaction } from "@trove/api/v2/contracts";
 
-import { Text } from "@/ui/text";
-import { Icon } from "@/ui/icon";
-import { colors, spacing, typography } from "@/ui/design-tokens";
-import { TilePanel } from "@/ui/tiled-garden/tile-panel";
+import { Button, Card, layout, space, Text } from "@/ui/trove";
 import { HomeTransactionRow } from "./home-transaction-row";
-import { homeAccent } from "./home-accent";
 
 interface HomeActivityProps {
   readonly transactions: readonly V2Transaction[];
@@ -25,27 +21,26 @@ export function HomeActivity({
 }: HomeActivityProps) {
   const byId = new Map(categories.map((category) => [category.id, category]));
   return (
-    <TilePanel style={styles.panel}>
+    <Card style={styles.card}>
       <View style={styles.heading}>
         <View style={styles.copy}>
-          <Text style={styles.title}>Latest activity</Text>
-          <Text style={styles.subtitle}>
+          <Text variant="titleSm">Latest activity</Text>
+          <Text tone="secondary" variant="bodySm">
             {household
               ? "Everyone in your household, together."
               : "The latest in your personal ledger."}
           </Text>
         </View>
-        <Pressable
-          accessibilityRole="button"
+        <Button
           accessibilityLabel="View all transactions"
+          label="View all"
           onPress={onViewAll}
-          style={({ pressed }) => [styles.link, pressed && styles.pressed]}
-        >
-          <Icon name="arrow-right" color={homeAccent.action.icon} size={20} />
-        </Pressable>
+          size="sm"
+          variant="tertiary"
+        />
       </View>
       {transactions.length === 0 ? (
-        <Text style={styles.empty}>
+        <Text style={styles.empty} tone="secondary">
           Your next entry starts the story. Add a transaction to see it here.
         </Text>
       ) : (
@@ -58,39 +53,20 @@ export function HomeActivity({
           />
         ))
       )}
-    </TilePanel>
+    </Card>
   );
 }
 
+// TransactionRow carries its own horizontal padding, so the card gives up its own.
 const styles = StyleSheet.create({
-  panel: { gap: spacing[1] },
+  card: { paddingHorizontal: 0, paddingBottom: space[2] },
   heading: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: spacing[2],
-    paddingBottom: spacing[2],
+    flexDirection: "row",
+    gap: space[2],
+    paddingBottom: space[2],
+    paddingHorizontal: layout.cardPadding,
   },
   copy: { flex: 1 },
-  title: {
-    color: colors.foreground,
-    fontSize: typography.textLg,
-    fontFamily: typography.fontBodyBold,
-  },
-  subtitle: { color: colors.mutedForeground, fontSize: typography.textXs },
-  link: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: homeAccent.action.background,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: homeAccent.action.border,
-  },
-  pressed: { opacity: 0.68 },
-  empty: {
-    color: colors.mutedForeground,
-    fontSize: typography.textSm,
-    paddingVertical: spacing[4],
-  },
+  empty: { paddingHorizontal: layout.cardPadding, paddingVertical: space[4] },
 });

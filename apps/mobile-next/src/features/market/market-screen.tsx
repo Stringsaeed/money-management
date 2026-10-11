@@ -2,38 +2,57 @@ import { StyleSheet, View } from "react-native";
 import { LegendList } from "@legendapp/list/react-native";
 
 import { useMarketQuotesQuery, type V2MarketQuote } from "@/data/market-queries";
-import { Button } from "@/ui/button";
-import { EmptyState } from "@/ui/empty-state";
-import { Screen } from "@/ui/screen";
-import { Surface } from "@/ui/surface";
-import { Text } from "@/ui/text";
-import { colors, spacing } from "@/ui/design-tokens";
+import {
+  Banner,
+  Button,
+  EmptyState,
+  Header,
+  layout,
+  ListGroup,
+  radius,
+  Screen,
+  Skeleton,
+  space,
+  Text,
+} from "@/ui/trove";
 
 import { MarketQuoteRow } from "./market-quote-row";
 
 const GROUP_ORDER = ["stocks", "metals", "crypto"] as const;
 type MarketGroup = (typeof GROUP_ORDER)[number];
-type MarketListItem =
-  | { readonly id: string; readonly type: "header"; readonly group: MarketGroup }
-  | { readonly id: string; readonly type: "quote"; readonly quote: V2MarketQuote };
+interface MarketSection {
+  readonly group: MarketGroup;
+  readonly quotes: readonly V2MarketQuote[];
+}
 
 export function MarketScreen() {
   const query = useMarketQuotesQuery();
-  const groups = marketRows(query.data);
+  const sections = marketSections(query.data);
 
   if (query.isLoading && query.data.length === 0)
     return (
       <Screen>
-        <Text style={styles.status}>Loading Market…</Text>
+        <View
+          accessible
+          accessibilityLabel="Loading Market"
+          accessibilityState={{ busy: true }}
+          style={styles.loading}
+        >
+          <Skeleton height={space[10]} width="40%" />
+          <Skeleton borderRadius={radius.lg} height={space[16] + space[10]} />
+          <Skeleton borderRadius={radius.lg} height={space[16] + space[10]} />
+        </View>
       </Screen>
     );
   if (query.isError && query.data.length === 0)
     return (
-      <Screen>
+      <Screen style={styles.empty}>
         <EmptyState
+          icon="market"
           title="Market is unavailable"
           message="Check your connection and try again."
-          onRetry={() => void query.retry()}
+          actionLabel="Try again"
+          onAction={() => void query.retry()}
         />
       </Screen>
     );
@@ -41,61 +60,60 @@ export function MarketScreen() {
   return (
     <Screen>
       <LegendList
-        data={groups}
-        keyExtractor={(item) => item.id}
-        estimatedItemSize={64}
+        data={sections}
+        keyExtractor={(item) => item.group}
+        estimatedItemSize={200}
         contentContainerStyle={styles.content}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text variant="headline">Market</Text>
-            <Text style={styles.description}>Live quotes for stocks, metals, and crypto.</Text>
+            <Header title="Market" />
+            <Text tone="secondary" variant="bodyMd">
+              Live quotes for stocks, metals, and crypto.
+            </Text>
             <Button
-              title={query.isFetching ? "Refreshing…" : "Refresh"}
-              onPress={() => void query.retry()}
+              fullWidth
+              label={query.isFetching ? "Refreshing…" : "Refresh"}
               loading={query.isFetching}
+              onPress={() => void query.retry()}
             />
-            <>
-              {query.isError ? (
-                <Surface variant="recessed">
-                  <Text style={styles.warning}>
-                    Some quotes could not refresh. Existing values are shown where available.
-                  </Text>
-                </Surface>
-              ) : null}
-            </>
+            {query.isError ? (
+              <Banner
+                message="Some quotes could not refresh. Existing values are shown where available."
+                tone="warning"
+              />
+            ) : null}
           </View>
         }
         ListEmptyComponent={
           <EmptyState
+            icon="market"
             title="No quotes yet"
             message="Market data will appear when the feed responds."
-            onRetry={() => void query.retry()}
+            actionLabel="Try again"
+            onAction={() => void query.retry()}
           />
         }
-        renderItem={({ item }) =>
-          item.type === "header" ? (
-            <Text variant="title" style={styles.group}>
-              {formatGroupLabel(item.group)}
-            </Text>
-          ) : (
-            <MarketQuoteRow quote={item.quote} />
-          )
-        }
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        renderItem={({ item }) => (
+          <ListGroup dividerInset={layout.cardPadding} header={formatGroupLabel(item.group)}>
+            {item.quotes.map((quote) => (
+              <MarketQuoteRow key={quote.id} quote={quote} />
+            ))}
+          </ListGroup>
+        )}
+        ItemSeparatorComponent={Separator}
       />
     </Screen>
   );
 }
 
-function marketRows(data: readonly V2MarketQuote[]): readonly MarketListItem[] {
+function Separator() {
+  return <View style={styles.separator} />;
+}
+
+function marketSections(data: readonly V2MarketQuote[]): readonly MarketSection[] {
   return GROUP_ORDER.flatMap((group) => {
-    const items = data.filter((quote) => quote.group === group);
-    return items.length > 0
-      ? [
-          { id: `group:${group}`, type: "header" as const, group },
-          ...items.map((quote) => ({ id: quote.id, type: "quote" as const, quote })),
-        ]
-      : [];
+    const quotes = data.filter((quote) => quote.group === group);
+    return quotes.length > 0 ? [{ group, quotes }] : [];
   });
 }
 
@@ -105,15 +123,12 @@ function formatGroupLabel(group: MarketGroup): string {
 
 const styles = StyleSheet.create({
   content: {
-    gap: spacing[2],
-    paddingBottom: spacing[24],
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[4],
+    paddingBottom: space[16] + space[8],
+    paddingHorizontal: layout.screenGutter,
+    paddingTop: space[3],
   },
-  header: { gap: spacing[3], paddingBottom: spacing[3] },
-  description: { color: colors.mutedForeground },
-  warning: { color: colors.textWarning },
-  group: { paddingTop: spacing[3] },
-  separator: { backgroundColor: colors.ledgerOutline, height: 1 },
-  status: { color: colors.mutedForeground, padding: spacing[5] },
+  header: { gap: space[3], paddingBottom: space[4] },
+  loading: { gap: space[4], paddingHorizontal: layout.screenGutter, paddingTop: space[4] },
+  empty: { justifyContent: "center", paddingHorizontal: layout.screenGutter },
+  separator: { height: space[4] },
 });

@@ -1,30 +1,27 @@
 import type { CategoryInput } from "@/data/ledger-client";
+import { Breadcrumb, type BreadcrumbSegmentSpec } from "@/ui/trove";
 
-import { BreadcrumbSegment } from "../transactions/breadcrumb-segment";
+type CategoryKind = CategoryInput["kind"];
+
+const KINDS = [
+  { kind: "expense", emoji: "💸", label: "Expense" },
+  { kind: "income", emoji: "💰", label: "Income" },
+] as const satisfies readonly { kind: CategoryKind; emoji: string; label: string }[];
 
 interface CategoryKindToggleProps {
-  readonly kind: CategoryInput["kind"];
-  readonly onChange: (kind: CategoryInput["kind"]) => void;
+  readonly kind: CategoryKind;
+  readonly onChange: (kind: CategoryKind) => void;
 }
 
-/** Expense / income switch drawn as breadcrumb segments so it sits in the editor's pill bar. */
+/** Expense / income switch for the category editor. */
 export function CategoryKindToggle({ kind, onChange }: CategoryKindToggleProps) {
-  return (
-    <>
-      <BreadcrumbSegment
-        accessibilityLabel="Expense category"
-        emoji="💸"
-        label="Expense"
-        selected={kind === "expense"}
-        onPress={() => onChange("expense")}
-      />
-      <BreadcrumbSegment
-        accessibilityLabel="Income category"
-        emoji="💰"
-        label="Income"
-        selected={kind === "income"}
-        onPress={() => onChange("income")}
-      />
-    </>
-  );
+  const segments: readonly BreadcrumbSegmentSpec[] = KINDS.map((option) => ({
+    key: option.kind,
+    emoji: option.emoji,
+    label: option.label,
+    state: option.kind === kind ? "active" : "set",
+    onPress: () => onChange(option.kind),
+  }));
+
+  return <Breadcrumb accessibilityLabel="Category kind" segments={segments} variant="toggle" />;
 }

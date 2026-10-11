@@ -44,7 +44,23 @@ describe("autoCategoryToast", () => {
       autoCategoryToast(
         created({ outcome: "categorized", source: "research", category: groceries }),
       ),
-    ).toEqual({ emoji: "✨", message: "“Breadfast” auto-categorized to 🛒 Groceries" });
+    ).toEqual({
+      emoji: "✨",
+      message: "“Breadfast” filed under 🛒 Groceries",
+      emphasis: "Groceries",
+      action: undefined,
+    });
+  });
+
+  it("offers a Change action that opens the saved transaction", () => {
+    const onChange = jest.fn();
+    const toast = autoCategoryToast(
+      created({ outcome: "categorized", source: "research", category: groceries }),
+      onChange,
+    );
+    expect(toast?.action?.label).toBe("Change");
+    toast?.action?.onPress();
+    expect(onChange).toHaveBeenCalledWith("transaction-1");
   });
 
   it("shortens long notes", () => {
@@ -54,7 +70,7 @@ describe("autoCategoryToast", () => {
         "Weekly groceries from the big market downtown",
       ),
     );
-    expect(toast?.message).toBe("“Weekly groceries from the b…” auto-categorized to 🛒 Groceries");
+    expect(toast?.message).toBe("“Weekly groceries from the b…” filed under 🛒 Groceries");
   });
 
   it.each(["skipped", "uncategorized", "rate_limited", "unavailable"] as const)(

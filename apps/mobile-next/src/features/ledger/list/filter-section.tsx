@@ -1,14 +1,10 @@
-import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { Chip } from "@/ui/chip";
-import { Text } from "@/ui/text";
-import { spacing } from "@/ui/design-tokens";
+import { Chip, space, Text } from "@/ui/trove";
 
 export interface FilterOption<T extends string = string> {
   readonly id: T;
   readonly label: string;
-  readonly leading?: ReactNode;
 }
 
 interface FilterSectionProps<T extends string> {
@@ -28,13 +24,14 @@ export function FilterSection<T extends string>({
   if (options.length === 0) return null;
   return (
     <View style={styles.section}>
-      <Text variant="label">{title}</Text>
+      <Text variant="labelSm" tone="secondary">
+        {title}
+      </Text>
       <View style={styles.options}>
         {options.map((option) => (
           <Chip
             key={option.id}
             label={option.label}
-            leading={option.leading}
             selected={isSelected(option.id)}
             onPress={() => onToggle(option.id)}
           />
@@ -45,6 +42,6 @@ export function FilterSection<T extends string>({
 }
 
 const styles = StyleSheet.create({
-  section: { gap: spacing[2] },
-  options: { flexDirection: "row", flexWrap: "wrap", gap: spacing[2] },
+  section: { gap: space[2] },
+  options: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
 });

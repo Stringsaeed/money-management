@@ -1,14 +1,16 @@
+import { useState } from "react";
+import { ScrollView, StyleSheet } from "react-native";
+
 import type { V2Account, V2Category } from "@trove/api/v2/contracts";
 
 import type { TransactionInput } from "@/data/ledger-client";
-
-import { BreadcrumbBar } from "../editor/breadcrumb-bar";
+import { Breadcrumb, DateSheet, layout } from "@/ui/trove";
 
 import { AccountPicker } from "./account-picker";
-import { BreadcrumbSeparator } from "./breadcrumb-segment";
+import { transactionBreadcrumbSegments } from "./breadcrumb-segments";
 import { CategoryPicker } from "./category-picker";
-import { DatePicker } from "./date-picker";
 import type { TransactionCreateActions } from "./transaction-create-actions";
+import type { TransactionPicker } from "./transaction-picker";
 
 interface TransactionBreadcrumbsProps extends TransactionCreateActions {
   readonly kind: TransactionInput["kind"];
@@ -27,6 +29,7 @@ interface TransactionBreadcrumbsProps extends TransactionCreateActions {
   readonly onDateChange: (date: string) => void;
 }
 
+/** The path under the title (account › category › [to account] › date) and the pickers it opens. */
 export function TransactionBreadcrumbs({
   kind,
   accounts,
@@ -45,46 +48,78 @@ export function TransactionBreadcrumbs({
   onCreateAccount,
   onCreateCategory,
 }: TransactionBreadcrumbsProps) {
+  const [open, setOpen] = useState<TransactionPicker | null>(null);
+  const isTransfer = kind === "transfer";
+  const close = (picker: TransactionPicker) => () =>
+    setOpen((current) => (current === picker ? null : current));
+
   return (
-    <BreadcrumbBar>
+    <>
+      <ScrollView
+        contentContainerStyle={styles.bar}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.scroll}
+      >
+        <Breadcrumb
+          accessibilityLabel="Transaction details"
+          segments={transactionBreadcrumbSegments({
+            isTransfer,
+            accounts,
+            categories,
+            accountId,
+            toAccountId,
+            categoryId,
+            autoCategorize,
+            date,
+            open,
+            onOpen: setOpen,
+          })}
+        />
+      </ScrollView>
       <AccountPicker
-        title={kind === "transfer" ? "From account" : "Account"}
-        placeholder="Account"
-        emoji="🏦"
+        open={open === "account"}
+        onDismiss={close("account")}
+        title={isTransfer ? "From account" : "Account"}
         accounts={accounts}
         selectedId={accountId}
         onChange={onAccountChange}
         emptyMessage="Add an account first so this transaction has somewhere to live."
         onCreateAccount={onCreateAccount}
       />
-      <BreadcrumbSeparator />
       <CategoryPicker
+        open={open === "category"}
+        onDismiss={close("category")}
         categories={categories}
         selectedId={categoryId}
-        isTransfer={kind === "transfer"}
-        autoKind={autoCategorize && kind !== "transfer" ? kind : null}
+        isTransfer={isTransfer}
+        autoKind={autoCategorize && !isTransfer ? kind : null}
         onSelectCategory={onSelectCategory}
         onSelectTransfer={onSelectTransfer}
         onSelectAuto={onSelectAutoCategory}
         onCreateCategory={onCreateCategory}
       />
-      {kind === "transfer" ? (
-        <>
-          <BreadcrumbSeparator />
-          <AccountPicker
-            title="To account"
-            placeholder="To account"
-            emoji="📥"
-            accounts={accounts.filter((item) => item.id !== accountId)}
-            selectedId={toAccountId}
-            onChange={onToAccountChange}
-            emptyMessage="Transfers need a second account to move money into."
-            onCreateAccount={onCreateAccount}
-          />
-        </>
-      ) : null}
-      <BreadcrumbSeparator />
-      <DatePicker date={date} onChange={onDateChange} />
-    </BreadcrumbBar>
+      <AccountPicker
+        open={open === "toAccount"}
+        onDismiss={close("toAccount")}
+        title="To account"
+        accounts={accounts.filter((item) => item.id !== accountId)}
+        selectedId={toAccountId}
+        onChange={onToAccountChange}
+        emptyMessage="Transfers need a second account to move money into."
+        onCreateAccount={onCreateAccount}
+      />
+      <DateSheet
+        open={open === "date"}
+        onDismiss={close("date")}
+        value={date}
+        onChange={onDateChange}
+      />
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  scroll: { flexGrow: 0 },
+  bar: { paddingHorizontal: layout.screenGutter },
+});

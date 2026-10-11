@@ -1,23 +1,11 @@
 import { Stack } from "expo-router/stack";
-import { colors, typography } from "@/ui/design-tokens";
+import { colors } from "@/ui/trove";
 
+// The Trove `Header` lives inside the screen, so the native header stays hidden.
 export default function HomeLayout() {
   return (
     <Stack
-      screenOptions={{
-        headerTransparent: true,
-        headerShadowVisible: false,
-        headerBlurEffect: "none",
-        headerStyle: { backgroundColor: "transparent" },
-        // Let native header colors follow the window's system appearance.
-        unstable_nativeProps: { headerConfig: { experimental_userInterfaceStyle: "unspecified" } },
-        headerTitleStyle: {
-          fontFamily: typography.fontBodyBold,
-          color: colors.foreground,
-          fontSize: 20,
-        },
-        contentStyle: { backgroundColor: colors.background },
-      }}
+      screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg.canvas } }}
     >
       <Stack.Screen name="index" options={{ title: "Home" }} />
     </Stack>

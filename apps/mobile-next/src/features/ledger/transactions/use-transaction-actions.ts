@@ -4,13 +4,18 @@ import type { V2Transaction } from "@trove/api/v2/contracts";
 
 import type { TransactionInput } from "@/data/ledger-client";
 import { useLedgerMutationsWithSound } from "@/features/sound";
-import { showToast } from "@/ui/toast";
+import { showToast } from "@/ui/trove";
 
 import { useEditorSubmit } from "../editor/use-editor-submit";
 
 import { autoCategoryToast } from "./auto-category-toast";
 
-export function useTransactionActions(transaction: V2Transaction | undefined, onDone?: () => void) {
+export function useTransactionActions(
+  transaction: V2Transaction | undefined,
+  onDone?: () => void,
+  /** Opens a saved transaction for editing; powers the auto-category toast's "Change" action. */
+  onChangeCategory?: (transactionId: string) => void,
+) {
   const mutations = useLedgerMutationsWithSound();
   const { busy, error, run } = useEditorSubmit(onDone);
 
@@ -20,7 +25,7 @@ export function useTransactionActions(transaction: V2Transaction | undefined, on
         await mutations.updateTransaction(transaction.id, input, transaction.version);
         return;
       }
-      const toast = autoCategoryToast(await mutations.createTransaction(input));
+      const toast = autoCategoryToast(await mutations.createTransaction(input), onChangeCategory);
       if (toast) showToast(toast);
     }, "Couldn't save this transaction. Check your connection and try again.");
 

@@ -1,75 +1,69 @@
 import { ScrollView, StyleSheet, View } from "react-native";
 
-import { Text } from "@/ui/text";
-import { Icon } from "@/ui/icon";
-import { colors, spacing, typography } from "@/ui/design-tokens";
-import { TilePanel } from "@/ui/tiled-garden/tile-panel";
+import { Card, Icon, layout, SoonBadge, space, Text, type IconName } from "@/ui/trove";
+
+const TEASERS = [
+  {
+    icon: "accounts",
+    title: "A little structure.",
+    copy: "Budgets for everyday life, with room to breathe.",
+    caption: "Budgets are not available yet.",
+  },
+  {
+    icon: "insights",
+    title: "A bigger picture.",
+    copy: "See what is left for the things that matter to you.",
+    caption: "Coming in a future release.",
+  },
+] as const satisfies readonly {
+  icon: IconName;
+  title: string;
+  copy: string;
+  caption: string;
+}[];
 
 export function HomeBudgetPreview() {
   return (
     <View style={styles.section}>
       <View style={styles.heading}>
-        <Text variant="title" style={styles.title}>
-          Budgets
-        </Text>
-        <Text style={styles.badge}>COMING SOON</Text>
+        <Text variant="titleSm">Budgets</Text>
+        <SoonBadge />
       </View>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.cards}
       >
-        <TilePanel style={styles.card}>
-          <Icon name="wallet" size={26} color={colors.foreground} />
-          <Text style={styles.cardTitle}>A little structure.</Text>
-          <Text style={styles.copy}>Budgets for everyday life, with room to breathe.</Text>
-          <Text style={styles.caption}>Budgets are not available yet.</Text>
-        </TilePanel>
-        <TilePanel style={styles.card}>
-          <Icon name="chart-line-up" size={26} color={colors.foreground} />
-          <Text style={styles.cardTitle}>A bigger picture.</Text>
-          <Text style={styles.copy}>See what is left for the things that matter to you.</Text>
-          <Text style={styles.caption}>Coming in a future release.</Text>
-        </TilePanel>
+        {TEASERS.map((teaser) => (
+          <Card key={teaser.title} style={styles.card}>
+            <Icon name={teaser.icon} size={24} />
+            <Text variant="titleSm">{teaser.title}</Text>
+            <Text variant="bodySm">{teaser.copy}</Text>
+            <Text tone="tertiary" variant="bodySm">
+              {teaser.caption}
+            </Text>
+          </Card>
+        ))}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { gap: spacing[3], marginHorizontal: -spacing[5] },
+  section: { gap: space[3], marginHorizontal: -layout.screenGutter },
   heading: {
-    paddingHorizontal: spacing[5],
+    alignItems: "center",
     flexDirection: "row",
     flexWrap: "wrap",
-    alignItems: "center",
+    gap: space[2],
     justifyContent: "space-between",
-    gap: spacing[2],
-  },
-  title: { fontFamily: typography.fontBodyBold, fontSize: typography.textLg },
-  badge: {
-    fontSize: 9,
-    letterSpacing: 1.1,
-    fontFamily: typography.fontBodyBold,
-    padding: spacing[1.5],
-    borderWidth: 1,
-    borderColor: colors.border,
-    color: colors.mutedForeground,
-    backgroundColor: colors.muted,
-    borderRadius: 6,
+    paddingHorizontal: layout.screenGutter,
   },
   cards: {
-    gap: spacing[3],
-    paddingHorizontal: spacing[5],
-    paddingBottom: spacing[2],
-    paddingTop: spacing[1],
+    gap: space[3],
+    paddingBottom: space[2],
+    paddingHorizontal: layout.screenGutter,
+    paddingTop: space[1],
   },
-  card: { width: 258, gap: spacing[2] },
-  cardTitle: {
-    fontFamily: typography.fontBodyBold,
-    fontSize: typography.textLg,
-    color: colors.foreground,
-  },
-  copy: { fontSize: typography.textSm, color: colors.foreground },
-  caption: { fontSize: typography.textXs, color: colors.mutedForeground },
+  card: { gap: space[2], width: 258 },
 });

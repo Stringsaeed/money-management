@@ -57,28 +57,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
             {
               fontFamily: "Nunito",
               fontDefinitions: [
-                { path: nunitoFont("200ExtraLight", "Nunito_200ExtraLight.ttf"), weight: 200 },
-                { path: nunitoFont("300Light", "Nunito_300Light.ttf"), weight: 300 },
                 { path: nunitoFont("400Regular", "Nunito_400Regular.ttf"), weight: 400 },
-                { path: nunitoFont("500Medium", "Nunito_500Medium.ttf"), weight: 500 },
-                { path: nunitoFont("600SemiBold", "Nunito_600SemiBold.ttf"), weight: 600 },
                 { path: nunitoFont("700Bold", "Nunito_700Bold.ttf"), weight: 700 },
                 { path: nunitoFont("800ExtraBold", "Nunito_800ExtraBold.ttf"), weight: 800 },
-                { path: nunitoFont("900Black", "Nunito_900Black.ttf"), weight: 900 },
               ],
             },
           ],
         },
         ios: {
           fonts: [
-            nunitoFont("200ExtraLight", "Nunito_200ExtraLight.ttf"),
-            nunitoFont("300Light", "Nunito_300Light.ttf"),
             nunitoFont("400Regular", "Nunito_400Regular.ttf"),
-            nunitoFont("500Medium", "Nunito_500Medium.ttf"),
-            nunitoFont("600SemiBold", "Nunito_600SemiBold.ttf"),
             nunitoFont("700Bold", "Nunito_700Bold.ttf"),
             nunitoFont("800ExtraBold", "Nunito_800ExtraBold.ttf"),
-            nunitoFont("900Black", "Nunito_900Black.ttf"),
           ],
         },
       },
