@@ -1,6 +1,9 @@
 import { ScrollView, StyleSheet, View } from "react-native";
 
+import { BUDGETS_ENABLED } from "@/config/features";
 import { Card, Icon, layout, SoonBadge, space, Text, type IconName } from "@/ui/trove";
+
+import { HomeBudgetCard } from "./home-budget-card";
 
 const TEASERS = [
   {
@@ -23,6 +26,7 @@ const TEASERS = [
 }[];
 
 export function HomeBudgetPreview() {
+  if (BUDGETS_ENABLED) return <HomeBudgetCard />;
   return (
     <View style={styles.section}>
       <View style={styles.heading}>

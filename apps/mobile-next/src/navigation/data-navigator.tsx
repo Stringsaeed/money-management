@@ -55,6 +55,10 @@ export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) 
         <Stack.Screen name="recurring/index" options={pushedOptions} />
         <Stack.Screen name="recurring/[id]" options={{ ...pushedOptions, presentation: "modal" }} />
         <Stack.Screen name="household" options={pushedOptions} />
+        <Stack.Screen name="budget/setup/payday" options={{ title: "Set up budget" }} />
+        <Stack.Screen name="budget/setup/items" options={{ title: "Set up budget" }} />
+        <Stack.Screen name="budget/setup/amounts" options={{ title: "Set up budget" }} />
+        <Stack.Screen name="budget/setup/review" options={{ title: "Set up budget" }} />
         <Stack.Screen name="callback" options={{ headerShown: false }} />
       </Stack>
     </LedgerDataProvider>

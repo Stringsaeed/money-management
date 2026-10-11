@@ -5,6 +5,9 @@ import { z } from "zod";
 import {
   accountTypeSchema,
   categoryKindSchema,
+  envelopeGroupSchema,
+  envelopeRepeatSchema,
+  paydayRuleSchema,
   ledgerDateSchema,
   recurringFrequencySchema,
   recurringHealthSchema,
@@ -12,6 +15,8 @@ import {
   transactionKindSchema,
   type V2Account,
   type V2AutoCategorization,
+  type V2BudgetSetupFacts,
+  type V2BudgetView,
   type V2Category,
   type V2CreatedTransaction,
   type V2Home,
@@ -181,3 +186,97 @@ export const parseRecurringRule = (payload: unknown): V2RecurringRule =>
 export const parseHome = (payload: unknown): V2Home => homeSchema.parse(payload);
 export const parseTransactionSummary = (payload: unknown): V2TransactionSummary =>
   transactionSummarySchema.parse(payload);
+
+const budgetPeriodSchema = z.object({ start: ledgerDateSchema, end: ledgerDateSchema });
+
+const budgetSchema = z.object({
+  id: z.string(),
+  ledgerId: z.string(),
+  currency: z.string(),
+  activationPeriodStart: ledgerDateSchema,
+  usualSalaryMinor: money.nullable(),
+  paydayReminder: z.boolean(),
+  defaultAccountId: z.string().nullable(),
+  version: z.number().int(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+const envelopeSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  group: envelopeGroupSchema,
+  startFresh: z.boolean(),
+  targetMinor: money.nullable(),
+  dueDate: ledgerDateSchema.nullable(),
+  repeat: envelopeRepeatSchema.nullable(),
+  archived: z.boolean(),
+  sortOrder: z.number().int(),
+  categoryIds: z.array(z.string()),
+  version: z.number().int(),
+});
+
+const budgetCurrentSchema = z.object({
+  period: budgetPeriodSchema,
+  unassignedMinor: money,
+  safeToSpendMinor: money,
+  perDayMinor: money,
+  daysLeft: z.number().int(),
+  cardReserveMinor: money,
+  envelopes: z.array(
+    z.object({
+      id: z.string(),
+      plannedMinor: money,
+      spentMinor: money,
+      rolloverMinor: money,
+      leftMinor: money,
+    }),
+  ),
+});
+
+export const budgetViewSchema: z.ZodType<V2BudgetView> = z.union([
+  z.object({ budget: z.null() }),
+  z.object({
+    budget: budgetSchema,
+    paydayRule: paydayRuleSchema,
+    fundingAccountIds: z.array(z.string()),
+    envelopes: z.array(envelopeSchema),
+    current: budgetCurrentSchema,
+  }),
+]);
+
+export const budgetSetupFactsSchema: z.ZodType<V2BudgetSetupFacts> = z.object({
+  today: ledgerDateSchema,
+  period: budgetPeriodSchema,
+  accountBalances: z.array(z.object({ accountId: z.string(), balanceMinor: money })),
+  spendSincePeriodStart: z.array(
+    z.object({ categoryId: z.string().nullable(), accountId: z.string(), amountMinor: money }),
+  ),
+  cardPaymentsSincePeriodStart: z.array(
+    z.object({ fromAccountId: z.string(), toAccountId: z.string(), amountMinor: money }),
+  ),
+  lastPeriod: budgetPeriodSchema,
+  lastPeriodSpend: z.array(z.object({ categoryId: z.string(), amountMinor: money })),
+  recurringExpenses: z.array(
+    z.object({
+      ruleId: z.string(),
+      name: z.string(),
+      amountMinor: money,
+      currency: z.string(),
+      categoryId: z.string().nullable(),
+      frequency: recurringFrequencySchema,
+      intervalCount: z.number().int(),
+    }),
+  ),
+  topCategories: z.array(
+    z.object({
+      categoryId: z.string(),
+      name: z.string(),
+      transactionCount: z.number().int(),
+    }),
+  ),
+});
+
+export const parseBudgetView = (payload: unknown): V2BudgetView => budgetViewSchema.parse(payload);
+export const parseBudgetSetupFacts = (payload: unknown): V2BudgetSetupFacts =>
+  budgetSetupFactsSchema.parse(payload);

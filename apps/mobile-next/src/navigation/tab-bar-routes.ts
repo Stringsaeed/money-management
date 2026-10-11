@@ -4,6 +4,8 @@ import type { TabBarKey, TabBarTab } from "@/ui/trove";
 const TAB_KEYS = {
   "(home)": "home",
   index: "home",
+  // Trove's tab bar has no budget key; its spare "insights" slot carries the Budget tab.
+  envelopes: "insights",
   ledger: "ledger",
   market: "market",
   settings: "settings",
@@ -27,12 +29,19 @@ interface TabEntryInput {
   readonly routes: readonly TabRoute[];
   readonly focusedKey: string | undefined;
   readonly labelFor: (route: TabRoute) => string;
+  /** Route names kept out of the bar, such as a feature that is switched off. */
+  readonly hiddenRoutes?: readonly string[];
 }
 
 /** The visible tabs, in route order, each carrying its route so a press can navigate to it. */
-export const buildTabEntries = ({ routes, focusedKey, labelFor }: TabEntryInput): TabEntry[] =>
+export const buildTabEntries = ({
+  routes,
+  focusedKey,
+  labelFor,
+  hiddenRoutes = [],
+}: TabEntryInput): TabEntry[] =>
   routes.flatMap((route) =>
-    isTabRouteName(route.name)
+    isTabRouteName(route.name) && !hiddenRoutes.includes(route.name)
       ? [
           {
             route,

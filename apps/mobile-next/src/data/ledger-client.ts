@@ -4,12 +4,17 @@ import { randomUUID } from "expo-crypto";
 
 import type {
   V2Account,
+  V2BudgetActivateInput,
+  V2BudgetSetupFacts,
+  V2BudgetUpdateInput,
+  V2BudgetView,
   V2Category,
   V2CreatedTransaction,
   V2Home,
   V2HomeOverviewBuckets,
   V2LedgerScope,
   V2Page,
+  V2PaydayRule,
   V2RecurringRule,
   V2Transaction,
   V2TransactionKind,
@@ -20,6 +25,8 @@ import { apiRequest } from "@/data/http";
 
 import {
   parseAccount,
+  parseBudgetSetupFacts,
+  parseBudgetView,
   parseCategory,
   parseCreatedTransaction,
   parseHome,
@@ -119,6 +126,10 @@ const scopeQuery = (scope: LedgerScope): string => {
   if (scope.kind === "household") params.set("householdId", scope.householdId);
   return params.toString();
 };
+
+/** The `payday` query value the setup-facts endpoint reads: `day:25` or `last_workday`. */
+export const paydayParam = (rule: V2PaydayRule): string =>
+  rule.kind === "day" ? `day:${rule.day}` : "last_workday";
 
 export const withScope = (path: string, scope: LedgerScope): string =>
   `${path}${path.includes("?") ? "&" : "?"}${scopeQuery(scope)}`;
@@ -401,6 +412,37 @@ export const ledgerClient = {
         json("PATCH", input, options),
         parseRecurringRule,
       );
+    },
+  },
+
+  budget: {
+    get(scope: LedgerScope): Promise<V2BudgetView> {
+      return request(withScope("/budget", scope), undefined, parseBudgetView);
+    },
+    setupFacts(scope: LedgerScope, payday: V2PaydayRule): Promise<V2BudgetSetupFacts> {
+      return request(
+        withScope(`/budget/setup-facts?payday=${paydayParam(payday)}`, scope),
+        undefined,
+        parseBudgetSetupFacts,
+      );
+    },
+    activate(
+      scope: LedgerScope,
+      input: V2BudgetActivateInput,
+      options: MutationOptions = {},
+    ): Promise<V2BudgetView> {
+      return request(
+        withScope("/budget/activate", scope),
+        json("POST", input, options),
+        parseBudgetView,
+      );
+    },
+    update(
+      scope: LedgerScope,
+      input: V2BudgetUpdateInput,
+      options: MutationOptions = {},
+    ): Promise<V2BudgetView> {
+      return request(withScope("/budget", scope), json("PATCH", input, options), parseBudgetView);
     },
   },
 };

@@ -20,4 +20,15 @@ describe("buildTabEntries", () => {
     expect(entries.map((entry) => entry.tab.active)).toEqual([false, false, true, false]);
     expect(entries[0]?.route.name).toBe("(home)");
   });
+
+  it("leaves hidden routes out of the bar", () => {
+    const entries = buildTabEntries({
+      routes: [...routes, { key: "envelopes-1", name: "envelopes" }],
+      focusedKey: undefined,
+      labelFor: (route) => route.name,
+      hiddenRoutes: ["envelopes", "market"],
+    });
+
+    expect(entries.map((entry) => entry.route.name)).toEqual(["(home)", "ledger", "settings"]);
+  });
 });

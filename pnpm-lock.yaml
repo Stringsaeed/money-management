@@ -351,6 +351,9 @@ importers:
       '@trove/api':
         specifier: workspace:*
         version: link:../../packages/api
+      '@trove/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       cuelume-native:
         specifier: ^0.1.0
         version: 0.1.0(73b203db9f50f1dab38c3d2197ba0260)
