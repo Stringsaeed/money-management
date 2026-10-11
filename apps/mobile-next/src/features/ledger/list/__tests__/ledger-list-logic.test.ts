@@ -110,12 +110,12 @@ describe("ledger grouping", () => {
   it("sections newest-first rows by day with titles and per-day net", () => {
     const items = groupTransactions(rows, "day", today);
     expect(items.map((item) => (item.type === "header" ? item.title : item.key))).toEqual([
-      "Today",
+      "TODAY",
       "1",
       "2",
-      "Yesterday",
+      "YESTERDAY",
       "3",
-      "Sunday, 30 August",
+      "SUN 30.08",
       "4",
     ]);
     expect(items[0]).toMatchObject({ net: { minor: 1_500, currency: "AED" }, count: 2 });

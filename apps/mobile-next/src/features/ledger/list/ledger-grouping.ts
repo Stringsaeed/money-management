@@ -27,13 +27,14 @@ export type LedgerListItem = LedgerSectionHeader | LedgerRowItem;
 
 export type LedgerGrouping = "day" | "month";
 
+/** Receipt stamp for a day: `TODAY`, `YESTERDAY`, `WED 07.10`, or `WED 07.10.25` in other years. */
 export function dayTitle(date: string, today: Date): string {
   const parsed = parseDateKey(date);
   if (!parsed) return date;
   const days = differenceInCalendarDays(today, parsed);
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  return format(parsed, isSameYear(parsed, today) ? "EEEE, d MMMM" : "EEE, d MMM yyyy");
+  if (days === 0) return "TODAY";
+  if (days === 1) return "YESTERDAY";
+  return format(parsed, isSameYear(parsed, today) ? "EEE dd.MM" : "EEE dd.MM.yy").toUpperCase();
 }
 
 function monthTitle(date: string): string {

@@ -4,10 +4,13 @@ import type { SystemKind } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { transactionTileIcon } from "../transactions/transaction-display";
+import { ledgerRowStamp } from "./ledger-row-stamp";
 
 export interface LedgerRowDisplay {
   readonly title: string;
   readonly meta: string;
+  /** The Ledger board's mono line: `08:12 · GROCERIES · ENBD CARD`. */
+  readonly stamp: string;
   /** Pre-formatted signed amount, kept for spoken labels and plain-text consumers. */
   readonly amount: string;
   /** Signed minor units for `Amount`: expense negative, income positive. */
@@ -52,6 +55,7 @@ export function ledgerRowDisplay(
   return {
     title,
     meta: meta.join(" · "),
+    stamp: ledgerRowStamp(transaction, lookups),
     amount: `${sign}${formatMoneyMinor(transaction.amountMinor, transaction.currency)}`,
     signedMinor:
       transaction.kind === "expense" ? -transaction.amountMinor : transaction.amountMinor,

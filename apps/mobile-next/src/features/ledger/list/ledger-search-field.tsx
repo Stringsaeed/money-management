@@ -1,6 +1,6 @@
-import { useState } from "react";
-
 import { SearchField } from "@/ui/trove";
+
+import { useSearchDraft } from "./use-search-draft";
 
 interface LedgerSearchFieldProps {
   readonly value: string;
@@ -8,32 +8,20 @@ interface LedgerSearchFieldProps {
   readonly placeholder?: string;
 }
 
-/**
- * Search typed locally and sent on submit, so the server is queried once per search rather
- * than on every keystroke. Clearing applies immediately.
- */
+/** Trove search field that queries the server on submit, for the filter sheet. */
 export function LedgerSearchField({
   value,
   onSubmit,
   placeholder = "Search notes",
 }: LedgerSearchFieldProps) {
-  const [draft, setDraft] = useState(value);
-  const [applied, setApplied] = useState(value);
-  // Follow external changes, e.g. the search chip being removed.
-  if (value !== applied) {
-    setApplied(value);
-    setDraft(value);
-  }
+  const search = useSearchDraft(value, onSubmit);
   return (
     <SearchField
       accessibilityLabel="Search transactions"
-      onChangeText={(text) => {
-        setDraft(text);
-        if (text === "" && value !== "") onSubmit("");
-      }}
-      onSubmitEditing={() => onSubmit(draft.trim())}
+      onChangeText={search.change}
+      onSubmitEditing={search.submit}
       placeholder={placeholder}
-      value={draft}
+      value={search.draft}
     />
   );
 }
