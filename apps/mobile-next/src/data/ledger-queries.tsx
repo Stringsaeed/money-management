@@ -1,15 +1,19 @@
 import { createContext, useContext, useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import type { Collection, UtilsRecord } from "@tanstack/db";
-import { keepPreviousData, useQuery, type QueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQueries, useQuery, type QueryClient } from "@tanstack/react-query";
 
 import type {
   V2Account,
+  V2AssignmentsCreateInput,
   V2BudgetActivateInput,
+  V2BudgetPeriodView,
   V2BudgetSetupFacts,
   V2BudgetUpdateInput,
   V2BudgetView,
   V2Category,
+  V2EnvelopeCreateInput,
+  V2EnvelopeUpdateInput,
   V2Home,
   V2PaydayRule,
   V2RecurringRule,
@@ -232,6 +236,30 @@ export function useBudgetSetupFactsQuery(
   };
 }
 
+export interface BudgetPeriodsResult {
+  /** In `starts` order: `undefined` while loading, `null` when the server has no such period. */
+  readonly periods: readonly (V2BudgetPeriodView | null | undefined)[];
+  readonly isLoading: boolean;
+}
+
+/** Per-envelope totals for earlier periods. */
+export function useBudgetPeriodsQuery(starts: readonly string[]): BudgetPeriodsResult {
+  const { identityKey, scope } = useLedgerData();
+  const results = useQueries({
+    queries: starts.map((start) => ({
+      queryKey: [...budgetKey(identityKey, scope), "period", start],
+      queryFn: () => ledgerClient.budget.period(scope, start),
+      // Finished periods only change when a past transaction is edited.
+      staleTime: 60_000,
+      retry: false,
+    })),
+  });
+  return {
+    periods: results.map((result) => (result.isError ? null : result.data)),
+    isLoading: results.some((result) => result.isLoading),
+  };
+}
+
 export function useUpcomingQuery(): LedgerQueryResult<UpcomingOccurrence> {
   const { identityKey, scope } = useLedgerData();
   const query = useQuery({
@@ -281,6 +309,13 @@ export function useLedgerMutations() {
     });
     // Paged lists embed Account/Category references, and deletes cascade into them.
     await queryClient.invalidateQueries({ queryKey: transactionListKey(identityKey, scope) });
+  };
+
+  /** Envelope and assignment writes answer with the fresh budget, so show it without a refetch. */
+  const applyBudgetView = async (view: V2BudgetView) => {
+    queryClient.setQueryData([...budgetKey(identityKey, scope), "view"], view);
+    // Earlier-period totals can move too (a plan is per period); they refetch when next shown.
+    await queryClient.invalidateQueries({ queryKey: [...budgetKey(identityKey, scope), "period"] });
   };
 
   return {
@@ -486,6 +521,43 @@ export function useLedgerMutations() {
         async (requestKey) => {
           const result = await ledgerClient.budget.activate(scope, input, { requestKey });
           await refresh("budget");
+          return result;
+        },
+      );
+    },
+    createEnvelope: async (input: V2EnvelopeCreateInput) => {
+      return runWithRequestKey(
+        "budget.createEnvelope",
+        fingerprint(JSON.stringify(input) ?? ""),
+        async (requestKey) => {
+          const result = await ledgerClient.budget.createEnvelope(scope, input, { requestKey });
+          // A new Category may have been created with it.
+          await refresh("budget");
+          return result;
+        },
+      );
+    },
+    updateEnvelope: async (id: string, input: V2EnvelopeUpdateInput, version?: number) => {
+      return runWithRequestKey(
+        "budget.updateEnvelope",
+        fingerprint(JSON.stringify([id, input, version]) ?? ""),
+        async (requestKey) => {
+          const result = await ledgerClient.budget.updateEnvelope(scope, id, input, {
+            version,
+            requestKey,
+          });
+          await applyBudgetView(result);
+          return result;
+        },
+      );
+    },
+    createAssignments: async (input: V2AssignmentsCreateInput) => {
+      return runWithRequestKey(
+        "budget.createAssignments",
+        fingerprint(JSON.stringify(input) ?? ""),
+        async (requestKey) => {
+          const result = await ledgerClient.budget.createAssignments(scope, input, { requestKey });
+          await applyBudgetView(result);
           return result;
         },
       );

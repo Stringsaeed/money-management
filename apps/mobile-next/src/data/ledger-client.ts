@@ -4,12 +4,17 @@ import { randomUUID } from "expo-crypto";
 
 import type {
   V2Account,
+  V2AssignmentsCreateInput,
   V2BudgetActivateInput,
+  V2BudgetPeriodView,
   V2BudgetSetupFacts,
   V2BudgetUpdateInput,
   V2BudgetView,
   V2Category,
   V2CreatedTransaction,
+  V2EnvelopeCreateInput,
+  V2EnvelopeCreated,
+  V2EnvelopeUpdateInput,
   V2Home,
   V2HomeOverviewBuckets,
   V2LedgerScope,
@@ -25,10 +30,12 @@ import { apiRequest } from "@/data/http";
 
 import {
   parseAccount,
+  parseBudgetPeriodView,
   parseBudgetSetupFacts,
   parseBudgetView,
   parseCategory,
   parseCreatedTransaction,
+  parseEnvelopeCreated,
   parseHome,
   homeOverviewBucketsSchema,
   parsePage,
@@ -443,6 +450,48 @@ export const ledgerClient = {
       options: MutationOptions = {},
     ): Promise<V2BudgetView> {
       return request(withScope("/budget", scope), json("PATCH", input, options), parseBudgetView);
+    },
+    createEnvelope(
+      scope: LedgerScope,
+      input: V2EnvelopeCreateInput,
+      options: MutationOptions = {},
+    ): Promise<V2EnvelopeCreated> {
+      return request(
+        withScope("/budget/envelopes", scope),
+        json("POST", input, options),
+        parseEnvelopeCreated,
+      );
+    },
+    updateEnvelope(
+      scope: LedgerScope,
+      id: string,
+      input: V2EnvelopeUpdateInput,
+      options: MutationOptions = {},
+    ): Promise<V2BudgetView> {
+      return request(
+        withScope(`/budget/envelopes/${encodeURIComponent(id)}`, scope),
+        json("PATCH", input, options),
+        parseBudgetView,
+      );
+    },
+    /** Plan, cover, and move all land here; the response is the refreshed budget. */
+    createAssignments(
+      scope: LedgerScope,
+      input: V2AssignmentsCreateInput,
+      options: MutationOptions = {},
+    ): Promise<V2BudgetView> {
+      return request(
+        withScope("/budget/assignments", scope),
+        json("POST", input, options),
+        parseBudgetView,
+      );
+    },
+    period(scope: LedgerScope, start: string): Promise<V2BudgetPeriodView> {
+      return request(
+        withScope(`/budget/periods/${encodeURIComponent(start)}`, scope),
+        undefined,
+        parseBudgetPeriodView,
+      );
     },
   },
 };
