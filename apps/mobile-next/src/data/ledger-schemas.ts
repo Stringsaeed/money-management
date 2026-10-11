@@ -22,8 +22,10 @@ import {
   type V2EnvelopeCreated,
   type V2Category,
   type V2CreatedTransaction,
+  type V2DueList,
   type V2Home,
   type V2Page,
+  type V2RecordedOccurrence,
   type V2RecurringRule,
   type V2Transaction,
   type V2TransactionSummary,
@@ -299,3 +301,31 @@ export const parseBudgetPeriodView = (payload: unknown): V2BudgetPeriodView =>
   budgetPeriodViewSchema.parse(payload);
 export const parseBudgetSetupFacts = (payload: unknown): V2BudgetSetupFacts =>
   budgetSetupFactsSchema.parse(payload);
+
+export const dueListSchema: z.ZodType<V2DueList> = z.object({
+  items: z.array(
+    z.object({
+      ruleId: z.string(),
+      name: z.string(),
+      scheduledDate: ledgerDateSchema,
+      amountMinor: money,
+      currency: z.string(),
+      accountId: z.string(),
+      categoryId: z.string().nullable(),
+      kind: transactionKindSchema,
+      overdue: z.boolean(),
+    }),
+  ),
+  truncated: z.boolean(),
+});
+
+export const recordedOccurrenceSchema: z.ZodType<V2RecordedOccurrence> = z.object({
+  ruleId: z.string(),
+  scheduledDate: ledgerDateSchema,
+  status: z.enum(["settled", "skipped"]),
+  transactionId: z.string().nullable(),
+});
+
+export const parseDueList = (payload: unknown): V2DueList => dueListSchema.parse(payload);
+export const parseRecordedOccurrence = (payload: unknown): V2RecordedOccurrence =>
+  recordedOccurrenceSchema.parse(payload);

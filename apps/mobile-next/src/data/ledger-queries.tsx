@@ -14,8 +14,10 @@ import type {
   V2Category,
   V2EnvelopeCreateInput,
   V2EnvelopeUpdateInput,
+  V2DueList,
   V2Home,
   V2PaydayRule,
+  V2RecurringPayInput,
   V2RecurringRule,
   V2Transaction,
 } from "@trove/api/v2/contracts";
@@ -32,6 +34,7 @@ import {
 } from "./ledger-client";
 import { createLedgerCollections, scopeKey, type LedgerCollections } from "./ledger-collections";
 import { parseHome, type UpcomingOccurrence } from "./ledger-schemas";
+import { ApiError } from "./http";
 import { createRequestKeyRunner } from "./request-keys";
 import { transactionListKey } from "./transaction-list-keys";
 import { changeRecurringLifecycle } from "./recurring-lifecycle";
@@ -260,6 +263,29 @@ export function useBudgetPeriodsQuery(starts: readonly string[]): BudgetPeriodsR
   };
 }
 
+/**
+ * Reminder-mode bills pending through `through` (a Ledger Date). Lives under the Budget key
+ * prefix, so every ledger write refreshes it with the rest of the Budget.
+ */
+export function useDueQuery(through: string): BudgetQueryResult<V2DueList> {
+  const { identityKey, scope } = useLedgerData();
+  const query = useQuery({
+    queryKey: [...budgetKey(identityKey, scope), "due", through],
+    queryFn: () => ledgerClient.recurring.due(scope, through),
+    staleTime: 15_000,
+    retry: 1,
+  });
+  return {
+    data: query.data,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    isStale: false,
+    retry: async () => {
+      await query.refetch();
+    },
+  };
+}
+
 export function useUpcomingQuery(): LedgerQueryResult<UpcomingOccurrence> {
   const { identityKey, scope } = useLedgerData();
   const query = useQuery({
@@ -316,6 +342,13 @@ export function useLedgerMutations() {
     queryClient.setQueryData([...budgetKey(identityKey, scope), "view"], view);
     // Earlier-period totals can move too (a plan is per period); they refetch when next shown.
     await queryClient.invalidateQueries({ queryKey: [...budgetKey(identityKey, scope), "period"] });
+  };
+
+  /** Paying posts a Transaction, so it refreshes Transactions, Accounts, the Due list and the Budget. */
+  const refreshAfterOccurrence = async () => {
+    await refresh("transactions");
+    await refresh("accounts");
+    await refresh("recurring");
   };
 
   return {
@@ -511,6 +544,46 @@ export function useLedgerMutations() {
           });
           await refresh("recurring");
           return result;
+        },
+      );
+    },
+    payOccurrence: async (ruleId: string, date: string, input: V2RecurringPayInput) => {
+      return runWithRequestKey(
+        "recurring.pay",
+        fingerprint(JSON.stringify([ruleId, date, input]) ?? ""),
+        async (requestKey) => {
+          try {
+            const result = await ledgerClient.recurring.pay(scope, ruleId, date, input, {
+              requestKey,
+            });
+            await refreshAfterOccurrence();
+            return result;
+          } catch (error) {
+            // 409: already paid or skipped elsewhere, so the list on screen is stale.
+            if (error instanceof ApiError && error.status === 409) {
+              await refreshAfterOccurrence().catch(() => undefined);
+            }
+            throw error;
+          }
+        },
+      );
+    },
+    skipOccurrence: async (ruleId: string, date: string) => {
+      return runWithRequestKey(
+        "recurring.skip",
+        fingerprint(JSON.stringify([ruleId, date]) ?? ""),
+        async (requestKey) => {
+          try {
+            const result = await ledgerClient.recurring.skip(scope, ruleId, date, { requestKey });
+            await refreshAfterOccurrence();
+            return result;
+          } catch (error) {
+            // 409: already paid or skipped elsewhere, so the list on screen is stale.
+            if (error instanceof ApiError && error.status === 409) {
+              await refreshAfterOccurrence().catch(() => undefined);
+            }
+            throw error;
+          }
         },
       );
     },
