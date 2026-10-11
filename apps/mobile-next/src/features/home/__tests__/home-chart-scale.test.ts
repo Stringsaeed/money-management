@@ -6,6 +6,7 @@ import {
   homeGridValues,
   homeLineLabelTops,
   homeLineY,
+  HOME_LINE_LABEL_HEIGHT,
 } from "../home-chart-scale";
 
 const month = (incomeMinor: number, expenseMinor: number) => ({
@@ -37,18 +38,46 @@ describe("home chart scale", () => {
 });
 
 describe("homeLineLabelTops", () => {
-  it("hangs each label 4pt under its point when they are apart", () => {
-    expect(homeLineLabelTops(14, 66)).toEqual({ income: 18, spend: 70 });
+  // A 300pt plot: month centres at 25, 75, ... 275.
+  const series = (...ys: number[]) => ys.map((y, index) => ({ x: 25 + index * 50, y }));
+
+  it("hangs each label 4pt under its point on flat lines, as on the board", () => {
+    const tops = homeLineLabelTops({
+      width: 300,
+      income: series(14, 14, 14, 14, 14, 14),
+      spend: series(40, 36, 44, 30, 38, 66),
+      incomeLabel: "12,000",
+      spendLabel: "4,286 SO FAR",
+    });
+    expect(tops).toEqual({ income: 18, spend: 70 });
   });
 
-  it("keeps a label at the bottom inside the plot", () => {
-    expect(homeLineLabelTops(14, 95).spend).toBe(83);
+  it("keeps labels inside the plot and apart from each other", () => {
+    const tops = homeLineLabelTops({
+      width: 300,
+      income: series(14, 14, 14, 14, 14, 95),
+      spend: series(40, 36, 44, 30, 38, 94),
+      incomeLabel: "815",
+      spendLabel: "4,300 SO FAR",
+    });
+    for (const top of [tops.income, tops.spend]) {
+      expect(top).toBeGreaterThanOrEqual(0);
+      expect(top).toBeLessThanOrEqual(96 - HOME_LINE_LABEL_HEIGHT);
+    }
+    expect(Math.abs(tops.income - tops.spend)).toBeGreaterThanOrEqual(HOME_LINE_LABEL_HEIGHT);
   });
 
-  it("lifts the higher line's label above its point when the two collide", () => {
-    const tops = homeLineLabelTops(94, 80);
-    expect(tops.income).toBe(83);
-    expect(tops.spend).toBe(63);
-    expect(Math.abs(tops.income - tops.spend)).toBeGreaterThanOrEqual(13);
+  it("moves the so-far label off a steep income line that would run through it", () => {
+    // October income collapses from the top to the bottom across the label's span.
+    const tops = homeLineLabelTops({
+      width: 300,
+      income: series(14, 14, 14, 14, 8, 90),
+      spend: series(40, 36, 44, 30, 46, 64),
+      incomeLabel: "815",
+      spendLabel: "4,300 SO FAR",
+    });
+    const preferred = 64 + 4;
+    expect(tops.spend).not.toBe(preferred);
+    expect(Math.abs(tops.income - tops.spend)).toBeGreaterThanOrEqual(HOME_LINE_LABEL_HEIGHT);
   });
 });

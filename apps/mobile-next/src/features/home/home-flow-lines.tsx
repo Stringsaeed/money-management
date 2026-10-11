@@ -38,7 +38,17 @@ export function HomeFlowLines({ months, domain, currency }: HomeFlowLinesProps) 
   const last = months.length - 1;
   const lastIncome = income[last] ?? 0;
   const lastSpend = spend[last] ?? 0;
-  const labelTops = homeLineLabelTops(homeLineY(lastIncome, domain), homeLineY(lastSpend, domain));
+  const incomeLabel = wholeAmount(lastIncome, currency);
+  const spendLabel = `${wholeAmount(lastSpend, currency)} SO FAR`;
+  const toPoints = (values: readonly number[]) =>
+    values.map((value, index) => ({ x: x(index), y: homeLineY(value, domain) }));
+  const labelTops = homeLineLabelTops({
+    width,
+    income: toPoints(income),
+    spend: toPoints(spend),
+    incomeLabel,
+    spendLabel,
+  });
   const onLayout = (event: LayoutChangeEvent) =>
     setWidth(Math.round(event.nativeEvent.layout.width));
 
@@ -90,13 +100,13 @@ export function HomeFlowLines({ months, domain, currency }: HomeFlowLinesProps) 
             maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE}
             style={[styles.label, styles.incomeLabel, { top: labelTops.income }]}
           >
-            {wholeAmount(lastIncome, currency)}
+            {incomeLabel}
           </NativeText>
           <NativeText
             maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE}
             style={[styles.label, styles.spendLabel, { top: labelTops.spend }]}
           >
-            {`${wholeAmount(lastSpend, currency)} SO FAR`}
+            {spendLabel}
           </NativeText>
         </>
       ) : null}
