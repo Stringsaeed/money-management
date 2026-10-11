@@ -1,3 +1,4 @@
+import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
@@ -15,8 +16,10 @@ import { GROUP_LABELS, GROUP_ORDER } from "./setup-types";
 import { useSetupModel } from "./use-setup-model";
 
 const itemDetail = (item: SetupItem): string | undefined => {
-  if (item.recurringMinor) return `${formatMoneyMinor(item.recurringMinor, "AED")} a month`;
-  if (item.lastPeriodMinor) return `${formatMoneyMinor(item.lastPeriodMinor, "AED")} last period`;
+  if (item.recurringMinor)
+    return `${formatMoneyMinor(item.recurringMinor, BUDGET_CURRENCY)} a month`;
+  if (item.lastPeriodMinor)
+    return `${formatMoneyMinor(item.lastPeriodMinor, BUDGET_CURRENCY)} last period`;
   return undefined;
 };
 

@@ -1,3 +1,4 @@
+import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
@@ -37,7 +38,9 @@ export function AmountsScreen() {
         ...Object.fromEntries(
           ticked.flatMap((item) => {
             const suggestion = suggestedMinor(item);
-            return suggestion === null ? [] : [[item.key, decimalFromMinor(suggestion, "AED")]];
+            return suggestion === null
+              ? []
+              : [[item.key, decimalFromMinor(suggestion, BUDGET_CURRENCY)]];
           }),
         ),
       },

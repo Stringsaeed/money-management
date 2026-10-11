@@ -6,6 +6,8 @@ import {
   type V2RecurringFrequency,
 } from "@trove/api/v2/contracts";
 
+import { currencyFractionDigits } from "@/utils/money";
+
 import { SETUP_PRESETS } from "./setup-presets";
 import { GROUP_ORDER, type CustomItem } from "./setup-types";
 
@@ -23,12 +25,12 @@ export interface SetupItem {
   readonly lastPeriodMinor: number | null;
 }
 
-const WHOLE_AED_MINOR = 100;
+const MINOR_PER_WHOLE = 10 ** currencyFractionDigits(BUDGET_CURRENCY);
 
-const roundToWholeAed = (minor: number): number =>
-  Math.round(minor / WHOLE_AED_MINOR) * WHOLE_AED_MINOR;
+const roundToWholeUnit = (minor: number): number =>
+  Math.round(minor / MINOR_PER_WHOLE) * MINOR_PER_WHOLE;
 
-/** A Recurring rule's amount as a monthly figure, in whole dirhams. */
+/** A Recurring rule's amount as a monthly figure, in whole currency units. */
 export function monthlyEquivalentMinor(rule: {
   readonly amountMinor: number;
   readonly frequency: V2RecurringFrequency;
@@ -41,7 +43,7 @@ export function monthlyEquivalentMinor(rule: {
     month: rule.amountMinor / interval,
     year: rule.amountMinor / 12 / interval,
   } satisfies Record<V2RecurringFrequency, number>;
-  return roundToWholeAed(perMonth[rule.frequency]);
+  return roundToWholeUnit(perMonth[rule.frequency]);
 }
 
 const nameKey = (name: string): string => `new:${name.trim().toLowerCase()}`;
@@ -148,4 +150,4 @@ export const isItemTicked = (
 
 /** What "Use suggestions" fills in: the usual Recurring amount, else last period's spend. */
 export const suggestedMinor = (item: SetupItem): number | null =>
-  item.recurringMinor ?? (item.lastPeriodMinor ? roundToWholeAed(item.lastPeriodMinor) : null);
+  item.recurringMinor ?? (item.lastPeriodMinor ? roundToWholeUnit(item.lastPeriodMinor) : null);
