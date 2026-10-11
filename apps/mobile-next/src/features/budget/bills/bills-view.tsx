@@ -1,22 +1,25 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 
-import { Button } from "@/ui/button";
-import { Chip } from "@/ui/chip";
-import { spacing } from "@/ui/design-tokens";
-import { Screen } from "@/ui/screen";
+import { Button, layout, Screen, SegmentedControl, space } from "@/ui/trove";
 
 import { CoverMoveSheet } from "../cover/cover-move-sheet";
 import { useCoverMoveRequest } from "../cover/use-cover-move-request";
 import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
 
 import { AddBigPaymentSheet } from "./add-big-payment-sheet";
+import { BillsHeader } from "./bills-header";
 import { MarkPaidSheet } from "./mark-paid-sheet";
 import { NextYearList } from "./next-year-list";
 import { ThisMonthList } from "./this-month-list";
 import { useSheetRequest } from "./use-sheet-request";
 
 export type BillsTab = "month" | "saving";
+
+const TABS = [
+  { value: "month", label: "This month" },
+  { value: "saving", label: "Next 12 months" },
+] as const satisfies readonly { value: BillsTab; label: string }[];
 
 interface BillsViewProps {
   readonly view: ActiveBudgetView;
@@ -34,16 +37,10 @@ export function BillsView({ view, initialTab, dueMinorByEnvelopeId }: BillsViewP
   const markPaid = useSheetRequest<string>();
 
   return (
-    <Screen edges={["bottom"]}>
+    <Screen style={styles.screen}>
+      <BillsHeader />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.tabs}>
-          <Chip label="This month" selected={tab === "month"} onPress={() => setTab("month")} />
-          <Chip
-            label="Next 12 months"
-            selected={tab === "saving"}
-            onPress={() => setTab("saving")}
-          />
-        </View>
+        <SegmentedControl options={TABS} value={tab} onChange={setTab} />
         {tab === "month" ? (
           <ThisMonthList
             lines={lines}
@@ -53,7 +50,7 @@ export function BillsView({ view, initialTab, dueMinorByEnvelopeId }: BillsViewP
         ) : (
           <NextYearList lines={lines} onMarkPaid={markPaid.show} />
         )}
-        <Button title="+ Add a big payment" onPress={() => add.show(true)} />
+        <Button fullWidth icon="add" label="Add a big payment" onPress={() => add.show(true)} />
       </ScrollView>
       <AddBigPaymentSheet
         open={add.open}
@@ -75,6 +72,6 @@ export function BillsView({ view, initialTab, dueMinorByEnvelopeId }: BillsViewP
 }
 
 const styles = StyleSheet.create({
-  content: { gap: spacing[4], padding: spacing[5], paddingBottom: spacing[10] },
-  tabs: { flexDirection: "row", gap: spacing[2] },
+  screen: { paddingHorizontal: layout.screenGutter },
+  content: { gap: space[4], paddingBottom: space[10], paddingTop: space[3] },
 });

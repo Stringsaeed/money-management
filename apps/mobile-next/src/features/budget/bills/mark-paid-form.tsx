@@ -2,11 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY, type V2Account } from "@trove/api/v2/contracts";
 
-import { Button } from "@/ui/button";
-import { colors, spacing } from "@/ui/design-tokens";
-import { Chip } from "@/ui/chip";
-import { Text } from "@/ui/text";
-import { TextField } from "@/ui/text-field";
+import { AmountInput, Button, Chip, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { PanelError } from "../envelope/panel-error";
@@ -35,17 +31,17 @@ export function MarkPaidForm({ view, line, accounts, onPaid, onCancel }: MarkPai
   const over = form.amountMinor !== null && totals.leftMinor - form.amountMinor < 0;
   return (
     <View style={styles.container}>
-      <Text variant="title" accessibilityRole="header">
+      <Text variant="titleMd" accessibilityRole="header">
         {`Mark ${envelope.name} paid`}
       </Text>
-      <TextField
+      <AmountInput
+        currency={BUDGET_CURRENCY}
         label="Amount"
-        keyboardType="decimal-pad"
         value={form.amountText}
         onChangeText={form.setAmountText}
       />
       {form.funding.length === 0 ? (
-        <Text variant="caption" style={styles.warning}>
+        <Text tone="warning" variant="bodySm">
           No AED account is in your budget, so there is nothing to pay from.
         </Text>
       ) : (
@@ -62,37 +58,41 @@ export function MarkPaidForm({ view, line, accounts, onPaid, onCancel }: MarkPai
       )}
       <QuickAddDate label="Paid on" date={form.date} onChange={form.setDate} placementNote={null} />
       <View style={styles.lines} accessibilityLiveRegion="polite">
-        <Text variant="label" style={over && styles.warning}>
+        <Text tone={over ? "warning" : "secondary"} variant="labelSm">
           {after}
         </Text>
         {over ? (
-          <Text variant="caption">
+          <Text variant="bodySm" tone="secondary">
             The extra shows as overspend, and you can cover it from another envelope.
           </Text>
         ) : (
-          <Text variant="caption">Safe to spend stays the same.</Text>
+          <Text variant="bodySm" tone="secondary">
+            Safe to spend stays the same.
+          </Text>
         )}
-        <Text variant="caption">{nextDueLine(envelope, money)}</Text>
+        <Text variant="bodySm" tone="secondary">
+          {nextDueLine(envelope, money)}
+        </Text>
       </View>
       {form.problem && form.funding.length > 0 ? (
-        <Text variant="caption" accessibilityRole="alert" style={styles.warning}>
+        <Text accessibilityRole="alert" tone="warning" variant="bodySm">
           {form.problem}
         </Text>
       ) : null}
       <PanelError message={form.error} />
       <Button
-        title="Confirm paid"
+        fullWidth
+        label="Confirm paid"
         loading={form.busy}
         disabled={form.problem !== "" || form.funding.length === 0}
         onPress={() => void form.submit()}
       />
-      <Button title="Not yet" variant="ghost" onPress={onCancel} />
+      <Button fullWidth label="Not yet" variant="tertiary" onPress={onCancel} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing[3] },
-  lines: { gap: spacing[1] },
-  warning: { color: colors.textWarning },
+  container: { gap: space[3] },
+  lines: { gap: space[1] },
 });

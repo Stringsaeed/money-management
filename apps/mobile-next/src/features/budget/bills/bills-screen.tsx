@@ -1,11 +1,9 @@
 import { StyleSheet } from "react-native";
 
 import { useBudgetQuery } from "@/data/ledger-queries";
-import { spacing } from "@/ui/design-tokens";
-import { EmptyState } from "@/ui/empty-state";
-import { Screen } from "@/ui/screen";
-import { Text } from "@/ui/text";
+import { EmptyState, layout, Screen, space, Text } from "@/ui/trove";
 
+import { BillsHeader } from "./bills-header";
 import { BillsView, type BillsTab } from "./bills-view";
 
 /** B1 entry: load the budget, then show Bills & big payments or say why it can't be shown. */
@@ -14,19 +12,23 @@ export function BillsScreen({ initialTab }: { readonly initialTab: BillsTab }) {
 
   if (budget.isError && !budget.data?.budget) {
     return (
-      <Screen edges={["bottom"]}>
+      <Screen style={styles.screen}>
+        <BillsHeader />
         <EmptyState
           title="Couldn't load your bills"
           message="Check your connection and try again."
-          onRetry={() => void budget.retry()}
+          actionLabel="Try again"
+          onAction={() => void budget.retry()}
+          framed={false}
         />
       </Screen>
     );
   }
   if (!budget.data) {
     return (
-      <Screen edges={["bottom"]}>
-        <Text variant="caption" style={styles.status}>
+      <Screen style={styles.screen}>
+        <BillsHeader />
+        <Text variant="bodySm" tone="secondary" style={styles.status}>
           Loading bills…
         </Text>
       </Screen>
@@ -34,12 +36,20 @@ export function BillsScreen({ initialTab }: { readonly initialTab: BillsTab }) {
   }
   if (!budget.data.budget) {
     return (
-      <Screen edges={["bottom"]}>
-        <EmptyState title="No budget yet" message="Set up your budget to plan bills." />
+      <Screen style={styles.screen}>
+        <BillsHeader />
+        <EmptyState
+          title="No budget yet"
+          message="Set up your budget to plan bills."
+          framed={false}
+        />
       </Screen>
     );
   }
   return <BillsView view={budget.data} initialTab={initialTab} />;
 }
 
-const styles = StyleSheet.create({ status: { padding: spacing[5] } });
+const styles = StyleSheet.create({
+  screen: { paddingHorizontal: layout.screenGutter },
+  status: { paddingVertical: space[5] },
+});

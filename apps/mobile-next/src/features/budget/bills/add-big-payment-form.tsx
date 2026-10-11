@@ -2,10 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { Button } from "@/ui/button";
-import { colors, spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
-import { TextField } from "@/ui/text-field";
+import { Button, space, Text, TextField } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { PanelError } from "../envelope/panel-error";
@@ -27,7 +24,7 @@ export function AddBigPaymentForm({ view, onAdded, onCancel }: AddBigPaymentForm
   const form = useAddBigPaymentForm({ view, onAdded });
   return (
     <View style={styles.container}>
-      <Text variant="title" accessibilityRole="header">
+      <Text variant="titleMd" accessibilityRole="header">
         Add a big payment
       </Text>
       <TextField
@@ -58,28 +55,28 @@ export function AddBigPaymentForm({ view, onAdded, onCancel }: AddBigPaymentForm
         value={form.setAsideText}
         onChangeText={form.setSetAsideText}
       />
-      <Text variant="caption">
+      <Text variant="bodySm" tone="secondary">
         {`Comes out of Not planned yet: ${formatMoneyMinor(view.current.unassignedMinor, BUDGET_CURRENCY)}`}
       </Text>
       <SavingPreview preview={form.preview} />
       {form.problem ? (
-        <Text accessibilityRole="alert" variant="caption" style={styles.problem}>
+        <Text accessibilityRole="alert" tone="warning" variant="bodySm">
           {form.problem}
         </Text>
       ) : null}
       <PanelError message={form.error} />
       <Button
-        title="Add to my plan"
+        fullWidth
+        label="Add to my plan"
         loading={form.busy}
         disabled={!form.ready}
         onPress={() => void form.submit()}
       />
-      <Button title="Not now" variant="ghost" onPress={onCancel} />
+      <Button fullWidth label="Not now" variant="tertiary" onPress={onCancel} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing[3] },
-  problem: { color: colors.textWarning },
+  container: { gap: space[3] },
 });

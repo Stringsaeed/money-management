@@ -1,11 +1,9 @@
 import { format, parseISO } from "date-fns";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { Button } from "@/ui/button";
-import { colors, radii, spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { Button, Card, colors, PressableScale, radius, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { REPEAT_LABELS } from "./big-payment-model";
@@ -41,66 +39,69 @@ export function SavingRow({ row, onPress, onMarkPaid }: SavingRowProps) {
       : `${money(row.setAsideMinor)} of ${money(row.targetMinor)} set aside`;
   const perPayday = envelope.savingPerPaydayMinor;
   return (
-    <View style={styles.row}>
-      <Pressable
+    <Card style={styles.card}>
+      <PressableScale
         accessibilityRole="button"
         accessibilityLabel={[envelope.name, due, progress].filter(Boolean).join(", ")}
         onPress={onPress}
+        scaleOnPress={false}
         style={styles.details}
       >
         <View style={styles.top}>
-          <Text variant="body" style={styles.name} numberOfLines={1}>
+          <Text variant="labelMd" style={styles.name} numberOfLines={1}>
             {envelope.name}
           </Text>
-          {due ? <Text variant="caption">{due}</Text> : null}
+          {due ? (
+            <Text tone="secondary" variant="bodySm">
+              {due}
+            </Text>
+          ) : null}
         </View>
         {row.targetMinor !== null ? (
           <View style={styles.track}>
             <View style={[styles.fill, { width: `${Math.round(row.fraction * 100)}%` }]} />
           </View>
         ) : null}
-        <Text variant="label">{progress}</Text>
+        <Text tone="secondary" variant="labelSm">
+          {progress}
+        </Text>
         {row.funded ? (
-          <Text variant="caption">Fully set aside</Text>
+          <Text tone="secondary" variant="bodySm">
+            Fully set aside
+          </Text>
         ) : perPayday !== undefined && perPayday > 0 ? (
-          <Text variant="caption">{`Set aside ${money(perPayday)} each payday`}</Text>
+          <Text tone="secondary" variant="bodySm">
+            {`Set aside ${money(perPayday)} each payday`}
+          </Text>
         ) : null}
-      </Pressable>
+      </PressableScale>
       {row.warnings.map((warning) => (
-        <Text key={warning.kind} variant="caption" accessibilityRole="alert" style={styles.warning}>
+        <Text key={warning.kind} accessibilityRole="alert" tone="warning" variant="bodySm">
           {warningText(warning)}
         </Text>
       ))}
       {row.targetMinor !== null ? (
-        <Button title="Mark paid" variant="secondary" onPress={onMarkPaid} />
+        <Button fullWidth label="Mark paid" variant="secondary" onPress={onMarkPaid} />
       ) : null}
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    backgroundColor: colors.card,
-    borderCurve: "continuous",
-    borderRadius: radii.lg,
-    gap: spacing[3],
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-  },
-  details: { gap: spacing[2] },
+  card: { gap: space[3] },
+  details: { gap: space[2] },
   top: {
     alignItems: "center",
     flexDirection: "row",
-    gap: spacing[3],
+    gap: space[3],
     justifyContent: "space-between",
   },
   name: { flex: 1 },
   track: {
-    backgroundColor: colors.surfaceContainer,
-    borderRadius: radii.full,
-    height: spacing[2],
+    backgroundColor: colors.fill.neutral,
+    borderRadius: radius.full,
+    height: space[2],
     overflow: "hidden",
   },
-  fill: { backgroundColor: colors.sage, borderRadius: radii.full, height: "100%" },
-  warning: { color: colors.textWarning },
+  fill: { backgroundColor: colors.accent.fill, borderRadius: radius.full, height: "100%" },
 });

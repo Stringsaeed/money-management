@@ -1,8 +1,7 @@
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { space, Text } from "@/ui/trove";
 
 import type { EnvelopeLine } from "../home/home-model";
 
@@ -23,7 +22,11 @@ interface ThisMonthListProps {
 export function ThisMonthList({ lines, dueMinorByEnvelopeId, onCover }: ThisMonthListProps) {
   const bills = billLines(lines);
   if (bills.length === 0) {
-    return <Text variant="caption">No bills in your plan yet.</Text>;
+    return (
+      <Text variant="bodySm" tone="secondary">
+        No bills in your plan yet.
+      </Text>
+    );
   }
   return (
     <View style={styles.list}>
@@ -42,4 +45,4 @@ export function ThisMonthList({ lines, dueMinorByEnvelopeId, onCover }: ThisMont
   );
 }
 
-const styles = StyleSheet.create({ list: { gap: spacing[2] } });
+const styles = StyleSheet.create({ list: { gap: space[2] } });

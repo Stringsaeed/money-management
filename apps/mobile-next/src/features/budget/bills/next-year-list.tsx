@@ -1,8 +1,7 @@
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { space, Text } from "@/ui/trove";
 
 import type { EnvelopeLine } from "../home/home-model";
 
@@ -19,7 +18,7 @@ export function NextYearList({ lines, onMarkPaid }: NextYearListProps) {
   const rows = savingRows(lines);
   if (rows.length === 0) {
     return (
-      <Text variant="caption">
+      <Text variant="bodySm" tone="secondary">
         Nothing big coming up. Add rent cheques, school terms or Ramadan and Eid to save for them a
         little each payday.
       </Text>
@@ -44,4 +43,4 @@ export function NextYearList({ lines, onMarkPaid }: NextYearListProps) {
   );
 }
 
-const styles = StyleSheet.create({ list: { gap: spacing[2] } });
+const styles = StyleSheet.create({ list: { gap: space[2] } });

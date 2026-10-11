@@ -1,11 +1,8 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { Button } from "@/ui/button";
-import { colors, radii, spacing } from "@/ui/design-tokens";
-import { Icon } from "@/ui/icon";
-import { Text } from "@/ui/text";
+import { Amount, Button, Card, colors, Icon, PressableScale, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import type { EnvelopeLine } from "../home/home-model";
@@ -40,47 +37,48 @@ export function BillRow({ line, status, onPress, onCover }: BillRowProps) {
   const short = status.kind === "short";
   const left = `${money(totals.leftMinor)} left`;
   return (
-    <View style={styles.row}>
-      <Pressable
+    <Card style={styles.card}>
+      <PressableScale
         accessibilityRole="button"
         accessibilityLabel={`${envelope.name}, ${statusText(status)}, ${left}`}
         onPress={onPress}
+        scaleOnPress={false}
         style={styles.top}
       >
         <View style={styles.text}>
-          <Text variant="body" numberOfLines={1}>
+          <Text variant="labelMd" numberOfLines={1}>
             {envelope.name}
           </Text>
           <View style={styles.status}>
-            {status.kind === "paid" ? <Icon name="check" size={16} color={colors.sage} /> : null}
-            <Text variant="caption" style={short && styles.short}>
+            {status.kind === "paid" ? (
+              <Icon name="check" size={16} color={colors.positive.text} />
+            ) : null}
+            <Text tone={short ? "negative" : "secondary"} variant="bodySm">
               {statusText(status)}
             </Text>
           </View>
         </View>
-        <Text variant="label">{left}</Text>
-      </Pressable>
-      {short ? <Button title="Cover" variant="secondary" onPress={onCover} /> : null}
-    </View>
+        <View style={styles.left}>
+          <Amount currency={BUDGET_CURRENCY} minor={totals.leftMinor} size="sm" />
+          <Text tone="secondary" variant="labelSm">
+            left
+          </Text>
+        </View>
+      </PressableScale>
+      {short ? <Button fullWidth label="Cover" variant="secondary" onPress={onCover} /> : null}
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    backgroundColor: colors.card,
-    borderCurve: "continuous",
-    borderRadius: radii.lg,
-    gap: spacing[3],
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-  },
+  card: { gap: space[3] },
   top: {
     alignItems: "center",
     flexDirection: "row",
-    gap: spacing[3],
+    gap: space[3],
     justifyContent: "space-between",
   },
-  text: { flex: 1, gap: spacing[0.5] },
-  status: { alignItems: "center", flexDirection: "row", gap: spacing[1] },
-  short: { color: colors.terracotta },
+  text: { flex: 1, gap: space[0.5] },
+  status: { alignItems: "center", flexDirection: "row", gap: space[1] },
+  left: { alignItems: "baseline", flexDirection: "row", gap: space[1] },
 });
