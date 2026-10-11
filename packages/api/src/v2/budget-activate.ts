@@ -207,7 +207,7 @@ export async function updateBudget(
 }
 
 /** The person acting, for "who" lines; a household ledger's owner id would not say who. */
-function budgetActor(context: V2LedgerContext): string {
+export function budgetActor(context: V2LedgerContext): string {
   return context.principal.kind === "user"
     ? context.principal.userId
     : context.principal.guestSessionId;
@@ -303,7 +303,7 @@ async function assertActiveAedAccount(
  * One Category per envelope, in input order. A new Category name reuses a
  * non-archived expense Category with the same name (case-insensitive).
  */
-async function resolveCategories(
+export async function resolveCategories(
   db: V2TransactionDatabase,
   context: V2LedgerContext,
   envelopes: readonly {
