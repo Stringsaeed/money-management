@@ -73,6 +73,10 @@ export type V2RecurringLifecycle = z.infer<typeof recurringLifecycleSchema>;
 
 export const recurringHealthSchema = z.enum(["ready", "needs_attention"]);
 export type V2RecurringHealth = z.infer<typeof recurringHealthSchema>;
+
+/** `auto_post` settles on its own each due date; `remind` waits for Mark paid or Skip (#372). */
+export const recurringModeSchema = z.enum(["auto_post", "remind"]);
+export type V2RecurringMode = z.infer<typeof recurringModeSchema>;
 export type V2AttentionReason = Readonly<Record<string, string | number | null>>;
 
 export const v2ScopeSchema = z.discriminatedUnion("kind", [
@@ -185,6 +189,7 @@ const recurringFieldsSchema = z.object({
   endDate: ledgerDateSchema.nullable().optional(),
   endCount: z.number().int().positive().max(1_000_000).nullable().optional(),
   timeZone: z.string().trim().min(1).max(120),
+  mode: recurringModeSchema.optional(),
 });
 
 function validateRecurringFields(
@@ -228,6 +233,15 @@ export const recurringUpdateSchema = recurringFieldsSchema
   .partial()
   .extend({ lifecycle: recurringLifecycleSchema.optional() })
   .refine((value) => Object.keys(value).length > 0, "Provide at least one Recurring Rule field.");
+
+/** Mark paid with the confirmed values; each override applies to this occurrence only. */
+export const recurringPaySchema = z
+  .object({
+    amountMinor: positiveMoneyMinorSchema.optional(),
+    accountId: z.string().trim().min(1).optional(),
+    date: ledgerDateSchema.optional(),
+  })
+  .strict();
 
 /** Budgeting v1 plans in AED only (#365 decision 9). */
 export const BUDGET_CURRENCY = "AED";
@@ -407,6 +421,7 @@ export type V2TransactionCreateInput = z.input<typeof transactionCreateSchema>;
 export type V2TransactionUpdateInput = z.input<typeof transactionUpdateSchema>;
 export type V2RecurringCreateInput = z.input<typeof recurringCreateSchema>;
 export type V2RecurringUpdateInput = z.input<typeof recurringUpdateSchema>;
+export type V2RecurringPayInput = z.input<typeof recurringPaySchema>;
 export type V2BudgetActivateInput = z.input<typeof budgetActivateSchema>;
 export type V2BudgetUpdateInput = z.input<typeof budgetUpdateSchema>;
 export type V2EnvelopeCreateInput = z.input<typeof envelopeCreateSchema>;
@@ -501,11 +516,40 @@ export interface V2RecurringRule {
   readonly timeZone: string;
   readonly lifecycle: V2RecurringLifecycle;
   readonly health: V2RecurringHealth;
+  readonly mode: V2RecurringMode;
   readonly attentionReasons: readonly V2AttentionReason[];
   readonly eligibilityFloor: string;
   readonly revision: number;
   readonly createdAt: string;
   readonly updatedAt: string;
+}
+
+/** One pending occurrence of a `remind` rule, from its earliest unpaid date (#372 M3). */
+export interface V2DueOccurrence {
+  readonly ruleId: string;
+  readonly name: string;
+  readonly scheduledDate: string;
+  readonly amountMinor: number;
+  readonly currency: string;
+  readonly accountId: string;
+  readonly categoryId: string | null;
+  readonly kind: V2TransactionKind;
+  /** Scheduled before today in the rule's time zone, and still neither paid nor skipped. */
+  readonly overdue: boolean;
+}
+
+export interface V2DueList {
+  readonly items: readonly V2DueOccurrence[];
+  /** True when more pending occurrences exist than the list returns. */
+  readonly truncated: boolean;
+}
+
+/** A recorded occurrence: `settled` posted one Generated Transaction, `skipped` posted none. */
+export interface V2RecordedOccurrence {
+  readonly ruleId: string;
+  readonly scheduledDate: string;
+  readonly status: "settled" | "skipped";
+  readonly transactionId: string | null;
 }
 
 export interface V2Home {

@@ -186,6 +186,10 @@ export const v2RecurringRule = pgTable(
     health: text("health", { enum: ["ready", "needs_attention"] })
       .notNull()
       .default("ready"),
+    /** `remind` rules never post on their own; each occurrence waits for Mark paid or Skip (#372). */
+    mode: text("mode", { enum: ["auto_post", "remind"] })
+      .notNull()
+      .default("auto_post"),
     attentionReasons: jsonb("attention_reasons")
       .$type<readonly Record<string, string | number | null>[]>()
       .notNull()
@@ -225,6 +229,7 @@ export const v2RecurringRule = pgTable(
       sql`${table.lifecycle} IN ('active', 'paused', 'completed', 'archived')`,
     ),
     check("v2_recurring_rules_health_valid", sql`${table.health} IN ('ready', 'needs_attention')`),
+    check("v2_recurring_rules_mode_valid", sql`${table.mode} IN ('auto_post', 'remind')`),
     check(
       "v2_recurring_rules_transfer_shape",
       sql`(${table.kind} = 'transfer' AND ${table.toAccountId} IS NOT NULL AND ${table.categoryId} IS NULL AND ${table.accountId} <> ${table.toAccountId})
@@ -254,6 +259,10 @@ export const v2RecurringOccurrence = pgTable(
       .references(() => v2Ledger.id, { onDelete: "cascade" }),
     ruleId: text("rule_id").notNull(),
     scheduledDate: text("scheduled_date").notNull(),
+    /** A settled occurrence can lose its Transaction later (deleted history); a skipped one never has one. */
+    status: text("status", { enum: ["settled", "skipped"] })
+      .notNull()
+      .default("settled"),
     transactionId: text("transaction_id"),
     settledAt: timestamptz("settled_at").defaultNow().notNull(),
   },
@@ -268,6 +277,10 @@ export const v2RecurringOccurrence = pgTable(
     check(
       "v2_recurring_occurrences_date_valid",
       sql`${table.scheduledDate} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'`,
+    ),
+    check(
+      "v2_recurring_occurrences_status_shape",
+      sql`${table.status} = 'settled' OR (${table.status} = 'skipped' AND ${table.transactionId} IS NULL)`,
     ),
     foreignKey({
       columns: [table.ledgerId, table.ruleId],

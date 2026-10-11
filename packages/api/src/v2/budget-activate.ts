@@ -12,6 +12,7 @@ import {
 import { v2Account, v2Category } from "@trove/db/schema/v2-ledger";
 
 import { budgetView, findBudget, loadBudget } from "./budget";
+import { remindBillRules } from "./recurring";
 import {
   BUDGET_CURRENCY,
   budgetActivateSchema,
@@ -127,6 +128,13 @@ export async function activateBudget(
         })),
     );
     if (assignments.length > 0) await db.insert(v2Assignment).values(assignments);
+    await remindBillRules(
+      db,
+      context,
+      envelopes.flatMap(({ input: envelope, categoryId }) =>
+        envelope.group === "bills" && categoryId ? [categoryId] : [],
+      ),
+    );
 
     const budget = await findBudget(db, context.ledgerId);
     if (!budget) throw new V2ApiError(500, "budget_activation_failed", "The budget was not saved.");

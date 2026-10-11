@@ -67,6 +67,7 @@ const recurring = {
   timeZone: "Asia/Dubai",
   lifecycle: "active" as const,
   health: "ready" as const,
+  mode: "auto_post" as const,
   attentionReasons: [],
   eligibilityFloor: "2026-09-21",
   revision: 1,

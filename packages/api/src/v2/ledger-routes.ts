@@ -21,9 +21,12 @@ import { getHome, getHomeOverviewBuckets } from "./home";
 import {
   createRecurringRule,
   getRecurringRule,
+  listDue,
   listRecurringRules,
   listUpcoming,
+  payOccurrence,
   settleRecurringRule,
+  skipOccurrence,
   updateRecurringRule,
 } from "./recurring";
 import {
@@ -48,6 +51,7 @@ import {
   ledgerDateSchema,
   categoryUpdateSchema,
   recurringCreateSchema,
+  recurringPaySchema,
   recurringUpdateSchema,
   transactionCreateSchema,
   transactionKindSchema,
@@ -387,6 +391,13 @@ export function createV2LedgerRoutes(dependencies: V2LedgerRouteDependencies): H
     const ledger = await resolveContext(dependencies, context);
     return context.json({ items: await listUpcoming(ledger), nextCursor: null });
   });
+  routes.get("/recurring/due", async (context) => {
+    const ledger = await resolveContext(dependencies, context);
+    const through = parseOptionalDate(context.req.query("through"), "through");
+    if (!through)
+      throw new V2ApiError(400, "invalid_through", "through must be a YYYY-MM-DD date.");
+    return context.json(await listDue(ledger, through, dependencies.now?.() ?? new Date()));
+  });
   routes.get("/recurring", async (context) => {
     const ledger = await resolveContext(dependencies, context);
     return context.json({
@@ -421,6 +432,31 @@ export function createV2LedgerRoutes(dependencies: V2LedgerRouteDependencies): H
         parseExpectedVersion(context.req.header("If-Match")),
         idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
       ),
+    );
+  });
+  routes.post("/recurring/:id/occurrences/:date/pay", async (context) => {
+    const ledger = await resolveContext(dependencies, context);
+    return context.json(
+      await payOccurrence(
+        ledger,
+        context.req.param("id"),
+        parseOccurrenceDate(context.req.param("date")),
+        await readJson(context, recurringPaySchema),
+        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
+      ),
+      201,
+    );
+  });
+  routes.post("/recurring/:id/occurrences/:date/skip", async (context) => {
+    const ledger = await resolveContext(dependencies, context);
+    return context.json(
+      await skipOccurrence(
+        ledger,
+        context.req.param("id"),
+        parseOccurrenceDate(context.req.param("date")),
+        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
+      ),
+      201,
     );
   });
   routes.post("/recurring/:id/settle", async (context) => {
@@ -499,6 +535,10 @@ function parseRepeated(context: Context, name: string): string[] {
       `${name} accepts at most ${MAX_FILTER_VALUES} values.`,
     );
   return values;
+}
+
+function parseOccurrenceDate(value: string): string {
+  return parseOptionalDate(value, "date") ?? "";
 }
 
 function parseOptionalDate(value: string | undefined, name: string): string | undefined {
