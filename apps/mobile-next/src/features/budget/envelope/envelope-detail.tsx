@@ -9,6 +9,7 @@ import { Button, Header, layout, Screen, space, Text } from "@/ui/trove";
 import { CoverMoveSheet } from "../cover/cover-move-sheet";
 import { useCoverMoveRequest } from "../cover/use-cover-move-request";
 import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
+import { useBudgetRole } from "../role/use-budget-role";
 
 import { hasCardSpending } from "./envelope-model";
 import { EnvelopeMenuSheet } from "./envelope-menu-sheet";
@@ -28,6 +29,7 @@ export function EnvelopeDetail({ view, line }: EnvelopeDetailProps) {
   const { envelope, totals } = line;
   const [menu, setMenu] = useState({ open: false, session: 0 });
   const coverMove = useCoverMoveRequest();
+  const { canAddSpending } = useBudgetRole();
   const categories = useCategoriesQuery();
   const accounts = useAccountsQuery();
   const hasCategories = envelope.categoryIds.length > 0;
@@ -70,16 +72,22 @@ export function EnvelopeDetail({ view, line }: EnvelopeDetailProps) {
             overMinor={-totals.leftMinor}
             group={envelope.group}
             onCard={hasCardSpending(list.data, accounts.data)}
-            onCover={() => coverMove.show({ kind: "cover", targetId: envelope.id })}
+            onCover={
+              canAddSpending
+                ? () => coverMove.show({ kind: "cover", targetId: envelope.id })
+                : undefined
+            }
           />
         ) : null}
         <EnvelopeSummary line={line} daysLeft={view.current.daysLeft} />
-        <Button
-          fullWidth
-          label="Move money"
-          variant="secondary"
-          onPress={() => coverMove.show({ kind: "move", fromId: envelope.id })}
-        />
+        {canAddSpending ? (
+          <Button
+            fullWidth
+            label="Move money"
+            variant="secondary"
+            onPress={() => coverMove.show({ kind: "move", fromId: envelope.id })}
+          />
+        ) : null}
         {over ? <WhySection transactions={list.data} categories={categoriesById} /> : null}
         {hasCategories ? (
           <EnvelopeTransactions list={list} categories={categoriesById} />

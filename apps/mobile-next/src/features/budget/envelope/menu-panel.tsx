@@ -8,6 +8,8 @@ import { Amount, Button, ListGroup, ListRow, showToast, space, Switch, Text } fr
 import { formatMoneyMinor } from "@/utils/money";
 
 import type { EnvelopeLine } from "../home/home-model";
+import { PLAN_ADMIN_ONLY } from "../role/budget-role";
+import { useBudgetRole } from "../role/use-budget-role";
 
 import { GROUP_LABEL } from "./group-panel";
 import { PanelError } from "./panel-error";
@@ -25,6 +27,7 @@ interface MenuPanelProps {
 export function MenuPanel({ line, onOpen, onClose }: MenuPanelProps) {
   const { updateEnvelope } = useLedgerMutations();
   const write = useEnvelopeWrite();
+  const { canEditPlan } = useBudgetRole();
   const { envelope, totals } = line;
 
   const setStartFresh = (startFresh: boolean) =>
@@ -59,44 +62,58 @@ export function MenuPanel({ line, onOpen, onClose }: MenuPanelProps) {
         {envelope.name}
       </Text>
       <ListGroup dividerInset={0}>
-        <ListRow
-          chevron
-          title="Change plan"
-          trailing={
-            <Amount currency={BUDGET_CURRENCY} minor={totals.plannedMinor} tone="secondary" />
-          }
-          onPress={() => onOpen("plan")}
-        />
-        <ListRow
-          chevron
-          title="Change group"
-          value={GROUP_LABEL[envelope.group]}
-          onPress={() => onOpen("group")}
-        />
-        <ListRow
-          chevron
-          title="Categories"
-          value={`${envelope.categoryIds.length} mapped`}
-          onPress={() => onOpen("categories")}
-        />
+        {canEditPlan ? (
+          <ListRow
+            chevron
+            title="Change plan"
+            trailing={
+              <Amount currency={BUDGET_CURRENCY} minor={totals.plannedMinor} tone="secondary" />
+            }
+            onPress={() => onOpen("plan")}
+          />
+        ) : null}
+        {canEditPlan ? (
+          <ListRow
+            chevron
+            title="Change group"
+            value={GROUP_LABEL[envelope.group]}
+            onPress={() => onOpen("group")}
+          />
+        ) : null}
+        {canEditPlan ? (
+          <ListRow
+            chevron
+            title="Categories"
+            value={`${envelope.categoryIds.length} mapped`}
+            onPress={() => onOpen("categories")}
+          />
+        ) : null}
         <ListRow chevron title="History" onPress={() => onOpen("history")} />
       </ListGroup>
-      <ListGroup dividerInset={0}>
-        <ListRow
-          title="Start fresh each month"
-          subtitle={"Leftover money doesn't carry into the next month."}
-          trailing={
-            <Switch
-              accessibilityLabel="Start fresh each month"
-              value={envelope.startFresh}
-              disabled={write.busy}
-              onValueChange={setStartFresh}
+      {canEditPlan ? (
+        <>
+          <ListGroup dividerInset={0}>
+            <ListRow
+              title="Start fresh each month"
+              subtitle={"Leftover money doesn't carry into the next month."}
+              trailing={
+                <Switch
+                  accessibilityLabel="Start fresh each month"
+                  value={envelope.startFresh}
+                  disabled={write.busy}
+                  onValueChange={setStartFresh}
+                />
+              }
             />
-          }
-        />
-      </ListGroup>
-      <PanelError message={write.error} />
-      <Button fullWidth label="Archive envelope" variant="delete" onPress={archive} />
+          </ListGroup>
+          <PanelError message={write.error} />
+          <Button fullWidth label="Archive envelope" variant="delete" onPress={archive} />
+        </>
+      ) : (
+        <Text tone="secondary" variant="bodySm">
+          {PLAN_ADMIN_ONLY}
+        </Text>
+      )}
     </View>
   );
 }

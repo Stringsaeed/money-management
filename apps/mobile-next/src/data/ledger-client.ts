@@ -6,6 +6,7 @@ import type {
   V2Account,
   V2AssignmentsCreateInput,
   V2BudgetActivateInput,
+  V2BudgetActivity,
   V2BudgetPeriodView,
   V2BudgetSetupFacts,
   V2BudgetUpdateInput,
@@ -35,6 +36,7 @@ import { apiRequest } from "@/data/http";
 
 import {
   parseAccount,
+  parseBudgetActivity,
   parseBudgetPeriodView,
   parseBudgetSetupFacts,
   parseBudgetView,
@@ -545,6 +547,14 @@ export const ledgerClient = {
         withScope("/budget/assignments", scope),
         json("POST", input, options),
         parseBudgetView,
+      );
+    },
+    /** Who moved money lately, newest first. */
+    activity(scope: LedgerScope, limit: number): Promise<V2BudgetActivity> {
+      return request(
+        withScope(`/budget/activity?limit=${limit}`, scope),
+        undefined,
+        parseBudgetActivity,
       );
     },
     period(scope: LedgerScope, start: string): Promise<V2BudgetPeriodView> {

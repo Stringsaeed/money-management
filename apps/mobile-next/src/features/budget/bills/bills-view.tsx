@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 
-import { Button, layout, Screen, SegmentedControl, space } from "@/ui/trove";
+import { Button, layout, Screen, SegmentedControl, space, Text } from "@/ui/trove";
 
 import { CoverMoveSheet } from "../cover/cover-move-sheet";
 import { useCoverMoveRequest } from "../cover/use-cover-move-request";
 import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
+import { PLAN_ADMIN_ONLY } from "../role/budget-role";
+import { useBudgetRole } from "../role/use-budget-role";
 
 import { AddBigPaymentSheet } from "./add-big-payment-sheet";
 import { BillsHeader } from "./bills-header";
@@ -35,6 +37,7 @@ export function BillsView({ view, initialTab, dueMinorByEnvelopeId }: BillsViewP
   const coverMove = useCoverMoveRequest();
   const add = useSheetRequest<true>();
   const markPaid = useSheetRequest<string>();
+  const { canEditPlan, canAddSpending } = useBudgetRole();
 
   return (
     <Screen style={styles.screen}>
@@ -45,12 +48,20 @@ export function BillsView({ view, initialTab, dueMinorByEnvelopeId }: BillsViewP
           <ThisMonthList
             lines={lines}
             dueMinorByEnvelopeId={dueMinorByEnvelopeId}
-            onCover={(targetId) => coverMove.show({ kind: "cover", targetId })}
+            onCover={
+              canAddSpending ? (targetId) => coverMove.show({ kind: "cover", targetId }) : undefined
+            }
           />
         ) : (
-          <NextYearList lines={lines} onMarkPaid={markPaid.show} />
+          <NextYearList lines={lines} onMarkPaid={canAddSpending ? markPaid.show : undefined} />
         )}
-        <Button fullWidth icon="add" label="Add a big payment" onPress={() => add.show(true)} />
+        {canEditPlan ? (
+          <Button fullWidth icon="add" label="Add a big payment" onPress={() => add.show(true)} />
+        ) : (
+          <Text tone="secondary" variant="bodySm">
+            {PLAN_ADMIN_ONLY}
+          </Text>
+        )}
       </ScrollView>
       <AddBigPaymentSheet
         open={add.open}

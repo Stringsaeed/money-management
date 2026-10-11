@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import {
   accountTypeSchema,
+  assignmentReasonSchema,
   categoryKindSchema,
   envelopeGroupSchema,
   envelopeRepeatSchema,
@@ -16,6 +17,7 @@ import {
   transactionKindSchema,
   type V2Account,
   type V2AutoCategorization,
+  type V2BudgetActivity,
   type V2BudgetPeriodView,
   type V2BudgetSetupFacts,
   type V2BudgetView,
@@ -311,6 +313,27 @@ export const parseBudgetPeriodView = (payload: unknown): V2BudgetPeriodView =>
   budgetPeriodViewSchema.parse(payload);
 export const parseBudgetSetupFacts = (payload: unknown): V2BudgetSetupFacts =>
   budgetSetupFactsSchema.parse(payload);
+
+export const budgetActivitySchema: z.ZodType<V2BudgetActivity> = z.object({
+  items: z.array(
+    z.object({
+      id: z.string(),
+      periodStart: ledgerDateSchema,
+      fromEnvelopeId: z.string().nullable(),
+      fromName: z.string().nullable(),
+      toEnvelopeId: z.string().nullable(),
+      toName: z.string().nullable(),
+      amountMinor: money,
+      reason: assignmentReasonSchema,
+      createdBy: z.string(),
+      createdByName: z.string().nullable(),
+      createdAt: z.string(),
+    }),
+  ),
+});
+
+export const parseBudgetActivity = (payload: unknown): V2BudgetActivity =>
+  budgetActivitySchema.parse(payload);
 
 export const dueListSchema: z.ZodType<V2DueList> = z.object({
   items: z.array(

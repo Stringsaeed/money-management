@@ -10,7 +10,8 @@ import { SavingRow } from "./saving-row";
 
 interface NextYearListProps {
   readonly lines: readonly EnvelopeLine[];
-  readonly onMarkPaid: (envelopeId: string) => void;
+  /** Absent when the caller may not mark payments paid. */
+  readonly onMarkPaid?: (envelopeId: string) => void;
 }
 
 /** B1 "Next 12 months": Saving-for envelopes, soonest due first. */
@@ -36,7 +37,7 @@ export function NextYearList({ lines, onMarkPaid }: NextYearListProps) {
               params: { id: row.line.envelope.id },
             })
           }
-          onMarkPaid={() => onMarkPaid(row.line.envelope.id)}
+          onMarkPaid={onMarkPaid ? () => onMarkPaid(row.line.envelope.id) : undefined}
         />
       ))}
     </View>

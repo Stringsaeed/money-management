@@ -13,7 +13,7 @@ interface BillRowProps {
   readonly line: EnvelopeLine;
   readonly status: BillStatus;
   readonly onPress: () => void;
-  readonly onCover: () => void;
+  readonly onCover?: () => void;
 }
 
 const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
@@ -65,7 +65,7 @@ export function BillRow({ line, status, onPress, onCover }: BillRowProps) {
           </Text>
         </View>
       </PressableScale>
-      {short ? <Button fullWidth label="Cover" variant="secondary" onPress={onCover} /> : null}
+      {short && onCover ? <Button fullWidth label="Cover" variant="secondary" onPress={onCover} /> : null}
     </Card>
   );
 }

@@ -10,6 +10,8 @@ import { periodContaining } from "@trove/domain/budget";
 
 import { ApiError } from "@/data/http";
 
+import { roleErrorMessage } from "../role/budget-role";
+
 import type { EnvelopeLine } from "../home/home-model";
 
 /** More envelopes than this and the picker gets a search field. */
@@ -138,6 +140,8 @@ export function placementText(placement: DatePlacement): string | null {
 
 /** Honest failure copy: a dropped connection and a rejected save both mean nothing was saved. */
 export function saveErrorMessage(cause: unknown): string {
+  const refused = roleErrorMessage(cause);
+  if (refused) return refused;
   if (cause instanceof ApiError && cause.code === "network_error") {
     return "You're offline. Nothing was saved.";
   }

@@ -6,10 +6,14 @@ import { ApiError } from "@/data/http";
 import { budgetKey, useLedgerData } from "@/data/ledger-queries";
 import { useLedgerMutationsWithSound } from "@/features/sound/use-ledger-mutations-with-sound";
 
+import { roleErrorMessage } from "../role/budget-role";
+
 const FALLBACK_MESSAGE =
   "Couldn't start your budget. Your plan is saved on this device. Check your connection and retry.";
 
 function failureMessage(error: ApiError | null): string {
+  const refused = roleErrorMessage(error);
+  if (refused) return refused;
   if (error?.code === "budget_overplanned") {
     return "Your plan uses more than you have. Go back, lower some amounts, and try again.";
   }

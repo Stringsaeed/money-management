@@ -8,6 +8,7 @@ import { EmptyState, layout, Screen, showToast, space, Text } from "@/ui/trove";
 
 import type { ActiveBudgetView } from "../home/home-model";
 import { useReminderSync } from "../reminders/use-reminder-sync";
+import { useBudgetRole } from "../role/use-budget-role";
 
 import { dueDateLabel } from "./due-date-label";
 import { DueHeader } from "./due-header";
@@ -66,6 +67,7 @@ function DueContent({ view }: { readonly view: ActiveBudgetView }) {
   const due = useDue(view);
   const mutations = useLedgerMutationsWithSound();
   const markPaid = useMarkPaidTarget();
+  const { canAddSpending } = useBudgetRole();
   // Keeps local reminders in step when a bill is snoozed, even if the Budget tab is not open.
   useReminderSync(view, due);
 
@@ -145,13 +147,13 @@ function DueContent({ view }: { readonly view: ActiveBudgetView }) {
                   item={item}
                   late={section.key === "overdue"}
                   muted={due.reminders.prefs.mutedRuleIds.includes(item.ruleId)}
-                  onMarkPaid={() => markPaid.openFor(item)}
+                  onMarkPaid={canAddSpending ? () => markPaid.openFor(item) : undefined}
                   onSnooze={
                     section.key === "overdue" || section.key === "today"
                       ? () => snooze(item)
                       : undefined
                   }
-                  onSkip={() => confirmSkip(item)}
+                  onSkip={canAddSpending ? () => confirmSkip(item) : undefined}
                 />
               ))}
               {showSalary ? <SalaryRow amountMinor={salary} payday={due.nextPayday} /> : null}

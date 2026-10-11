@@ -11,10 +11,11 @@ interface DueRowProps {
   readonly item: V2DueOccurrence;
   readonly late: boolean;
   readonly muted: boolean;
-  readonly onMarkPaid: () => void;
+  /** Absent for a read-only viewer. */
+  readonly onMarkPaid?: () => void;
   /** Only offered for bills due today or already overdue. */
   readonly onSnooze?: () => void;
-  readonly onSkip: () => void;
+  readonly onSkip?: () => void;
 }
 
 /** One pending bill with its three actions. Nothing is recorded until Mark paid. */
@@ -36,9 +37,9 @@ export function DueRow({ item, late, muted, onMarkPaid, onSnooze, onSkip }: DueR
         {muted ? `${when} · reminders muted` : when}
       </Text>
       <View style={styles.actions}>
-        <Button label="Mark paid" onPress={onMarkPaid} size="sm" />
+        {onMarkPaid ? <Button label="Mark paid" onPress={onMarkPaid} size="sm" /> : null}
         {onSnooze ? <Chip label="Snooze 1 day" onPress={onSnooze} /> : null}
-        <Chip label="Skip this month" onPress={onSkip} />
+        {onSkip ? <Chip label="Skip this month" onPress={onSkip} /> : null}
       </View>
     </Card>
   );

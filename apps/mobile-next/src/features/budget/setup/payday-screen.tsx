@@ -3,10 +3,12 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { useAccountsQuery } from "@/data/ledger-queries";
+import { useAccountsQuery, useLedgerData } from "@/data/ledger-queries";
+import { useHouseholdMembership } from "@/features/household/use-household-membership";
 import { Button, ListGroup, ListRow, space, Switch, Text, TextField } from "@/ui/trove";
 
 import { FundingSection } from "./funding-section";
+import { HouseholdSharesSection } from "./household-shares-section";
 import { PaydayPicker } from "./payday-picker";
 import { SetupFrame } from "./setup-frame";
 import { SetupStatus } from "./setup-status";
@@ -17,6 +19,10 @@ import { useSetupDraft } from "./use-setup-draft";
 export function PaydayScreen() {
   const { draft, update, ready } = useSetupDraft();
   const accounts = useAccountsQuery();
+  const { scope } = useLedgerData();
+  const { household } = useHouseholdMembership(
+    scope.kind === "household" ? scope.householdId : null,
+  );
 
   if (accounts.isError && accounts.data.length === 0) {
     return (
@@ -89,6 +95,15 @@ export function PaydayScreen() {
         }
         onTotal={(openingCash) => update({ openingCash })}
       />
+      {scope.kind === "household" ? (
+        <HouseholdSharesSection
+          household={household}
+          shares={draft.householdShares}
+          onChange={(userId, text) =>
+            update({ householdShares: { ...draft.householdShares, [userId]: text } })
+          }
+        />
+      ) : null}
     </SetupFrame>
   );
 }

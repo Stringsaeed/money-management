@@ -2,6 +2,8 @@ import { StyleSheet, View } from "react-native";
 
 import { Button, Card, space, Text } from "@/ui/trove";
 
+import { PLAN_ADMIN_ONLY } from "./role/budget-role";
+
 const STEPS = [
   { title: "Payday and money", detail: "When you get paid and what you have now." },
   { title: "What it is for", detail: "Bills, everyday spending, and things you save for." },
@@ -10,12 +12,14 @@ const STEPS = [
 
 interface BudgetIntroProps {
   readonly hasDraft: boolean;
+  /** False for a household member who is not the admin: only the admin starts the budget. */
+  readonly canStart: boolean;
   readonly onStart: () => void;
   readonly onNotNow: () => void;
 }
 
 /** S1: one pitch and one way in. A saved draft turns Start into Continue setup. */
-export function BudgetIntro({ hasDraft, onStart, onNotNow }: BudgetIntroProps) {
+export function BudgetIntro({ hasDraft, canStart, onStart, onNotNow }: BudgetIntroProps) {
   return (
     <View style={styles.container}>
       <View style={styles.heading}>
@@ -38,7 +42,13 @@ export function BudgetIntro({ hasDraft, onStart, onNotNow }: BudgetIntroProps) {
         ))}
       </Card>
       <View style={styles.actions}>
-        <Button fullWidth label={hasDraft ? "Continue setup" : "Start"} onPress={onStart} />
+        {canStart ? (
+          <Button fullWidth label={hasDraft ? "Continue setup" : "Start"} onPress={onStart} />
+        ) : (
+          <Text accessibilityRole="alert" tone="secondary" variant="bodySm">
+            {PLAN_ADMIN_ONLY}
+          </Text>
+        )}
         <Button fullWidth label="Not now" variant="tertiary" onPress={onNotNow} />
       </View>
     </View>

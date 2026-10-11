@@ -12,7 +12,7 @@ import type { SavingRow as SavingRowData, SavingWarning } from "./bills-model";
 interface SavingRowProps {
   readonly row: SavingRowData;
   readonly onPress: () => void;
-  readonly onMarkPaid: () => void;
+  readonly onMarkPaid?: () => void;
 }
 
 const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
@@ -80,7 +80,7 @@ export function SavingRow({ row, onPress, onMarkPaid }: SavingRowProps) {
           {warningText(warning)}
         </Text>
       ))}
-      {row.targetMinor !== null ? (
+      {row.targetMinor !== null && onMarkPaid ? (
         <Button fullWidth label="Mark paid" variant="secondary" onPress={onMarkPaid} />
       ) : null}
     </Card>
