@@ -1,7 +1,12 @@
+import { differenceInCalendarDays } from "date-fns";
+
 import { BUDGET_CURRENCY, type V2Account, type V2Category } from "@trove/api/v2/contracts";
 
 import { ApiError } from "@/data/http";
+import { parseDateKey } from "@/utils/date";
 import { parseMoneyMinor } from "@/utils/money";
+
+import { PAYDAY_ON_TIME_DAYS } from "./payday-status";
 
 export const SALARY_CATEGORY_NAME = "Salary";
 
@@ -68,3 +73,15 @@ export function gotPaidErrorMessage(cause: unknown): string {
 
 /** The salary starts the new month when it is dated on or after the period's first day. */
 export const startsNewMonth = (date: string, periodStart: string): boolean => date >= periodStart;
+
+export type GotPaidTiming = "early" | "on_time" | "late";
+
+/** Before the period starts is early, the first days are on time, later is late. */
+export function gotPaidTiming(date: string, periodStart: string): GotPaidTiming {
+  const logged = parseDateKey(date);
+  const start = parseDateKey(periodStart);
+  if (!logged || !start) return "on_time";
+  const days = differenceInCalendarDays(logged, start);
+  if (days < 0) return "early";
+  return days < PAYDAY_ON_TIME_DAYS ? "on_time" : "late";
+}

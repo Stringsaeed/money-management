@@ -4,6 +4,7 @@ import type { V2BudgetActivateInput } from "@trove/api/v2/contracts";
 
 import { ApiError } from "@/data/http";
 import { budgetKey, useLedgerData } from "@/data/ledger-queries";
+import { track } from "@/features/analytics";
 import { useLedgerMutationsWithSound } from "@/features/sound/use-ledger-mutations-with-sound";
 
 import { roleErrorMessage } from "../role/budget-role";
@@ -38,6 +39,10 @@ export function useStartBudget(onStarted: () => void) {
     setError(null);
     try {
       await activateBudget(input);
+      track("budget_activated", {
+        envelope_count: input.envelopes.length,
+        groups: new Set(input.envelopes.map((envelope) => envelope.group)).size,
+      });
       onStarted();
     } catch (cause) {
       if (cause instanceof ApiError && cause.code === "budget_already_active") {

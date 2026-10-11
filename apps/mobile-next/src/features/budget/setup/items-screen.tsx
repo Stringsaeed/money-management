@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
+import { track } from "@/features/analytics";
 import { Button, ListGroup, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
@@ -60,6 +61,7 @@ export function ItemsScreen() {
             disabled={ticked.length === 0}
             onPress={() => {
               setup.update({ step: "amounts" });
+              track("budget_setup_step_completed", { step: "items" });
               router.push("/budget/setup/amounts");
             }}
           />

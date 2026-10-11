@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 
+import { track } from "@/features/analytics";
 import { useAccountsQuery, useCategoriesQuery, useLedgerMutations } from "@/data/ledger-queries";
 import { useLedgerMutationsWithSound } from "@/features/sound";
 import { showToast } from "@/ui/trove";
@@ -17,6 +18,7 @@ import {
   gotPaidErrorMessage,
   incomeCategories,
   salaryAccounts,
+  gotPaidTiming,
   SALARY_CATEGORY_NAME,
   startsNewMonth,
 } from "./got-paid-model";
@@ -73,6 +75,7 @@ export function useGotPaidForm(view: ActiveBudgetView) {
     } finally {
       setBusy(false);
     }
+    track("got_paid_logged", { timing: gotPaidTiming(date, current.period.start) });
     showToast({ message: "Salary logged. It's now money you can plan." });
     if (!startsNewMonth(date, current.period.start)) {
       router.dismissTo(BUDGET_HOME_ROUTE);

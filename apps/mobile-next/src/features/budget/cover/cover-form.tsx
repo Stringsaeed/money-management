@@ -3,6 +3,7 @@ import { Alert, StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
+import { track } from "@/features/analytics";
 import { useLedgerMutations } from "@/data/ledger-queries";
 import { Button, ListGroup, showToast, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
@@ -68,6 +69,10 @@ export function CoverForm({ view, targetId, amountMinor, onCovered, onDone }: Co
   const move = async () => {
     const ok = await write.run(() => createAssignments(coverInput(targetId, plan)));
     if (!ok) return;
+    const source = plan.takes[0]?.place.kind;
+    track("overspend_covered", {
+      source_type: source === "unplanned" ? "unassigned" : (source ?? "unassigned"),
+    });
     showToast({ message: `Covered ${money(plan.coveredMinor)} for ${target.envelope.name}` });
     onCovered?.(targetId);
     onDone();

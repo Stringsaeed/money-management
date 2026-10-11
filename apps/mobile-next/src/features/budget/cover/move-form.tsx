@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
+import { track } from "@/features/analytics";
 import { useLedgerMutations } from "@/data/ledger-queries";
 import { AmountInput, Button, showToast, space, Text } from "@/ui/trove";
 import { formatMoneyMinor, parseMoneyMinor } from "@/utils/money";
@@ -42,6 +43,7 @@ export function MoveForm({ view, fromId, onDone }: MoveFormProps) {
     if (!from || !to || preview?.status !== "ok" || amountMinor === null) return;
     const ok = await write.run(() => createAssignments(moveInput(from, to, amountMinor)));
     if (!ok) return;
+    track("money_moved", {});
     showToast({ message: `Moved ${money(amountMinor)} to ${to.name}` });
     onDone();
   };

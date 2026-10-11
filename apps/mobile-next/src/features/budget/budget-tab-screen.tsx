@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { useRef } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
+import { track } from "@/features/analytics";
 import { useBudgetQuery } from "@/data/ledger-queries";
 import { EmptyState, Header, layout, Screen, space } from "@/ui/trove";
 
@@ -53,9 +54,10 @@ export function BudgetTabScreen() {
           <BudgetIntro
             hasDraft={setup.exists}
             canStart={canEditPlan}
-            onStart={() =>
-              router.push(SETUP_STEP_ROUTES[setup.exists ? setup.draft.step : "payday"])
-            }
+            onStart={() => {
+              if (!setup.exists) track("budget_setup_started", {});
+              router.push(SETUP_STEP_ROUTES[setup.exists ? setup.draft.step : "payday"]);
+            }}
             onNotNow={() => router.navigate("/(tabs)/(home)")}
           />
         )}

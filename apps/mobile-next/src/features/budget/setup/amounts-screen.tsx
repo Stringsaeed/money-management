@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
+import { track } from "@/features/analytics";
 import { Button, space, Text } from "@/ui/trove";
 
 import { AmountRow } from "./amount-row";
@@ -55,6 +56,7 @@ export function AmountsScreen() {
           disabled={left === null || left < 0 || invalidAmounts}
           onPress={() => {
             setup.update({ step: "review" });
+            track("budget_setup_step_completed", { step: "amounts" });
             router.push("/budget/setup/review");
           }}
         />

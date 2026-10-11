@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import type { V2EnvelopeRepeat } from "@trove/api/v2/contracts";
 
+import { track } from "@/features/analytics";
 import { useLedgerMutations } from "@/data/ledger-queries";
 import { todayDateKey } from "@/utils/date";
 
@@ -55,7 +56,9 @@ export function useAddBigPaymentForm({ view, onAdded }: UseAddBigPaymentFormOpti
   const submit = async () => {
     if (!check.ok) return;
     const ok = await write.run(() => createEnvelope(check.input));
-    if (ok) onAdded(check.input.name);
+    if (!ok) return;
+    track("big_payment_created", { repeat: check.input.repeat ?? "once" });
+    onAdded(check.input.name);
   };
 
   return {

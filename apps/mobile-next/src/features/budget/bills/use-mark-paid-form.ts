@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { BUDGET_CURRENCY, type V2Account } from "@trove/api/v2/contracts";
 
+import { track } from "@/features/analytics";
 import { useLedgerMutations } from "@/data/ledger-queries";
 import { todayDateKey } from "@/utils/date";
 import { decimalFromMinor } from "@/utils/money";
@@ -49,7 +50,9 @@ export function useMarkPaidForm({ view, line, accounts, onPaid }: UseMarkPaidFor
   const submit = async () => {
     if (!check.ok) return;
     const ok = await write.run(() => payEnvelope(line.envelope.id, check.input));
-    if (ok) onPaid(check.input.amountMinor);
+    if (!ok) return;
+    track("bill_marked_paid", {});
+    onPaid(check.input.amountMinor);
   };
 
   return {

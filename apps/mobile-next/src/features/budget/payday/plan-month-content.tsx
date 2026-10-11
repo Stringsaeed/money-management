@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
+import { track } from "@/features/analytics";
 import { Amount, Button, showToast, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
@@ -26,6 +27,7 @@ export function PlanMonthContent({ view }: { readonly view: ActiveBudgetView }) 
   const finish = () => router.dismissTo(BUDGET_HOME_ROUTE);
   const repeat = async () => {
     if (!(await month.repeat())) return;
+    track("plan_repeated", {});
     showToast({
       message: `Planned ${money(plan.totalMinor)} across ${pluralEnvelopes(plan.items.length)}`,
     });

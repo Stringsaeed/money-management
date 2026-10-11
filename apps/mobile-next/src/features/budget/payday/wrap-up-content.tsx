@@ -4,6 +4,7 @@ import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
+import { track } from "@/features/analytics";
 import { useAccountsQuery } from "@/data/ledger-queries";
 import { Button, ListGroup, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
@@ -37,7 +38,10 @@ export function WrapUpContent({ view, wrapUp }: WrapUpContentProps) {
   const [resolved, setResolved] = useState<Readonly<Record<string, OverspendResolution>>>({});
   const resolve = (id: string, resolution: OverspendResolution) =>
     setResolved((current) => ({ ...current, [id]: resolution }));
-  const next = () => router.replace(nextPaydayStep("wrapUp", paydayFlowFacts(view)));
+  const next = (skipped: boolean) => {
+    track("month_wrapup_completed", { skipped });
+    router.replace(nextPaydayStep("wrapUp", paydayFlowFacts(view)));
+  };
 
   const range = periodLabel({ start: wrapUp.periodStart, end: wrapUp.periodEnd });
   const title = firstMonth
@@ -56,8 +60,8 @@ export function WrapUpContent({ view, wrapUp }: WrapUpContentProps) {
       }
       footer={
         <>
-          <Button fullWidth label="Next" onPress={next} />
-          <Button fullWidth label="Skip" variant="tertiary" onPress={next} />
+          <Button fullWidth label="Next" onPress={() => next(false)} />
+          <Button fullWidth label="Skip" variant="tertiary" onPress={() => next(true)} />
         </>
       }
     >
