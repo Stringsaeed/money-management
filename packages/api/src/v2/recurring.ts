@@ -323,6 +323,7 @@ export async function updateRecurringRule(
   input: V2RecurringUpdateInput,
   expectedRevision?: number,
   idempotencyKey?: string,
+  now = new Date(),
 ): Promise<V2RecurringRule> {
   const parsed = recurringUpdateSchema.parse(input);
   return withLedgerMutation(context, "recurring.update", idempotencyKey, async (db) => {
@@ -336,7 +337,7 @@ export async function updateRecurringRule(
     assertTimeZone(merged.timeZone);
     await validateRuleDependencies(db, context.ledgerId, merged);
     const lifecycle = parsed.lifecycle ?? current.lifecycle;
-    const eligibilityFloor = nextEligibilityFloor(current, lifecycle, merged.timeZone);
+    const eligibilityFloor = nextEligibilityFloor(current, lifecycle, merged, now);
     const updated = await db
       .update(v2RecurringRule)
       .set({
@@ -408,10 +409,22 @@ function assertTimeZone(timeZone: string): void {
   }
 }
 
-function nextEligibilityFloor(current: RuleRow, lifecycle: string, timeZone: string): string {
-  return lifecycle !== current.lifecycle && lifecycle === "active"
-    ? dateAfter(localDateInTimeZone(new Date(), timeZone))
-    : current.eligibilityFloor;
+/**
+ * Resuming skips everything up to today. Switching a reminder to auto-post
+ * starts posting from today, so unpaid past reminders are never back-posted.
+ */
+function nextEligibilityFloor(
+  current: RuleRow,
+  lifecycle: string,
+  merged: { readonly timeZone: string; readonly mode: RuleRow["mode"] },
+  now: Date,
+): string {
+  const today = localDateInTimeZone(now, merged.timeZone);
+  if (lifecycle !== current.lifecycle && lifecycle === "active") return dateAfter(today);
+  if (current.mode === "remind" && merged.mode === "auto_post") {
+    return current.eligibilityFloor > today ? current.eligibilityFloor : today;
+  }
+  return current.eligibilityFloor;
 }
 
 export interface UpcomingOccurrence {

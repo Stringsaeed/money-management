@@ -1,6 +1,12 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
-import { periodContaining, ruleInEffect, type PaydayRule } from "@trove/domain/budget";
+import {
+  nextPeriodStart,
+  periodContaining,
+  ruleInEffect,
+  type PaydayChange,
+  type PaydayRule,
+} from "@trove/domain/budget";
 import {
   v2Assignment,
   v2Budget,
@@ -175,17 +181,32 @@ export async function updateBudget(
 
     if (parsed.paydayRule) {
       const loaded = await loadBudget(db, budget, today);
-      const currentStart = loaded.projection.current.period.start;
-      const inEffect = ruleInEffect(loaded.paydays, currentStart);
-      if (!samePaydayRule(inEffect, parsed.paydayRule)) {
-        // History is insert-only per period start; a second change within the
-        // same period replaces only that period's row.
+      const effectiveFrom = paydayEffectiveFrom(
+        loaded.paydays,
+        loaded.projection.current.period.start,
+        parsed.paydayRule,
+        today,
+      );
+      // A change that has not started yet is replaced by this one (or dropped
+      // when the person goes back to the rule in effect).
+      await db
+        .delete(v2BudgetPayday)
+        .where(
+          and(
+            eq(v2BudgetPayday.budgetId, budget.id),
+            gt(v2BudgetPayday.effectiveFrom, loaded.projection.current.period.start),
+            ...(effectiveFrom ? [ne(v2BudgetPayday.effectiveFrom, effectiveFrom)] : []),
+          ),
+        );
+      if (effectiveFrom) {
+        // History is insert-only per period start; a second change for the
+        // same start replaces only that start's row.
         await db
           .insert(v2BudgetPayday)
           .values({
             ledgerId: context.ledgerId,
             budgetId: budget.id,
-            effectiveFrom: currentStart,
+            effectiveFrom,
             ...paydayColumns(parsed.paydayRule),
             createdBy: actor,
           })
@@ -215,6 +236,25 @@ export async function updateBudget(
     if (!updated) throw new V2ApiError(500, "budget_update_failed", "The budget was not saved.");
     return budgetView(await loadBudget(db, updated, today));
   });
+}
+
+/**
+ * Where a payday change starts, or null when `rule` is already the rule in effect.
+ * It reshapes the current period only while that period, re-cut under the new
+ * rule, still contains today. Otherwise today would sit in a brand-new period
+ * that started in the past without this period's plan, so the change waits for
+ * the next payday under the old rule.
+ */
+function paydayEffectiveFrom(
+  paydays: readonly PaydayChange[],
+  currentStart: string,
+  rule: PaydayRule,
+  today: string,
+): string | null {
+  const inEffect = ruleInEffect(paydays, currentStart);
+  if (samePaydayRule(inEffect, rule)) return null;
+  if (nextPeriodStart(rule, currentStart) > today) return currentStart;
+  return nextPeriodStart(inEffect, currentStart);
 }
 
 /** The person acting, for "who" lines; a household ledger's owner id would not say who. */

@@ -63,7 +63,14 @@ const line = (
     version: 1,
     ...envelope,
   },
-  totals: { id: envelope.id ?? "e1", plannedMinor, spentMinor: 0, rolloverMinor: 0, leftMinor },
+  totals: {
+    id: envelope.id ?? "e1",
+    plannedMinor,
+    budgetedMinor: plannedMinor,
+    spentMinor: 0,
+    rolloverMinor: 0,
+    leftMinor,
+  },
 });
 
 describe("savingRow", () => {

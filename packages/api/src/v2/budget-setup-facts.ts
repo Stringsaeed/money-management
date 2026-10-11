@@ -4,7 +4,7 @@ import { format, parseISO, subDays } from "date-fns";
 import { periodContaining, type PaydayRule } from "@trove/domain/budget";
 import { v2Account, v2Category, v2RecurringRule, v2Transaction } from "@trove/db/schema/v2-ledger";
 
-import { balancesAsOf } from "./budget";
+import { balancesAsOf, budgetCardAccountIds, openingCardDebt } from "./budget";
 import { BUDGET_CURRENCY, type V2BudgetSetupFacts } from "./contracts";
 import { safeMinor, type V2LedgerContext } from "./shared";
 
@@ -131,6 +131,9 @@ export async function getBudgetSetupFacts(
       .orderBy(desc(count()), asc(v2Category.name))
       .limit(TOP_CATEGORY_LIMIT),
   ]);
+  const cardAccountIds = await budgetCardAccountIds(db, ledgerId);
+  const cards = new Set(cardAccountIds);
+  const openingCardDebtMinor = await openingCardDebt(db, ledgerId, cardAccountIds, period.start);
 
   return {
     today,
@@ -143,7 +146,9 @@ export async function getBudgetSetupFacts(
       categoryId: row.categoryId,
       accountId: row.accountId,
       amountMinor: safeMinor(row.amountMinor, "Spending total"),
+      onCard: cards.has(row.accountId),
     })),
+    openingCardDebtMinor,
     cardPaymentsSincePeriodStart: paymentRows.map((row) => ({
       fromAccountId: row.fromAccountId,
       toAccountId: row.toAccountId,

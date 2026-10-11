@@ -24,7 +24,13 @@ const rent: BudgetEnvelope = {
 };
 
 function plan(periodStart: string, envelopeId: string, amountMinor: number): BudgetAssignment {
-  return { periodStart, fromEnvelopeId: null, toEnvelopeId: envelopeId, amountMinor };
+  return {
+    periodStart,
+    fromEnvelopeId: null,
+    toEnvelopeId: envelopeId,
+    amountMinor,
+    reason: "plan",
+  };
 }
 
 function facts(overrides: Partial<BudgetFacts>): BudgetFacts {
@@ -36,6 +42,7 @@ function facts(overrides: Partial<BudgetFacts>): BudgetFacts {
     spending: [],
     cardPayments: [],
     cashMinor: 0,
+    openingCardDebtMinor: 0,
     today: "2026-02-10",
     ...overrides,
   };
@@ -60,6 +67,7 @@ describe("rollover", () => {
     expect(projection.periods[0]?.envelopes[0]).toEqual({
       envelopeId: "groceries",
       plannedMinor: 100_000,
+      budgetedMinor: 100_000,
       spentMinor: 30_000,
       rolloverMinor: 0,
       leftMinor: 70_000,
@@ -67,6 +75,7 @@ describe("rollover", () => {
     expect(projection.current.envelopes[0]).toEqual({
       envelopeId: "groceries",
       plannedMinor: 50_000,
+      budgetedMinor: 50_000,
       spentMinor: 0,
       rolloverMinor: 70_000,
       leftMinor: 120_000,
@@ -142,6 +151,63 @@ describe("unassigned identities", () => {
     expect(paid.unassignedMinor).toBe(500_000);
   });
 
+  // Review B-H1: cash 5,000; the card owed 1,500 before activation; DEWA (Bills) planned 0.
+  // Pay the old 1,500 statement, then spend 1,000 on the card in DEWA.
+  it("keeps Not planned yet when a card payment for old debt is followed by card spend", () => {
+    const dewa: BudgetEnvelope = {
+      id: "dewa",
+      group: "bills",
+      categoryIds: ["dewa"],
+      startFresh: false,
+    };
+    const oldDebtPaid = facts({
+      envelopes: [dewa],
+      cashMinor: 350_000,
+      openingCardDebtMinor: 150_000,
+      cardPayments: [{ date: "2026-02-05", amountMinor: 150_000 }],
+    });
+    expect(projectBudget(oldDebtPaid).current.unassignedMinor).toBe(350_000);
+
+    const current = projectBudget({
+      ...oldDebtPaid,
+      spending: [{ date: "2026-02-06", categoryId: "dewa", amountMinor: 100_000, onCard: true }],
+    }).current;
+    expect(current.envelopes[0]?.leftMinor).toBe(-100_000);
+    expect(current.cardReserveMinor).toBe(100_000);
+    expect(current.unassignedMinor).toBe(350_000);
+    expect(current.safeToSpendMinor).toBe(350_000);
+  });
+
+  it("lowers Not planned yet by an unmapped card expense, like an unmapped cash expense", () => {
+    const unmappedCard = projectBudget({
+      ...planned,
+      spending: [{ date: "2026-02-05", categoryId: "gifts", amountMinor: 20_000, onCard: true }],
+    }).current;
+    const uncategorisedCard = projectBudget({
+      ...planned,
+      spending: [{ date: "2026-02-05", categoryId: null, amountMinor: 20_000, onCard: true }],
+    }).current;
+    const unmappedCash = projectBudget({ ...planned, cashMinor: 980_000 }).current;
+    expect(unmappedCard.cardReserveMinor).toBe(20_000);
+    expect(unmappedCard.unassignedMinor).toBe(480_000);
+    expect(uncategorisedCard.unassignedMinor).toBe(480_000);
+    expect(unmappedCash.unassignedMinor).toBe(480_000);
+  });
+
+  it("reserves new card spend once old debt is paid off and the rest pays the new spend", () => {
+    // Old debt 500; paid 800: 500 retires the old debt, 300 pays 300 of the 1,000 new spend.
+    const current = projectBudget({
+      ...planned,
+      cashMinor: 920_000,
+      openingCardDebtMinor: 50_000,
+      cardPayments: [{ date: "2026-02-08", amountMinor: 80_000 }],
+      spending: [{ date: "2026-02-05", categoryId: "food", amountMinor: 100_000, onCard: true }],
+    }).current;
+    expect(current.cardReserveMinor).toBe(70_000);
+    // cash 9,200 - groceries left 1,000 - rent left 3,000 - reserve 700.
+    expect(current.unassignedMinor).toBe(450_000);
+  });
+
   it("holds back money assigned to a future period", () => {
     const current = projectBudget({
       ...planned,
@@ -172,5 +238,41 @@ describe("safe to spend", () => {
     const current = projectBudget({ ...planned, today: "2026-02-24" }).current;
     expect(current.daysLeft).toBe(1);
     expect(current.perDayMinor).toBe(700_000);
+  });
+});
+
+describe("budgeted", () => {
+  it("counts plan and repeat assignments only, not money moved around the plan", () => {
+    const current = projectBudget({
+      ...planned,
+      assignments: [
+        ...planned.assignments,
+        {
+          periodStart: P1,
+          fromEnvelopeId: null,
+          toEnvelopeId: "groceries",
+          amountMinor: 10_000,
+          reason: "repeat",
+        },
+        {
+          periodStart: P1,
+          fromEnvelopeId: "rent",
+          toEnvelopeId: "groceries",
+          amountMinor: 30_000,
+          reason: "cover",
+        },
+        {
+          periodStart: P1,
+          fromEnvelopeId: "groceries",
+          toEnvelopeId: null,
+          amountMinor: 5_000,
+          reason: "move",
+        },
+      ],
+    }).current;
+    expect(current.envelopes.map((e) => [e.envelopeId, e.plannedMinor, e.budgetedMinor])).toEqual([
+      ["groceries", 235_000, 210_000],
+      ["rent", 270_000, 300_000],
+    ]);
   });
 });

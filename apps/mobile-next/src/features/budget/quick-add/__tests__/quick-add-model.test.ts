@@ -48,6 +48,7 @@ const line = (id: string, name = id): EnvelopeLine => {
   const totals: V2EnvelopeTotals = {
     id,
     plannedMinor: 0,
+    budgetedMinor: 0,
     spentMinor: 0,
     rolloverMinor: 0,
     leftMinor: 0,

@@ -11,6 +11,7 @@ export {
 } from "./periods";
 export {
   projectBudget,
+  type AssignmentReason,
   type BudgetAssignment,
   type BudgetEnvelope,
   type BudgetFacts,

@@ -2,15 +2,24 @@ import { Hono } from "hono";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { v2Assignment, v2Budget, v2Envelope, v2EnvelopeCategory } from "@trove/db/schema/v2-budget";
+import {
+  v2Assignment,
+  v2Budget,
+  v2BudgetPayday,
+  v2Envelope,
+  v2EnvelopeCategory,
+} from "@trove/db/schema/v2-budget";
 import { v2GuestSession } from "@trove/db/schema/v2-identity";
 import { v2Account, v2Category, v2Ledger } from "@trove/db/schema/v2-ledger";
 
 import { createTestDb } from "../../test-support/db";
 import type {
   V2AccountCreateInput,
+  V2AccountUpdateInput,
   V2AssignmentsCreateInput,
   V2BudgetActivateInput,
+  V2BudgetSetupFacts,
+  V2BudgetUpdateInput,
   V2EnvelopeCreateInput,
   V2EnvelopeUpdateInput,
   V2BudgetView,
@@ -18,6 +27,7 @@ import type {
   V2Principal,
   V2TransactionCreateInput,
 } from "../contracts";
+import { budgetToday } from "../budget";
 import { claimGuestLedger } from "../guest-claim";
 import { createV2LedgerRoutes } from "../ledger-routes";
 import { V2ApiError } from "../shared";
@@ -30,7 +40,9 @@ type RequestBody =
   | V2BudgetActivateInput
   | V2EnvelopeCreateInput
   | V2EnvelopeUpdateInput
-  | V2AssignmentsCreateInput;
+  | V2AssignmentsCreateInput
+  | V2BudgetUpdateInput
+  | V2AccountUpdateInput;
 type SeedBody = V2AccountCreateInput | V2CategoryCreateInput | V2TransactionCreateInput;
 
 // 2026-10-11 in Dubai. Payday 25 -> current period 2026-09-25..2026-10-24, 14 days left.
@@ -38,7 +50,7 @@ const NOW = new Date("2026-10-11T08:00:00Z");
 const GUEST = "guest-budget";
 
 /** An app over a fresh PGlite DB with a guest principal and a fixed clock. */
-async function createHarness() {
+async function createHarness(now: Date = NOW) {
   const db = await createTestDb({ householdLedgerMirror: false });
   await db.insert(v2GuestSession).values({
     id: GUEST,
@@ -60,7 +72,7 @@ async function createHarness() {
   );
   app.route(
     "/api/v2",
-    createV2LedgerRoutes({ db, getPrincipal: async () => principal, now: () => NOW }),
+    createV2LedgerRoutes({ db, getPrincipal: async () => principal, now: () => now }),
   );
 
   async function send<T = ActiveView>(
@@ -181,9 +193,11 @@ describe("V2 budget activation over HTTP", () => {
     expect(read.status).toBe(200);
     const view = read.body;
     expect(view).toEqual(activated.body);
+    const [stored] = await db.select().from(v2Budget);
     expect(view.budget).toMatchObject({
       currency: "AED",
       activationPeriodStart: "2026-09-25",
+      activatedOn: stored ? budgetToday(stored.createdAt) : "missing",
       usualSalaryMinor: 1_500_000,
       paydayReminder: true,
       defaultAccountId: "current",
@@ -392,7 +406,12 @@ describe("V2 budget envelopes and assignments over HTTP", () => {
       "cover-1",
     );
     expect(covered.status).toBe(201);
-    expect(totals(covered.body, groceries)).toMatchObject({ plannedMinor: 130_000, leftMinor: 0 });
+    // The cover moves money; the plan (budgeted) stays what the plan set.
+    expect(totals(covered.body, groceries)).toMatchObject({
+      plannedMinor: 130_000,
+      budgetedMinor: 100_000,
+      leftMinor: 0,
+    });
     expect(covered.body.current).toMatchObject({
       unassignedMinor: 320_000,
       safeToSpendMinor: 370_000,
@@ -440,6 +459,18 @@ describe("V2 budget envelopes and assignments over HTTP", () => {
       expect(rejected.status).toBe(422);
       expect(rejected.body).toMatchObject({ error: { code: "invalid_period_start" } });
     }
+  });
+
+  it("keeps a budget funding account an AED non-card account", async () => {
+    // Review B-L2: as a card, its spending would count twice and transfers into it as card payments.
+    for (const change of [{ type: "credit_card" }, { currency: "USD" }] as const) {
+      const refused = await send("PATCH", "/accounts/current", change);
+      expect(refused.status).toBe(422);
+      expect(refused.body).toMatchObject({ error: { code: "funding_account_locked" } });
+    }
+    await seed("/accounts", { id: "other", name: "Other", type: "savings", currency: "AED" });
+    expect((await send("PATCH", "/accounts/other", { type: "credit_card" })).status).toBe(200);
+    expect((await send("PATCH", "/accounts/current", { name: "Main" })).status).toBe(200);
   });
 
   it("archiving an envelope returns its Left to Not planned yet and frees its Category", async () => {
@@ -555,10 +586,11 @@ describe("V2 budget envelopes and assignments over HTTP", () => {
     );
     expect(period.status).toBe(200);
     expect(period.body.period).toEqual({ start: "2026-09-25", end: "2026-10-24" });
+    const zero = { spentMinor: 0, rolloverMinor: 0 };
     expect(period.body.envelopes).toEqual([
-      { id: groceries, plannedMinor: 100_000, spentMinor: 0, rolloverMinor: 0, leftMinor: 100_000 },
-      { id: dining, plannedMinor: 50_000, spentMinor: 0, rolloverMinor: 0, leftMinor: 50_000 },
-      { id: rent, plannedMinor: 500_000, spentMinor: 0, rolloverMinor: 0, leftMinor: 500_000 },
+      { id: groceries, plannedMinor: 100_000, budgetedMinor: 100_000, ...zero, leftMinor: 100_000 },
+      { id: dining, plannedMinor: 50_000, budgetedMinor: 50_000, ...zero, leftMinor: 50_000 },
+      { id: rent, plannedMinor: 500_000, budgetedMinor: 500_000, ...zero, leftMinor: 500_000 },
     ]);
     expect((await send("GET", "/budget/periods/2026-09-26")).status).toBe(404);
     expect((await send("GET", "/budget/periods/2026-08-25")).status).toBe(404);
@@ -598,5 +630,198 @@ describe("guest claim with a budget", () => {
     expect(
       await db.select().from(v2Budget).where(eq(v2Budget.ledgerId, "v2:guest:g1")),
     ).toHaveLength(1);
+  });
+});
+
+describe("budget review fixes over HTTP", () => {
+  // Review B-H1: cash 5,000; the card owes 1,500 from 1 Sep; payday 25; DEWA (Bills) planned 0.
+  it("keeps Not planned yet when old card debt is paid and new card spend follows", async () => {
+    const { send, seed } = await createHarness();
+    await seed("/accounts", {
+      id: "current",
+      name: "Current",
+      type: "checking",
+      currency: "AED",
+      openingBalanceMinor: 500_000,
+    });
+    await seed("/accounts", { id: "card", name: "Card", type: "credit_card", currency: "AED" });
+    await seed("/categories", { id: "dewa", name: "DEWA", kind: "expense" });
+    await seed("/categories", { id: "gifts", name: "Gifts", kind: "expense" });
+    await seed("/transactions", {
+      id: "old-card-spend",
+      kind: "expense",
+      categoryId: "gifts",
+      accountId: "card",
+      amountMinor: 150_000,
+      date: "2026-09-01",
+    });
+    const activated = await send(
+      "POST",
+      "/budget/activate",
+      {
+        paydayRule: { kind: "day", day: 25 },
+        fundingAccountIds: ["current"],
+        envelopes: [{ name: "DEWA", group: "bills", categoryId: "dewa", plannedMinor: 0 }],
+      },
+      "activate",
+    );
+    expect(activated.status).toBe(201);
+    expect(activated.body.current.unassignedMinor).toBe(500_000);
+
+    await seed("/transactions", {
+      id: "pay-statement",
+      kind: "transfer",
+      accountId: "current",
+      toAccountId: "card",
+      amountMinor: 150_000,
+      date: "2026-10-05",
+    });
+    await seed("/transactions", {
+      id: "dewa-on-card",
+      kind: "expense",
+      categoryId: "dewa",
+      accountId: "card",
+      amountMinor: 100_000,
+      date: "2026-10-06",
+    });
+    const view = (await send("GET", "/budget")).body;
+    expect(view.current).toMatchObject({
+      unassignedMinor: 350_000,
+      safeToSpendMinor: 350_000,
+      cardReserveMinor: 100_000,
+    });
+    // The extra 1,000 is not there to hand out.
+    const tooMuch = await send("POST", "/budget/assignments", {
+      items: [
+        {
+          fromEnvelopeId: null,
+          toEnvelopeId: view.envelopes[0]?.id ?? "",
+          amountMinor: 350_001,
+          reason: "plan",
+        },
+      ],
+    });
+    expect(tooMuch.body).toMatchObject({ error: { code: "insufficient_funds" } });
+
+    // An unmapped card purchase lowers Not planned yet, like an unmapped cash purchase.
+    await seed("/transactions", {
+      id: "gift-on-card",
+      kind: "expense",
+      categoryId: "gifts",
+      accountId: "card",
+      amountMinor: 20_000,
+      date: "2026-10-07",
+    });
+    expect((await send("GET", "/budget")).body.current).toMatchObject({
+      unassignedMinor: 330_000,
+      cardReserveMinor: 120_000,
+    });
+
+    // Setup facts carry what the preview needs to reproduce the same reserve.
+    const facts = await send<V2BudgetSetupFacts>("GET", "/budget/setup-facts?payday=day:25");
+    expect(facts.status).toBe(200);
+    expect(facts.body.openingCardDebtMinor).toBe(150_000);
+    expect(facts.body.spendSincePeriodStart).toEqual(
+      expect.arrayContaining([
+        { categoryId: "dewa", accountId: "card", amountMinor: 100_000, onCard: true },
+        { categoryId: "gifts", accountId: "card", amountMinor: 20_000, onCard: true },
+      ]),
+    );
+  });
+
+  // Review B-H2: cash 500 and Food (everyday) planned 500, so Not planned yet is 0.
+  it("plans an upcoming period from Not planned yet only", async () => {
+    const { db, send, seed } = await createHarness();
+    await seed("/accounts", {
+      id: "current",
+      name: "Current",
+      type: "checking",
+      currency: "AED",
+      openingBalanceMinor: 50_000,
+    });
+    await seed("/categories", { id: "food", name: "Food", kind: "expense" });
+    const activated = await send("POST", "/budget/activate", {
+      paydayRule: { kind: "day", day: 25 },
+      fundingAccountIds: ["current"],
+      envelopes: [{ name: "Food", group: "everyday", categoryId: "food", plannedMinor: 50_000 }],
+    });
+    const food = activated.body.envelopes[0]?.id ?? "";
+    expect(activated.body.current.unassignedMinor).toBe(0);
+
+    const minted = await send("POST", "/budget/assignments", {
+      periodStart: "2026-10-25",
+      items: [
+        { fromEnvelopeId: food, toEnvelopeId: null, amountMinor: 50_000, reason: "move" },
+        { fromEnvelopeId: food, toEnvelopeId: null, amountMinor: 50_000, reason: "move" },
+      ],
+    });
+    expect(minted.status).toBe(422);
+    expect(minted.body).toMatchObject({ error: { code: "invalid_future_source" } });
+    expect(await db.select().from(v2Assignment)).toHaveLength(1);
+    expect((await send("GET", "/budget")).body.current).toMatchObject({
+      unassignedMinor: 0,
+      safeToSpendMinor: 50_000,
+    });
+  });
+
+  it("reshapes the current period when the new payday still contains today", async () => {
+    // Today 11 Oct, period 25 Sep - 24 Oct. Day 20 ends this period on 19 Oct, after today.
+    const { send, seed } = await createHarness();
+    await seed("/accounts", { id: "current", name: "Current", type: "checking", currency: "AED" });
+    await seed("/categories", { id: "food", name: "Food", kind: "expense" });
+    await send("POST", "/budget/activate", {
+      paydayRule: { kind: "day", day: 25 },
+      fundingAccountIds: ["current"],
+      envelopes: [{ name: "Food", group: "everyday", categoryId: "food", plannedMinor: 0 }],
+    });
+    const changed = await send("PATCH", "/budget", { paydayRule: { kind: "day", day: 20 } });
+    expect(changed.status).toBe(200);
+    expect(changed.body.paydayRule).toEqual({ kind: "day", day: 20 });
+    expect(changed.body.current.period).toEqual({ start: "2026-09-25", end: "2026-10-19" });
+  });
+
+  // Review B-M1: today 20 Nov, payday 25 -> 25 Oct - 24 Nov; Food planned 1,000.
+  it("waits for the next payday when the new payday would end the period before today", async () => {
+    const { db, send, seed } = await createHarness(new Date("2026-11-20T08:00:00Z"));
+    await seed("/accounts", {
+      id: "current",
+      name: "Current",
+      type: "checking",
+      currency: "AED",
+      openingBalanceMinor: 500_000,
+    });
+    await seed("/categories", { id: "food", name: "Food", kind: "expense" });
+    await send("POST", "/budget/activate", {
+      paydayRule: { kind: "day", day: 25 },
+      fundingAccountIds: ["current"],
+      envelopes: [{ name: "Food", group: "everyday", categoryId: "food", plannedMinor: 100_000 }],
+    });
+    const paydays = () =>
+      db
+        .select({
+          from: v2BudgetPayday.effectiveFrom,
+          kind: v2BudgetPayday.kind,
+          day: v2BudgetPayday.day,
+        })
+        .from(v2BudgetPayday)
+        .orderBy(v2BudgetPayday.effectiveFrom);
+
+    const changed = await send("PATCH", "/budget", { paydayRule: { kind: "day", day: 1 } });
+    expect(changed.status).toBe(200);
+    expect(changed.body.current.period).toEqual({ start: "2026-10-25", end: "2026-11-24" });
+    expect(changed.body.current.envelopes[0]).toMatchObject({
+      plannedMinor: 100_000,
+      rolloverMinor: 0,
+      leftMinor: 100_000,
+    });
+    expect(await paydays()).toEqual([
+      { from: "2026-10-25", kind: "day", day: 25 },
+      { from: "2026-11-25", kind: "day", day: 1 },
+    ]);
+
+    // Changing back before it starts drops the waiting change.
+    const reverted = await send("PATCH", "/budget", { paydayRule: { kind: "day", day: 25 } });
+    expect(reverted.body.current.period).toEqual({ start: "2026-10-25", end: "2026-11-24" });
+    expect(await paydays()).toEqual([{ from: "2026-10-25", kind: "day", day: 25 }]);
   });
 });

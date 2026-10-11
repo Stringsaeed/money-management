@@ -452,6 +452,7 @@ export function createV2LedgerRoutes(dependencies: V2LedgerRouteDependencies): H
         await readJson(context, recurringUpdateSchema),
         parseExpectedVersion(context.req.header("If-Match")),
         idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
+        dependencies.now?.() ?? new Date(),
       ),
     );
   });

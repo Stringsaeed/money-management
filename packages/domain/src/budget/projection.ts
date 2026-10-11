@@ -14,18 +14,27 @@ export interface BudgetEnvelope {
   startFresh: boolean;
 }
 
+/** Why money moved. `plan` and `repeat` set the plan; the rest move money around it. */
+export type AssignmentReason = "plan" | "cover" | "move" | "leftover" | "repeat";
+
 /** A null side is Unassigned (Not planned yet). `periodStart` may be a future period. */
 export interface BudgetAssignment {
   periodStart: string;
   fromEnvelopeId: string | null;
   toEnvelopeId: string | null;
   amountMinor: number;
+  reason: AssignmentReason;
 }
 
-/** An expense from a funding account (`onCard: false`) or a credit-card account (`onCard: true`). */
+/**
+ * An expense from a funding account (`onCard: false`) or a credit-card account (`onCard: true`).
+ * The engine maps it to an envelope by Category. Pass funding expenses in mapped Categories and
+ * EVERY card expense: an unmapped card expense lowers Not planned yet through the card reserve,
+ * the same way an unmapped cash expense lowers it through cash.
+ */
 export interface BudgetSpending {
   date: string;
-  categoryId: string;
+  categoryId: string | null;
   amountMinor: number;
   onCard: boolean;
 }
@@ -45,12 +54,20 @@ export interface BudgetFacts {
   cardPayments: readonly CardPayment[];
   /** Sum of current balances of the funding accounts. */
   cashMinor: number;
+  /**
+   * What the AED credit cards owed just before the activation period started (0 when they owed
+   * nothing). Card payments since activation pay this off first; it was never reserved.
+   */
+  openingCardDebtMinor: number;
   today: string;
 }
 
 export interface EnvelopePeriodTotals {
   envelopeId: string;
+  /** Net of every assignment in the period (plan, cover, move, leftover, repeat). */
   plannedMinor: number;
+  /** Net of the `plan` and `repeat` assignments only: what the plan set, before money moved. */
+  budgetedMinor: number;
   spentMinor: number;
   rolloverMinor: number;
   leftMinor: number;
@@ -106,14 +123,14 @@ function envelopeTotals(
   envelope: BudgetEnvelope,
   previous: EnvelopePeriodTotals | null,
 ): EnvelopePeriodTotals {
-  let plannedMinor = 0;
-  for (const assignment of facts.assignments) {
-    if (!within(period, assignment.periodStart)) continue;
-    plannedMinor += netInto(assignment, envelope.id);
-  }
+  const { plannedMinor, budgetedMinor } = plannedInto(facts.assignments, period, envelope.id);
   let spentMinor = 0;
   for (const item of facts.spending) {
-    if (within(period, item.date) && envelopeByCategory.get(item.categoryId) === envelope.id) {
+    if (
+      item.categoryId !== null &&
+      within(period, item.date) &&
+      envelopeByCategory.get(item.categoryId) === envelope.id
+    ) {
       spentMinor += item.amountMinor;
     }
   }
@@ -121,10 +138,28 @@ function envelopeTotals(
   return {
     envelopeId: envelope.id,
     plannedMinor,
+    budgetedMinor,
     spentMinor,
     rolloverMinor,
     leftMinor: rolloverMinor + plannedMinor - spentMinor,
   };
+}
+
+/** Net assignments into the envelope in the period: all of them, and the plan-setting ones. */
+function plannedInto(
+  assignments: readonly BudgetAssignment[],
+  period: BudgetPeriod,
+  envelopeId: string,
+): Pick<EnvelopePeriodTotals, "plannedMinor" | "budgetedMinor"> {
+  let plannedMinor = 0;
+  let budgetedMinor = 0;
+  for (const assignment of assignments) {
+    if (!within(period, assignment.periodStart)) continue;
+    const netMinor = netInto(assignment, envelopeId);
+    plannedMinor += netMinor;
+    if (assignment.reason === "plan" || assignment.reason === "repeat") budgetedMinor += netMinor;
+  }
+  return { plannedMinor, budgetedMinor };
 }
 
 function currentTotals(facts: BudgetFacts, current: PeriodTotals): CurrentPeriodTotals {
@@ -163,16 +198,22 @@ function futureAssigned(facts: BudgetFacts, current: BudgetPeriod): number {
   return totalMinor;
 }
 
-/** Card spending not yet paid off since activation, never below zero. */
+/**
+ * Card spending since activation that is not paid off yet, never below zero. Payments first
+ * retire the debt the cards had before activation, so paying an old statement cannot cancel the
+ * reserve held for newer card spending.
+ */
 function cardReserve(facts: BudgetFacts): number {
-  let owedMinor = 0;
+  let spentMinor = 0;
   for (const item of facts.spending) {
-    if (item.onCard && item.date >= facts.activationStart) owedMinor += item.amountMinor;
+    if (item.onCard && item.date >= facts.activationStart) spentMinor += item.amountMinor;
   }
+  let paidMinor = 0;
   for (const payment of facts.cardPayments) {
-    if (payment.date >= facts.activationStart) owedMinor -= payment.amountMinor;
+    if (payment.date >= facts.activationStart) paidMinor += payment.amountMinor;
   }
-  return Math.max(owedMinor, 0);
+  const paidTowardNewSpendMinor = Math.max(paidMinor - Math.max(facts.openingCardDebtMinor, 0), 0);
+  return Math.max(spentMinor - paidTowardNewSpendMinor, 0);
 }
 
 /** Safe to spend per remaining day, floored to whole AED; 0 when nothing is safe to spend. */

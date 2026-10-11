@@ -1,4 +1,5 @@
 import { and, asc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
+import { format, parseISO, subDays } from "date-fns";
 
 import { localDateInTimeZone } from "@trove/domain/clock";
 import {
@@ -9,6 +10,7 @@ import {
   savingPerPayday,
   type BudgetFacts,
   type BudgetProjection,
+  type EnvelopePeriodTotals,
   type PaydayChange,
 } from "@trove/domain/budget";
 import {
@@ -21,7 +23,13 @@ import {
 } from "@trove/db/schema/v2-budget";
 import { v2Account, v2Transaction } from "@trove/db/schema/v2-ledger";
 
-import { BUDGET_CURRENCY, type V2Budget, type V2BudgetView, type V2Envelope } from "./contracts";
+import {
+  BUDGET_CURRENCY,
+  type V2Budget,
+  type V2BudgetView,
+  type V2Envelope,
+  type V2EnvelopeTotals,
+} from "./contracts";
 import { iso, safeMinor, type V2DbExecutor, type V2LedgerContext } from "./shared";
 
 /**
@@ -78,14 +86,19 @@ export function budgetView(loaded: LoadedBudget): V2BudgetView {
       perDayMinor: current.perDayMinor,
       daysLeft: current.daysLeft,
       cardReserveMinor: current.cardReserveMinor,
-      envelopes: current.envelopes.map((totals) => ({
-        id: totals.envelopeId,
-        plannedMinor: totals.plannedMinor,
-        spentMinor: totals.spentMinor,
-        rolloverMinor: totals.rolloverMinor,
-        leftMinor: totals.leftMinor,
-      })),
+      envelopes: current.envelopes.map(envelopeTotals),
     },
+  };
+}
+
+export function envelopeTotals(totals: EnvelopePeriodTotals): V2EnvelopeTotals {
+  return {
+    id: totals.envelopeId,
+    plannedMinor: totals.plannedMinor,
+    budgetedMinor: totals.budgetedMinor,
+    spentMinor: totals.spentMinor,
+    rolloverMinor: totals.rolloverMinor,
+    leftMinor: totals.leftMinor,
   };
 }
 
@@ -130,7 +143,7 @@ export async function loadBudget(
   today: string,
 ): Promise<LoadedBudget> {
   const ledgerId = budget.ledgerId;
-  const [paydayRows, fundingRows, envelopeRows, assignmentRows, cardRows] = await Promise.all([
+  const [paydayRows, fundingRows, envelopeRows, assignmentRows, cardIds] = await Promise.all([
     db.select().from(v2BudgetPayday).where(eq(v2BudgetPayday.budgetId, budget.id)),
     db
       .select({ accountId: v2BudgetFundingAccount.accountId })
@@ -142,32 +155,28 @@ export async function loadBudget(
       .from(v2Envelope)
       .where(and(eq(v2Envelope.budgetId, budget.id), eq(v2Envelope.lifecycle, "active")))
       .orderBy(asc(v2Envelope.sortOrder), asc(v2Envelope.id)),
-    // One row per (period, from, to): bounded by periods x envelope pairs, not by moves.
+    // One row per (period, from, to, reason): bounded by periods x envelope pairs, not by moves.
     db
       .select({
         periodStart: v2Assignment.periodStart,
         fromEnvelopeId: v2Assignment.fromEnvelopeId,
         toEnvelopeId: v2Assignment.toEnvelopeId,
+        reason: v2Assignment.reason,
         amountMinor: sql<string>`sum(${v2Assignment.amountMinor})`,
       })
       .from(v2Assignment)
       .where(eq(v2Assignment.budgetId, budget.id))
-      .groupBy(v2Assignment.periodStart, v2Assignment.fromEnvelopeId, v2Assignment.toEnvelopeId),
-    db
-      .select({ id: v2Account.id })
-      .from(v2Account)
-      .where(
-        and(
-          eq(v2Account.ledgerId, ledgerId),
-          eq(v2Account.type, "credit_card"),
-          eq(v2Account.currency, BUDGET_CURRENCY),
-        ),
+      .groupBy(
+        v2Assignment.periodStart,
+        v2Assignment.fromEnvelopeId,
+        v2Assignment.toEnvelopeId,
+        v2Assignment.reason,
       ),
+    budgetCardAccountIds(db, ledgerId),
   ]);
 
   const paydays = paydayRows.map(paydayChange);
   const fundingAccountIds = fundingRows.map((row) => row.accountId);
-  const cardAccountIds = cardRows.map((row) => row.id);
   const envelopeIds = envelopeRows.map((row) => row.id);
   const mappingRows =
     envelopeIds.length === 0
@@ -194,10 +203,11 @@ export async function loadBudget(
   const mappedCategoryIds = mappingRows.map((mapping) => mapping.categoryId);
   const range = { from: budget.activationPeriodStart, to: today };
 
-  const [balances, spending, cardPayments] = await Promise.all([
+  const [balances, spending, cardPayments, openingCardDebtMinor] = await Promise.all([
     balancesAsOf(db, ledgerId, fundingAccountIds, today),
-    mappedSpending(db, ledgerId, mappedCategoryIds, fundingAccountIds, cardAccountIds, range),
-    cardPaymentsSince(db, ledgerId, fundingAccountIds, cardAccountIds, range),
+    budgetSpending(db, ledgerId, mappedCategoryIds, fundingAccountIds, cardIds, range),
+    cardPaymentsSince(db, ledgerId, fundingAccountIds, cardIds, range),
+    openingCardDebt(db, ledgerId, cardIds, budget.activationPeriodStart),
   ]);
   let cashMinor = 0;
   for (const value of balances.values()) cashMinor += value;
@@ -216,10 +226,12 @@ export async function loadBudget(
       fromEnvelopeId: row.fromEnvelopeId,
       toEnvelopeId: row.toEnvelopeId,
       amountMinor: safeMinor(row.amountMinor, "Assignment total"),
+      reason: row.reason,
     })),
     spending,
     cardPayments,
     cashMinor,
+    openingCardDebtMinor,
     today,
   };
   return { budget, paydays, fundingAccountIds, envelopes, projection: projectBudget(facts) };
@@ -280,8 +292,46 @@ interface DateRange {
   readonly to: string;
 }
 
-/** Expenses in mapped Categories from funding or credit-card accounts, one row per day/category/account. */
-async function mappedSpending(
+/** Every AED credit-card account of the ledger, archived ones included (their spending still counts). */
+export async function budgetCardAccountIds(db: V2DbExecutor, ledgerId: string): Promise<string[]> {
+  const rows = await db
+    .select({ id: v2Account.id })
+    .from(v2Account)
+    .where(
+      and(
+        eq(v2Account.ledgerId, ledgerId),
+        eq(v2Account.type, "credit_card"),
+        eq(v2Account.currency, BUDGET_CURRENCY),
+      ),
+    );
+  return rows.map((row) => row.id);
+}
+
+/**
+ * What the cards owed just before `periodStart`: their balances counting every transaction
+ * dated before it, negated (a card balance is negative while it owes), never below zero.
+ */
+export async function openingCardDebt(
+  db: V2DbExecutor,
+  ledgerId: string,
+  cardAccountIds: readonly string[],
+  periodStart: string,
+): Promise<number> {
+  const balances = await balancesAsOf(db, ledgerId, cardAccountIds, dayBefore(periodStart));
+  let balanceMinor = 0;
+  for (const value of balances.values()) balanceMinor += value;
+  return Math.max(-balanceMinor, 0);
+}
+
+function dayBefore(date: string): string {
+  return format(subDays(parseISO(date), 1), "yyyy-MM-dd");
+}
+
+/**
+ * Expenses in mapped Categories from funding accounts plus EVERY expense from a credit-card
+ * account (mapped or not, so unmapped card spending is reserved), one row per day/category/account.
+ */
+async function budgetSpending(
   db: V2DbExecutor,
   ledgerId: string,
   categoryIds: readonly string[],
@@ -289,8 +339,16 @@ async function mappedSpending(
   cardAccountIds: readonly string[],
   range: DateRange,
 ): Promise<BudgetFacts["spending"]> {
-  const accountIds = [...fundingAccountIds, ...cardAccountIds];
-  if (categoryIds.length === 0 || accountIds.length === 0) return [];
+  const fromFunding =
+    categoryIds.length === 0 || fundingAccountIds.length === 0
+      ? undefined
+      : and(
+          inArray(v2Transaction.categoryId, [...categoryIds]),
+          inArray(v2Transaction.accountId, [...fundingAccountIds]),
+        );
+  const fromCard =
+    cardAccountIds.length === 0 ? undefined : inArray(v2Transaction.accountId, [...cardAccountIds]);
+  if (!fromFunding && !fromCard) return [];
   const rows = await db
     .select({
       date: v2Transaction.date,
@@ -305,24 +363,17 @@ async function mappedSpending(
         eq(v2Transaction.kind, "expense"),
         gte(v2Transaction.date, range.from),
         lte(v2Transaction.date, range.to),
-        inArray(v2Transaction.categoryId, [...categoryIds]),
-        inArray(v2Transaction.accountId, accountIds),
+        or(fromFunding, fromCard),
       ),
     )
     .groupBy(v2Transaction.date, v2Transaction.categoryId, v2Transaction.accountId);
   const cards = new Set(cardAccountIds);
-  return rows.flatMap((row) =>
-    row.categoryId
-      ? [
-          {
-            date: row.date,
-            categoryId: row.categoryId,
-            amountMinor: safeMinor(row.amountMinor, "Spending total"),
-            onCard: cards.has(row.accountId),
-          },
-        ]
-      : [],
-  );
+  return rows.map((row) => ({
+    date: row.date,
+    categoryId: row.categoryId,
+    amountMinor: safeMinor(row.amountMinor, "Spending total"),
+    onCard: cards.has(row.accountId),
+  }));
 }
 
 /** Transfers from a funding account to a credit-card account, one row per day. */
@@ -373,6 +424,7 @@ function budgetRow(row: BudgetRow): V2Budget {
     ledgerId: row.ledgerId,
     currency: row.currency,
     activationPeriodStart: row.activationPeriodStart,
+    activatedOn: budgetToday(row.createdAt),
     usualSalaryMinor:
       row.usualSalaryMinor === null ? null : safeMinor(row.usualSalaryMinor, "Usual salary"),
     paydayReminder: row.paydayReminder,
