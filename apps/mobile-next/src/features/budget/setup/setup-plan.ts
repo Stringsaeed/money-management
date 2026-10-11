@@ -1,0 +1,214 @@
+import { projectBudget } from "@trove/domain/budget";
+import {
+  BUDGET_CURRENCY,
+  type V2Account,
+  type V2BudgetActivateInput,
+  type V2BudgetSetupFacts,
+  type V2PaydayRule,
+} from "@trove/api/v2/contracts";
+
+import { parseMoneyMinor } from "@/utils/money";
+
+import { isItemTicked, type SetupItem } from "./setup-items";
+import { type GROUP_ORDER, type SetupDraft } from "./setup-types";
+
+/** Typed money text: empty is 0, anything that is not a valid AED amount is `null`. */
+export function parseAmountText(text: string): number | null {
+  const value = text.trim();
+  if (!value) return 0;
+  const minor = parseMoneyMinor(value, BUDGET_CURRENCY);
+  return minor !== null && minor >= 0 ? minor : null;
+}
+
+const isFundingEligible = (account: V2Account): boolean =>
+  !account.archived && account.currency === BUDGET_CURRENCY && account.type !== "credit_card";
+
+/** Accounts a person can tick as money they have now: active, AED, not a credit card. */
+export const fundingEligibleAccounts = (accounts: readonly V2Account[]): V2Account[] =>
+  accounts.filter(isFundingEligible);
+
+const DEFAULT_FUNDING_TYPES = new Set<V2Account["type"]>(["checking", "cash"]);
+
+/** Current and cash accounts start ticked; savings, investment and the rest do not. */
+export const isFundingTicked = (
+  account: V2Account,
+  funding: Readonly<Record<string, boolean>>,
+): boolean => funding[account.id] ?? DEFAULT_FUNDING_TYPES.has(account.type);
+
+/** Active AED credit cards: their spending comes out of envelopes and reserves cash. */
+export const cardAccountIds = (accounts: readonly V2Account[]): string[] =>
+  accounts
+    .filter(
+      (account) =>
+        !account.archived && account.currency === BUDGET_CURRENCY && account.type === "credit_card",
+    )
+    .map((account) => account.id);
+
+export interface FundingChoice {
+  /** Ticked eligible accounts. Empty when the person types one total instead. */
+  readonly accountIds: readonly string[];
+  /** The typed total in minor units when no eligible account exists. */
+  readonly openingCashMinor: number | null;
+  /** The typed total could not be read. */
+  readonly invalid: boolean;
+}
+
+/** With eligible accounts the person ticks them; with none they type one total. */
+export function fundingChoice(
+  accounts: readonly V2Account[],
+  draft: Pick<SetupDraft, "funding" | "openingCash">,
+): FundingChoice {
+  const eligible = fundingEligibleAccounts(accounts);
+  if (eligible.length > 0) {
+    return {
+      accountIds: eligible
+        .filter((account) => isFundingTicked(account, draft.funding))
+        .map((account) => account.id),
+      openingCashMinor: null,
+      invalid: false,
+    };
+  }
+  const total = parseAmountText(draft.openingCash);
+  return { accountIds: [], openingCashMinor: total ?? 0, invalid: total === null };
+}
+
+/** Whether S2 can move on: a payday, readable money text, and money to plan with. */
+export function paydayStepReady(
+  draft: Pick<SetupDraft, "payday" | "usualSalary">,
+  funding: FundingChoice,
+): boolean {
+  const needsAccount = funding.openingCashMinor === null && funding.accountIds.length === 0;
+  return (
+    draft.payday !== null &&
+    parseAmountText(draft.usualSalary) !== null &&
+    !funding.invalid &&
+    !needsAccount
+  );
+}
+
+export interface PlanInputs {
+  readonly facts: V2BudgetSetupFacts;
+  readonly payday: V2PaydayRule;
+  /** The ticked items, in envelope order. */
+  readonly items: readonly SetupItem[];
+  readonly amounts: Readonly<Record<string, string>>;
+  readonly funding: FundingChoice;
+  readonly cardAccountIds: readonly string[];
+}
+
+export const plannedMinor = (item: SetupItem, amounts: Readonly<Record<string, string>>): number =>
+  parseAmountText(amounts[item.key] ?? "") ?? 0;
+
+export const hasInvalidAmount = (
+  items: readonly SetupItem[],
+  amounts: Readonly<Record<string, string>>,
+): boolean => items.some((item) => parseAmountText(amounts[item.key] ?? "") === null);
+
+export interface PlanPreview {
+  /** Left to plan (S4) and Not planned yet (S5): the engine's Unassigned Money at activation. */
+  readonly leftToPlanMinor: number;
+  readonly safeToSpendMinor: number;
+  readonly perDayMinor: number;
+  readonly daysLeft: number;
+  readonly groupTotals: Readonly<Record<(typeof GROUP_ORDER)[number], number>>;
+}
+
+/**
+ * Runs the same engine the server runs at activation on the draft plan, so Left to plan and the
+ * Safe to spend in the review equal the numbers the new budget shows. Spending already logged in
+ * the period counts once: it lowers what an envelope has left and is not added back.
+ */
+export function previewPlan(inputs: PlanInputs): PlanPreview {
+  const { facts, payday, items, amounts, funding } = inputs;
+  const start = facts.period.start;
+  const fundingIds = new Set(funding.accountIds);
+  const cardIds = new Set(inputs.cardAccountIds);
+  const mappedCategoryIds = new Set(
+    items.flatMap((item) => (item.categoryId ? [item.categoryId] : [])),
+  );
+
+  const cashMinor =
+    funding.openingCashMinor ??
+    facts.accountBalances
+      .filter((balance) => fundingIds.has(balance.accountId))
+      .reduce((sum, balance) => sum + balance.balanceMinor, 0);
+
+  const projection = projectBudget({
+    paydays: [{ effectiveFrom: start, rule: payday }],
+    activationStart: start,
+    envelopes: items.map((item) => ({
+      id: item.key,
+      group: item.group,
+      categoryIds: item.categoryId ? [item.categoryId] : [],
+      startFresh: false,
+    })),
+    assignments: items.flatMap((item) => {
+      const amountMinor = plannedMinor(item, amounts);
+      return amountMinor > 0
+        ? [{ periodStart: start, fromEnvelopeId: null, toEnvelopeId: item.key, amountMinor }]
+        : [];
+    }),
+    spending: facts.spendSincePeriodStart.flatMap((row) =>
+      row.categoryId &&
+      mappedCategoryIds.has(row.categoryId) &&
+      (fundingIds.has(row.accountId) || cardIds.has(row.accountId))
+        ? [
+            {
+              date: start,
+              categoryId: row.categoryId,
+              amountMinor: row.amountMinor,
+              onCard: cardIds.has(row.accountId),
+            },
+          ]
+        : [],
+    ),
+    cardPayments: facts.cardPaymentsSincePeriodStart
+      .filter(
+        (payment) => fundingIds.has(payment.fromAccountId) && cardIds.has(payment.toAccountId),
+      )
+      .map((payment) => ({ date: start, amountMinor: payment.amountMinor })),
+    cashMinor,
+    today: facts.today,
+  });
+
+  const groupTotals = { bills: 0, everyday: 0, saving: 0 };
+  for (const item of items) groupTotals[item.group] += plannedMinor(item, amounts);
+  const current = projection.current;
+  return {
+    leftToPlanMinor: current.unassignedMinor,
+    safeToSpendMinor: current.safeToSpendMinor,
+    perDayMinor: current.perDayMinor,
+    daysLeft: current.daysLeft,
+    groupTotals,
+  };
+}
+
+/** The ticked items in envelope order: Bills, then Everyday, then Saving for. */
+export const tickedItems = (
+  items: readonly SetupItem[],
+  selection: Readonly<Record<string, boolean>>,
+): SetupItem[] => items.filter((item) => isItemTicked(item, selection));
+
+/** The one activation request for the draft: funding, envelopes with their Categories, amounts. */
+export function buildActivateInput(
+  draft: Pick<SetupDraft, "usualSalary" | "paydayReminder" | "amounts">,
+  payday: V2PaydayRule,
+  funding: FundingChoice,
+  items: readonly SetupItem[],
+): V2BudgetActivateInput {
+  const salary = parseAmountText(draft.usualSalary) ?? 0;
+  return {
+    paydayRule: payday,
+    ...(salary > 0 && { usualSalaryMinor: salary }),
+    paydayReminder: draft.paydayReminder,
+    ...(funding.openingCashMinor === null
+      ? { fundingAccountIds: [...funding.accountIds] }
+      : { openingCashMinor: funding.openingCashMinor }),
+    envelopes: items.map((item) => ({
+      name: item.name,
+      group: item.group,
+      ...(item.categoryId ? { categoryId: item.categoryId } : { newCategory: { name: item.name } }),
+      plannedMinor: plannedMinor(item, draft.amounts),
+    })),
+  };
+}

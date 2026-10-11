@@ -1,12 +1,17 @@
 import { createContext, useContext, useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import type { Collection, UtilsRecord } from "@tanstack/db";
-import { useQuery, type QueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, type QueryClient } from "@tanstack/react-query";
 
 import type {
   V2Account,
+  V2BudgetActivateInput,
+  V2BudgetSetupFacts,
+  V2BudgetUpdateInput,
+  V2BudgetView,
   V2Category,
   V2Home,
+  V2PaydayRule,
   V2RecurringRule,
   V2Transaction,
 } from "@trove/api/v2/contracts";
@@ -170,6 +175,63 @@ export function useHomeQuery(): HomeQueryResult {
   };
 }
 
+export interface BudgetQueryResult<T> {
+  readonly data: T | undefined;
+  readonly isLoading: boolean;
+  readonly isError: boolean;
+  /** The data belongs to the previous input while the new one loads. */
+  readonly isStale: boolean;
+  readonly retry: () => Promise<void>;
+}
+
+/** Prefix of every Budget query for one ledger scope, so one invalidation refreshes them all. */
+export const budgetKey = (identityKey: string, scope: LedgerScope) =>
+  ["v2", "budget", scopeKey(identityKey, scope)] as const;
+
+export function useBudgetQuery(): BudgetQueryResult<V2BudgetView> {
+  const { identityKey, scope } = useLedgerData();
+  const query = useQuery({
+    queryKey: [...budgetKey(identityKey, scope), "view"],
+    queryFn: () => ledgerClient.budget.get(scope),
+    staleTime: 15_000,
+    retry: 1,
+  });
+  return {
+    data: query.data,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    isStale: false,
+    retry: async () => {
+      await query.refetch();
+    },
+  };
+}
+
+/** AED facts for the period `payday` implies; idle until a payday is chosen. */
+export function useBudgetSetupFactsQuery(
+  payday: V2PaydayRule | null,
+): BudgetQueryResult<V2BudgetSetupFacts> {
+  const { identityKey, scope } = useLedgerData();
+  const query = useQuery({
+    queryKey: [...budgetKey(identityKey, scope), "setup-facts", payday],
+    queryFn: () => ledgerClient.budget.setupFacts(scope, payday ?? { kind: "last_workday" }),
+    enabled: payday !== null,
+    // Keep the previous period's facts on screen while a changed payday loads.
+    placeholderData: keepPreviousData,
+    staleTime: 15_000,
+    retry: 1,
+  });
+  return {
+    data: query.data,
+    isLoading: query.isLoading && payday !== null,
+    isError: query.isError,
+    isStale: query.isPlaceholderData,
+    retry: async () => {
+      await query.refetch();
+    },
+  };
+}
+
 export function useUpcomingQuery(): LedgerQueryResult<UpcomingOccurrence> {
   const { identityKey, scope } = useLedgerData();
   const query = useQuery({
@@ -195,22 +257,25 @@ export function useLedgerMutations() {
   const fingerprint = (value: string): string => value;
 
   // oxlint-disable-next-line complexity -- refresh invalidates only the collections affected by a mutation.
-  const refresh = async (kind: keyof LedgerCollections | "home") => {
+  const refresh = async (kind: keyof LedgerCollections | "home" | "budget") => {
     const refreshes: Promise<unknown>[] = [];
-    if (kind === "accounts" || kind === "home")
+    // Activation creates the "My money" account and Categories, so it reloads both.
+    if (kind === "accounts" || kind === "home" || kind === "budget")
       refreshes.push(collections.accounts.utils.refetch());
-    if (kind === "categories" || kind === "home")
+    if (kind === "categories" || kind === "home" || kind === "budget")
       refreshes.push(collections.categories.utils.refetch());
     if (kind === "transactions" || kind === "home")
       refreshes.push(collections.transactions.utils.refetch());
     if (kind === "recurring" || kind === "home")
       refreshes.push(collections.recurring.utils.refetch());
     await Promise.all(refreshes);
-    if (kind === "accounts" || kind === "transactions" || kind === "home") {
+    if (kind === "accounts" || kind === "transactions" || kind === "home" || kind === "budget") {
       await queryClient.invalidateQueries({
         queryKey: ["v2", "home", scopeKey(identityKey, scope)],
       });
     }
+    // Every ledger write can move Safe to spend and Not planned yet.
+    await queryClient.invalidateQueries({ queryKey: budgetKey(identityKey, scope) });
     await queryClient.invalidateQueries({
       queryKey: ["v2", "upcoming", scopeKey(identityKey, scope)],
     });
@@ -410,6 +475,28 @@ export function useLedgerMutations() {
             requestKey,
           });
           await refresh("recurring");
+          return result;
+        },
+      );
+    },
+    activateBudget: async (input: V2BudgetActivateInput) => {
+      return runWithRequestKey(
+        "budget.activate",
+        fingerprint(JSON.stringify(input) ?? ""),
+        async (requestKey) => {
+          const result = await ledgerClient.budget.activate(scope, input, { requestKey });
+          await refresh("budget");
+          return result;
+        },
+      );
+    },
+    updateBudget: async (input: V2BudgetUpdateInput, version?: number) => {
+      return runWithRequestKey(
+        "budget.update",
+        fingerprint(JSON.stringify([input, version]) ?? ""),
+        async (requestKey) => {
+          const result = await ledgerClient.budget.update(scope, input, { version, requestKey });
+          await refresh("budget");
           return result;
         },
       );

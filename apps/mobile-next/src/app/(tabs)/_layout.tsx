@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router";
+import { BUDGETS_ENABLED } from "@/config/features";
 import { AppTabBar } from "@/navigation/app-tab-bar";
 import { colors } from "@/ui/trove";
 
@@ -10,6 +11,10 @@ export default function TabLayout() {
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.bg.canvas } }}
     >
       <Tabs.Screen name="(home)" options={{ title: "Home" }} />
+      <Tabs.Screen
+        name="envelopes"
+        options={{ title: "Budget", href: BUDGETS_ENABLED ? undefined : null }}
+      />
       <Tabs.Screen name="ledger" options={{ title: "Ledger" }} />
       <Tabs.Screen name="market" options={{ title: "Market" }} />
       <Tabs.Screen name="settings" options={{ title: "Settings" }} />
