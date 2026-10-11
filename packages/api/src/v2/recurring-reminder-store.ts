@@ -53,19 +53,22 @@ const make = Effect.gen(function* () {
           ),
       ),
 
-    activeReminderRules: run("reminders.activeReminderRules", async (db) => {
-      const rows = await db
-        .select()
-        .from(v2RecurringRule)
-        .where(
-          and(
-            eq(v2RecurringRule.ledgerId, ledgerId),
-            eq(v2RecurringRule.lifecycle, "active"),
-            eq(v2RecurringRule.mode, "remind"),
-          ),
-        );
-      return rows.map(decodeRule);
-    }),
+    /** Active `remind` rules, only `currency`'s when given (a rule belongs to its currency's budget). */
+    activeReminderRules: (currency: string | undefined) =>
+      run("reminders.activeReminderRules", async (db) => {
+        const rows = await db
+          .select()
+          .from(v2RecurringRule)
+          .where(
+            and(
+              eq(v2RecurringRule.ledgerId, ledgerId),
+              eq(v2RecurringRule.lifecycle, "active"),
+              eq(v2RecurringRule.mode, "remind"),
+              ...(currency ? [eq(v2RecurringRule.currency, currency)] : []),
+            ),
+          );
+        return rows.map(decodeRule);
+      }),
 
     recordedDatesOf: (ruleIds: readonly string[]) =>
       run("reminders.recordedDatesOf", (db) =>
@@ -114,10 +117,11 @@ const make = Effect.gen(function* () {
       }),
 
     /**
-     * Budget activation (#372 decision): active expense rules whose Category
-     * maps to a Bills envelope stop auto-posting and become reminders.
+     * Budget activation (#372 decision): active expense rules in the budget's
+     * currency whose Category maps to a Bills envelope stop auto-posting and
+     * become reminders. Other currencies' rules belong to other budgets.
      */
-    remindBillRules: (billCategoryIds: readonly string[]) =>
+    remindBillRules: (currency: string, billCategoryIds: readonly string[]) =>
       run("reminders.remindBillRules", async (db) => {
         if (billCategoryIds.length === 0) return;
         await db
@@ -134,6 +138,7 @@ const make = Effect.gen(function* () {
               eq(v2RecurringRule.kind, "expense"),
               eq(v2RecurringRule.lifecycle, "active"),
               eq(v2RecurringRule.mode, "auto_post"),
+              eq(v2RecurringRule.currency, currency),
               inArray(v2RecurringRule.categoryId, [...billCategoryIds]),
             ),
           );

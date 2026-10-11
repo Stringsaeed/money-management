@@ -64,12 +64,30 @@ const make = Effect.gen(function* () {
     Effect.tryPromise({ try: () => query(db), catch: storeFailure(operation) });
 
   return {
-    findBudget: run("budget.find", async (db) => {
-      const rows = await db.select().from(v2Budget).where(eq(v2Budget.ledgerId, ledgerId)).limit(1);
-      return rows[0] && decodeBudget(rows[0]);
-    }),
+    /** The ledger's budget in `currency` (unique per ledger and currency). */
+    findBudget: (currency: string) =>
+      run("budget.find", async (db) => {
+        const rows = await db
+          .select()
+          .from(v2Budget)
+          .where(and(eq(v2Budget.ledgerId, ledgerId), eq(v2Budget.currency, currency)))
+          .limit(1);
+        return rows[0] && decodeBudget(rows[0]);
+      }),
 
-    loadPlan: (budget: BudgetRow) => run("budget.loadPlan", (db) => loadPlan(db, ledgerId, budget)),
+    /** The ledger's budgets, oldest first, at most `limit`. */
+    listBudgets: (limit: number) =>
+      run("budget.list", async (db) => {
+        const rows = await db
+          .select()
+          .from(v2Budget)
+          .where(eq(v2Budget.ledgerId, ledgerId))
+          .orderBy(asc(v2Budget.createdAt), asc(v2Budget.id))
+          .limit(limit);
+        return rows.map(decodeBudget);
+      }),
+
+    loadPlan: (budget: BudgetRow) => run("budget.loadPlan", (db) => loadPlan(db, budget)),
 
     insertPlan: (plan: NewBudgetPlan) =>
       run("budget.insertPlan", async (db) => {
@@ -159,7 +177,7 @@ const make = Effect.gen(function* () {
         await db.insert(v2Envelope).values(envelope);
         await db
           .insert(v2EnvelopeCategory)
-          .values({ ledgerId, envelopeId: envelope.id, categoryId });
+          .values({ ledgerId, budgetId: envelope.budgetId, envelopeId: envelope.id, categoryId });
         if (assignment) await db.insert(v2Assignment).values(assignment);
       }),
 
@@ -176,8 +194,8 @@ const make = Effect.gen(function* () {
           .where(eq(v2Envelope.id, envelopeId)),
       ),
 
-    /** Which envelopes the given Categories map to (a Category maps to at most one). */
-    mappingsOf: (categoryIds: readonly string[]) =>
+    /** Which envelopes of the budget the given Categories map to (at most one each per budget). */
+    mappingsOf: (budgetId: string, categoryIds: readonly string[]) =>
       run("budget.mappingsOf", (db) =>
         db
           .select({
@@ -187,19 +205,21 @@ const make = Effect.gen(function* () {
           .from(v2EnvelopeCategory)
           .where(
             and(
-              eq(v2EnvelopeCategory.ledgerId, ledgerId),
+              eq(v2EnvelopeCategory.budgetId, budgetId),
               inArray(v2EnvelopeCategory.categoryId, [...categoryIds]),
             ),
           ),
       ),
 
-    replaceMappings: (envelopeId: string, categoryIds: readonly string[]) =>
+    replaceMappings: (budgetId: string, envelopeId: string, categoryIds: readonly string[]) =>
       run("budget.replaceMappings", async (db) => {
         await db.delete(v2EnvelopeCategory).where(eq(v2EnvelopeCategory.envelopeId, envelopeId));
         if (categoryIds.length === 0) return;
         await db
           .insert(v2EnvelopeCategory)
-          .values(categoryIds.map((categoryId) => ({ ledgerId, envelopeId, categoryId })));
+          .values(
+            categoryIds.map((categoryId) => ({ ledgerId, budgetId, envelopeId, categoryId })),
+          );
       }),
 
     /** The envelope's first mapped Category by id, where a big payment is recorded. */
@@ -229,11 +249,7 @@ export class BudgetStore extends Context.Service<BudgetStore, Effect.Success<typ
   static readonly layer = Layer.effect(BudgetStore, make);
 }
 
-async function loadPlan(
-  db: V2DbExecutor,
-  ledgerId: string,
-  budget: BudgetRow,
-): Promise<StoredPlan> {
+async function loadPlan(db: V2DbExecutor, budget: BudgetRow): Promise<StoredPlan> {
   const [paydayRows, fundingRows, envelopeRows, assignmentRows] = await Promise.all([
     db.select().from(v2BudgetPayday).where(eq(v2BudgetPayday.budgetId, budget.id)),
     db
@@ -276,7 +292,7 @@ async function loadPlan(
           .from(v2EnvelopeCategory)
           .where(
             and(
-              eq(v2EnvelopeCategory.ledgerId, ledgerId),
+              eq(v2EnvelopeCategory.budgetId, budget.id),
               inArray(v2EnvelopeCategory.envelopeId, envelopeIds),
             ),
           );

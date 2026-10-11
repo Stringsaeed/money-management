@@ -8,11 +8,26 @@ import { V2ApiError } from "./shared";
  * them into REST status codes, error codes, and messages.
  */
 
-export class BudgetNotFound extends Schema.TaggedError<BudgetNotFound>()("BudgetNotFound", {}) {}
+/** `currency` is set when the request named the budget's currency. */
+export class BudgetNotFound extends Schema.TaggedError<BudgetNotFound>()("BudgetNotFound", {
+  currency: Schema.optional(Schema.String),
+}) {}
+
+/** The ledger has more than one budget and the request did not say which currency. */
+export class BudgetCurrencyRequired extends Schema.TaggedError<BudgetCurrencyRequired>()(
+  "BudgetCurrencyRequired",
+  {},
+) {}
 
 export class BudgetAlreadyActive extends Schema.TaggedError<BudgetAlreadyActive>()(
   "BudgetAlreadyActive",
-  {},
+  { currency: Schema.String },
+) {}
+
+/** A budget only counts accounts in its own currency (ADR-0002). */
+export class BudgetCurrencyMismatch extends Schema.TaggedError<BudgetCurrencyMismatch>()(
+  "BudgetCurrencyMismatch",
+  { accountId: Schema.String, budgetCurrency: Schema.String },
 ) {}
 
 /** The written plan would leave Not planned yet below zero; the write rolls back. */
@@ -28,18 +43,13 @@ export class BudgetFundingInvalid extends Schema.TaggedError<BudgetFundingInvali
   "BudgetFundingInvalid",
   {
     accountId: Schema.String,
-    reason: Schema.Literals(["missing", "currency", "credit_card"]),
+    reason: Schema.Literals(["missing", "credit_card"]),
   },
 ) {}
 
 export class BudgetDefaultAccountInvalid extends Schema.TaggedError<BudgetDefaultAccountInvalid>()(
   "BudgetDefaultAccountInvalid",
   { accountId: Schema.String },
-) {}
-
-export class BudgetAccountInvalid extends Schema.TaggedError<BudgetAccountInvalid>()(
-  "BudgetAccountInvalid",
-  {},
 ) {}
 
 export class BudgetCategoryInvalid extends Schema.TaggedError<BudgetCategoryInvalid>()(
@@ -184,11 +194,12 @@ export function storeFailure(operation: string) {
 
 export type BudgetFailure =
   | BudgetNotFound
+  | BudgetCurrencyRequired
   | BudgetAlreadyActive
+  | BudgetCurrencyMismatch
   | BudgetOverplanned
   | BudgetFundingInvalid
   | BudgetDefaultAccountInvalid
-  | BudgetAccountInvalid
   | BudgetCategoryInvalid
   | BudgetCategoryDuplicate
   | CategoryAlreadyMapped

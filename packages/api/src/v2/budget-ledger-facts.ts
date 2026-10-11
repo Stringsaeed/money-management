@@ -7,11 +7,7 @@ import { v2Account, v2Category, v2RecurringRule, v2Transaction } from "@trove/db
 
 import { storeFailure } from "./budget-errors";
 import { BudgetLedger, LedgerDb } from "./budget-services";
-import {
-  BUDGET_CURRENCY,
-  type transactionCreateSchema,
-  type V2BudgetSetupFacts,
-} from "./contracts";
+import type { transactionCreateSchema, V2BudgetSetupFacts } from "./contracts";
 import { safeMinor, type V2DbExecutor } from "./shared";
 import { insertTransaction } from "./transactions";
 
@@ -45,8 +41,9 @@ const make = Effect.gen(function* () {
     balancesAsOf: (accountIds: readonly string[], today: string) =>
       run("ledger.balancesAsOf", (db) => balancesAsOf(db, ledgerId, accountIds, today)),
 
-    /** Every AED credit-card account, archived ones included (their spending still counts). */
-    cardAccountIds: run("ledger.cardAccountIds", (db) => cardAccountIds(db, ledgerId)),
+    /** Every credit-card account in `currency`, archived ones included (their spending still counts). */
+    cardAccountIds: (currency: string) =>
+      run("ledger.cardAccountIds", (db) => cardAccountIds(db, ledgerId, currency)),
 
     /** What the cards owed just before `periodStart`, never below zero. */
     openingCardDebt: (cardIds: readonly string[], periodStart: string) =>
@@ -98,14 +95,14 @@ const make = Effect.gen(function* () {
         }),
       ),
 
-    insertCashAccount: (id: string, name: string, openingBalanceMinor: number) =>
+    insertCashAccount: (id: string, name: string, currency: string, openingBalanceMinor: number) =>
       run("ledger.insertCashAccount", (db) =>
         db.insert(v2Account).values({
           ledgerId,
           id,
           name,
           type: "cash",
-          currency: BUDGET_CURRENCY,
+          currency,
           openingBalanceMinor,
           createdBy: ledger.ownerId,
           updatedBy: ledger.ownerId,
@@ -116,8 +113,10 @@ const make = Effect.gen(function* () {
     insertTransaction: (parsed: NewExpense) =>
       run("ledger.insertTransaction", (db) => insertTransaction(db, ledger, parsed)),
 
-    setupFacts: (period: BudgetPeriod, lastPeriod: BudgetPeriod, today: string) =>
-      run("ledger.setupFacts", (db) => setupFacts(db, ledgerId, period, lastPeriod, today)),
+    setupFacts: (currency: string, period: BudgetPeriod, lastPeriod: BudgetPeriod, today: string) =>
+      run("ledger.setupFacts", (db) =>
+        setupFacts(db, ledgerId, currency, period, lastPeriod, today),
+      ),
   };
 });
 
@@ -176,7 +175,11 @@ async function balancesAsOf(
   return balances;
 }
 
-async function cardAccountIds(db: V2DbExecutor, ledgerId: string): Promise<string[]> {
+async function cardAccountIds(
+  db: V2DbExecutor,
+  ledgerId: string,
+  currency: string,
+): Promise<string[]> {
   const rows = await db
     .select({ id: v2Account.id })
     .from(v2Account)
@@ -184,7 +187,7 @@ async function cardAccountIds(db: V2DbExecutor, ledgerId: string): Promise<strin
       and(
         eq(v2Account.ledgerId, ledgerId),
         eq(v2Account.type, "credit_card"),
-        eq(v2Account.currency, BUDGET_CURRENCY),
+        eq(v2Account.currency, currency),
       ),
     );
   return rows.map((row) => row.id);
@@ -289,24 +292,32 @@ async function cardPayments(
 
 /**
  * `GET /budget/setup-facts` reads (#367 S2-S4): what the setup flow needs to
- * suggest envelopes and preview "Left to plan" before a budget exists. AED only.
+ * suggest envelopes and preview "Left to plan" before a budget exists. Only
+ * `currency`'s accounts, spending, card payments, and recurring expenses.
  */
 async function setupFacts(
   db: V2DbExecutor,
   ledgerId: string,
+  currency: string,
   period: BudgetPeriod,
   lastPeriod: BudgetPeriod,
   today: string,
 ): Promise<V2BudgetSetupFacts> {
-  const aedExpense = and(
+  const expenseInCurrency = and(
     eq(v2Transaction.ledgerId, ledgerId),
     eq(v2Transaction.kind, "expense"),
-    eq(v2Transaction.currency, BUDGET_CURRENCY),
+    eq(v2Transaction.currency, currency),
   );
   const activeAccounts = await db
     .select({ id: v2Account.id })
     .from(v2Account)
-    .where(and(eq(v2Account.ledgerId, ledgerId), eq(v2Account.lifecycle, "active")))
+    .where(
+      and(
+        eq(v2Account.ledgerId, ledgerId),
+        eq(v2Account.lifecycle, "active"),
+        eq(v2Account.currency, currency),
+      ),
+    )
     .orderBy(asc(v2Account.name), asc(v2Account.id));
 
   const [balances, spendRows, paymentRows, lastRows, ruleRows, topRows] = await Promise.all([
@@ -323,7 +334,13 @@ async function setupFacts(
         amountMinor: sql<string>`sum(${v2Transaction.amountMinor})`,
       })
       .from(v2Transaction)
-      .where(and(aedExpense, gte(v2Transaction.date, period.start), lte(v2Transaction.date, today)))
+      .where(
+        and(
+          expenseInCurrency,
+          gte(v2Transaction.date, period.start),
+          lte(v2Transaction.date, today),
+        ),
+      )
       .groupBy(v2Transaction.categoryId, v2Transaction.accountId),
     db
       .select({
@@ -343,7 +360,7 @@ async function setupFacts(
         and(
           eq(v2Transaction.ledgerId, ledgerId),
           eq(v2Transaction.kind, "transfer"),
-          eq(v2Transaction.currency, BUDGET_CURRENCY),
+          eq(v2Transaction.currency, currency),
           eq(v2Account.type, "credit_card"),
           gte(v2Transaction.date, period.start),
           lte(v2Transaction.date, today),
@@ -358,7 +375,7 @@ async function setupFacts(
       .from(v2Transaction)
       .where(
         and(
-          aedExpense,
+          expenseInCurrency,
           gte(v2Transaction.date, lastPeriod.start),
           lte(v2Transaction.date, lastPeriod.end),
         ),
@@ -372,6 +389,7 @@ async function setupFacts(
           eq(v2RecurringRule.ledgerId, ledgerId),
           eq(v2RecurringRule.kind, "expense"),
           eq(v2RecurringRule.lifecycle, "active"),
+          eq(v2RecurringRule.currency, currency),
         ),
       )
       .orderBy(asc(v2RecurringRule.name), asc(v2RecurringRule.id))
@@ -392,6 +410,7 @@ async function setupFacts(
           eq(v2Category.kind, "expense"),
           eq(v2Category.lifecycle, "active"),
           eq(v2Transaction.kind, "expense"),
+          eq(v2Transaction.currency, currency),
           gte(
             v2Transaction.date,
             format(subDays(parseISO(today), TOP_CATEGORY_WINDOW_DAYS), "yyyy-MM-dd"),
@@ -403,7 +422,7 @@ async function setupFacts(
       .orderBy(desc(count()), asc(v2Category.name))
       .limit(TOP_CATEGORY_LIMIT),
   ]);
-  const cardIds = await cardAccountIds(db, ledgerId);
+  const cardIds = await cardAccountIds(db, ledgerId, currency);
   const cards = new Set(cardIds);
   const openingCardDebtMinor = await openingCardDebt(db, ledgerId, cardIds, period.start);
 

@@ -50,12 +50,16 @@ export const resolveCategories = Effect.fn("resolveCategories")(function* (
   return resolved;
 });
 
-/** A Category maps to at most one envelope; `ownEnvelopeId`'s own mappings are about to be replaced. */
+/**
+ * A Category maps to at most one envelope per budget (it may also be an envelope
+ * in another currency's budget); `ownEnvelopeId`'s own mappings are about to be replaced.
+ */
 export const requireCategoriesUnmapped = Effect.fn("requireCategoriesUnmapped")(function* (
+  budgetId: string,
   categoryIds: readonly string[],
   ownEnvelopeId: string | undefined,
 ) {
-  const rows = yield* (yield* BudgetStore).mappingsOf(categoryIds);
+  const rows = yield* (yield* BudgetStore).mappingsOf(budgetId, categoryIds);
   const conflict = rows.find((row) => row.envelopeId !== ownEnvelopeId);
   if (conflict) {
     return yield* new CategoryAlreadyMapped({

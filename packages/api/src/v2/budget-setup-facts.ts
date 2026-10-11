@@ -7,12 +7,15 @@ import { BudgetClock } from "./budget-services";
 
 /**
  * `GET /budget/setup-facts` (#367 S2-S4): what the setup flow needs to suggest
- * envelopes and preview "Left to plan" before a budget exists, for the period
- * that contains today under the chosen payday rule.
+ * envelopes and preview "Left to plan" before a budget exists in `currency`,
+ * for the period that contains today under the chosen payday rule.
  */
-export const getBudgetSetupFacts = Effect.fn("getBudgetSetupFacts")(function* (rule: PaydayRule) {
+export const getBudgetSetupFacts = Effect.fn("getBudgetSetupFacts")(function* (
+  rule: PaydayRule,
+  currency: string,
+) {
   const { today } = yield* BudgetClock;
   const period = periodContaining(rule, today);
   const lastPeriod = periodContaining(rule, dayBefore(period.start));
-  return yield* (yield* LedgerFacts).setupFacts(period, lastPeriod, today);
+  return yield* (yield* LedgerFacts).setupFacts(currency, period, lastPeriod, today);
 });

@@ -5,6 +5,7 @@ import type { z } from "zod";
 import { localDateInTimeZone } from "@trove/domain/clock";
 import { pendingDatesFrom } from "@trove/domain/settlement";
 
+import { selectBudget } from "./budget";
 import {
   DueHorizonExceeded,
   OccurrenceAlreadyRecorded,
@@ -15,7 +16,7 @@ import {
   TransferSameAccount,
 } from "./budget-errors";
 import { inLedgerMutation } from "./budget-mutation";
-import { BudgetClock } from "./budget-services";
+import { BudgetClock, BudgetSelection } from "./budget-services";
 import type {
   recurringPaySchema,
   V2DueList,
@@ -35,6 +36,8 @@ export type RecurringPay = z.output<typeof recurringPaySchema>;
 /**
  * Pending occurrences of active `remind` rules, from each rule's earliest unpaid and
  * unskipped date through `through`, so an overdue item stays until it is paid or skipped.
+ * Only the selected budget's currency: the named one, else the only budget's; a ledger
+ * with no budget lists every currency's reminders.
  */
 export const listDue = Effect.fn("listDue")(function* (through: string) {
   const { now } = yield* BudgetClock;
@@ -42,7 +45,9 @@ export const listDue = Effect.fn("listDue")(function* (through: string) {
     return yield* new DueHorizonExceeded({ horizonDays: DUE_HORIZON_DAYS });
   }
   const store = yield* ReminderStore;
-  const rules = yield* store.activeReminderRules;
+  const { currency: named } = yield* BudgetSelection;
+  const currency = named ?? (yield* selectBudget)?.currency;
+  const rules = yield* store.activeReminderRules(currency);
   if (rules.length === 0) return { items: [], truncated: false } satisfies V2DueList;
   const recorded = yield* store.recordedDatesOf(rules.map((rule) => rule.id));
   const items: V2DueOccurrence[] = [];
