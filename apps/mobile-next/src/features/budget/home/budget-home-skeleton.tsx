@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import { colors, radii, spacing } from "@/ui/design-tokens";
+import { radius, Skeleton, space } from "@/ui/trove";
 
 /** Loading placeholder: shapes only, never a number. */
 export function BudgetHomeSkeleton() {
@@ -11,21 +11,18 @@ export function BudgetHomeSkeleton() {
       accessibilityState={{ busy: true }}
       style={styles.container}
     >
-      <View style={[styles.block, styles.label]} />
-      <View style={[styles.block, styles.amount]} />
-      <View style={[styles.block, styles.caption]} />
-      <View style={[styles.block, styles.row]} />
-      <View style={[styles.block, styles.row]} />
-      <View style={[styles.block, styles.row]} />
+      <Skeleton height={space[4]} width="30%" />
+      <Skeleton height={space[10]} width="60%" />
+      <Skeleton height={space[4]} width="50%" />
+      <Skeleton borderRadius={radius.lg} height={ROW_HEIGHT} />
+      <Skeleton borderRadius={radius.lg} height={ROW_HEIGHT} />
+      <Skeleton borderRadius={radius.lg} height={ROW_HEIGHT} />
     </View>
   );
 }
 
+const ROW_HEIGHT = space[12] + space[2];
+
 const styles = StyleSheet.create({
-  container: { gap: spacing[3] },
-  block: { backgroundColor: colors.surfaceContainer, borderRadius: radii.lg },
-  label: { height: spacing[4], width: "30%" },
-  amount: { height: spacing[10], width: "60%" },
-  caption: { height: spacing[4], width: "50%" },
-  row: { height: spacing[14] },
+  container: { gap: space[3] },
 });

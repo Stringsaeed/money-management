@@ -1,9 +1,6 @@
-import { StyleSheet, View } from "react-native";
-
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { colors, radii, spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { ListRow } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import type { GroupSummary } from "./home-model";
@@ -23,26 +20,5 @@ export function GroupSummaryRow({ title, noun, leftLabel, summary }: GroupSummar
     summary.count === 0
       ? "None yet"
       : `${count} · ${formatMoneyMinor(summary.leftMinor, BUDGET_CURRENCY)} ${leftLabel}`;
-  return (
-    <View
-      accessible
-      accessibilityRole="summary"
-      accessibilityLabel={`${title}, ${detail}`}
-      style={styles.row}
-    >
-      <Text variant="body">{title}</Text>
-      <Text variant="caption">{detail}</Text>
-    </View>
-  );
+  return <ListRow accessibilityLabel={`${title}, ${detail}`} subtitle={detail} title={title} />;
 }
-
-const styles = StyleSheet.create({
-  row: {
-    backgroundColor: colors.card,
-    borderCurve: "continuous",
-    borderRadius: radii.lg,
-    gap: spacing[0.5],
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-  },
-});

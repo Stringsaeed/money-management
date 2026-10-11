@@ -1,9 +1,8 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { colors, radii, spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
+import { Amount, colors, layout, PressableScale, radius, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { envelopeProgress, type EnvelopeLine } from "./home-model";
@@ -20,19 +19,29 @@ export function EverydayRow({ line, onPress }: EverydayRowProps) {
   const amount = formatMoneyMinor(Math.abs(totals.leftMinor), BUDGET_CURRENCY);
   const status = over ? `${amount} over` : `${amount} left`;
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={`${envelope.name}, ${status}`}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      pressedStyle={styles.pressed}
+      scaleOnPress={false}
+      style={styles.row}
     >
       <View style={styles.top}>
-        <Text variant="body" style={styles.name} numberOfLines={1}>
+        <Text variant="labelMd" style={styles.name} numberOfLines={1}>
           {envelope.name}
         </Text>
-        <Text variant="label" style={over && styles.over}>
-          {status}
-        </Text>
+        <View style={styles.status}>
+          <Amount
+            currency={BUDGET_CURRENCY}
+            minor={Math.abs(totals.leftMinor)}
+            size="sm"
+            tone={over ? "negative" : "secondary"}
+          />
+          <Text tone={over ? "negative" : "secondary"} variant="labelSm">
+            {over ? "over" : "left"}
+          </Text>
+        </View>
       </View>
       <View style={styles.track}>
         <View
@@ -43,34 +52,34 @@ export function EverydayRow({ line, onPress }: EverydayRowProps) {
           ]}
         />
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
   row: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.surface.default,
     borderCurve: "continuous",
-    borderRadius: radii.lg,
-    gap: spacing[2],
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
+    borderRadius: radius.lg,
+    gap: space[2],
+    paddingHorizontal: layout.cardPadding,
+    paddingVertical: space[3],
   },
-  pressed: { backgroundColor: colors.surfaceDim },
+  pressed: { backgroundColor: colors.fill.neutral },
   top: {
     alignItems: "center",
     flexDirection: "row",
-    gap: spacing[3],
+    gap: space[3],
     justifyContent: "space-between",
   },
   name: { flex: 1 },
-  over: { color: colors.terracotta },
+  status: { alignItems: "baseline", flexDirection: "row", gap: space[1] },
   track: {
-    backgroundColor: colors.surfaceContainer,
-    borderRadius: radii.full,
-    height: spacing[2],
+    backgroundColor: colors.fill.neutral,
+    borderRadius: radius.full,
+    height: space[2],
     overflow: "hidden",
   },
-  fill: { backgroundColor: colors.sage, borderRadius: radii.full, height: "100%" },
-  fillOver: { backgroundColor: colors.terracotta },
+  fill: { backgroundColor: colors.accent.fill, borderRadius: radius.full, height: "100%" },
+  fillOver: { backgroundColor: colors.negative.text },
 });

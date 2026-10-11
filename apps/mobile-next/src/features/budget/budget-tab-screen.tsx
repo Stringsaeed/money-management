@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useRef } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 
 import { useBudgetQuery } from "@/data/ledger-queries";
 import { EmptyState, Header, layout, Screen, space } from "@/ui/trove";
@@ -20,12 +20,14 @@ export function BudgetTabScreen() {
 
   return (
     <Screen edges={["top"]}>
+      <View style={styles.header}>
+        <Header title="Budget" />
+      </View>
       <ScrollView
         ref={scrollRef}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Header title="Budget" />
         {budget.isError && !budget.data ? (
           <EmptyState
             title="Couldn't load your budget"
@@ -58,6 +60,7 @@ export function BudgetTabScreen() {
 }
 
 const styles = StyleSheet.create({
+  header: { paddingHorizontal: layout.screenGutter },
   content: {
     gap: space[4],
     paddingBottom: space[16] + space[8],
