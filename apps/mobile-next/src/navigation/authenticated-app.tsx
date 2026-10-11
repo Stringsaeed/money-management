@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useQueryAppFocus } from "@/data/use-query-app-focus";
+import { useBudgetReminderOwner } from "@/features/budget/reminders/use-budget-reminder-owner";
 import { LedgerScopeProvider } from "./ledger-scope-provider";
 import { DataNavigator } from "./data-navigator";
 
 export const AuthenticatedApp = ({ identityKey }: { readonly identityKey: string }) => {
   useQueryAppFocus();
+  useBudgetReminderOwner(identityKey);
   const [queryClient] = useState(
     () => new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000 } } }),
   );
@@ -17,7 +19,7 @@ export const AuthenticatedApp = ({ identityKey }: { readonly identityKey: string
   );
   return (
     <QueryClientProvider client={queryClient}>
-      <LedgerScopeProvider>
+      <LedgerScopeProvider identityKey={identityKey}>
         <DataNavigator queryClient={queryClient} identityKey={identityKey} />
       </LedgerScopeProvider>
     </QueryClientProvider>

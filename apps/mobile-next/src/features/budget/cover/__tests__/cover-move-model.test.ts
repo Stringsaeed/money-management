@@ -1,9 +1,14 @@
+import { projectBudget, type BudgetAssignment, type BudgetFacts } from "@trove/domain/budget";
+
+import { coverAfterLine } from "../cover-copy";
 import {
   allocateCover,
   coverInput,
   defaultCoverSelection,
   movePreview,
+  pastCoverInput,
   rankCoverSources,
+  rankPastCoverSources,
   type Place,
 } from "../cover-move-model";
 
@@ -117,5 +122,94 @@ describe("movePreview", () => {
 
   it("needs an amount", () => {
     expect(movePreview(from, to, 0)).toEqual({ status: "no_amount", capMinor: 5_000 });
+  });
+});
+
+describe("cover-past (C1)", () => {
+  it("never takes from Not planned yet, and lets the overspent envelope repay itself", () => {
+    expect(rankPastCoverSources(places).map((source) => source.key)).toEqual([
+      "coffee",
+      "dining",
+      "groceries",
+      "dewa",
+      "rent",
+    ]);
+    const repaysItself = [
+      place("unplanned", "unplanned", 50_000),
+      place("groceries", "everyday", 8_000),
+    ];
+    expect(rankPastCoverSources(repaysItself).map((source) => source.key)).toEqual(["groceries"]);
+  });
+
+  it("pays each take back into Not planned yet from an envelope", () => {
+    const ranked = rankPastCoverSources(places);
+    const plan = allocateCover(ranked, ["groceries", "dewa"], 10_000);
+    expect(pastCoverInput(plan)).toEqual({
+      items: [
+        { fromEnvelopeId: "groceries", toEnvelopeId: null, amountMinor: 5_000, reason: "cover" },
+        { fromEnvelopeId: "dewa", toEnvelopeId: null, amountMinor: 5_000, reason: "cover" },
+      ],
+    });
+  });
+
+  it("previews the Not planned yet the engine computes after the pay-back", () => {
+    // Groceries ended September AED 200 over; September and October each plan Groceries 2,000.
+    const plan = (periodStart: string, to: string, amountMinor: number): BudgetAssignment => ({
+      periodStart,
+      fromEnvelopeId: null,
+      toEnvelopeId: to,
+      amountMinor,
+      reason: "plan",
+    });
+    const facts: BudgetFacts = {
+      paydays: [{ effectiveFrom: "2026-09-01", rule: { kind: "day", day: 1 } }],
+      activationStart: "2026-09-01",
+      envelopes: [
+        { id: "groceries", group: "everyday", categoryIds: ["food"], startFresh: false },
+        { id: "dining", group: "everyday", categoryIds: ["eat-out"], startFresh: false },
+      ],
+      assignments: [
+        plan("2026-09-01", "groceries", 200_000),
+        plan("2026-09-01", "dining", 100_000),
+        plan("2026-10-01", "groceries", 200_000),
+        plan("2026-10-01", "dining", 150_000),
+      ],
+      spending: [{ date: "2026-09-20", categoryId: "food", amountMinor: 220_000, onCard: false }],
+      cardPayments: [],
+      cashMinor: 780_000,
+      openingCardDebtMinor: 0,
+      today: "2026-10-05",
+    };
+    const before = projectBudget(facts).current;
+    expect(before.unassignedMinor).toBe(330_000);
+    expect(before.envelopes.map((totals) => [totals.envelopeId, totals.leftMinor])).toEqual([
+      ["groceries", 200_000],
+      ["dining", 250_000],
+    ]);
+
+    const ranked = rankPastCoverSources([
+      place("unplanned", "unplanned", 330_000),
+      place("groceries", "everyday", 200_000),
+      place("dining", "everyday", 250_000),
+    ]);
+    const cover = allocateCover(ranked, defaultCoverSelection(ranked, 20_000), 20_000);
+    const preview = coverAfterLine("past", cover, {
+      name: "Groceries",
+      leftMinor: 200_000,
+      unassignedMinor: 330_000,
+      money: (minor) => `AED ${minor / 100}`,
+    });
+    expect(preview).toBe("Not planned yet after: AED 3500");
+
+    const written = pastCoverInput(cover).items.map((item) => ({
+      ...item,
+      periodStart: "2026-10-01",
+    }));
+    const after = projectBudget({ ...facts, assignments: [...facts.assignments, ...written] });
+    expect(after.current.unassignedMinor).toBe(350_000);
+    expect(after.current.envelopes.map((totals) => [totals.envelopeId, totals.leftMinor])).toEqual([
+      ["groceries", 200_000],
+      ["dining", 230_000],
+    ]);
   });
 });

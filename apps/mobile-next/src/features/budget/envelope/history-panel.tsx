@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
 import { useBudgetPeriodsQuery } from "@/data/ledger-queries";
-import { Amount, ListGroup, ListRow, space, Text } from "@/ui/trove";
+import { Amount, Button, ListGroup, ListRow, space, Text } from "@/ui/trove";
 
 import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
 
@@ -32,11 +32,26 @@ export function HistoryPanel({ view, line, onBack }: HistoryPanelProps) {
   return (
     <View style={styles.container}>
       <PanelHeader title="History" onBack={onBack} />
+      {history.isError ? (
+        <View accessibilityRole="alert" style={styles.container}>
+          <Text tone="negative" variant="bodySm">
+            {rows.length === 0
+              ? "Couldn't load earlier periods."
+              : "Couldn't load some earlier periods, so this list is incomplete."}
+          </Text>
+          <Button
+            fullWidth
+            label="Retry"
+            variant="secondary"
+            onPress={() => void history.retry()}
+          />
+        </View>
+      ) : null}
       {history.isLoading ? (
         <Text tone="secondary" variant="bodySm">
           Loading earlier periods…
         </Text>
-      ) : rows.length === 0 ? (
+      ) : rows.length === 0 && !history.isError ? (
         <Text tone="secondary" variant="bodySm">
           No earlier periods yet. They appear after your first payday.
         </Text>

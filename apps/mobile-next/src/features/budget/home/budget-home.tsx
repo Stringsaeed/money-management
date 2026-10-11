@@ -93,7 +93,7 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
       ) : null}
 
       <AttentionLine attention={attention} />
-      {attention.top?.kind === "payday" ? (
+      {attention.top?.kind === "payday" && canAddSpending ? (
         <PaydayActions today={payday.today} reminders={due.reminders} />
       ) : null}
       <DueTodayRow due={due} />

@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { track } from "@/features/analytics";
 import { useAccountsQuery, useCategoriesQuery, useLedgerMutations } from "@/data/ledger-queries";
+import { useTransactionSummaryQuery } from "@/data/transaction-list-queries";
 import { useLedgerMutationsWithSound } from "@/features/sound";
 import { showToast } from "@/ui/trove";
 import { decimalFromMinor } from "@/utils/money";
@@ -41,6 +42,14 @@ export function useGotPaidForm(view: ActiveBudgetView) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
+  // Only the period's first income runs the payday ritual (wrap-up, leftovers, plan).
+  const incomeThisPeriod = useTransactionSummaryQuery({
+    kinds: ["income"],
+    accountIds: view.fundingAccountIds,
+    from: current.period.start,
+    to: today,
+  });
+
   const accountChoices = salaryAccounts(accounts.data, view.fundingAccountIds);
   const accountId =
     pickedAccountId ?? defaultSalaryAccountId(accountChoices, budget.defaultAccountId);
@@ -56,6 +65,7 @@ export function useGotPaidForm(view: ActiveBudgetView) {
     }
     setError(undefined);
     setBusy(true);
+    const firstIncome = (incomeThisPeriod.data?.count ?? 0) === 0;
     try {
       const incomeCategoryId =
         categoryId ?? (await createCategory({ name: SALARY_CATEGORY_NAME, kind: "income" })).id;
@@ -77,7 +87,7 @@ export function useGotPaidForm(view: ActiveBudgetView) {
     }
     track("got_paid_logged", { timing: gotPaidTiming(date, current.period.start) });
     showToast({ message: "Salary logged. It's now money you can plan." });
-    if (!startsNewMonth(date, current.period.start)) {
+    if (!startsNewMonth(date, current.period.start) || !firstIncome) {
       router.dismissTo(BUDGET_HOME_ROUTE);
       return;
     }

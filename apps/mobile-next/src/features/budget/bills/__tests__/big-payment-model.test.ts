@@ -1,4 +1,4 @@
-import { checkBigPayment, nextDueDate, savingPreview } from "../big-payment-model";
+import { checkBigPayment, checkPayment, nextDueDate, savingPreview } from "../big-payment-model";
 
 const RULE = { kind: "day", day: 25 } as const;
 const CURRENT_START = "2026-10-25";
@@ -113,5 +113,24 @@ describe("checkBigPayment", () => {
       ok: false,
       message: expect.stringContaining("Not planned yet"),
     });
+  });
+});
+
+describe("checkPayment", () => {
+  const period = { start: "2026-10-25", today: "2026-11-02" };
+  const draft = { amountText: "12000", accountId: "bank", date: "2026-11-02" };
+
+  it("pays today or earlier in this period", () => {
+    expect(checkPayment(draft, period)).toEqual({
+      ok: true,
+      input: { amountMinor: 1_200_000, accountId: "bank", date: "2026-11-02" },
+    });
+    expect(checkPayment({ ...draft, date: "2026-10-25" }, period).ok).toBe(true);
+  });
+
+  it("refuses a date before the period or after today", () => {
+    const refused = { ok: false, message: "Pick a day in this budget month, up to today." };
+    expect(checkPayment({ ...draft, date: "2026-10-24" }, period)).toEqual(refused);
+    expect(checkPayment({ ...draft, date: "2026-11-03" }, period)).toEqual(refused);
   });
 });

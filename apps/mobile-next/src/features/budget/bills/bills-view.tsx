@@ -1,16 +1,18 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 
-import { Button, layout, Screen, SegmentedControl, space, Text } from "@/ui/trove";
+import { Banner, Button, layout, Screen, SegmentedControl, space, Text } from "@/ui/trove";
 
 import { CoverMoveSheet } from "../cover/cover-move-sheet";
 import { useCoverMoveRequest } from "../cover/use-cover-move-request";
+import { useDue } from "../due/use-due";
 import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
 import { PLAN_ADMIN_ONLY } from "../role/budget-role";
 import { useBudgetRole } from "../role/use-budget-role";
 
 import { AddBigPaymentSheet } from "./add-big-payment-sheet";
 import { BillsHeader } from "./bills-header";
+import { dueByEnvelope } from "./bills-model";
 import { MarkPaidSheet } from "./mark-paid-sheet";
 import { NextYearList } from "./next-year-list";
 import { ThisMonthList } from "./this-month-list";
@@ -26,14 +28,18 @@ const TABS = [
 interface BillsViewProps {
   readonly view: ActiveBudgetView;
   readonly initialTab: BillsTab;
-  /** Recurring due data (#372) per Bills envelope id; see `ThisMonthList`. */
-  readonly dueMinorByEnvelopeId?: ReadonlyMap<string, number>;
 }
 
 /** B1: this month's bills and the big payments coming up, with Add a big payment. */
-export function BillsView({ view, initialTab, dueMinorByEnvelopeId }: BillsViewProps) {
+export function BillsView({ view, initialTab }: BillsViewProps) {
   const [tab, setTab] = useState<BillsTab>(initialTab);
   const lines = envelopeLines(view);
+  // The same Due list Budget home reads; its `through` reaches past this period's end.
+  const due = useDue(view);
+  const dueMinorByEnvelopeId =
+    due.loaded && !due.isError
+      ? dueByEnvelope(due.items, view.envelopes, view.current.period.end)
+      : undefined;
   const coverMove = useCoverMoveRequest();
   const add = useSheetRequest<true>();
   const markPaid = useSheetRequest<string>();
@@ -44,12 +50,26 @@ export function BillsView({ view, initialTab, dueMinorByEnvelopeId }: BillsViewP
       <BillsHeader />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <SegmentedControl options={TABS} value={tab} onChange={setTab} />
+        {tab === "month" && due.isError ? (
+          <View accessibilityRole="alert">
+            <Banner
+              actionLabel="Retry"
+              message="Short shows only for overspent bills until they load."
+              onAction={() => void due.retry()}
+              title="Couldn't load bills due"
+              tone="negative"
+            />
+          </View>
+        ) : null}
         {tab === "month" ? (
           <ThisMonthList
             lines={lines}
             dueMinorByEnvelopeId={dueMinorByEnvelopeId}
             onCover={
-              canAddSpending ? (targetId) => coverMove.show({ kind: "cover", targetId }) : undefined
+              canAddSpending
+                ? (targetId, shortMinor) =>
+                    coverMove.show({ kind: "cover", targetId, amountMinor: shortMinor })
+                : undefined
             }
           />
         ) : (

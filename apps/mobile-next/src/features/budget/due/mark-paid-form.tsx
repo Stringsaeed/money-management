@@ -11,16 +11,25 @@ import { useMarkPaidForm } from "./use-mark-paid-form";
 
 interface MarkPaidFormProps {
   readonly item: V2DueOccurrence;
-  /** Active accounts in the bill's currency. */
+  /** Where it can be paid from; see `markPaidAccounts`. */
   readonly accounts: readonly V2Account[];
+  /** Today's Ledger Date: the payment is dated today unless changed. */
+  readonly today: string;
   readonly muted: boolean;
   readonly onMutedChange: (muted: boolean) => void;
   readonly onPaid: () => void;
 }
 
 /** Confirms a bill: amount, account and date are editable and apply to this payment only. */
-export function MarkPaidForm({ item, accounts, muted, onMutedChange, onPaid }: MarkPaidFormProps) {
-  const form = useMarkPaidForm(item, onPaid);
+export function MarkPaidForm({
+  item,
+  accounts,
+  today,
+  muted,
+  onMutedChange,
+  onPaid,
+}: MarkPaidFormProps) {
+  const form = useMarkPaidForm({ item, accounts, today, onPaid });
   return (
     <View style={styles.container}>
       <Text variant="titleMd">Mark {item.name} paid</Text>

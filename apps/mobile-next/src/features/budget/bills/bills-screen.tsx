@@ -3,6 +3,8 @@ import { StyleSheet } from "react-native";
 import { useBudgetQuery } from "@/data/ledger-queries";
 import { EmptyState, layout, Screen, space, Text } from "@/ui/trove";
 
+import { BudgetLoadError } from "../budget-load-error";
+
 import { BillsHeader } from "./bills-header";
 import { BillsView, type BillsTab } from "./bills-view";
 
@@ -10,17 +12,11 @@ import { BillsView, type BillsTab } from "./bills-view";
 export function BillsScreen({ initialTab }: { readonly initialTab: BillsTab }) {
   const budget = useBudgetQuery();
 
-  if (budget.isError && !budget.data?.budget) {
+  if (budget.isError) {
     return (
       <Screen style={styles.screen}>
         <BillsHeader />
-        <EmptyState
-          title="Couldn't load your bills"
-          message="Check your connection and try again."
-          actionLabel="Try again"
-          onAction={() => void budget.retry()}
-          framed={false}
-        />
+        <BudgetLoadError stale={budget.data !== undefined} onRetry={() => void budget.retry()} />
       </Screen>
     );
   }

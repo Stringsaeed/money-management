@@ -12,21 +12,22 @@ import { PanelError } from "../envelope/panel-error";
 import { useEnvelopeWrite } from "../envelope/use-envelope-write";
 import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
 
+import { coverIntro, coverNoteLines, coverToast, noSourcesLine } from "./cover-copy";
 import {
   allocateCover,
-  coverInput,
+  coverMode,
+  coverSources,
+  coverWrite,
   defaultCoverSelection,
   placesFrom,
-  rankCoverSources,
+  type CoverRequest,
 } from "./cover-move-model";
 import { CoverNotes } from "./cover-notes";
 import { CoverSourceRow } from "./cover-source-row";
 
 interface CoverFormProps {
   readonly view: ActiveBudgetView;
-  readonly targetId: string;
-  /** Cover this much instead of the envelope's current overspend (last month's, from the wrap-up). */
-  readonly amountMinor?: number;
+  readonly request: CoverRequest;
   readonly onCovered?: (targetId: string) => void;
   readonly onDone: () => void;
 }
@@ -34,16 +35,19 @@ interface CoverFormProps {
 const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
 
 /**
- * O2: choose where the money for an overspent envelope comes from. Nothing moves until Move, and
+ * O2, B1 and C1: choose where the money for an envelope comes from. Nothing moves until Move, and
  * the "After:" numbers are the same arithmetic the server applies to the same Left values.
  */
-export function CoverForm({ view, targetId, amountMinor, onCovered, onDone }: CoverFormProps) {
+export function CoverForm({ view, request, onCovered, onDone }: CoverFormProps) {
   const { createAssignments } = useLedgerMutations();
   const write = useEnvelopeWrite();
+  const { targetId } = request;
+  const mode = coverMode(request);
   const lines = envelopeLines(view);
+  const { unassignedMinor } = view.current;
   const target = lines.find((line) => line.envelope.id === targetId);
-  const overMinor = amountMinor ?? Math.max(-(target?.totals.leftMinor ?? 0), 0);
-  const ranked = rankCoverSources(placesFrom(lines, view.current.unassignedMinor), targetId);
+  const overMinor = request.amountMinor ?? Math.max(-(target?.totals.leftMinor ?? 0), 0);
+  const ranked = coverSources(mode, placesFrom(lines, unassignedMinor), targetId);
   const [selected, setSelected] = useState(() => defaultCoverSelection(ranked, overMinor));
   const plan = allocateCover(ranked, selected, overMinor);
 
@@ -67,13 +71,13 @@ export function CoverForm({ view, targetId, amountMinor, onCovered, onDone }: Co
   };
 
   const move = async () => {
-    const ok = await write.run(() => createAssignments(coverInput(targetId, plan)));
+    const ok = await write.run(() => createAssignments(coverWrite(mode, targetId, plan)));
     if (!ok) return;
     const source = plan.takes[0]?.place.kind;
     track("overspend_covered", {
       source_type: source === "unplanned" ? "unassigned" : (source ?? "unassigned"),
     });
-    showToast({ message: `Covered ${money(plan.coveredMinor)} for ${target.envelope.name}` });
+    showToast({ message: coverToast(mode, target.envelope.name, plan.coveredMinor, money) });
     onCovered?.(targetId);
     onDone();
   };
@@ -99,16 +103,11 @@ export function CoverForm({ view, targetId, amountMinor, onCovered, onDone }: Co
       <Text variant="titleMd" accessibilityRole="header">
         {`Cover ${target.envelope.name}`}
       </Text>
-      <Text>
-        {amountMinor === undefined
-          ? `${money(overMinor)} over. Pick where it comes from.`
-          : `${money(overMinor)} was overspent last month. Pick where this month's top-up comes from.`}
-      </Text>
+      <Text>{coverIntro(mode, { name: target.envelope.name, amountMinor: overMinor, money })}</Text>
 
       {ranked.length === 0 ? (
         <Text variant="bodySm" tone="secondary">
-          No envelope has money to spare right now. Nothing is moved, and the overspend comes out of
-          next month&apos;s money.
+          {noSourcesLine(mode)}
         </Text>
       ) : (
         <ListGroup dividerInset={0}>
@@ -125,10 +124,13 @@ export function CoverForm({ view, targetId, amountMinor, onCovered, onDone }: Co
       )}
 
       <CoverNotes
-        name={target.envelope.name}
-        afterLeftMinor={target.totals.leftMinor + plan.coveredMinor}
-        plan={plan}
-        hasSources={ranked.length > 0}
+        {...coverNoteLines(mode, plan, {
+          name: target.envelope.name,
+          leftMinor: target.totals.leftMinor,
+          unassignedMinor,
+          money,
+          hasSources: ranked.length > 0,
+        })}
       />
 
       <PanelError message={write.error} />

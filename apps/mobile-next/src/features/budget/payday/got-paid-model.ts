@@ -3,6 +3,8 @@ import { differenceInCalendarDays } from "date-fns";
 import { BUDGET_CURRENCY, type V2Account, type V2Category } from "@trove/api/v2/contracts";
 
 import { ApiError } from "@/data/http";
+
+import { roleErrorMessage } from "../role/budget-role";
 import { parseDateKey } from "@/utils/date";
 import { parseMoneyMinor } from "@/utils/money";
 
@@ -65,6 +67,8 @@ export function checkGotPaid(draft: GotPaidDraft, today: string): GotPaidCheck {
 
 /** What went wrong and that nothing was recorded. */
 export function gotPaidErrorMessage(cause: unknown): string {
+  const refused = roleErrorMessage(cause);
+  if (refused) return refused;
   if (cause instanceof ApiError && cause.code === "network_error") {
     return "You're offline. Nothing was recorded.";
   }

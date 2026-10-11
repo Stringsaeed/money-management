@@ -1,20 +1,31 @@
 import { useState } from "react";
 
-import type { V2DueOccurrence } from "@trove/api/v2/contracts";
+import type { V2Account, V2DueOccurrence } from "@trove/api/v2/contracts";
 
 import { track } from "@/features/analytics";
 import { useLedgerMutationsWithSound } from "@/features/sound";
 import { showToast } from "@/ui/trove";
 import { decimalFromMinor } from "@/utils/money";
 
-import { checkMarkPaid, occurrenceErrorMessage } from "./mark-paid-model";
+import { checkMarkPaid, markPaidDefaultAccountId, occurrenceErrorMessage } from "./mark-paid-model";
 
-/** Amount, account and date start as the bill says; Save posts them as this payment only. */
-export function useMarkPaidForm(item: V2DueOccurrence, onPaid: () => void) {
+interface UseMarkPaidFormOptions {
+  readonly item: V2DueOccurrence;
+  readonly accounts: readonly V2Account[];
+  readonly today: string;
+  readonly onPaid: () => void;
+}
+
+/**
+ * Amount and account start as the bill says (account only when it is one the budget counts), the
+ * date starts today; Save posts them as this payment only.
+ */
+export function useMarkPaidForm({ item, accounts, today, onPaid }: UseMarkPaidFormOptions) {
   const mutations = useLedgerMutationsWithSound();
   const [amountText, setAmountText] = useState(decimalFromMinor(item.amountMinor, item.currency));
-  const [accountId, setAccountId] = useState(item.accountId);
-  const [date, setDate] = useState(item.scheduledDate);
+  const [pickedAccountId, setAccountId] = useState<string | null>(null);
+  const accountId = pickedAccountId ?? markPaidDefaultAccountId(accounts, item);
+  const [date, setDate] = useState(today);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 

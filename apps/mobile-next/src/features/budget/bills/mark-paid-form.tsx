@@ -56,7 +56,14 @@ export function MarkPaidForm({ view, line, accounts, onPaid, onCancel }: MarkPai
           ))}
         </ChipRow>
       )}
-      <QuickAddDate label="Paid on" date={form.date} onChange={form.setDate} placementNote={null} />
+      <QuickAddDate
+        label="Paid on"
+        date={form.date}
+        onChange={form.setDate}
+        placementNote={null}
+        minDate={form.periodStart}
+        maxDate={form.today}
+      />
       <View style={styles.lines} accessibilityLiveRegion="polite">
         <Text tone={over ? "warning" : "secondary"} variant="labelSm">
           {after}

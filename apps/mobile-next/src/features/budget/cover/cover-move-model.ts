@@ -2,6 +2,22 @@ import type { V2AssignmentsCreateInput, V2EnvelopeGroup } from "@trove/api/v2/co
 
 import type { EnvelopeLine } from "../home/home-model";
 
+import type { CoverMoveRequest } from "./use-cover-move-request";
+
+/**
+ * - over: O2, this envelope is overspent now.
+ * - short: B1, a bill needs more than its Left before it is due.
+ * - past: C1, last period's overspend is paid back into Not planned yet.
+ */
+export type CoverMode = "over" | "short" | "past";
+
+export type CoverRequest = Extract<CoverMoveRequest, { kind: "cover" | "cover-past" }>;
+
+export function coverMode(request: CoverRequest): CoverMode {
+  if (request.kind === "cover-past") return "past";
+  return request.amountMinor === undefined ? "over" : "short";
+}
+
 export const UNPLANNED_KEY = "unplanned";
 
 export type PlaceKind = "unplanned" | V2EnvelopeGroup;
@@ -54,6 +70,17 @@ export function rankCoverSources(places: readonly Place[], targetKey: string): P
     .sort((a, b) => KIND_RANK[a.kind] - KIND_RANK[b.kind] || b.availableMinor - a.availableMinor);
 }
 
+/**
+ * Where last period's overspend can be paid back from: envelopes with Left now, the overspent
+ * one included. Never Not planned yet: the overspend already came out of it.
+ */
+export function rankPastCoverSources(places: readonly Place[]): Place[] {
+  return rankCoverSources(
+    places.filter((place) => place.kind !== "unplanned"),
+    UNPLANNED_KEY,
+  );
+}
+
 export interface CoverTake {
   readonly place: Place;
   readonly takeMinor: number;
@@ -64,7 +91,7 @@ export interface CoverTake {
 export interface CoverPlan {
   readonly takes: readonly CoverTake[];
   readonly coveredMinor: number;
-  /** Still over after the sources run out: it comes out of next month's money. */
+  /** What the selected sources could not give. */
   readonly restMinor: number;
   readonly takesFromSaving: boolean;
 }
@@ -117,6 +144,26 @@ export function coverInput(targetId: string, plan: CoverPlan): V2AssignmentsCrea
     })),
   };
 }
+
+/** One `cover` per source, back into Not planned yet in the current period. */
+export function pastCoverInput(plan: CoverPlan): V2AssignmentsCreateInput {
+  return {
+    items: plan.takes.map(({ place, takeMinor }) => ({
+      fromEnvelopeId: place.id,
+      toEnvelopeId: null,
+      amountMinor: takeMinor,
+      reason: "cover" as const,
+    })),
+  };
+}
+
+/** Where this kind of cover can come from, best first. */
+export const coverSources = (mode: CoverMode, places: readonly Place[], targetKey: string) =>
+  mode === "past" ? rankPastCoverSources(places) : rankCoverSources(places, targetKey);
+
+/** The assignments a cover writes: into the envelope now, or back into Not planned yet. */
+export const coverWrite = (mode: CoverMode, targetId: string, plan: CoverPlan) =>
+  mode === "past" ? pastCoverInput(plan) : coverInput(targetId, plan);
 
 export type MovePreview =
   | { readonly status: "no_amount"; readonly capMinor: number }

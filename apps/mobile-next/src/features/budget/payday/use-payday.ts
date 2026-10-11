@@ -3,7 +3,7 @@ import { useTransactionSummaryQuery } from "@/data/transaction-list-queries";
 import { budgetToday } from "../due/due-model";
 import type { ActiveBudgetView } from "../home/home-model";
 
-import { paydayStatus, type PaydayStatus } from "./payday-status";
+import { paydayStatus, salaryWindowStart, type PaydayStatus } from "./payday-status";
 
 export interface UsePayday {
   readonly today: string;
@@ -12,7 +12,7 @@ export interface UsePayday {
 
 /**
  * Whether this period's salary still needs logging: a salary is expected and no income has landed
- * in a funding account since the period began.
+ * in a funding account since the period began (or in the early-pay days just before it).
  */
 export function usePayday(view: ActiveBudgetView): UsePayday {
   const today = budgetToday(view.current);
@@ -20,13 +20,15 @@ export function usePayday(view: ActiveBudgetView): UsePayday {
   const income = useTransactionSummaryQuery({
     kinds: ["income"],
     accountIds: view.fundingAccountIds,
-    from: periodStart,
+    from: salaryWindowStart(periodStart),
     to: today,
   });
   const status = paydayStatus({
     expectsSalary: view.budget.usualSalaryMinor !== null || view.budget.paydayReminder,
     today,
     periodStart,
+    activationPeriodStart: view.budget.activationPeriodStart,
+    activatedOn: view.budget.activatedOn,
     incomeCount: income.data?.count ?? null,
   });
   return { today, status };

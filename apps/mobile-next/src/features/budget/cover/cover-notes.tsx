@@ -1,34 +1,24 @@
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
-
-import type { CoverPlan } from "./cover-move-model";
 
 interface CoverNotesProps {
-  readonly name: string;
-  /** The covered envelope's Left once the move is made. */
-  readonly afterLeftMinor: number;
-  readonly plan: CoverPlan;
-  readonly hasSources: boolean;
+  /** What the move leaves behind; null until something is covered. */
+  readonly afterLine: string | null;
+  /** What a partial cover leaves uncovered, or a prompt to pick a source; null when not needed. */
+  readonly restLine: string | null;
 }
 
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
-
-/** Under the sources: what the envelope will have, and what a partial cover leaves over. */
-export function CoverNotes({ name, afterLeftMinor, plan, hasSources }: CoverNotesProps) {
+/** Under the sources: what the move leaves, and what a partial cover does not reach. */
+export function CoverNotes({ afterLine, restLine }: CoverNotesProps) {
   return (
     <>
-      {plan.coveredMinor > 0 ? (
+      {afterLine ? (
         <Text variant="labelSm" tone="secondary" accessibilityLiveRegion="polite">
-          {`${name} after: ${money(afterLeftMinor)} left`}
+          {afterLine}
         </Text>
       ) : null}
-      {plan.restMinor > 0 && hasSources ? (
+      {restLine ? (
         <Text variant="bodySm" tone="secondary" accessibilityLiveRegion="polite">
-          {plan.coveredMinor > 0
-            ? `${money(plan.restMinor)} is still over. The rest comes out of next month's money.`
-            : "Pick at least one source to cover it."}
+          {restLine}
         </Text>
       ) : null}
     </>

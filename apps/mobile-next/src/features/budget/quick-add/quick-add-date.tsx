@@ -13,6 +13,9 @@ interface QuickAddDateProps {
   /** Where this date lands when it is not the current period, e.g. "Added to 25 Oct – 24 Nov". */
   readonly placementNote: string | null;
   readonly label?: string;
+  /** Earliest and latest Ledger Dates the picker offers. */
+  readonly minDate?: string;
+  readonly maxDate?: string;
 }
 
 /** Defaults to today; tapping the row opens the date picker in place. */
@@ -21,6 +24,8 @@ export function QuickAddDate({
   onChange,
   placementNote,
   label: title = "Date",
+  minDate,
+  maxDate,
 }: QuickAddDateProps) {
   const [open, setOpen] = useState(false);
   const label = transactionDateLabel(date);
@@ -49,6 +54,8 @@ export function QuickAddDate({
           presentation="inline"
           style={styles.picker}
           timeZoneName="UTC"
+          minimumDate={minDate ? datePickerValue(minDate) : undefined}
+          maximumDate={maxDate ? datePickerValue(maxDate) : undefined}
           onValueChange={(_, value) => onChange(dateKeyFromPicker(value))}
         />
       ) : null}

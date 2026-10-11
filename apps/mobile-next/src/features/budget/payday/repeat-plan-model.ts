@@ -26,7 +26,7 @@ type RepeatEnvelope = Pick<
   V2Envelope,
   "id" | "name" | "group" | "targetMinor" | "savingPerPaydayMinor"
 >;
-type RepeatTotals = Pick<V2EnvelopeTotals, "id" | "plannedMinor">;
+type RepeatTotals = Pick<V2EnvelopeTotals, "id" | "budgetedMinor">;
 
 interface RepeatInputs {
   /** Active envelopes. */
@@ -39,9 +39,11 @@ interface RepeatInputs {
 }
 
 /**
- * Last month's plan again, only for what is missing: each envelope's target is what it planned in
- * the period just ended (Saving for with a target uses the recalculated per-payday amount), and
- * only the part above what this period already has is added. Expected income never counts.
+ * Last month's plan again, only for what is missing: each envelope's target is what the plan set
+ * in the period just ended (Saving for with a target uses the recalculated per-payday amount), and
+ * only the part above what this period's plan already set is added. Both sides are `budgetedMinor`
+ * (plan and repeat only), so leftovers, covers and moves are never refilled. Expected income never
+ * counts.
  */
 export function repeatPlan({
   envelopes,
@@ -49,8 +51,8 @@ export function repeatPlan({
   previous,
   unassignedMinor,
 }: RepeatInputs): RepeatPlan {
-  const plannedNow = new Map(current.map((totals) => [totals.id, totals.plannedMinor]));
-  const plannedBefore = new Map(previous.map((totals) => [totals.id, totals.plannedMinor]));
+  const plannedNow = new Map(current.map((totals) => [totals.id, totals.budgetedMinor]));
+  const plannedBefore = new Map(previous.map((totals) => [totals.id, totals.budgetedMinor]));
   // No finished period means there is no "last month" to repeat.
   const items = (previous.length === 0 ? [] : [...envelopes]).flatMap((envelope) => {
     const target =

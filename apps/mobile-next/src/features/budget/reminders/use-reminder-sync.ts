@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { scopeKey } from "@/data/ledger-collections";
 import { useLedgerData } from "@/data/ledger-queries";
 import { formatMoneyMinor } from "@/utils/money";
 
@@ -35,7 +34,6 @@ export interface ReminderSync {
  */
 export function useReminderSync(view: ActiveBudgetView, due: UseDue): ReminderSync {
   const { identityKey, scope } = useLedgerData();
-  const scopeId = scopeKey(identityKey, scope);
   const [permission, setPermission] = useState<ReminderPermission | null>(null);
   const { prefs, dismissPrompt, forgetEndedSnoozes } = due.reminders;
 
@@ -68,13 +66,14 @@ export function useReminderSync(view: ActiveBudgetView, due: UseDue): ReminderSy
       pending: salaryPending,
       snoozedOn: paydaySnoozedOn,
     });
-    syncReminders(scopeId, [...bills, ...paydays], new Date()).catch((cause: unknown) =>
-      console.warn("Budget reminders could not be scheduled.", cause),
+    syncReminders({ identityKey, scope }, [...bills, ...paydays], new Date()).catch(
+      (cause: unknown) => console.warn("Budget reminders could not be scheduled.", cause),
     );
   }, [
     permission,
     loaded,
-    scopeId,
+    identityKey,
+    scope,
     items,
     prefs,
     today,

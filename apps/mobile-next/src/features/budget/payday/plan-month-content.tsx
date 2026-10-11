@@ -9,6 +9,7 @@ import { formatMoneyMinor } from "@/utils/money";
 
 import { PanelError } from "../envelope/panel-error";
 import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
+import { PLAN_ADMIN_ONLY } from "../role/budget-role";
 import { SetupFrame } from "../setup/setup-frame";
 
 import { BUDGET_HOME_ROUTE } from "./payday-flow";
@@ -18,11 +19,15 @@ import { usePlanMonth } from "./use-plan-month";
 
 const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
 
-/** C3: plan the new month with the money you have; Repeat last month's plan is one atomic batch. */
+/**
+ * C3: plan the new month with the money you have; Repeat last month's plan is one atomic batch.
+ * Repeat sets plan amounts, so only someone who can edit the plan sees it.
+ */
 export function PlanMonthContent({ view }: { readonly view: ActiveBudgetView }) {
   const month = usePlanMonth(view);
-  const { plan } = month;
+  const { plan, lastMonth, repeatAccess } = month;
   const { unassignedMinor } = view.current;
+  const offerRepeat = repeatAccess === "offered";
 
   const finish = () => router.dismissTo(BUDGET_HOME_ROUTE);
   const repeat = async () => {
@@ -43,19 +48,19 @@ export function PlanMonthContent({ view }: { readonly view: ActiveBudgetView }) 
       footer={
         <>
           <PanelError message={month.error} />
-          {month.hasLastMonth ? (
+          {offerRepeat ? (
             <Button
               fullWidth
               label="Repeat last month's plan"
               loading={month.busy}
-              disabled={month.isLoading || !plan.canRepeat}
+              disabled={lastMonth !== "ready" || !plan.canRepeat}
               onPress={() => void repeat()}
             />
           ) : null}
           <Button
             fullWidth
-            label={month.hasLastMonth ? "Plan later" : "Done"}
-            variant={month.hasLastMonth ? "tertiary" : "primary"}
+            label={offerRepeat ? "Plan later" : "Done"}
+            variant={offerRepeat ? "tertiary" : "primary"}
             onPress={finish}
           />
         </>
@@ -77,7 +82,18 @@ export function PlanMonthContent({ view }: { readonly view: ActiveBudgetView }) 
           </Text>
         ) : null}
       </View>
-      {month.hasLastMonth ? <RepeatCard plan={plan} onAdjust={finish} /> : null}
+      {offerRepeat && lastMonth !== "none" ? (
+        <RepeatCard
+          plan={plan}
+          lastMonth={lastMonth}
+          onRetry={() => void month.retryLastMonth()}
+          onAdjust={finish}
+        />
+      ) : repeatAccess === "refused" ? (
+        <Text tone="secondary" variant="bodySm">
+          {PLAN_ADMIN_ONLY}
+        </Text>
+      ) : null}
       <PlanGroups lines={envelopeLines(view)} />
       <Text variant="bodySm" tone="secondary">
         Salary late? Plan with what you have now. You can plan more any time once it lands.

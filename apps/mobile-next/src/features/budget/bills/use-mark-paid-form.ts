@@ -4,9 +4,9 @@ import { BUDGET_CURRENCY, type V2Account } from "@trove/api/v2/contracts";
 
 import { track } from "@/features/analytics";
 import { useLedgerMutations } from "@/data/ledger-queries";
-import { todayDateKey } from "@/utils/date";
 import { decimalFromMinor } from "@/utils/money";
 
+import { budgetToday } from "../due/due-model";
 import { useEnvelopeWrite } from "../envelope/use-envelope-write";
 import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
 import { paidWithAccounts, resolveDefaultAccountId } from "../quick-add/quick-add-model";
@@ -29,7 +29,9 @@ export function useMarkPaidForm({ view, line, accounts, onPaid }: UseMarkPaidFor
     decimalFromMinor(line.envelope.targetMinor ?? 0, BUDGET_CURRENCY),
   );
   const [accountOverride, setAccountOverride] = useState<string | null>(null);
-  const [date, setDate] = useState(todayDateKey);
+  const today = budgetToday(view.current);
+  const periodStart = view.current.period.start;
+  const [date, setDate] = useState(today);
 
   const accountId =
     accountOverride ??
@@ -38,7 +40,7 @@ export function useMarkPaidForm({ view, line, accounts, onPaid }: UseMarkPaidFor
       null,
       view.budget.defaultAccountId,
     );
-  const check = checkPayment({ amountText, accountId, date });
+  const check = checkPayment({ amountText, accountId, date }, { start: periodStart, today });
 
   const edit =
     <T>(set: (value: T) => void) =>
@@ -63,6 +65,8 @@ export function useMarkPaidForm({ view, line, accounts, onPaid }: UseMarkPaidFor
     selectAccount: edit(setAccountOverride),
     date,
     setDate: edit(setDate),
+    periodStart,
+    today,
     amountMinor: check.ok ? check.input.amountMinor : null,
     problem: check.ok ? "" : check.message,
     busy: write.busy,

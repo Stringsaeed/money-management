@@ -11,12 +11,12 @@ import { billLines, billStatus } from "./bills-model";
 interface ThisMonthListProps {
   readonly lines: readonly EnvelopeLine[];
   /**
-   * Slot for Recurring due data (#372): what is still to pay this period per Bills envelope id.
-   * Without an entry the bill is judged from its own plan and spending.
+   * What is still to pay this period per Bills envelope id (`dueByEnvelope`). Without an entry
+   * the bill is judged from its own plan and spending.
    */
   readonly dueMinorByEnvelopeId?: ReadonlyMap<string, number>;
-  /** Absent when the caller may not move money. */
-  readonly onCover?: (envelopeId: string) => void;
+  /** Tops up a short bill by what it is short. Absent when the caller may not move money. */
+  readonly onCover?: (envelopeId: string, shortMinor: number) => void;
 }
 
 /** B1 "This month": every Bills envelope as paid, ready, or short. */
@@ -31,17 +31,24 @@ export function ThisMonthList({ lines, dueMinorByEnvelopeId, onCover }: ThisMont
   }
   return (
     <View style={styles.list}>
-      {bills.map((line) => (
-        <BillRow
-          key={line.envelope.id}
-          line={line}
-          status={billStatus(line.totals, dueMinorByEnvelopeId?.get(line.envelope.id))}
-          onPress={() =>
-            router.push({ pathname: "/budget/envelope/[id]", params: { id: line.envelope.id } })
-          }
-          onCover={onCover ? () => onCover(line.envelope.id) : undefined}
-        />
-      ))}
+      {bills.map((line) => {
+        const status = billStatus(line.totals, dueMinorByEnvelopeId?.get(line.envelope.id));
+        return (
+          <BillRow
+            key={line.envelope.id}
+            line={line}
+            status={status}
+            onPress={() =>
+              router.push({ pathname: "/budget/envelope/[id]", params: { id: line.envelope.id } })
+            }
+            onCover={
+              onCover && status.kind === "short"
+                ? () => onCover(line.envelope.id, status.shortMinor)
+                : undefined
+            }
+          />
+        );
+      })}
     </View>
   );
 }

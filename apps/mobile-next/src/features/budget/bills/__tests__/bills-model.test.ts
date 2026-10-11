@@ -1,7 +1,7 @@
-import type { V2Envelope, V2EnvelopeTotals } from "@trove/api/v2/contracts";
+import type { V2DueOccurrence, V2Envelope, V2EnvelopeTotals } from "@trove/api/v2/contracts";
 
 import type { EnvelopeLine } from "../../home/home-model";
-import { billStatus, savingRow, savingRows } from "../bills-model";
+import { billStatus, dueByEnvelope, savingRow, savingRows } from "../bills-model";
 
 const totals = (
   plannedMinor: number,
@@ -41,6 +41,70 @@ describe("billStatus", () => {
 
   it("says unplanned when nothing is planned or spent", () => {
     expect(billStatus(totals(0, 0, 0))).toEqual({ kind: "unplanned" });
+  });
+});
+
+describe("dueByEnvelope", () => {
+  const bill = (
+    ruleId: string,
+    scheduledDate: string,
+    patch: Partial<V2DueOccurrence> = {},
+  ): V2DueOccurrence => ({
+    ruleId,
+    name: ruleId,
+    scheduledDate,
+    amountMinor: 45_000,
+    currency: "AED",
+    accountId: "bank",
+    categoryId: "internet",
+    kind: "expense",
+    overdue: false,
+    ...patch,
+  });
+  const envelopes = [
+    { id: "du", group: "bills" as const, categoryIds: ["internet"] },
+    { id: "dewa", group: "bills" as const, categoryIds: ["utilities"] },
+    { id: "groceries", group: "everyday" as const, categoryIds: ["food"] },
+  ];
+
+  it("sums the bills each Bills envelope still has to pay through the period end", () => {
+    const due = dueByEnvelope(
+      [
+        bill("du", "2026-10-18"),
+        bill("du-late", "2026-09-18", { overdue: true, amountMinor: 40_000 }),
+        bill("dewa", "2026-10-20", { categoryId: "utilities", amountMinor: 61_000 }),
+        bill("du-next", "2026-10-25"),
+      ],
+      envelopes,
+      "2026-10-24",
+    );
+    expect([...due.entries()]).toEqual([
+      ["du", 85_000],
+      ["dewa", 61_000],
+    ]);
+  });
+
+  it("ignores income, other currencies, uncategorised bills and non-Bills envelopes", () => {
+    const due = dueByEnvelope(
+      [
+        bill("refund", "2026-10-18", { kind: "income" }),
+        bill("usd", "2026-10-18", { currency: "USD" }),
+        bill("none", "2026-10-18", { categoryId: null }),
+        bill("food", "2026-10-18", { categoryId: "food" }),
+      ],
+      envelopes,
+      "2026-10-24",
+    );
+    expect(due.size).toBe(0);
+  });
+
+  it("makes a bill with Left below its next payment short, before anything is spent", () => {
+    // du is due AED 450 on the 18th; the envelope has AED 300 Left (planned 300).
+    const due = dueByEnvelope([bill("du", "2026-10-18")], envelopes, "2026-10-24");
+    expect(billStatus(totals(30_000, 0, 30_000), due.get("du"))).toEqual({
+      kind: "short",
+      shortMinor: 15_000,
+    });
   });
 });
 

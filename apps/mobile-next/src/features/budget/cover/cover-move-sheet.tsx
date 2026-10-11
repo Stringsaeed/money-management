@@ -13,18 +13,17 @@ interface CoverMoveSheetProps {
   readonly onCovered?: (targetId: string) => void;
 }
 
-/** O2 Cover from… and O3 Move money, in one sheet that shows whichever was asked for. */
+/** O2/B1/C1 Cover from… and O3 Move money, in one sheet that shows whichever was asked for. */
 export function CoverMoveSheet({ controller, view, onCovered }: CoverMoveSheetProps) {
   const { state, close } = controller;
   const { request } = state;
   return (
     <Sheet open={state.open} onDismiss={close} snapPoints={["full"]}>
-      {request?.kind === "cover" ? (
+      {request?.kind === "cover" || request?.kind === "cover-past" ? (
         <CoverForm
           key={state.session}
           view={view}
-          targetId={request.targetId}
-          amountMinor={request.amountMinor}
+          request={request}
           onCovered={onCovered}
           onDone={close}
         />
