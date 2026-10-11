@@ -1,4 +1,3 @@
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
@@ -9,6 +8,7 @@ import { AmountRow } from "./amount-row";
 import { LeftToPlanBar } from "./left-to-plan-bar";
 import { suggestedMinor } from "./setup-items";
 import { SetupFrame } from "./setup-frame";
+import { setupHref } from "./setup-routes";
 import { SetupRestart } from "./setup-restart";
 import { SetupStatus } from "./setup-status";
 import { parseAmountText } from "./setup-plan";
@@ -18,9 +18,10 @@ import { decimalFromMinor } from "@/utils/money";
 
 /** S4: a monthly amount per envelope, with Left to plan updating on every keystroke. */
 export function AmountsScreen() {
-  const { needsPayday, draft, setup, facts, ticked, preview, invalidAmounts } = useSetupModel();
+  const { currency, target, needsPayday, draft, setup, facts, ticked, preview, invalidAmounts } =
+    useSetupModel();
 
-  if (needsPayday) return <SetupRestart />;
+  if (needsPayday) return <SetupRestart target={target} />;
   if (facts.isError && !facts.data) {
     return (
       <SetupStatus error={{ title: "Couldn't calculate", onRetry: () => void facts.retry() }} />
@@ -37,10 +38,8 @@ export function AmountsScreen() {
         ...draft.amounts,
         ...Object.fromEntries(
           ticked.flatMap((item) => {
-            const suggestion = suggestedMinor(item);
-            return suggestion === null
-              ? []
-              : [[item.key, decimalFromMinor(suggestion, BUDGET_CURRENCY)]];
+            const suggestion = suggestedMinor(item, currency);
+            return suggestion === null ? [] : [[item.key, decimalFromMinor(suggestion, currency)]];
           }),
         ),
       },
@@ -51,7 +50,7 @@ export function AmountsScreen() {
       step="Step 3 of 3"
       title="Plan your month"
       intro="Give each envelope a monthly amount. Leave it empty for 0."
-      pinned={<LeftToPlanBar leftMinor={left} />}
+      pinned={<LeftToPlanBar currency={currency} leftMinor={left} />}
       footer={
         <Button
           fullWidth
@@ -60,7 +59,7 @@ export function AmountsScreen() {
           onPress={() => {
             setup.update({ step: "review" });
             track("budget_setup_step_completed", { step: "amounts" });
-            router.push("/budget/setup/review");
+            router.push(setupHref("review", target));
           }}
         />
       }
@@ -81,9 +80,10 @@ export function AmountsScreen() {
             {rows.map((item) => (
               <AmountRow
                 key={item.key}
+                currency={currency}
                 item={item}
                 value={draft.amounts[item.key] ?? ""}
-                invalid={parseAmountText(draft.amounts[item.key] ?? "") === null}
+                invalid={parseAmountText(draft.amounts[item.key] ?? "", currency) === null}
                 onChange={(text) => setAmount(item.key, text)}
               />
             ))}

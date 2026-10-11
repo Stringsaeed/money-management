@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { track } from "@/features/analytics";
 import { useLedgerMutations } from "@/data/ledger-queries";
 import { Button, ListGroup, showToast, space, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetMoney } from "../currency/use-budget-currency";
 import { PanelError } from "../envelope/panel-error";
 import { useEnvelopeWrite } from "../envelope/use-envelope-write";
 import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
@@ -32,13 +30,12 @@ interface CoverFormProps {
   readonly onDone: () => void;
 }
 
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
-
 /**
  * O2, B1 and C1: choose where the money for an envelope comes from. Nothing moves until Move, and
  * the "After:" numbers are the same arithmetic the server applies to the same Left values.
  */
 export function CoverForm({ view, request, onCovered, onDone }: CoverFormProps) {
+  const money = useBudgetMoney();
   const { createAssignments } = useLedgerMutations();
   const write = useEnvelopeWrite();
   const { targetId } = request;

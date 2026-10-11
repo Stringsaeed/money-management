@@ -18,6 +18,7 @@ import {
   type V2Account,
   type V2AutoCategorization,
   type V2BudgetActivity,
+  type V2BudgetList,
   type V2BudgetPeriodView,
   type V2BudgetSetupFacts,
   type V2BudgetView,
@@ -274,6 +275,19 @@ export const budgetPeriodViewSchema: z.ZodType<V2BudgetPeriodView> = z.object({
   envelopes: z.array(envelopeTotalsSchema),
 });
 
+export const budgetListSchema: z.ZodType<V2BudgetList> = z.object({
+  items: z.array(
+    z.object({
+      id: z.string(),
+      currency: z.string(),
+      activatedOn: ledgerDateSchema,
+      period: budgetPeriodSchema,
+      safeToSpendMinor: money,
+    }),
+  ),
+  truncated: z.boolean(),
+});
+
 export const budgetSetupFactsSchema: z.ZodType<V2BudgetSetupFacts> = z.object({
   today: ledgerDateSchema,
   period: budgetPeriodSchema,
@@ -312,6 +326,7 @@ export const budgetSetupFactsSchema: z.ZodType<V2BudgetSetupFacts> = z.object({
   ),
 });
 
+export const parseBudgetList = (payload: unknown): V2BudgetList => budgetListSchema.parse(payload);
 export const parseBudgetView = (payload: unknown): V2BudgetView => budgetViewSchema.parse(payload);
 export const parseEnvelopeCreated = (payload: unknown): V2EnvelopeCreated =>
   envelopeCreatedSchema.parse(payload);

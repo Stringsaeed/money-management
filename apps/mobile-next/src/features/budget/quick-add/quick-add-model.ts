@@ -1,15 +1,11 @@
 import { format, parseISO } from "date-fns";
 
-import {
-  BUDGET_CURRENCY,
-  type V2Account,
-  type V2Category,
-  type V2PaydayRule,
-} from "@trove/api/v2/contracts";
+import { type V2Account, type V2Category, type V2PaydayRule } from "@trove/api/v2/contracts";
 import { periodContaining } from "@trove/domain/budget";
 
 import { ApiError } from "@/data/http";
 
+import { currencyErrorMessage } from "../currency/currency-errors";
 import { roleErrorMessage } from "../role/budget-role";
 
 import type { EnvelopeLine } from "../home/home-model";
@@ -43,14 +39,13 @@ export interface PaidWithAccounts {
   readonly cards: readonly V2Account[];
 }
 
-/** Accounts a budget expense can come from: the money you have, plus credit cards. AED only. */
+/** Accounts a budget expense can come from: the money you have, plus credit cards, in the budget's currency. */
 export function paidWithAccounts(
   accounts: readonly V2Account[],
   fundingAccountIds: readonly string[],
+  currency: string,
 ): PaidWithAccounts {
-  const usable = accounts.filter(
-    (account) => !account.archived && account.currency === BUDGET_CURRENCY,
-  );
+  const usable = accounts.filter((account) => !account.archived && account.currency === currency);
   return {
     funding: usable.filter((account) => fundingAccountIds.includes(account.id)),
     cards: usable.filter(
@@ -140,7 +135,7 @@ export function placementText(placement: DatePlacement): string | null {
 
 /** Honest failure copy: a dropped connection and a rejected save both mean nothing was saved. */
 export function saveErrorMessage(cause: unknown): string {
-  const refused = roleErrorMessage(cause);
+  const refused = roleErrorMessage(cause) ?? currencyErrorMessage(cause);
   if (refused) return refused;
   if (cause instanceof ApiError && cause.code === "network_error") {
     return "You're offline. Nothing was saved.";

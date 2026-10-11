@@ -1,7 +1,6 @@
 import { addMonths, format, parseISO } from "date-fns";
 
 import {
-  BUDGET_CURRENCY,
   type V2EnvelopeCreateInput,
   type V2EnvelopePayInput,
   type V2EnvelopeRepeat,
@@ -70,8 +69,6 @@ export function savingPreview(input: {
   };
 }
 
-const parseMoney = (text: string) => parseMoneyMinor(text, BUDGET_CURRENCY);
-
 export interface BigPaymentDraft {
   readonly name: string;
   readonly amountText: string;
@@ -84,12 +81,13 @@ export interface BigPaymentDraft {
 export function previewDraft(
   draft: BigPaymentDraft,
   context: {
+    readonly currency: string;
     readonly today: string;
     readonly rule: V2PaydayRule;
     readonly currentPeriodStart: string;
   },
 ): SavingPreview | null {
-  const amounts = parseAmounts(draft);
+  const amounts = parseAmounts(draft, context.currency);
   if (!amounts.ok) return null;
   const { targetMinor, setAsideMinor } = amounts;
   if (draft.dueDate < context.today) return null;
@@ -115,11 +113,13 @@ export type BigPaymentCheck =
 /** The amount and the set-aside as money, or what is wrong with them. */
 function parseAmounts(
   draft: BigPaymentDraft,
+  currency: string,
 ):
   | { readonly ok: true; readonly targetMinor: number; readonly setAsideMinor: number }
   | { readonly ok: false; readonly message: string } {
-  const targetMinor = parseMoney(draft.amountText);
-  const setAsideMinor = draft.setAsideText.trim() === "" ? 0 : parseMoney(draft.setAsideText);
+  const targetMinor = parseMoneyMinor(draft.amountText, currency);
+  const setAsideMinor =
+    draft.setAsideText.trim() === "" ? 0 : parseMoneyMinor(draft.setAsideText, currency);
   if (targetMinor === null || targetMinor <= 0) {
     return { ok: false, message: "How much needs an amount above zero, like 12000 or 350.50." };
   }
@@ -135,11 +135,11 @@ function parseAmounts(
 /** B2: turns what was typed into the create request, or says what is missing. */
 export function checkBigPayment(
   draft: BigPaymentDraft,
-  context: { readonly today: string; readonly unassignedMinor: number },
+  context: { readonly currency: string; readonly today: string; readonly unassignedMinor: number },
 ): BigPaymentCheck {
   const name = draft.name.trim();
   if (name === "" || draft.amountText.trim() === "") return { ok: false, message: "" };
-  const amounts = parseAmounts(draft);
+  const amounts = parseAmounts(draft, context.currency);
   if (!amounts.ok) return amounts;
   const { targetMinor, setAsideMinor } = amounts;
   if (draft.dueDate < context.today) {
@@ -186,9 +186,9 @@ export function checkPayment(
     readonly accountId: string | null;
     readonly date: string;
   },
-  period: { readonly start: string; readonly today: string },
+  period: { readonly currency: string; readonly start: string; readonly today: string },
 ): PaymentCheck {
-  const amountMinor = parseMoney(draft.amountText);
+  const amountMinor = parseMoneyMinor(draft.amountText, period.currency);
   if (amountMinor === null || amountMinor <= 0) {
     return { ok: false, message: "Enter the amount you paid, like 12000 or 350.50." };
   }
@@ -207,8 +207,6 @@ export function payErrorMessage(cause: unknown): string {
     switch (cause.code) {
       case "envelope_category_missing":
         return "This payment has no category to record the expense in. Add one from the envelope's menu. Nothing was saved.";
-      case "budget_currency_mismatch":
-        return "That account is in another currency. Pick one in this budget's currency. Nothing was saved.";
       case "envelope_not_saving_for":
         return "This envelope is no longer a big payment. Nothing was saved.";
       default:

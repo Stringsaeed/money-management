@@ -97,7 +97,7 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
         <PaydayActions today={payday.today} reminders={due.reminders} />
       ) : null}
       <DueTodayRow due={due} />
-      <BudgetReminders view={view} due={due} />
+      <BudgetReminders />
 
       <View
         onLayout={(event) => {

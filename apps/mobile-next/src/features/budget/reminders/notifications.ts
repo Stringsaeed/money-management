@@ -41,22 +41,27 @@ const tapSchema = z.object({
   // Notifications scheduled before reminders carried their ledger have neither.
   identityKey: z.string().optional(),
   scope: scopeSchema.optional(),
+  // Notifications scheduled before budgets had a currency open whichever budget is shown.
+  currency: z.string().optional(),
 });
 
 export interface ReminderTap {
   readonly target: ReminderTarget;
   /** The ledger the reminder belongs to; absent on reminders scheduled before it was recorded. */
   readonly ledger: ReminderLedger | null;
+  /** The budget the reminder is about; null on reminders scheduled before budgets had a currency. */
+  readonly currency: string | null;
 }
 
 /** Where a tapped notification's data says to go, and for which ledger; null for anything else. */
 export function reminderTap(data: Notifications.NotificationContent["data"]): ReminderTap | null {
   const parsed = tapSchema.safeParse(data);
   if (!parsed.success) return null;
-  const { target, identityKey, scope } = parsed.data;
+  const { target, identityKey, scope, currency } = parsed.data;
   return {
     target: target === "budget" ? "payday" : target,
     ledger: identityKey && scope ? { identityKey, scope } : null,
+    currency: currency ?? null,
   };
 }
 
@@ -104,6 +109,17 @@ export function reminderMoment(day: string): Date | null {
   return parsed ? set(parsed, { hours: REMINDER_HOUR, minutes: 0, seconds: 0 }) : null;
 }
 
+/**
+ * Which notification a reminder is. Bills batch across budgets, so they are one per day;
+ * paydays are one per budget and day.
+ */
+export const reminderKey = (
+  reminder: Pick<PlannedReminder, "kind" | "day" | "currency">,
+): string =>
+  reminder.kind === "bills"
+    ? `bills:${reminder.day}`
+    : `payday:${reminder.currency}:${reminder.day}`;
+
 const BUDGET_PREFIX = "trove-budget:";
 const identifierPrefix = (scopeId: string) => `${BUDGET_PREFIX}${scopeId}:`;
 
@@ -125,6 +141,7 @@ type ReminderData = {
   readonly target: ReminderTarget;
   readonly identityKey: string;
   readonly scope: V2LedgerScope;
+  readonly currency: string;
 };
 
 /** The device's notification schedule, as far as budget reminders use it. */
@@ -190,7 +207,7 @@ export function budgetReminderSchedule(device: NotificationSchedule) {
     await cancelMatching((identifier) => identifier.startsWith(prefix));
     for (const { reminder, at } of due) {
       await device.schedule(
-        `${prefix}${reminder.kind}:${reminder.day}`,
+        `${prefix}${reminderKey(reminder)}`,
         {
           title: reminder.title,
           body: reminder.body,
@@ -198,6 +215,7 @@ export function budgetReminderSchedule(device: NotificationSchedule) {
             target: TARGETS[reminder.kind],
             identityKey: ledger.identityKey,
             scope: ledger.scope,
+            currency: reminder.currency,
           },
         },
         at,

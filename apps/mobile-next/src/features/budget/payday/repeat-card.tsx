@@ -1,10 +1,8 @@
 import { StyleSheet } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { Button, Card, space, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetMoney } from "../currency/use-budget-currency";
 import type { RepeatPlan } from "./repeat-plan-model";
 import type { LastMonth } from "./use-plan-month";
 
@@ -15,8 +13,6 @@ interface RepeatCardProps {
   readonly onAdjust: () => void;
 }
 
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
-
 export const pluralEnvelopes = (count: number) =>
   `${count} ${count === 1 ? "envelope" : "envelopes"}`;
 
@@ -25,6 +21,7 @@ export const pluralEnvelopes = (count: number) =>
  * While last month loads or after it fails to load, it says so instead of "already matches".
  */
 export function RepeatCard({ plan, lastMonth, onRetry, onAdjust }: RepeatCardProps) {
+  const money = useBudgetMoney();
   return (
     <Card style={styles.card}>
       <Text variant="labelMd">Repeat last month&apos;s plan</Text>

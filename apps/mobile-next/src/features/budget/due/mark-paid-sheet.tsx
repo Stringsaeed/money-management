@@ -1,6 +1,7 @@
 import { useAccountsQuery } from "@/data/ledger-queries";
 import { Sheet } from "@/ui/trove";
 
+import { useBudgetCurrency } from "../currency/use-budget-currency";
 import { MarkPaidForm } from "./mark-paid-form";
 import { markPaidAccounts } from "./mark-paid-model";
 import type { MarkPaidTarget } from "./use-mark-paid-target";
@@ -16,8 +17,9 @@ interface MarkPaidSheetProps {
 /** M3's Mark paid sheet for one bill. */
 export function MarkPaidSheet({ target, due, fundingAccountIds, onDismiss }: MarkPaidSheetProps) {
   const accounts = useAccountsQuery();
+  const currency = useBudgetCurrency();
   const { item } = target;
-  const choices = item ? markPaidAccounts(accounts.data, item, fundingAccountIds) : [];
+  const choices = item ? markPaidAccounts(accounts.data, item, fundingAccountIds, currency) : [];
   return (
     <Sheet open={target.open} onDismiss={onDismiss} snapPoints={["full"]}>
       {item ? (

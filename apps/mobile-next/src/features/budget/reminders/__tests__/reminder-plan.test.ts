@@ -2,15 +2,22 @@ import { EMPTY_REMINDER_PREFS, setMuted, snoozeUntil, type ReminderPrefs } from 
 import {
   billsMessage,
   planBillReminders,
+  planLedgerReminders,
   planPaydayReminders,
   type ReminderBill,
 } from "../reminder-plan";
 
-const money = (minor: number) =>
-  `AED ${(minor / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+const money = (minor: number, currency: string) =>
+  `${currency} ${(minor / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
 
-const bill = (ruleId: string, scheduledDate: string, amountMinor = 185_000): ReminderBill => ({
+const bill = (
+  ruleId: string,
+  scheduledDate: string,
+  amountMinor = 185_000,
+  currency = "AED",
+): ReminderBill => ({
   ruleId,
+  currency,
   scheduledDate,
   name: ruleId,
   amountMinor,
@@ -73,6 +80,7 @@ describe("planBillReminders", () => {
 describe("planPaydayReminders", () => {
   it("lists the upcoming paydays under the current rule", () => {
     const planned = planPaydayReminders({
+      currency: "AED",
       rule: { kind: "day", day: 25 },
       currentPeriodStart: "2026-09-25",
       today: "2026-10-11",
@@ -83,6 +91,7 @@ describe("planPaydayReminders", () => {
 
   it("includes today when today is payday and the salary is not logged yet", () => {
     const planned = planPaydayReminders({
+      currency: "AED",
       rule: { kind: "day", day: 25 },
       currentPeriodStart: "2026-10-25",
       today: "2026-10-25",
@@ -94,6 +103,7 @@ describe("planPaydayReminders", () => {
 
   it("drops today's payday reminder once the salary is logged", () => {
     const planned = planPaydayReminders({
+      currency: "AED",
       rule: { kind: "day", day: 25 },
       currentPeriodStart: "2026-10-25",
       today: "2026-10-25",
@@ -104,6 +114,7 @@ describe("planPaydayReminders", () => {
   });
 
   const late = {
+    currency: "AED",
     rule: { kind: "day", day: 25 } as const,
     currentPeriodStart: "2026-10-25",
     today: "2026-10-26",
@@ -131,5 +142,61 @@ describe("planPaydayReminders", () => {
       snoozedOn: "2026-11-24",
     });
     expect(new Set(twice.map((reminder) => reminder.day)).size).toBe(twice.length);
+  });
+});
+
+describe("planLedgerReminders", () => {
+  const payday = {
+    rule: { kind: "day", day: 25 } as const,
+    currentPeriodStart: "2026-09-25",
+    count: 1,
+  };
+  const ledger = (sources: Parameters<typeof planLedgerReminders>[0]["sources"]) =>
+    planLedgerReminders({
+      sources,
+      prefs: EMPTY_REMINDER_PREFS,
+      today: "2026-10-11",
+      horizonDays: 13,
+      money,
+    });
+
+  it("sends one bills notification a day across budgets", () => {
+    const planned = ledger([
+      { currency: "AED", bills: [bill("rent", "2026-10-12")], payday: { ...payday, count: 0 } },
+      {
+        currency: "USD",
+        bills: [bill("saas", "2026-10-12", 4_900, "USD"), bill("vps", "2026-10-15", 900, "USD")],
+        payday: { ...payday, count: 0 },
+      },
+    ]);
+    expect(planned.map((reminder) => [reminder.kind, reminder.day, reminder.body])).toEqual([
+      ["bills", "2026-10-12", "2 bills due today"],
+      ["bills", "2026-10-15", "vps USD 9.00 due today"],
+    ]);
+  });
+
+  it("opens the budget of the first bill, and a lone bill uses its own currency", () => {
+    const planned = ledger([
+      { currency: "AED", bills: [], payday: { ...payday, count: 0 } },
+      {
+        currency: "USD",
+        bills: [bill("saas", "2026-10-12", 4_900, "USD")],
+        payday: { ...payday, count: 0 },
+      },
+    ]);
+    expect(planned).toEqual([
+      expect.objectContaining({ currency: "USD", body: "saas USD 49.00 due today" }),
+    ]);
+  });
+
+  it("keeps a payday reminder per budget", () => {
+    const planned = ledger([
+      { currency: "AED", bills: [], payday },
+      { currency: "USD", bills: [], payday },
+    ]);
+    expect(planned.map((reminder) => [reminder.kind, reminder.currency, reminder.day])).toEqual([
+      ["payday", "AED", "2026-10-25"],
+      ["payday", "USD", "2026-10-25"],
+    ]);
   });
 });

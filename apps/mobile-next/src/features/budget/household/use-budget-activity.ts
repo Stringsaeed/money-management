@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { V2BudgetActivityItem } from "@trove/api/v2/contracts";
 
 import { ledgerClient } from "@/data/ledger-client";
-import { budgetKey, useLedgerData } from "@/data/ledger-queries";
+import { budgetKey, useLedgerData, useSelectedBudget } from "@/data/ledger-queries";
 
 const ACTIVITY_LIMIT = 5;
 
@@ -18,10 +18,11 @@ export interface UseBudgetActivity {
  */
 export function useBudgetActivity(): UseBudgetActivity {
   const { identityKey, scope } = useLedgerData();
+  const { currency } = useSelectedBudget();
   const query = useQuery({
-    queryKey: [...budgetKey(identityKey, scope), "activity", ACTIVITY_LIMIT],
-    queryFn: () => ledgerClient.budget.activity(scope, ACTIVITY_LIMIT),
-    enabled: scope.kind === "household",
+    queryKey: [...budgetKey(identityKey, scope), "activity", currency, ACTIVITY_LIMIT],
+    queryFn: () => ledgerClient.budget.activity(scope, currency ?? "", ACTIVITY_LIMIT),
+    enabled: scope.kind === "household" && currency !== null,
     staleTime: 15_000,
     retry: 1,
   });

@@ -1,11 +1,10 @@
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import type { HouseholdDetail } from "@/features/household/household-client";
 import { space, Text, TextField } from "@/ui/trove";
 
 interface HouseholdSharesSectionProps {
+  readonly currency: string;
   readonly household: HouseholdDetail | null;
   readonly shares: Readonly<Record<string, string>>;
   readonly onChange: (userId: string, text: string) => void;
@@ -16,6 +15,7 @@ interface HouseholdSharesSectionProps {
  * this device and never changes the plan or the numbers.
  */
 export function HouseholdSharesSection({
+  currency,
   household,
   shares,
   onChange,
@@ -32,7 +32,7 @@ export function HouseholdSharesSection({
         <TextField
           key={member.userId}
           label={member.userName || member.userEmail}
-          placeholder={`${BUDGET_CURRENCY} 0`}
+          placeholder={`${currency} 0`}
           keyboardType="decimal-pad"
           value={shares[member.userId] ?? ""}
           onChangeText={(text) => onChange(member.userId, text)}

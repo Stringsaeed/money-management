@@ -118,13 +118,14 @@ describe("paidWithAccounts", () => {
       account("usd-card", { type: "credit_card", currency: "USD" }),
       account("savings", { type: "savings" }),
     ];
-    const result = paidWithAccounts(accounts, ["bank", "cash", "old", "usd"]);
+    const result = paidWithAccounts(accounts, ["bank", "cash", "old", "usd"], "AED");
+    expect(paidWithAccounts(accounts, ["usd"], "USD").cards.map((a) => a.id)).toEqual(["usd-card"]);
     expect(result.funding.map((a) => a.id)).toEqual(["bank", "cash"]);
     expect(result.cards.map((a) => a.id)).toEqual(["card"]);
   });
 
   it("reports no cards when the person has none", () => {
-    expect(paidWithAccounts([account("bank")], ["bank"]).cards).toEqual([]);
+    expect(paidWithAccounts([account("bank")], ["bank"], "AED").cards).toEqual([]);
   });
 });
 

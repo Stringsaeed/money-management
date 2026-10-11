@@ -27,7 +27,7 @@ const accounts = [
 
 describe("markPaidAccounts", () => {
   it("offers an AED bill only the funding accounts and credit cards the budget counts", () => {
-    const ids = markPaidAccounts(accounts, { currency: "AED" }, ["bank", "old-bank"]).map(
+    const ids = markPaidAccounts(accounts, { currency: "AED" }, ["bank", "old-bank"], "AED").map(
       (item) => item.id,
     );
     expect(ids).toEqual(["bank", "card"]);
@@ -35,7 +35,7 @@ describe("markPaidAccounts", () => {
 
   it("offers a bill in another currency every active account in that currency", () => {
     expect(
-      markPaidAccounts(accounts, { currency: "USD" }, ["bank"]).map((item) => item.id),
+      markPaidAccounts(accounts, { currency: "USD" }, ["bank"], "AED").map((item) => item.id),
     ).toEqual(["usd"]);
   });
 });

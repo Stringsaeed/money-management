@@ -1,12 +1,10 @@
 import { router } from "expo-router";
 import { Alert, StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { useLedgerMutations } from "@/data/ledger-queries";
 import { Amount, Button, ListGroup, ListRow, showToast, space, Switch, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
 import type { EnvelopeLine } from "../home/home-model";
 import { PLAN_ADMIN_ONLY } from "../role/budget-role";
 import { useBudgetRole } from "../role/use-budget-role";
@@ -25,6 +23,8 @@ interface MenuPanelProps {
 
 /** The ••• menu: every advanced envelope action lives here and nowhere else. */
 export function MenuPanel({ line, onOpen, onClose }: MenuPanelProps) {
+  const money = useBudgetMoney();
+  const currency = useBudgetCurrency();
   const { updateEnvelope } = useLedgerMutations();
   const write = useEnvelopeWrite();
   const { canEditPlan } = useBudgetRole();
@@ -36,7 +36,7 @@ export function MenuPanel({ line, onOpen, onClose }: MenuPanelProps) {
   const archive = () =>
     Alert.alert(
       `Archive ${envelope.name}?`,
-      `Its ${formatMoneyMinor(Math.max(totals.leftMinor, 0), BUDGET_CURRENCY)} left goes back to Not planned yet, and spending in its categories stops counting. You can't undo this.`,
+      `Its ${money(Math.max(totals.leftMinor, 0))} left goes back to Not planned yet, and spending in its categories stops counting. You can't undo this.`,
       [
         { text: "Keep it", style: "cancel" },
         {
@@ -66,9 +66,7 @@ export function MenuPanel({ line, onOpen, onClose }: MenuPanelProps) {
           <ListRow
             chevron
             title="Change plan"
-            trailing={
-              <Amount currency={BUDGET_CURRENCY} minor={totals.plannedMinor} tone="secondary" />
-            }
+            trailing={<Amount currency={currency} minor={totals.plannedMinor} tone="secondary" />}
             onPress={() => onOpen("plan")}
           />
         ) : null}

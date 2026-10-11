@@ -1,8 +1,6 @@
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { ListRow } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetMoney } from "../currency/use-budget-currency";
 import type { CoverTake, Place } from "./cover-move-model";
 
 interface CoverSourceRowProps {
@@ -13,10 +11,9 @@ interface CoverSourceRowProps {
   readonly onToggle: () => void;
 }
 
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
-
 /** One place a cover can come from, with its Left and the "After:" preview. Sits in a ListGroup. */
 export function CoverSourceRow({ place, selected, take, onToggle }: CoverSourceRowProps) {
+  const money = useBudgetMoney();
   const left =
     place.kind === "unplanned"
       ? `${money(place.availableMinor)} not planned`

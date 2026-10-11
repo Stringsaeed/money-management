@@ -1,5 +1,4 @@
 import {
-  BUDGET_CURRENCY,
   type V2DueOccurrence,
   type V2Envelope,
   type V2EnvelopeTotals,
@@ -32,25 +31,27 @@ export function billStatus(
   return { kind: "ready" };
 }
 
-/** An AED expense bill with a Category, due by `periodEnd`. */
+/** An expense bill in the budget's currency with a Category, due by `periodEnd`. */
 const owedBill = (
   item: V2DueOccurrence,
+  currency: string,
   periodEnd: string,
 ): item is V2DueOccurrence & { categoryId: string } =>
   item.kind === "expense" &&
-  item.currency === BUDGET_CURRENCY &&
+  item.currency === currency &&
   item.categoryId !== null &&
   item.scheduledDate <= periodEnd;
 
 /**
- * What each Bills envelope still has to pay before the period ends, from the Due list: AED expense
- * bills in a Category the envelope holds, due on or before `periodEnd`. Overdue ones from earlier
+ * What each Bills envelope still has to pay before the period ends, from the Due list: expense
+ * bills in the budget's currency in a Category the envelope holds, due on or before `periodEnd`. Overdue ones from earlier
  * periods count because they are still owed, and snoozed ones count because a snooze only delays
  * the reminder. Envelopes with no such bill get no entry.
  */
 export function dueByEnvelope(
   items: readonly V2DueOccurrence[],
   envelopes: readonly Pick<V2Envelope, "id" | "group" | "categoryIds">[],
+  currency: string,
   periodEnd: string,
 ): Map<string, number> {
   const envelopeByCategory = new Map(
@@ -62,7 +63,9 @@ export function dueByEnvelope(
   );
   const due = new Map<string, number>();
   for (const item of items) {
-    const envelopeId = owedBill(item, periodEnd) ? envelopeByCategory.get(item.categoryId) : null;
+    const envelopeId = owedBill(item, currency, periodEnd)
+      ? envelopeByCategory.get(item.categoryId)
+      : null;
     if (!envelopeId) continue;
     due.set(envelopeId, (due.get(envelopeId) ?? 0) + item.amountMinor);
   }

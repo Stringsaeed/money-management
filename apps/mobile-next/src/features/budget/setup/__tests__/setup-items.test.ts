@@ -61,7 +61,7 @@ describe("setup items", () => {
   ];
 
   it("pre-ticks Bills and Everyday from the ledger, with presets unticked and Bills winning", () => {
-    const items = buildSetupItems({ facts, categories, custom: [] });
+    const items = buildSetupItems({ currency: "AED", facts, categories, custom: [] });
     const byKey = Object.fromEntries(items.map((entry) => [entry.key, entry]));
 
     expect(byKey["cat:utilities"]).toMatchObject({
@@ -89,6 +89,7 @@ describe("setup items", () => {
 
   it("does not reuse an archived Category for a custom row", () => {
     const items = buildSetupItems({
+      currency: "AED",
       facts,
       categories,
       custom: [{ name: "old", group: "everyday" }],
@@ -101,13 +102,13 @@ describe("setup items", () => {
 describe("suggestions", () => {
   it("turns a Recurring amount into a monthly figure in whole dirhams", () => {
     expect(
-      monthlyEquivalentMinor({ amountMinor: 120_000, frequency: "year", intervalCount: 1 }),
+      monthlyEquivalentMinor({ amountMinor: 120_000, frequency: "year", intervalCount: 1 }, "AED"),
     ).toBe(10_000);
     expect(
-      monthlyEquivalentMinor({ amountMinor: 30_000, frequency: "month", intervalCount: 3 }),
+      monthlyEquivalentMinor({ amountMinor: 30_000, frequency: "month", intervalCount: 3 }, "AED"),
     ).toBe(10_000);
     expect(
-      monthlyEquivalentMinor({ amountMinor: 1_000, frequency: "week", intervalCount: 1 }),
+      monthlyEquivalentMinor({ amountMinor: 1_000, frequency: "week", intervalCount: 1 }, "AED"),
     ).toBe(4_300);
   });
 
@@ -120,12 +121,14 @@ describe("suggestions", () => {
       defaultTicked: true,
     };
 
-    expect(suggestedMinor({ ...base, recurringMinor: 500_00, lastPeriodMinor: 90_00 })).toBe(
+    expect(suggestedMinor({ ...base, recurringMinor: 500_00, lastPeriodMinor: 90_00 }, "AED")).toBe(
       500_00,
     );
-    expect(suggestedMinor({ ...base, recurringMinor: null, lastPeriodMinor: 123_456 })).toBe(
+    expect(suggestedMinor({ ...base, recurringMinor: null, lastPeriodMinor: 123_456 }, "AED")).toBe(
       123_500,
     );
-    expect(suggestedMinor({ ...base, recurringMinor: null, lastPeriodMinor: null })).toBeNull();
+    expect(
+      suggestedMinor({ ...base, recurringMinor: null, lastPeriodMinor: null }, "AED"),
+    ).toBeNull();
   });
 });

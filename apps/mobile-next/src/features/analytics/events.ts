@@ -4,7 +4,7 @@ import type { V2EnvelopeRepeat } from "@trove/api/v2/contracts";
 export interface AnalyticsEvents {
   budget_setup_started: Record<string, never>;
   budget_setup_step_completed: { step: "payday" | "items" | "amounts" };
-  budget_activated: { envelope_count: number; groups: number };
+  budget_activated: { envelope_count: number; groups: number; currency_count: number };
   budget_home_viewed: Record<string, never>;
   spend_quick_added: { has_account: boolean; has_note: boolean; backdated: boolean };
   overspend_covered: { source_type: "unassigned" | "everyday" | "bills" | "saving" };

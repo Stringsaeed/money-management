@@ -1,10 +1,8 @@
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { Button, space, Text, TextField } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetMoney } from "../currency/use-budget-currency";
 import { PanelError } from "../envelope/panel-error";
 import type { ActiveBudgetView } from "../home/home-model";
 import { QuickAddDate } from "../quick-add/quick-add-date";
@@ -21,6 +19,7 @@ interface AddBigPaymentFormProps {
 
 /** B2: what it is, how much, when it is due, and what to set aside each payday. */
 export function AddBigPaymentForm({ view, onAdded, onCancel }: AddBigPaymentFormProps) {
+  const money = useBudgetMoney();
   const form = useAddBigPaymentForm({ view, onAdded });
   return (
     <View style={styles.container}>
@@ -56,7 +55,7 @@ export function AddBigPaymentForm({ view, onAdded, onCancel }: AddBigPaymentForm
         onChangeText={form.setSetAsideText}
       />
       <Text variant="bodySm" tone="secondary">
-        {`Comes out of Not planned yet: ${formatMoneyMinor(view.current.unassignedMinor, BUDGET_CURRENCY)}`}
+        {`Comes out of Not planned yet: ${money(view.current.unassignedMinor)}`}
       </Text>
       <SavingPreview preview={form.preview} />
       {form.problem ? (

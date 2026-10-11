@@ -27,6 +27,7 @@ interface UseAddBigPaymentFormOptions {
 /** State, the live per-payday suggestion, and the save for the Add a big payment sheet. */
 export function useAddBigPaymentForm({ view, onAdded }: UseAddBigPaymentFormOptions) {
   const { createEnvelope } = useLedgerMutations();
+  const { currency } = view.budget;
   const write = useEnvelopeWrite(addBigPaymentErrorMessage);
   const [name, setName] = useState("");
   const [amountText, setAmountText] = useState("");
@@ -38,8 +39,13 @@ export function useAddBigPaymentForm({ view, onAdded }: UseAddBigPaymentFormOpti
 
   const draft: BigPaymentDraft = { name, amountText, setAsideText, dueDate, repeat };
   const today = todayDateKey();
-  const check = checkBigPayment(draft, { today, unassignedMinor: view.current.unassignedMinor });
+  const check = checkBigPayment(draft, {
+    currency,
+    today,
+    unassignedMinor: view.current.unassignedMinor,
+  });
   const preview = previewDraft(draft, {
+    currency,
     today,
     rule: view.paydayRule,
     currentPeriodStart: view.current.period.start,

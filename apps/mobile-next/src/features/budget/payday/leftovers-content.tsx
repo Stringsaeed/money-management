@@ -2,12 +2,10 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { useLedgerMutations } from "@/data/ledger-queries";
 import { Button, Chip, ListGroup, showToast, space } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetMoney } from "../currency/use-budget-currency";
 import { PanelError } from "../envelope/panel-error";
 import { useEnvelopeWrite } from "../envelope/use-envelope-write";
 import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
@@ -24,10 +22,9 @@ import {
 } from "./leftovers-model";
 import { nextPaydayStep, paydayFlowFacts } from "./payday-flow";
 
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
-
 /** C2: what happens to Everyday money that rolled over. Keeping it (the default) writes nothing. */
 export function LeftoversContent({ view }: { readonly view: ActiveBudgetView }) {
+  const money = useBudgetMoney();
   const { createAssignments } = useLedgerMutations();
   const write = useEnvelopeWrite();
   const lines = envelopeLines(view);

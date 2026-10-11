@@ -1,16 +1,15 @@
 import { router } from "expo-router";
 import { StyleSheet } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { Button, Card, space, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetMoney } from "../currency/use-budget-currency";
 import { RAISE_PERIODS, type RaiseSuggestion } from "./wrap-up-model";
 
 /** One gentle suggestion; the change itself happens in the envelope's Change plan. */
 export function RaiseCard({ suggestion }: { readonly suggestion: RaiseSuggestion }) {
-  const amount = formatMoneyMinor(suggestion.suggestedMinor, BUDGET_CURRENCY);
+  const money = useBudgetMoney();
+  const amount = money(suggestion.suggestedMinor);
   return (
     <Card style={styles.card}>
       <Text>

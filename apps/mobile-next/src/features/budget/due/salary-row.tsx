@@ -1,10 +1,8 @@
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { Amount, Card, space, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
 import { dueDateLabel } from "./due-date-label";
 
 interface SalaryRowProps {
@@ -14,7 +12,9 @@ interface SalaryRowProps {
 
 /** The usual salary, shown for information: it is not budget money until Got paid posts it. */
 export function SalaryRow({ amountMinor, payday }: SalaryRowProps) {
-  const amount = formatMoneyMinor(amountMinor, BUDGET_CURRENCY);
+  const money = useBudgetMoney();
+  const currency = useBudgetCurrency();
+  const amount = money(amountMinor);
   return (
     <Card
       accessible
@@ -23,7 +23,7 @@ export function SalaryRow({ amountMinor, payday }: SalaryRowProps) {
     >
       <View style={styles.top}>
         <Text variant="labelMd">Expected salary</Text>
-        <Amount currency={BUDGET_CURRENCY} minor={amountMinor} />
+        <Amount currency={currency} minor={amountMinor} />
       </View>
       <Text tone="secondary" variant="bodySm">
         {dueDateLabel(payday)} · not counted until you tap Got paid

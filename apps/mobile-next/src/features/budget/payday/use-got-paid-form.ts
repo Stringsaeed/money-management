@@ -50,7 +50,7 @@ export function useGotPaidForm(view: ActiveBudgetView) {
     to: today,
   });
 
-  const accountChoices = salaryAccounts(accounts.data, view.fundingAccountIds);
+  const accountChoices = salaryAccounts(accounts.data, view.fundingAccountIds, budget.currency);
   const accountId =
     pickedAccountId ?? defaultSalaryAccountId(accountChoices, budget.defaultAccountId);
   const categoryChoices = incomeCategories(categories.data);
@@ -58,7 +58,7 @@ export function useGotPaidForm(view: ActiveBudgetView) {
 
   const submit = async () => {
     if (busy) return;
-    const check = checkGotPaid({ amountText, accountId, date }, today);
+    const check = checkGotPaid({ amountText, accountId, date }, budget.currency, today);
     if (!check.ok) {
       setError(check.error);
       return;

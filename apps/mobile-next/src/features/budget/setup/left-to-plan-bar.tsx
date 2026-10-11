@@ -1,17 +1,16 @@
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { Amount, colors, layout, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 interface LeftToPlanBarProps {
+  readonly currency: string;
   /** The engine's Not planned yet for this draft; `null` while it cannot be calculated. */
   readonly leftMinor: number | null;
 }
 
 /** The sticky Left to plan summary: neutral above zero, a line at zero, red below zero. */
-export function LeftToPlanBar({ leftMinor }: LeftToPlanBarProps) {
+export function LeftToPlanBar({ currency, leftMinor }: LeftToPlanBarProps) {
   const over = leftMinor !== null && leftMinor < 0;
   return (
     <View style={styles.bar} accessibilityRole="summary" accessibilityLiveRegion="polite">
@@ -22,7 +21,7 @@ export function LeftToPlanBar({ leftMinor }: LeftToPlanBarProps) {
         <Text variant="amountLg">…</Text>
       ) : (
         <Amount
-          currency={BUDGET_CURRENCY}
+          currency={currency}
           minor={leftMinor}
           size="lg"
           tone={over ? "negative" : "primary"}
@@ -31,10 +30,10 @@ export function LeftToPlanBar({ leftMinor }: LeftToPlanBarProps) {
       {leftMinor === null ? null : (
         <Text tone={over ? "negative" : "secondary"} variant="bodySm">
           {over
-            ? `Planned ${formatMoneyMinor(-leftMinor, BUDGET_CURRENCY)} more than you have. Lower amounts.`
+            ? `Planned ${formatMoneyMinor(-leftMinor, currency)} more than you have. Lower amounts.`
             : leftMinor === 0
-              ? "Every dirham has a job."
-              : `${formatMoneyMinor(leftMinor, BUDGET_CURRENCY)} not planned yet: it counts as safe to spend.`}
+              ? "Every bit of it has a job."
+              : `${formatMoneyMinor(leftMinor, currency)} not planned yet: it counts as safe to spend.`}
         </Text>
       )}
     </View>

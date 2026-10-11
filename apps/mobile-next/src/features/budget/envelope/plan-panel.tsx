@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { useLedgerMutations } from "@/data/ledger-queries";
 import { AmountInput, Button, showToast, space, Text } from "@/ui/trove";
-import { decimalFromMinor, formatMoneyMinor, parseMoneyMinor } from "@/utils/money";
+import { decimalFromMinor, parseMoneyMinor } from "@/utils/money";
 
+import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
 import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
 
 import { planChange } from "./envelope-model";
@@ -21,15 +20,15 @@ interface PlanPanelProps {
   readonly onDone: () => void;
 }
 
-const money = (minor: number) => formatMoneyMinor(minor, BUDGET_CURRENCY);
-
 /** Change plan: type the new monthly amount; the difference moves from or to Not planned yet. */
 export function PlanPanel({ view, line, onBack, onDone }: PlanPanelProps) {
+  const money = useBudgetMoney();
+  const currency = useBudgetCurrency();
   const { createAssignments } = useLedgerMutations();
   const write = useEnvelopeWrite();
   const { totals, envelope } = line;
-  const [text, setText] = useState(decimalFromMinor(totals.plannedMinor, BUDGET_CURRENCY));
-  const next = parseMoneyMinor(text, BUDGET_CURRENCY);
+  const [text, setText] = useState(decimalFromMinor(totals.plannedMinor, currency));
+  const next = parseMoneyMinor(text, currency);
   const change =
     next === null || next < 0
       ? null
@@ -67,7 +66,7 @@ export function PlanPanel({ view, line, onBack, onDone }: PlanPanelProps) {
     <View style={styles.container}>
       <PanelHeader title="Change plan" onBack={onBack} />
       <AmountInput
-        currency={BUDGET_CURRENCY}
+        currency={currency}
         label={`${envelope.name} this period`}
         value={text}
         onChangeText={(value) => {

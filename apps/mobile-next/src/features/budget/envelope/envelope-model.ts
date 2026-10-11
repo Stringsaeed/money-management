@@ -12,6 +12,7 @@ import { periodContaining } from "@trove/domain/budget";
 
 import { ApiError } from "@/data/http";
 
+import { currencyErrorMessage } from "../currency/currency-errors";
 import { roleErrorMessage } from "../role/budget-role";
 
 import type { ActiveBudgetView } from "../home/home-model";
@@ -127,7 +128,7 @@ export function categoryChoices(
 
 /** Plain-language failure copy for envelope writes. Nothing changed when one of these shows. */
 export function writeErrorMessage(cause: unknown): string {
-  const refused = roleErrorMessage(cause);
+  const refused = roleErrorMessage(cause) ?? currencyErrorMessage(cause);
   if (refused) return refused;
   if (cause instanceof ApiError) {
     switch (cause.code) {

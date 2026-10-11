@@ -1,12 +1,10 @@
 import { useState } from "react";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { track } from "@/features/analytics";
 import { playCue, useLedgerMutationsWithSound } from "@/features/sound";
 import { showToast } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
 
+import { useBudgetMoney } from "../currency/use-budget-currency";
 import { errorHaptic } from "../../ledger/transactions/transaction-haptics";
 
 import {
@@ -42,6 +40,7 @@ interface UseSaveSpendOptions {
 
 /** Saves one expense Transaction. A failure keeps the sheet open and says nothing was saved. */
 export function useSaveSpend({ remember, onSaved }: UseSaveSpendOptions) {
+  const money = useBudgetMoney();
   const mutations = useLedgerMutationsWithSound();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
@@ -83,7 +82,7 @@ export function useSaveSpend({ remember, onSaved }: UseSaveSpendOptions) {
     showToast({
       message:
         placementText(placement) ??
-        `Added ${formatMoneyMinor(spend.amountMinor, BUDGET_CURRENCY)} to ${envelope.envelope.name}`,
+        `Added ${money(spend.amountMinor)} to ${envelope.envelope.name}`,
     });
     onSaved({ envelopeId: envelope.envelope.id, overMinor, cover });
   };

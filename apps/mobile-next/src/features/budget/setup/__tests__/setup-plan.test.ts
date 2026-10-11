@@ -43,6 +43,7 @@ const preview = (
   overrides: Partial<Parameters<typeof previewPlan>[0]> & { amounts: Record<string, string> },
 ) =>
   previewPlan({
+    currency: "AED",
     facts: facts(),
     payday: { kind: "day", day: 1 },
     items: [groceries, rent],
@@ -171,12 +172,16 @@ describe("activation request", () => {
   };
 
   it("maps funding accounts, envelopes, and amounts", () => {
-    const input = buildActivateInput(draft, { kind: "last_workday" }, accountsFunding, [
-      groceries,
-      rent,
-    ]);
+    const input = buildActivateInput(
+      draft,
+      { kind: "last_workday" },
+      accountsFunding,
+      [groceries, rent],
+      "AED",
+    );
 
     expect(input).toEqual({
+      currency: "AED",
       paydayRule: { kind: "last_workday" },
       usualSalaryMinor: aed(12000),
       paydayReminder: false,
@@ -204,7 +209,10 @@ describe("activation request", () => {
       { kind: "day", day: 25 },
       { accountIds: [], openingCashMinor: aed(800), invalid: false },
       [groceries],
+      "USD",
     );
+
+    expect(input.currency).toBe("USD");
 
     expect(input.openingCashMinor).toBe(aed(800));
     expect(input).not.toHaveProperty("fundingAccountIds");
@@ -228,7 +236,7 @@ describe("funding choice", () => {
     ...overrides,
   });
 
-  it("ticks current and cash by default and never offers cards, non-AED, or archived accounts", () => {
+  it("ticks current and cash by default and never offers cards, other currencies, or archived accounts", () => {
     const choice = fundingChoice(
       [
         account("current", {}),
@@ -239,16 +247,21 @@ describe("funding choice", () => {
         account("old", { archived: true }),
       ],
       { funding: {}, openingCash: "" },
+      "AED",
     );
 
     expect(choice.accountIds).toEqual(["current", "cash"]);
   });
 
   it("falls back to the typed total when no account can fund a budget", () => {
-    const choice = fundingChoice([account("card", { type: "credit_card" })], {
-      funding: {},
-      openingCash: "250.5",
-    });
+    const choice = fundingChoice(
+      [account("card", { type: "credit_card" })],
+      {
+        funding: {},
+        openingCash: "250.5",
+      },
+      "AED",
+    );
 
     expect(choice).toEqual({ accountIds: [], openingCashMinor: 25050, invalid: false });
   });

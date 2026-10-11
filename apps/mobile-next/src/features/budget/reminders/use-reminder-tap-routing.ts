@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 
 import type { V2LedgerScope } from "@trove/api/v2/contracts";
 
+import { scopeKey } from "@/data/ledger-collections";
+import { budgetCurrencyStorageKey, updateBudgetCurrencyState } from "@/data/budget-currency-store";
 import { useBudgetingEnabled } from "@/features/feature-flags";
 import { useLedgerScope } from "@/navigation/ledger-scope-context";
 
@@ -24,12 +26,33 @@ const ROUTES = {
 interface PendingRoute {
   readonly scope: V2LedgerScope;
   readonly route: (typeof ROUTES)[ReminderTarget];
+  readonly currency: string | null;
+}
+
+/** Makes the reminder's budget the one the next screen shows, then opens the route. */
+function openRoute(
+  identityKey: string,
+  scope: V2LedgerScope,
+  currency: string | null,
+  route: (typeof ROUTES)[ReminderTarget],
+) {
+  if (currency === null) {
+    router.push(route);
+    return;
+  }
+  updateBudgetCurrencyState(budgetCurrencyStorageKey(scopeKey(identityKey, scope)), (state) => ({
+    ...state,
+    selected: currency,
+  }))
+    .catch(() => undefined)
+    .then(() => router.push(route));
 }
 
 /**
  * Shows reminders in the foreground, and opens the Due list or Got paid when a reminder is
- * tapped, including a cold start. The reminder's ledger is selected first, so a household bill
- * never opens the Personal Due list; a reminder for another identity is ignored.
+ * tapped, including a cold start. The reminder's ledger and budget are selected first, so a
+ * household bill never opens the Personal Due list and a USD bill never opens the AED one; a
+ * reminder for another identity is ignored.
  */
 export function useReminderTapRouting(identityKey: string): void {
   const lastResponse = Notifications.useLastNotificationResponse();
@@ -56,17 +79,19 @@ export function useReminderTapRouting(identityKey: string): void {
     if (tap.ledger && tap.ledger.identityKey !== identityKey) return;
     const target = tap.ledger?.scope ?? scope;
     if (sameLedgerScope(target, scope)) {
-      router.push(ROUTES[tap.target]);
+      openRoute(identityKey, target, tap.currency, ROUTES[tap.target]);
       return;
     }
     // Switching ledgers remounts the screens, so the route is pushed once the new scope is in.
-    setPending({ scope: target, route: ROUTES[tap.target] });
+    setPending({ scope: target, route: ROUTES[tap.target], currency: tap.currency });
     selectScope(target);
   }, [response, identityKey, scope, selectScope]);
 
   useEffect(() => {
     if (!pending) return;
-    if (sameLedgerScope(pending.scope, scope)) router.push(pending.route);
+    if (sameLedgerScope(pending.scope, scope)) {
+      openRoute(identityKey, pending.scope, pending.currency, pending.route);
+    }
     setPending(null);
-  }, [pending, scope]);
+  }, [pending, scope, identityKey]);
 }

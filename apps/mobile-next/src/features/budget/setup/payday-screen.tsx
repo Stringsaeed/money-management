@@ -1,25 +1,29 @@
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
-import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
-
 import { track } from "@/features/analytics";
 import { useAccountsQuery, useLedgerData } from "@/data/ledger-queries";
 import { useHouseholdMembership } from "@/features/household/use-household-membership";
 import { Button, ListGroup, ListRow, space, Switch, Text, TextField } from "@/ui/trove";
 
+import { CurrencySection } from "./currency-section";
 import { FundingSection } from "./funding-section";
 import { HouseholdSharesSection } from "./household-shares-section";
 import { PaydayPicker } from "./payday-picker";
 import { SetupFrame } from "./setup-frame";
 import { SetupStatus } from "./setup-status";
+import { paydayIntro, resolveSetupCurrency } from "./setup-currency";
 import { fundingChoice, parseAmountText, paydayStepReady } from "./setup-plan";
+import { setupHref } from "./setup-routes";
 import { useSetupDraft } from "./use-setup-draft";
+import { useSetupTarget } from "./use-setup-target";
 
 /** S2: payday, usual salary, payday reminder, and the money you have right now. */
 export function PaydayScreen() {
   const { draft, update, ready } = useSetupDraft();
   const accounts = useAccountsQuery();
+  const target = useSetupTarget();
+  const { currency, fixed } = resolveSetupCurrency(target, draft.currency, accounts.data);
   const { scope } = useLedgerData();
   const { household } = useHouseholdMembership(
     scope.kind === "household" ? scope.householdId : null,
@@ -33,16 +37,16 @@ export function PaydayScreen() {
     );
   }
 
-  const funding = fundingChoice(accounts.data, draft);
-  const salaryInvalid = parseAmountText(draft.usualSalary) === null;
+  const funding = fundingChoice(accounts.data, draft, currency);
+  const salaryInvalid = parseAmountText(draft.usualSalary, currency) === null;
   const needsAccount = funding.openingCashMinor === null && funding.accountIds.length === 0;
-  const canContinue = ready && !accounts.isLoading && paydayStepReady(draft, funding);
+  const canContinue = ready && !accounts.isLoading && paydayStepReady(draft, funding, currency);
 
   return (
     <SetupFrame
       step="Step 1 of 3"
       title="Payday and money"
-      intro="No bank connection needed. You can change all of this later."
+      intro={paydayIntro(fixed, currency)}
       footer={
         <>
           {needsAccount ? (
@@ -57,19 +61,25 @@ export function PaydayScreen() {
             onPress={() => {
               update({ step: "items" });
               track("budget_setup_step_completed", { step: "payday" });
-              router.push("/budget/setup/items");
+              router.push(setupHref("items", target));
             }}
           />
         </>
       }
     >
+      <CurrencySection
+        fixed={fixed}
+        accounts={accounts.data}
+        currency={currency}
+        onChange={(chosen) => update({ currency: chosen })}
+      />
       <View style={styles.group}>
         <Text variant="titleMd">When do you get paid?</Text>
         <PaydayPicker value={draft.payday} onChange={(payday) => update({ payday })} />
       </View>
       <TextField
         label="Usual salary (optional)"
-        placeholder={`${BUDGET_CURRENCY} 0`}
+        placeholder={`${currency} 0`}
         keyboardType="decimal-pad"
         value={draft.usualSalary}
         onChangeText={(usualSalary) => update({ usualSalary })}
@@ -89,6 +99,7 @@ export function PaydayScreen() {
         />
       </ListGroup>
       <FundingSection
+        currency={currency}
         accounts={accounts.data}
         draft={draft}
         totalInvalid={funding.invalid}
@@ -100,6 +111,7 @@ export function PaydayScreen() {
       />
       {scope.kind === "household" ? (
         <HouseholdSharesSection
+          currency={currency}
           household={household}
           shares={draft.householdShares}
           onChange={(userId, text) =>
