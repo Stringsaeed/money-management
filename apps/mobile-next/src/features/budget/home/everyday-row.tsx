@@ -1,0 +1,85 @@
+import { StyleSheet, View } from "react-native";
+
+import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
+
+import { Amount, colors, layout, PressableScale, radius, space, Text } from "@/ui/trove";
+import { formatMoneyMinor } from "@/utils/money";
+
+import { envelopeProgress, type EnvelopeLine } from "./home-model";
+
+interface EverydayRowProps {
+  readonly line: EnvelopeLine;
+  readonly onPress: () => void;
+}
+
+/** One Everyday envelope: name, what is left (or how far over), and a progress bar. */
+export function EverydayRow({ line, onPress }: EverydayRowProps) {
+  const { envelope, totals } = line;
+  const { fraction, over } = envelopeProgress(totals);
+  const amount = formatMoneyMinor(Math.abs(totals.leftMinor), BUDGET_CURRENCY);
+  const status = over ? `${amount} over` : `${amount} left`;
+  return (
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={`${envelope.name}, ${status}`}
+      onPress={onPress}
+      pressedStyle={styles.pressed}
+      scaleOnPress={false}
+      style={styles.row}
+    >
+      <View style={styles.top}>
+        <Text variant="labelMd" style={styles.name} numberOfLines={1}>
+          {envelope.name}
+        </Text>
+        <View style={styles.status}>
+          <Amount
+            currency={BUDGET_CURRENCY}
+            minor={Math.abs(totals.leftMinor)}
+            size="sm"
+            tone={over ? "negative" : "secondary"}
+          />
+          <Text tone={over ? "negative" : "secondary"} variant="labelSm">
+            {over ? "over" : "left"}
+          </Text>
+        </View>
+      </View>
+      <View style={styles.track}>
+        <View
+          style={[
+            styles.fill,
+            over && styles.fillOver,
+            { width: `${Math.round(fraction * 100)}%` },
+          ]}
+        />
+      </View>
+    </PressableScale>
+  );
+}
+
+const styles = StyleSheet.create({
+  row: {
+    backgroundColor: colors.surface.default,
+    borderCurve: "continuous",
+    borderRadius: radius.lg,
+    gap: space[2],
+    paddingHorizontal: layout.cardPadding,
+    paddingVertical: space[3],
+  },
+  pressed: { backgroundColor: colors.fill.neutral },
+  top: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space[3],
+    justifyContent: "space-between",
+  },
+  name: { flex: 1 },
+  status: { alignItems: "baseline", flexDirection: "row", gap: space[1] },
+  track: {
+    backgroundColor: colors.fill.neutral,
+    borderRadius: radius.full,
+    height: space[2],
+    overflow: "hidden",
+  },
+  fill: { backgroundColor: colors.accent.fill, borderRadius: radius.full, height: "100%" },
+  fillOver: { backgroundColor: colors.negative.text },
+});
