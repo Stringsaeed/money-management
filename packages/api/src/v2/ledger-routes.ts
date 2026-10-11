@@ -7,7 +7,7 @@ import { autoCategorizeTransaction } from "./auto-categorize";
 import { budgetToday, getBudget } from "./budget";
 import { activateBudget, updateBudget } from "./budget-activate";
 import { createAssignments, getBudgetPeriod } from "./budget-assignments";
-import { createEnvelope, updateEnvelope } from "./budget-envelopes";
+import { createEnvelope, payEnvelope, updateEnvelope } from "./budget-envelopes";
 import { getBudgetSetupFacts } from "./budget-setup-facts";
 import type { TransactionCategorizer } from "./categorizer";
 import {
@@ -47,6 +47,7 @@ import {
   assignmentsCreateSchema,
   categoryCreateSchema,
   envelopeCreateSchema,
+  envelopePaySchema,
   envelopeUpdateSchema,
   ledgerDateSchema,
   categoryUpdateSchema,
@@ -362,6 +363,19 @@ export function createV2LedgerRoutes(dependencies: V2LedgerRouteDependencies): H
         parseExpectedVersion(context.req.header("If-Match")),
         idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
       ),
+    );
+  });
+  routes.post("/budget/envelopes/:id/pay", async (context) => {
+    const ledger = await resolveContext(dependencies, context);
+    return context.json(
+      await payEnvelope(
+        ledger,
+        context.req.param("id"),
+        await readJson(context, envelopePaySchema),
+        today(),
+        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
+      ),
+      201,
     );
   });
   routes.post("/budget/assignments", async (context) => {

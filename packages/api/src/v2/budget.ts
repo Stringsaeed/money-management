@@ -2,8 +2,11 @@ import { and, asc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
 
 import { localDateInTimeZone } from "@trove/domain/clock";
 import {
+  nextPeriodStart,
+  paydaysLeft,
   projectBudget,
   ruleInEffect,
+  savingPerPayday,
   type BudgetFacts,
   type BudgetProjection,
   type PaydayChange,
@@ -64,7 +67,10 @@ export function budgetView(loaded: LoadedBudget): V2BudgetView {
     budget: budgetRow(budget),
     paydayRule: ruleInEffect(loaded.paydays, current.period.start),
     fundingAccountIds: loaded.fundingAccountIds,
-    envelopes: loaded.envelopes.map(envelopeRow),
+    envelopes: loaded.envelopes.map((envelope) => ({
+      ...envelopeRow(envelope),
+      ...savingSuggestion(loaded, envelope),
+    })),
     current: {
       period: current.period,
       unassignedMinor: current.unassignedMinor,
@@ -80,6 +86,40 @@ export function budgetView(loaded: LoadedBudget): V2BudgetView {
         leftMinor: totals.leftMinor,
       })),
     },
+  };
+}
+
+/**
+ * Per-payday suggestion for a Saving-for envelope with a target and due date
+ * (data rule 10). The envelope's current Left counts as already set aside, so
+ * the suggestion recalculates after every assignment or payment.
+ */
+function savingSuggestion(
+  loaded: LoadedBudget,
+  envelope: EnvelopeRow,
+): Pick<V2Envelope, "savingPerPaydayMinor" | "paydaysLeft" | "shortBeforePaydayMinor"> {
+  if (envelope.group !== "saving" || envelope.targetMinor === null || envelope.dueDate === null) {
+    return {};
+  }
+  const targetMinor = safeMinor(envelope.targetMinor, "Envelope target");
+  const currentStart = loaded.projection.current.period.start;
+  const rule = ruleInEffect(loaded.paydays, currentStart);
+  const leftMinor =
+    loaded.projection.current.envelopes.find((totals) => totals.envelopeId === envelope.id)
+      ?.leftMinor ?? 0;
+  const goal = {
+    targetMinor,
+    setAsideMinor: Math.max(leftMinor, 0),
+    dueDate: envelope.dueDate,
+    rule,
+    currentPeriodStart: currentStart,
+  };
+  const dueBeforePayday = envelope.dueDate < nextPeriodStart(rule, currentStart);
+  return {
+    savingPerPaydayMinor: savingPerPayday(goal),
+    paydaysLeft: paydaysLeft(goal),
+    ...(dueBeforePayday &&
+      leftMinor < targetMinor && { shortBeforePaydayMinor: targetMinor - Math.max(leftMinor, 0) }),
   };
 }
 

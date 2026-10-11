@@ -1,18 +1,26 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { addMonths, format, parseISO } from "date-fns";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
 import { v2Assignment, v2Envelope, v2EnvelopeCategory } from "@trove/db/schema/v2-budget";
 
 import { budgetActor, resolveCategories } from "./budget-activate";
 import { budgetView, findBudget, loadBudget } from "./budget";
 import {
+  BUDGET_CURRENCY,
   envelopeCreateSchema,
+  envelopePaySchema,
   envelopeUpdateSchema,
+  transactionCreateSchema,
   type V2BudgetView,
+  type V2EnvelopePaid,
+  type V2EnvelopePayInput,
+  type V2EnvelopeRepeat,
   type V2EnvelopeCreateInput,
   type V2EnvelopeCreated,
   type V2EnvelopeGroup,
   type V2EnvelopeUpdateInput,
 } from "./contracts";
+import { insertTransaction } from "./transactions";
 import {
   requireExpectedVersion,
   V2ApiError,
@@ -152,6 +160,103 @@ export async function updateEnvelope(
 
     return budgetView(await loadBudget(db, budget, today));
   });
+}
+
+const REPEAT_MONTHS = {
+  every_3_months: 3,
+  every_6_months: 6,
+  yearly: 12,
+} satisfies Record<Exclude<V2EnvelopeRepeat, "once">, number>;
+
+/**
+ * Mark a big payment paid (#373 B3): one expense Transaction in the envelope's
+ * first mapped Category, then the next target. A repeating envelope keeps its
+ * target and moves the due date forward; a one-off clears target, due date,
+ * and repeat. Any shortfall shows up as the envelope's negative Left (O1).
+ */
+export async function payEnvelope(
+  context: V2LedgerContext,
+  envelopeId: string,
+  input: V2EnvelopePayInput,
+  today: string,
+  idempotencyKey?: string,
+): Promise<V2EnvelopePaid> {
+  const parsed = envelopePaySchema.parse(input);
+  return withLedgerMutation(context, "budget.envelope.pay", idempotencyKey, async (db) => {
+    const budget = await requireBudget(db, context);
+    const rows = await db
+      .select()
+      .from(v2Envelope)
+      .where(and(eq(v2Envelope.budgetId, budget.id), eq(v2Envelope.id, envelopeId)))
+      .limit(1);
+    const envelope = rows[0];
+    if (!envelope) throw new V2ApiError(404, "envelope_not_found", "This envelope was not found.");
+    if (envelope.lifecycle === "archived") {
+      throw new V2ApiError(409, "envelope_archived", "This envelope is archived.");
+    }
+    if (envelope.group !== "saving") {
+      throw new V2ApiError(
+        422,
+        "envelope_not_saving_for",
+        "Only Saving-for envelopes can be marked paid.",
+      );
+    }
+    const mappings = await db
+      .select({ categoryId: v2EnvelopeCategory.categoryId })
+      .from(v2EnvelopeCategory)
+      .where(eq(v2EnvelopeCategory.envelopeId, envelope.id))
+      .orderBy(asc(v2EnvelopeCategory.categoryId))
+      .limit(1);
+    const categoryId = mappings[0]?.categoryId;
+    if (!categoryId) {
+      throw new V2ApiError(
+        422,
+        "envelope_category_missing",
+        "This envelope has no Category to record the payment in. Pick one first.",
+      );
+    }
+
+    const transaction = await insertTransaction(
+      db,
+      context,
+      transactionCreateSchema.parse({
+        kind: "expense",
+        accountId: parsed.accountId,
+        categoryId,
+        amountMinor: parsed.amountMinor,
+        date: parsed.date,
+        note: envelope.name,
+      }),
+    );
+    if (transaction.currency !== BUDGET_CURRENCY) {
+      throw new V2ApiError(
+        422,
+        "budget_account_invalid",
+        "Budgets are in AED. Pay from an AED account.",
+      );
+    }
+
+    await db
+      .update(v2Envelope)
+      .set({
+        ...nextTarget(envelope),
+        version: sql`${v2Envelope.version} + 1`,
+        updatedBy: budgetActor(context),
+        updatedAt: new Date(),
+      })
+      .where(eq(v2Envelope.id, envelope.id));
+
+    const view = activeView(budgetView(await loadBudget(db, budget, today)));
+    return { ...view, transactionId: transaction.id };
+  });
+}
+
+function nextTarget(envelope: typeof v2Envelope.$inferSelect) {
+  const months = envelope.repeat && envelope.repeat !== "once" ? REPEAT_MONTHS[envelope.repeat] : 0;
+  if (months === 0 || envelope.dueDate === null) {
+    return { targetMinor: null, dueDate: null, repeat: null };
+  }
+  return { dueDate: format(addMonths(parseISO(envelope.dueDate), months), "yyyy-MM-dd") };
 }
 
 type EnvelopeUpdate = ReturnType<typeof envelopeUpdateSchema.parse>;
