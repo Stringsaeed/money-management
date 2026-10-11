@@ -1,10 +1,12 @@
 import { router } from "expo-router";
+import { StyleSheet, View } from "react-native";
 
 import type { V2Category, V2Transaction } from "@trove/api/v2/contracts";
 
-import { Section } from "@/ui/section";
+import { space, Text } from "@/ui/trove";
 
-import { TransactionRow } from "../../ledger/transactions/transaction-row";
+import { LedgerRow } from "../../ledger/list/ledger-row";
+import { ledgerRowDisplay } from "../../ledger/list/ledger-row-display";
 
 import { largestTransactions } from "./envelope-model";
 
@@ -18,15 +20,22 @@ export function WhySection({ transactions, categories }: WhySectionProps) {
   const largest = largestTransactions(transactions);
   if (largest.length === 0) return null;
   return (
-    <Section title="Why">
+    <View style={styles.section}>
+      <Text variant="titleMd">Why</Text>
       {largest.map((transaction) => (
-        <TransactionRow
+        <LedgerRow
           key={transaction.id}
           transaction={transaction}
-          category={transaction.categoryId ? categories.get(transaction.categoryId) : undefined}
+          display={ledgerRowDisplay(transaction, {
+            category: transaction.categoryId ? categories.get(transaction.categoryId) : undefined,
+          })}
           onPress={() => router.push(`/transactions/${transaction.id}`)}
         />
       ))}
-    </Section>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  section: { gap: space[3] },
+});

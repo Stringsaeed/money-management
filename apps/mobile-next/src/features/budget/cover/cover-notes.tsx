@@ -1,6 +1,6 @@
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
-import { Text } from "@/ui/text";
+import { Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import type { CoverPlan } from "./cover-move-model";
@@ -20,12 +20,12 @@ export function CoverNotes({ name, afterLeftMinor, plan, hasSources }: CoverNote
   return (
     <>
       {plan.coveredMinor > 0 ? (
-        <Text variant="label" accessibilityLiveRegion="polite">
+        <Text variant="labelSm" tone="secondary" accessibilityLiveRegion="polite">
           {`${name} after: ${money(afterLeftMinor)} left`}
         </Text>
       ) : null}
       {plan.restMinor > 0 && hasSources ? (
-        <Text variant="caption" accessibilityLiveRegion="polite">
+        <Text variant="bodySm" tone="secondary" accessibilityLiveRegion="polite">
           {plan.coveredMinor > 0
             ? `${money(plan.restMinor)} is still over. The rest comes out of next month's money.`
             : "Pick at least one source to cover it."}

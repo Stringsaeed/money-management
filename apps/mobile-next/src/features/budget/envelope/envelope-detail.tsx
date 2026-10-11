@@ -1,20 +1,16 @@
-import { Stack } from "expo-router";
+import { router } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 import { useAccountsQuery, useCategoriesQuery } from "@/data/ledger-queries";
 import { useTransactionPagesQuery } from "@/data/transaction-list-queries";
-import { Button } from "@/ui/button";
-import { spacing } from "@/ui/design-tokens";
-import { Screen } from "@/ui/screen";
-import { Text } from "@/ui/text";
+import { Button, Header, layout, Screen, space, Text } from "@/ui/trove";
 
 import { CoverMoveSheet } from "../cover/cover-move-sheet";
 import { useCoverMoveRequest } from "../cover/use-cover-move-request";
 import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
 
 import { hasCardSpending } from "./envelope-model";
-import { EnvelopeMenuButton } from "./envelope-menu-button";
 import { EnvelopeMenuSheet } from "./envelope-menu-sheet";
 import { EnvelopeSummary } from "./envelope-summary";
 import { EnvelopeTransactions } from "./envelope-transactions";
@@ -49,21 +45,25 @@ export function EnvelopeDetail({ view, line }: EnvelopeDetailProps) {
   const over = totals.leftMinor < 0;
 
   return (
-    <Screen edges={["bottom"]}>
-      <Stack.Screen
-        options={{
-          title: envelope.name,
-          headerRight: () => (
-            <EnvelopeMenuButton
-              onPress={() => setMenu((current) => ({ open: true, session: current.session + 1 }))}
-            />
-          ),
-        }}
+    <Screen style={styles.screen}>
+      <Header
+        variant="compact"
+        title={envelope.name}
+        onBack={() => router.back()}
+        actions={[
+          {
+            icon: "more",
+            label: "More actions",
+            onPress: () => setMenu((current) => ({ open: true, session: current.session + 1 })),
+          },
+        ]}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.heading}>
-          <Text variant="headline">{envelope.name}</Text>
-          <Text variant="caption">{GROUP_LABEL[envelope.group]}</Text>
+          <Text variant="titleLg">{envelope.name}</Text>
+          <Text tone="secondary" variant="bodySm">
+            {GROUP_LABEL[envelope.group]}
+          </Text>
         </View>
         {over ? (
           <OverBanner
@@ -75,7 +75,8 @@ export function EnvelopeDetail({ view, line }: EnvelopeDetailProps) {
         ) : null}
         <EnvelopeSummary line={line} daysLeft={view.current.daysLeft} />
         <Button
-          title="Move money"
+          fullWidth
+          label="Move money"
           variant="secondary"
           onPress={() => coverMove.show({ kind: "move", fromId: envelope.id })}
         />
@@ -83,7 +84,7 @@ export function EnvelopeDetail({ view, line }: EnvelopeDetailProps) {
         {hasCategories ? (
           <EnvelopeTransactions list={list} categories={categoriesById} />
         ) : (
-          <Text variant="caption">
+          <Text tone="secondary" variant="bodySm">
             No category is mapped to this envelope. Add one under More actions to count spending.
           </Text>
         )}
@@ -101,6 +102,7 @@ export function EnvelopeDetail({ view, line }: EnvelopeDetailProps) {
 }
 
 const styles = StyleSheet.create({
-  content: { gap: spacing[5], padding: spacing[5], paddingBottom: spacing[10] },
-  heading: { gap: spacing[1] },
+  screen: { paddingHorizontal: layout.screenGutter },
+  content: { gap: space[5], paddingBottom: space[10], paddingTop: space[3] },
+  heading: { gap: space[1] },
 });

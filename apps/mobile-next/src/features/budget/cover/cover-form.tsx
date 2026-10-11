@@ -4,10 +4,7 @@ import { Alert, StyleSheet, View } from "react-native";
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
 import { useLedgerMutations } from "@/data/ledger-queries";
-import { Button } from "@/ui/button";
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
-import { showToast } from "@/ui/toast";
+import { Button, ListGroup, showToast, space, Text } from "@/ui/trove";
 import { formatMoneyMinor } from "@/utils/money";
 
 import { PanelError } from "../envelope/panel-error";
@@ -49,9 +46,11 @@ export function CoverForm({ view, targetId, onDone }: CoverFormProps) {
   if (!target || overMinor === 0) {
     return (
       <View style={styles.container}>
-        <Text variant="title">Nothing to cover</Text>
-        <Text variant="caption">This envelope is no longer over.</Text>
-        <Button title="Done" variant="secondary" onPress={onDone} />
+        <Text variant="titleMd">Nothing to cover</Text>
+        <Text variant="bodySm" tone="secondary">
+          This envelope is no longer over.
+        </Text>
+        <Button fullWidth label="Done" variant="secondary" onPress={onDone} />
       </View>
     );
   }
@@ -88,18 +87,18 @@ export function CoverForm({ view, targetId, onDone }: CoverFormProps) {
 
   return (
     <View style={styles.container}>
-      <Text variant="title" accessibilityRole="header">
+      <Text variant="titleMd" accessibilityRole="header">
         {`Cover ${target.envelope.name}`}
       </Text>
-      <Text variant="body">{`${money(overMinor)} over. Pick where it comes from.`}</Text>
+      <Text>{`${money(overMinor)} over. Pick where it comes from.`}</Text>
 
       {ranked.length === 0 ? (
-        <Text variant="caption">
+        <Text variant="bodySm" tone="secondary">
           No envelope has money to spare right now. Nothing is moved, and the overspend comes out of
           next month&apos;s money.
         </Text>
       ) : (
-        <View style={styles.sources}>
+        <ListGroup dividerInset={0}>
           {ranked.map((place) => (
             <CoverSourceRow
               key={place.key}
@@ -109,7 +108,7 @@ export function CoverForm({ view, targetId, onDone }: CoverFormProps) {
               onToggle={() => toggle(place.key)}
             />
           ))}
-        </View>
+        </ListGroup>
       )}
 
       <CoverNotes
@@ -121,17 +120,17 @@ export function CoverForm({ view, targetId, onDone }: CoverFormProps) {
 
       <PanelError message={write.error} />
       <Button
-        title={plan.coveredMinor > 0 ? `Move ${money(plan.coveredMinor)}` : "Move"}
+        fullWidth
+        label={plan.coveredMinor > 0 ? `Move ${money(plan.coveredMinor)}` : "Move"}
         loading={write.busy}
         disabled={plan.coveredMinor === 0}
         onPress={confirmAndMove}
       />
-      <Button title="Not now" variant="ghost" onPress={onDone} />
+      <Button fullWidth label="Not now" variant="tertiary" onPress={onDone} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing[3] },
-  sources: { gap: spacing[2] },
+  container: { gap: space[3] },
 });

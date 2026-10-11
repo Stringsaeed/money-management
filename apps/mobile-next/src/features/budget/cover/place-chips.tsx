@@ -1,4 +1,4 @@
-import { Chip } from "@/ui/chip";
+import { Chip } from "@/ui/trove";
 
 import { ChipRow } from "../quick-add/chip-row";
 

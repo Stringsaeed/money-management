@@ -4,11 +4,7 @@ import { StyleSheet, View } from "react-native";
 import { BUDGET_CURRENCY } from "@trove/api/v2/contracts";
 
 import { useLedgerMutations } from "@/data/ledger-queries";
-import { Button } from "@/ui/button";
-import { spacing } from "@/ui/design-tokens";
-import { Text } from "@/ui/text";
-import { TextField } from "@/ui/text-field";
-import { showToast } from "@/ui/toast";
+import { AmountInput, Button, showToast, space, Text } from "@/ui/trove";
 import { formatMoneyMinor, parseMoneyMinor } from "@/utils/money";
 
 import { PanelError } from "../envelope/panel-error";
@@ -52,7 +48,7 @@ export function MoveForm({ view, fromId, onDone }: MoveFormProps) {
 
   return (
     <View style={styles.container}>
-      <Text variant="title" accessibilityRole="header">
+      <Text variant="titleMd" accessibilityRole="header">
         Move money
       </Text>
       <PlaceChips
@@ -73,22 +69,22 @@ export function MoveForm({ view, fromId, onDone }: MoveFormProps) {
           setToKey(key);
         }}
       />
-      <TextField
+      <AmountInput
+        currency={BUDGET_CURRENCY}
         label="Amount"
-        placeholder={`${BUDGET_CURRENCY} 0`}
-        keyboardType="decimal-pad"
         value={text}
         onChangeText={(value) => {
           change();
           setText(value);
         }}
       />
-      <Text variant="caption" accessibilityLiveRegion="polite">
+      <Text variant="bodySm" tone="secondary" accessibilityLiveRegion="polite">
         {moveHint({ from, to, text, amountMinor, money })}
       </Text>
       <PanelError message={write.error} />
       <Button
-        title="Move"
+        fullWidth
+        label="Move"
         loading={write.busy}
         disabled={preview?.status !== "ok"}
         onPress={() => void move()}
@@ -97,4 +93,4 @@ export function MoveForm({ view, fromId, onDone }: MoveFormProps) {
   );
 }
 
-const styles = StyleSheet.create({ container: { gap: spacing[3] } });
+const styles = StyleSheet.create({ container: { gap: space[3] } });

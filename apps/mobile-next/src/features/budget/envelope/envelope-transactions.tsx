@@ -41,7 +41,9 @@ export function EnvelopeTransactions({ list, categories }: EnvelopeTransactionsP
               key={transaction.id}
               transaction={transaction}
               display={ledgerRowDisplay(transaction, {
-                category: transaction.categoryId ? categories.get(transaction.categoryId) : undefined,
+                category: transaction.categoryId
+                  ? categories.get(transaction.categoryId)
+                  : undefined,
               })}
               onPress={() => router.push(`/transactions/${transaction.id}`)}
             />

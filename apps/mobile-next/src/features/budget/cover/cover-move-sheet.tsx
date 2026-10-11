@@ -1,4 +1,4 @@
-import { Sheet } from "@/ui/sheet";
+import { Sheet } from "@/ui/trove";
 
 import type { ActiveBudgetView } from "../home/home-model";
 
