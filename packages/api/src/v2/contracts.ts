@@ -247,41 +247,105 @@ export type V2EnvelopeRepeat = z.infer<typeof envelopeRepeatSchema>;
 const nonNegativeMoneyMinorSchema = moneyMinorSchema.nonnegative();
 const entityIdSchema = z.string().trim().min(1);
 
+const envelopeInputFields = {
+  name: z.string().trim().min(1).max(120),
+  group: envelopeGroupSchema,
+  /** An existing expense Category, or `newCategory` to reuse-or-create one by name. */
+  categoryId: entityIdSchema.optional(),
+  newCategory: z.object({ name: z.string().trim().min(1).max(120) }).optional(),
+  targetMinor: positiveMoneyMinorSchema.optional(),
+  dueDate: ledgerDateSchema.optional(),
+  repeat: envelopeRepeatSchema.optional(),
+};
+
+interface EnvelopeRefineInput {
+  readonly group: V2EnvelopeGroup;
+  readonly categoryId?: string;
+  readonly newCategory?: unknown;
+  readonly targetMinor?: number;
+  readonly dueDate?: string;
+  readonly repeat?: V2EnvelopeRepeat;
+  readonly setAsideMinor?: number;
+}
+
+function refineEnvelope(value: EnvelopeRefineInput, context: z.RefinementCtx): void {
+  if ((value.categoryId === undefined) === (value.newCategory === undefined)) {
+    context.addIssue({
+      code: "custom",
+      path: ["categoryId"],
+      message: "Give either categoryId or newCategory.",
+    });
+  }
+  const hasSavingFields =
+    value.targetMinor !== undefined ||
+    value.dueDate !== undefined ||
+    value.repeat !== undefined ||
+    (value.setAsideMinor ?? 0) > 0;
+  if (value.group !== "saving" && hasSavingFields) {
+    context.addIssue({
+      code: "custom",
+      path: ["group"],
+      message: "Only Saving-for envelopes have a target, due date, repeat, or set-aside amount.",
+    });
+  }
+}
+
 export const budgetActivateEnvelopeSchema = z
   .object({
-    name: z.string().trim().min(1).max(120),
-    group: envelopeGroupSchema,
-    /** An existing expense Category, or `newCategory` to reuse-or-create one by name. */
-    categoryId: entityIdSchema.optional(),
-    newCategory: z.object({ name: z.string().trim().min(1).max(120) }).optional(),
+    ...envelopeInputFields,
     plannedMinor: nonNegativeMoneyMinorSchema,
-    targetMinor: positiveMoneyMinorSchema.optional(),
-    dueDate: ledgerDateSchema.optional(),
-    repeat: envelopeRepeatSchema.optional(),
     /** Money already set aside for a Saving-for goal; assigned from Not planned yet. */
     setAsideMinor: nonNegativeMoneyMinorSchema.default(0),
   })
-  .superRefine((value, context) => {
-    if ((value.categoryId === undefined) === (value.newCategory === undefined)) {
-      context.addIssue({
-        code: "custom",
-        path: ["categoryId"],
-        message: "Give either categoryId or newCategory.",
-      });
-    }
-    const hasSavingFields =
-      value.targetMinor !== undefined ||
-      value.dueDate !== undefined ||
-      value.repeat !== undefined ||
-      value.setAsideMinor > 0;
-    if (value.group !== "saving" && hasSavingFields) {
-      context.addIssue({
-        code: "custom",
-        path: ["group"],
-        message: "Only Saving-for envelopes have a target, due date, repeat, or set-aside amount.",
-      });
-    }
+  .superRefine(refineEnvelope);
+
+/** `POST /budget/envelopes`: one envelope, optionally funded from Not planned yet. */
+export const envelopeCreateSchema = z
+  .object({
+    ...envelopeInputFields,
+    plannedMinor: nonNegativeMoneyMinorSchema.default(0),
+  })
+  .superRefine(refineEnvelope);
+
+/** `PATCH /budget/envelopes/:id`. `categoryIds` replaces the whole mapping set. */
+export const envelopeUpdateSchema = z
+  .object({
+    name: envelopeInputFields.name.optional(),
+    group: envelopeGroupSchema.optional(),
+    startFresh: z.boolean().optional(),
+    targetMinor: positiveMoneyMinorSchema.nullable().optional(),
+    dueDate: ledgerDateSchema.nullable().optional(),
+    repeat: envelopeRepeatSchema.nullable().optional(),
+    lifecycle: z.literal("archived").optional(),
+    categoryIds: z.array(entityIdSchema).min(1).max(20).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, "Provide at least one Envelope field.")
+  .refine(
+    (value) => new Set(value.categoryIds).size === (value.categoryIds?.length ?? 0),
+    "Categories must be distinct.",
+  );
+
+export const assignmentReasonSchema = z.enum(["plan", "cover", "move", "leftover", "repeat"]);
+export type V2AssignmentReason = z.infer<typeof assignmentReasonSchema>;
+
+/** A null side is Not planned yet. */
+export const assignmentItemSchema = z
+  .object({
+    fromEnvelopeId: entityIdSchema.nullable(),
+    toEnvelopeId: entityIdSchema.nullable(),
+    amountMinor: positiveMoneyMinorSchema,
+    reason: assignmentReasonSchema,
+  })
+  .refine((value) => value.fromEnvelopeId !== value.toEnvelopeId, {
+    message: "Move money between two different places.",
+    path: ["toEnvelopeId"],
   });
+
+/** `POST /budget/assignments`. `periodStart` defaults to the current period start. */
+export const assignmentsCreateSchema = z.object({
+  periodStart: ledgerDateSchema.optional(),
+  items: z.array(assignmentItemSchema).min(1).max(50),
+});
 
 export const budgetActivateSchema = z
   .object({
@@ -345,6 +409,9 @@ export type V2RecurringCreateInput = z.input<typeof recurringCreateSchema>;
 export type V2RecurringUpdateInput = z.input<typeof recurringUpdateSchema>;
 export type V2BudgetActivateInput = z.input<typeof budgetActivateSchema>;
 export type V2BudgetUpdateInput = z.input<typeof budgetUpdateSchema>;
+export type V2EnvelopeCreateInput = z.input<typeof envelopeCreateSchema>;
+export type V2EnvelopeUpdateInput = z.input<typeof envelopeUpdateSchema>;
+export type V2AssignmentsCreateInput = z.input<typeof assignmentsCreateSchema>;
 
 export interface V2Account {
   readonly id: string;
@@ -543,6 +610,17 @@ export type V2BudgetView =
       readonly envelopes: readonly V2Envelope[];
       readonly current: V2BudgetCurrent;
     };
+
+/** `POST /budget/envelopes`: the refreshed budget plus the new envelope's id. */
+export type V2EnvelopeCreated = Extract<V2BudgetView, { readonly budget: object }> & {
+  readonly envelopeId: string;
+};
+
+/** `GET /budget/periods/:start`: per-envelope totals for one period since activation. */
+export interface V2BudgetPeriodView {
+  readonly period: V2BudgetPeriod;
+  readonly envelopes: readonly V2EnvelopeTotals[];
+}
 
 /** `GET /budget/setup-facts`: AED facts the setup flow previews the plan with. */
 export interface V2BudgetSetupFacts {

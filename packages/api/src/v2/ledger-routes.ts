@@ -6,6 +6,8 @@ import { listAccounts, createAccount, deleteAccount, getAccount, updateAccount }
 import { autoCategorizeTransaction } from "./auto-categorize";
 import { budgetToday, getBudget } from "./budget";
 import { activateBudget, updateBudget } from "./budget-activate";
+import { createAssignments, getBudgetPeriod } from "./budget-assignments";
+import { createEnvelope, updateEnvelope } from "./budget-envelopes";
 import { getBudgetSetupFacts } from "./budget-setup-facts";
 import type { TransactionCategorizer } from "./categorizer";
 import {
@@ -39,7 +41,10 @@ import {
   accountUpdateSchema,
   budgetActivateSchema,
   budgetUpdateSchema,
+  assignmentsCreateSchema,
   categoryCreateSchema,
+  envelopeCreateSchema,
+  envelopeUpdateSchema,
   ledgerDateSchema,
   categoryUpdateSchema,
   recurringCreateSchema,
@@ -326,6 +331,54 @@ export function createV2LedgerRoutes(dependencies: V2LedgerRouteDependencies): H
         today(),
         parseExpectedVersion(context.req.header("If-Match")),
         idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
+      ),
+    );
+  });
+
+  routes.post("/budget/envelopes", async (context) => {
+    const ledger = await resolveContext(dependencies, context);
+    return context.json(
+      await createEnvelope(
+        ledger,
+        await readJson(context, envelopeCreateSchema),
+        today(),
+        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
+      ),
+      201,
+    );
+  });
+  routes.patch("/budget/envelopes/:id", async (context) => {
+    const ledger = await resolveContext(dependencies, context);
+    return context.json(
+      await updateEnvelope(
+        ledger,
+        context.req.param("id"),
+        await readJson(context, envelopeUpdateSchema),
+        today(),
+        parseExpectedVersion(context.req.header("If-Match")),
+        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
+      ),
+    );
+  });
+  routes.post("/budget/assignments", async (context) => {
+    const ledger = await resolveContext(dependencies, context);
+    return context.json(
+      await createAssignments(
+        ledger,
+        await readJson(context, assignmentsCreateSchema),
+        today(),
+        idempotencyKeyFromHeader(context.req.header("Idempotency-Key")),
+      ),
+      201,
+    );
+  });
+  routes.get("/budget/periods/:start", async (context) => {
+    const ledger = await resolveContext(dependencies, context);
+    return context.json(
+      await getBudgetPeriod(
+        ledger,
+        parseOptionalDate(context.req.param("start"), "start") ?? "",
+        today(),
       ),
     );
   });
