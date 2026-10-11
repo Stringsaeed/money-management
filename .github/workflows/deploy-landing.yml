@@ -94,7 +94,19 @@ jobs:
           export CLOUDFLARE_ACCOUNT_ID=$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '\r\n' | tr '[:upper:]' '[:lower:]')
           if [ -n "${PR_NUMBER:-}" ]; then
             # A new version under a stable alias; production traffic is untouched.
-            pnpm exec wrangler versions upload --preview-alias "pr-${PR_NUMBER}" --message "PR #${PR_NUMBER}" | tee wrangler.log
+            # Versions need an existing Worker, which only the first production
+            # deploy from main creates. Until then, report it instead of failing:
+            # a PR must never create the Worker (that would publish it on trove.ing).
+            if ! pnpm exec wrangler versions upload --preview-alias "pr-${PR_NUMBER}" --message "PR #${PR_NUMBER}" > wrangler.log 2>&1; then
+              cat wrangler.log
+              if grep -q "does not yet exist" wrangler.log; then
+                echo "::notice title=No landing preview yet::The trove-landing Worker is created by the first deploy from main. Previews start after that."
+                echo "url=" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              exit 1
+            fi
+            cat wrangler.log
           else
             pnpm exec wrangler deploy --message "${GITHUB_SHA::7}" | tee wrangler.log
           fi
