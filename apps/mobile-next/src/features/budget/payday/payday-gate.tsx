@@ -4,6 +4,7 @@ import { StyleSheet } from "react-native";
 import { useBudgetQuery } from "@/data/ledger-queries";
 import { EmptyState, layout, Screen, space, Text } from "@/ui/trove";
 
+import { BudgetLoadError } from "../budget-load-error";
 import type { ActiveBudgetView } from "../home/home-model";
 import { SetupHeader } from "../setup/setup-header";
 
@@ -13,20 +14,17 @@ interface PaydayGateProps {
   readonly children: (view: ActiveBudgetView) => ReactNode;
 }
 
-/** Loads the budget for a payday screen, with honest loading, error and no-budget states. */
+/**
+ * Loads the budget for a payday screen, with honest loading, error and no-budget states. A failed
+ * refresh hides the numbers too, so Money to plan and Repeat never run on an old budget.
+ */
 export function PaydayGate({ title, children }: PaydayGateProps) {
   const budget = useBudgetQuery();
-  if (budget.isError && !budget.data) {
+  if (budget.isError) {
     return (
       <Screen>
         <SetupHeader title={title} />
-        <EmptyState
-          title="Couldn't load your budget"
-          message="Check your connection and try again."
-          actionLabel="Try again"
-          onAction={() => void budget.retry()}
-          framed={false}
-        />
+        <BudgetLoadError stale={budget.data !== undefined} onRetry={() => void budget.retry()} />
       </Screen>
     );
   }

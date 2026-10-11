@@ -92,7 +92,11 @@ export function WrapUpContent({ view, wrapUp }: WrapUpContentProps) {
               item={item}
               resolution={resolved[item.id]}
               onCover={() =>
-                coverMove.show({ kind: "cover", targetId: item.id, amountMinor: item.overMinor })
+                coverMove.show({
+                  kind: "cover-past",
+                  targetId: item.id,
+                  amountMinor: item.overMinor,
+                })
               }
               onAccept={() => resolve(item.id, "accepted")}
             />

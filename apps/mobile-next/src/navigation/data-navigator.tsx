@@ -26,7 +26,7 @@ const screenOptions = {
 
 export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) => {
   const { scope } = useLedgerScope();
-  useReminderTapRouting();
+  useReminderTapRouting(identityKey);
   const scopeKey = scope.kind === "personal" ? "personal" : scope.householdId;
   return (
     <LedgerDataProvider

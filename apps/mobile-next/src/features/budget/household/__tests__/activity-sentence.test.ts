@@ -47,6 +47,12 @@ describe("activitySentence", () => {
     );
   });
 
+  it("reads a pay-back into Not planned yet as paying back last month's overspend", () => {
+    expect(activitySentence(item({ reason: "cover", toName: null }), money)).toBe(
+      "Sara paid back AED 100.00 of last month's overspend from Dining",
+    );
+  });
+
   it("reads a cover as covering the envelope that was over", () => {
     expect(activitySentence(item({ reason: "cover" }), money)).toBe(
       "Sara covered Groceries with AED 100.00 from Dining",

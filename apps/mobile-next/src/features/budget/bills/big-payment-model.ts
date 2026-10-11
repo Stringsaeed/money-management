@@ -176,18 +176,27 @@ export type PaymentCheck =
   | { readonly ok: true; readonly input: V2EnvelopePayInput }
   | { readonly ok: false; readonly message: string };
 
-/** B3: the amount, account and date become the pay request. */
-export function checkPayment(draft: {
-  readonly amountText: string;
-  readonly accountId: string | null;
-  readonly date: string;
-}): PaymentCheck {
+/**
+ * B3: the amount, account and date become the pay request. The date stays inside the current
+ * period and not after today, so the payment lowers this period's Left exactly as previewed.
+ */
+export function checkPayment(
+  draft: {
+    readonly amountText: string;
+    readonly accountId: string | null;
+    readonly date: string;
+  },
+  period: { readonly start: string; readonly today: string },
+): PaymentCheck {
   const amountMinor = parseMoney(draft.amountText);
   if (amountMinor === null || amountMinor <= 0) {
     return { ok: false, message: "Enter the amount you paid, like 12000 or 350.50." };
   }
   if (draft.accountId === null) {
     return { ok: false, message: "Pick the account you paid from." };
+  }
+  if (draft.date < period.start || draft.date > period.today) {
+    return { ok: false, message: "Pick a day in this budget month, up to today." };
   }
   return { ok: true, input: { amountMinor, accountId: draft.accountId, date: draft.date } };
 }

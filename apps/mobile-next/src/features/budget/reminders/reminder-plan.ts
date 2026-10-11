@@ -88,16 +88,19 @@ interface PlanPaydayInput {
   readonly today: string;
   /** How many upcoming paydays to schedule. */
   readonly count: number;
-  /** Salary is still unlogged this period, so a "Not yet" can bring the reminder back. */
+  /**
+   * Salary is still unlogged this period, so a "Not yet" can bring the reminder back. Once it is
+   * logged, today's payday reminder is dropped too.
+   */
   readonly pending?: boolean;
   /** The Ledger Date the person last said "Not yet"; the reminder returns the day after. */
   readonly snoozedOn?: string | null;
 }
 
 /**
- * Payday reminders for today (if it is payday) and the next paydays under the current rule, plus
- * one for tomorrow when the person said "Not yet" today and the salary is still unlogged. One per
- * day at most.
+ * Payday reminders for today (if it is payday and the salary is not logged yet) and the next
+ * paydays under the current rule, plus one for tomorrow when the person said "Not yet" today and
+ * the salary is still unlogged. One per day at most.
  */
 export function planPaydayReminders({
   rule,
@@ -107,13 +110,9 @@ export function planPaydayReminders({
   pending = false,
   snoozedOn = null,
 }: PlanPaydayInput): PlannedReminder[] {
-  const days: string[] = [];
-  let start = currentPeriodStart;
-  for (let step = 0; step <= count; step += 1) {
-    if (start >= today) days.push(start);
-    start = nextPeriodStart(rule, start);
-  }
-  const paydays = days.slice(0, count);
+  const paydays = upcomingPaydays(rule, currentPeriodStart, count, (day) =>
+    pending ? day >= today : day > today,
+  );
   const retry = snoozedOn ? shiftDay(snoozedOn, 1) : null;
   if (pending && retry && retry >= today && !paydays.includes(retry)) paydays.push(retry);
   return paydays.sort().map((day) => ({
@@ -122,6 +121,22 @@ export function planPaydayReminders({
     title: "Payday",
     body: "Did your salary land? Open Trove to see your budget.",
   }));
+}
+
+/** The first `count` period starts from `currentPeriodStart` on that `keep` accepts. */
+function upcomingPaydays(
+  rule: PaydayRule,
+  currentPeriodStart: string,
+  count: number,
+  keep: (day: string) => boolean,
+): string[] {
+  const days: string[] = [];
+  let start = currentPeriodStart;
+  for (let step = 0; step <= count; step += 1) {
+    if (keep(start)) days.push(start);
+    start = nextPeriodStart(rule, start);
+  }
+  return days.slice(0, count);
 }
 
 function shiftDay(day: string, days: number): string {

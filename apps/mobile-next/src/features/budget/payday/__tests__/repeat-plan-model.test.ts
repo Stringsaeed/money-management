@@ -8,7 +8,11 @@ const envelope = (
   extra: Pick<V2Envelope, "targetMinor" | "savingPerPaydayMinor"> = { targetMinor: null },
 ) => ({ id, name: id, group, ...extra });
 
-const totals = (id: string, plannedMinor: number) => ({ id, plannedMinor });
+const totals = (id: string, budgetedMinor: number, plannedMinor = budgetedMinor) => ({
+  id,
+  budgetedMinor,
+  plannedMinor,
+});
 
 const envelopes = [
   envelope("groceries", "everyday"),
@@ -45,6 +49,22 @@ describe("repeatPlan", () => {
       ["groceries", 80_000],
       ["cushion", 150_000],
     ]);
+  });
+
+  it("diffs against the plan, so a leftover, cover or move this period is not refilled", () => {
+    // Groceries planned 2,000 last month (net 1,700 after AED 300 moved out); this month the
+    // AED 300 leftover went back to Not planned yet (net -300) and Dining was covered with 150.
+    const plan = repeatPlan({
+      envelopes: [envelope("groceries", "everyday"), envelope("dining", "everyday")],
+      previous: [totals("groceries", 200_000, 170_000), totals("dining", 80_000, 95_000)],
+      current: [totals("groceries", 0, -30_000), totals("dining", 0, 15_000)],
+      unassignedMinor: 900_000,
+    });
+    expect(plan.items.map((item) => [item.envelopeId, item.amountMinor])).toEqual([
+      ["groceries", 200_000],
+      ["dining", 80_000],
+    ]);
+    expect(plan.totalMinor).toBe(280_000);
   });
 
   it("reports the shortfall and blocks Repeat when the money is not there", () => {

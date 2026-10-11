@@ -81,14 +81,26 @@ describe("planPaydayReminders", () => {
     expect(planned.map((reminder) => reminder.day)).toEqual(["2026-10-25", "2026-11-25"]);
   });
 
-  it("includes today when today is payday", () => {
+  it("includes today when today is payday and the salary is not logged yet", () => {
     const planned = planPaydayReminders({
       rule: { kind: "day", day: 25 },
       currentPeriodStart: "2026-10-25",
       today: "2026-10-25",
       count: 2,
+      pending: true,
     });
     expect(planned.map((reminder) => reminder.day)).toEqual(["2026-10-25", "2026-11-25"]);
+  });
+
+  it("drops today's payday reminder once the salary is logged", () => {
+    const planned = planPaydayReminders({
+      rule: { kind: "day", day: 25 },
+      currentPeriodStart: "2026-10-25",
+      today: "2026-10-25",
+      count: 2,
+      pending: false,
+    });
+    expect(planned.map((reminder) => reminder.day)).toEqual(["2026-11-25", "2026-12-25"]);
   });
 
   const late = {
@@ -100,7 +112,11 @@ describe("planPaydayReminders", () => {
 
   it("brings the reminder back tomorrow after Not yet while the salary is unlogged", () => {
     const planned = planPaydayReminders({ ...late, pending: true, snoozedOn: "2026-10-26" });
-    expect(planned.map((reminder) => reminder.day)).toEqual(["2026-10-27", "2026-11-25", "2026-12-25"]);
+    expect(planned.map((reminder) => reminder.day)).toEqual([
+      "2026-10-27",
+      "2026-11-25",
+      "2026-12-25",
+    ]);
   });
 
   it("keeps one reminder per day and drops the retry once the salary is logged", () => {

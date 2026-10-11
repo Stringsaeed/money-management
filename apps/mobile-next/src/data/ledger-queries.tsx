@@ -241,9 +241,13 @@ export function useBudgetSetupFactsQuery(
 }
 
 export interface BudgetPeriodsResult {
-  /** In `starts` order: `undefined` while loading, `null` when the server has no such period. */
+  /** In `starts` order: `undefined` while loading, `null` when the read failed. */
   readonly periods: readonly (V2BudgetPeriodView | null | undefined)[];
   readonly isLoading: boolean;
+  /** At least one read failed, so a missing period is an error, not "no history". */
+  readonly isError: boolean;
+  /** Reads the failed periods again. */
+  readonly retry: () => Promise<void>;
 }
 
 /** Per-envelope totals for earlier periods. */
@@ -261,6 +265,12 @@ export function useBudgetPeriodsQuery(starts: readonly string[]): BudgetPeriodsR
   return {
     periods: results.map((result) => (result.isError ? null : result.data)),
     isLoading: results.some((result) => result.isLoading),
+    isError: results.some((result) => result.isError),
+    retry: async () => {
+      await Promise.all(
+        results.filter((result) => result.isError).map((result) => result.refetch()),
+      );
+    },
   };
 }
 

@@ -9,10 +9,31 @@ import type { UseDue } from "./use-due";
 
 const noun = (count: number) => (count === 1 ? "bill" : "bills");
 
-/** M1's way into the Due list: today's bills and anything overdue, or the next one coming. */
+/**
+ * M1's way into the Due list: today's bills and anything overdue, or the next one coming. While
+ * the bills load, or when they fail to, it says so rather than disappearing as if nothing is due.
+ */
 export function DueTodayRow({ due }: { readonly due: UseDue }) {
+  if (due.isError) {
+    return (
+      <ListGroup dividerInset={0}>
+        <ListRow
+          accessibilityLabel="Due today, couldn't load your bills. Retry"
+          onPress={() => void due.retry()}
+          subtitle="Couldn't load your bills · Retry"
+          title="Due today"
+        />
+      </ListGroup>
+    );
+  }
+  if (!due.loaded) {
+    return (
+      <ListGroup dividerInset={0}>
+        <ListRow subtitle="Checking your bills…" title="Due today" />
+      </ListGroup>
+    );
+  }
   const { count, totalMinor } = due.dueNow;
-  if (!due.loaded) return null;
   const next = due.sections.flatMap((section) => section.items)[0];
   if (count === 0 && !next) return null;
 

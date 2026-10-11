@@ -1,10 +1,43 @@
-import type { V2DueOccurrence, V2RecurringPayInput } from "@trove/api/v2/contracts";
+import {
+  BUDGET_CURRENCY,
+  type V2Account,
+  type V2DueOccurrence,
+  type V2RecurringPayInput,
+} from "@trove/api/v2/contracts";
 
 import { ApiError } from "@/data/http";
 
 import { parseMoneyMinor } from "@/utils/money";
 
+import { paidWithAccounts } from "../quick-add/quick-add-model";
 import { roleErrorMessage } from "../role/budget-role";
+
+/**
+ * Where an AED bill can be paid from: the budget's funding accounts and credit cards, the accounts
+ * whose spending the budget counts. A bill in another currency is outside the budget, so any
+ * active account in its currency.
+ */
+export function markPaidAccounts(
+  accounts: readonly V2Account[],
+  item: Pick<V2DueOccurrence, "currency">,
+  fundingAccountIds: readonly string[],
+): V2Account[] {
+  if (item.currency !== BUDGET_CURRENCY) {
+    return accounts.filter((account) => !account.archived && account.currency === item.currency);
+  }
+  const { funding, cards } = paidWithAccounts(accounts, fundingAccountIds);
+  return [...funding, ...cards];
+}
+
+/** The bill's own account when it is on offer, else the first account on offer. */
+export function markPaidDefaultAccountId(
+  choices: readonly V2Account[],
+  item: Pick<V2DueOccurrence, "accountId">,
+): string {
+  return choices.some((account) => account.id === item.accountId)
+    ? item.accountId
+    : (choices[0]?.id ?? item.accountId);
+}
 
 export interface MarkPaidDraft {
   readonly amountText: string;

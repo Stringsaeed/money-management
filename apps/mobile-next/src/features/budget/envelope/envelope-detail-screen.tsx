@@ -4,6 +4,7 @@ import { StyleSheet } from "react-native";
 import { useBudgetQuery } from "@/data/ledger-queries";
 import { EmptyState, Header, layout, Screen, space, Text } from "@/ui/trove";
 
+import { BudgetLoadError } from "../budget-load-error";
 import { envelopeLines } from "../home/home-model";
 
 import { EnvelopeDetail } from "./envelope-detail";
@@ -15,17 +16,11 @@ export function EnvelopeDetailScreen({ id }: { readonly id: string }) {
   const line = view ? envelopeLines(view).find((item) => item.envelope.id === id) : null;
   const back = () => router.back();
 
-  if (budget.isError && !line) {
+  if (budget.isError) {
     return (
       <Screen style={styles.screen}>
-        <Header variant="compact" title="Envelope" onBack={back} />
-        <EmptyState
-          title="Couldn't calculate"
-          message="Check your connection and try again."
-          actionLabel="Try again"
-          onAction={() => void budget.retry()}
-          framed={false}
-        />
+        <Header variant="compact" title={line?.envelope.name ?? "Envelope"} onBack={back} />
+        <BudgetLoadError stale={budget.data !== undefined} onRetry={() => void budget.retry()} />
       </Screen>
     );
   }
