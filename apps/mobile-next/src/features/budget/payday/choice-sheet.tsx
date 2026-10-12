@@ -30,7 +30,7 @@ export function ChoiceSheet({
   onDismiss,
 }: ChoiceSheetProps) {
   return (
-    <Sheet onDismiss={onDismiss} open={open} title={title}>
+    <Sheet surface="canvas" onDismiss={onDismiss} open={open} title={title}>
       <View accessibilityRole="radiogroup" style={styles.list}>
         {choices.map((choice) => (
           <RadioCard

@@ -38,7 +38,7 @@ export function MarkPaidSheet({
   const { item } = target;
   const choices = item ? markPaidAccounts(accounts.data, item, fundingAccountIds, currency) : [];
   return (
-    <Sheet open={target.open} onDismiss={onDismiss} snapPoints={["full"]}>
+    <Sheet surface="canvas" open={target.open} onDismiss={onDismiss} snapPoints={["full"]}>
       {item ? (
         <MarkPaidForm
           key={target.session}

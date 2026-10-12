@@ -23,7 +23,7 @@ interface ScopeSheetProps {
  */
 export function ScopeSheet({ open, onDismiss, ...body }: ScopeSheetProps) {
   return (
-    <Sheet open={open} onDismiss={onDismiss} testID="ledger-scope-sheet">
+    <Sheet surface="canvas" open={open} onDismiss={onDismiss} testID="ledger-scope-sheet">
       <ScopeSheetBody {...body} />
     </Sheet>
   );

@@ -26,7 +26,7 @@ export function MarkPaidSheet({ open, session, envelopeId, view, onDismiss }: Ma
     categories.data.map((category): [string, string] => [category.id, category.icon]),
   );
   return (
-    <Sheet open={open} onDismiss={onDismiss} snapPoints={["full"]}>
+    <Sheet surface="canvas" open={open} onDismiss={onDismiss} snapPoints={["full"]}>
       {line ? (
         <MarkPaidForm
           key={session}

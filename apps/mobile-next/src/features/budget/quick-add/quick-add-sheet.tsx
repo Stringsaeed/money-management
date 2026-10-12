@@ -43,7 +43,7 @@ export function QuickAddSheet({
   };
 
   return (
-    <Sheet open={open} onDismiss={onDismiss} snapPoints={["full"]}>
+    <Sheet surface="canvas" open={open} onDismiss={onDismiss} snapPoints={["full"]}>
       <QuickAddForm
         key={session}
         view={view}
