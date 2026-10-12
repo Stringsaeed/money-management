@@ -224,6 +224,21 @@ describe("activation request", () => {
     expect(input).not.toHaveProperty("fundingAccountIds");
     expect(input).not.toHaveProperty("usualSalaryMinor");
   });
+  it("gives a new preset Category its emoji and a custom one none", () => {
+    const preset = { ...item("new:groceries", "everyday", null), name: "Groceries" };
+    const input = buildActivateInput(
+      draft,
+      { kind: "day", day: 25 },
+      accountsFunding,
+      [preset, rent],
+      "AED",
+    );
+
+    expect(input.envelopes.map((envelope) => envelope.newCategory)).toEqual([
+      { name: "Groceries", icon: "🛒" },
+      { name: "new:rent" },
+    ]);
+  });
 });
 
 describe("funding choice", () => {

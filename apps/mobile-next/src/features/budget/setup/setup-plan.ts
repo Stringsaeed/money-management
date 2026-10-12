@@ -8,6 +8,7 @@ import {
 
 import { currencyFractionDigits, parseMoneyMinor } from "@/utils/money";
 
+import { presetEmoji } from "./setup-emoji";
 import { isItemTicked, type SetupItem } from "./setup-items";
 import { type GROUP_ORDER, type SetupDraft } from "./setup-types";
 
@@ -242,8 +243,16 @@ export function buildActivateInput(
     envelopes: items.map((item) => ({
       name: item.name,
       group: item.group,
-      ...(item.categoryId ? { categoryId: item.categoryId } : { newCategory: { name: item.name } }),
+      ...(item.categoryId
+        ? { categoryId: item.categoryId }
+        : { newCategory: newCategoryFor(item.name) }),
       plannedMinor: plannedMinor(item, draft.amounts, currency),
     })),
   };
+}
+
+/** A Category to create for an item; presets carry their emoji so the envelope shows it. */
+function newCategoryFor(name: string): { readonly name: string; readonly icon?: string } {
+  const icon = presetEmoji(name);
+  return icon ? { name, icon } : { name };
 }

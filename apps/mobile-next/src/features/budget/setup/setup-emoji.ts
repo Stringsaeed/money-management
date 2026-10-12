@@ -7,6 +7,12 @@ import { SETUP_PRESETS } from "./setup-presets";
 
 const FALLBACK = categoryEmoji(undefined);
 
+/** The preset emoji for an item name, e.g. 🛒 for Groceries; null for custom items. */
+export function presetEmoji(name: string): string | null {
+  const key = name.trim().toLowerCase();
+  return SETUP_PRESETS.find((preset) => preset.name.toLowerCase() === key)?.emoji ?? null;
+}
+
 /**
  * The emoji on an item's chip and amount row: its Category's own emoji, else the preset's,
  * else the plain tag every uncategorised row shows.
@@ -17,6 +23,5 @@ export function itemEmoji(item: SetupItem, categories: readonly V2Category[]): s
     : undefined;
   const own = category ? categoryEmoji(category.icon) : FALLBACK;
   if (own !== FALLBACK) return own;
-  const name = item.name.trim().toLowerCase();
-  return SETUP_PRESETS.find((preset) => preset.name.toLowerCase() === name)?.emoji ?? FALLBACK;
+  return presetEmoji(item.name) ?? FALLBACK;
 }
