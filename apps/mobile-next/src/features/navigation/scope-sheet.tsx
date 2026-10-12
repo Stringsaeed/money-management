@@ -23,6 +23,7 @@ interface ScopeSheetProps {
   readonly error: string | null;
   readonly onSelect: (scope: V2LedgerScope) => void;
   readonly onOpenHousehold: () => void;
+  readonly onOpenSettings: () => void;
 }
 
 const SelectedMark = () => <Icon color={colors.accent.text} name="check" size={20} />;
@@ -36,6 +37,7 @@ export function ScopeSheet({
   error,
   onSelect,
   onOpenHousehold,
+  onOpenSettings,
 }: ScopeSheetProps) {
   return (
     <Sheet open={open} onDismiss={onDismiss} testID="ledger-scope-sheet" title="Choose ledger">
@@ -68,6 +70,9 @@ export function ScopeSheet({
           tone={error ? "negative" : "neutral"}
         />
       ) : null}
+      <ListGroup>
+        <ListRow chevron icon="settings" onPress={onOpenSettings} title="Settings" />
+      </ListGroup>
     </Sheet>
   );
 }

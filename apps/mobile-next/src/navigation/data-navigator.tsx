@@ -63,6 +63,7 @@ export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) 
         <Stack.Screen name="recurring/index" options={pushedOptions} />
         <Stack.Screen name="recurring/[id]" options={{ ...pushedOptions, presentation: "modal" }} />
         <Stack.Screen name="household" options={pushedOptions} />
+        <Stack.Screen name="settings" options={pushedOptions} />
         <Stack.Protected guard={budgeting}>
           <Stack.Screen name="budget/setup/payday" options={pushedOptions} />
           <Stack.Screen name="budget/setup/items" options={pushedOptions} />

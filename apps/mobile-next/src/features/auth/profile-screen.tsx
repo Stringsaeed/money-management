@@ -21,7 +21,12 @@ import {
 import { useSession } from "./use-session";
 import { profileIdentity } from "./profile-utils";
 
-export function ProfileScreen() {
+export interface ProfileScreenProps {
+  onBack: () => void;
+}
+
+/** Settings, pushed from the ledger sheet. */
+export function ProfileScreen({ onBack }: ProfileScreenProps) {
   const session = useSession();
   const { scope, selectScope } = useLedgerScope();
   const [busy, setBusy] = useState(false);
@@ -54,14 +59,12 @@ export function ProfileScreen() {
   };
 
   return (
-    <Screen>
+    <Screen style={styles.screen}>
+      <Header onBack={onBack} title="Settings" variant="compact" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Header title="Profile" />
-          <Text tone="secondary" variant="bodyMd">
-            {description}
-          </Text>
-        </View>
+        <Text tone="secondary" variant="bodyMd">
+          {description}
+        </Text>
         <SoundSettings />
         <AiSettings />
         <AnalyticsSettings />
@@ -101,12 +104,7 @@ export function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: {
-    gap: space[6],
-    paddingBottom: space[16] + space[8],
-    paddingHorizontal: layout.screenGutter,
-    paddingTop: space[3],
-  },
-  header: { gap: space[2] },
+  screen: { paddingHorizontal: layout.screenGutter },
+  content: { gap: space[6], paddingBottom: space[8], paddingTop: space[3] },
   actions: { gap: space[4] },
 });

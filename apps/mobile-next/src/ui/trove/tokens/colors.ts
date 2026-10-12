@@ -144,5 +144,7 @@ export const colors = {
     activeFill: colorToken("tabActiveFill"),
     activeIcon: colorToken("tabActiveIcon"),
     idleIcon: colorToken("tabIdleIcon"),
+    /** iOS Liquid Glass bar only: the soft lift under the glass. */
+    glassShadow: colorToken("tabBarGlassShadow"),
   },
 } as const;

@@ -71,7 +71,7 @@ export const AppTabBar = ({ state, navigation, descriptors }: BottomTabBarProps)
         onTabPress={pressTab}
         scope={scope.kind}
         scopeExpanded={scopeOpen}
-        scopeLabel={`Ledger scope: ${scopeLabel}`}
+        scopeLabel={`${scopeLabel} ledger. Switch ledger or open settings`}
         tabs={entries.map((entry) => entry.tab)}
       />
       <CreateActionSheet
@@ -90,6 +90,10 @@ export const AppTabBar = ({ state, navigation, descriptors }: BottomTabBarProps)
         onOpenHousehold={() => {
           setScopeOpen(false);
           router.push("/household");
+        }}
+        onOpenSettings={() => {
+          setScopeOpen(false);
+          router.push("/settings");
         }}
       />
     </>

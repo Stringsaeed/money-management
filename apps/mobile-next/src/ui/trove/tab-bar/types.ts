@@ -1,10 +1,7 @@
 import type { NavIconName } from "../icon";
 
 /** Destinations in the pill; each key picks its outline/filled icon pair. */
-export type TabBarKey = Extract<
-  NavIconName,
-  "home" | "ledger" | "insights" | "market" | "settings"
->;
+export type TabBarKey = Extract<NavIconName, "home" | "budget" | "ledger" | "market">;
 
 /** Which ledger every tab shows: the person's own, or the shared household one. */
 export type TabBarScope = "personal" | "household";
@@ -14,6 +11,6 @@ export interface TabBarTab {
   /** Spoken name; tabs are icon-only. */
   label: string;
   active: boolean;
-  /** Eight-point attention dot, e.g. an action is waiting in Settings. */
+  /** Eight-point attention dot. */
   badge?: boolean;
 }

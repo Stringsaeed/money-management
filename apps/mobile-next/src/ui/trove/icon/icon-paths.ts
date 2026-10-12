@@ -34,6 +34,12 @@ const tag =
 /** Outline + filled twins, for the tab bar. */
 export const NAV_ICONS = {
   home: { outline: home, filled: home },
+  budget: {
+    outline:
+      "M3.5 7A1.5 1.5 0 0 1 5 5.5h14A1.5 1.5 0 0 1 20.5 7v10a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 17zM4 7l8 6 8-6",
+    filled:
+      "M5 5h14a2 2 0 0 1 2 2v.4l-9 6.3-9-6.3V7a2 2 0 0 1 2-2zM3 9.2l9 6.3 9-6.3V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
+  },
   ledger: {
     outline:
       "M12 6.5C10.5 5.3 8.5 4.8 4 5v13c4.5-.2 6.5.3 8 1.5 1.5-1.2 3.5-1.7 8-1.5V5c-4.5-.2-6.5.3-8 1.5zM12 6.5v13",

@@ -2,18 +2,32 @@ import { jest } from "@jest/globals";
 
 interface SharedValue<T> {
   value: T;
+  get: () => T;
+  set: (value: T) => void;
 }
 
 export const Easing = {
   cubic: (value: number) => value,
+  linear: (value: number) => value,
   out: (easing: (value: number) => number) => easing,
 };
 
 export const useAnimatedStyle = jest.fn(<T>(updater: () => T): T => updater());
 
-export const useSharedValue = jest.fn(<T>(value: T): SharedValue<T> => ({ value }));
+export const useSharedValue = jest.fn(<T>(initial: T): SharedValue<T> => {
+  const shared: SharedValue<T> = {
+    value: initial,
+    get: () => shared.value,
+    set: (next) => {
+      shared.value = next;
+    },
+  };
+  return shared;
+});
 
 export const withTiming = jest.fn(<T>(value: T): T => value);
+
+export const withSpring = jest.fn(<T>(value: T): T => value);
 
 export const useAnimatedProps = jest.fn(<T>(updater: () => T): T => updater());
 
