@@ -28,7 +28,13 @@ export function CoverMoveSheet({ controller, view, onCovered }: CoverMoveSheetPr
           onDone={close}
         />
       ) : request?.kind === "move" ? (
-        <MoveForm key={state.session} view={view} fromId={request.fromId} onDone={close} />
+        <MoveForm
+          key={state.session}
+          view={view}
+          fromId={request.fromId}
+          toId={request.toId}
+          onDone={close}
+        />
       ) : null}
     </Sheet>
   );

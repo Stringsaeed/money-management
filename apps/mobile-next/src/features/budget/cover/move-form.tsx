@@ -1,97 +1,108 @@
-import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { track } from "@/features/analytics";
-import { useLedgerMutations } from "@/data/ledger-queries";
-import { AmountInput, Button, showToast, space, Text } from "@/ui/trove";
-import { parseMoneyMinor } from "@/utils/money";
+import { useCategoriesQuery } from "@/data/ledger-queries";
+import { compactAmount, FlowButton, SelectChip, Text } from "@/ui/trove";
 
-import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
+import { useBudgetCurrency } from "../currency/use-budget-currency";
+import { codeAmount } from "../envelope/envelope-figures";
 import { PanelError } from "../envelope/panel-error";
-import { useEnvelopeWrite } from "../envelope/use-envelope-write";
-import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
+import type { ActiveBudgetView } from "../home/home-model";
 
-import { UNPLANNED_KEY, moveHint, movePreview, moveInput, placesFrom } from "./cover-move-model";
-import { PlaceChips } from "./place-chips";
+import { AfterReceipt } from "./after-receipt";
+import { placeEmojis } from "./cover-display";
+import { moveAfterLines } from "./move-display";
+import { MoveAmountField } from "./move-amount-field";
+import { MoveEnds } from "./move-ends";
+import { SheetHeading } from "./sheet-heading";
+import { useMoveForm } from "./use-move-form";
 
 interface MoveFormProps {
   readonly view: ActiveBudgetView;
   /** Envelope to take from; `null` starts at Not planned yet. */
   readonly fromId: string | null;
+  /** Envelope to move into, when the caller already knows it. */
+  readonly toId?: string | null;
   readonly onDone: () => void;
 }
 
-/** O3: move money between two places. The amount can't pass what the source has left. */
-export function MoveForm({ view, fromId, onDone }: MoveFormProps) {
-  const money = useBudgetMoney();
+/** O3 Move money: from and to, the amount (capped at what the source has), and what it leaves. */
+export function MoveForm({ view, fromId, toId, onDone }: MoveFormProps) {
   const currency = useBudgetCurrency();
-  const { createAssignments } = useLedgerMutations();
-  const write = useEnvelopeWrite();
-  const places = placesFrom(envelopeLines(view), view.current.unassignedMinor);
-  const [fromKey, setFromKey] = useState(fromId ?? UNPLANNED_KEY);
-  const [toKey, setToKey] = useState<string | null>(null);
-  const [text, setText] = useState("");
-
-  const from = places.find((place) => place.key === fromKey) ?? places[0];
-  const to = places.find((place) => place.key === toKey);
-  const amountMinor = parseMoneyMinor(text.trim(), currency);
-  const preview = from && to && amountMinor !== null ? movePreview(from, to, amountMinor) : null;
-
-  const change = () => write.clearError();
-  const move = async () => {
-    if (!from || !to || preview?.status !== "ok" || amountMinor === null) return;
-    const ok = await write.run(() => createAssignments(moveInput(from, to, amountMinor)));
-    if (!ok) return;
-    track("money_moved", {});
-    showToast({ message: `Moved ${money(amountMinor)} to ${to.name}` });
-    onDone();
-  };
+  const categories = useCategoriesQuery();
+  const form = useMoveForm({ view, fromId, toId, onDone });
+  const { from, to, amountMinor } = form;
+  const categoriesById = new Map(categories.data.map((category) => [category.id, category]));
+  const emojis = placeEmojis(form.lines, categoriesById);
 
   return (
-    <View style={styles.container}>
-      <Text variant="titleMd" accessibilityRole="header">
-        Move money
-      </Text>
-      <PlaceChips
-        label="From"
-        places={places.filter((place) => place.key !== toKey)}
-        selectedKey={fromKey}
-        onSelect={(key) => {
-          change();
-          setFromKey(key);
-        }}
-      />
-      <PlaceChips
-        label="To"
-        places={places.filter((place) => place.key !== fromKey)}
-        selectedKey={toKey}
-        onSelect={(key) => {
-          change();
-          setToKey(key);
-        }}
-      />
-      <AmountInput
+    <View style={styles.column}>
+      <SheetHeading stamp="BETWEEN ENVELOPES" title="Move money" onClose={onDone} />
+      <MoveEnds
         currency={currency}
-        label="Amount"
-        value={text}
-        onChangeText={(value) => {
-          change();
-          setText(value);
-        }}
+        emojis={emojis}
+        from={from}
+        picking={form.picking}
+        places={form.places}
+        to={to}
+        onChoose={form.choose}
+        onSwap={form.swap}
+        onToggle={form.togglePicker}
       />
-      <Text variant="bodySm" tone="secondary" accessibilityLiveRegion="polite">
-        {moveHint({ from, to, text, amountMinor, money })}
-      </Text>
-      <PanelError message={write.error} />
-      <Button
-        fullWidth
-        label="Move"
-        loading={write.busy}
-        disabled={preview?.status !== "ok"}
-        onPress={() => void move()}
+      <MoveAmountField
+        currency={currency}
+        label={`AMOUNT · UP TO ${compactAmount(form.capMinor, currency)}`}
+        value={form.text}
+        onChangeText={form.changeText}
+      />
+      {form.quickPicks.length > 0 ? (
+        <View style={styles.picks}>
+          {form.quickPicks.map((pick) => (
+            <SelectChip
+              key={pick.key}
+              label={pick.label}
+              selected={amountMinor === pick.amountMinor}
+              size="md"
+              variant="envelope"
+              onPress={() => form.pickAmount(pick.amountMinor)}
+            />
+          ))}
+        </View>
+      ) : null}
+
+      {form.ready && from && to && amountMinor !== null ? (
+        <AfterReceipt
+          lines={moveAfterLines(from, to, amountMinor, {
+            safeToSpendMinor: view.current.safeToSpendMinor,
+            currency,
+          })}
+        />
+      ) : form.hint ? (
+        <Text
+          accessibilityLiveRegion="polite"
+          style={styles.hint}
+          tone="secondary"
+          variant="bodySm"
+        >
+          {form.hint}
+        </Text>
+      ) : null}
+
+      <PanelError message={form.error} />
+      <FlowButton
+        disabled={!form.ready}
+        label={
+          form.ready && amountMinor !== null ? `Move ${codeAmount(amountMinor, currency)}` : "Move"
+        }
+        loading={form.busy}
+        size="cta"
+        onPress={form.move}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({ container: { gap: space[3] } });
+const styles = StyleSheet.create({
+  column: { gap: 14 },
+  picks: { flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" },
+  hint: { textAlign: "center" },
+});

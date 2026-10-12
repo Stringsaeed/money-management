@@ -23,6 +23,9 @@ export interface PaydayFlowFacts {
 
 type FlowStep = "gotPaid" | "wrapUp" | "leftovers";
 
+/** The steps after Got paid, in order. */
+export type PaydayStep = "wrapUp" | "leftovers" | "plan";
+
 /**
  * The step after `from`: Wrap-up (when a period just ended), Leftovers (when Everyday rolled
  * anything over), then Plan new month. Finishing Plan new month lands on Budget home.
@@ -39,4 +42,36 @@ export function paydayFlowFacts(view: ActiveBudgetView): PaydayFlowFacts {
     hasPrevious: view.budget.activationPeriodStart < view.current.period.start,
     leftoversMinor: leftoverTotal(envelopeLines(view)),
   };
+}
+
+/** The steps this payday shows, in order: the same ones `nextPaydayStep` walks through. */
+export function paydaySteps(facts: PaydayFlowFacts): PaydayStep[] {
+  const steps: PaydayStep[] = [];
+  if (facts.hasPrevious) steps.push("wrapUp");
+  if (facts.leftoversMinor > 0) steps.push("leftovers");
+  steps.push("plan");
+  return steps;
+}
+
+export interface PaydayStepPosition {
+  /** 1-based; a step the flow would skip counts as the first. */
+  readonly step: number;
+  readonly of: number;
+  /** The first step closes the flow; later ones go back to the step before. */
+  readonly first: boolean;
+}
+
+/** Where `step` sits in this payday's steps, for the header's progress segments. */
+export function paydayStepPosition(step: PaydayStep, facts: PaydayFlowFacts): PaydayStepPosition {
+  const steps = paydaySteps(facts);
+  const index = steps.indexOf(step);
+  return { step: Math.max(index, 0) + 1, of: steps.length, first: index <= 0 };
+}
+
+/** The step a route opens, for copy that names what comes next. */
+export function paydayStepOf(route: PaydayStepRoute): PaydayStep | null {
+  if (route === PAYDAY_ROUTES.wrapUp) return "wrapUp";
+  if (route === PAYDAY_ROUTES.leftovers) return "leftovers";
+  if (route === PAYDAY_ROUTES.plan) return "plan";
+  return null;
 }

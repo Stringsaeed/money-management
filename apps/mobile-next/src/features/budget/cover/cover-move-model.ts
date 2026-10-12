@@ -223,3 +223,44 @@ export function moveHint(input: {
   const cap = Math.max(from.availableMinor, 0);
   return cap > 0 ? `Up to ${money(cap)} from ${from.name}.` : `${from.name} has nothing to move.`;
 }
+
+/**
+ * Move money from an envelope's screen: out of it while it has money, and into it from the best
+ * cover source once it is over (Not planned yet first, as Cover from… ranks them).
+ */
+export function envelopeMoveRequest(
+  lines: readonly EnvelopeLine[],
+  unassignedMinor: number,
+  envelopeId: string,
+): Extract<CoverMoveRequest, { kind: "move" }> {
+  const line = lines.find((item) => item.envelope.id === envelopeId);
+  if (!line || line.totals.leftMinor >= 0) return { kind: "move", fromId: envelopeId };
+  const best = rankCoverSources(placesFrom(lines, unassignedMinor), envelopeId)[0];
+  return { kind: "move", fromId: best?.id ?? null, toId: envelopeId };
+}
+
+export interface ResolvedMove {
+  readonly from: Place | undefined;
+  readonly to: Place | undefined;
+  /** Null until both ends and a readable amount are known. */
+  readonly preview: MovePreview | null;
+  /** The most the source can give. */
+  readonly capMinor: number;
+}
+
+/** The picked ends (the source falls back to Not planned yet) and what moving the amount does. */
+export function resolveMove(
+  places: readonly Place[],
+  fromKey: string,
+  toKey: string | null,
+  amountMinor: number | null,
+): ResolvedMove {
+  const from = places.find((place) => place.key === fromKey) ?? places[0];
+  const to = places.find((place) => place.key === toKey);
+  return {
+    from,
+    to,
+    preview: from && to && amountMinor !== null ? movePreview(from, to, amountMinor) : null,
+    capMinor: Math.max(from?.availableMinor ?? 0, 0),
+  };
+}

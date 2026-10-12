@@ -31,6 +31,7 @@ describe("wrapUpSummary", () => {
   it("counts bills with a payment, and money saved for big payments", () => {
     const summary = wrapUpSummary(lines);
     expect(summary.bills).toEqual({ paid: 1, total: 2 });
+    expect(summary.billsSpentMinor).toBe(48_000);
     expect(summary.savedMinor).toBe(210_000);
   });
 

@@ -46,6 +46,8 @@ export interface WrapUpSummary {
   readonly everyday: { readonly spentMinor: number; readonly plannedMinor: number };
   /** Bills envelopes that had a payment in the period, out of all Bills envelopes. */
   readonly bills: { readonly paid: number; readonly total: number };
+  /** What the Bills envelopes spent in the period. */
+  readonly billsSpentMinor: number;
   /** Net money moved into Saving for envelopes in the period. */
   readonly savedMinor: number;
   /** Envelopes below zero at period end, worst first. */
@@ -65,6 +67,7 @@ export function wrapUpSummary(lines: readonly WrapUpEnvelope[]): WrapUpSummary {
       plannedMinor: sum(everyday.map((line) => line.plannedMinor)),
     },
     bills: { paid: bills.filter((line) => line.spentMinor > 0).length, total: bills.length },
+    billsSpentMinor: sum(bills.map((line) => line.spentMinor)),
     savedMinor: sum(saving.map((line) => Math.max(line.plannedMinor, 0))),
     overspent: lines
       .filter((line) => line.leftMinor < 0)

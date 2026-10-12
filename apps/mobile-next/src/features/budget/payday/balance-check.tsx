@@ -1,53 +1,49 @@
-import { router } from "expo-router";
+import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { type V2Account } from "@trove/api/v2/contracts";
 
-import { Amount, Button, ListGroup, ListRow, space, Text } from "@/ui/trove";
+import { DENSE_MAX_FONT_SCALE, Text } from "@/ui/trove";
 
-import { useBudgetCurrency } from "../currency/use-budget-currency";
+import { BalanceRow } from "./balance-row";
 
 interface BalanceCheckProps {
   /** The accounts that hold money you have. */
   readonly accounts: readonly V2Account[];
 }
 
-/** "Do these still match?" The Adjust path is the account editor: V2 has no separate adjustment. */
+/**
+ * "Do these still match your bank?" The Adjust path is the account editor: V2 has no separate
+ * adjustment. Matches ✓ is a tick for this screen only; nothing is saved.
+ */
 export function BalanceCheck({ accounts }: BalanceCheckProps) {
-  const currency = useBudgetCurrency();
+  const [matched, setMatched] = useState<Readonly<Record<string, boolean>>>({});
   if (accounts.length === 0) return null;
   return (
-    <View style={styles.section}>
-      <Text variant="titleMd">Do these still match?</Text>
-      <Text tone="secondary" variant="bodySm">
-        Compare with your bank or wallet. If one is off, adjust it before you plan.
+    <View>
+      <Text
+        accessibilityRole="header"
+        maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE}
+        style={styles.heading}
+        tone="tertiary"
+        variant="stamp"
+      >
+        Do these still match your bank?
       </Text>
-      <ListGroup dividerInset={0}>
-        {accounts.map((account) => (
-          <ListRow
-            key={account.id}
-            title={account.name}
-            trailing={
-              <View style={styles.trailing}>
-                <Amount currency={currency} minor={account.balanceMinor} tone="secondary" />
-                <Button
-                  label="Adjust"
-                  size="sm"
-                  variant="secondary"
-                  onPress={() =>
-                    router.push({ pathname: "/accounts/[id]/edit", params: { id: account.id } })
-                  }
-                />
-              </View>
-            }
-          />
-        ))}
-      </ListGroup>
+      {accounts.map((account) => (
+        <BalanceRow
+          account={account}
+          key={account.id}
+          matches={matched[account.id] === true}
+          onToggleMatches={() =>
+            setMatched((current) => ({ ...current, [account.id]: !current[account.id] }))
+          }
+        />
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { gap: space[3] },
-  trailing: { alignItems: "center", flexDirection: "row", gap: space[3] },
+  heading: { marginBottom: 2 },
 });

@@ -1,8 +1,10 @@
+import { StyleSheet, View } from "react-native";
+
 import type { V2Category } from "@trove/api/v2/contracts";
 
-import { Chip } from "@/ui/trove";
+import { SelectChip, space } from "@/ui/trove";
 
-import { ChipRow } from "./chip-row";
+import { categoryEmoji } from "./envelope-emoji";
 
 interface CategoryChipsProps {
   readonly categories: readonly V2Category[];
@@ -10,19 +12,24 @@ interface CategoryChipsProps {
   readonly onSelect: (id: string) => void;
 }
 
-/** Only for an envelope that maps to several Categories; one Category needs no question. */
+/** The envelope's Categories, for an envelope that maps to several. */
 export function CategoryChips({ categories, selectedId, onSelect }: CategoryChipsProps) {
-  if (categories.length < 2) return null;
   return (
-    <ChipRow label="Category">
+    <View accessibilityLabel="Category" accessibilityRole="radiogroup" style={styles.wrap}>
       {categories.map((category) => (
-        <Chip
+        <SelectChip
+          emoji={categoryEmoji(category)}
           key={category.id}
           label={category.name}
-          selected={category.id === selectedId}
           onPress={() => onSelect(category.id)}
+          selected={category.id === selectedId}
+          size="md"
         />
       ))}
-    </ChipRow>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wrap: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
+});

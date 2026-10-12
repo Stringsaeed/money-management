@@ -21,11 +21,9 @@ export function resolveSetupCurrency(
   return { currency: chosen ?? defaultFirstBudgetCurrency(accounts), fixed: false };
 }
 
-/** S2's lead-in: an additional budget names its currency, the first one asks for it below. */
-export const paydayIntro = (fixed: boolean, currency: string): string =>
-  fixed
-    ? `Your ${currency} budget. No bank connection needed. You can change all of this later.`
-    : "No bank connection needed. You can change all of this later.";
+/** S2's lead-in for an additional budget, which names its currency; the first budget has none. */
+export const paydayIntro = (fixed: boolean, currency: string): string | null =>
+  fixed ? `Your ${currency} budget. No bank connection needed.` : null;
 
 /** The currencies to pick from: those of active accounts, the current pick always included. */
 export function currencyChoices(accounts: readonly V2Account[], current: string): string[] {

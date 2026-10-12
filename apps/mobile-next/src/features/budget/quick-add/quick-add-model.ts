@@ -4,6 +4,7 @@ import { type V2Account, type V2Category, type V2PaydayRule } from "@trove/api/v
 import { periodContaining } from "@trove/domain/budget";
 
 import { ApiError } from "@/data/http";
+import { currencyFractionDigits } from "@/utils/money";
 
 import { currencyErrorMessage } from "../currency/currency-errors";
 import { roleErrorMessage } from "../role/budget-role";
@@ -31,7 +32,23 @@ export function impactLine(
   const after = leftMinor - amountMinor;
   if (after < 0)
     return { text: `${name} will be ${money(-after)} over`, over: true, overMinor: -after };
-  return { text: `${name} will have ${money(after)} left`, over: false, overMinor: 0 };
+  return { text: `${name}: ${money(after)} left after this`, over: false, overMinor: 0 };
+}
+
+/**
+ * Money on the impact pill: the currency's own format, with the decimals only when they carry
+ * value ("AED 175", "AED 62.50"), as the Quick add board prints it.
+ */
+export function impactMoney(minor: number, currency: string): string {
+  const digits = currencyFractionDigits(currency);
+  const scale = 10 ** digits;
+  const whole = minor % scale === 0;
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency,
+    minimumFractionDigits: whole ? 0 : digits,
+    maximumFractionDigits: digits,
+  }).format(minor / scale);
 }
 
 export interface PaidWithAccounts {

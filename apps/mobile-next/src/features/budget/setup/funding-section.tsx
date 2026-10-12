@@ -2,98 +2,86 @@ import { StyleSheet, View } from "react-native";
 
 import type { V2Account } from "@trove/api/v2/contracts";
 
-import { Amount, ListGroup, space, Text, TextField } from "@/ui/trove";
+import { space, Text, TextField } from "@/ui/trove";
 
-import { ChoiceRow } from "./choice-row";
-import { fundingEligibleAccounts, isFundingTicked } from "./setup-plan";
+import { FundingRow } from "./funding-row";
+import { SectionStamp } from "./section-stamp";
+import { fundingRows, needsTypedTotal } from "./setup-accounts";
 import type { SetupDraft } from "./setup-types";
 
 interface FundingSectionProps {
+  /** "MONEY YOU HAVE RIGHT NOW", or the household's "SHARED MONEY IT BUDGETS FROM". */
+  readonly title: string;
   /** The budget's currency: accounts in any other currency are not part of it. */
   readonly currency: string;
   readonly accounts: readonly V2Account[];
   readonly draft: Pick<SetupDraft, "funding" | "openingCash">;
+  /** S2 notes each account's type; the household board prints names alone. */
+  readonly showType: boolean;
   readonly totalInvalid: boolean;
+  /** Nothing ticked: say what Next is waiting for. */
+  readonly needsAccount: boolean;
   /** Accounts are still loading: the typed-total field would flash and then vanish. */
   readonly loading: boolean;
   readonly onTick: (accountId: string, ticked: boolean) => void;
   readonly onTotal: (text: string) => void;
 }
 
-const unavailableNote = (account: V2Account, currency: string): string | undefined => {
-  if (account.currency !== currency) return "Not in this budget";
-  if (account.type === "credit_card") {
-    return "Card spending comes out of your envelopes, so cards are not counted as money you have.";
-  }
-  return undefined;
-};
-
-/** "Money you have right now": tick the accounts that hold it, or type one total when none can. */
+/** The accounts that hold the money to plan, or one typed total when none can. */
 export function FundingSection({
+  title,
   currency,
   accounts,
   draft,
+  showType,
   totalInvalid,
+  needsAccount,
   loading,
   onTick,
   onTotal,
 }: FundingSectionProps) {
-  const shown = accounts.filter((account) => !account.archived);
-  const eligible = fundingEligibleAccounts(shown, currency);
-  const typeTotal = !loading && eligible.length === 0;
+  const rows = fundingRows(accounts, draft, currency, showType);
+  const typeTotal = !loading && needsTypedTotal(accounts, currency);
 
   return (
-    <View style={styles.group}>
-      <Text variant="titleMd">Money you have right now</Text>
-      {shown.length > 0 ? (
-        <ListGroup dividerInset={0}>
-          {shown.map((account) => {
-            const note = unavailableNote(account, currency);
-            const ticked = !note && isFundingTicked(account, draft.funding);
-            return (
-              <ChoiceRow
-                key={account.id}
-                label={account.name}
-                note={note}
-                trailing={
-                  <Amount
-                    currency={account.currency}
-                    minor={account.balanceMinor}
-                    tone="secondary"
-                  />
-                }
-                ticked={ticked}
-                disabled={Boolean(note)}
-                onPress={() => onTick(account.id, !ticked)}
-              />
-            );
-          })}
-        </ListGroup>
-      ) : null}
+    <View style={styles.section}>
+      <View style={styles.stamp}>
+        <SectionStamp label={title} />
+      </View>
+      {rows.map((row) => (
+        <FundingRow key={row.id} row={row} onToggle={onTick} />
+      ))}
       {loading ? (
         <Text tone="secondary" variant="bodySm">
           Loading your accounts…
         </Text>
       ) : null}
-      {typeTotal ? (
-        <TextField
-          label="How much do you have right now?"
-          placeholder={`${currency} 0`}
-          keyboardType="decimal-pad"
-          value={draft.openingCash}
-          onChangeText={onTotal}
-          error={totalInvalid ? "Enter an amount like 2500 or 2500.50." : undefined}
-        />
+      {needsAccount && !typeTotal ? (
+        <Text tone="secondary" variant="bodySm">
+          Tick at least one account that holds your money.
+        </Text>
       ) : null}
       {typeTotal ? (
-        <Text tone="secondary" variant="bodySm">
-          This creates one My money cash account with that balance when you start your budget.
-        </Text>
+        <View style={styles.total}>
+          <TextField
+            label="How much do you have right now?"
+            placeholder={`${currency} 0`}
+            keyboardType="decimal-pad"
+            value={draft.openingCash}
+            onChangeText={onTotal}
+            error={totalInvalid ? "Enter an amount like 2500 or 2500.50." : undefined}
+          />
+          <Text tone="secondary" variant="bodySm">
+            This creates one My money cash account with that balance when you start your budget.
+          </Text>
+        </View>
       ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  group: { gap: space[3] },
+  section: { gap: space[1] },
+  stamp: { marginBottom: space[1] },
+  total: { gap: space[3], paddingTop: space[2] },
 });

@@ -1,6 +1,6 @@
 import type { V2BudgetActivityItem } from "@trove/api/v2/contracts";
 
-import { activitySentence } from "../activity-sentence";
+import { activityInitial, activitySentence } from "../activity-sentence";
 
 const money = (minor: number) => `AED ${(minor / 100).toFixed(2)}`;
 
@@ -60,5 +60,13 @@ describe("activitySentence", () => {
     expect(activitySentence(item({ reason: "cover", fromName: null }), money)).toBe(
       "Sara covered Groceries with AED 100.00 from Not planned yet",
     );
+  });
+});
+
+describe("activityInitial", () => {
+  it("takes the first letter of the name, or of Someone", () => {
+    expect(activityInitial(item({ createdByName: "sara" }))).toBe("S");
+    expect(activityInitial(item({ createdByName: "  " }))).toBe("S");
+    expect(activityInitial(item({ createdByName: "Omar" }))).toBe("O");
   });
 });

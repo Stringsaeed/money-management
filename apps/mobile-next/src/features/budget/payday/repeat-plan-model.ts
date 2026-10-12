@@ -1,12 +1,16 @@
 import type {
   V2AssignmentsCreateInput,
   V2Envelope,
+  V2EnvelopeGroup,
   V2EnvelopeTotals,
 } from "@trove/api/v2/contracts";
 
 export interface RepeatItem {
   readonly envelopeId: string;
   readonly name: string;
+  readonly group: V2EnvelopeGroup;
+  /** A Saving for envelope with a target: its per-payday amount, recalculated, not last month's. */
+  readonly recalculated: boolean;
   /** What to add this period so the envelope matches last month's plan. */
   readonly amountMinor: number;
 }
@@ -55,12 +59,25 @@ export function repeatPlan({
   const plannedBefore = new Map(previous.map((totals) => [totals.id, totals.budgetedMinor]));
   // No finished period means there is no "last month" to repeat.
   const items = (previous.length === 0 ? [] : [...envelopes]).flatMap((envelope) => {
-    const target =
-      envelope.group === "saving" && envelope.targetMinor !== null
-        ? (envelope.savingPerPaydayMinor ?? plannedBefore.get(envelope.id) ?? 0)
-        : (plannedBefore.get(envelope.id) ?? 0);
+    const recalculated =
+      envelope.group === "saving" &&
+      envelope.targetMinor !== null &&
+      envelope.savingPerPaydayMinor !== undefined;
+    const target = recalculated
+      ? (envelope.savingPerPaydayMinor ?? 0)
+      : (plannedBefore.get(envelope.id) ?? 0);
     const amountMinor = target - (plannedNow.get(envelope.id) ?? 0);
-    return amountMinor > 0 ? [{ envelopeId: envelope.id, name: envelope.name, amountMinor }] : [];
+    return amountMinor > 0
+      ? [
+          {
+            envelopeId: envelope.id,
+            name: envelope.name,
+            group: envelope.group,
+            recalculated,
+            amountMinor,
+          },
+        ]
+      : [];
   });
   const totalMinor = items.reduce((total, item) => total + item.amountMinor, 0);
   const availableMinor = Math.max(unassignedMinor, 0);
@@ -84,4 +101,28 @@ export function repeatInput(plan: RepeatPlan): V2AssignmentsCreateInput {
       reason: "repeat" as const,
     })),
   };
+}
+
+export interface RepeatGroup {
+  readonly group: V2EnvelopeGroup;
+  /** What Repeat adds to the group's envelopes. */
+  readonly amountMinor: number;
+  /** Some of it is a Saving for amount recalculated from its target. */
+  readonly recalculated: boolean;
+}
+
+/** What Repeat adds per group, Bills, Everyday then Saving for; groups it leaves alone are skipped. */
+export function repeatGroups(plan: RepeatPlan): RepeatGroup[] {
+  const order: readonly V2EnvelopeGroup[] = ["bills", "everyday", "saving"];
+  return order.flatMap((group) => {
+    const items = plan.items.filter((item) => item.group === group);
+    if (items.length === 0) return [];
+    return [
+      {
+        group,
+        amountMinor: items.reduce((total, item) => total + item.amountMinor, 0),
+        recalculated: items.some((item) => item.recalculated),
+      },
+    ];
+  });
 }

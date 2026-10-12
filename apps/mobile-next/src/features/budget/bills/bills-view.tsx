@@ -1,29 +1,26 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Banner, Button, layout, Screen, SegmentedControl, space, Text } from "@/ui/trove";
+import { KindSwitch, layout, Screen } from "@/ui/trove";
 
 import { CoverMoveSheet } from "../cover/cover-move-sheet";
 import { useCoverMoveRequest } from "../cover/use-cover-move-request";
-import { useDue } from "../due/use-due";
-import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
-import { PLAN_ADMIN_ONLY } from "../role/budget-role";
+import type { ActiveBudgetView } from "../home/home-model";
 import { useBudgetRole } from "../role/use-budget-role";
 
 import { AddBigPaymentSheet } from "./add-big-payment-sheet";
 import { BillsHeader } from "./bills-header";
-import { dueByEnvelope } from "./bills-model";
+import { BillsList } from "./bills-list";
+import { BillsNotice } from "./bills-notice";
+import { BillsSummary } from "./bills-summary";
+import { BILLS_TABS, BILLS_TOP_GAP, type BillsTab } from "./bills-tab";
 import { MarkPaidSheet } from "./mark-paid-sheet";
-import { NextYearList } from "./next-year-list";
-import { ThisMonthList } from "./this-month-list";
+import { useBills } from "./use-bills";
 import { useSheetRequest } from "./use-sheet-request";
 
-export type BillsTab = "month" | "saving";
-
-const TABS = [
-  { value: "month", label: "This month" },
-  { value: "saving", label: "Next 12 months" },
-] as const satisfies readonly { value: BillsTab; label: string }[];
+/** Board bottom padding (40) less the 34pt home indicator inset. */
+const BOTTOM_GAP = 6;
 
 interface BillsViewProps {
   readonly view: ActiveBudgetView;
@@ -33,55 +30,36 @@ interface BillsViewProps {
 /** B1: this month's bills and the big payments coming up, with Add a big payment. */
 export function BillsView({ view, initialTab }: BillsViewProps) {
   const [tab, setTab] = useState<BillsTab>(initialTab);
-  const lines = envelopeLines(view);
-  // The same Due list Budget home reads; its `through` reaches past this period's end.
-  const due = useDue(view);
-  const dueMinorByEnvelopeId =
-    due.loaded && !due.isError
-      ? dueByEnvelope(due.items, view.envelopes, view.budget.currency, view.current.period.end)
-      : undefined;
+  const insets = useSafeAreaInsets();
+  const bills = useBills(view);
   const coverMove = useCoverMoveRequest();
   const add = useSheetRequest<true>();
   const markPaid = useSheetRequest<string>();
   const { canEditPlan, canAddSpending } = useBudgetRole();
+  const cover = canAddSpending
+    ? (targetId: string, shortMinor: number) =>
+        coverMove.show({ kind: "cover", targetId, amountMinor: shortMinor })
+    : undefined;
+  const summary = tab === "month" ? bills.monthSummary : bills.yearSummary;
+  const rowCount = tab === "month" ? bills.bills.length : bills.savings.length;
 
   return (
-    <Screen style={styles.screen}>
-      <BillsHeader />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SegmentedControl options={TABS} value={tab} onChange={setTab} />
-        {tab === "month" && due.isError ? (
-          <View accessibilityRole="alert">
-            <Banner
-              actionLabel="Retry"
-              message="Short shows only for overspent bills until they load."
-              onAction={() => void due.retry()}
-              title="Couldn't load bills due"
-              tone="negative"
-            />
-          </View>
-        ) : null}
-        {tab === "month" ? (
-          <ThisMonthList
-            lines={lines}
-            dueMinorByEnvelopeId={dueMinorByEnvelopeId}
-            onCover={
-              canAddSpending
-                ? (targetId, shortMinor) =>
-                    coverMove.show({ kind: "cover", targetId, amountMinor: shortMinor })
-                : undefined
-            }
-          />
-        ) : (
-          <NextYearList lines={lines} onMarkPaid={canAddSpending ? markPaid.show : undefined} />
-        )}
-        {canEditPlan ? (
-          <Button fullWidth icon="add" label="Add a big payment" onPress={() => add.show(true)} />
-        ) : (
-          <Text tone="secondary" variant="bodySm">
-            {PLAN_ADMIN_ONLY}
-          </Text>
-        )}
+    <Screen edges={["top"]}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + BOTTOM_GAP }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <BillsHeader />
+        <KindSwitch accessibilityLabel="Show" options={BILLS_TABS} value={tab} onChange={setTab} />
+        {rowCount > 0 ? <BillsSummary lines={summary.lines} total={summary.total} /> : null}
+        <BillsNotice tab={tab} bills={bills} canEditPlan={canEditPlan} onCover={cover} />
+        <BillsList
+          tab={tab}
+          bills={bills}
+          onAdd={canEditPlan ? () => add.show(true) : undefined}
+          onCover={cover}
+          onMarkPaid={canAddSpending ? markPaid.show : undefined}
+        />
       </ScrollView>
       <AddBigPaymentSheet
         open={add.open}
@@ -103,6 +81,5 @@ export function BillsView({ view, initialTab }: BillsViewProps) {
 }
 
 const styles = StyleSheet.create({
-  screen: { paddingHorizontal: layout.screenGutter },
-  content: { gap: space[4], paddingBottom: space[10], paddingTop: space[3] },
+  content: { gap: 16, paddingHorizontal: layout.screenGutter, paddingTop: BILLS_TOP_GAP },
 });

@@ -7,6 +7,7 @@ import {
   datePlacement,
   filterEnvelopes,
   impactLine,
+  impactMoney,
   orderEnvelopes,
   paidWithAccounts,
   placementText,
@@ -67,7 +68,7 @@ describe("impactLine", () => {
 
   it("says what is left when it stays within the envelope", () => {
     expect(impactLine("Groceries", 10_000, 6_000, money)).toEqual({
-      text: "Groceries will have AED 40.00 left",
+      text: "Groceries: AED 40.00 left after this",
       over: false,
       overMinor: 0,
     });
@@ -83,6 +84,20 @@ describe("impactLine", () => {
 
   it("shows nothing before an amount is typed", () => {
     expect(impactLine("Fuel", 500, 0, money)).toBeNull();
+  });
+});
+
+describe("impactMoney", () => {
+  it("drops decimals that are all zero", () => {
+    expect(impactMoney(17_500, "AED")).toMatch(/^AED\s?175$/);
+  });
+
+  it("keeps decimals that carry value", () => {
+    expect(impactMoney(6_250, "AED")).toMatch(/^AED\s?62\.50$/);
+  });
+
+  it("handles a currency with no decimals", () => {
+    expect(impactMoney(1_200, "JPY")).toMatch(/1,200/);
   });
 });
 

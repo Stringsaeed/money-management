@@ -1,19 +1,18 @@
-import { StyleSheet } from "react-native";
+import { EmptyState, Text } from "@/ui/trove";
 
-import { EmptyState, layout, Screen, Text } from "@/ui/trove";
-
-import { SetupHeader } from "./setup-header";
+import { SetupStepScreen } from "./setup-step-screen";
+import type { SetupStep } from "./setup-types";
 
 interface SetupStatusProps {
+  readonly step: SetupStep;
   readonly loading?: string;
   readonly error?: { readonly title: string; readonly onRetry: () => void };
 }
 
 /** Full-screen loading or retry state for a setup step that is waiting on the server. */
-export function SetupStatus({ loading, error }: SetupStatusProps) {
+export function SetupStatus({ step, loading, error }: SetupStatusProps) {
   return (
-    <Screen>
-      <SetupHeader />
+    <SetupStepScreen step={step}>
       {error ? (
         <EmptyState
           title={error.title}
@@ -23,14 +22,10 @@ export function SetupStatus({ loading, error }: SetupStatusProps) {
           framed={false}
         />
       ) : (
-        <Text style={styles.loading} tone="secondary" variant="bodySm">
+        <Text accessibilityLiveRegion="polite" tone="secondary" variant="bodySm">
           {loading}
         </Text>
       )}
-    </Screen>
+    </SetupStepScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  loading: { padding: layout.screenGutter },
-});

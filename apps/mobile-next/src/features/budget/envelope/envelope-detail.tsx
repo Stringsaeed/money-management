@@ -1,116 +1,156 @@
 import { router } from "expo-router";
-import { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
+import { LegendList } from "@legendapp/list/react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useAccountsQuery, useCategoriesQuery } from "@/data/ledger-queries";
-import { useTransactionPagesQuery } from "@/data/transaction-list-queries";
-import { Button, Header, layout, Screen, space, Text } from "@/ui/trove";
+import type { V2Transaction } from "@trove/api/v2/contracts";
 
+import { ActionBar, layout, Screen } from "@/ui/trove";
+
+import { TransactionListFooter } from "../../ledger/transactions/transaction-list-footer";
 import { CoverMoveSheet } from "../cover/cover-move-sheet";
-import { useCoverMoveRequest } from "../cover/use-cover-move-request";
-import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
+import { envelopeMoveRequest } from "../cover/cover-move-model";
+import { useBudgetCurrency } from "../currency/use-budget-currency";
+import { envelopeLines, type ActiveBudgetView, type EnvelopeLine } from "../home/home-model";
+import { QuickAddSheet } from "../quick-add/quick-add-sheet";
 import { useBudgetRole } from "../role/use-budget-role";
 
-import { hasCardSpending } from "./envelope-model";
+import { envelopeEmoji } from "./envelope-display";
+import { codeAmount } from "./envelope-figures";
+import { EnvelopeHeader } from "./envelope-header";
 import { EnvelopeMenuSheet } from "./envelope-menu-sheet";
-import { EnvelopeSummary } from "./envelope-summary";
-import { EnvelopeTransactions } from "./envelope-transactions";
-import { GROUP_LABEL } from "./group-panel";
-import { OverBanner } from "./over-banner";
-import { WhySection } from "./why-section";
+import { EnvelopeOverview } from "./envelope-overview";
+import { spendingRowDisplay } from "./spending-display";
+import { SpendingListStatus } from "./spending-list-status";
+import { SpendingRow } from "./spending-row";
+import { useEnvelopeSheets } from "./use-envelope-sheets";
+import { useEnvelopeSpending } from "./use-envelope-spending";
 
 interface EnvelopeDetailProps {
   readonly view: ActiveBudgetView;
   readonly line: EnvelopeLine;
 }
 
+/** Board spending rows are 52pt. */
+const ESTIMATED_ROW = 52;
+
+const openTransaction = (transaction: V2Transaction) =>
+  router.push(`/transactions/${transaction.id}`);
+
 /** M4 with O1: one envelope's plan against what happened, and what to do when it is over. */
 export function EnvelopeDetail({ view, line }: EnvelopeDetailProps) {
   const { envelope, totals } = line;
-  const [menu, setMenu] = useState({ open: false, session: 0 });
-  const coverMove = useCoverMoveRequest();
+  const currency = useBudgetCurrency();
+  const insets = useSafeAreaInsets();
+  const sheets = useEnvelopeSheets();
   const { canAddSpending } = useBudgetRole();
-  const categories = useCategoriesQuery();
-  const accounts = useAccountsQuery();
-  const hasCategories = envelope.categoryIds.length > 0;
-  const list = useTransactionPagesQuery(
-    {
-      categoryIds: envelope.categoryIds,
-      kinds: ["expense"],
-      from: view.current.period.start,
-      to: view.current.period.end,
-    },
-    // An empty category filter would list every transaction.
-    { enabled: hasCategories },
-  );
-  const categoriesById = new Map(categories.data.map((category) => [category.id, category]));
+  const spending = useEnvelopeSpending(view, line);
+  const { list } = spending;
   const over = totals.leftMinor < 0;
+  const today = new Date();
 
   return (
-    <Screen style={styles.screen}>
-      <Header
-        variant="compact"
+    <Screen edges={["top"]} style={styles.screen}>
+      <EnvelopeHeader
+        emoji={envelopeEmoji(envelope, spending.categoriesById)}
         title={envelope.name}
         onBack={() => router.back()}
-        actions={[
-          {
-            icon: "more",
-            label: "More actions",
-            onPress: () => setMenu((current) => ({ open: true, session: current.session + 1 })),
-          },
+        onMore={sheets.openMenu}
+      />
+      <LegendList
+        data={list.data}
+        dataKey={list.dataKey}
+        extraData={spending.lookupVersion}
+        keyExtractor={(transaction) => transaction.id}
+        estimatedItemSize={ESTIMATED_ROW}
+        recycleItems
+        style={styles.list}
+        contentContainerStyle={[
+          styles.content,
+          canAddSpending ? null : { paddingBottom: insets.bottom + 24 },
         ]}
-      />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.heading}>
-          <Text variant="titleLg">{envelope.name}</Text>
-          <Text tone="secondary" variant="bodySm">
-            {GROUP_LABEL[envelope.group]}
-          </Text>
-        </View>
-        {over ? (
-          <OverBanner
-            overMinor={-totals.leftMinor}
-            group={envelope.group}
-            onCard={hasCardSpending(list.data, accounts.data)}
-            onCover={
-              canAddSpending
-                ? () => coverMove.show({ kind: "cover", targetId: envelope.id })
-                : undefined
-            }
+        showsVerticalScrollIndicator={false}
+        onEndReached={list.loadMore}
+        onEndReachedThreshold={0.6}
+        ListHeaderComponent={
+          <EnvelopeOverview
+            currency={currency}
+            line={line}
+            spending={spending}
+            view={view}
+            onOpenTransaction={openTransaction}
           />
-        ) : null}
-        <EnvelopeSummary line={line} daysLeft={view.current.daysLeft} />
-        {canAddSpending ? (
-          <Button
-            fullWidth
-            label="Move money"
-            variant="secondary"
-            onPress={() => coverMove.show({ kind: "move", fromId: envelope.id })}
+        }
+        ListEmptyComponent={
+          <SpendingListStatus hasCategories={spending.hasCategories} list={list} />
+        }
+        ListFooterComponent={
+          <TransactionListFooter
+            count={list.data.length}
+            hasNextPage={list.hasNextPage}
+            isFetchingNextPage={list.isFetchingNextPage}
+            nextPageFailed={list.nextPageFailed}
+            onLoadMore={list.loadMore}
           />
-        ) : null}
-        {over ? <WhySection transactions={list.data} categories={categoriesById} /> : null}
-        {hasCategories ? (
-          <EnvelopeTransactions list={list} categories={categoriesById} />
-        ) : (
-          <Text tone="secondary" variant="bodySm">
-            No category is mapped to this envelope. Add one under More actions to count spending.
-          </Text>
+        }
+        renderItem={({ item }) => (
+          <SpendingRow
+            display={spendingRowDisplay(
+              item,
+              {
+                category: spending.categoriesById.get(item.categoryId ?? ""),
+                account: spending.accountsById.get(item.accountId),
+              },
+              today,
+            )}
+            transaction={item}
+            onPress={openTransaction}
+          />
         )}
-      </ScrollView>
-      <EnvelopeMenuSheet
-        open={menu.open}
-        session={menu.session}
-        view={view}
-        line={line}
-        onDismiss={() => setMenu((current) => ({ ...current, open: false }))}
       />
-      <CoverMoveSheet controller={coverMove} view={view} />
+      {canAddSpending ? (
+        <ActionBar
+          secondary={{
+            label: "Move money",
+            onPress: () =>
+              sheets.coverMove.show(
+                envelopeMoveRequest(envelopeLines(view), view.current.unassignedMinor, envelope.id),
+              ),
+          }}
+          primary={
+            over
+              ? {
+                  label: `Cover ${codeAmount(-totals.leftMinor, currency)}`,
+                  tone: "negative",
+                  onPress: () => sheets.coverMove.show({ kind: "cover", targetId: envelope.id }),
+                }
+              : { label: "Add spending", onPress: sheets.openQuickAdd }
+          }
+        />
+      ) : null}
+      <EnvelopeMenuSheet
+        line={line}
+        open={sheets.menu.open}
+        session={sheets.menu.session}
+        view={view}
+        onDismiss={sheets.closeMenu}
+      />
+      <QuickAddSheet
+        open={sheets.quickAdd.open}
+        preselectedEnvelopeId={envelope.id}
+        session={sheets.quickAdd.session}
+        view={view}
+        onCover={(saved) => sheets.coverAfterQuickAdd(saved.envelopeId)}
+        onDismiss={sheets.closeQuickAdd}
+      />
+      <CoverMoveSheet controller={sheets.coverMove} view={view} />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { paddingHorizontal: layout.screenGutter },
-  content: { gap: space[5], paddingBottom: space[10], paddingTop: space[3] },
-  heading: { gap: space[1] },
+  // Board top padding is 56pt on a 47pt status bar: the inset plus 9.
+  screen: { paddingTop: 9 },
+  list: { flex: 1 },
+  content: { paddingBottom: 24, paddingHorizontal: layout.screenGutter, paddingTop: 16 },
 });

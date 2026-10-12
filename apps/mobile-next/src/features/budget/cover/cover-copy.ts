@@ -29,22 +29,6 @@ export function noSourcesLine(mode: CoverMode): string {
   }
 }
 
-interface AfterFacts {
-  readonly name: string;
-  /** The covered envelope's Left now. */
-  readonly leftMinor: number;
-  readonly unassignedMinor: number;
-  readonly money: (minor: number) => string;
-}
-
-/** What the move leaves: the envelope's Left, or for a pay-back, Not planned yet. */
-export function coverAfterLine(mode: CoverMode, plan: CoverPlan, facts: AfterFacts): string {
-  const { name, leftMinor, unassignedMinor, money } = facts;
-  if (mode === "past")
-    return `Not planned yet after: ${money(unassignedMinor + plan.coveredMinor)}`;
-  return `${name} after: ${money(leftMinor + plan.coveredMinor)} left`;
-}
-
 /** A partial cover: what is not covered and where that leaves it. */
 export function coverRestLine(
   mode: CoverMode,
@@ -61,28 +45,17 @@ export function coverRestLine(
   }
 }
 
-export interface CoverNoteLines {
-  /** What the move leaves behind; null until something is covered. */
-  readonly afterLine: string | null;
-  /** What a partial cover does not reach, or a prompt to pick a source; null when not needed. */
-  readonly restLine: string | null;
-}
-
-/** The lines under the sources, for a plan from `hasSources` places. */
-export function coverNoteLines(
+/** Under the receipt: what a partial cover does not reach, or a prompt to pick a source. */
+export function coverRestNote(
   mode: CoverMode,
   plan: CoverPlan,
-  facts: AfterFacts & { readonly hasSources: boolean },
-): CoverNoteLines {
-  const afterLine = plan.coveredMinor > 0 ? coverAfterLine(mode, plan, facts) : null;
-  if (plan.restMinor === 0 || !facts.hasSources) return { afterLine, restLine: null };
-  return {
-    afterLine,
-    restLine:
-      plan.coveredMinor > 0
-        ? coverRestLine(mode, plan.restMinor, facts.money)
-        : "Pick at least one source to cover it.",
-  };
+  money: (minor: number) => string,
+  hasSources: boolean,
+): string | null {
+  if (plan.restMinor === 0 || !hasSources) return null;
+  return plan.coveredMinor > 0
+    ? coverRestLine(mode, plan.restMinor, money)
+    : "Pick at least one source to cover it.";
 }
 
 export function coverToast(

@@ -2,7 +2,13 @@ import type { V2Account, V2BudgetSetupFacts } from "@trove/api/v2/contracts";
 
 import { emptySetupDraft, parseSetupDraft, serializeSetupDraft } from "../setup-draft";
 import type { SetupItem } from "../setup-items";
-import { buildActivateInput, fundingChoice, previewPlan, type FundingChoice } from "../setup-plan";
+import {
+  buildActivateInput,
+  fundingChoice,
+  groupCounts,
+  previewPlan,
+  type FundingChoice,
+} from "../setup-plan";
 
 const aed = (dirhams: number) => dirhams * 100;
 
@@ -274,5 +280,31 @@ describe("setup draft storage", () => {
     expect(parseSetupDraft(serializeSetupDraft(draft))).toEqual(draft);
     expect(parseSetupDraft("{not json")).toBeNull();
     expect(parseSetupDraft(null)).toBeNull();
+  });
+});
+
+describe("review receipt figures", () => {
+  it("prints the money you have and the Everyday spending already logged", () => {
+    const result = preview({
+      facts: facts({
+        spendSincePeriodStart: [
+          { categoryId: "groceries", accountId: "current", amountMinor: aed(400), onCard: false },
+          { categoryId: "fuel", accountId: "current", amountMinor: aed(90), onCard: false },
+        ],
+      }),
+      amounts: { "cat:groceries": "1000" },
+    });
+
+    expect(result.cashMinor).toBe(aed(5000));
+    // Fuel is not an envelope here, so only the groceries spending is Everyday spending.
+    expect(result.everydaySpentMinor).toBe(aed(400));
+  });
+
+  it("counts the ticked envelopes per group", () => {
+    expect(groupCounts([groceries, rent, item("cat:dining", "everyday", "dining")])).toEqual({
+      bills: 0,
+      everyday: 2,
+      saving: 1,
+    });
   });
 });

@@ -1,6 +1,6 @@
 import type { V2Envelope, V2EnvelopeGroup } from "@trove/api/v2/contracts";
 
-import { repeatInput, repeatPlan } from "../repeat-plan-model";
+import { repeatGroups, repeatInput, repeatPlan } from "../repeat-plan-model";
 
 const envelope = (
   id: string,
@@ -115,5 +115,39 @@ describe("repeatPlan", () => {
         { fromEnvelopeId: null, toEnvelopeId: "groceries", amountMinor: 200_000, reason: "repeat" },
       ],
     });
+  });
+});
+
+describe("repeatGroups", () => {
+  it("sums what Repeat adds per group and flags a recalculated Saving for", () => {
+    const plan = repeatPlan({
+      envelopes,
+      previous,
+      current: envelopes.map((item) => totals(item.id, 0)),
+      unassignedMinor: 500_000,
+    });
+    expect(repeatGroups(plan)).toEqual([
+      { group: "bills", amountMinor: 50_000, recalculated: false },
+      { group: "everyday", amountMinor: 200_000, recalculated: false },
+      { group: "saving", amountMinor: 150_000, recalculated: true },
+    ]);
+  });
+
+  it("repeats a Saving for without a per-payday amount from last month's plan", () => {
+    const plan = repeatPlan({
+      envelopes: [envelope("trip", "saving", { targetMinor: 300_000 })],
+      previous: [totals("trip", 40_000)],
+      current: [totals("trip", 0)],
+      unassignedMinor: 500_000,
+    });
+    expect(plan.items).toEqual([
+      {
+        envelopeId: "trip",
+        name: "trip",
+        group: "saving",
+        recalculated: false,
+        amountMinor: 40_000,
+      },
+    ]);
   });
 });

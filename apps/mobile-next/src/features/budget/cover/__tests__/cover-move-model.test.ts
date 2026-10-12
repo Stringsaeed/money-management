@@ -1,6 +1,6 @@
 import { projectBudget, type BudgetAssignment, type BudgetFacts } from "@trove/domain/budget";
 
-import { coverAfterLine } from "../cover-copy";
+import { coverAfterLines } from "../cover-display";
 import {
   allocateCover,
   coverInput,
@@ -194,13 +194,17 @@ describe("cover-past (C1)", () => {
       place("dining", "everyday", 250_000),
     ]);
     const cover = allocateCover(ranked, defaultCoverSelection(ranked, 20_000), 20_000);
-    const preview = coverAfterLine("past", cover, {
-      name: "Groceries",
-      leftMinor: 200_000,
-      unassignedMinor: 330_000,
-      money: (minor) => `AED ${minor / 100}`,
-    });
-    expect(preview).toBe("Not planned yet after: AED 3500");
+    const preview = coverAfterLines(
+      "past",
+      cover,
+      { name: "Groceries", kind: "everyday", leftMinor: 200_000 },
+      { unassignedMinor: 330_000, safeToSpendMinor: before.safeToSpendMinor, currency: "AED" },
+    );
+    expect(preview).toEqual([
+      { label: "DINING", value: "2,300.00" },
+      { label: "NOT PLANNED YET", value: "3,500.00" },
+      { label: "SAFE TO SPEND", value: "7,800 · SAME", total: true },
+    ]);
 
     const written = pastCoverInput(cover).items.map((item) => ({
       ...item,
@@ -208,6 +212,7 @@ describe("cover-past (C1)", () => {
     }));
     const after = projectBudget({ ...facts, assignments: [...facts.assignments, ...written] });
     expect(after.current.unassignedMinor).toBe(350_000);
+    expect(after.current.safeToSpendMinor).toBe(before.safeToSpendMinor);
     expect(after.current.envelopes.map((totals) => [totals.envelopeId, totals.leftMinor])).toEqual([
       ["groceries", 200_000],
       ["dining", 230_000],

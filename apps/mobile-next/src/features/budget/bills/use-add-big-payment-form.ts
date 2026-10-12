@@ -73,6 +73,7 @@ export function useAddBigPaymentForm({ view, onAdded }: UseAddBigPaymentFormOpti
     setAsideText,
     dueDate,
     repeat,
+    today,
     setName: edit(setName),
     setAmountText: edit(setAmountText),
     setSetAsideText: edit(setSetAsideText),
