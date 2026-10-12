@@ -136,7 +136,7 @@ export {
   Header,
   SegmentedControl,
   Sheet,
-  useNativeHeaderStyle,
+  useNavigationTheme,
 } from "./navigation";
 export type {
   ChipProps,
