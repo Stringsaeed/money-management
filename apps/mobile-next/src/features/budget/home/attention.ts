@@ -44,8 +44,6 @@ export type AttentionItem =
       readonly moreToday: number;
     };
 
-export type AttentionKind = AttentionItem["kind"];
-
 export interface AttentionInputs {
   /** Every active envelope with its Left this period. */
   readonly envelopes: readonly {
