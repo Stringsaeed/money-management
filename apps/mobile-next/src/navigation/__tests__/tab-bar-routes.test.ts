@@ -16,8 +16,8 @@ describe("buildTabEntries", () => {
       labelFor: (route) => route.name,
     });
 
-    expect(entries.map((entry) => entry.tab.key)).toEqual(["home", "ledger", "market", "settings"]);
-    expect(entries.map((entry) => entry.tab.active)).toEqual([false, false, true, false]);
+    expect(entries.map((entry) => entry.tab.key)).toEqual(["home", "ledger", "market"]);
+    expect(entries.map((entry) => entry.tab.active)).toEqual([false, false, true]);
     expect(entries[0]?.route.name).toBe("(home)");
   });
 
@@ -29,6 +29,6 @@ describe("buildTabEntries", () => {
       hiddenRoutes: ["envelopes", "market"],
     });
 
-    expect(entries.map((entry) => entry.route.name)).toEqual(["(home)", "ledger", "settings"]);
+    expect(entries.map((entry) => entry.route.name)).toEqual(["(home)", "ledger"]);
   });
 });

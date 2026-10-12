@@ -1,57 +1,54 @@
-import { StyleSheet, useWindowDimensions, View } from "react-native";
-import { EaseView } from "react-native-ease";
+import { StyleSheet, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useReducedMotion } from "../../motion";
-import { colors, motion, radius, space, troveTransition } from "../tokens";
-import { BOTTOM_OFFSET, PILL_HEIGHT, PILL_PADDING, TAB_GAP, TAB_HEIGHT } from "./constants";
+import { Icon } from "../icon";
+import { colors, space } from "../tokens";
+import { BOTTOM_OFFSET } from "./constants";
+import { TAB_BAR_GLASS } from "./glass";
 import { RoundButton } from "./round-button";
-import { SideButtons } from "./side-buttons";
-import { TabBarSurface } from "./tab-bar-surface";
-import { TabButton } from "./tab-button";
+import { ScopeButton } from "./scope-button";
+import { TabBarRow } from "./tab-bar-row";
+import { TabPill } from "./tab-pill";
 import type { TabBarKey, TabBarScope, TabBarTab } from "./types";
-import { indicatorOffset, roundButtonCount, tabBarLayout } from "./utils";
+import { roundButtonCount, tabBarLayout } from "./utils";
 
 export interface TabBarProps {
   tabs: readonly TabBarTab[];
-  /** Called for every tab press, including the active one (re-tap scrolls to top). */
+  /**
+   * Called for every tab press, including the active one (re-tap scrolls to top), and once
+   * when a selector drag is released over another tab.
+   */
   onTabPress: (key: TabBarKey) => void;
-  /** Shows the round Accounts button. Omit it where the scope button takes that slot. */
-  onAccounts?: () => void;
   onAdd: () => void;
-  /** Current ledger scope; the scope button shows its icon, and a household keeps a tinted ring. */
+  /** Current ledger scope; the scope button shows 👤 or 🏠. */
   scope?: TabBarScope;
-  /** Shows the round scope button, typically opening the Personal / Household menu. */
+  /** Shows the round scope button, typically opening the ledger and settings sheet. */
   onScopePress?: () => void;
   /** True while the scope menu is open (reported to screen readers). */
   scopeExpanded?: boolean;
   scopeLabel?: string;
   /** Long press on Add, e.g. to start a transfer. */
   onAddLongPress?: () => void;
-  /** Dot on Accounts: a bank sync needs attention. */
-  accountsBadge?: boolean;
-  accountsLabel?: string;
   addLabel?: string;
 }
 
 /**
- * Floating navigation: an icon-only pill of tabs, optional round scope and Accounts buttons
- * and a round accent Add button, 8pt above the safe-area inset. Business actions come in
- * as props.
+ * Floating navigation (Tab bar v3): an icon-only pill of tabs with a draggable selector, an
+ * optional round scope button and a round accent Add button, 8pt above the safe-area inset.
+ * On Liquid Glass all three are interactive glass in one glass group.
+ * Business actions come in as props.
  */
 export function TabBar({
   tabs,
   onTabPress,
-  onAccounts,
   onAdd,
   scope = "personal",
   onScopePress,
   scopeExpanded,
   scopeLabel,
   onAddLongPress,
-  accountsBadge = false,
-  accountsLabel = "Accounts",
-  addLabel = "Add transaction",
+  addLabel = "Add spending",
 }: TabBarProps) {
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
@@ -59,13 +56,11 @@ export function TabBar({
   const { tabWidth, sideGap } = tabBarLayout(
     windowWidth - insets.left - insets.right,
     tabs.length,
-    roundButtonCount(onScopePress, onAccounts),
+    roundButtonCount(onScopePress),
   );
-  const activeIndex = tabs.findIndex((tab) => tab.active);
 
   return (
-    <View
-      pointerEvents="box-none"
+    <TabBarRow
       style={[
         styles.wrap,
         {
@@ -76,45 +71,29 @@ export function TabBar({
         },
       ]}
     >
-      <TabBarSurface style={styles.pill}>
-        <View accessibilityLabel="Main" accessibilityRole="tablist" style={styles.tabs}>
-          {reducedMotion || activeIndex < 0 ? null : (
-            <EaseView
-              animate={{ translateX: indicatorOffset(activeIndex, tabWidth) }}
-              pointerEvents="none"
-              style={[styles.indicator, { width: tabWidth }]}
-              transition={troveTransition(false, motion.sheet)}
-            />
-          )}
-          {tabs.map((tab) => (
-            <TabButton
-              fadeFill={reducedMotion}
-              key={tab.key}
-              onPress={() => onTabPress(tab.key)}
-              reducedMotion={reducedMotion}
-              tab={tab}
-              width={tabWidth}
-            />
-          ))}
-        </View>
-      </TabBarSurface>
-      <SideButtons
-        accountsBadge={accountsBadge}
-        accountsLabel={accountsLabel}
-        onAccounts={onAccounts}
-        onScopePress={onScopePress}
-        scope={scope}
-        scopeExpanded={scopeExpanded}
-        scopeLabel={scopeLabel}
+      <TabPill
+        onTabPress={onTabPress}
+        reducedMotion={reducedMotion}
+        tabWidth={tabWidth}
+        tabs={tabs}
       />
-      <RoundButton
-        icon="add"
-        label={addLabel}
-        onLongPress={onAddLongPress}
-        onPress={onAdd}
-        variant="accent"
-      />
-    </View>
+      {onScopePress ? (
+        <ScopeButton
+          expanded={scopeExpanded}
+          label={scopeLabel}
+          onPress={onScopePress}
+          scope={scope}
+        />
+      ) : null}
+      <RoundButton label={addLabel} onLongPress={onAddLongPress} onPress={onAdd} variant="accent">
+        <Icon
+          color={TAB_BAR_GLASS ? colors.accent.text : colors.accent.on}
+          name="add"
+          size={26}
+          strokeWidth={2.25}
+        />
+      </RoundButton>
+    </TabBarRow>
   );
 }
 
@@ -127,15 +106,5 @@ const styles = StyleSheet.create({
     left: 0,
     position: "absolute",
     right: 0,
-  },
-  pill: { height: PILL_HEIGHT, justifyContent: "center", paddingHorizontal: PILL_PADDING },
-  tabs: { flexDirection: "row", gap: TAB_GAP },
-  indicator: {
-    backgroundColor: colors.tabBar.activeFill,
-    borderRadius: radius.full,
-    height: TAB_HEIGHT,
-    left: 0,
-    position: "absolute",
-    top: 0,
   },
 });

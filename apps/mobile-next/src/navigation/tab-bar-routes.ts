@@ -4,11 +4,9 @@ import type { TabBarKey, TabBarTab } from "@/ui/trove";
 const TAB_KEYS = {
   "(home)": "home",
   index: "home",
-  // Trove's tab bar has no budget key; its spare "insights" slot carries the Budget tab.
-  envelopes: "insights",
+  envelopes: "budget",
   ledger: "ledger",
   market: "market",
-  settings: "settings",
 } as const satisfies Record<string, TabBarKey>;
 
 type TabRouteName = keyof typeof TAB_KEYS;

@@ -9,6 +9,7 @@ module.exports = {
     "^@expo/ui/community/slider$": "<rootDir>/src/ui/__mocks__/expo-ui.tsx",
     "^cuelume-native$": "<rootDir>/src/features/sound/__mocks__/cuelume-native.ts",
     "^expo-blur$": "<rootDir>/src/ui/__mocks__/expo-blur.tsx",
+    "^expo-glass-effect$": "<rootDir>/src/ui/__mocks__/expo-glass-effect.tsx",
     "^react-native-reanimated$": "<rootDir>/src/ui/__mocks__/react-native-reanimated.ts",
     "^react-native-worklets$": "<rootDir>/src/ui/__mocks__/react-native-worklets.ts",
     "^react-native-ease$": "<rootDir>/src/ui/__mocks__/react-native-ease.tsx",

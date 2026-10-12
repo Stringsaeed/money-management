@@ -17,7 +17,6 @@ export default function TabLayout() {
       </Tabs.Protected>
       <Tabs.Screen name="ledger" options={{ title: "Ledger" }} />
       <Tabs.Screen name="market" options={{ title: "Market" }} />
-      <Tabs.Screen name="settings" options={{ title: "Settings" }} />
     </Tabs>
   );
 }

@@ -27,8 +27,8 @@ const fitFor = (windowWidth: number, tabCount: number, roundButtons: number, sid
   Math.floor((windowWidth - chromeWidth(tabCount, roundButtons, sideGap)) / tabCount);
 
 /**
- * Tab width and side gap: 56pt tabs where the screen allows, shrinking to the 44pt touch
- * target; on narrow screens (≈320pt) the side gap tightens and tabs go down to 40pt, with
+ * Tab width and side gap: the board's 50pt tabs where the screen allows, shrinking to the 44pt
+ * touch target; on narrow screens (≈320pt) the side gap tightens and tabs go down to 40pt, with
  * hitSlop restoring the 44pt target, so the pill and its round buttons still fit.
  */
 export function tabBarLayout(
@@ -48,27 +48,27 @@ export function tabBarLayout(
   };
 }
 
-/** Tab width alone; see `tabBarLayout`. */
-export function tabWidthFor(windowWidth: number, tabCount: number, roundButtons = 2): number {
-  return tabBarLayout(windowWidth, tabCount, roundButtons).tabWidth;
-}
-
 /** Horizontal hitSlop that brings a narrow tab back to the 44pt touch target. */
 export function tabHitSlop(tabWidth: number): number {
   return Math.max(0, Math.ceil((layout.minTouchTarget - tabWidth) / 2));
 }
 
-/** Left offset of tab `index` inside the pill's padded content box; -1 when none is active. */
+/** Left offset of tab `index` inside the pill's padded content box; 0 when none is active. */
 export function indicatorOffset(index: number, tabWidth: number): number {
   return index < 0 ? 0 : index * (tabWidth + TAB_GAP);
 }
 
-/** Spoken name of the scope button, e.g. "Scope: Household". */
+/** The board's spoken name for the scope button. */
 export function scopeButtonLabel(scope: TabBarScope): string {
-  return scope === "household" ? "Scope: Household" : "Scope: Personal";
+  return `${scope === "household" ? "Household" : "Personal"} budget. Switch ledger or open settings`;
 }
 
-/** Round buttons beside the pill: Add always, plus scope and Accounts when their handlers exist. */
-export function roundButtonCount(onScopePress?: () => void, onAccounts?: () => void): number {
-  return 1 + (onScopePress ? 1 : 0) + (onAccounts ? 1 : 0);
+/** The board's scope glyph. */
+export function scopeEmoji(scope: TabBarScope): string {
+  return scope === "household" ? "🏠" : "👤";
+}
+
+/** Round buttons beside the pill: Add always, plus scope when its handler exists. */
+export function roundButtonCount(onScopePress?: () => void): number {
+  return onScopePress ? 2 : 1;
 }
