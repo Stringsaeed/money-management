@@ -83,7 +83,13 @@ export function resolveDefaultAccountId(
   return eligibleIds[0] ?? null;
 }
 
-/** Recently used envelopes first (most recent first), then the rest in their own order. */
+/** Where spending usually goes: Everyday first, then Bills, then Saving for. */
+const SPEND_GROUP_RANK = { everyday: 0, bills: 1, saving: 2 } as const;
+
+/**
+ * Recently used envelopes first (most recent first), then the rest by group (Everyday, Bills,
+ * Saving for), keeping their own order inside a group.
+ */
 export function orderEnvelopes(
   lines: readonly EnvelopeLine[],
   recentIds: readonly string[],
@@ -91,7 +97,11 @@ export function orderEnvelopes(
   const byId = new Map(lines.map((line) => [line.envelope.id, line]));
   const recent = recentIds.flatMap((id) => byId.get(id) ?? []);
   const recentSet = new Set(recent.map((line) => line.envelope.id));
-  return [...recent, ...lines.filter((line) => !recentSet.has(line.envelope.id))];
+  const rest = lines
+    .filter((line) => !recentSet.has(line.envelope.id))
+    // A fresh array, so sorting in place is safe (Hermes has no `toSorted`); sort is stable.
+    .sort((a, b) => SPEND_GROUP_RANK[a.envelope.group] - SPEND_GROUP_RANK[b.envelope.group]);
+  return [...recent, ...rest];
 }
 
 /** Envelopes whose name contains `query`; the selected one always stays so it never vanishes. */

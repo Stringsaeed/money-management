@@ -32,11 +32,11 @@ const account = (id: string, patch: Partial<V2Account> = {}): V2Account => ({
   ...patch,
 });
 
-const line = (id: string, name = id): EnvelopeLine => {
+const line = (id: string, name = id, group: V2Envelope["group"] = "everyday"): EnvelopeLine => {
   const envelope: V2Envelope = {
     id,
     name,
-    group: "everyday",
+    group,
     startFresh: false,
     targetMinor: null,
     dueDate: null,
@@ -162,6 +162,21 @@ describe("orderEnvelopes", () => {
       "a",
       "b",
       "c",
+    ]);
+  });
+
+  it("lists Everyday before Bills and Saving for after the recent ones", () => {
+    const mixed = [
+      line("rent", "Rent", "saving"),
+      line("dewa", "DEWA", "bills"),
+      line("food", "Groceries"),
+      line("fun", "Fun"),
+    ];
+    expect(orderEnvelopes(mixed, ["dewa"]).map((l) => l.envelope.id)).toEqual([
+      "dewa",
+      "food",
+      "fun",
+      "rent",
     ]);
   });
 });
