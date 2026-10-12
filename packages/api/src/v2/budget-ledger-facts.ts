@@ -83,12 +83,13 @@ const make = Effect.gen(function* () {
         ),
     ),
 
-    insertExpenseCategory: (id: string, name: string) =>
+    insertExpenseCategory: (id: string, name: string, icon?: string) =>
       run("ledger.insertExpenseCategory", (db) =>
         db.insert(v2Category).values({
           ledgerId,
           id,
           name,
+          ...(icon && { icon }),
           kind: "expense",
           createdBy: ledger.ownerId,
           updatedBy: ledger.ownerId,

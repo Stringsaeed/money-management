@@ -18,7 +18,7 @@ export function CoverMoveSheet({ controller, view, onCovered }: CoverMoveSheetPr
   const { state, close } = controller;
   const { request } = state;
   return (
-    <Sheet open={state.open} onDismiss={close} snapPoints={["full"]}>
+    <Sheet surface="canvas" open={state.open} onDismiss={close} snapPoints={["full"]}>
       {request?.kind === "cover" || request?.kind === "cover-past" ? (
         <CoverForm
           key={state.session}
@@ -28,7 +28,13 @@ export function CoverMoveSheet({ controller, view, onCovered }: CoverMoveSheetPr
           onDone={close}
         />
       ) : request?.kind === "move" ? (
-        <MoveForm key={state.session} view={view} fromId={request.fromId} onDone={close} />
+        <MoveForm
+          key={state.session}
+          view={view}
+          fromId={request.fromId}
+          toId={request.toId}
+          onDone={close}
+        />
       ) : null}
     </Sheet>
   );

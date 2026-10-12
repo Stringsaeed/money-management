@@ -8,6 +8,7 @@ import {
 
 import { currencyFractionDigits, parseMoneyMinor } from "@/utils/money";
 
+import { presetEmoji } from "./setup-emoji";
 import { isItemTicked, type SetupItem } from "./setup-items";
 import { type GROUP_ORDER, type SetupDraft } from "./setup-types";
 
@@ -105,6 +106,10 @@ export const hasInvalidAmount = (
 export interface PlanPreview {
   /** Left to plan (S4) and Not planned yet (S5): the engine's Unassigned Money at activation. */
   readonly leftToPlanMinor: number;
+  /** Money you have: the ticked accounts' balances today, or the typed total. */
+  readonly cashMinor: number;
+  /** Spending already logged this period in the Categories of the ticked Everyday envelopes. */
+  readonly everydaySpentMinor: number;
   readonly safeToSpendMinor: number;
   readonly perDayMinor: number;
   readonly daysLeft: number;
@@ -130,6 +135,25 @@ export function previewPlan(inputs: PlanInputs): PlanPreview {
       .filter((balance) => fundingIds.has(balance.accountId))
       .reduce((sum, balance) => sum + balance.balanceMinor, 0);
 
+  // The server's rule: EVERY expense on a budget-currency credit card (archived cards and unmapped
+  // Categories too: they reserve cash), plus expenses from a ticked funding account in a mapped
+  // Category.
+  const spending = facts.spendSincePeriodStart.filter(
+    (row) =>
+      row.onCard ||
+      (fundingIds.has(row.accountId) &&
+        row.categoryId !== null &&
+        mappedCategoryIds.has(row.categoryId)),
+  );
+  const everydayCategoryIds = new Set(
+    items.flatMap((item) =>
+      item.group === "everyday" && item.categoryId ? [item.categoryId] : [],
+    ),
+  );
+  const everydaySpentMinor = spending
+    .filter((row) => row.categoryId !== null && everydayCategoryIds.has(row.categoryId))
+    .reduce((sum, row) => sum + row.amountMinor, 0);
+
   const projection = projectBudget({
     paydays: [{ effectiveFrom: start, rule: payday }],
     activationStart: start,
@@ -153,24 +177,12 @@ export function previewPlan(inputs: PlanInputs): PlanPreview {
           ]
         : [];
     }),
-    // The server's rule: EVERY expense on a budget-currency credit card (archived cards and unmapped
-    // Categories too: they reserve cash), plus expenses from a ticked funding account in a mapped
-    // Category.
-    spending: facts.spendSincePeriodStart.flatMap((row) =>
-      row.onCard ||
-      (fundingIds.has(row.accountId) &&
-        row.categoryId !== null &&
-        mappedCategoryIds.has(row.categoryId))
-        ? [
-            {
-              date: start,
-              categoryId: row.categoryId,
-              amountMinor: row.amountMinor,
-              onCard: row.onCard,
-            },
-          ]
-        : [],
-    ),
+    spending: spending.map((row) => ({
+      date: start,
+      categoryId: row.categoryId,
+      amountMinor: row.amountMinor,
+      onCard: row.onCard,
+    })),
     // Every row already pays a budget-currency credit card; only payments from a ticked account count.
     cardPayments: facts.cardPaymentsSincePeriodStart
       .filter((payment) => fundingIds.has(payment.fromAccountId))
@@ -186,11 +198,23 @@ export function previewPlan(inputs: PlanInputs): PlanPreview {
   const current = projection.current;
   return {
     leftToPlanMinor: current.unassignedMinor,
+    cashMinor,
+    everydaySpentMinor,
     safeToSpendMinor: current.safeToSpendMinor,
     perDayMinor: current.perDayMinor,
     daysLeft: current.daysLeft,
     groupTotals,
   };
+}
+
+/** How many ticked items each group has, for "BILLS · 4". */
+export function groupCounts(items: readonly SetupItem[]) {
+  const counts = { bills: 0, everyday: 0, saving: 0 } satisfies Record<
+    (typeof GROUP_ORDER)[number],
+    number
+  >;
+  for (const item of items) counts[item.group] += 1;
+  return counts;
 }
 
 /** The ticked items in envelope order: Bills, then Everyday, then Saving for. */
@@ -219,8 +243,16 @@ export function buildActivateInput(
     envelopes: items.map((item) => ({
       name: item.name,
       group: item.group,
-      ...(item.categoryId ? { categoryId: item.categoryId } : { newCategory: { name: item.name } }),
+      ...(item.categoryId
+        ? { categoryId: item.categoryId }
+        : { newCategory: newCategoryFor(item.name) }),
       plannedMinor: plannedMinor(item, draft.amounts, currency),
     })),
   };
+}
+
+/** A Category to create for an item; presets carry their emoji so the envelope shows it. */
+function newCategoryFor(name: string): { readonly name: string; readonly icon?: string } {
+  const icon = presetEmoji(name);
+  return icon ? { name, icon } : { name };
 }

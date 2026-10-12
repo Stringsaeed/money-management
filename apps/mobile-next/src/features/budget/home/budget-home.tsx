@@ -2,31 +2,37 @@ import { router } from "expo-router";
 import { useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { Button, ListGroup, space, Text } from "@/ui/trove";
+import { SafeToSpend, SafeToSpendError } from "@/ui/trove";
 
-import { pickAttention } from "./attention";
-import { AttentionLine } from "./attention-line";
-import { EverydayRow } from "./everyday-row";
-import { DueTodayRow } from "../due/due-today-row";
-import { useDue } from "../due/use-due";
-import { PaydayActions } from "../payday/payday-actions";
-import { usePayday } from "../payday/use-payday";
-import { BudgetReminders } from "../reminders/budget-reminders";
-import { GroupSummaryRow } from "./group-summary-row";
-import { envelopeLines, groupSummary, type ActiveBudgetView } from "./home-model";
-import { SafeToSpendHero } from "./safe-to-spend-hero";
-import { OverNotice } from "./over-notice";
-import { useHomeAnalytics } from "./use-home-analytics";
-import { HouseholdHomeExtras } from "../household/household-home-extras";
-import { useBudgetRole } from "../role/use-budget-role";
+import { CurrencySwitch } from "../currency/currency-switch";
+import { StartBudgetPrompt } from "../currency/start-budget-prompt";
 import { CoverMoveSheet } from "../cover/cover-move-sheet";
 import { useCoverMoveRequest } from "../cover/use-cover-move-request";
+import { HouseholdHomeExtras } from "../household/household-home-extras";
 import { QuickAddSheet } from "../quick-add/quick-add-sheet";
+import { useQuickAddRequests } from "../quick-add/use-quick-add-requests";
+import { BudgetReminders } from "../reminders/budget-reminders";
+import { navigateAttention, openEnvelope } from "./attention-navigation";
+import { BudgetHeader } from "./budget-header";
+import { budgetStamp } from "./budget-stamp";
+import { compactMoney } from "./compact-money";
+import { EverydaySection } from "./everyday-section";
+import { HomeAttentionSlot } from "./home-attention-slot";
+import type { ActiveBudgetView } from "./home-model";
+import { floorWholeMinor, periodPace, runwayLabel } from "./runway";
+import { SummaryTickets } from "./summary-tickets";
+import { useBudgetHome } from "./use-budget-home";
 
 interface BudgetHomeProps {
   readonly view: ActiveBudgetView;
-  /** Scrolls the enclosing list so `y` is at the top. */
+  /** Scrolls the enclosing list so `y` (in this column) is at the top. */
   readonly scrollToY: (y: number) => void;
+  /**
+   * A refresh failed: `view` is out of date, so its numbers are hidden behind dashes and the
+   * hero offers Retry. Names stay, so the page keeps its shape.
+   */
+  readonly stale?: boolean;
+  readonly onRetry: () => void;
 }
 
 interface QuickAddTarget {
@@ -38,125 +44,106 @@ interface QuickAddTarget {
 /** Quick add's sheet needs this long to finish closing before Cover can present over it. */
 const SHEET_HANDOFF_MS = 400;
 
-/** M1: Safe to spend, the pace to payday, what needs attention, and the envelopes. */
-export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
+const STALE_TICKET = { value: "—", sub: " " } as const;
+
+/** M1 and H3: Safe to spend and the runway, the one thing that needs you, Everyday, tickets. */
+export function BudgetHome({ view, scrollToY, stale = false, onRetry }: BudgetHomeProps) {
   const { current } = view;
-  const lines = envelopeLines(view);
-  const everyday = lines.filter((line) => line.envelope.group === "everyday");
-  const due = useDue(view);
-  const payday = usePayday(view);
-  const attention = pickAttention({
-    envelopes: lines.map(({ envelope, totals }) => ({
-      name: envelope.name,
-      leftMinor: totals.leftMinor,
-    })),
-    unassignedMinor: current.unassignedMinor,
-    dueTodayCount: due.dueNow.count,
-    paydayPending: payday.status.pending,
-    paydayLate: payday.status.pending && payday.status.late,
-  });
-  useHomeAnalytics(attention);
-  const over = current.safeToSpendMinor < 0;
+  const home = useBudgetHome(view);
+  const { currency, access } = home;
   const everydayY = useRef(0);
+  const activityY = useRef(0);
+  const coverMove = useCoverMoveRequest();
   const [quickAdd, setQuickAdd] = useState<QuickAddTarget>({
     open: false,
     envelopeId: null,
     session: 0,
   });
   const openQuickAdd = (envelopeId: string | null) =>
-    setQuickAdd((current) => ({ open: true, envelopeId, session: current.session + 1 }));
-  const coverMove = useCoverMoveRequest();
-  const { canAddSpending } = useBudgetRole();
-  // The Everyday envelope that is furthest over; with none over, Cover points at the list instead.
-  // (`sort` on the fresh filtered array: Hermes has no `toSorted`.)
-  const mostOver = everyday
-    .filter((line) => line.totals.leftMinor < 0)
-    .sort((a, b) => a.totals.leftMinor - b.totals.leftMinor)[0];
+    setQuickAdd((state) => ({ open: true, envelopeId, session: state.session + 1 }));
+  const canQuickAdd = access.canAddSpending && !stale;
+  useQuickAddRequests(canQuickAdd, () => openQuickAdd(null));
 
   return (
-    <View style={styles.container}>
-      <SafeToSpendHero current={current} />
+    <View style={styles.column}>
+      <BudgetHeader
+        bell={{ count: stale ? 0 : home.dueCount, onPress: () => router.push("/budget/due") }}
+        stamp={budgetStamp(home.today, current.period.start)}
+      />
+      <CurrencySwitch />
 
-      {over ? (
-        <OverNotice
-          overMinor={-current.safeToSpendMinor}
-          onCover={
-            canAddSpending
-              ? () =>
-                  mostOver
-                    ? coverMove.show({ kind: "cover", targetId: mostOver.envelope.id })
-                    : scrollToY(everydayY.current)
-              : undefined
-          }
-          onAdjust={() => scrollToY(everydayY.current)}
+      {stale ? (
+        <SafeToSpendError
+          message="Everything you logged is saved. We won't show a number until it's right."
+          onRetry={onRetry}
+          title="Couldn't calculate right now"
         />
-      ) : null}
+      ) : (
+        <SafeToSpend
+          currency={currency}
+          daysEmoji="💰"
+          daysLeft={current.daysLeft}
+          perDayMinor={floorWholeMinor(Math.max(current.perDayMinor, 0), currency)}
+          runwayLabel={runwayLabel(home.ticks, current.daysLeft)}
+          safeMinor={current.safeToSpendMinor}
+          ticks={home.ticks}
+        />
+      )}
 
-      <AttentionLine attention={attention} />
-      {attention.top?.kind === "payday" && canAddSpending ? (
-        <PaydayActions today={payday.today} reminders={due.reminders} />
-      ) : null}
-      <DueTodayRow due={due} />
-      <BudgetReminders />
+      {stale ? null : (
+        <HomeAttentionSlot
+          access={access}
+          attention={home.attention}
+          context={{ money: (minor) => compactMoney(minor, currency), now: new Date() }}
+          onTarget={(target) =>
+            navigateAttention(target, {
+              retryDue: () => void home.due.retry(),
+              cover: (envelopeId) => coverMove.show({ kind: "cover", targetId: envelopeId }),
+              scrollToEveryday: () => scrollToY(everydayY.current),
+              scrollToActivity: () => scrollToY(activityY.current),
+            })
+          }
+        />
+      )}
 
-      <View
+      <EverydaySection
+        currency={currency}
+        daysLeft={current.daysLeft}
+        emojiFor={home.emojiFor}
+        lines={home.everyday}
         onLayout={(event) => {
           everydayY.current = event.nativeEvent.layout.y;
         }}
-      >
-        <View style={styles.section}>
-          <Text variant="titleMd">Everyday</Text>
-          {everyday.length === 0 ? (
-            <Text tone="secondary" variant="bodySm">
-              No everyday envelopes yet.
-            </Text>
-          ) : (
-            everyday.map((line) => (
-              <EverydayRow
-                key={line.envelope.id}
-                line={line}
-                onPress={() =>
-                  router.push({
-                    pathname: "/budget/envelope/[id]",
-                    params: { id: line.envelope.id },
-                  })
-                }
-                onLongPress={canAddSpending ? () => openQuickAdd(line.envelope.id) : undefined}
-              />
-            ))
-          )}
-        </View>
-      </View>
+        onOpen={openEnvelope}
+        onQuickAdd={canQuickAdd ? openQuickAdd : undefined}
+        pace={periodPace(current)}
+        stale={stale}
+      />
 
-      <ListGroup dividerInset={0}>
-        <GroupSummaryRow
-          title="Bills"
-          noun={{ one: "bill", many: "bills" }}
-          leftLabel="left"
-          summary={groupSummary(lines, "bills")}
-          onPress={() => router.push({ pathname: "/budget/bills", params: { tab: "month" } })}
-        />
-        <GroupSummaryRow
-          title="Saving for"
-          noun={{ one: "goal", many: "goals" }}
-          leftLabel="set aside"
-          summary={groupSummary(lines, "saving")}
-          onPress={() => router.push({ pathname: "/budget/bills", params: { tab: "saving" } })}
-        />
-      </ListGroup>
+      <SummaryTickets
+        bills={stale ? STALE_TICKET : home.bills}
+        saving={stale ? STALE_TICKET : home.saving}
+        savingEmoji={home.savingEmoji}
+      />
 
-      {canAddSpending ? (
-        <Button fullWidth icon="add" label="Add spending" onPress={() => openQuickAdd(null)} />
-      ) : null}
-
-      <HouseholdHomeExtras />
+      {stale ? null : (
+        <>
+          <HouseholdHomeExtras
+            onActivityLayout={(event) => {
+              activityY.current = event.nativeEvent.layout.y;
+            }}
+          />
+          <BudgetReminders />
+          <StartBudgetPrompt />
+        </>
+      )}
 
       <QuickAddSheet
         open={quickAdd.open}
         session={quickAdd.session}
         view={view}
         preselectedEnvelopeId={quickAdd.envelopeId}
-        onDismiss={() => setQuickAdd((current) => ({ ...current, open: false }))}
+        onDismiss={() => setQuickAdd((state) => ({ ...state, open: false }))}
         onCover={(saved) =>
           setTimeout(
             () => coverMove.show({ kind: "cover", targetId: saved.envelopeId }),
@@ -170,6 +157,5 @@ export function BudgetHome({ view, scrollToY }: BudgetHomeProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { gap: space[5] },
-  section: { gap: space[3] },
+  column: { gap: 18 },
 });

@@ -1,4 +1,4 @@
-import { EmptyState } from "@/ui/trove";
+import { SafeToSpendError } from "@/ui/trove";
 
 interface BudgetLoadErrorProps {
   /** Numbers were loaded before and a refresh failed: they may be out of date, so hide them. */
@@ -9,20 +9,18 @@ interface BudgetLoadErrorProps {
 /** The budget could not be loaded or refreshed. Never shows a 0 or an old number as current. */
 export function BudgetLoadError({ stale, onRetry }: BudgetLoadErrorProps) {
   return stale ? (
-    <EmptyState
-      title="Couldn't calculate"
-      message="Your numbers are hidden until we can load them again."
-      actionLabel="Retry"
-      onAction={onRetry}
-      framed={false}
+    <SafeToSpendError
+      message="Everything you logged is saved. We won't show a number until it's right."
+      onRetry={onRetry}
+      title="Couldn't calculate right now"
     />
   ) : (
-    <EmptyState
-      title="Couldn't load your budget"
+    <SafeToSpendError
+      label="BUDGET"
       message="Check your connection and try again."
-      actionLabel="Try again"
-      onAction={onRetry}
-      framed={false}
+      onRetry={onRetry}
+      retryLabel="Try again"
+      title="Couldn't load your budget"
     />
   );
 }

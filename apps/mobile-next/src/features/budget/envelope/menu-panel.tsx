@@ -5,11 +5,11 @@ import { useLedgerMutations } from "@/data/ledger-queries";
 import { Amount, Button, ListGroup, ListRow, showToast, space, Switch, Text } from "@/ui/trove";
 
 import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
+import { GROUP_LABEL } from "../envelope-groups";
 import type { EnvelopeLine } from "../home/home-model";
 import { PLAN_ADMIN_ONLY } from "../role/budget-role";
 import { useBudgetRole } from "../role/use-budget-role";
 
-import { GROUP_LABEL } from "./group-panel";
 import { PanelError } from "./panel-error";
 import { useEnvelopeWrite } from "./use-envelope-write";
 

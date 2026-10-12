@@ -11,7 +11,7 @@ import {
 
 import { compactAmount } from "./home-money";
 import { HomeReceiptTear } from "./home-receipt-tear";
-import type { SpendTick } from "./home-spend-ticks";
+import type { SpendTick } from "@/features/budget/home/spend-ticks";
 import { HomeSpendStrip } from "./home-spend-strip";
 
 interface HomeSafeToSpendProps {

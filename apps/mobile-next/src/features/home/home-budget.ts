@@ -7,7 +7,7 @@ import {
   everydayAllowanceMinor,
   spendTicks,
   type SpendTick,
-} from "./home-spend-ticks";
+} from "@/features/budget/home/spend-ticks";
 
 /** What Home shows about the budget: nothing (flag off or unknown), the plan CTA, or safe to spend. */
 export type HomeBudget =

@@ -4,6 +4,7 @@ import { type V2Account, type V2Category, type V2PaydayRule } from "@trove/api/v
 import { periodContaining } from "@trove/domain/budget";
 
 import { ApiError } from "@/data/http";
+import { currencyFractionDigits } from "@/utils/money";
 
 import { currencyErrorMessage } from "../currency/currency-errors";
 import { roleErrorMessage } from "../role/budget-role";
@@ -31,7 +32,23 @@ export function impactLine(
   const after = leftMinor - amountMinor;
   if (after < 0)
     return { text: `${name} will be ${money(-after)} over`, over: true, overMinor: -after };
-  return { text: `${name} will have ${money(after)} left`, over: false, overMinor: 0 };
+  return { text: `${name}: ${money(after)} left after this`, over: false, overMinor: 0 };
+}
+
+/**
+ * Money on the impact pill: the currency's own format, with the decimals only when they carry
+ * value ("AED 175", "AED 62.50"), as the Quick add board prints it.
+ */
+export function impactMoney(minor: number, currency: string): string {
+  const digits = currencyFractionDigits(currency);
+  const scale = 10 ** digits;
+  const whole = minor % scale === 0;
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency,
+    minimumFractionDigits: whole ? 0 : digits,
+    maximumFractionDigits: digits,
+  }).format(minor / scale);
 }
 
 export interface PaidWithAccounts {
@@ -66,7 +83,13 @@ export function resolveDefaultAccountId(
   return eligibleIds[0] ?? null;
 }
 
-/** Recently used envelopes first (most recent first), then the rest in their own order. */
+/** Where spending usually goes: Everyday first, then Bills, then Saving for. */
+const SPEND_GROUP_RANK = { everyday: 0, bills: 1, saving: 2 } as const;
+
+/**
+ * Recently used envelopes first (most recent first), then the rest by group (Everyday, Bills,
+ * Saving for), keeping their own order inside a group.
+ */
 export function orderEnvelopes(
   lines: readonly EnvelopeLine[],
   recentIds: readonly string[],
@@ -74,7 +97,11 @@ export function orderEnvelopes(
   const byId = new Map(lines.map((line) => [line.envelope.id, line]));
   const recent = recentIds.flatMap((id) => byId.get(id) ?? []);
   const recentSet = new Set(recent.map((line) => line.envelope.id));
-  return [...recent, ...lines.filter((line) => !recentSet.has(line.envelope.id))];
+  const rest = lines
+    .filter((line) => !recentSet.has(line.envelope.id))
+    // A fresh array, so sorting in place is safe (Hermes has no `toSorted`); sort is stable.
+    .sort((a, b) => SPEND_GROUP_RANK[a.envelope.group] - SPEND_GROUP_RANK[b.envelope.group]);
+  return [...recent, ...rest];
 }
 
 /** Envelopes whose name contains `query`; the selected one always stays so it never vanishes. */

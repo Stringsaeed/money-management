@@ -1,10 +1,11 @@
 import { router } from "expo-router";
 
-import { useAccountsQuery, useCategoriesQuery } from "@/data/ledger-queries";
+import { useAccountsQuery, useCategoriesQuery, useLedgerData } from "@/data/ledger-queries";
 import { Sheet } from "@/ui/trove";
 
 import { afterSheetCloses } from "../../ledger/transactions/transaction-create-actions";
 import type { ActiveBudgetView } from "../home/home-model";
+import { PAYDAY_ROUTES } from "../payday/payday-flow";
 
 import { QuickAddForm } from "./quick-add-form";
 import type { SavedSpend } from "./use-save-spend";
@@ -33,10 +34,16 @@ export function QuickAddSheet({
 }: QuickAddSheetProps) {
   const accounts = useAccountsQuery();
   const categories = useCategoriesQuery();
+  const { scope } = useLedgerData();
   const { memory, remember } = useQuickAddMemory();
+  /** Closes the sheet first: a route pushed under a presented native sheet stays hidden behind it. */
+  const leaveThen = (navigate: () => void) => {
+    onDismiss();
+    afterSheetCloses(navigate);
+  };
 
   return (
-    <Sheet open={open} onDismiss={onDismiss} snapPoints={["full"]}>
+    <Sheet surface="canvas" open={open} onDismiss={onDismiss} snapPoints={["full"]}>
       <QuickAddForm
         key={session}
         view={view}
@@ -45,14 +52,14 @@ export function QuickAddSheet({
         memory={memory}
         remember={remember}
         preselectedEnvelopeId={preselectedEnvelopeId}
+        stamp={scope.kind === "household" ? "🏠 Household budget" : "👤 Personal budget"}
         onSaved={(saved) => {
           onDismiss();
           if (saved.cover) onCover?.(saved);
         }}
-        onAddCard={() => {
-          onDismiss();
-          afterSheetCloses(() => router.push("/accounts/new"));
-        }}
+        onAddCard={() => leaveThen(() => router.push("/accounts/new"))}
+        onClose={onDismiss}
+        onGotPaid={() => leaveThen(() => router.push(PAYDAY_ROUTES.gotPaid))}
       />
     </Sheet>
   );

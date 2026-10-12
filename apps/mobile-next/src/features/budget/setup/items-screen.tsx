@@ -1,104 +1,92 @@
 import { router } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { useState } from "react";
+
+import type { V2EnvelopeGroup } from "@trove/api/v2/contracts";
 
 import { track } from "@/features/analytics";
-import { Button, ListGroup, space, Text } from "@/ui/trove";
-import { formatMoneyMinor } from "@/utils/money";
+import { ActionBar } from "@/ui/trove";
 
-import { AddItemRow } from "./add-item-row";
-import { ChoiceRow } from "./choice-row";
-import { isItemTicked, resolveItemKey, type SetupItem } from "./setup-items";
-import { SetupFrame } from "./setup-frame";
+import { ItemGroup } from "./item-group";
+import { itemEmoji } from "./setup-emoji";
+import { isItemTicked, resolveItemKey } from "./setup-items";
 import { setupHref } from "./setup-routes";
 import { SetupRestart } from "./setup-restart";
 import { SetupStatus } from "./setup-status";
-import { GROUP_LABELS, GROUP_ORDER } from "./setup-types";
+import { SetupStepScreen } from "./setup-step-screen";
+import { GROUP_ORDER } from "./setup-types";
+import { StepTitle } from "./step-title";
 import { useSetupModel } from "./use-setup-model";
 
-const itemDetail = (item: SetupItem, currency: string): string | undefined => {
-  if (item.recurringMinor) return `${formatMoneyMinor(item.recurringMinor, currency)} a month`;
-  if (item.lastPeriodMinor)
-    return `${formatMoneyMinor(item.lastPeriodMinor, currency)} last period`;
-  return undefined;
-};
-
-/** S3: what the money is for, as a checklist of envelopes in three groups. */
+/** S3: what the money is for, as tick chips in three groups. Each ticked one becomes an envelope. */
 export function ItemsScreen() {
-  const { currency, target, needsPayday, draft, setup, facts, categories, items, ticked } =
-    useSetupModel();
+  const { target, needsPayday, draft, setup, facts, categories, items, ticked } = useSetupModel();
+  const [adding, setAdding] = useState<V2EnvelopeGroup | null>(null);
 
-  if (needsPayday) return <SetupRestart target={target} />;
+  if (needsPayday) return <SetupRestart step="items" target={target} />;
   if (facts.isError && !facts.data) {
     return (
       <SetupStatus
+        step="items"
         error={{ title: "Couldn't load your suggestions", onRetry: () => void facts.retry() }}
       />
     );
   }
-  if (!facts.data) return <SetupStatus loading="Finding what you spend on…" />;
+  if (!facts.data) return <SetupStatus step="items" loading="Finding what you spend on…" />;
 
-  const add = (name: string, group: SetupItem["group"]) => {
+  const add = (name: string, group: V2EnvelopeGroup) => {
     const { key } = resolveItemKey(name, categories.data);
     const exists = items.some((item) => item.key === key);
     setup.update({
       selection: { ...draft.selection, [key]: true },
       ...(!exists && { custom: [...draft.custom, { name, group }] }),
     });
+    setAdding(null);
   };
 
   return (
-    <SetupFrame
-      step="Step 2 of 3"
-      title="What is it for?"
-      intro="Tick what you want to set money aside for. Each one gets its own envelope."
+    <SetupStepScreen
+      step="items"
       footer={
-        <>
-          {ticked.length === 0 ? (
-            <Text tone="secondary" variant="bodySm">
-              Tick at least one to continue.
-            </Text>
-          ) : null}
-          <Button
-            fullWidth
-            label="Next"
-            disabled={ticked.length === 0}
-            onPress={() => {
+        <ActionBar
+          summary={{ label: "ENVELOPES", value: `${ticked.length} ticked` }}
+          primary={{
+            label: "Next",
+            disabled: ticked.length === 0,
+            accessibilityHint: ticked.length === 0 ? "Tick at least one to continue" : undefined,
+            onPress: () => {
               setup.update({ step: "amounts" });
               track("budget_setup_step_completed", { step: "items" });
               router.push(setupHref("amounts", target));
-            }}
-          />
-        </>
+            },
+          }}
+        />
       }
     >
+      <StepTitle
+        title="What's your money for?"
+        intro="We ticked what you already pay. Each one becomes an envelope."
+      />
       {GROUP_ORDER.map((group) => (
-        <View key={group} style={styles.group}>
-          <Text variant="titleMd">{GROUP_LABELS[group]}</Text>
-          <ListGroup dividerInset={0}>
-            {items
-              .filter((item) => item.group === group)
-              .map((item) => {
-                const isTicked = isItemTicked(item, draft.selection);
-                return (
-                  <ChoiceRow
-                    key={item.key}
-                    label={item.name}
-                    detail={itemDetail(item, currency)}
-                    ticked={isTicked}
-                    onPress={() =>
-                      setup.update({ selection: { ...draft.selection, [item.key]: !isTicked } })
-                    }
-                  />
-                );
-              })}
-          </ListGroup>
-        </View>
+        <ItemGroup
+          key={group}
+          group={group}
+          chips={items
+            .filter((item) => item.group === group)
+            .map((item) => ({
+              key: item.key,
+              name: item.name,
+              emoji: itemEmoji(item, categories.data),
+              ticked: isItemTicked(item, draft.selection),
+            }))}
+          onToggle={(key, isTicked) =>
+            setup.update({ selection: { ...draft.selection, [key]: isTicked } })
+          }
+          adding={adding === group}
+          onAddOpen={() => setAdding(group)}
+          onAddClose={() => setAdding(null)}
+          onAdd={(name) => add(name, group)}
+        />
       ))}
-      <AddItemRow onAdd={add} />
-    </SetupFrame>
+    </SetupStepScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  group: { gap: space[2] },
-});

@@ -1,13 +1,23 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text as NativeText, View } from "react-native";
 
-import { Button, Card, space, Text } from "@/ui/trove";
+import {
+  CtaStack,
+  DashedRule,
+  FlowButton,
+  LeaderLine,
+  ReceiptNote,
+  ReceiptSlip,
+  ReceiptTotal,
+  Text,
+} from "@/ui/trove";
 
+import { BudgetHeader } from "./home/budget-header";
 import { PLAN_ADMIN_ONLY } from "./role/budget-role";
 
 const STEPS = [
-  { title: "Payday and money", detail: "When you get paid and what you have now." },
-  { title: "What it is for", detail: "Bills, everyday spending, and things you save for." },
-  { title: "Plan your month", detail: "Give your money a job." },
+  { prefix: "01", label: "PAYDAY & MONEY", value: "1 MIN" },
+  { prefix: "02", label: "WHAT IT'S FOR", value: "1 MIN" },
+  { prefix: "03", label: "PLAN AMOUNTS", value: "1 MIN" },
 ] as const;
 
 interface BudgetIntroProps {
@@ -20,7 +30,7 @@ interface BudgetIntroProps {
   readonly onNotNow: () => void;
 }
 
-/** S1: one pitch and one way in. A saved draft turns Start into Continue setup. */
+/** S1: one pitch, the three steps on a receipt, and one way in. A saved draft continues setup. */
 export function BudgetIntro({
   hasDraft,
   canStart,
@@ -28,46 +38,67 @@ export function BudgetIntro({
   onStart,
   onNotNow,
 }: BudgetIntroProps) {
+  const notNow = { label: "Not now", onPress: onNotNow };
   return (
-    <View style={styles.container}>
-      <View style={styles.heading}>
-        <Text variant="titleLg">Know what is safe to spend</Text>
-        <Text>Plan your month in about three minutes. No bank connection needed.</Text>
+    <View style={styles.column}>
+      <BudgetHeader stamp="NO BUDGET YET" />
+      <View style={styles.pitch}>
+        <NativeText
+          accessibilityElementsHidden
+          allowFontScaling={false}
+          importantForAccessibility="no"
+          style={styles.emoji}
+        >
+          ✉️
+        </NativeText>
+        <Text accessibilityRole="header" variant="titleLg">
+          Know what you can spend until payday.
+        </Text>
+        <Text style={styles.body} tone="secondary">
+          Give every dirham you have a job: bills, everyday, and the big ones like rent cheques and
+          school terms. We&apos;ll show one number each day.
+        </Text>
       </View>
-      <Card style={styles.steps}>
-        {STEPS.map((step, index) => (
-          <View key={step.title} style={styles.step}>
-            <Text tone="secondary" variant="labelSm">
-              {index + 1}
-            </Text>
-            <View style={styles.stepCopy}>
-              <Text>{step.title}</Text>
-              <Text tone="secondary" variant="bodySm">
-                {step.detail}
-              </Text>
-            </View>
-          </View>
-        ))}
-      </Card>
-      <View style={styles.actions}>
-        {roleLoading ? null : canStart ? (
-          <Button fullWidth label={hasDraft ? "Continue setup" : "Start"} onPress={onStart} />
-        ) : (
-          <Text accessibilityRole="alert" tone="secondary" variant="bodySm">
+      <View accessibilityLabel="Three steps">
+        <ReceiptSlip gap={9}>
+          {STEPS.map((step) => (
+            <LeaderLine
+              key={step.prefix}
+              gap={8}
+              label={step.label}
+              prefix={step.prefix}
+              value={step.value}
+            />
+          ))}
+          <DashedRule />
+          <ReceiptTotal label="TOTAL" value="≈ 3 MIN" />
+          <ReceiptNote text="*** NO BANK CONNECTION NEEDED ***" />
+        </ReceiptSlip>
+      </View>
+      {roleLoading ? (
+        <FlowButton {...notNow} size="link" tone="text" />
+      ) : canStart ? (
+        <CtaStack
+          link={notNow}
+          primary={{ label: hasDraft ? "Continue setup" : "Start my budget", onPress: onStart }}
+        />
+      ) : (
+        <View style={styles.refused}>
+          <Text accessibilityRole="alert" style={styles.center} tone="secondary" variant="bodySm">
             {PLAN_ADMIN_ONLY}
           </Text>
-        )}
-        <Button fullWidth label="Not now" variant="tertiary" onPress={onNotNow} />
-      </View>
+          <FlowButton {...notNow} size="link" tone="text" />
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: space[6] },
-  heading: { gap: space[2] },
-  steps: { gap: space[3] },
-  step: { alignItems: "flex-start", flexDirection: "row", gap: space[3] },
-  stepCopy: { flex: 1, gap: space[0.5] },
-  actions: { gap: space[2] },
+  column: { gap: 20 },
+  pitch: { gap: 8 },
+  emoji: { fontSize: 40, lineHeight: 44 },
+  body: { fontSize: 16, lineHeight: 23 },
+  refused: { gap: 6 },
+  center: { textAlign: "center" },
 });

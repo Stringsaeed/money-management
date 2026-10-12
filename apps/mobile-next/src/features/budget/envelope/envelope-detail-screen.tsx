@@ -1,55 +1,41 @@
 import { router } from "expo-router";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { useBudgetQuery } from "@/data/ledger-queries";
-import { EmptyState, Header, layout, Screen, space, Text } from "@/ui/trove";
+import { layout, Screen, space } from "@/ui/trove";
 
-import { BudgetLoadError } from "../budget-load-error";
 import { envelopeLines } from "../home/home-model";
 
 import { EnvelopeDetail } from "./envelope-detail";
+import { EnvelopeFallback } from "./envelope-fallback";
+import { EnvelopeHeader } from "./envelope-header";
+
+const back = () => router.back();
 
 /** M4 entry: load the budget, then show the envelope or say why it can't be shown. */
 export function EnvelopeDetailScreen({ id }: { readonly id: string }) {
   const budget = useBudgetQuery();
   const view = budget.data?.budget ? budget.data : null;
   const line = view ? envelopeLines(view).find((item) => item.envelope.id === id) : null;
-  const back = () => router.back();
 
-  if (budget.isError) {
-    return (
-      <Screen style={styles.screen}>
-        <Header variant="compact" title={line?.envelope.name ?? "Envelope"} onBack={back} />
-        <BudgetLoadError stale={budget.data !== undefined} onRetry={() => void budget.retry()} />
-      </Screen>
-    );
-  }
-  if (!budget.data) {
-    return (
-      <Screen style={styles.screen}>
-        <Header variant="compact" title="Envelope" onBack={back} />
-        <Text style={styles.status} tone="secondary" variant="bodySm">
-          Loading envelope…
-        </Text>
-      </Screen>
-    );
-  }
-  if (!view || !line) {
-    return (
-      <Screen style={styles.screen}>
-        <Header variant="compact" title="Envelope" onBack={back} />
-        <EmptyState
-          title="Envelope not found"
-          message="It may have been archived."
-          framed={false}
+  if (view && line && !budget.isError) return <EnvelopeDetail view={view} line={line} />;
+
+  return (
+    <Screen edges={["top", "bottom"]} style={styles.screen}>
+      <EnvelopeHeader title={line?.envelope.name ?? "Envelope"} onBack={back} />
+      <View style={styles.body}>
+        <EnvelopeFallback
+          failed={budget.isError}
+          loaded={budget.data !== undefined}
+          stale={budget.data !== undefined}
+          onRetry={() => void budget.retry()}
         />
-      </Screen>
-    );
-  }
-  return <EnvelopeDetail view={view} line={line} />;
+      </View>
+    </Screen>
+  );
 }
 
 const styles = StyleSheet.create({
-  screen: { paddingHorizontal: layout.screenGutter },
-  status: { paddingVertical: space[5] },
+  screen: { paddingTop: 9 },
+  body: { paddingHorizontal: layout.screenGutter, paddingVertical: space[5] },
 });

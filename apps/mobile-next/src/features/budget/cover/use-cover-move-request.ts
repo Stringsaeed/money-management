@@ -10,8 +10,11 @@ export type CoverMoveRequest =
    * C1: last period's overspend already came out of Not planned yet; envelopes pay it back there.
    */
   | { readonly kind: "cover-past"; readonly targetId: string; readonly amountMinor: number }
-  /** O3: move money, starting from this envelope (or Not planned yet when `null`). */
-  | { readonly kind: "move"; readonly fromId: string | null };
+  /**
+   * O3: move money, starting from this envelope (or Not planned yet when `null`), optionally
+   * into `toId` (an overspent envelope pulling money in).
+   */
+  | { readonly kind: "move"; readonly fromId: string | null; readonly toId?: string | null };
 
 interface CoverMoveState {
   readonly open: boolean;

@@ -36,11 +36,33 @@ export function nextDueDate(dueDate: string, repeat: V2EnvelopeRepeat | null): s
 }
 
 export interface SavingPreview {
+  /** The target less what is already set aside, never below zero. */
+  readonly stillNeededMinor: number;
   /** What to set aside each payday between now and the due date. */
   readonly perPaydayMinor: number;
   readonly paydaysLeft: number;
+  /** The paydays from the next one through the due date (empty when it is due before payday). */
+  readonly paydayDates: readonly string[];
   /** The due date falls before the next payday and not enough is set aside. */
   readonly shortBeforePaydayMinor: number | null;
+}
+
+/** Longest run of paydays listed; a monthly payday never needs more for a big payment. */
+const MAX_PAYDAYS = 120;
+
+/** The paydays from the one after `currentPeriodStart` through `dueDate`, as Ledger Dates. */
+export function paydayDates(
+  rule: V2PaydayRule,
+  currentPeriodStart: string,
+  dueDate: string,
+): string[] {
+  const dates: string[] = [];
+  let start = nextPeriodStart(rule, currentPeriodStart);
+  while (start <= dueDate && dates.length < MAX_PAYDAYS) {
+    dates.push(start);
+    start = nextPeriodStart(rule, start);
+  }
+  return dates;
 }
 
 /** The same numbers the server shows on the envelope, worked out before it exists. */
@@ -60,8 +82,10 @@ export function savingPreview(input: {
   };
   const dueBeforePayday = input.dueDate < nextPeriodStart(input.rule, input.currentPeriodStart);
   return {
+    stillNeededMinor: Math.max(input.targetMinor - input.setAsideMinor, 0),
     perPaydayMinor: savingPerPayday(goal),
     paydaysLeft: paydaysLeft(goal),
+    paydayDates: paydayDates(input.rule, input.currentPeriodStart, input.dueDate),
     shortBeforePaydayMinor:
       dueBeforePayday && input.setAsideMinor < input.targetMinor
         ? input.targetMinor - input.setAsideMinor

@@ -11,7 +11,7 @@ import { BudgetStore } from "./budget-store";
 /** An envelope names an existing Category or asks for a new one by name. */
 export interface CategoryChoice {
   readonly categoryId?: string;
-  readonly newCategory?: { readonly name: string };
+  readonly newCategory?: { readonly name: string; readonly icon?: string };
 }
 
 /**
@@ -40,7 +40,7 @@ export const resolveCategories = Effect.fn("resolveCategories")(function* (
     let id = byName.get(name.toLowerCase());
     if (!id) {
       id = crypto.randomUUID();
-      yield* facts.insertExpenseCategory(id, name);
+      yield* facts.insertExpenseCategory(id, name, choice.newCategory?.icon);
       byName.set(name.toLowerCase(), id);
     }
     resolved.push(id);

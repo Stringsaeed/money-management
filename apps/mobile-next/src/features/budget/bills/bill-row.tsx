@@ -1,84 +1,43 @@
-import { StyleSheet, View } from "react-native";
+import { BudgetPill } from "@/ui/trove";
 
-import { Amount, Button, Card, colors, Icon, PressableScale, space, Text } from "@/ui/trove";
-
-import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
-import type { EnvelopeLine } from "../home/home-model";
-
-import type { BillStatus } from "./bills-model";
+import { billMeta, billPill, plainFigure } from "./bills-copy";
+import type { BillRow as BillRowData } from "./bills-model";
+import { PaymentRow } from "./payment-row";
 
 interface BillRowProps {
-  readonly line: EnvelopeLine;
-  readonly status: BillStatus;
+  readonly row: BillRowData;
+  readonly icon: string;
+  readonly currency: string;
+  readonly today: string;
   readonly onPress: () => void;
+  /** Tops up a short bill; absent when it is not short or the person may not move money. */
   readonly onCover?: () => void;
 }
 
-function statusText(status: BillStatus, money: (minor: number) => string): string {
-  switch (status.kind) {
-    case "paid":
-      return "Paid";
-    case "ready":
-      return "Ready";
-    case "short":
-      return `Short ${money(status.shortMinor)}`;
-    case "unplanned":
-      return "Not planned this period";
-  }
-}
-
-/** One Bills envelope: paid, ready, or short, with Cover when it is short. */
-export function BillRow({ line, status, onPress, onCover }: BillRowProps) {
-  const money = useBudgetMoney();
-  const currency = useBudgetCurrency();
-  const { envelope, totals } = line;
-  const short = status.kind === "short";
-  const left = `${money(totals.leftMinor)} left`;
+/** One Bills envelope: what it costs this month and whether it is paid, ready, or short. */
+export function BillRow({ row, icon, currency, today, onPress, onCover }: BillRowProps) {
+  const meta = billMeta(row, today, currency);
+  const pill = billPill(row, currency);
+  const amount = plainFigure(row.amountMinor, currency);
+  const label = [
+    row.line.envelope.name,
+    pill.spoken ?? pill.label,
+    `${amount} ${currency}`,
+    meta.toLowerCase(),
+  ].join(", ");
   return (
-    <Card style={styles.card}>
-      <PressableScale
-        accessibilityRole="button"
-        accessibilityLabel={`${envelope.name}, ${statusText(status, money)}, ${left}`}
-        onPress={onPress}
-        scaleOnPress={false}
-        style={styles.top}
-      >
-        <View style={styles.text}>
-          <Text variant="labelMd" numberOfLines={1}>
-            {envelope.name}
-          </Text>
-          <View style={styles.status}>
-            {status.kind === "paid" ? (
-              <Icon name="check" size={16} color={colors.positive.text} />
-            ) : null}
-            <Text tone={short ? "negative" : "secondary"} variant="bodySm">
-              {statusText(status, money)}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.left}>
-          <Amount currency={currency} minor={totals.leftMinor} size="sm" />
-          <Text tone="secondary" variant="labelSm">
-            left
-          </Text>
-        </View>
-      </PressableScale>
-      {short && onCover ? (
-        <Button fullWidth label="Cover" variant="secondary" onPress={onCover} />
+    <PaymentRow
+      accessibilityLabel={label}
+      amount={amount}
+      icon={icon}
+      meta={meta}
+      name={row.line.envelope.name}
+      onPress={onPress}
+      pill={pill}
+    >
+      {onCover && row.status.kind === "short" ? (
+        <BudgetPill label="Cover it" onPress={onCover} size="sm" tone="warn" />
       ) : null}
-    </Card>
+    </PaymentRow>
   );
 }
-
-const styles = StyleSheet.create({
-  card: { gap: space[3] },
-  top: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: space[3],
-    justifyContent: "space-between",
-  },
-  text: { flex: 1, gap: space[0.5] },
-  status: { alignItems: "center", flexDirection: "row", gap: space[1] },
-  left: { alignItems: "baseline", flexDirection: "row", gap: space[1] },
-});
