@@ -126,6 +126,14 @@ export const colors = {
     textTertiary: colorToken("paperTextTertiary"),
     accentText: colorToken("paperAccentText"),
     negative: colorToken("paperNegative"),
+    /** Marker behind a negative total printed on paper. */
+    negativeMarker: colorToken("paperNegativeMarker"),
+    /** Over-planned totals and warnings printed on paper. */
+    warning: colorToken("paperWarning"),
+    /** Marker behind a warning total printed on paper. */
+    warningMarker: colorToken("paperWarningMarker"),
+    /** Confirmations printed on paper, e.g. "Every dirham has a job". */
+    positive: colorToken("paperPositive"),
     rule: colorToken("paperRule"),
     ruleStrong: colorToken("paperRuleStrong"),
     /** Paper lifts with a soft shadow on canvas; none on dark. */
@@ -133,6 +141,13 @@ export const colors = {
   },
   /** Spending series on Home's income vs spending card: the same warm grey in both modes. */
   chartSpend: colorToken("chartSpend"),
+  /** Budgeting: the pay-period runway. */
+  budget: {
+    /** A past day spent under the daily amount: deep olive on paper, a softer lime on dark. */
+    runwayUnder: colorToken("runwayUnder"),
+    /** Steps still to come in a step header: the paper rule on canvas, the divider tone on dark. */
+    stepTrack: colorToken("stepTrack"),
+  },
   /** Selected segment of a compact toggle: paper white, or a lifted ring tone on dark. */
   segmentOn: colorToken("segmentOn"),
   /** Label on a solid warning.text fill, e.g. the due-count badge. */

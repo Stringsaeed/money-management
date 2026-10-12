@@ -4,8 +4,13 @@ import { EaseView } from "react-native-ease";
 import { useReducedMotion } from "../../motion";
 import { colors, radius } from "../tokens";
 
+export interface AmountCaretProps {
+  /** hero: 40pt bar beside the big amount (default) · field: 18pt bar in a compact amount field. */
+  size?: "hero" | "field";
+}
+
 /** Blinking insertion bar shown while the amount is focused; static with Reduce Motion. */
-export function AmountCaret() {
+export function AmountCaret({ size = "hero" }: AmountCaretProps) {
   const reducedMotion = useReducedMotion();
 
   return (
@@ -13,7 +18,7 @@ export function AmountCaret() {
       animate={{ opacity: reducedMotion ? 1 : 0 }}
       initialAnimate={{ opacity: 1 }}
       pointerEvents="none"
-      style={styles.caret}
+      style={[styles.caret, styles[size]]}
       transition={
         reducedMotion
           ? { type: "none" }
@@ -28,8 +33,9 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     backgroundColor: colors.accent.fill,
     borderRadius: radius.full,
-    height: 40,
     marginLeft: 2,
     width: 2,
   },
+  hero: { height: 40 },
+  field: { height: 18 },
 });
