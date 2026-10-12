@@ -12,7 +12,7 @@ describe("StepHeader", () => {
     expect(onLeading).toHaveBeenCalledTimes(1);
 
     const progress = screen.getByRole("progressbar", { name: "Step 2 of 3" });
-    expect(progress.props.accessibilityValue).toEqual({ min: 1, max: 3, now: 2 });
+    expect(progress.props.accessibilityValue).toEqual({ min: 0, max: 3, now: 2 });
     expect(screen.getByText("2 / 3")).toBeTruthy();
   });
 

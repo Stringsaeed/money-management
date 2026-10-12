@@ -17,7 +17,7 @@ export function StepProgress({ step, of, accessibilityLabel }: StepProgressProps
     <View
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="progressbar"
-      accessibilityValue={{ min: 1, max: segments.length, now: Math.min(step, segments.length) }}
+      accessibilityValue={{ min: 0, max: segments.length, now: Math.min(step, segments.length) }}
       accessible
       style={styles.track}
     >

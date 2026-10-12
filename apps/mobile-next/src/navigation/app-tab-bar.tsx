@@ -2,6 +2,7 @@ import { router, type Tabs } from "expo-router";
 import type { V2LedgerScope } from "@trove/api/v2/contracts";
 import { useState, type ComponentProps } from "react";
 
+import { requestQuickAdd } from "@/features/budget/quick-add/quick-add-requests";
 import { useBudgetingEnabled } from "@/features/feature-flags";
 import { useSession } from "@/features/auth/use-session";
 import { useHousehold } from "@/features/household/use-household";
@@ -45,6 +46,12 @@ export const AppTabBar = ({ state, navigation, descriptors }: BottomTabBarProps)
     });
     if (!entry.tab.active && !event.defaultPrevented) navigation.navigate(entry.route.name);
   };
+  // On Budget home, Add opens Quick add; everywhere else (and on the intro) a new transaction.
+  const pressAdd = () => {
+    const onBudget = state.routes[state.index]?.name === "envelopes";
+    if (onBudget && requestQuickAdd()) return;
+    router.push("/transactions/new");
+  };
   const selectCreateAction = (action: CreateAction) => {
     setCreateOpen(false);
     const paths = {
@@ -65,7 +72,7 @@ export const AppTabBar = ({ state, navigation, descriptors }: BottomTabBarProps)
     <>
       <TabBar
         addLabel="Create"
-        onAdd={() => router.push("/transactions/new")}
+        onAdd={pressAdd}
         onAddLongPress={() => setCreateOpen(true)}
         onScopePress={() => setScopeOpen(true)}
         onTabPress={pressTab}

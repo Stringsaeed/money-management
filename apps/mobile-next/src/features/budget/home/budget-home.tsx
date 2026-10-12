@@ -10,6 +10,7 @@ import { CoverMoveSheet } from "../cover/cover-move-sheet";
 import { useCoverMoveRequest } from "../cover/use-cover-move-request";
 import { HouseholdHomeExtras } from "../household/household-home-extras";
 import { QuickAddSheet } from "../quick-add/quick-add-sheet";
+import { useQuickAddRequests } from "../quick-add/use-quick-add-requests";
 import { BudgetReminders } from "../reminders/budget-reminders";
 import { navigateAttention, openEnvelope } from "./attention-navigation";
 import { BudgetHeader } from "./budget-header";
@@ -61,6 +62,7 @@ export function BudgetHome({ view, scrollToY, stale = false, onRetry }: BudgetHo
   const openQuickAdd = (envelopeId: string | null) =>
     setQuickAdd((state) => ({ open: true, envelopeId, session: state.session + 1 }));
   const canQuickAdd = access.canAddSpending && !stale;
+  useQuickAddRequests(canQuickAdd, () => openQuickAdd(null));
 
   return (
     <View style={styles.column}>
