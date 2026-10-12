@@ -37,6 +37,8 @@ export interface RadioCardProps {
   /** Defaults to "title, sub, trailing". */
   accessibilityLabel?: string;
   accessibilityHint?: string;
+  /** `checkbox` when several cards in a group can be on at once (cover sources). Defaults to radio. */
+  accessibilityRole?: "radio" | "checkbox";
   testID?: string;
 }
 
@@ -55,6 +57,7 @@ export function RadioCard({
   children,
   accessibilityLabel = [title, sub, trailing].filter(Boolean).join(", "),
   accessibilityHint,
+  accessibilityRole = "radio",
   testID,
 }: RadioCardProps) {
   const lg = size === "lg";
@@ -63,7 +66,7 @@ export function RadioCard({
     <PressableScale
       accessibilityHint={accessibilityHint}
       accessibilityLabel={accessibilityLabel}
-      accessibilityRole="radio"
+      accessibilityRole={accessibilityRole}
       accessibilityState={{ checked: selected, disabled }}
       disabled={disabled}
       onPress={onPress}

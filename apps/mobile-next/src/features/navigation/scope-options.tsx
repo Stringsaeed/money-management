@@ -18,10 +18,10 @@ interface ScopeOptionsProps {
   readonly onSelect: (scope: V2LedgerScope) => void;
 }
 
-/** One option's SAFE column: the figure for the ledger on screen, nothing for the other. */
+/** One option's SAFE column: the figure for the ledger on screen, no column for the other. */
 function safeProps(name: string, sub: string, safe: string | null) {
   return safe === null
-    ? { safeLabel: "", safeValue: "", accessibilityLabel: `${name}, ${sub}` }
+    ? {}
     : { safeValue: safe, accessibilityLabel: `${name}, ${sub}, safe to spend ${safe}` };
 }
 

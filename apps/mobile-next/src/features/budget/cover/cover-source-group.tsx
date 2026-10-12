@@ -45,6 +45,7 @@ export function CoverSourceGroup({
           <RadioCard
             key={place.key}
             accessibilityLabel={`${place.name}, ${trailing} left, ${sub.text.toLowerCase()}`}
+            accessibilityRole="checkbox"
             emoji={emojis.get(place.key)}
             selected={selected.includes(place.key)}
             sub={sub.text}

@@ -2,7 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import { FlowButton, Text } from "@/ui/trove";
 
-import { SheetHeading } from "./sheet-heading";
+import { SheetHeading } from "../sheet-heading";
 
 interface NothingToCoverProps {
   /** The envelope's name, when it still exists. */

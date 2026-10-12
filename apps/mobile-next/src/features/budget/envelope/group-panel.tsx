@@ -5,17 +5,12 @@ import type { V2EnvelopeGroup } from "@trove/api/v2/contracts";
 import { useLedgerMutations } from "@/data/ledger-queries";
 import { Chip, space, Text } from "@/ui/trove";
 
+import { GROUP_LABEL } from "../envelope-groups";
 import type { EnvelopeLine } from "../home/home-model";
 
 import { PanelError } from "./panel-error";
 import { PanelHeader } from "./panel-header";
 import { useEnvelopeWrite } from "./use-envelope-write";
-
-export const GROUP_LABEL = {
-  bills: "Bills",
-  everyday: "Everyday",
-  saving: "Saving for",
-} as const satisfies Record<V2EnvelopeGroup, string>;
 
 const GROUPS: readonly V2EnvelopeGroup[] = ["everyday", "bills", "saving"];
 

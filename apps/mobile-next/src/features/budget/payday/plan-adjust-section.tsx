@@ -7,10 +7,11 @@ import { useReducedMotion } from "@/ui/motion";
 import { compactAmount, ImpactLine, motion, troveTransition } from "@/ui/trove";
 import { parseMoneyMinor } from "@/utils/money";
 
+import { categoriesById, envelopeEmoji } from "../envelope-emoji";
+import { GROUP_EMOJI, GROUP_ORDER } from "../envelope-groups";
 import type { EnvelopeLine } from "../home/home-model";
 
 import { adjustImpact } from "./adjust-impact";
-import { envelopeEmoji, GROUP_EMOJI, GROUP_ORDER } from "./envelope-emoji";
 import { PlanAdjustGroup } from "./plan-adjust-group";
 import type { PlanAdjust } from "./use-plan-adjust";
 
@@ -30,6 +31,7 @@ export function PlanAdjustSection({
   previous,
 }: PlanAdjustSectionProps) {
   const reducedMotion = useReducedMotion();
+  const categoryLookup = categoriesById(categories);
   const lastMonth = new Map(previous?.map((totals) => [totals.id, totals.budgetedMinor]));
   const impact = adjustImpact(adjust.result, currency);
   const typedMinor = (line: EnvelopeLine) =>
@@ -49,7 +51,7 @@ export function PlanAdjustSection({
         return (
           <PlanAdjustGroup
             currency={currency}
-            emojiOf={(line) => envelopeEmoji(line.envelope, categories) ?? GROUP_EMOJI[group]}
+            emojiOf={(line) => envelopeEmoji(line.envelope, categoryLookup) ?? GROUP_EMOJI[group]}
             group={group}
             hintOf={(line) => {
               const before = lastMonth.get(line.envelope.id);

@@ -24,6 +24,24 @@ describe("RadioCard", () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
+  it("can be a checkbox for multi-select groups", async () => {
+    const onPress = jest.fn();
+    await render(
+      <RadioCard
+        accessibilityRole="checkbox"
+        onPress={onPress}
+        selected
+        title="Fun money"
+        trailing="400"
+      />,
+    );
+    expect(screen.queryByRole("radio")).toBeNull();
+    const card = screen.getByRole("checkbox", { name: "Fun money, 400" });
+    expect(card.props.accessibilityState).toMatchObject({ checked: true, disabled: false });
+    await fireEvent.press(card);
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
   it("blocks presses when disabled", async () => {
     const onPress = jest.fn();
     await render(<RadioCard disabled onPress={onPress} selected={false} title="DEWA" />);

@@ -1,6 +1,6 @@
 import { StyleSheet, Text as NativeText, View } from "react-native";
 
-import { colors, DENSE_MAX_FONT_SCALE, fonts, space, StepHeader, Text } from "@/ui/trove";
+import { colors, DENSE_MAX_FONT_SCALE, fonts, RoundButton, space, Text } from "@/ui/trove";
 
 interface QuickAddHeaderProps {
   /** Whose budget this lands in, e.g. "👤 PERSONAL BUDGET". */
@@ -20,7 +20,7 @@ export function QuickAddHeader({ stamp, onClose }: QuickAddHeaderProps) {
           Add spending
         </NativeText>
       </View>
-      <StepHeader leading="close" onLeading={onClose} />
+      <RoundButton icon="close" onPress={onClose} />
     </View>
   );
 }

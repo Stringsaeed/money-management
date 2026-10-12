@@ -2,8 +2,7 @@ import type { V2Account, V2Category } from "@trove/api/v2/contracts";
 
 import { accountTypeOption } from "../../ledger/accounts/account-display";
 import { transactionDateLabel } from "../../ledger/transactions/transaction-display";
-
-import { categoryEmoji } from "./envelope-emoji";
+import { ownCategoryEmoji } from "../envelope-emoji";
 
 export interface MetaChipCopy {
   readonly emoji: string;
@@ -41,7 +40,7 @@ function accountCopy(account: V2Account | null): MetaChipCopy {
 function categoryCopy(category: V2Category | null, count: number): MetaChipCopy | null {
   if (!category || count < 2) return null;
   return {
-    emoji: categoryEmoji(category) ?? "🏷️",
+    emoji: ownCategoryEmoji(category) ?? "🏷️",
     label: category.name,
     accessibilityLabel: `Category: ${category.name}`,
   };

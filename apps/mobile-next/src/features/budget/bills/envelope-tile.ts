@@ -26,15 +26,3 @@ export function envelopeTileIcon(
   }
   return icon;
 }
-
-/** The Category's emoji only, for slots that cannot draw a Trove icon (attention disc). */
-export function envelopeEmoji(
-  envelope: Pick<V2Envelope, "categoryIds">,
-  iconByCategoryId: ReadonlyMap<string, string>,
-): string | null {
-  for (const id of envelope.categoryIds) {
-    const icon = iconByCategoryId.get(id);
-    if (icon && !/^[\w-]+$/.test(icon)) return icon;
-  }
-  return null;
-}

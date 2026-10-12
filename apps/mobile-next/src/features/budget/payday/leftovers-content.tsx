@@ -8,10 +8,10 @@ import { ActionBar, RadioCard, showToast } from "@/ui/trove";
 import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
 import { PanelError } from "../envelope/panel-error";
 import { useEnvelopeWrite } from "../envelope/use-envelope-write";
+import { categoriesById, envelopeEmoji } from "../envelope-emoji";
 import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
 
 import { ChoiceSheet } from "./choice-sheet";
-import { envelopeEmoji } from "./envelope-emoji";
 import {
   KEEP_SUB,
   KEEP_TITLE,
@@ -47,7 +47,8 @@ export function LeftoversContent({ view }: { readonly view: ActiveBudgetView }) 
   const movableMinor = movable.reduce((total, line) => total + line.amountMinor, 0);
   const totalMinor = leftoverTotal(lines);
   const savings = lines.filter((line) => line.envelope.group === "saving");
-  const emojiOf = (line: (typeof lines)[number]) => envelopeEmoji(line.envelope, categories.data);
+  const categoryLookup = categoriesById(categories.data);
+  const emojiOf = (line: (typeof lines)[number]) => envelopeEmoji(line.envelope, categoryLookup);
   const facts = paydayFlowFacts(view);
   const position = paydayStepPosition("leftovers", facts);
 

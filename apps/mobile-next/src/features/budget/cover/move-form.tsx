@@ -7,13 +7,13 @@ import { useBudgetCurrency } from "../currency/use-budget-currency";
 import { codeAmount } from "../envelope/envelope-figures";
 import { PanelError } from "../envelope/panel-error";
 import type { ActiveBudgetView } from "../home/home-model";
+import { SheetHeading } from "../sheet-heading";
 
 import { AfterReceipt } from "./after-receipt";
 import { placeEmojis } from "./cover-display";
 import { moveAfterLines } from "./move-display";
 import { MoveAmountField } from "./move-amount-field";
 import { MoveEnds } from "./move-ends";
-import { SheetHeading } from "./sheet-heading";
 import { useMoveForm } from "./use-move-form";
 
 interface MoveFormProps {

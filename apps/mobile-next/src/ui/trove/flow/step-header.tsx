@@ -2,8 +2,10 @@ import { StyleSheet, View } from "react-native";
 
 import { Text } from "../text";
 import { DENSE_MAX_FONT_SCALE, layout, space } from "../tokens";
-import { StepHeaderButton, type StepHeaderLeading } from "./step-header-button";
+import { RoundButton } from "./round-button";
 import { StepProgress } from "./step-progress";
+
+export type StepHeaderLeading = "back" | "close";
 
 export interface StepHeaderProps {
   /** `back` chevron for setup steps, `close` cross to leave a flow (wrap-up). */
@@ -34,7 +36,7 @@ export function StepHeader({
 
   return (
     <View style={styles.row}>
-      <StepHeaderButton accessibilityLabel={leadingLabel} kind={leading} onPress={onLeading} />
+      <RoundButton accessibilityLabel={leadingLabel} icon={leading} onPress={onLeading} />
       {showProgress ? (
         <StepProgress
           accessibilityLabel={accessibilityLabel ?? `Step ${step} of ${of}`}

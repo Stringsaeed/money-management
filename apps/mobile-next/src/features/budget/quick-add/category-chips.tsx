@@ -4,7 +4,7 @@ import type { V2Category } from "@trove/api/v2/contracts";
 
 import { SelectChip, space } from "@/ui/trove";
 
-import { categoryEmoji } from "./envelope-emoji";
+import { ownCategoryEmoji } from "../envelope-emoji";
 
 interface CategoryChipsProps {
   readonly categories: readonly V2Category[];
@@ -18,7 +18,7 @@ export function CategoryChips({ categories, selectedId, onSelect }: CategoryChip
     <View accessibilityLabel="Category" accessibilityRole="radiogroup" style={styles.wrap}>
       {categories.map((category) => (
         <SelectChip
-          emoji={categoryEmoji(category)}
+          emoji={ownCategoryEmoji(category) ?? undefined}
           key={category.id}
           label={category.name}
           onPress={() => onSelect(category.id)}

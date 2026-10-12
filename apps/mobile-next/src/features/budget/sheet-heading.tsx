@@ -1,29 +1,29 @@
 import type { ReactNode } from "react";
 import { StyleSheet, Text as NativeText, View } from "react-native";
 
-import { colors, DENSE_MAX_FONT_SCALE, fonts, Text } from "@/ui/trove";
+import { colors, DENSE_MAX_FONT_SCALE, fonts, RoundButton, Text } from "@/ui/trove";
 
 interface SheetHeadingProps {
   /** Mono caption over the title, e.g. "SAVING FOR" or "DUE TODAY · TUE 1 DEC". */
   readonly stamp: string;
-  readonly stampTone?: "tertiary" | "warning";
+  readonly stampTone?: "tertiary" | "negative" | "warning";
   readonly title: string;
-  /** 26/32 on Add a big payment, 24/30 on Mark paid. */
-  readonly size: 24 | 26;
+  /** 26/32 on Add a big payment, Cover and Move money; 24/30 on Mark paid. */
+  readonly size?: 24 | 26;
   /** Before the text, e.g. the envelope's tile. */
   readonly leading?: ReactNode;
-  /** After the text, e.g. the close disc. */
-  readonly trailing?: ReactNode;
+  /** Draws the 44pt close disc after the text. */
+  readonly onClose?: () => void;
 }
 
-/** Budget sheet heading: a mono stamp over an 800 title, with optional side slots. */
+/** Budget sheet heading: a mono stamp over an 800 title, an optional tile, and a close disc. */
 export function SheetHeading({
   stamp,
   stampTone = "tertiary",
   title,
-  size,
+  size = 26,
   leading,
-  trailing,
+  onClose,
 }: SheetHeadingProps) {
   return (
     <View style={[styles.row, leading ? styles.gap12 : styles.gap10]}>
@@ -32,11 +32,15 @@ export function SheetHeading({
         <Text maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE} tone={stampTone} variant="stamp">
           {stamp}
         </Text>
-        <NativeText accessibilityRole="header" style={size === 26 ? styles.lg : styles.md}>
+        <NativeText
+          accessibilityRole="header"
+          maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE}
+          style={size === 26 ? styles.lg : styles.md}
+        >
           {title}
         </NativeText>
       </View>
-      {trailing}
+      {onClose ? <RoundButton icon="close" onPress={onClose} /> : null}
     </View>
   );
 }
@@ -46,6 +50,7 @@ const styles = StyleSheet.create({
   gap10: { gap: 10 },
   gap12: { gap: 12 },
   text: { flex: 1, gap: 2 },
+  // Board h1: Nunito 800 26/32, -0.5 tracking; between titleLg (28) and titleMd (20).
   lg: {
     color: colors.text.primary,
     fontFamily: fonts.extrabold,

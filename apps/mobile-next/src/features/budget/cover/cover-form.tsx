@@ -4,9 +4,10 @@ import { useCategoriesQuery } from "@/data/ledger-queries";
 import { Text } from "@/ui/trove";
 
 import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
-import { envelopeEmoji } from "../envelope/envelope-display";
+import { envelopeEmojiOrTag } from "../envelope-emoji";
 import { PanelError } from "../envelope/panel-error";
 import type { ActiveBudgetView } from "../home/home-model";
+import { SheetHeading } from "../sheet-heading";
 
 import { AfterReceipt } from "./after-receipt";
 import { CoverConfirm } from "./cover-confirm";
@@ -21,7 +22,6 @@ import {
 import type { CoverRequest } from "./cover-move-model";
 import { CoverSourceGroup } from "./cover-source-group";
 import { NothingToCover } from "./nothing-to-cover";
-import { SheetHeading } from "./sheet-heading";
 import { useCoverForm } from "./use-cover-form";
 
 interface CoverFormProps {
@@ -47,7 +47,7 @@ export function CoverForm({ view, request, onCovered, onDone }: CoverFormProps) 
   const stamp = coverStamp(
     mode,
     envelope.name,
-    envelopeEmoji(envelope, categoriesById),
+    envelopeEmojiOrTag(envelope, categoriesById),
     amountMinor,
     currency,
   );

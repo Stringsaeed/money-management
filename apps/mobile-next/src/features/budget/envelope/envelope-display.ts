@@ -1,36 +1,14 @@
 import { differenceInCalendarDays, parseISO } from "date-fns";
 
-import type {
-  V2BudgetPeriod,
-  V2Category,
-  V2Envelope,
-  V2EnvelopeGroup,
-  V2EnvelopeTotals,
-} from "@trove/api/v2/contracts";
+import type { V2BudgetPeriod, V2EnvelopeGroup, V2EnvelopeTotals } from "@trove/api/v2/contracts";
 
 import { amountAccessibilityLabel, compactAmount } from "@/ui/trove";
 import { currencyFractionDigits } from "@/utils/money";
-
-import { categoryEmoji } from "../../ledger/categories/category-emoji";
 
 import { codeAmount, receiptFigure, signedCompact } from "./envelope-figures";
 import { paceMinor } from "./envelope-model";
 
 const clamp01 = (value: number) => (Number.isFinite(value) ? Math.min(Math.max(value, 0), 1) : 0);
-
-/**
- * An envelope has no emoji of its own: it wears its first mapped Category's, or the tag when
- * that is missing or a legacy icon slug (the same rule Budget home's rows follow).
- */
-export function envelopeEmoji(
-  envelope: Pick<V2Envelope, "categoryIds">,
-  categoriesById: ReadonlyMap<string, Pick<V2Category, "icon">>,
-): string {
-  const category = envelope.categoryIds
-    .map((id) => categoriesById.get(id))
-    .find((found) => found !== undefined);
-  return categoryEmoji(category?.icon);
-}
 
 /** Share of the pay period already gone, 0…1: where the pace tick stands on the bar. */
 export function periodPace(period: V2BudgetPeriod, daysLeft: number): number {

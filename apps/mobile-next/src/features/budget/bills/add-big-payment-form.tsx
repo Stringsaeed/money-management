@@ -2,11 +2,12 @@ import { format, parseISO } from "date-fns";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { FlowButton, StepHeader, Text } from "@/ui/trove";
+import { FlowButton, Text } from "@/ui/trove";
 
 import { useBudgetMoney } from "../currency/use-budget-currency";
 import { PanelError } from "../envelope/panel-error";
 import type { ActiveBudgetView } from "../home/home-model";
+import { SheetHeading } from "../sheet-heading";
 
 import { FieldButtonRow } from "./field-button-row";
 import { FieldGroup } from "./field-group";
@@ -14,7 +15,6 @@ import { FieldInputRow } from "./field-input-row";
 import { InlineDatePicker } from "./inline-date-picker";
 import { RepeatChips } from "./repeat-chips";
 import { SavingPreview } from "./saving-preview";
-import { SheetHeading } from "./sheet-heading";
 import { useAddBigPaymentForm } from "./use-add-big-payment-form";
 
 interface AddBigPaymentFormProps {
@@ -34,12 +34,7 @@ export function AddBigPaymentForm({ view, onAdded, onCancel }: AddBigPaymentForm
   const { currency } = view.budget;
   return (
     <View style={styles.container}>
-      <SheetHeading
-        size={26}
-        stamp="Saving for"
-        title="Add a big payment"
-        trailing={<StepHeader leading="close" onLeading={onCancel} />}
-      />
+      <SheetHeading onClose={onCancel} stamp="Saving for" title="Add a big payment" />
       <FieldGroup>
         <FieldInputRow
           font="words"

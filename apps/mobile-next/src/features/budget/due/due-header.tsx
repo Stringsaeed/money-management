@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { StyleSheet, Text as NativeText, View } from "react-native";
 
-import { colors, DENSE_MAX_FONT_SCALE, fonts, space, StepHeader, Text } from "@/ui/trove";
+import { colors, DENSE_MAX_FONT_SCALE, fonts, RoundButton, space, Text } from "@/ui/trove";
 
 interface DueHeaderProps {
   /** Today's stamp, e.g. "SUN 11.10.26"; absent until the budget has loaded. */
@@ -12,7 +12,7 @@ interface DueHeaderProps {
 export function DueHeader({ stamp }: DueHeaderProps) {
   return (
     <View style={styles.row}>
-      <StepHeader leading="back" leadingLabel="Back to budget" onLeading={() => router.back()} />
+      <RoundButton accessibilityLabel="Back to budget" icon="back" onPress={() => router.back()} />
       <View style={styles.titles}>
         {stamp ? (
           <Text maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE} tone="tertiary" variant="stamp">

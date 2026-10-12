@@ -7,11 +7,11 @@ import { CategoryTile, FlowButton, Text } from "@/ui/trove";
 import { useBudgetCurrency } from "../currency/use-budget-currency";
 import { PanelError } from "../envelope/panel-error";
 import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
+import { SheetHeading } from "../sheet-heading";
 
 import { MarkPaidFields } from "./mark-paid-fields";
 import { markPaidStamp } from "./mark-paid-lines";
 import { MarkPaidReceipt } from "./mark-paid-receipt";
-import { SheetHeading } from "./sheet-heading";
 import { useMarkPaidForm } from "./use-mark-paid-form";
 
 interface MarkPaidFormProps {

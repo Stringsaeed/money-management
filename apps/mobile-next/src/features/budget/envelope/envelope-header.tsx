@@ -1,8 +1,6 @@
 import { StyleSheet, Text as NativeText, View } from "react-native";
 
-import { colors, DENSE_MAX_FONT_SCALE, fonts, layout } from "@/ui/trove";
-
-import { RoundButton } from "./round-button";
+import { colors, DENSE_MAX_FONT_SCALE, fonts, layout, RoundButton } from "@/ui/trove";
 
 interface EnvelopeHeaderProps {
   readonly title: string;
@@ -17,7 +15,7 @@ interface EnvelopeHeaderProps {
 export function EnvelopeHeader({ title, emoji, onBack, onMore }: EnvelopeHeaderProps) {
   return (
     <View style={styles.row}>
-      <RoundButton accessibilityLabel="Back to budget" icon="chevron-left" onPress={onBack} />
+      <RoundButton accessibilityLabel="Back to budget" icon="back" onPress={onBack} />
       <View style={styles.title}>
         {emoji ? (
           <NativeText

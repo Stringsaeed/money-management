@@ -5,6 +5,7 @@ import { compactAmount } from "@/ui/trove";
 
 import { budgetToday } from "../due/due-model";
 import { useDue } from "../due/use-due";
+import { categoriesById, envelopeEmoji } from "../envelope-emoji";
 import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
 
 import { codeAmount } from "./bills-copy";
@@ -18,7 +19,7 @@ import {
   savingsSummary,
 } from "./bills-model";
 import type { BillsSummaryData } from "./bills-summary";
-import { envelopeEmoji, envelopeTileIcon } from "./envelope-tile";
+import { envelopeTileIcon } from "./envelope-tile";
 
 /** Everything B1 shows for both tabs, from the budget view and the shared Due list. */
 export function useBills(view: ActiveBudgetView) {
@@ -36,6 +37,7 @@ export function useBills(view: ActiveBudgetView) {
   );
   const savings = savingRows(lines);
   const categories = useCategoriesQuery();
+  const categoryLookup = categoriesById(categories.data);
   const iconByCategoryId = new Map(
     categories.data.map((category): [string, string] => [category.id, category.icon]),
   );
@@ -68,6 +70,6 @@ export function useBills(view: ActiveBudgetView) {
     yearSummary,
     attention: savingNeedingAttention(savings),
     iconFor: (envelope: V2Envelope) => envelopeTileIcon(envelope, iconByCategoryId),
-    emojiFor: (envelope: V2Envelope) => envelopeEmoji(envelope, iconByCategoryId),
+    emojiFor: (envelope: V2Envelope) => envelopeEmoji(envelope, categoryLookup),
   };
 }

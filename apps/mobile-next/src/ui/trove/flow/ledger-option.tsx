@@ -12,11 +12,11 @@ export interface LedgerOptionProps {
   sub: string;
   /** Mono caption over the figure. */
   safeLabel?: string;
-  /** Preformatted safe-to-spend figure, e.g. "1,988". */
-  safeValue: string;
+  /** Preformatted safe-to-spend figure, e.g. "1,988". Omit to drop the SAFE column. */
+  safeValue?: string;
   selected: boolean;
   onPress: () => void;
-  /** Defaults to "{name}, {sub}, {safeLabel} {safeValue}". */
+  /** Defaults to "{name}, {sub}, {safeLabel} {safeValue}", or "{name}, {sub}" without a figure. */
   accessibilityLabel?: string;
   testID?: string;
 }
@@ -38,7 +38,10 @@ export function LedgerOption({
 }: LedgerOptionProps) {
   return (
     <PressableScale
-      accessibilityLabel={accessibilityLabel ?? `${name}, ${sub}, ${safeLabel} ${safeValue}`}
+      accessibilityLabel={
+        accessibilityLabel ??
+        (safeValue === undefined ? `${name}, ${sub}` : `${name}, ${sub}, ${safeLabel} ${safeValue}`)
+      }
       accessibilityRole="radio"
       accessibilityState={{ checked: selected }}
       onPress={onPress}
@@ -63,14 +66,16 @@ export function LedgerOption({
           {sub}
         </Text>
       </View>
-      <View style={styles.safe}>
-        <NativeText maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE} style={styles.safeLabel}>
-          {safeLabel}
-        </NativeText>
-        <NativeText maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE} style={styles.safeValue}>
-          {safeValue}
-        </NativeText>
-      </View>
+      {safeValue === undefined ? null : (
+        <View style={styles.safe}>
+          <NativeText maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE} style={styles.safeLabel}>
+            {safeLabel}
+          </NativeText>
+          <NativeText maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE} style={styles.safeValue}>
+            {safeValue}
+          </NativeText>
+        </View>
+      )}
     </PressableScale>
   );
 }

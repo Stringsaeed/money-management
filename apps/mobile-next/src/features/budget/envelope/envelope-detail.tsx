@@ -11,11 +11,11 @@ import { TransactionListFooter } from "../../ledger/transactions/transaction-lis
 import { CoverMoveSheet } from "../cover/cover-move-sheet";
 import { envelopeMoveRequest } from "../cover/cover-move-model";
 import { useBudgetCurrency } from "../currency/use-budget-currency";
+import { envelopeEmojiOrTag } from "../envelope-emoji";
 import { envelopeLines, type ActiveBudgetView, type EnvelopeLine } from "../home/home-model";
 import { QuickAddSheet } from "../quick-add/quick-add-sheet";
 import { useBudgetRole } from "../role/use-budget-role";
 
-import { envelopeEmoji } from "./envelope-display";
 import { codeAmount } from "./envelope-figures";
 import { EnvelopeHeader } from "./envelope-header";
 import { EnvelopeMenuSheet } from "./envelope-menu-sheet";
@@ -52,7 +52,7 @@ export function EnvelopeDetail({ view, line }: EnvelopeDetailProps) {
   return (
     <Screen edges={["top"]} style={styles.screen}>
       <EnvelopeHeader
-        emoji={envelopeEmoji(envelope, spending.categoriesById)}
+        emoji={envelopeEmojiOrTag(envelope, spending.categoriesById)}
         title={envelope.name}
         onBack={() => router.back()}
         onMore={sheets.openMenu}

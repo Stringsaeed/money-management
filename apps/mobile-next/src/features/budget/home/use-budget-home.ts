@@ -5,12 +5,12 @@ import { dateKey } from "@/utils/date";
 
 import { useBudgetCurrency } from "../currency/use-budget-currency";
 import { useDue } from "../due/use-due";
+import { envelopeEmojiOrTag } from "../envelope-emoji";
 import { useBudgetActivity } from "../household/use-budget-activity";
 import { usePayday } from "../payday/use-payday";
 import { useBudgetRole } from "../role/use-budget-role";
 import { pickAttention } from "./attention";
 import { dueThisWeekCount } from "./due-bell-model";
-import { envelopeEmoji } from "./envelope-emoji";
 import { envelopeLines, type ActiveBudgetView } from "./home-model";
 import { dailyEverydaySpend, everydayAllowanceMinor, spendTicks } from "./spend-ticks";
 import { billsTicket, savingTicket } from "./summary-tickets-model";
@@ -72,7 +72,7 @@ export function useBudgetHome(view: ActiveBudgetView) {
     }),
     dueCount: due.loaded && !due.isError ? dueThisWeekCount(due.sections) : 0,
     emojiFor: (envelope: { readonly categoryIds: readonly string[] }) =>
-      envelopeEmoji(envelope, categoriesById),
+      envelopeEmojiOrTag(envelope, categoriesById),
     bills: billsTicket({
       lines,
       envelopes: view.envelopes,
@@ -82,8 +82,6 @@ export function useBudgetHome(view: ActiveBudgetView) {
       periodEnd: current.period.end,
     }),
     saving,
-    savingEmoji: saving.envelope ? envelopeEmoji(saving.envelope, categoriesById) : "🏠",
+    savingEmoji: saving.envelope ? envelopeEmojiOrTag(saving.envelope, categoriesById) : "🏠",
   };
 }
-
-export type BudgetHomeData = ReturnType<typeof useBudgetHome>;

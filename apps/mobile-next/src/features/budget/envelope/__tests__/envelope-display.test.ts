@@ -1,5 +1,4 @@
 import {
-  envelopeEmoji,
   envelopeHero,
   envelopeReceiptLines,
   overBannerText,
@@ -20,23 +19,6 @@ describe("envelope figures", () => {
     expect(signedCompact(-17_500, "AED")).toBe("−175");
     expect(signedCompact(7_550, "AED")).toBe("75.50");
     expect(codeAmount(17_500, "AED")).toBe("AED 175");
-  });
-});
-
-describe("envelopeEmoji", () => {
-  const categories = new Map([
-    ["slug", { icon: "tag" }],
-    ["food", { icon: "🛒" }],
-    ["eat", { icon: "🍽️" }],
-  ]);
-
-  it("wears the first mapped Category's emoji", () => {
-    expect(envelopeEmoji({ categoryIds: ["missing", "food", "eat"] }, categories)).toBe("🛒");
-  });
-
-  it("falls back to the tag without a mapped Category or for a legacy icon slug", () => {
-    expect(envelopeEmoji({ categoryIds: [] }, categories)).toBe("🏷️");
-    expect(envelopeEmoji({ categoryIds: ["slug", "food"] }, categories)).toBe("🏷️");
   });
 });
 

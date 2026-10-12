@@ -2,7 +2,7 @@ import { compactAmount } from "@/ui/trove";
 
 import type { V2Category } from "@trove/api/v2/contracts";
 
-import { envelopeEmoji } from "../envelope/envelope-display";
+import { envelopeEmojiOrTag } from "../envelope-emoji";
 import { receiptFigure, signedCompact } from "../envelope/envelope-figures";
 import type { EnvelopeLine } from "../home/home-model";
 
@@ -25,7 +25,7 @@ export function placeEmojis(
 ): ReadonlyMap<string, string> {
   const emojis = new Map<string, string>([[UNPLANNED_KEY, NOT_PLANNED_EMOJI]]);
   for (const { envelope } of lines)
-    emojis.set(envelope.id, envelopeEmoji(envelope, categoriesById));
+    emojis.set(envelope.id, envelopeEmojiOrTag(envelope, categoriesById));
   return emojis;
 }
 

@@ -4,9 +4,8 @@ import type { V2EnvelopeGroup } from "@trove/api/v2/contracts";
 
 import { DENSE_MAX_FONT_SCALE, PlanAmountRow, Text } from "@/ui/trove";
 
+import { GROUP_LABEL } from "../envelope-groups";
 import type { EnvelopeLine } from "../home/home-model";
-
-import { GROUP_LABEL } from "./envelope-emoji";
 
 interface PlanAdjustGroupProps {
   readonly group: V2EnvelopeGroup;

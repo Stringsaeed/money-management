@@ -2,7 +2,8 @@ import { StyleSheet, Text as NativeText, View } from "react-native";
 
 import { colors, compactAmount, DENSE_MAX_FONT_SCALE, fonts, Text } from "@/ui/trove";
 
-import { GROUP_LABEL } from "./envelope-emoji";
+import { GROUP_LABEL } from "../envelope-groups";
+
 import { codeAmount } from "./payday-money";
 import { PaydayPill } from "./payday-pill";
 import { repeatGroups, type RepeatPlan } from "./repeat-plan-model";

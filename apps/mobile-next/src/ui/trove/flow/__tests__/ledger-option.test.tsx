@@ -39,4 +39,20 @@ describe("LedgerOption", () => {
       { checked: false },
     );
   });
+
+  it("drops the SAFE column without a figure", async () => {
+    await render(
+      <LedgerOption
+        emoji="🏠"
+        name="Household"
+        onPress={jest.fn()}
+        selected={false}
+        sub="With Sara · shared accounts only"
+      />,
+    );
+    expect(
+      screen.getByRole("radio", { name: "Household, With Sara · shared accounts only" }),
+    ).toBeTruthy();
+    expect(screen.queryByText("SAFE")).toBeNull();
+  });
 });
