@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 
-import { ProfileScreen } from "@/features/auth/profile-screen";
+import { SettingsScreen } from "@/features/settings";
 
 export default function SettingsRoute() {
-  return <ProfileScreen onBack={() => router.back()} />;
+  return <SettingsScreen onBack={() => router.back()} />;
 }

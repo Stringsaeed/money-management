@@ -7,6 +7,7 @@ import * as SplashScreen from "expo-splash-screen";
 import {
   useFonts,
   Nunito_400Regular,
+  Nunito_600SemiBold,
   Nunito_700Bold,
   Nunito_800ExtraBold,
 } from "@expo-google-fonts/nunito";
@@ -34,6 +35,7 @@ startBudgetingFlag();
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
+    Nunito_600SemiBold,
     Nunito_700Bold,
     Nunito_800ExtraBold,
     IBMPlexMono_400Regular,
