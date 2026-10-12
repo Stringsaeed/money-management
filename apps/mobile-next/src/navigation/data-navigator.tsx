@@ -1,7 +1,8 @@
+import { Platform } from "react-native";
 import { Stack } from "expo-router";
 import type { QueryClient } from "@tanstack/react-query";
 import { LedgerDataProvider } from "@/data/ledger-queries";
-import { colors, fonts } from "@/ui/trove";
+import { colors, fonts, useNativeHeaderStyle } from "@/ui/trove";
 import { useBudgetingEnabled } from "@/features/feature-flags";
 import { useReminderTapRouting } from "@/features/budget/reminders/use-reminder-tap-routing";
 import { useLedgerScope } from "./ledger-scope-context";
@@ -17,6 +18,20 @@ const editorOptions = { presentation: "modal", headerShown: false } as const;
 /** Pushed screens draw the Trove compact Header (back, title, actions) themselves. */
 const pushedOptions = { headerShown: false } as const;
 
+/**
+ * Settings uses the native stack header: an iOS large title over the scroll view, which insets
+ * its own content. Android keeps an opaque bar, so content starts below it. Colors come from
+ * `useNativeHeaderStyle`, because native header props reject dynamic colors.
+ */
+const settingsOptions = {
+  headerShown: true,
+  title: "Settings",
+  headerLargeTitleEnabled: true,
+  headerLargeTitleShadowVisible: false,
+  headerBackButtonDisplayMode: "minimal",
+  headerTransparent: Platform.OS === "ios",
+} as const;
+
 const screenOptions = {
   headerStyle: { backgroundColor: colors.bg.canvas },
   headerTintColor: colors.text.primary,
@@ -28,6 +43,7 @@ const screenOptions = {
 export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) => {
   const { scope } = useLedgerScope();
   const budgeting = useBudgetingEnabled();
+  const headerStyle = useNativeHeaderStyle();
   useReminderTapRouting(identityKey);
   const scopeKey = scope.kind === "personal" ? "personal" : scope.householdId;
   return (
@@ -63,7 +79,7 @@ export const DataNavigator = ({ queryClient, identityKey }: DataNavigatorProps) 
         <Stack.Screen name="recurring/index" options={pushedOptions} />
         <Stack.Screen name="recurring/[id]" options={{ ...pushedOptions, presentation: "modal" }} />
         <Stack.Screen name="household" options={pushedOptions} />
-        <Stack.Screen name="settings" options={pushedOptions} />
+        <Stack.Screen name="settings" options={{ ...settingsOptions, ...headerStyle }} />
         <Stack.Protected guard={budgeting}>
           <Stack.Screen name="budget/setup/payday" options={pushedOptions} />
           <Stack.Screen name="budget/setup/items" options={pushedOptions} />

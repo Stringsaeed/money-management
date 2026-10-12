@@ -130,7 +130,14 @@ export type {
   TransactionRowProps,
   UpcomingRowProps,
 } from "./data";
-export { Chip, FilterButton, Header, SegmentedControl, Sheet } from "./navigation";
+export {
+  Chip,
+  FilterButton,
+  Header,
+  SegmentedControl,
+  Sheet,
+  useNativeHeaderStyle,
+} from "./navigation";
 export type {
   ChipProps,
   CompactHeaderProps,
