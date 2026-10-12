@@ -20,8 +20,11 @@ const THUMB = TRACK_HEIGHT - TRACK_PADDING * 2;
 const TRAVEL = TRACK_WIDTH - TRACK_PADDING * 2 - THUMB;
 /** Lifts the 28pt track to the 44pt touch target. */
 const HIT_SLOP = { top: 8, bottom: 8, left: 4, right: 4 } as const;
+const THUMB_SHADOW = [
+  { offsetX: 0, offsetY: 1, blurRadius: space[0.5], color: colors.elevation.shadow2 },
+];
 
-/** 48×28 pill switch: accent track when on, strong border tone when off, white thumb. */
+/** 48×28 pill switch: accent track and accent-on thumb when on; strong border tone and paper thumb when off. */
 export function Switch({
   value,
   onValueChange,
@@ -45,7 +48,10 @@ export function Switch({
       <View style={[styles.track, track]}>
         <EaseView
           animate={{ translateX: value ? TRAVEL : 0 }}
-          style={[styles.thumb, disabled ? styles.thumbDisabled : styles.thumbEnabled]}
+          style={[
+            styles.thumb,
+            disabled ? styles.thumbDisabled : value ? styles.thumbOn : styles.thumbOff,
+          ]}
           transition={troveTransition(reducedMotion, motion.base)}
         />
       </View>
@@ -65,11 +71,7 @@ const styles = StyleSheet.create({
   trackOff: { backgroundColor: colors.border.strong },
   trackDisabled: { backgroundColor: colors.fill.disabled },
   thumb: { borderRadius: radius.full, height: THUMB, width: THUMB },
-  thumbEnabled: {
-    backgroundColor: colors.surface.paper,
-    boxShadow: [
-      { offsetX: 0, offsetY: 1, blurRadius: space[0.5], color: colors.elevation.shadow2 },
-    ],
-  },
+  thumbOn: { backgroundColor: colors.accent.on, boxShadow: THUMB_SHADOW },
+  thumbOff: { backgroundColor: colors.surface.paper, boxShadow: THUMB_SHADOW },
   thumbDisabled: { backgroundColor: colors.text.disabled },
 });

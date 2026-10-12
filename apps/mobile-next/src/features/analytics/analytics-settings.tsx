@@ -1,16 +1,19 @@
-import { ListGroup, ListRow, Switch } from "@/ui/trove";
+import { SettingsRow, SettingsSection, Switch } from "@/ui/trove";
 
 import { setAnalyticsSharing } from "./analytics-store";
 import { useAnalyticsSharing } from "./use-analytics-sharing";
 
-/** Settings row: opt in or out of anonymous usage analytics. */
+/** Settings section: opt in or out of anonymous usage analytics. */
 export function AnalyticsSettings() {
   const sharing = useAnalyticsSharing();
 
   return (
-    <ListGroup dividerInset={0}>
-      <ListRow
-        subtitle="Helps us improve budgeting. Never includes amounts, payees, notes, or account names."
+    <SettingsSection
+      footer="Helps us improve budgeting. Never includes amounts, payees, notes, or account names."
+      title="Analytics"
+    >
+      <SettingsRow
+        icon="chart-bar"
         title="Share anonymous usage"
         trailing={
           <Switch
@@ -20,6 +23,6 @@ export function AnalyticsSettings() {
           />
         }
       />
-    </ListGroup>
+    </SettingsSection>
   );
 }

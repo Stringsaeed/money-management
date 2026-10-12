@@ -6,10 +6,12 @@ import { Platform, type TextStyle } from "react-native";
  *
  * Android won't synthesize weights for custom fonts, so each weight is its own family.
  * Nunito is embedded natively on iOS (PostScript names) and loaded by `useFonts` on
- * Android; Plex Mono is loaded by `useFonts` on both.
+ * Android; Nunito SemiBold and Plex Mono are loaded by `useFonts` on both.
  */
 export const fonts = {
   regular: Platform.select({ ios: "Nunito-Regular", default: "Nunito_400Regular" }),
+  /** Settings row titles. */
+  semibold: "Nunito_600SemiBold",
   bold: Platform.select({ ios: "Nunito-Bold", default: "Nunito_700Bold" }),
   extrabold: Platform.select({ ios: "Nunito-ExtraBold", default: "Nunito_800ExtraBold" }),
   mono: "IBMPlexMono_400Regular",
