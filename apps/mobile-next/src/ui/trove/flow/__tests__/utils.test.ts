@@ -3,6 +3,7 @@ import {
   chipPadding,
   chipRingWidth,
   kindThumbLayout,
+  planFigureFit,
   labelWithMeta,
   stepSegments,
 } from "../utils";
@@ -72,5 +73,14 @@ describe("actionBarLayout", () => {
 
   it("puts a left slot beside the primary otherwise", () => {
     expect(actionBarLayout({})).toBe("row");
+  });
+});
+
+describe("planFigureFit", () => {
+  it("steps the plan pill figure down as it grows", () => {
+    expect(planFigureFit("0")).toBe("md");
+    expect(planFigureFit("1,600.00")).toBe("md");
+    expect(planFigureFit("150,000.00")).toBe("sm");
+    expect(planFigureFit("1,500,000.00")).toBe("xs");
   });
 });

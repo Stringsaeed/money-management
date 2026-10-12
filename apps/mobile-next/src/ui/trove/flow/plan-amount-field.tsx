@@ -6,6 +6,7 @@ import {
   View,
   type BlurEvent,
   type FocusEvent,
+  type TextStyle,
 } from "react-native";
 
 import { currencyFractionDigits } from "../amount";
@@ -14,6 +15,7 @@ import { formatAmountDisplay, sanitizeAmountInput } from "../controls/amount-inp
 import { useFocusState } from "../controls/use-focus-state";
 import { useKeyboardAccessory } from "../pickers/use-keyboard-accessory";
 import { colors, DENSE_MAX_FONT_SCALE, fonts, radius } from "../tokens";
+import { planFigureFit, type PlanFigureFit } from "./utils";
 
 export interface PlanAmountFieldProps {
   value: string;
@@ -60,6 +62,7 @@ export function PlanAmountField({
   });
   const fractionDigits = currencyFractionDigits(currency);
   const empty = value === "";
+  const figure = empty ? "0" : formatAmountDisplay(value);
 
   return (
     <View style={[styles.field, focus.focused ? styles.focused : styles.idle]}>
@@ -69,13 +72,15 @@ export function PlanAmountField({
         style={styles.display}
       >
         <NativeText
-          adjustsFontSizeToFit
           maxFontSizeMultiplier={DENSE_MAX_FONT_SCALE}
-          minimumFontScale={0.7}
           numberOfLines={1}
-          style={[styles.figure, empty ? styles.placeholder : null]}
+          style={[
+            styles.figure,
+            FIGURE_FIT[planFigureFit(figure)],
+            empty ? styles.placeholder : null,
+          ]}
         >
-          {empty ? "0" : formatAmountDisplay(value)}
+          {figure}
         </NativeText>
         {focus.focused ? <AmountCaret size="field" /> : null}
       </View>
@@ -119,6 +124,10 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   placeholder: { color: colors.text.tertiary },
+  // Fixed steps instead of adjustsFontSizeToFit, which can shrink a lone "0" to a dot on iOS.
+  fitMd: {},
+  fitSm: { fontSize: 14, lineHeight: 18 },
+  fitXs: { fontSize: 12, lineHeight: 16 },
   // Invisible but focusable: the native input owns typing, paste and accessibility.
   input: {
     bottom: 0,
@@ -129,3 +138,9 @@ const styles = StyleSheet.create({
     top: 0,
   },
 });
+
+const FIGURE_FIT = {
+  md: styles.fitMd,
+  sm: styles.fitSm,
+  xs: styles.fitXs,
+} as const satisfies Record<PlanFigureFit, TextStyle>;

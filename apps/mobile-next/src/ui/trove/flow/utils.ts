@@ -82,3 +82,15 @@ export function actionBarLayout({ caption, secondary }: ActionBarSlots): ActionB
   if (!secondary) return "row";
   return secondary.appearance ?? "outline";
 }
+
+export type PlanFigureFit = "md" | "sm" | "xs";
+
+/**
+ * Size step for a plan amount pill: 16pt fits 8 Plex Mono characters in its 84pt figure box
+ * ("1,600.00"), 14pt fits 10 ("150,000.00") and 12pt the rest.
+ */
+export function planFigureFit(figure: string): PlanFigureFit {
+  if (figure.length <= 8) return "md";
+  if (figure.length <= 10) return "sm";
+  return "xs";
+}
