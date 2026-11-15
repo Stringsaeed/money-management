@@ -6,8 +6,8 @@ const nunitoFont = (weightDir: string, file: string) =>
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "Trove Next",
-  slug: "trove-next",
+  name: "Trove",
+  slug: "money-management",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
@@ -15,7 +15,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: "automatic",
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.stringsaeed.moneymanagement.next",
+    bundleIdentifier: "com.stringsaeed.moneymanagement",
+    appleTeamId: "V3HN8HXZYK",
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
       CADisableMinimumFrameDurationOnPhone: true,
@@ -33,7 +34,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       monochromeImage: "./assets/images/android-icon-monochrome.png",
     },
     predictiveBackGestureEnabled: false,
-    package: "com.stringsaeed.moneymanagement.next",
+    package: "com.stringsaeed.moneymanagement",
   },
   plugins: [
     "expo-router",
@@ -107,8 +108,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   extra: {
     router: {},
+    eas: {
+      projectId: "a33b24c0-b380-4d0a-8ce6-b2f4b61da346",
+    },
+  },
+  updates: {
+    checkAutomatically: "ON_ERROR_RECOVERY",
+    url: "https://u.expo.dev/a33b24c0-b380-4d0a-8ce6-b2f4b61da346",
   },
   runtimeVersion: {
+    // EAS generates the ignored native directories during CNG builds, which
+    // makes the experimental fingerprint policy resolve differently locally
+    // and on EAS. Bump `version` for every native/public release.
     policy: "appVersion",
   },
 });
