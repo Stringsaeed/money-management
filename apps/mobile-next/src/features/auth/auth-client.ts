@@ -16,7 +16,6 @@ const AUTHORIZE_URL = "https://api.workos.com/user_management/authorize";
 const AUTHENTICATE_URL = "https://api.workos.com/user_management/authenticate";
 
 const REGISTERED_SESSION_KEY = "trove-next.workos.session";
-const LEGACY_REGISTERED_SESSION_KEY = "trove.workos.session";
 const GUEST_SESSION_KEY = "trove-next.guest.session";
 const PKCE_KEY = "trove-next.workos.pkce";
 const PKCE_TTL_MS = 10 * 60 * 1000;
@@ -39,17 +38,6 @@ const registeredSessionSchema = z.object({
   principal: signedInPrincipalSchema,
   accessToken: z.string().min(1),
   refreshToken: z.string().min(1),
-  expiresAt: z.number().int().positive(),
-});
-
-const legacyRegisteredSessionSchema = z.object({
-  accessToken: z.string().min(1),
-  refreshToken: z.string().min(1),
-  user: z.object({
-    id: z.string().min(1),
-    email: z.string().email(),
-    name: z.string(),
-  }),
   expiresAt: z.number().int().positive(),
 });
 
@@ -186,44 +174,9 @@ function registeredSessionFromResponse(
   });
 }
 
-function registeredSessionFromLegacy(raw: string): StoredRegisteredSession | null {
-  try {
-    const legacy = legacyRegisteredSessionSchema.safeParse(JSON.parse(raw));
-    if (!legacy.success) return null;
-    const session = registeredSessionSchema.safeParse({
-      principal: {
-        kind: "user",
-        userId: legacy.data.user.id,
-        workosUserId: legacy.data.user.id,
-        email: legacy.data.user.email,
-        name: legacy.data.user.name.trim() || legacy.data.user.email,
-      },
-      accessToken: legacy.data.accessToken,
-      refreshToken: legacy.data.refreshToken,
-      expiresAt: legacy.data.expiresAt,
-    });
-    return session.success ? session.data : null;
-  } catch {
-    return null;
-  }
-}
-
-async function readRegisteredSessionRaw(): Promise<string | null> {
-  const current = await SecureStore.getItemAsync(REGISTERED_SESSION_KEY);
-  if (current) return current;
-  const legacyRaw = await SecureStore.getItemAsync(LEGACY_REGISTERED_SESSION_KEY);
-  if (!legacyRaw) return null;
-  const migrated = registeredSessionFromLegacy(legacyRaw);
-  if (!migrated) return null;
-  const stored = JSON.stringify(migrated);
-  await SecureStore.setItemAsync(REGISTERED_SESSION_KEY, stored);
-  await SecureStore.deleteItemAsync(LEGACY_REGISTERED_SESSION_KEY);
-  return stored;
-}
-
 async function loadStoredSessions(): Promise<void> {
   const [registeredRaw, guestRaw] = await Promise.all([
-    readRegisteredSessionRaw(),
+    SecureStore.getItemAsync(REGISTERED_SESSION_KEY),
     SecureStore.getItemAsync(GUEST_SESSION_KEY),
   ]);
   const parseStored = <T>(raw: string | null, schema: z.ZodType<T>): T | null => {
