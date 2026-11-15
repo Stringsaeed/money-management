@@ -1,105 +1,74 @@
-import { router } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { useCategoriesQuery } from "@/data/ledger-queries";
+import { ActionBar, Text } from "@/ui/trove";
 
-import { track } from "@/features/analytics";
-import { Amount, Button, showToast, space, Text } from "@/ui/trove";
-
-import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
+import { useBudgetCurrency } from "../currency/use-budget-currency";
 import { PanelError } from "../envelope/panel-error";
-import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
+import type { ActiveBudgetView } from "../home/home-model";
 import { PLAN_ADMIN_ONLY } from "../role/budget-role";
-import { SetupFrame } from "../setup/setup-frame";
 
-import { BUDGET_HOME_ROUTE } from "./payday-flow";
-import { PlanGroups } from "./plan-groups";
-import { pluralEnvelopes, RepeatCard } from "./repeat-card";
-import { usePlanMonth } from "./use-plan-month";
+import { MoneyToPlanReceipt } from "./money-to-plan-receipt";
+import { planPeriodStamp } from "./payday-copy";
+import { paydayFlowFacts, paydayStepPosition } from "./payday-flow";
+import { stepLeading } from "./payday-nav";
+import { PaydayStepFrame } from "./payday-step-frame";
+import { PlanChoices } from "./plan-choices";
+import { moneyToPlan } from "./plan-month-model";
+import { StepTitle } from "./step-title";
+import { usePlanMonthScreen } from "./use-plan-month-screen";
 
 /**
- * C3: plan the new month with the money you have; Repeat last month's plan is one atomic batch.
- * Repeat sets plan amounts, so only someone who can edit the plan sees it.
+ * C3: plan the new month with the money you have, by repeating last month's plan (one atomic
+ * batch) or by typing the amounts. Both set plan amounts, so only someone who can edit the plan
+ * sees them.
  */
 export function PlanMonthContent({ view }: { readonly view: ActiveBudgetView }) {
-  const money = useBudgetMoney();
   const currency = useBudgetCurrency();
-  const month = usePlanMonth(view);
-  const { plan, lastMonth, repeatAccess } = month;
-  const { unassignedMinor } = view.current;
-  const offerRepeat = repeatAccess === "offered";
-
-  const finish = () => router.dismissTo(BUDGET_HOME_ROUTE);
-  const repeat = async () => {
-    if (!(await month.repeat())) return;
-    track("plan_repeated", {});
-    showToast({
-      message: `Planned ${money(plan.totalMinor)} across ${pluralEnvelopes(plan.items.length)}`,
-    });
-    finish();
-  };
+  const categories = useCategoriesQuery();
+  const screen = usePlanMonthScreen(view);
+  const { month } = screen;
+  const { current } = view;
+  const position = paydayStepPosition("plan", paydayFlowFacts(view));
+  const plannedMinor = current.envelopes.reduce((total, totals) => total + totals.plannedMinor, 0);
 
   return (
-    <SetupFrame
-      header="Plan new month"
-      step="Plan new month"
-      title="Money to plan"
-      intro="Only money you have counts. Your expected salary is never planned before it lands."
+    <PaydayStepFrame
+      {...stepLeading(position.first)}
       footer={
-        <>
-          <PanelError message={month.error} />
-          {offerRepeat ? (
-            <Button
-              fullWidth
-              label="Repeat last month's plan"
-              loading={month.busy}
-              disabled={lastMonth !== "ready" || !plan.canRepeat}
-              onPress={() => void repeat()}
-            />
-          ) : null}
-          <Button
-            fullWidth
-            label={offerRepeat ? "Plan later" : "Done"}
-            variant={offerRepeat ? "tertiary" : "primary"}
-            onPress={finish}
-          />
-        </>
+        <ActionBar
+          caption="Only money you have. Expected income never counts."
+          primary={{ ...screen.button, loading: screen.busy, onPress: screen.run }}
+        />
       }
+      of={position.of}
+      step={position.step}
+      tag="NEW MONTH"
     >
-      <View accessible accessibilityLiveRegion="polite" style={styles.hero}>
-        <Text tone="secondary" variant="labelSm">
-          Money to plan
+      <StepTitle meta={planPeriodStamp(current.period)} title="Plan your new month" />
+      <MoneyToPlanReceipt
+        currency={currency}
+        lines={moneyToPlan(current.unassignedMinor, plannedMinor, month.incomeMinor)}
+        periodStart={current.period.start}
+        totalMinor={current.unassignedMinor}
+      />
+      {current.unassignedMinor < 0 ? (
+        <Text accessibilityRole="alert" tone="negative" variant="bodySm">
+          You&apos;ve planned or spent more than you have. Lower an envelope below.
         </Text>
-        <Amount
-          currency={currency}
-          minor={unassignedMinor}
-          size="hero"
-          tone={unassignedMinor < 0 ? "negative" : "primary"}
-        />
-        {unassignedMinor < 0 ? (
-          <Text tone="negative" variant="bodySm">
-            You&apos;ve planned or spent more than you have. Lower an envelope below.
-          </Text>
-        ) : null}
-      </View>
-      {offerRepeat && lastMonth !== "none" ? (
-        <RepeatCard
-          plan={plan}
-          lastMonth={lastMonth}
-          onRetry={() => void month.retryLastMonth()}
-          onAdjust={finish}
-        />
-      ) : repeatAccess === "refused" ? (
+      ) : null}
+      {month.planAccess === "refused" ? (
         <Text tone="secondary" variant="bodySm">
           {PLAN_ADMIN_ONLY}
         </Text>
       ) : null}
-      <PlanGroups lines={envelopeLines(view)} />
-      <Text variant="bodySm" tone="secondary">
-        Salary late? Plan with what you have now. You can plan more any time once it lands.
-      </Text>
-    </SetupFrame>
+      <PlanChoices
+        adjust={screen.adjust}
+        categories={categories.data}
+        currency={currency}
+        mode={screen.mode}
+        month={month}
+        onMode={screen.setMode}
+      />
+      <PanelError message={screen.error} />
+    </PaydayStepFrame>
   );
 }
-
-const styles = StyleSheet.create({
-  hero: { gap: space[1] },
-});

@@ -1,22 +1,23 @@
 import { router } from "expo-router";
-import { StyleSheet, View } from "react-native";
 
-import { space, Text } from "@/ui/trove";
+import type { V2Envelope } from "@trove/api/v2/contracts";
 
-import type { EnvelopeLine } from "../home/home-model";
+import { Text } from "@/ui/trove";
 
-import { savingRows } from "./bills-model";
+import type { SavingRow as SavingRowData } from "./bills-model";
 import { SavingRow } from "./saving-row";
 
 interface NextYearListProps {
-  readonly lines: readonly EnvelopeLine[];
+  readonly rows: readonly SavingRowData[];
+  readonly iconFor: (envelope: V2Envelope) => string;
+  readonly currency: string;
+  readonly today: string;
   /** Absent when the caller may not mark payments paid. */
   readonly onMarkPaid?: (envelopeId: string) => void;
 }
 
 /** B1 "Next 12 months": Saving-for envelopes, soonest due first. */
-export function NextYearList({ lines, onMarkPaid }: NextYearListProps) {
-  const rows = savingRows(lines);
+export function NextYearList({ rows, iconFor, currency, today, onMarkPaid }: NextYearListProps) {
   if (rows.length === 0) {
     return (
       <Text variant="bodySm" tone="secondary">
@@ -25,23 +26,20 @@ export function NextYearList({ lines, onMarkPaid }: NextYearListProps) {
       </Text>
     );
   }
-  return (
-    <View style={styles.list}>
-      {rows.map((row) => (
-        <SavingRow
-          key={row.line.envelope.id}
-          row={row}
-          onPress={() =>
-            router.push({
-              pathname: "/budget/envelope/[id]",
-              params: { id: row.line.envelope.id },
-            })
-          }
-          onMarkPaid={onMarkPaid ? () => onMarkPaid(row.line.envelope.id) : undefined}
-        />
-      ))}
-    </View>
-  );
+  return rows.map((row) => {
+    const { envelope } = row.line;
+    return (
+      <SavingRow
+        key={envelope.id}
+        row={row}
+        icon={iconFor(envelope)}
+        currency={currency}
+        today={today}
+        onPress={() =>
+          router.push({ pathname: "/budget/envelope/[id]", params: { id: envelope.id } })
+        }
+        onMarkPaid={onMarkPaid ? () => onMarkPaid(envelope.id) : undefined}
+      />
+    );
+  });
 }
-
-const styles = StyleSheet.create({ list: { gap: space[2] } });

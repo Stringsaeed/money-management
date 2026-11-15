@@ -276,7 +276,13 @@ const envelopeInputFields = {
   group: envelopeGroupSchema,
   /** An existing expense Category, or `newCategory` to reuse-or-create one by name. */
   categoryId: entityIdSchema.optional(),
-  newCategory: z.object({ name: z.string().trim().min(1).max(120) }).optional(),
+  newCategory: z
+    .object({
+      name: z.string().trim().min(1).max(120),
+      /** Emoji or icon for a Category this creates; an existing one keeps its own. */
+      icon: z.string().trim().min(1).max(64).optional(),
+    })
+    .optional(),
   targetMinor: positiveMoneyMinorSchema.optional(),
   dueDate: ledgerDateSchema.optional(),
   repeat: envelopeRepeatSchema.optional(),

@@ -42,3 +42,31 @@ export const GROUP_LABELS = {
   everyday: "Everyday",
   saving: "Saving for",
 } as const satisfies Record<V2EnvelopeGroup, string>;
+
+/** What each group is, under its stamp on What it's for. */
+export const GROUP_HINTS = {
+  bills: "Same amount, same day, every month.",
+  everyday: "What you spend as you go. This is your Safe to spend.",
+  saving: "Big payments, set aside a little every payday.",
+} as const satisfies Record<V2EnvelopeGroup, string>;
+
+/** The dashed add chip closing each group. */
+export const GROUP_ADD_LABELS = {
+  bills: "Add a bill",
+  everyday: "Add your own",
+  saving: "Add a big payment",
+} as const satisfies Record<V2EnvelopeGroup, string>;
+
+/** Placeholder of the name field an add chip opens. */
+export const GROUP_ADD_PLACEHOLDERS = {
+  bills: "Netflix, internet, insurance",
+  everyday: "Gym, pets, gifts",
+  saving: "Car service, flights home",
+} as const satisfies Record<V2EnvelopeGroup, string>;
+
+/** Leading emoji of each group's line on the review receipt. */
+export const GROUP_RECEIPT_EMOJI = {
+  bills: "🧾",
+  everyday: "🛒",
+  saving: "🏠",
+} as const satisfies Record<V2EnvelopeGroup, string>;

@@ -1,62 +1,73 @@
 import { router } from "expo-router";
 import { useRef } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { track } from "@/features/analytics";
 import { useBudgetQuery } from "@/data/ledger-queries";
-import { EmptyState, Header, layout, Screen, space } from "@/ui/trove";
+import { track } from "@/features/analytics";
+import { layout, Screen } from "@/ui/trove";
 
 import { BudgetIntro } from "./budget-intro";
-import { CurrencySwitch } from "./currency/currency-switch";
-import { StartBudgetPrompt } from "./currency/start-budget-prompt";
-import { BudgetScopeLabel } from "./household/budget-scope-label";
-import { useBudgetRole } from "./role/use-budget-role";
+import { BudgetLoadError } from "./budget-load-error";
+import { BudgetHeader } from "./home/budget-header";
 import { BudgetHome } from "./home/budget-home";
-import { BudgetHomeError } from "./home/budget-home-error";
-import { BudgetHomeSkeleton } from "./home/budget-home-skeleton";
+import { BudgetHomeLoading } from "./home/budget-home-loading";
+import { stampDate } from "./home/budget-stamp";
+import { useBudgetRole } from "./role/use-budget-role";
 import { setupHref } from "./setup/setup-routes";
 import { useSetupDraft } from "./setup/use-setup-draft";
+
+/** Board top padding 58 less the 47pt status bar: the header sits 11pt under the safe area. */
+const TOP_GAP = 11;
+/** The floating tab bar plus the board's room above it (padding-bottom 130 = 34 inset + 96). */
+const TAB_BAR_CLEARANCE = 96;
+/** The board's gap between the header and the first section. */
+const SECTION_GAP = 18;
+
+const openDue = () => router.push("/budget/due");
 
 /** The Budget tab: the intro while there is no budget, Budget home once there is one. */
 export function BudgetTabScreen() {
   const budget = useBudgetQuery();
   const setup = useSetupDraft();
   const { canEditPlan, loading: roleLoading } = useBudgetRole();
+  const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
+  const retry = () => void budget.retry();
+  const active = budget.data?.budget ? budget.data : null;
 
   return (
     <Screen edges={["top"]}>
-      <View style={styles.header}>
-        <Header title="Budget" />
-      </View>
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: insets.bottom + TAB_BAR_CLEARANCE },
+        ]}
         showsVerticalScrollIndicator={false}
       >
-        <BudgetScopeLabel />
-        <CurrencySwitch />
         {budget.isError && !budget.data ? (
-          <EmptyState
-            title="Couldn't load your budget"
-            message="Check your connection and try again."
-            actionLabel="Try again"
-            onAction={() => void budget.retry()}
-            framed={false}
+          <View style={styles.column}>
+            <BudgetHeader bell={{ count: 0, onPress: openDue }} stamp={stampDate(new Date())} />
+            <BudgetLoadError stale={false} onRetry={retry} />
+          </View>
+        ) : budget.isError && active ? (
+          <BudgetHome
+            key={active.budget.currency}
+            onRetry={retry}
+            scrollToY={(y) => scrollRef.current?.scrollTo({ y, animated: true })}
+            stale
+            view={active}
           />
-        ) : budget.isError && budget.data?.budget ? (
-          <BudgetHomeError onRetry={() => void budget.retry()} />
         ) : !budget.data || !setup.ready ? (
-          <BudgetHomeSkeleton />
-        ) : budget.data.budget ? (
-          <>
-            <BudgetHome
-              key={budget.data.budget.currency}
-              view={budget.data}
-              scrollToY={(y) => scrollRef.current?.scrollTo({ y, animated: true })}
-            />
-            <StartBudgetPrompt />
-          </>
+          <BudgetHomeLoading stamp={stampDate(new Date())} />
+        ) : active ? (
+          <BudgetHome
+            key={active.budget.currency}
+            onRetry={retry}
+            scrollToY={(y) => scrollRef.current?.scrollTo({ y, animated: true })}
+            view={active}
+          />
         ) : (
           <BudgetIntro
             hasDraft={setup.exists}
@@ -75,10 +86,6 @@ export function BudgetTabScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { paddingHorizontal: layout.screenGutter },
-  content: {
-    gap: space[4],
-    paddingBottom: space[16] + space[8],
-    paddingHorizontal: layout.screenGutter,
-  },
+  content: { paddingHorizontal: layout.screenGutter, paddingTop: TOP_GAP },
+  column: { gap: SECTION_GAP },
 });

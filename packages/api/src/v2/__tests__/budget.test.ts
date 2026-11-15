@@ -170,11 +170,16 @@ describe("V2 budget activation over HTTP", () => {
     fundingAccountIds: ["current"],
     envelopes: [
       { name: "Groceries", group: "everyday", categoryId: "groceries", plannedMinor: 100_000 },
-      { name: "Rent", group: "bills", newCategory: { name: "rent" }, plannedMinor: 500_000 },
+      {
+        name: "Rent",
+        group: "bills",
+        newCategory: { name: "rent", icon: "🏠" },
+        plannedMinor: 500_000,
+      },
       {
         name: "Ramadan & Eid",
         group: "saving",
-        newCategory: { name: "Ramadan & Eid" },
+        newCategory: { name: "Ramadan & Eid", icon: "🌙" },
         plannedMinor: 50_000,
         targetMinor: 300_000,
         dueDate: "2027-03-01",
@@ -210,6 +215,12 @@ describe("V2 budget activation over HTTP", () => {
       "rent",
       expect.any(String),
     ]);
+    // A created Category takes the given icon; the reused Rent keeps its own.
+    const icons = new Map(
+      (await db.select().from(v2Category)).map((row) => [row.name, row.icon] as const),
+    );
+    expect(icons.get("Ramadan & Eid")).toBe("🌙");
+    expect(icons.get("Rent")).not.toBe("🏠");
 
     // cash = 1,000,000 - 20,000 - 30,000 - 4,000 = 946,000
     // Groceries left = 100,000 - (30,000 + 10,000 card) = 60,000; Rent 500,000; Eid 70,000

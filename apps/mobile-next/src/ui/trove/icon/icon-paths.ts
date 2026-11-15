@@ -79,6 +79,8 @@ export const UI_ICONS = {
   calendar: rect(4, 5.5, 16, 14.5, 2.5) + "M4 10h16M8.5 3.5v4M15.5 3.5v4",
   note: "M14.5 5.5l4 4M4 20l1-4.5L15.8 4.7a1.8 1.8 0 0 1 2.5 0l1 1a1.8 1.8 0 0 1 0 2.5L8.5 19z",
   recurring: "M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4",
+  /** Retry after an error: an open clockwise arc with its arrowhead at the top right. */
+  retry: "M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6",
   category: "M4 6h16M4 12h16M4 18h16",
   tag,
   transfer: "M7 4.5L3.5 8 7 11.5M3.5 8h17M17 12.5l3.5 3.5-3.5 3.5M20.5 16h-17",

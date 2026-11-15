@@ -33,3 +33,8 @@ export function activitySentence(
   const clause = moveClause(item.fromName, item.toName, item.reason, money(item.amountMinor));
   return `${personName(item)} ${clause}`;
 }
+
+/** The mover's initial for an avatar disc, e.g. "S"; "Someone" gives "S". */
+export function activityInitial(item: V2BudgetActivityItem): string {
+  return personName(item).charAt(0).toUpperCase();
+}

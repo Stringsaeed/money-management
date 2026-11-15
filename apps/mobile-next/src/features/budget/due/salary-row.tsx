@@ -1,38 +1,31 @@
-import { StyleSheet, View } from "react-native";
-
-import { Amount, Card, space, Text } from "@/ui/trove";
+import { amountParts } from "@/ui/trove";
 
 import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
+
 import { dueDateLabel } from "./due-date-label";
+import { dueWhen } from "./due-display";
+import { DueListRow } from "./due-list-row";
 
 interface SalaryRowProps {
   readonly amountMinor: number;
   readonly payday: string;
 }
 
+const NOTE = { text: "Not counted until you tap Got paid", tone: "tertiary" } as const;
+
 /** The usual salary, shown for information: it is not budget money until Got paid posts it. */
 export function SalaryRow({ amountMinor, payday }: SalaryRowProps) {
   const money = useBudgetMoney();
   const currency = useBudgetCurrency();
-  const amount = money(amountMinor);
   return (
-    <Card
-      accessible
-      accessibilityLabel={`Expected salary ${amount} on ${dueDateLabel(payday)}. Not counted until you tap Got paid.`}
-      style={styles.card}
-    >
-      <View style={styles.top}>
-        <Text variant="labelMd">Expected salary</Text>
-        <Amount currency={currency} minor={amountMinor} />
-      </View>
-      <Text tone="secondary" variant="bodySm">
-        {dueDateLabel(payday)} · not counted until you tap Got paid
-      </Text>
-    </Card>
+    <DueListRow
+      accessibilityLabel={`Expected salary about ${money(amountMinor)} on ${dueDateLabel(payday)}. Not counted until you tap Got paid.`}
+      figure={`≈ ${amountParts(amountMinor, currency, "never").whole}`}
+      icon="💰"
+      name="Salary"
+      note={NOTE}
+      quiet
+      when={dueWhen(payday)}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  card: { gap: space[1] },
-  top: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
-});

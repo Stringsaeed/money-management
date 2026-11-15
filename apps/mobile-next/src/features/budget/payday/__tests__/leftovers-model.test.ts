@@ -1,6 +1,7 @@
 import type { V2EnvelopeGroup } from "@trove/api/v2/contracts";
 
 import {
+  leftoverBreakdown,
   leftoverChoice,
   leftoverLines,
   leftoversInput,
@@ -55,17 +56,21 @@ describe("leftoversInput", () => {
   it("moves each envelope's leftover to the chosen Saving for in one batch", () => {
     expect(leftoversInput(movable, { kind: "saving", envelopeId: "cushion" })).toEqual({
       items: [
-        { fromEnvelopeId: "groceries", toEnvelopeId: "cushion", amountMinor: 30_000, reason: "leftover" },
+        {
+          fromEnvelopeId: "groceries",
+          toEnvelopeId: "cushion",
+          amountMinor: 30_000,
+          reason: "leftover",
+        },
         { fromEnvelopeId: "fuel", toEnvelopeId: "cushion", amountMinor: 5_000, reason: "leftover" },
       ],
     });
   });
 
   it("sends the leftovers back to Not planned yet", () => {
-    expect(leftoversInput(movable, { kind: "plan" })?.items.map((item) => item.toEnvelopeId)).toEqual([
-      null,
-      null,
-    ]);
+    expect(
+      leftoversInput(movable, { kind: "plan" })?.items.map((item) => item.toEnvelopeId),
+    ).toEqual([null, null]);
   });
 
   it("writes nothing when no envelope has anything to give", () => {
@@ -78,5 +83,19 @@ describe("leftoverChoice", () => {
     expect(leftoverChoice("saving", null)).toEqual({ kind: "keep" });
     expect(leftoverChoice("saving", "cushion")).toEqual({ kind: "saving", envelopeId: "cushion" });
     expect(leftoverChoice("plan", "cushion")).toEqual({ kind: "plan" });
+  });
+});
+
+describe("leftoverBreakdown", () => {
+  it("lists each Everyday envelope's rollover, adding up to the total", () => {
+    const shares = leftoverBreakdown(lines);
+    expect(shares.map((share) => [share.envelopeId, share.rolloverMinor])).toEqual([
+      ["groceries", 30_000],
+      ["fuel", 20_000],
+      ["fun", 10_000],
+    ]);
+    expect(shares.reduce((total, share) => total + share.rolloverMinor, 0)).toBe(
+      leftoverTotal(lines),
+    );
   });
 });

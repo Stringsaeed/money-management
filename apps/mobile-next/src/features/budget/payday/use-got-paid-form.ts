@@ -9,7 +9,6 @@ import { showToast } from "@/ui/trove";
 import { decimalFromMinor } from "@/utils/money";
 
 import { budgetToday } from "../due/due-model";
-import { BUDGET_HOME_ROUTE, nextPaydayStep, paydayFlowFacts } from "./payday-flow";
 import type { ActiveBudgetView } from "../home/home-model";
 
 import {
@@ -17,12 +16,19 @@ import {
   defaultIncomeCategoryId,
   defaultSalaryAccountId,
   gotPaidErrorMessage,
+  gotPaidTiming,
   incomeCategories,
   salaryAccounts,
-  gotPaidTiming,
   SALARY_CATEGORY_NAME,
   startsNewMonth,
 } from "./got-paid-model";
+import {
+  BUDGET_HOME_ROUTE,
+  nextPaydayStep,
+  paydayFlowFacts,
+  paydayStepOf,
+  type PaydayStep,
+} from "./payday-flow";
 
 /** C0: the salary's amount, account, date and income Category, and posting it as one income. */
 export function useGotPaidForm(view: ActiveBudgetView) {
@@ -49,12 +55,19 @@ export function useGotPaidForm(view: ActiveBudgetView) {
     from: current.period.start,
     to: today,
   });
+  const firstIncome = (incomeThisPeriod.data?.count ?? 0) === 0;
+  const runsRitual = firstIncome && startsNewMonth(date, current.period.start);
+  const nextRoute = nextPaydayStep("gotPaid", paydayFlowFacts(view));
+  /** The step logging leads to, or `null` when it lands back on Budget home. */
+  const nextStep: PaydayStep | null = runsRitual ? paydayStepOf(nextRoute) : null;
 
   const accountChoices = salaryAccounts(accounts.data, view.fundingAccountIds, budget.currency);
   const accountId =
     pickedAccountId ?? defaultSalaryAccountId(accountChoices, budget.defaultAccountId);
   const categoryChoices = incomeCategories(categories.data);
   const categoryId = pickedCategoryId ?? defaultIncomeCategoryId(categories.data);
+
+  const clearError = () => setError(undefined);
 
   const submit = async () => {
     if (busy) return;
@@ -65,7 +78,6 @@ export function useGotPaidForm(view: ActiveBudgetView) {
     }
     setError(undefined);
     setBusy(true);
-    const firstIncome = (incomeThisPeriod.data?.count ?? 0) === 0;
     try {
       const incomeCategoryId =
         categoryId ?? (await createCategory({ name: SALARY_CATEGORY_NAME, kind: "income" })).id;
@@ -87,25 +99,34 @@ export function useGotPaidForm(view: ActiveBudgetView) {
     }
     track("got_paid_logged", { timing: gotPaidTiming(date, current.period.start) });
     showToast({ message: "Salary logged. It's now money you can plan." });
-    if (!startsNewMonth(date, current.period.start) || !firstIncome) {
+    if (!runsRitual) {
       router.dismissTo(BUDGET_HOME_ROUTE);
       return;
     }
-    router.replace(nextPaydayStep("gotPaid", paydayFlowFacts(view)));
+    router.replace(nextRoute);
   };
 
   return {
     amountText,
-    setAmountText,
+    setAmountText: (text: string) => {
+      clearError();
+      setAmountText(text);
+    },
     accountChoices,
     accountId,
+    account: accountChoices.find((account) => account.id === accountId) ?? null,
     setAccountId,
     categoryChoices,
     categoryId,
+    category: categoryChoices.find((category) => category.id === categoryId) ?? null,
     setCategoryId,
     date,
-    setDate,
+    setDate: (next: string) => {
+      clearError();
+      setDate(next);
+    },
     today,
+    nextStep,
     busy,
     error,
     submit,

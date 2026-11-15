@@ -1,12 +1,12 @@
 import { router } from "expo-router";
-import { StyleSheet } from "react-native";
 
-import { EmptyState, layout, Screen, space, Text } from "@/ui/trove";
+import { EmptyState, Text } from "@/ui/trove";
 
 import type { ActiveBudgetView } from "../home/home-model";
-import { SetupHeader } from "../setup/setup-header";
 
-import { nextPaydayStep, paydayFlowFacts } from "./payday-flow";
+import { nextPaydayStep, paydayFlowFacts, paydayStepPosition } from "./payday-flow";
+import { stepLeading } from "./payday-nav";
+import { PaydayStepFrame } from "./payday-step-frame";
 import { useWrapUp } from "./use-wrap-up";
 import { WrapUpContent } from "./wrap-up-content";
 
@@ -14,11 +14,18 @@ import { WrapUpContent } from "./wrap-up-content";
 export function WrapUpLoader({ view }: { readonly view: ActiveBudgetView }) {
   const wrapUp = useWrapUp(view);
   if (wrapUp.status === "ready") return <WrapUpContent view={view} wrapUp={wrapUp} />;
+  const facts = paydayFlowFacts(view);
+  const position = paydayStepPosition("wrapUp", facts);
   return (
-    <Screen>
-      <SetupHeader title="Month wrap-up" />
+    <PaydayStepFrame
+      {...stepLeading(position.first)}
+      gap={14}
+      of={position.of}
+      step={position.step}
+      tag="WRAP-UP"
+    >
       {wrapUp.status === "loading" ? (
-        <Text style={styles.status} tone="secondary" variant="bodySm">
+        <Text accessibilityLiveRegion="polite" tone="secondary" variant="bodySm">
           Loading last month…
         </Text>
       ) : (
@@ -26,14 +33,10 @@ export function WrapUpLoader({ view }: { readonly view: ActiveBudgetView }) {
           title="Couldn't load last month"
           message="Nothing is lost. You can skip the wrap-up and plan your new month."
           actionLabel="Skip"
-          onAction={() => router.replace(nextPaydayStep("wrapUp", paydayFlowFacts(view)))}
+          onAction={() => router.replace(nextPaydayStep("wrapUp", facts))}
           framed={false}
         />
       )}
-    </Screen>
+    </PaydayStepFrame>
   );
 }
-
-const styles = StyleSheet.create({
-  status: { padding: layout.screenGutter, paddingTop: space[5] },
-});

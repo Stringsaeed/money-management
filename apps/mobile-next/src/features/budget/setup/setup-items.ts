@@ -5,7 +5,7 @@ import {
   type V2RecurringFrequency,
 } from "@trove/api/v2/contracts";
 
-import { currencyFractionDigits } from "@/utils/money";
+import { currencyFractionDigits, decimalFromMinor } from "@/utils/money";
 
 import { SETUP_PRESETS } from "./setup-presets";
 import { GROUP_ORDER, type CustomItem } from "./setup-types";
@@ -155,3 +155,15 @@ export const isItemTicked = (
 export const suggestedMinor = (item: SetupItem, currency: string): number | null =>
   item.recurringMinor ??
   (item.lastPeriodMinor ? roundToWholeUnit(item.lastPeriodMinor, currency) : null);
+
+/** "Use suggestions": the suggested amount, as typed text, for every item that has one. */
+export const suggestedAmounts = (
+  items: readonly SetupItem[],
+  currency: string,
+): Record<string, string> =>
+  Object.fromEntries(
+    items.flatMap((item) => {
+      const suggestion = suggestedMinor(item, currency);
+      return suggestion === null ? [] : [[item.key, decimalFromMinor(suggestion, currency)]];
+    }),
+  );

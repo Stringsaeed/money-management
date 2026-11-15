@@ -23,7 +23,7 @@ export function AddBigPaymentSheet({
   onAdded,
 }: AddBigPaymentSheetProps) {
   return (
-    <Sheet open={open} onDismiss={onDismiss} snapPoints={["full"]}>
+    <Sheet surface="canvas" open={open} onDismiss={onDismiss} snapPoints={["full"]}>
       <AddBigPaymentForm
         key={session}
         view={view}

@@ -1,4 +1,10 @@
-import { checkBigPayment, checkPayment, nextDueDate, savingPreview } from "../big-payment-model";
+import {
+  checkBigPayment,
+  checkPayment,
+  nextDueDate,
+  paydayDates,
+  savingPreview,
+} from "../big-payment-model";
 
 const RULE = { kind: "day", day: 25 } as const;
 const CURRENT_START = "2026-10-25";
@@ -14,7 +20,13 @@ describe("savingPreview", () => {
         rule: RULE,
         currentPeriodStart: CURRENT_START,
       }),
-    ).toEqual({ perPaydayMinor: 300_000, paydaysLeft: 3, shortBeforePaydayMinor: null });
+    ).toEqual({
+      stillNeededMinor: 900_000,
+      perPaydayMinor: 300_000,
+      paydaysLeft: 3,
+      paydayDates: ["2026-11-25", "2026-12-25", "2027-01-25"],
+      shortBeforePaydayMinor: null,
+    });
     expect(
       savingPreview({
         targetMinor: 1_000_000,
@@ -35,7 +47,13 @@ describe("savingPreview", () => {
         rule: RULE,
         currentPeriodStart: CURRENT_START,
       }),
-    ).toEqual({ perPaydayMinor: 700_000, paydaysLeft: 1, shortBeforePaydayMinor: 700_000 });
+    ).toEqual({
+      stillNeededMinor: 700_000,
+      perPaydayMinor: 700_000,
+      paydaysLeft: 1,
+      paydayDates: [],
+      shortBeforePaydayMinor: 700_000,
+    });
   });
 
   it("has no warning when it is already fully set aside", () => {
@@ -47,7 +65,23 @@ describe("savingPreview", () => {
         rule: RULE,
         currentPeriodStart: CURRENT_START,
       }),
-    ).toEqual({ perPaydayMinor: 0, paydaysLeft: 1, shortBeforePaydayMinor: null });
+    ).toEqual({
+      stillNeededMinor: 0,
+      perPaydayMinor: 0,
+      paydaysLeft: 1,
+      paydayDates: [],
+      shortBeforePaydayMinor: null,
+    });
+  });
+});
+
+describe("paydayDates", () => {
+  it("lists the paydays after this period's start through the due date", () => {
+    expect(paydayDates(RULE, CURRENT_START, "2026-12-25")).toEqual(["2026-11-25", "2026-12-25"]);
+  });
+
+  it("is empty when the payment is due before the next payday", () => {
+    expect(paydayDates(RULE, CURRENT_START, "2026-11-24")).toEqual([]);
   });
 });
 

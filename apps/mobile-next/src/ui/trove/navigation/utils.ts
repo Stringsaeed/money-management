@@ -1,3 +1,5 @@
+import { troveRawColors, type ColorMode } from "../tokens";
+
 export const TRACK_PADDING = 2;
 export const TRACK_GAP = 2;
 
@@ -33,4 +35,11 @@ export function filterAccessibilityLabel(label: string, state: FilterState): str
 /** Plain large headers keep the 34pt display title; slotted ones step down to 28pt per the board. */
 export function largeTitleVariant(hasSlots: boolean): "display" | "titleLg" {
   return hasSlots ? "titleLg" : "display";
+}
+
+export type SheetSurface = "raised" | "canvas";
+
+/** Native sheet backgrounds reject opaque dynamic colors, so a sheet takes the raw hex per mode. */
+export function sheetBackground(surface: SheetSurface, mode: ColorMode): string {
+  return troveRawColors[mode][surface === "canvas" ? "bgCanvas" : "surfaceRaised"];
 }

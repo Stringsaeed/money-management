@@ -1,10 +1,9 @@
 import { router } from "expo-router";
-import { StyleSheet } from "react-native";
 
 import { promptCurrencies } from "@/data/budget-currency";
 import { useAccountsQuery, useSelectedBudget } from "@/data/ledger-queries";
-import { Button, Card, space, Text } from "@/ui/trove";
 
+import { HomePromptCard } from "../home/home-prompt-card";
 import { useBudgetRole } from "../role/use-budget-role";
 import { setupHref } from "../setup/setup-routes";
 
@@ -28,26 +27,14 @@ export function StartBudgetPrompt() {
     (account) => !account.archived && account.currency === currency,
   ).length;
   return (
-    <Card style={styles.card}>
-      <Text variant="titleMd">{`Start a ${currency} budget`}</Text>
-      <Text tone="secondary" variant="bodySm">
-        {`You have ${count} ${currency} ${count === 1 ? "account" : "accounts"}. A ${currency} budget has its own envelopes, payday and Safe to spend. Nothing is converted between currencies.`}
-      </Text>
-      <Button
-        fullWidth
-        label={`Start ${currency} budget`}
-        onPress={() => router.push(setupHref("payday", currency))}
-      />
-      <Button
-        fullWidth
-        label="Not now"
-        variant="tertiary"
-        onPress={() => void dismissPrompt(currency, accounts.data)}
-      />
-    </Card>
+    <HomePromptCard
+      link={{ label: "Not now", onPress: () => void dismissPrompt(currency, accounts.data) }}
+      message={`You have ${count} ${currency} ${count === 1 ? "account" : "accounts"}. A ${currency} budget has its own envelopes, payday and Safe to spend. Nothing is converted between currencies.`}
+      primary={{
+        label: `Start ${currency} budget`,
+        onPress: () => router.push(setupHref("payday", currency)),
+      }}
+      title={`Start a ${currency} budget`}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  card: { gap: space[2] },
-});

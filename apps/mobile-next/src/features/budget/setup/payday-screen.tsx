@@ -1,128 +1,55 @@
 import { router } from "expo-router";
-import { StyleSheet, View } from "react-native";
 
+import { useLedgerData } from "@/data/ledger-queries";
 import { track } from "@/features/analytics";
-import { useAccountsQuery, useLedgerData } from "@/data/ledger-queries";
-import { useHouseholdMembership } from "@/features/household/use-household-membership";
-import { Button, ListGroup, ListRow, space, Switch, Text, TextField } from "@/ui/trove";
+import { ActionBar } from "@/ui/trove";
 
-import { CurrencySection } from "./currency-section";
-import { FundingSection } from "./funding-section";
-import { HouseholdSharesSection } from "./household-shares-section";
-import { PaydayPicker } from "./payday-picker";
-import { SetupFrame } from "./setup-frame";
-import { SetupStatus } from "./setup-status";
-import { paydayIntro, resolveSetupCurrency } from "./setup-currency";
-import { fundingChoice, parseAmountText, paydayStepReady } from "./setup-plan";
+import { HouseholdPaydayStep } from "./household-payday-step";
+import { PersonalPaydayStep } from "./personal-payday-step";
+import { moneyLabel } from "./setup-copy";
 import { setupHref } from "./setup-routes";
-import { useSetupDraft } from "./use-setup-draft";
-import { useSetupTarget } from "./use-setup-target";
+import { SetupStatus } from "./setup-status";
+import { SetupStepScreen } from "./setup-step-screen";
+import { usePaydayStep } from "./use-payday-step";
 
-/** S2: payday, usual salary, payday reminder, and the money you have right now. */
+/** S2 (H2 for a household): payday and the money to plan with. */
 export function PaydayScreen() {
-  const { draft, update, ready } = useSetupDraft();
-  const accounts = useAccountsQuery();
-  const target = useSetupTarget();
-  const { currency, fixed } = resolveSetupCurrency(target, draft.currency, accounts.data);
+  const step = usePaydayStep();
   const { scope } = useLedgerData();
-  const { household } = useHouseholdMembership(
-    scope.kind === "household" ? scope.householdId : null,
-  );
+  const { accounts, currency, target } = step;
 
   if (accounts.isError && accounts.data.length === 0) {
     return (
       <SetupStatus
+        step="payday"
         error={{ title: "Couldn't load your accounts", onRetry: () => void accounts.retry() }}
       />
     );
   }
 
-  const funding = fundingChoice(accounts.data, draft, currency);
-  const salaryInvalid = parseAmountText(draft.usualSalary, currency) === null;
-  const needsAccount = funding.openingCashMinor === null && funding.accountIds.length === 0;
-  const canContinue = ready && !accounts.isLoading && paydayStepReady(draft, funding, currency);
-
   return (
-    <SetupFrame
-      step="Step 1 of 3"
-      title="Payday and money"
-      intro={paydayIntro(fixed, currency)}
+    <SetupStepScreen
+      step="payday"
       footer={
-        <>
-          {needsAccount ? (
-            <Text tone="secondary" variant="bodySm">
-              Tick at least one account that holds your money.
-            </Text>
-          ) : null}
-          <Button
-            fullWidth
-            label="Next"
-            disabled={!canContinue}
-            onPress={() => {
-              update({ step: "items" });
+        <ActionBar
+          summary={{ label: "MONEY TO PLAN", value: moneyLabel(step.moneyMinor, currency) }}
+          primary={{
+            label: "Next",
+            disabled: !step.canContinue,
+            onPress: () => {
+              step.update({ step: "items" });
               track("budget_setup_step_completed", { step: "payday" });
               router.push(setupHref("items", target));
-            }}
-          />
-        </>
+            },
+          }}
+        />
       }
     >
-      <CurrencySection
-        fixed={fixed}
-        accounts={accounts.data}
-        currency={currency}
-        onChange={(chosen) => update({ currency: chosen })}
-      />
-      <View style={styles.group}>
-        <Text variant="titleMd">When do you get paid?</Text>
-        <PaydayPicker value={draft.payday} onChange={(payday) => update({ payday })} />
-      </View>
-      <TextField
-        label="Usual salary (optional)"
-        placeholder={`${currency} 0`}
-        keyboardType="decimal-pad"
-        value={draft.usualSalary}
-        onChangeText={(usualSalary) => update({ usualSalary })}
-        error={salaryInvalid ? "Enter an amount like 12000 or 12000.50." : undefined}
-      />
-      <ListGroup dividerInset={0}>
-        <ListRow
-          title="Remind me on payday"
-          subtitle="A reminder only. Nothing is added to your ledger for you."
-          trailing={
-            <Switch
-              accessibilityLabel="Remind me on payday"
-              value={draft.paydayReminder}
-              onValueChange={(paydayReminder) => update({ paydayReminder })}
-            />
-          }
-        />
-      </ListGroup>
-      <FundingSection
-        currency={currency}
-        accounts={accounts.data}
-        draft={draft}
-        totalInvalid={funding.invalid}
-        loading={accounts.isLoading}
-        onTick={(accountId, ticked) =>
-          update({ funding: { ...draft.funding, [accountId]: ticked } })
-        }
-        onTotal={(openingCash) => update({ openingCash })}
-      />
       {scope.kind === "household" ? (
-        <HouseholdSharesSection
-          currency={currency}
-          household={household}
-          shares={draft.householdShares}
-          onChange={(userId, text) =>
-            update({ householdShares: { ...draft.householdShares, [userId]: text } })
-          }
-        />
-      ) : null}
-    </SetupFrame>
+        <HouseholdPaydayStep step={step} />
+      ) : (
+        <PersonalPaydayStep step={step} />
+      )}
+    </SetupStepScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  group: { gap: space[3] },
-});

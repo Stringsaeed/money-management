@@ -1,45 +1,52 @@
 import { StyleSheet, View } from "react-native";
 
-import type { HouseholdDetail } from "@/features/household/household-client";
-import { space, Text, TextField } from "@/ui/trove";
+import { space } from "@/ui/trove";
+
+import { SectionStamp } from "./section-stamp";
+import { inPairs, type ShareTileModel } from "./setup-household";
+import { ShareTile } from "./share-tile";
 
 interface HouseholdSharesSectionProps {
   readonly currency: string;
-  readonly household: HouseholdDetail | null;
+  readonly tiles: readonly ShareTileModel[];
   readonly shares: Readonly<Record<string, string>>;
   readonly onChange: (userId: string, text: string) => void;
 }
 
 /**
- * H2: what each member expects to put in each month. Informational: it is kept with the draft on
- * this device and never changes the plan or the numbers.
+ * H2 Monthly shares: what each member expects to put in each month. Informational: kept with
+ * the draft on this device, it never changes the plan or the numbers.
  */
 export function HouseholdSharesSection({
   currency,
-  household,
+  tiles,
   shares,
   onChange,
 }: HouseholdSharesSectionProps) {
-  const members = household?.members.filter((member) => member.status === "active") ?? [];
+  if (tiles.length === 0) return null;
   return (
-    <View style={styles.group}>
-      <Text variant="titleMd">Monthly share per member</Text>
-      <Text variant="bodySm" tone="secondary">
-        For your own reference. Nothing here changes your plan. In your Personal budget this shows
-        as a Bill: Household share.
-      </Text>
-      {members.map((member) => (
-        <TextField
-          key={member.userId}
-          label={member.userName || member.userEmail}
-          placeholder={`${currency} 0`}
-          keyboardType="decimal-pad"
-          value={shares[member.userId] ?? ""}
-          onChangeText={(text) => onChange(member.userId, text)}
-        />
+    <View style={styles.section}>
+      <SectionStamp label="MONTHLY SHARES" trailing="For reference only" trailingStyle="note" />
+      {inPairs(tiles).map((pair) => (
+        <View key={pair.map((tile) => tile.userId).join(":")} style={styles.row}>
+          {pair.map((tile) => (
+            <ShareTile
+              key={tile.userId}
+              currency={currency}
+              onChange={onChange}
+              tile={tile}
+              value={shares[tile.userId] ?? ""}
+            />
+          ))}
+          {pair.length === 1 ? <View style={styles.spacer} /> : null}
+        </View>
       ))}
     </View>
   );
 }
 
-const styles = StyleSheet.create({ group: { gap: space[3] } });
+const styles = StyleSheet.create({
+  section: { gap: space[2] },
+  row: { flexDirection: "row", gap: 10 },
+  spacer: { flex: 1 },
+});

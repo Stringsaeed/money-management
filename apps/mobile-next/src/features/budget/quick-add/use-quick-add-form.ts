@@ -3,17 +3,20 @@ import { useState } from "react";
 import type { V2Account, V2Category } from "@trove/api/v2/contracts";
 
 import { playCue } from "@/features/sound";
-import { currencyFractionDigits, formatMoneyMinor, parseMoneyMinor } from "@/utils/money";
+import { currencyFractionDigits, parseMoneyMinor } from "@/utils/money";
 
 import { normalizeAmountEntry } from "../../ledger/transactions/amount-entry";
 import { budgetToday } from "../due/due-model";
 import type { ActiveBudgetView, EnvelopeLine } from "../home/home-model";
 
+import { envelopeChips } from "./envelope-chip-model";
+import type { QuickAddPanel } from "./quick-add-panel";
 import {
   checkSpend,
   datePlacement,
   envelopeCategories,
   filterEnvelopes,
+  impactMoney,
   orderEnvelopes,
   pickCategoryId,
   placementText,
@@ -40,7 +43,7 @@ export function useQuickAddForm(options: UseQuickAddFormOptions) {
   const { view, lines, accounts, categories, memory, remember, preselectedEnvelopeId, onSaved } =
     options;
   const { currency } = view.budget;
-  const money = (minor: number) => formatMoneyMinor(minor, currency);
+  const money = (minor: number) => impactMoney(minor, currency);
   const saving = useSaveSpend({ remember, onSaved });
   const [amount, setAmount] = useState("");
   const [envelopeId, setEnvelopeId] = useState(preselectedEnvelopeId);
@@ -51,6 +54,7 @@ export function useQuickAddForm(options: UseQuickAddFormOptions) {
   const today = budgetToday(view.current);
   const [date, setDate] = useState(today);
   const [query, setQuery] = useState("");
+  const [panel, setPanel] = useState<QuickAddPanel | null>(null);
 
   const ordered = orderEnvelopes(lines, memory.recentEnvelopeIds);
   const selected = lines.find((line) => line.envelope.id === envelopeId) ?? null;
@@ -91,6 +95,7 @@ export function useQuickAddForm(options: UseQuickAddFormOptions) {
 
   return {
     amount,
+    amountMinor,
     fractionDigits: currencyFractionDigits(currency),
     /** The keypad applies the entry rules and its own key haptic; this records the result. */
     changeAmount: (next: string) => {
@@ -99,7 +104,7 @@ export function useQuickAddForm(options: UseQuickAddFormOptions) {
       setAmount(next);
     },
     clearAmount: () => setAmount(""),
-    envelopes: filterEnvelopes(ordered, query, envelopeId),
+    envelopeChips: envelopeChips(filterEnvelopes(ordered, query, envelopeId), categories, currency),
     envelopeCount: lines.length,
     selected,
     selectEnvelope: (id: string) => {
@@ -112,12 +117,14 @@ export function useQuickAddForm(options: UseQuickAddFormOptions) {
     funding,
     cards,
     accountId,
+    account: eligible.find((account) => account.id === accountId) ?? null,
     selectAccount: (id: string) => {
       saving.clearError();
       setAccountOverride(id);
     },
     envelopeCategories: choices,
     categoryId,
+    category: choices.find((category) => category.id === categoryId) ?? null,
     selectCategory: (id: string) => {
       saving.clearError();
       setCategoryOverride(id);
@@ -128,6 +135,10 @@ export function useQuickAddForm(options: UseQuickAddFormOptions) {
     setDate,
     placementNote: placementText(placement),
     impact,
+    /** The meta chip whose editor stands in for the keypad, if any. */
+    panel,
+    togglePanel: (next: QuickAddPanel) => setPanel((current) => (current === next ? null : next)),
+    closePanel: () => setPanel(null),
     busy: saving.busy,
     error: saving.error,
     submit,

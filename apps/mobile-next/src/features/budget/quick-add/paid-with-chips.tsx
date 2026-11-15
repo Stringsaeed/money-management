@@ -1,8 +1,10 @@
+import { StyleSheet, View } from "react-native";
+
 import type { V2Account } from "@trove/api/v2/contracts";
 
-import { Chip } from "@/ui/trove";
+import { SelectChip, space } from "@/ui/trove";
 
-import { ChipRow } from "./chip-row";
+import { accountTypeOption } from "../../ledger/accounts/account-display";
 
 interface PaidWithChipsProps {
   readonly funding: readonly V2Account[];
@@ -22,16 +24,24 @@ export function PaidWithChips({
   onAddCard,
 }: PaidWithChipsProps) {
   return (
-    <ChipRow label="Paid with">
+    <View accessibilityLabel="Paid with" accessibilityRole="radiogroup" style={styles.wrap}>
       {[...funding, ...cards].map((account) => (
-        <Chip
+        <SelectChip
+          emoji={accountTypeOption(account.type).emoji}
           key={account.id}
           label={account.name}
-          selected={account.id === selectedId}
           onPress={() => onSelect(account.id)}
+          selected={account.id === selectedId}
+          size="md"
         />
       ))}
-      {cards.length === 0 ? <Chip label="Add card" onPress={onAddCard} /> : null}
-    </ChipRow>
+      {cards.length === 0 ? (
+        <SelectChip label="Add card" onPress={onAddCard} variant="add" />
+      ) : null}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wrap: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
+});

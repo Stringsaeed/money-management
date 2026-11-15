@@ -22,7 +22,7 @@ export function EnvelopeMenuSheet({
   onDismiss,
 }: EnvelopeMenuSheetProps) {
   return (
-    <Sheet open={open} onDismiss={onDismiss} snapPoints={["full"]}>
+    <Sheet surface="canvas" open={open} onDismiss={onDismiss} snapPoints={["full"]}>
       <EnvelopePanels key={session} view={view} line={line} onClose={onDismiss} />
     </Sheet>
   );

@@ -1,7 +1,17 @@
 import type { V2DueOccurrence, V2Envelope, V2EnvelopeTotals } from "@trove/api/v2/contracts";
 
 import type { EnvelopeLine } from "../../home/home-model";
-import { billStatus, dueByEnvelope, savingRow, savingRows } from "../bills-model";
+import {
+  billRows,
+  billsMonthSummary,
+  billStatus,
+  dueByEnvelope,
+  firstDueByEnvelope,
+  savingNeedingAttention,
+  savingRow,
+  savingRows,
+  savingsSummary,
+} from "../bills-model";
 
 const totals = (
   plannedMinor: number,
@@ -100,6 +110,24 @@ describe("dueByEnvelope", () => {
     expect(due.size).toBe(0);
   });
 
+  it("finds the earliest bill each Bills envelope still owes", () => {
+    const first = firstDueByEnvelope(
+      [
+        bill("du", "2026-10-18"),
+        bill("du-late", "2026-09-18", { overdue: true }),
+        bill("dewa", "2026-10-20", { categoryId: "utilities" }),
+        bill("du-next", "2026-10-25"),
+      ],
+      envelopes,
+      "AED",
+      "2026-10-24",
+    );
+    expect([...first.entries()]).toEqual([
+      ["du", "2026-09-18"],
+      ["dewa", "2026-10-20"],
+    ]);
+  });
+
   it("makes a bill with Left below its next payment short, before anything is spent", () => {
     // du is due AED 450 on the 18th; the envelope has AED 300 Left (planned 300).
     const due = dueByEnvelope([bill("du", "2026-10-18")], envelopes, "AED", "2026-10-24");
@@ -184,5 +212,67 @@ describe("savingRows", () => {
       line({ id: "soon", dueDate: "2026-12-01" }, 0, 0),
     ]);
     expect(rows.map((row) => row.line.envelope.id)).toEqual(["soon", "late", "none"]);
+  });
+});
+
+const billLine = (id: string, plannedMinor: number, spentMinor: number, leftMinor: number) => {
+  const base = line({ id, group: "bills" }, plannedMinor, leftMinor);
+  return { ...base, totals: { ...base.totals, spentMinor } };
+};
+
+describe("billRows and billsMonthSummary", () => {
+  const lines = [
+    billLine("car", 185_000, 0, 185_000),
+    billLine("du", 30_000, 0, 30_000),
+    billLine("dewa", 45_000, 45_000, 0),
+    billLine("gym", 0, 0, 0),
+    line({ id: "rent" }, 0, 0),
+  ];
+
+  it("prices each bill by what is still to pay, or what was paid once paid", () => {
+    const rows = billRows(lines, new Map([["du", 37_500]]), new Map([["du", "2026-10-18"]]));
+    expect(
+      rows.map((row) => [row.line.envelope.id, row.status.kind, row.amountMinor, row.dueDate]),
+    ).toEqual([
+      ["car", "ready", 185_000, null],
+      ["du", "short", 37_500, "2026-10-18"],
+      ["dewa", "paid", 45_000, null],
+      ["gym", "unplanned", 0, null],
+    ]);
+  });
+
+  it("adds up the month, what is paid and what is still to pay", () => {
+    expect(billsMonthSummary(billRows(lines, new Map([["du", 37_500]])))).toEqual({
+      count: 4,
+      paidCount: 1,
+      totalMinor: 267_500,
+      paidMinor: 45_000,
+      stillToPayMinor: 222_500,
+    });
+  });
+});
+
+describe("savingsSummary and savingNeedingAttention", () => {
+  const rows = savingRows([
+    line(
+      { id: "rent", dueDate: "2026-12-01", targetMinor: 1_500_000, savingPerPaydayMinor: 250_000 },
+      250_000,
+      1_000_000,
+    ),
+    line({ id: "school", dueDate: "2027-01-04", targetMinor: 900_000 }, 0, 360_000),
+    line({ id: "cushion", savingPerPaydayMinor: 139_500 }, 139_500, 420_000),
+  ]);
+
+  it("adds up what is set aside, what the targets still need, and each payday", () => {
+    expect(savingsSummary(rows)).toEqual({
+      setAsideMinor: 1_780_000,
+      stillToSetAsideMinor: 1_040_000,
+      perPaydayMinor: 389_500,
+    });
+  });
+
+  it("picks the soonest big payment with a warning", () => {
+    expect(savingNeedingAttention(rows)?.line.envelope.id).toBe("school");
+    expect(savingNeedingAttention(rows.slice(0, 1))).toBeNull();
   });
 });

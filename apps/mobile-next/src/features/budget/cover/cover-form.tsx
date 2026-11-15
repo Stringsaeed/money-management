@@ -1,27 +1,28 @@
-import { useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { track } from "@/features/analytics";
-import { useLedgerMutations } from "@/data/ledger-queries";
-import { Button, ListGroup, showToast, space, Text } from "@/ui/trove";
+import { useCategoriesQuery } from "@/data/ledger-queries";
+import { Text } from "@/ui/trove";
 
-import { useBudgetMoney } from "../currency/use-budget-currency";
+import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
+import { envelopeEmojiOrTag } from "../envelope-emoji";
 import { PanelError } from "../envelope/panel-error";
-import { useEnvelopeWrite } from "../envelope/use-envelope-write";
-import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
+import type { ActiveBudgetView } from "../home/home-model";
+import { SheetHeading } from "../sheet-heading";
 
-import { coverIntro, coverNoteLines, coverToast, noSourcesLine } from "./cover-copy";
+import { AfterReceipt } from "./after-receipt";
+import { CoverConfirm } from "./cover-confirm";
+import { coverIntro, coverRestNote, noSourcesLine } from "./cover-copy";
 import {
-  allocateCover,
-  coverMode,
-  coverSources,
-  coverWrite,
-  defaultCoverSelection,
-  placesFrom,
-  type CoverRequest,
-} from "./cover-move-model";
-import { CoverNotes } from "./cover-notes";
-import { CoverSourceRow } from "./cover-source-row";
+  coverAfterLines,
+  coverSourceGroups,
+  coverStamp,
+  coverTitle,
+  placeEmojis,
+} from "./cover-display";
+import type { CoverRequest } from "./cover-move-model";
+import { CoverSourceGroup } from "./cover-source-group";
+import { NothingToCover } from "./nothing-to-cover";
+import { useCoverForm } from "./use-cover-form";
 
 interface CoverFormProps {
   readonly view: ActiveBudgetView;
@@ -30,119 +31,98 @@ interface CoverFormProps {
   readonly onDone: () => void;
 }
 
-/**
- * O2, B1 and C1: choose where the money for an envelope comes from. Nothing moves until Move, and
- * the "After:" numbers are the same arithmetic the server applies to the same Left values.
- */
+/** O2, B1 and C1 Cover from…: pick the sources, see what they leave, then move it. */
 export function CoverForm({ view, request, onCovered, onDone }: CoverFormProps) {
   const money = useBudgetMoney();
-  const { createAssignments } = useLedgerMutations();
-  const write = useEnvelopeWrite();
-  const { targetId } = request;
-  const mode = coverMode(request);
-  const lines = envelopeLines(view);
-  const { unassignedMinor } = view.current;
-  const target = lines.find((line) => line.envelope.id === targetId);
-  const overMinor = request.amountMinor ?? Math.max(-(target?.totals.leftMinor ?? 0), 0);
-  const ranked = coverSources(mode, placesFrom(lines, unassignedMinor), targetId);
-  const [selected, setSelected] = useState(() => defaultCoverSelection(ranked, overMinor));
-  const plan = allocateCover(ranked, selected, overMinor);
+  const currency = useBudgetCurrency();
+  const categories = useCategoriesQuery();
+  const form = useCoverForm({ view, request, onCovered, onDone });
+  const { mode, target, plan, ranked, amountMinor } = form;
 
-  if (!target || overMinor === 0) {
-    return (
-      <View style={styles.container}>
-        <Text variant="titleMd">Nothing to cover</Text>
-        <Text variant="bodySm" tone="secondary">
-          This envelope is no longer over.
-        </Text>
-        <Button fullWidth label="Done" variant="secondary" onPress={onDone} />
-      </View>
-    );
-  }
+  if (!target || amountMinor === 0)
+    return <NothingToCover name={target?.envelope.name} onDone={onDone} />;
 
-  const toggle = (key: string) => {
-    write.clearError();
-    setSelected((current) =>
-      current.includes(key) ? current.filter((item) => item !== key) : [...current, key],
-    );
-  };
-
-  const move = async () => {
-    const ok = await write.run(() => createAssignments(coverWrite(mode, targetId, plan)));
-    if (!ok) return;
-    const source = plan.takes[0]?.place.kind;
-    track("overspend_covered", {
-      source_type: source === "unplanned" ? "unassigned" : (source ?? "unassigned"),
-    });
-    showToast({ message: coverToast(mode, target.envelope.name, plan.coveredMinor, money) });
-    onCovered?.(targetId);
-    onDone();
-  };
-
-  const confirmAndMove = () => {
-    if (!plan.takesFromSaving) return void move();
-    const names = plan.takes
-      .filter((take) => take.place.kind === "saving")
-      .map((take) => take.place.name)
-      .join(", ");
-    Alert.alert(
-      "Take from savings?",
-      `${names} is set aside for a bigger payment. Move ${money(plan.coveredMinor)} out of savings?`,
-      [
-        { text: "Keep savings", style: "cancel" },
-        { text: "Move it", style: "destructive", onPress: () => void move() },
-      ],
-    );
-  };
+  const categoriesById = new Map(categories.data.map((category) => [category.id, category]));
+  const { envelope, totals } = target;
+  const stamp = coverStamp(
+    mode,
+    envelope.name,
+    envelopeEmojiOrTag(envelope, categoriesById),
+    amountMinor,
+    currency,
+  );
+  const restNote = coverRestNote(mode, plan, money, ranked.length > 0);
+  const emojis = placeEmojis(form.lines, categoriesById);
 
   return (
-    <View style={styles.container}>
-      <Text variant="titleMd" accessibilityRole="header">
-        {`Cover ${target.envelope.name}`}
-      </Text>
-      <Text>{coverIntro(mode, { name: target.envelope.name, amountMinor: overMinor, money })}</Text>
+    <View style={styles.column}>
+      <SheetHeading
+        stamp={stamp.text}
+        stampTone={stamp.tone}
+        title={coverTitle(mode)}
+        onClose={onDone}
+      />
+      {mode === "past" ? (
+        <Text tone="secondary" variant="bodySm">
+          {coverIntro(mode, { name: envelope.name, amountMinor, money })}
+        </Text>
+      ) : null}
 
       {ranked.length === 0 ? (
-        <Text variant="bodySm" tone="secondary">
+        <Text tone="secondary" variant="bodySm">
           {noSourcesLine(mode)}
         </Text>
       ) : (
-        <ListGroup dividerInset={0}>
-          {ranked.map((place) => (
-            <CoverSourceRow
-              key={place.key}
-              place={place}
-              selected={selected.includes(place.key)}
-              take={plan.takes.find((take) => take.place.key === place.key)}
-              onToggle={() => toggle(place.key)}
+        <View accessibilityLabel="Source" accessibilityRole="radiogroup" style={styles.sources}>
+          {coverSourceGroups(ranked).map((group) => (
+            <CoverSourceGroup
+              key={group.key}
+              amountMinor={amountMinor}
+              currency={currency}
+              emojis={emojis}
+              group={group}
+              plan={plan}
+              selected={form.selected}
+              onToggle={form.toggle}
             />
           ))}
-        </ListGroup>
+        </View>
       )}
 
-      <CoverNotes
-        {...coverNoteLines(mode, plan, {
-          name: target.envelope.name,
-          leftMinor: target.totals.leftMinor,
-          unassignedMinor,
-          money,
-          hasSources: ranked.length > 0,
-        })}
-      />
+      {plan.coveredMinor > 0 ? (
+        <AfterReceipt
+          lines={coverAfterLines(
+            mode,
+            plan,
+            { name: envelope.name, kind: envelope.group, leftMinor: totals.leftMinor },
+            {
+              unassignedMinor: view.current.unassignedMinor,
+              safeToSpendMinor: view.current.safeToSpendMinor,
+              currency,
+            },
+          )}
+        />
+      ) : null}
+      {restNote ? (
+        <Text accessibilityLiveRegion="polite" tone="secondary" variant="bodySm">
+          {restNote}
+        </Text>
+      ) : null}
 
-      <PanelError message={write.error} />
-      <Button
-        fullWidth
-        label={plan.coveredMinor > 0 ? `Move ${money(plan.coveredMinor)}` : "Move"}
-        loading={write.busy}
-        disabled={plan.coveredMinor === 0}
-        onPress={confirmAndMove}
+      <PanelError message={form.error} />
+      <CoverConfirm
+        busy={form.busy}
+        coveredMinor={plan.coveredMinor}
+        currency={currency}
+        hasSources={ranked.length > 0}
+        onDone={onDone}
+        onMove={form.confirmAndMove}
       />
-      <Button fullWidth label="Not now" variant="tertiary" onPress={onDone} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: space[3] },
+  column: { gap: 14 },
+  sources: { gap: 6 },
 });

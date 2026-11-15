@@ -6,7 +6,8 @@ import { useState, type ReactNode } from "react";
 import { StyleSheet, useColorScheme } from "react-native";
 
 import { Text } from "../text";
-import { space, troveRawColors } from "../tokens";
+import { space } from "../tokens";
+import { sheetBackground, type SheetSurface } from "./utils";
 
 export interface SheetProps {
   open: boolean;
@@ -14,13 +15,15 @@ export interface SheetProps {
   title?: string;
   children: ReactNode;
   snapPoints?: ("half" | "full")[];
+  /** `raised` (default) lifts off the screen; `canvas` matches the page, so paper slips show. */
+  surface?: SheetSurface;
   testID?: string;
 }
 
 /**
  * Bottom sheet on the platform's native sheet (same approach as the legacy sheet): the
  * system supplies the grabber, top corner radius, scrim and elevation, and we paint it with
- * `surface.raised`. Stays mounted while the native dismissal animates out.
+ * `surface.raised` (or `bg.canvas`). Stays mounted while the native dismissal animates out.
  */
 export function Sheet({
   open,
@@ -28,6 +31,7 @@ export function Sheet({
   title,
   children,
   snapPoints = ["half", "full"],
+  surface = "raised",
   testID,
 }: SheetProps) {
   const scheme = useColorScheme();
@@ -41,7 +45,7 @@ export function Sheet({
   return (
     <NativeBottomSheet
       // Native sheet backgrounds reject opaque dynamic colors; bridge the canonical raw palette.
-      backgroundStyle={scheme === "dark" ? styles.nativeDark : styles.nativeLight}
+      backgroundStyle={BACKGROUND[surface][scheme === "dark" ? "dark" : "light"]}
       enablePanDownToClose
       index={open ? 0 : -1}
       onDismiss={() => {
@@ -69,9 +73,19 @@ export function Sheet({
   );
 }
 
+const backgrounds = StyleSheet.create({
+  raisedLight: { backgroundColor: sheetBackground("raised", "light") },
+  raisedDark: { backgroundColor: sheetBackground("raised", "dark") },
+  canvasLight: { backgroundColor: sheetBackground("canvas", "light") },
+  canvasDark: { backgroundColor: sheetBackground("canvas", "dark") },
+});
+
+const BACKGROUND = {
+  raised: { light: backgrounds.raisedLight, dark: backgrounds.raisedDark },
+  canvas: { light: backgrounds.canvasLight, dark: backgrounds.canvasDark },
+} as const;
+
 const styles = StyleSheet.create({
-  nativeLight: { backgroundColor: troveRawColors.light.surfaceRaised },
-  nativeDark: { backgroundColor: troveRawColors.dark.surfaceRaised },
   content: {
     gap: space[4],
     paddingBottom: space[6],

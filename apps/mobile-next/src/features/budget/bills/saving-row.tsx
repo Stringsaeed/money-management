@@ -1,93 +1,56 @@
-import { format, parseISO } from "date-fns";
 import { StyleSheet, View } from "react-native";
 
-import { Button, Card, PressableScale, ProgressBar, space, Text } from "@/ui/trove";
+import { BudgetPill } from "@/ui/trove";
 
-import { useBudgetMoney } from "../currency/use-budget-currency";
-import { REPEAT_LABELS } from "./big-payment-model";
-import type { SavingRow as SavingRowData, SavingWarning } from "./bills-model";
+import { savingAmount, savingMeta, savingPill } from "./bills-copy";
+import type { SavingRow as SavingRowData } from "./bills-model";
+import { PaymentRow } from "./payment-row";
+import { SavingBar } from "./saving-bar";
 
 interface SavingRowProps {
   readonly row: SavingRowData;
+  readonly icon: string;
+  readonly currency: string;
+  readonly today: string;
   readonly onPress: () => void;
+  /** Absent when the person may not mark payments paid. */
   readonly onMarkPaid?: () => void;
 }
 
-const warningText = (warning: SavingWarning, money: (minor: number) => string): string =>
-  warning.kind === "short_before_payday"
-    ? `Short ${money(warning.shortMinor)}: due before you're paid`
-    : "Not planned: nothing is going into this one this payday";
-
-function dueText(row: SavingRowData): string | null {
-  const { dueDate, repeat } = row.line.envelope;
-  if (dueDate === null) return null;
-  const date = `Due ${format(parseISO(dueDate), "d MMM yyyy")}`;
-  return repeat && repeat !== "once" ? `${date} · ${REPEAT_LABELS[repeat].toLowerCase()}` : date;
-}
-
-/** One Saving-for envelope: progress to the target, the due date, and what to set aside. */
-export function SavingRow({ row, onPress, onMarkPaid }: SavingRowProps) {
-  const money = useBudgetMoney();
-  const { envelope } = row.line;
-  const due = dueText(row);
-  const progress =
-    row.targetMinor === null
-      ? `${money(row.setAsideMinor)} set aside`
-      : `${money(row.setAsideMinor)} of ${money(row.targetMinor)} set aside`;
-  const perPayday = envelope.savingPerPaydayMinor;
+/** One big payment: set aside of the target, its due date and pace, and Mark paid. */
+export function SavingRow({ row, icon, currency, today, onPress, onMarkPaid }: SavingRowProps) {
+  const meta = savingMeta(row, today, currency);
+  const pill = savingPill(row, currency);
+  const amount = savingAmount(row, currency);
+  const hasTarget = row.targetMinor !== null;
+  const label = [
+    row.line.envelope.name,
+    pill.spoken ?? pill.label,
+    hasTarget ? `${amount.replace(" / ", " of ")} ${currency} set aside` : `${amount} ${currency}`,
+    meta.toLowerCase(),
+  ].join(", ");
   return (
-    <Card style={styles.card}>
-      <PressableScale
-        accessibilityRole="button"
-        accessibilityLabel={[envelope.name, due, progress].filter(Boolean).join(", ")}
-        onPress={onPress}
-        scaleOnPress={false}
-        style={styles.details}
-      >
-        <View style={styles.top}>
-          <Text variant="labelMd" style={styles.name} numberOfLines={1}>
-            {envelope.name}
-          </Text>
-          {due ? (
-            <Text tone="secondary" variant="bodySm">
-              {due}
-            </Text>
+    <PaymentRow
+      accessibilityLabel={label}
+      amount={amount}
+      icon={icon}
+      meta={meta}
+      name={row.line.envelope.name}
+      onPress={onPress}
+      pill={pill}
+    >
+      {hasTarget ? (
+        <View style={styles.second}>
+          <SavingBar fraction={row.fraction} />
+          {onMarkPaid ? (
+            <BudgetPill label="Mark paid" onPress={onMarkPaid} size="sm" tone="accent" />
           ) : null}
         </View>
-        {row.targetMinor !== null ? <ProgressBar fraction={row.fraction} /> : null}
-        <Text tone="secondary" variant="labelSm">
-          {progress}
-        </Text>
-        {row.funded ? (
-          <Text tone="secondary" variant="bodySm">
-            Fully set aside
-          </Text>
-        ) : perPayday !== undefined && perPayday > 0 ? (
-          <Text tone="secondary" variant="bodySm">
-            {`Set aside ${money(perPayday)} each payday`}
-          </Text>
-        ) : null}
-      </PressableScale>
-      {row.warnings.map((warning) => (
-        <Text key={warning.kind} accessibilityRole="alert" tone="warning" variant="bodySm">
-          {warningText(warning, money)}
-        </Text>
-      ))}
-      {row.targetMinor !== null && onMarkPaid ? (
-        <Button fullWidth label="Mark paid" variant="secondary" onPress={onMarkPaid} />
       ) : null}
-    </Card>
+    </PaymentRow>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { gap: space[3] },
-  details: { gap: space[2] },
-  top: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: space[3],
-    justifyContent: "space-between",
-  },
-  name: { flex: 1 },
+  second: { alignItems: "center", alignSelf: "stretch", flexDirection: "row", gap: 12 },
 });

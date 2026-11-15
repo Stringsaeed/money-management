@@ -2,7 +2,7 @@ import { StyleSheet, View, type ViewStyle } from "react-native";
 
 import { colors } from "@/ui/trove";
 
-import type { SpendTick } from "./home-spend-ticks";
+import type { SpendTick } from "@/features/budget/home/spend-ticks";
 
 interface HomeSpendStripProps {
   readonly ticks: readonly SpendTick[];

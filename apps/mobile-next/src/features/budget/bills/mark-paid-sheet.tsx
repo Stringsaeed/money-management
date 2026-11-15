@@ -1,9 +1,10 @@
-import { useAccountsQuery } from "@/data/ledger-queries";
+import { useAccountsQuery, useCategoriesQuery } from "@/data/ledger-queries";
 import { Sheet, showToast } from "@/ui/trove";
 
 import { useBudgetMoney } from "../currency/use-budget-currency";
 import { envelopeLines, type ActiveBudgetView } from "../home/home-model";
 
+import { envelopeTileIcon } from "./envelope-tile";
 import { MarkPaidForm } from "./mark-paid-form";
 
 interface MarkPaidSheetProps {
@@ -19,14 +20,19 @@ interface MarkPaidSheetProps {
 export function MarkPaidSheet({ open, session, envelopeId, view, onDismiss }: MarkPaidSheetProps) {
   const money = useBudgetMoney();
   const accounts = useAccountsQuery();
+  const categories = useCategoriesQuery();
   const line = envelopeLines(view).find((item) => item.envelope.id === envelopeId);
+  const iconByCategoryId = new Map(
+    categories.data.map((category): [string, string] => [category.id, category.icon]),
+  );
   return (
-    <Sheet open={open} onDismiss={onDismiss} snapPoints={["full"]}>
+    <Sheet surface="canvas" open={open} onDismiss={onDismiss} snapPoints={["full"]}>
       {line ? (
         <MarkPaidForm
           key={session}
           view={view}
           line={line}
+          icon={envelopeTileIcon(line.envelope, iconByCategoryId)}
           accounts={accounts.data}
           onPaid={(amountMinor) => {
             showToast({

@@ -1,46 +1,36 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 
-import { Amount, Card, space, Text } from "@/ui/trove";
+import type { V2EnvelopeRepeat } from "@trove/api/v2/contracts";
 
-import { useBudgetCurrency, useBudgetMoney } from "../currency/use-budget-currency";
+import { RECEIPT_PADDING, ReceiptSlip } from "@/ui/trove";
+
 import type { SavingPreview as SavingPreviewData } from "./big-payment-model";
+import { ReceiptSentence } from "./receipt-sentence";
+import { SavingPreviewLines } from "./saving-preview-lines";
 
-/** "Set aside each payday", or the warning when the money is due before you're paid. */
-export function SavingPreview({ preview }: { readonly preview: SavingPreviewData | null }) {
-  const money = useBudgetMoney();
-  const currency = useBudgetCurrency();
-  return (
-    <Card style={styles.card}>
-      {preview === null ? (
-        <Text tone="secondary" variant="bodySm">
-          Add an amount and a due date to see what to set aside.
-        </Text>
-      ) : (
-        <View style={styles.lines} accessibilityLiveRegion="polite">
-          {preview.shortBeforePaydayMinor !== null ? (
-            <Text accessibilityRole="alert" tone="warning">
-              {`Short ${money(preview.shortBeforePaydayMinor)}: due before you're paid`}
-            </Text>
-          ) : preview.perPaydayMinor === 0 ? (
-            <Text>Already fully set aside</Text>
-          ) : (
-            <>
-              <Text tone="secondary" variant="labelSm">
-                Set aside each payday
-              </Text>
-              <Amount currency={currency} minor={preview.perPaydayMinor} size="lg" />
-              <Text tone="secondary" variant="bodySm">
-                {`${preview.paydaysLeft} ${preview.paydaysLeft === 1 ? "payday" : "paydays"} until it's due`}
-              </Text>
-            </>
-          )}
-        </View>
-      )}
-    </Card>
-  );
+interface SavingPreviewProps {
+  readonly preview: SavingPreviewData | null;
+  readonly dueDate: string;
+  readonly repeat: V2EnvelopeRepeat;
+  readonly currency: string;
 }
 
-const styles = StyleSheet.create({
-  card: { gap: space[1] },
-  lines: { gap: space[1] },
-});
+/** B2 receipt: what is still needed, over how many paydays, and what to set aside each one. */
+export function SavingPreview({ preview, dueDate, repeat, currency }: SavingPreviewProps) {
+  return (
+    <View accessibilityLiveRegion="polite">
+      <ReceiptSlip padding={RECEIPT_PADDING.screen} tearDepth={8}>
+        {preview === null ? (
+          <ReceiptSentence text="Add an amount and a due date to see what to set aside each payday." />
+        ) : (
+          <SavingPreviewLines
+            preview={preview}
+            dueDate={dueDate}
+            repeat={repeat}
+            currency={currency}
+          />
+        )}
+      </ReceiptSlip>
+    </View>
+  );
+}

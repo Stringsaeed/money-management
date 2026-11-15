@@ -1,4 +1,8 @@
-import type { V2AssignmentsCreateInput, V2Envelope, V2EnvelopeTotals } from "@trove/api/v2/contracts";
+import type {
+  V2AssignmentsCreateInput,
+  V2Envelope,
+  V2EnvelopeTotals,
+} from "@trove/api/v2/contracts";
 
 /** The server takes at most this many items in one batch. */
 const MAX_BATCH_ITEMS = 50;
@@ -63,4 +67,19 @@ export type LeftoverOption = LeftoverChoice["kind"];
 export function leftoverChoice(option: LeftoverOption, savingId: string | null): LeftoverChoice {
   if (option === "saving" && savingId) return { kind: "saving", envelopeId: savingId };
   return option === "plan" ? { kind: "plan" } : { kind: "keep" };
+}
+
+export interface LeftoverShare {
+  readonly envelopeId: string;
+  readonly name: string;
+  readonly rolloverMinor: number;
+}
+
+/** Each Everyday envelope's part of the leftover total, in envelope order; they add up to it. */
+export function leftoverBreakdown(lines: readonly LeftoverSource[]): LeftoverShare[] {
+  return lines.flatMap(({ envelope, totals }) =>
+    envelope.group === "everyday" && totals.rolloverMinor > 0
+      ? [{ envelopeId: envelope.id, name: envelope.name, rolloverMinor: totals.rolloverMinor }]
+      : [],
+  );
 }

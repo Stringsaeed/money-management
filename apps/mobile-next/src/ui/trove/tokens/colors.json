@@ -80,7 +80,13 @@
     "paperShadow": "#15151514",
     "chartSpend": "#8C887D",
     "segmentOn": "#FFFFFF",
-    "warningOn": "#FFFFFF"
+    "warningOn": "#FFFFFF",
+    "runwayUnder": "#4A6B00",
+    "paperWarning": "#8F5600",
+    "paperWarningMarker": "#F6E7C8",
+    "paperNegativeMarker": "#F8E2DC",
+    "paperPositive": "#3F6B00",
+    "stepTrack": "#D3CFC4"
   },
   "dark": {
     "bgCanvas": "#151515",
@@ -163,6 +169,12 @@
     "paperShadow": "#00000000",
     "chartSpend": "#8C887D",
     "segmentOn": "#34342F",
-    "warningOn": "#151515"
+    "warningOn": "#151515",
+    "runwayUnder": "#8FB300",
+    "paperWarning": "#8F5600",
+    "paperWarningMarker": "#F6E7C8",
+    "paperNegativeMarker": "#F8E2DC",
+    "paperPositive": "#3F6B00",
+    "stepTrack": "#2A2A27"
   }
 }
