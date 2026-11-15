@@ -44,12 +44,12 @@ jobs:
           expo-token: ${{ secrets.EXPO_TOKEN }}
 
       - name: 🚀 Create preview
-        # Non-blocking: the EAS project is mid-rebrand (app slug "trove" vs the
-        # project the configured projectId resolves to), so `eas update` can fail
-        # on a slug mismatch. That is an Expo-side config issue, not a PR defect,
-        # so a failed preview should not block merges. Remove once EAS is realigned.
+        # Non-blocking until apps/mobile-next is linked to EAS (projectId, preview
+        # channel, preview environment). Those live in the store-listing config
+        # PR, so `eas update` cannot publish yet. A failed preview should not
+        # block merges. Remove continue-on-error once that config is on main.
         continue-on-error: true
         uses: expo/expo-github-action/preview@v8
         with:
           command: eas update --channel preview --environment preview --message "Preview from ${{ github.actor }} for ${{ github.event.pull_request.title || github.ref_name }}"
-          working-directory: apps/mobile
+          working-directory: apps/mobile-next
