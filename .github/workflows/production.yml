@@ -49,6 +49,8 @@ jobs:
       # exists — i.e. native code changed and a new build is required. When a
       # match exists (including after reverting to an earlier native state) an
       # OTA update suffices. We gate on iOS since that's the platform we ship.
+      # The store app is apps/mobile-next. `profile: production` reads that
+      # app's EAS build profile, which is owned by the store-listing config PR.
       - name: 🫆 Get fingerprint info
         id: fingerprint
         uses: expo/expo-github-action/continuous-deploy-fingerprint-info@main
@@ -56,7 +58,7 @@ jobs:
           profile: production
           platform: ios
           environment: production
-          working-directory: apps/mobile
+          working-directory: apps/mobile-next
 
       - name: 🧭 Decide release type
         id: decide
@@ -104,10 +106,11 @@ jobs:
             --environment production \
             --message "${MESSAGE:-Manual update from ${GITHUB_SHA::7}}" \
             --non-interactive
-        working-directory: apps/mobile
+        working-directory: apps/mobile-next
 
   # Native change: OTA can't carry it, so hand off to the EAS Workflow that
-  # builds iOS and distributes to TestFlight (.eas/workflows/build-and-submit-ios.yml).
+  # builds iOS and distributes to TestFlight
+  # (apps/mobile-next/.eas/workflows/build-and-submit-ios.yml).
   # `eas workflow:run` defaults to not waiting, so this returns once the run is
   # queued; the build + TestFlight submission happen on EAS. TestFlight submission
   # requires an App Store Connect API Key registered with EAS (one-time setup).
@@ -131,4 +134,4 @@ jobs:
         run: |
           eas workflow:run .eas/workflows/build-and-submit-ios.yml \
             --non-interactive
-        working-directory: apps/mobile
+        working-directory: apps/mobile-next
