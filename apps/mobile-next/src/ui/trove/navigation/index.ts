@@ -10,3 +10,4 @@ export { SegmentedControl } from "./segmented-control";
 export type { SegmentedControlProps, SegmentOption } from "./segmented-control";
 export { Sheet } from "./sheet";
 export type { SheetProps } from "./sheet";
+export { useNavigationTheme } from "./use-navigation-theme";

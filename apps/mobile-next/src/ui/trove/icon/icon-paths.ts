@@ -108,6 +108,13 @@ export const UI_ICONS = {
     circle(12, 13, 1.8) +
     "M9 19c.4-1.8 1.5-2.8 3-2.8s2.6 1 3 2.8",
   volume: "M4 9.5h3.5L12 5.5v13l-4.5-4H4zM15.5 9.5a3.5 3.5 0 0 1 0 5M18 7a7 7 0 0 1 0 10",
+  coins:
+    "M3 6.25a6.5 2.75 0 1 0 13 0a6.5 2.75 0 1 0-13 0M3 6.25v10.5c0 1.4 2.6 2.5 6.5 2.7M3 11.5c0 1.4 2.6 2.5 6 2.7M16 6.25V10" +
+    circle(16, 15.75, 4.75),
+  moon: "M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z",
+  globe: circle(12, 12, 9) + "M3 12h18M12 3a13 13 0 0 1 0 18 13 13 0 0 1 0-18",
+  export: "M4 14.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3.5M12 15V4M7.5 8.5L12 4l4.5 4.5",
+  "sign-out": "M9.5 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3.5M15.5 16.5L20 12l-4.5-4.5M20 12H9.5",
   /** System kinds: shown in tiles so they can't be mistaken for a user-named category. */
   "kind-income": "M17 7L7 17M15.5 17H7V8.5",
   "kind-expense": "M7 17L17 7M8.5 7H17v8.5",

@@ -1,6 +1,6 @@
 export { AuthProvider } from "./auth-provider";
 export { AuthScreen } from "./auth-screen";
-export { ProfileScreen } from "./profile-screen";
+export { profileIdentity } from "./profile-utils";
 export { useSession } from "./use-session";
 export type {
   AuthPrincipal,

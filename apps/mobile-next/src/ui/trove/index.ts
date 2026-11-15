@@ -130,7 +130,14 @@ export type {
   TransactionRowProps,
   UpcomingRowProps,
 } from "./data";
-export { Chip, FilterButton, Header, SegmentedControl, Sheet } from "./navigation";
+export {
+  Chip,
+  FilterButton,
+  Header,
+  SegmentedControl,
+  Sheet,
+  useNavigationTheme,
+} from "./navigation";
 export type {
   ChipProps,
   CompactHeaderProps,
@@ -278,6 +285,8 @@ export type {
   RepeatRule,
   SliderProps,
 } from "./pickers";
+export { SETTINGS_ROW_HEIGHT, SettingsRow, settingsRowLabel, SettingsSection } from "./settings";
+export type { SettingsRowProps, SettingsSectionProps } from "./settings";
 export { PressableScale } from "./pressable-scale";
 export type { PressableScaleProps } from "./pressable-scale";
 export { Text } from "./text";
